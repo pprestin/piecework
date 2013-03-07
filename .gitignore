@@ -1,5 +1,13 @@
 *.class
 
+# Eclipse Files #
+.project
+.settings
+.classpath
+
+# Maven Files #
+target
+
 # Package Files #
 *.jar
 *.war
