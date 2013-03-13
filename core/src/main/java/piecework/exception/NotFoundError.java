@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2010 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.exception;
 
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
 
 /**
+ * This is an exception class to wrap not found exceptions.
+ * 
  * @author James Renfro
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
+public class NotFoundError extends StatusCodeError {
 
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
+	private static final long serialVersionUID = -4402958687768073463L;
 	
+	public static final int NOT_FOUND_CODE = 404;
+	
+	public NotFoundError() {
+		super(NOT_FOUND_CODE);
+	}
+	
+	public NotFoundError(String resourceKey, Object... messageArguments) {
+		super(NOT_FOUND_CODE, resourceKey, messageArguments);
+	}
+	
+	public NotFoundError(Throwable cause) {
+		super(cause, NOT_FOUND_CODE);
+	}
+
 }

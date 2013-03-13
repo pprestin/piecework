@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2010 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.util;
 
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
+public interface PropertyValueReader {
 
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
+	String getFirstValue(String propertyName);
+	
+	List<String> getValuesAsStrings(String propertyName);
+	
+	Set<String> keySet();
+	
+	Set<Map.Entry<String, List<String>>> entrySet();
+	
+	boolean hasPreviousValue(String propertyName);
+	
+	List<String> getPreviousValues(String propertyName);
+	
+	String getTitle();
 	
 }

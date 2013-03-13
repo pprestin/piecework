@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.authentication;
 
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
+import org.apache.cxf.jaxrs.ext.RequestHandler;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
+public interface AuthenticationHandler extends RequestHandler {
 
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
-	
 }

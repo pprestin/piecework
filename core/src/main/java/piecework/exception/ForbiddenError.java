@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2011 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
-
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
+package piecework.exception;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
+public class ForbiddenError extends StatusCodeError {
 
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
+	public static final int FORBIDDEN_CODE = 403;
+	
+	private static final long serialVersionUID = 1L;
+
+	public ForbiddenError() {
+		super(FORBIDDEN_CODE);
+	}
+	
+	public ForbiddenError(String resourceKey, Object... messageArguments) {
+		super(FORBIDDEN_CODE, resourceKey, messageArguments);
+	}
+	
+	public ForbiddenError(Throwable cause) {
+		super(cause, FORBIDDEN_CODE);
+	}
 	
 }

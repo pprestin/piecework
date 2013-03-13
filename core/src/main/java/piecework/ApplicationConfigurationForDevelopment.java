@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework;
 
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
+@Configuration
+@Profile("dev")
+public class ApplicationConfigurationForDevelopment {
 
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
-	
 }

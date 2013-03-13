@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
-
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
+package piecework.authorization;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
+public interface AuthorizationConfiguration {
 
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
+	String getAuthTypeHeaderName();
+	
+	String getActAsUserHeaderName();
+	
+	String getRemoteUserHeaderName();
+	
+	String getSystemHeaderName();
+	
+	String getCertificateSubjectsHeaderName();
+	
+	String getCertificateIssuersHeaderName();
 	
 }

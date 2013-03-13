@@ -2,65 +2,15 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
        xmlns:mongo="http://www.springframework.org/schema/data/mongo"
        xsi:schemaLocation="http://www.springframework.org/schema/beans 
            http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
            http://www.springframework.org/schema/context
            http://www.springframework.org/schema/context/spring-context-3.2.xsd
-           http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
 		   http://www.springframework.org/schema/data/mongo 
 	 	   http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
-               
+          
      <context:component-scan base-package="piecework"/>
      <mongo:repositories base-package="piecework" />
-     
-     <jaxrs:server id="restflow.v1.Resources" address="/">
-		<jaxrs:serviceBeans>
-			<ref bean="formResource"/>
-<!-- 			<ref bean="restflow.v1.RootResource" /> -->
-<!-- 			<ref bean="restflow.v1.RestrictedResource" /> -->
-<!-- 			<ref bean="restflow.v1.UnrestrictedResource" /> -->
-		</jaxrs:serviceBeans>
-		<jaxrs:extensionMappings>
-			<entry key="json" value="application/json" />
-			<entry key="xml" value="application/xml" />
-			<entry key="html" value="text/html" />
-			<entry key="xhtml" value="application/xhtml+xml" />
-			<entry key="png" value="image/png" />
-			<entry key="csv" value="text/csv" />
-			<entry key="xls" value="application/vnd.ms-excel" />
-		</jaxrs:extensionMappings>
-		<jaxrs:languageMappings>
-			<entry key="en" value="en-gb" />
-		</jaxrs:languageMappings>
-		<jaxrs:providers>
-<!-- 			<ref bean="restflow.v1.RedirectResponseHandler" /> -->
-<!-- 			<ref bean="restflow.v1.WebFormsProvider" /> -->
-<!-- 			<ref bean="restflow.v1.GeneralExceptionMapper" /> -->
-<!-- 			<ref bean="restflow.v1.StatusCodeErrorMapper" /> -->
-			<bean class="org.apache.cxf.jaxrs.provider.json.JSONProvider">
-<!-- 				<property name="arrayKeys"> -->
-<!-- 					<list> -->
-<!-- 						<value>entry</value> -->
-<!-- 						<value>group</value> -->
-<!-- 						<value>item</value> -->
-<!-- 						<value>constraint</value> -->
-<!-- 						<value>constraintType</value> -->
-<!-- 						<value>process</value> -->
-<!-- 						<value>processInstance</value> -->
-<!-- 						<value>property</value> -->
-<!-- 						<value>propertyType</value> -->
-<!-- 						<value>stepDefinition</value> -->
-<!-- 						<value>task</value> -->
-<!-- 						<value>validationResult</value> -->
-<!-- 						<value>user</value> -->
-<!-- 					</list> -->
-<!-- 				</property> -->
-				<property name="attributesToElements" value="true" />
-				<property name="serializeAsArray" value="true" />
-			</bean>
-		</jaxrs:providers>
-	</jaxrs:server>
-     
+          
 </beans>

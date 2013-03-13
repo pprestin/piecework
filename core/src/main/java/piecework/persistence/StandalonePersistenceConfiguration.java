@@ -32,7 +32,7 @@ import com.mongodb.ServerAddress;
  * @author James Renfro
  */
 @Configuration
-@Profile("dev")
+@Profile("standalone")
 public class StandalonePersistenceConfiguration {
 
 	@Value("${mongo_db}")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2010 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
-
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
+package piecework.authorization;
 
 /**
+ * This is an enumeration that defines the set of trusted credentials that may be used for authorization. 
+ *
  * @author James Renfro
+ * @since 1.0.2.1
+ * @added 8/30/2010
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
-
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
-	
+public enum AuthorizationType {
+	END_USER, SYSTEM;
 }

@@ -13,18 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.util;
 
-import org.springframework.stereotype.Repository;
-
-import piecework.form.record.FormRecord;
+import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends org.springframework.data.repository.Repository<FormRecord, String> {
+public interface UserContract extends Serializable {
 
-	FormRecord findOne(String id);
-	FormRecord save(FormRecord entity);
+	String getId();
+	
+	String getVisibleId();
+	
+	String getDisplayName();
+	
+	String getSortName();
+	
+	String getFirstName();
+	
+	String getMiddleName();
+	
+	String getLastName();
+	
+	String getEmailAddress();
+	
+	Map<String, String> getIdentifiers();
+	
+	boolean isFakeUser();
+	
+	String getProvider();
 	
 }
