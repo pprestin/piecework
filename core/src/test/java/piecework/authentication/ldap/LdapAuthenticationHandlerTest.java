@@ -15,18 +15,28 @@
  */
 package piecework.authentication.ldap;
 
-import javax.naming.directory.SearchControls;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.ws.rs.core.Response;
+
+import junit.framework.Assert;
 
 import org.apache.cxf.common.security.SecurityToken;
 import org.apache.cxf.common.security.UsernameToken;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;
+import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
+import org.apache.cxf.security.SecurityContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.core.DistinguishedName;
 import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -34,6 +44,7 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import piecework.ApplicationConfigurationForTest;
 import piecework.authentication.AuthenticationHandler;
+import piecework.form.FormResourceVersion1;
 
 /**
  * @author James Renfro
@@ -56,49 +67,74 @@ public class LdapAuthenticationHandlerTest {
 	LdapContextSource groupLdapContextSource;
 	
 	@Test
-	public void test() {
+	public void testSimpleAuthentication() {
+		SpringSecurityLdapTemplate ldapTemplate = new SpringSecurityLdapTemplate(personLdapContextSource);
+		
+		boolean isAuthenticated = ldapTemplate.authenticate(DistinguishedName.EMPTY_PATH, "uid=rod", "koala");
+		Assert.assertTrue(isAuthenticated);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testAuthenticationHandler() throws SecurityException, NoSuchMethodException {
 
-		String id = "jkeats";
-		String password = "pass";
+		String id = "rod";
+		String password = "koala";
+		
+		final Map<Class<?>, Object> map = new HashMap<Class<?>, Object>();
 		
 		Message message = Mockito.mock(Message.class);
+		Exchange exchange = Mockito.mock(Exchange.class);
+		
 		ClassResourceInfo resourceClass = Mockito.mock(ClassResourceInfo.class);
 		Mockito.when(message.get(SecurityToken.class)).thenReturn(new UsernameToken(id, password, null, false, null, null));
+		Mockito.when(message.get("org.apache.cxf.resource.method")).thenReturn(FormResourceVersion1.class.getMethod("read", String.class));
+		Mockito.doAnswer(new SecurityContextStorageAnswer(map)).when(message).put(Mockito.any(Class.class), Mockito.any());
+		Mockito.when(message.get(SecurityContext.class)).then(new SecurityContextRetrievalAnswer(map));
+		Mockito.when(exchange.get(Mockito.any())).thenReturn(null);
+		Mockito.when(message.getExchange()).thenReturn(exchange);
 		
 		Response response = authenticationHandler.handleRequest(message, resourceClass);
 	
-		
-		
-//		SpringSecurityLdapTemplate ldapTemplate = new SpringSecurityLdapTemplate(groupLdapContextSource);
-//	
-////		AndFilter filter = new AndFilter();
-////		filter.and(new LikeFilter("uwRegId", id));
-//		String encoded = "member=uwNetID=" + id;
-//		
-//		AbstractContextMapper userMapper = new AbstractContextMapper() {
-//			protected Object doMapFromContext(DirContextOperations context) {
-//				return context.getStringAttribute("cn");
-//			}
-//		};
-//		
-//		ContextMapperCallbackHandler callbackHandler = new ContextMapperCallbackHandler(userMapper);
-//		
-//		ldapTemplate.search(DistinguishedName.EMPTY_PATH, 
-//        		encoded, getSearchControls(), callbackHandler);
-//		
-//		List<String> list = callbackHandler.getList();
-//		
-//		for (String name : list) {
-//			System.out.println(name);
-//		}
+		Assert.assertNull(response);
 	}
 
-	private SearchControls getSearchControls() {
-        SearchControls retval = new SearchControls();
-        retval.setCountLimit(100);
-        retval.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        retval.setReturningAttributes(null);
-        retval.setTimeLimit(10000);
-        return retval;
-    }
+	public class SecurityContextStorageAnswer implements Answer<Void> {
+		
+		private final Map<Class<?>, Object> map;
+		
+		public SecurityContextStorageAnswer(Map<Class<?>, Object> map) {
+			this.map = map;
+		}
+		
+	    @Override
+	    public Void answer(InvocationOnMock invocation) throws Throwable {
+	        Object[] arguments = invocation.getArguments();
+	        if (arguments != null && arguments.length > 1) {
+	        	Class<?> key = (Class<?>)arguments[0];
+	        	SecurityContext value = (SecurityContext) arguments[1];
+	        	map.put(key, value);
+	        }
+	        return null;
+	    }
+	}
+	
+	public class SecurityContextRetrievalAnswer implements Answer<SecurityContext> {
+		
+		private final Map<Class<?>, Object> map;
+		
+		public SecurityContextRetrievalAnswer(Map<Class<?>, Object> map) {
+			this.map = map;
+		}
+		
+		@Override
+	    public SecurityContext answer(InvocationOnMock invocation) throws Throwable {
+	        Object[] arguments = invocation.getArguments();
+	        if (arguments != null && arguments.length > 0 && arguments[0] != null) {
+	        	Class<?> key = (Class<?>)arguments[0];
+	        	return (SecurityContext) map.get(key);
+	        }
+	        return null;
+	    }
+	}
 }
