@@ -17,13 +17,12 @@ package piecework.authentication.ldap;
 
 import java.io.File;
 
-import javax.annotation.PreDestroy;
-
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.env.Environment;
 import org.springframework.security.ldap.server.ApacheDSContainer;
 
 /**
@@ -33,31 +32,29 @@ import org.springframework.security.ldap.server.ApacheDSContainer;
 @Profile("standalone")
 public class StandaloneLdapConfiguration {
 
-	private final static String ROOT = "o=example";
-	private final static String LDIFS = "classpath:META-INF/piecework/ldif.properties";
+	private final static String ROOT = "dc=springframework,dc=org";
+	private final static String LDIF_LOCATION = "classpath*:META-INF/piecework/demo.ldif";
+	private final static String TEST_LDIF_LOCATION = "classpath*:META-INF/piecework/test.ldif";
 	
-	@Value("10389")
+	@Value("33389")
 	private int port;
 	
 	@Bean 
-	public ApacheDSContainer directoryServer() throws Exception {
+	public ApacheDSContainer directoryServer(Environment env) throws Exception {
+		
 		File workingDirectory = new File(System.getProperty("java.io.tmpdir") + File.separator + "piecework-standalone-directory");
-				
-		ApacheDSContainer container = new ApacheDSContainer(ROOT, LDIFS);
+		FileUtils.deleteDirectory(workingDirectory);
+
+		String ldifs = LDIF_LOCATION;
+		
+		if (env.acceptsProfiles("test"))
+			ldifs = TEST_LDIF_LOCATION;
+		
+		ApacheDSContainer container = new ApacheDSContainer(ROOT, ldifs);
 		container.setPort(port);
 		container.setWorkingDirectory(workingDirectory);
 		
 		return container;
 	}
 		
-//	@PostConstruct
-//	public void startDirectoryServer() throws Exception {
-//		directoryServer().start();
-//	}
-
-	@PreDestroy
-	public void stopDirectoryServer() throws Exception {
-		directoryServer().stop();
-	}
-	
 }

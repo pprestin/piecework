@@ -19,8 +19,6 @@ package piecework.authorization;
  * This is an enumeration that defines the set of trusted credentials that may be used for authorization. 
  *
  * @author James Renfro
- * @since 1.0.2.1
- * @added 8/30/2010
  */
 public enum AuthorizationType {
 	END_USER, SYSTEM;

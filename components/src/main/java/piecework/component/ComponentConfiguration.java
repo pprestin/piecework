@@ -23,9 +23,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ComponentConfiguration {
 
-//	@Bean
-//	public HelloWorldResource helloWorldResource() {
-//		return new ActivitiHelloWorldResource();
-//	}
 	
 }

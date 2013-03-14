@@ -45,8 +45,8 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticator;
+import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
-import org.springframework.security.ldap.authentication.PasswordComparisonAuthenticator;
 import org.springframework.security.ldap.authentication.SpringSecurityAuthenticationSource;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
@@ -128,6 +128,7 @@ public class AuthenticationConfiguration {
 		context.setBase(ldapGroupBase);
 		context.setAuthenticationSource(authenticationSource());
 		context.setAuthenticationStrategy(authenticationStrategy());
+		context.setAnonymousReadOnly(true);
 		return context;
 	}
 	
@@ -140,6 +141,7 @@ public class AuthenticationConfiguration {
 		context.setUserDn(ldapPersonDn);
 		context.setAuthenticationSource(authenticationSource());
 		context.setAuthenticationStrategy(authenticationStrategy());
+		context.setAnonymousReadOnly(true);
 		return context;
 	}
 	
@@ -151,10 +153,14 @@ public class AuthenticationConfiguration {
 		if (env.acceptsProfiles("sso")) 
 			authenticator = new PreauthenticatedLdapAuthenticator(context);
 		else
-			authenticator = new PasswordComparisonAuthenticator(context);
+			authenticator = new BindAuthenticator(context);
+//			authenticator = new PasswordComparisonAuthenticator(context);
 
 		LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapPersonSearchBase, ldapPersonSearchFilter, context);
 		authenticator.setUserSearch(userSearch);
+		((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
+		((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
+		((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
 
 		DefaultLdapAuthoritiesPopulator authoritiesPopulater = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(), ldapGroupSearchBase);
 		authoritiesPopulater.setGroupSearchFilter(ldapGroupSearchFilter);

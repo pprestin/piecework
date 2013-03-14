@@ -46,6 +46,7 @@ public class AuthenticationHandlerForDevelopment implements AuthenticationHandle
 	public Response handleRequest(Message m, ClassResourceInfo resourceClass) {
 		LOG.warn("DEVELOPMENT AUTHENTICATION HANDLER IN USE!!! Everybody has superuser access... don't use this in production.");
 		String username = System.getProperty("REMOTE_USER");
+		String password = null;
 		
 		if (username == null) {
 			HttpServletRequest request = (HttpServletRequest)m.get("HTTP.REQUEST");
@@ -54,6 +55,7 @@ public class AuthenticationHandlerForDevelopment implements AuthenticationHandle
 				HttpSession session = request.getSession(true);
 				
 				username = request.getParameter("username");
+				password = request.getParameter("password");
 				
 				if (username == null) 
 					username = (String) session.getAttribute("username");
@@ -63,7 +65,7 @@ public class AuthenticationHandlerForDevelopment implements AuthenticationHandle
 		}
 		
 		if (username != null) {
-			UsernameToken token = new UsernameToken(username, null, null, false, null, new Date().toString());
+			UsernameToken token = new UsernameToken(username, password, null, false, null, new Date().toString());
 			m.put(SecurityToken.class, token);
 		}
 		return delegate.handleRequest(m, resourceClass);

@@ -26,8 +26,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * if a given GET request resolves to multiple entities. 
  * 
  * @author James Renfro
- * @since 1.0.2.0
- * @added 8/4/2010
  */
 @XmlRootElement
 public class MultipleChoices {

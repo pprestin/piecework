@@ -77,12 +77,7 @@ public class ApplicationConfiguration {
 		sf.setProvider(new GeneralExceptionMapper());
 		sf.setProvider(new StatusCodeErrorMapper());
 		sf.setProvider(authenticationHandler);
-		
-//		if (env.acceptsProfiles("dev")) 
-//			sf.setProvider(new DevelopmentAuthenticationHandler(authenticationProviders, new SecureAnnotationsInterceptor()));
-//		else
-//			sf.setProvider(new AuthenticationHandler(authenticationProviders, new SecureAnnotationsInterceptor()));
-		
+
 		BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);
 		JAXRSBindingFactory factory = new JAXRSBindingFactory();
 		factory.setBus(sf.getBus());

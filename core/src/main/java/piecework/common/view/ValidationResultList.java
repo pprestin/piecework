@@ -28,7 +28,6 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * @author James Renfro
- * @date Apr 11, 2011
  */
 @XmlRootElement(name = ValidationResultList.Constants.ROOT_ELEMENT_NAME)
 @XmlAccessorType(XmlAccessType.NONE)

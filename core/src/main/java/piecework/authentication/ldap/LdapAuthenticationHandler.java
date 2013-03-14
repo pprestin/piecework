@@ -15,7 +15,6 @@
  */
 package piecework.authentication.ldap;
 
-import java.security.Principal;
 import java.util.Arrays;
 
 import javax.ws.rs.core.Response;
@@ -88,10 +87,5 @@ public class LdapAuthenticationHandler implements AuthenticationHandler {
         
         return Response.status(401).build();
     }
-	
-//	public boolean isAuthenticated(String username, String password) {
-//		Authentication authentication = providerManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-//		return authentication.isAuthenticated();
-//	}
-	
+		
 }

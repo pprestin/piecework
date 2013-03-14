@@ -47,7 +47,7 @@ public class AuthenticationSecurityContext implements SecurityContext {
 	
 	@Override
 	public Principal getUserPrincipal() {
-		return (Principal) authentication.getPrincipal();
+		return authentication;
 	}
 
 	@Override
