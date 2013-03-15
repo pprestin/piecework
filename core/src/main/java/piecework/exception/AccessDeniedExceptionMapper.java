@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.exception;
 
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
-import piecework.Resource;
-import piecework.authorization.AuthorizationRole;
+import org.apache.cxf.interceptor.security.AccessDeniedException;
 
 /**
  * @author James Renfro
  */
-@Path("secure/v1/form")
-public interface FormResourceVersion1 extends Resource {
+public class AccessDeniedExceptionMapper implements ExceptionMapper<org.apache.cxf.interceptor.security.AccessDeniedException> {
 
-	@GET
-	@Path("{formDefinitionKey}")
-	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-	public Response read(@PathParam("processDefinitionKey") String processDefinitionKey);
+	private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(AccessDeniedExceptionMapper.class);
+	
+	@Override
+	public Response toResponse(AccessDeniedException exception) {
+		StatusCodeError error = new StatusCodeError(401);
+		if (LOG.isDebugEnabled())
+			LOG.debug("Parsing a CXF access denied exception", exception);
+		
+		return ErrorResponseBuilder.buildErrorResponse(error);
+	}
 
 }

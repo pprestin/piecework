@@ -29,9 +29,9 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.apache.cxf.Bus;
 import org.apache.cxf.configuration.jsse.SSLUtils;
 import org.apache.cxf.configuration.security.FiltersType;
-import org.apache.cxf.interceptor.security.SecureAnnotationsInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,12 +47,14 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticator;
 import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
+import org.springframework.security.ldap.authentication.PasswordComparisonAuthenticator;
 import org.springframework.security.ldap.authentication.SpringSecurityAuthenticationSource;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 
 import piecework.authentication.AuthenticationHandler;
+import piecework.authorization.AuthorizationRoleMapper;
 import piecework.util.KeyManagerCabinet;
 
 /**
@@ -73,6 +75,9 @@ public class AuthenticationConfiguration {
 
 	@Autowired 
 	Environment env;
+	
+	@Autowired
+	Bus cxf;
 	
 	@Value("${ldap.person.url}")
 	String ldapPersonUrl;
@@ -112,7 +117,7 @@ public class AuthenticationConfiguration {
 		AuthenticationProvider[] authenticationProviders = new AuthenticationProvider[1]; 
 		authenticationProviders[0] = authenticationProvider();
 		
-		AuthenticationHandler authenticationHandler = new LdapAuthenticationHandler(authenticationProviders, new SecureAnnotationsInterceptor());
+		AuthenticationHandler authenticationHandler = new LdapAuthenticationHandler(authenticationProviders);
 	
 		if (env.acceptsProfiles("dev")) 
 			return new AuthenticationHandlerForDevelopment(authenticationHandler);
@@ -152,9 +157,10 @@ public class AuthenticationConfiguration {
 		AbstractLdapAuthenticator authenticator = null;
 		if (env.acceptsProfiles("sso")) 
 			authenticator = new PreauthenticatedLdapAuthenticator(context);
+		else if (env.acceptsProfiles("passwordcompare"))
+			authenticator = new PasswordComparisonAuthenticator(context);
 		else
 			authenticator = new BindAuthenticator(context);
-//			authenticator = new PasswordComparisonAuthenticator(context);
 
 		LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapPersonSearchBase, ldapPersonSearchFilter, context);
 		authenticator.setUserSearch(userSearch);
@@ -164,8 +170,11 @@ public class AuthenticationConfiguration {
 
 		DefaultLdapAuthoritiesPopulator authoritiesPopulater = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(), ldapGroupSearchBase);
 		authoritiesPopulater.setGroupSearchFilter(ldapGroupSearchFilter);
+
+		LdapAuthenticationProvider provider = new LdapAuthenticationProvider(authenticator, authoritiesPopulater);
+		provider.setAuthoritiesMapper(new AuthorizationRoleMapper());
 		
-		return new LdapAuthenticationProvider(authenticator, authoritiesPopulater);
+		return provider;
 	}
 	
 	public AuthenticationSource authenticationSource() {

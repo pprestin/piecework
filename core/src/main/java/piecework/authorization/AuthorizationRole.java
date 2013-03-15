@@ -27,16 +27,16 @@ import piecework.Constants;
  */
 public final class AuthorizationRole implements Comparable<AuthorizationRole> {
 
-	public static final String ANONYMOUS = "anonymous";
-	public static final String CREATOR = "creator";
-	public static final String OWNER = "owner";
-	public static final String USER = "user";
-	public static final String INITIATOR = "initiator";
-	public static final String APPROVER = "approver";
-	public static final String WATCHER = "watcher";
-	public static final String OVERSEER = "overseer";
-	public static final String SUPERUSER = "superuser";
-	public static final String SYSTEM = "system";
+//	public static final String ANONYMOUS = "anonymous";
+	public static final String CREATOR = "ROLE_CREATOR";
+	public static final String OWNER = "ROLE_OWNER";
+	public static final String USER = "ROLE_USER";
+	public static final String INITIATOR = "ROLE_INITIATOR";
+	public static final String APPROVER = "ROLE_APPROVER";
+	public static final String WATCHER = "ROLE_WATCHER";
+	public static final String OVERSEER = "ROLE_OVERSEER";
+	public static final String SUPERUSER = "ROLE_SUPERUSER";
+	public static final String SYSTEM = "ROLE_SYSTEM";
 	
 	private final String role;
 	private final Map<String, String> limits;

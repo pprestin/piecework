@@ -15,21 +15,25 @@
  */
 package piecework.authorization;
 
+import java.util.Collections;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.vote.AffirmativeBased;
+
 /**
  * @author James Renfro
  */
-public interface AuthorizationConfiguration {
+@Configuration
+public class AuthorizationConfiguration {
+	
+	@Bean
+	public AccessDecisionManager resourceAccessDecisionManager() {
+		@SuppressWarnings("rawtypes")
+		AccessDecisionVoter voter = new ResourceAccessVoter();
+		return new AffirmativeBased(Collections.singletonList(voter));
+	}
 
-	String getAuthTypeHeaderName();
-	
-	String getActAsUserHeaderName();
-	
-	String getRemoteUserHeaderName();
-	
-	String getSystemHeaderName();
-	
-	String getCertificateSubjectsHeaderName();
-	
-	String getCertificateIssuersHeaderName();
-	
 }

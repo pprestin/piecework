@@ -24,15 +24,13 @@ import org.apache.cxf.common.security.SecurityToken;
 import org.apache.cxf.common.security.TokenType;
 import org.apache.cxf.common.security.UsernameToken;
 import org.apache.cxf.configuration.security.AuthorizationPolicy;
-import org.apache.cxf.interceptor.security.AbstractAuthorizingInInterceptor;
-import org.apache.cxf.interceptor.security.AccessDeniedException;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;
 import org.apache.cxf.message.Message;
-import org.apache.cxf.security.SecurityContext;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import piecework.authentication.AuthenticationHandler;
 
@@ -43,11 +41,9 @@ import piecework.authentication.AuthenticationHandler;
 public class LdapAuthenticationHandler implements AuthenticationHandler {
 
 	private final ProviderManager providerManager;	
-	private final AbstractAuthorizingInInterceptor interceptor;
 
-	public LdapAuthenticationHandler(AuthenticationProvider[] authenticationProviders, AbstractAuthorizingInInterceptor interceptor) {
-		this.providerManager = new ProviderManager(Arrays.asList(authenticationProviders)); 
-		this.interceptor = interceptor;
+	public LdapAuthenticationHandler(AuthenticationProvider[] authenticationProviders) {
+		this.providerManager = new ProviderManager(Arrays.asList(authenticationProviders));
 	}
 	
 	public Response handleRequest(Message m, ClassResourceInfo resourceClass) {
@@ -74,14 +70,9 @@ public class LdapAuthenticationHandler implements AuthenticationHandler {
 	        Authentication authentication = providerManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 	        	
 	        if (authentication.isAuthenticated()) {
-	        	m.put(SecurityContext.class, new AuthenticationSecurityContext(authentication));
+	        	SecurityContextHolder.getContext().setAuthentication(authentication);
 	        	
-	        	try {
-	                interceptor.handleMessage(m);
-	                return null;
-	            } catch (AccessDeniedException ex) {
-	                return Response.status(Response.Status.FORBIDDEN).build();
-	            }
+	        	return null;
 	        }
         }
         

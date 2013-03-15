@@ -38,6 +38,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 import piecework.authentication.AuthenticationHandler;
+import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.util.AcceptablePropertiesFilenameFilter;
@@ -76,6 +77,7 @@ public class ApplicationConfiguration {
 		sf.setExtensionMappings(extensionMappings);
 		sf.setProvider(new GeneralExceptionMapper());
 		sf.setProvider(new StatusCodeErrorMapper());
+		sf.setProvider(new AccessDeniedExceptionMapper());
 		sf.setProvider(authenticationHandler);
 
 		BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);
