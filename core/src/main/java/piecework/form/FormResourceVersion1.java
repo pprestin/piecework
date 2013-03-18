@@ -31,7 +31,7 @@ import piecework.authorization.AuthorizationRole;
 public interface FormResourceVersion1 extends Resource {
 
 	@GET
-	@Path("{formDefinitionKey}")
+	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
 	public Response read(@PathParam("processDefinitionKey") String processDefinitionKey);
 

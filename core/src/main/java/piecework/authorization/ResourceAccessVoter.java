@@ -80,7 +80,7 @@ public class ResourceAccessVoter extends RoleVoter {
     			continue;
     		for (int j=0;j<parameterAnnotations[i].length;j++) {
     			Annotation annotation = parameterAnnotations[i][j];
-    			if (annotation.equals(PathParam.class)) {
+    			if (annotation instanceof PathParam) {
     				PathParam pathParam = PathParam.class.cast(annotation);
     				String name = pathParam.value();
     				if (name != null && name.equalsIgnoreCase("processDefinitionKey") && arguments.length > i && parameterTypes.length > i)
