@@ -45,7 +45,7 @@ public class FormResourceVersion1Impl implements FormResourceVersion1 {
 	@Value("${statement}") 
 	private String statement;
 	
-	public Response read(String processDefinitionKey) {
+	public FormView read(String processDefinitionKey) {
 		FormRecord form = repository.findOne(processDefinitionKey);
 		if (form == null) {
 			form = new FormRecord();
@@ -53,9 +53,7 @@ public class FormResourceVersion1Impl implements FormResourceVersion1 {
 			form.setName("This is a quick test");
 			repository.save(form);
 		}
-		FormView formView = new FormView.Builder(form).build(context());
-	
-		return Response.status(Status.OK).entity(formView).type(MediaType.TEXT_HTML).build();
+		return new FormView.Builder(form).build(context());
 	}
 	
 	private static ViewContext context() {

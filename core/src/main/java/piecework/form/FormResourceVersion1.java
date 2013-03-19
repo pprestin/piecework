@@ -19,10 +19,10 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
 
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
+import piecework.form.view.FormView;
 
 /**
  * @author James Renfro
@@ -33,6 +33,6 @@ public interface FormResourceVersion1 extends Resource {
 	@GET
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-	public Response read(@PathParam("processDefinitionKey") String processDefinitionKey);
+	public FormView read(@PathParam("processDefinitionKey") String processDefinitionKey);
 
 }

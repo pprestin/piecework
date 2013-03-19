@@ -15,9 +15,13 @@
  */
 package piecework.ui;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.SequenceInputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
@@ -29,12 +33,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 
 /**
  * @author James Renfro
@@ -75,9 +82,11 @@ public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider imp
 		
 		Resource resource = getResource(type);
 		if (resource.exists()) {
-			InputStream input = resource.getInputStream();
+			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), resource.getInputStream());
 			try {
-				IOUtils.copy(input, entityStream);
+				MustacheFactory mf = new DefaultMustacheFactory();
+			    Mustache mustache = mf.compile(new InputStreamReader(input), getTemplateName(type));
+			    mustache.execute(new PrintWriter(entityStream), t).flush();
 			} catch (IOException e) {
 				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
 			} finally {
@@ -88,9 +97,13 @@ public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider imp
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}	
 	}
+	
+	private String getTemplateName(Class<?> type) {
+		return new StringBuilder(type.getSimpleName()).append(".template").toString();
+	}
 
 	private Resource getResource(Class<?> type) {
-		String templateName = type.getSimpleName() + ".template.html";
+		String templateName = new StringBuilder(type.getSimpleName()).append(".template.html").toString();
 		Resource resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
 		return resource;
 	}
