@@ -16,6 +16,7 @@
 package piecework.ui;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,7 +36,9 @@ import javax.ws.rs.ext.Provider;
 
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +55,10 @@ import com.github.mustachejava.MustacheFactory;
 public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider implements MessageBodyWriter<T> {
 
 	private static final Logger LOG = Logger.getLogger(MustacheHtmlTransformer.class);
+	
+	@Value("${templates.directory}")
+	private String templatesDirectory;
+	
 	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -104,7 +111,11 @@ public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider imp
 
 	private Resource getResource(Class<?> type) {
 		String templateName = new StringBuilder(type.getSimpleName()).append(".template.html").toString();
-		Resource resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
+		Resource resource = null;
+		if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}"))
+			resource = new FileSystemResource(templatesDirectory + File.separator + templateName);
+		else
+			resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
 		return resource;
 	}
 

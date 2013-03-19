@@ -13,3 +13,6 @@ foo
 *.jar
 *.war
 *.ear
+
+# Data #
+web/data
