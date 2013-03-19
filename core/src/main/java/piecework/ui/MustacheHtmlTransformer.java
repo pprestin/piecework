@@ -16,6 +16,7 @@
 package piecework.ui;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -24,10 +25,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
+import org.apache.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -40,6 +44,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider implements MessageBodyWriter<T> {
 
+	private static final Logger LOG = Logger.getLogger(MustacheHtmlTransformer.class);
+	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
 		Resource resource = getResource(type);
@@ -49,7 +55,15 @@ public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider imp
 	@Override
 	public long getSize(T t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
 		Resource resource = getResource(type);
-		return resource.getFile().length();
+		long size = 0;
+		if (resource.exists()) {
+			try {
+				size = resource.getFile().length();
+			} catch (IOException e) {
+				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
+			}
+		}
+		return size;
 	}
 
 	@Override
@@ -58,11 +72,26 @@ public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider imp
 			MultivaluedMap<String, Object> httpHeaders,
 			OutputStream entityStream) throws IOException,
 			WebApplicationException {
+		
+		Resource resource = getResource(type);
+		if (resource.exists()) {
+			InputStream input = resource.getInputStream();
+			try {
+				IOUtils.copy(input, entityStream);
+			} catch (IOException e) {
+				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
+			} finally {
+				input.close();
+				entityStream.close();
+			}
+		} else {
+			throw new WebApplicationException(Response.Status.NOT_FOUND);
+		}	
 	}
 
 	private Resource getResource(Class<?> type) {
 		String templateName = type.getSimpleName() + ".template.html";
-		Resource resource = new ClassPathResource("META-INF/templates/" + templateName);
+		Resource resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
 		return resource;
 	}
 
