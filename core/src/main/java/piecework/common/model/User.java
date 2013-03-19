@@ -13,31 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.model;
+package piecework.common.model;
 
-import java.util.List;
+import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author James Renfro
  */
-public interface Section {
-
-	<F extends FormField> List<F> getFields();
+public interface User extends Serializable {
 
 	String getId();
-
-	String getName();
-
-	String getLabel();
-
-	String getDescription();
 	
-	String getActionValue();
+	String getVisibleId();
 	
-	String getSelected();
-
-	String getSelectable();
-
-	String getReadOnly();
+	String getDisplayName();
+	
+	String getSortName();
+	
+	String getFirstName();
+	
+	String getMiddleName();
+	
+	String getLastName();
+	
+	String getEmailAddress();
+	
+	Map<String, String> getIdentifiers();
+	
+	boolean isFakeUser();
+	
+	String getProvider();
 
 }

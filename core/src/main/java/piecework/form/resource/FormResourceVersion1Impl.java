@@ -15,6 +15,7 @@
  */
 package piecework.form.resource;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -22,10 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import piecework.common.view.ViewContext;
 import piecework.form.FormRepository;
 import piecework.form.FormResourceVersion1;
 import piecework.form.FormService;
 import piecework.form.record.FormRecord;
+import piecework.form.view.FormView;
 
 /**
  * @author James Renfro
@@ -49,10 +52,13 @@ public class FormResourceVersion1Impl implements FormResourceVersion1 {
 			form.setId(processDefinitionKey);
 			form.setName("This is a quick test");
 			repository.save(form);
-			return Response.status(Status.NOT_FOUND).build();
 		}
-		return Response.ok(statement + " " + form.getName()).build();
-
+		FormView formView = new FormView.Builder(form).build(context());
+	
+		return Response.status(Status.OK).entity(formView).type(MediaType.TEXT_HTML).build();
 	}
 	
+	private static ViewContext context() {
+		return new ViewContext("", "", "v1", "form");
+	}
 }

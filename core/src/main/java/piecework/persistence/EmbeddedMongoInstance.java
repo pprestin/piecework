@@ -21,6 +21,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.DisposableBean;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -45,7 +46,7 @@ import de.flapdoodle.embed.process.io.directories.IDirectory;
  * 
  * @author Radu Banica
  */
-public class EmbeddedMongoInstance {
+public class EmbeddedMongoInstance implements DisposableBean {
 
 	private static final Logger LOG = Logger.getLogger(EmbeddedMongoInstance.class);
 	private MongodExecutable mongodExecutable;
@@ -106,13 +107,15 @@ public class EmbeddedMongoInstance {
 		    DB db = mongo.getDB(dbName);
 		    db.addUser(username, password.toCharArray());
 		    
+		    mongo.close();
+		    
 		} catch (IOException ex) {
 			LOG.error("Failed to start embedded MongoDB on port " + port + ": " + ex.toString());
 		}
 	}
 
 	@PreDestroy
-	public void stopEmbeddedMongo() {
+	public void destroy() {
 		if ((mongod != null) && (mongodExecutable != null)) {
 			LOG.debug("Stopping embedded MongoDB...");
 			mongod.stop();

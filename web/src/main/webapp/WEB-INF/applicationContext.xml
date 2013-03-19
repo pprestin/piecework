@@ -12,10 +12,23 @@
 	 	   http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
 	 	   http://www.springframework.org/schema/security
 	 	   http://www.springframework.org/schema/security/spring-security-3.1.xsd">
-          
-     <context:component-scan base-package="piecework"/>
-     <mongo:repositories base-package="piecework" />
-          
-     <security:global-method-security secured-annotations="enabled" jsr250-annotations="enabled" access-decision-manager-ref="resourceAccessDecisionManager" />
+
+	<context:component-scan base-package="piecework" />
+	<mongo:repositories base-package="piecework" />
+
+	<security:global-method-security
+		secured-annotations="enabled" jsr250-annotations="enabled"
+		access-decision-manager-ref="resourceAccessDecisionManager" />
+
+<!-- 	<bean id="filterChainProxy" class="org.springframework.security.web.FilterChainProxy"> -->
+<!-- 		<security:filter-chain-map path-type="ant"> -->
+<!-- 			<security:filter-chain pattern="/**" -->
+<!-- 				filters=" -->
+<!-- 	           securityContextPersistenceFilterWithASCTrue, -->
+<!-- 	           formLoginFilter, -->
+<!-- 	           exceptionTranslationFilter, -->
+<!-- 	           filterSecurityInterceptor" /> -->
+<!-- 		</security:filter-chain-map> -->
+<!-- 	</bean> -->
 
 </beans>

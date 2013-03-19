@@ -41,6 +41,7 @@ import piecework.authentication.AuthenticationHandler;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
+import piecework.ui.MustacheHtmlTransformer;
 import piecework.util.AcceptablePropertiesFilenameFilter;
 
 /**
@@ -60,6 +61,9 @@ public class ApplicationConfiguration {
 	@Autowired
 	AuthenticationHandler authenticationHandler;
 	
+	@Autowired
+	MustacheHtmlTransformer mustacheHtmlTransformer;
+	
 	@Bean
 	public Bus cxf() {
 		return BusFactory.newInstance().createBus();
@@ -70,15 +74,20 @@ public class ApplicationConfiguration {
 		Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
 		extensionMappings.put("json", "application/json");
 		extensionMappings.put("xml", "application/xml");
+		extensionMappings.put("html", "text/html");
 		
 		JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
 		sf.setServiceBeanObjects((Object[])resources);
 		sf.setAddress("/");
 		sf.setExtensionMappings(extensionMappings);
-		sf.setProvider(new GeneralExceptionMapper());
-		sf.setProvider(new StatusCodeErrorMapper());
-		sf.setProvider(new AccessDeniedExceptionMapper());
-		sf.setProvider(authenticationHandler);
+		
+		List<Object> providers = new ArrayList<Object>();
+		providers.add(new GeneralExceptionMapper());
+		providers.add(new StatusCodeErrorMapper());
+		providers.add(new AccessDeniedExceptionMapper());
+		providers.add(mustacheHtmlTransformer);
+		providers.add(authenticationHandler);
+		sf.setProviders(providers);
 
 		BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);
 		JAXRSBindingFactory factory = new JAXRSBindingFactory();

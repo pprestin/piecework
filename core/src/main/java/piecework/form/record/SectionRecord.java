@@ -87,11 +87,7 @@ public class SectionRecord implements Section, Serializable {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
-	public List<FormFieldRecord> getFields() {
-		return fields;
-	}
-
+	
 	public void setFields(List<FormFieldRecord> fields) {
 		this.fields = fields;
 	}
@@ -102,6 +98,26 @@ public class SectionRecord implements Section, Serializable {
 
 	public void setActionValue(String actionValue) {
 		this.actionValue = actionValue;
+	}
+
+	@Override
+	public <F extends FormField> List<F> getFields() {
+		return (List<F>) fields;
+	}
+
+	@Override
+	public String getSelected() {
+		return null;
+	}
+
+	@Override
+	public String getSelectable() {
+		return null;
+	}
+
+	@Override
+	public String getReadOnly() {
+		return null;
 	}
 
 }
