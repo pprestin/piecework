@@ -15,11 +15,17 @@
  */
 package piecework.form.model;
 
+import java.io.Serializable;
+
+import piecework.common.model.User;
+
 /**
  * @author James Renfro
  */
-public interface Attachment {
+public interface Attachment extends Serializable {
 
+	String getId();
+	
 	String getLabel();
 
 	String getDescription();
@@ -29,5 +35,9 @@ public interface Attachment {
 	String getProcessInstanceId();
 
 	String getExternalUrl();
+	
+	String getLastModified();
+	
+	<U extends User> U getUser();
 
 }

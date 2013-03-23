@@ -20,16 +20,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.convert.EntityConverter;
 import org.springframework.stereotype.Service;
 
-import piecework.authorization.AuthorizationContext;
+import piecework.Constants;
 import piecework.common.view.ValidationResult;
 import piecework.exception.StatusCodeError;
 import piecework.form.model.Attachment;
 import piecework.form.model.Form;
 import piecework.form.model.Message;
+import piecework.form.model.record.FormRecord;
+import piecework.util.CollectionNameUtil;
 import piecework.util.ManyMap;
 import piecework.util.PropertyValueReader;
 
@@ -39,56 +41,87 @@ import piecework.util.PropertyValueReader;
 @Service
 public class FormService {
 
+	private static final Logger LOG = Logger.getLogger(FormService.class);
+	
 	@Autowired 
 	private FormRepository repository;
 	
-	public List<String> findProcessInstanceIds(String namespace, String processDefinitionKey) throws StatusCodeError {
+	public List<String> findProcessInstanceIds(String processDefinitionKey) throws StatusCodeError {
 		return null;
 	}
 	
-	public  Set<String> findProcessInstanceIdsByParameterMap(String namespace, Collection<String> processDefinitionKeys, Map<String, List<String>> parameterMap) throws StatusCodeError {
+	public  Set<String> findProcessInstanceIdsByParameterMap(Collection<String> processDefinitionKeys, Map<String, List<String>> parameterMap) throws StatusCodeError {
 		return null;
 	}
 	
-	public Map<String, String> getColumnMap(String namespace, String processDefinitionKey, String taskDefinitionKey, EntityConverter entityConverter, AuthorizationContext context) throws StatusCodeError {
+	public Map<String, String> getColumnMap(String processDefinitionKey, String taskDefinitionKey) throws StatusCodeError {
 		return null;
 	}
 	
-	public List<Form> getForms(String namespace, String processDefinitionKey, String taskDefinitionKey, AuthorizationContext context) throws StatusCodeError {
+	public List<Form> getForms(String processDefinitionKey, String taskDefinitionKey) throws StatusCodeError {
 		return null;
 	}
 	
-	public Form getForm(String namespace, String processDefinitionKey, String taskDefinitionKey, AuthorizationContext context) throws StatusCodeError {
-		return null;
-	}
-	
-	public Form getForm(String namespace, String processDefinitionKey, String taskDefinitionKey, AuthorizationContext context, List<ValidationResult> results, Map<String, List<String>> formData, List<Attachment> attachments) throws StatusCodeError {
-		return null;
-	}
-	
-	public Form getForm(String namespace, String processDefinitionKey, String taskDefinitionKey, String processInstanceId, boolean includeRestricted, boolean readOnly, AuthorizationContext context) throws StatusCodeError {
-		return null;
-	}
-	
-	public Form storeForm(String namespace, String processDefinitionKey, String taskDefinitionKey, Form formReference, String userId) throws StatusCodeError {
-		return null;
-	}
-	
-	public ManyMap<String, String> getValues(String namespace, String processDefinitionKey, String processInstanceId, AuthorizationContext context) throws StatusCodeError {
-		return null;
-	}
-	
-	public void validate(String namespace, String processDefinitionKey, String taskDefinitionKey, List<String> sectionNames, PropertyValueReader reader, EntityConverter entityConverter, AuthorizationContext context) throws StatusCodeError {
-
-	}
-	
-	public void storeValues(String namespace, String processDefinitionKey, String taskDefinitionKey, String processInstanceId, List<String> sectionNames, PropertyValueReader reader, AuthorizationContext context, boolean isRequiredNecessary) throws StatusCodeError {
-
-	}
-
-	public void storeMessages(String namespace, String processDefinitionKey, String taskDefinitionKey, String processInstanceId, List<Message> messages) throws StatusCodeError {
-
-	}
-
+	public Form getForm(String processDefinitionKey, String taskDefinitionKey) throws StatusCodeError {
+		FormRecord form = getFormRecord(processDefinitionKey, taskDefinitionKey);
 		
+		return form;
+	}
+	
+	public Form getForm(String processDefinitionKey, String taskDefinitionKey, List<ValidationResult> results, Map<String, List<String>> formData, List<Attachment> attachments) throws StatusCodeError {
+		return null;
+	}
+	
+	public Form getForm(String processDefinitionKey, String taskDefinitionKey, String processInstanceId, boolean includeRestricted, boolean readOnly) throws StatusCodeError {
+		return null;
+	}
+	
+	public Form storeForm(String processDefinitionKey, String taskDefinitionKey, Form form, String userId) throws StatusCodeError {
+		FormRecord formRecord = new FormRecord.Builder(form).build();
+		
+		return formRecord;
+	}
+	
+	public ManyMap<String, String> getValues(String processDefinitionKey, String processInstanceId) throws StatusCodeError {
+		return null;
+	}
+	
+	public void validate(String processDefinitionKey, String taskDefinitionKey, List<String> sectionNames, PropertyValueReader reader) throws StatusCodeError {
+
+	}
+	
+	public void storeValues(String processDefinitionKey, String taskDefinitionKey, String processInstanceId, List<String> sectionNames, PropertyValueReader reader, boolean isRequiredNecessary) throws StatusCodeError {
+
+	}
+
+	public void storeMessages(String processDefinitionKey, String taskDefinitionKey, String processInstanceId, List<Message> messages) throws StatusCodeError {
+
+	}
+
+	private FormRecord getFormRecord(String processDefinitionKey, String taskDefinitionKey) throws StatusCodeError {
+		
+		String formId = taskDefinitionKey;
+		if (formId == null) 
+			formId = Constants.START_TASK_DEFINITION_KEY;
+		
+		FormRecord form = null;
+		String formCollectionName = CollectionNameUtil.getFormCollectionName(processDefinitionKey);
+		
+		form = repository.collectionFindOne(formId, formCollectionName);
+
+		if (form != null) {
+			String layout = form.getLayout();
+			// If the layout is wizard then only the start task form is going to
+			// be returned, and the only section that will be editable is the
+			// one that
+			if (layout != null && layout.equalsIgnoreCase("wizard")) {
+				form = repository
+						.collectionFindOne(Constants.START_TASK_DEFINITION_KEY,
+								formCollectionName);
+			}
+		}
+		
+		return form;
+	}
+
 }

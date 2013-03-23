@@ -16,15 +16,16 @@
 package piecework.common.view;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import piecework.common.model.User;
+import piecework.form.model.builder.UserBuilder;
 
 
 /**
@@ -32,14 +33,16 @@ import piecework.common.model.User;
  * in the system who is involved in a workflow. 
  * 
  * @author James Renfro
- * @since 1.0.2.1
- * @added 8/9/2010
  */
 @XmlRootElement
-public final class UserView extends View {
+public final class UserView implements User {
 
 	private static final long serialVersionUID = -3377941728797595948L;
 
+	@XmlAttribute(name=UserView.Attributes.ID)
+	@XmlID
+	protected final String id;
+	
 	@XmlAttribute(name = UserView.Attributes.VISIBLE_ID)
 	private final String visibleId;
 	
@@ -74,20 +77,28 @@ public final class UserView extends View {
 		this(new UserView.Builder(), new ViewContext());
 	}
 	
-	private UserView(UserView.Builder builder, ViewContext context) {
-		super(builder, context);
-		this.visibleId = builder.visibleId;
-		this.displayName = builder.displayName;
-		this.sortName = builder.sortName;
-		this.firstName = builder.firstName;
-		this.middleName = builder.middleName;
-		this.lastName = builder.lastName;
-		this.emailAddress = builder.emailAddress;
-		this.identifiers = builder.identifiers != null ? Collections.unmodifiableMap(builder.identifiers) : null;
-		this.provider = builder.provider;
-		this.isFakeUser = builder.isFakeUser;
+	private UserView(UserBuilder<?> builder, ViewContext context) {
+		this.id = builder.getId();
+		this.visibleId = builder.getVisibleId();
+		this.displayName = builder.getDisplayName();
+		this.sortName = builder.getSortName();
+		this.firstName = builder.getFirstName();
+		this.middleName = builder.getMiddleName();
+		this.lastName = builder.getLastName();
+		this.emailAddress = builder.getEmailAddress();
+		this.identifiers = buildIdentifiers(builder.getIdentifiers());
+		this.provider = builder.getProvider();
+		this.isFakeUser = builder.isFakeUser();
+	}
+	
+	private static Map<String, String> buildIdentifiers(Map<String, String> identifiers) {
+		return identifiers != null ? Collections.unmodifiableMap(identifiers) : null;
 	}
 
+	public String getId() {
+		return id;
+	}
+	
 	public String getVisibleId() {
 		return visibleId;
 	}
@@ -136,113 +147,21 @@ public final class UserView extends View {
 	/*
 	 * Fluent builder class, as per Joshua Bloch's Effective Java
 	 */
-	public final static class Builder extends View.Builder {
-		private String visibleId;
-		private String displayName;
-		private String sortName;
-		private String firstName;
-		private String middleName;
-		private String lastName;
-		private String emailAddress;
-		private Map<String, String> identifiers;
-		private boolean isFakeUser;
-		private String provider;
-				
+	public final static class Builder extends UserBuilder<UserView> {
+		
 		public Builder() {
 			super();
 		}
 		
 		public Builder(User user) {
-			this();
-			this.visibleId = user.getVisibleId();
-			this.displayName = user.getDisplayName();
-			this.sortName = user.getSortName();
-			this.firstName = user.getFirstName();
-			this.middleName = user.getMiddleName();
-			this.lastName = user.getLastName();
-			this.emailAddress = user.getEmailAddress();
-			this.identifiers = user.getIdentifiers();
-			this.isFakeUser = user.isFakeUser();
-			this.provider = user.getProvider();
+			super(user);
 		}
-		
+
+		@Override
 		public UserView build(ViewContext context) {
 			return new UserView(this, context);
 		}
 		
-		public Builder visibleId(String visibleId) {
-			this.visibleId = visibleId;
-			return this;
-		}
-		
-		public Builder displayName(String displayName) {
-			this.displayName = displayName;
-			return this;
-		}
-
-		public Builder sortName(String sortName) {
-			this.sortName = sortName;
-			return this;
-		}
-		
-		public Builder firstName(String firstName) {
-			this.firstName = firstName;
-			return this;
-		}
-		
-		public Builder middleName(String middleName) {
-			this.middleName = middleName;
-			return this;
-		}
-		
-		public Builder lastName(String lastName) {
-			this.lastName = lastName;
-			return this;
-		}
-		
-		public Builder emailAddress(String emailAddress) {
-			this.emailAddress = emailAddress;
-			return this;
-		}
-		
-		public Builder fakeUser(boolean isFakeUser) {
-			this.isFakeUser = isFakeUser;
-			return this;
-		}
-		
-		public Builder identifier(String name, String value) {
-			if (name != null && value != null) {
-				if (this.identifiers == null) 
-					this.identifiers = new HashMap<String, String>();
-				
-				this.identifiers.put(name, value);
-			}
-			return this;
-		}
-		
-		public Builder provider(String provider) {
-			this.provider = provider;
-			return this;
-		}
-		
-//		@Override
-//		public String getUri() {
-//			StringBuilder builder = new StringBuilder();
-//			
-//			if (serviceUri != null && version != null) {
-//				builder.append(serviceUri).append("/")
-//					.append(version).append("/")
-//					.append(resource);
-//				
-//				if (id != null) {
-//					builder.append("/").append(id);
-//				}
-//				
-//				return builder.toString();
-//			}
-//			
-//			return null;
-//		}
 	}
 
 	static class Attributes {

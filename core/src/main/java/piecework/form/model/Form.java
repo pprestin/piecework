@@ -15,16 +15,19 @@
  */
 package piecework.form.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * @author James Renfro
  */
-public interface Form {
+public interface Form extends Serializable {
 
 	String getId();
 	
 	String getName();
+	
+	String getMessage();
 
 	String getLabel();
 	
@@ -35,6 +38,12 @@ public interface Form {
 	String getRequestUrl();
 	
 	String getResponseUrl();
+	
+	String getProcessDefinitionKey();
+	
+	String getTaskDefinitionKey();
+	
+	String getSubmissionId();
 	
 	<S extends Section> List<S> getDialogs();
 	

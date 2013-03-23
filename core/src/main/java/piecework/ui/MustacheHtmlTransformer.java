@@ -52,7 +52,7 @@ import com.github.mustachejava.MustacheFactory;
 @Produces("text/html")
 @Provider
 @Service
-public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider implements MessageBodyWriter<T> {
+public class MustacheHtmlTransformer extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
 
 	private static final Logger LOG = Logger.getLogger(MustacheHtmlTransformer.class);
 	
@@ -67,7 +67,7 @@ public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider imp
 	}
 
 	@Override
-	public long getSize(T t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+	public long getSize(Object t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
 		Resource resource = getResource(type);
 		long size = 0;
 		if (resource.exists()) {
@@ -81,7 +81,7 @@ public class MustacheHtmlTransformer<T> extends AbstractConfigurableProvider imp
 	}
 
 	@Override
-	public void writeTo(T t, Class<?> type, Type genericType,
+	public void writeTo(Object t, Class<?> type, Type genericType,
 			Annotation[] annotations, MediaType mediaType,
 			MultivaluedMap<String, Object> httpHeaders,
 			OutputStream entityStream) throws IOException,

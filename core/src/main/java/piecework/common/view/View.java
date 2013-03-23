@@ -24,6 +24,8 @@ import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import piecework.form.model.builder.Builder;
+
 
 /**
  * Abstract data transfer object.
@@ -32,61 +34,61 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
-public abstract class View implements Serializable {
+public abstract class View<B extends Builder> implements Serializable {
 	
-	private static final long serialVersionUID = 2547958887552746776L;
-	
-	@XmlTransient
-	private final String serviceUri;
-		
-	@XmlAttribute(name=View.Attributes.ID)
-	@XmlID
-	protected final String id;
-	
-	@XmlAttribute(name = Attributes.URI)
-	protected final String uri;
-
-	@SuppressWarnings("unused")
-	private View() {
-		this(new View.Builder(), new ViewContext());
-	}
-	
-	protected View(View.Builder builder, ViewContext context) {
-		this.id = builder.id;
-		this.uri = context.getUri(builder.id);
-		this.serviceUri = context.getServiceUri(builder.id);
-	}
-	
-	public String getId() {
-		return this.id;
-	}
-
-	public String getServiceUri() {
-		return this.serviceUri;
-	}
-	
-	public String getUri() {
-		return this.uri;
-	}
-	
-	static class Attributes {
-        final static String ID = "id";
-        final static String URN = "urn";
-        final static String URI = "link";
-        final static String VERSION = "version";
-        final static String NAMESPACE = "namespace";
-        final static String CONTAINER = "container";
-    }
-	
-	public static class Builder {
-		protected String id;
-		
-		public Builder() {
-		}
-	
-		public Builder id(String id) {
-			this.id = id;
-			return this;
-		}
-	}
+//	private static final long serialVersionUID = 2547958887552746776L;
+//	
+//	@XmlTransient
+//	private final String serviceUri;
+//		
+//	@XmlAttribute(name=View.Attributes.ID)
+//	@XmlID
+//	protected final String id;
+//	
+//	@XmlAttribute(name = Attributes.URI)
+//	protected final String uri;
+//
+//	@SuppressWarnings("unused")
+//	protected View() {
+//		this(null, new ViewContext());
+//	}
+//	
+//	protected View(B builder, ViewContext context) {
+//		this.id = builder.id;
+//		this.uri = context.getUri(builder.id);
+//		this.serviceUri = context.getServiceUri(builder.id);
+//	}
+//	
+//	public String getId() {
+//		return this.id;
+//	}
+//
+//	public String getServiceUri() {
+//		return this.serviceUri;
+//	}
+//	
+//	public String getUri() {
+//		return this.uri;
+//	}
+//	
+//	static class Attributes {
+//        final static String ID = "id";
+//        final static String URN = "urn";
+//        final static String URI = "link";
+//        final static String VERSION = "version";
+//        final static String NAMESPACE = "namespace";
+//        final static String CONTAINER = "container";
+//    }
+//	
+//	public static class Builder {
+//		protected String id;
+//		
+//		public Builder() {
+//		}
+//	
+//		public Builder id(String id) {
+//			this.id = id;
+//			return this;
+//		}
+//	}
 }

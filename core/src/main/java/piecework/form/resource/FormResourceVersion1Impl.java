@@ -15,20 +15,18 @@
  */
 package piecework.form.resource;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.common.view.ViewContext;
+import piecework.exception.StatusCodeError;
 import piecework.form.FormRepository;
 import piecework.form.FormResourceVersion1;
 import piecework.form.FormService;
-import piecework.form.record.FormRecord;
-import piecework.form.view.FormView;
+import piecework.form.model.Form;
+import piecework.form.model.record.FormRecord;
+import piecework.form.model.view.FormView;
 
 /**
  * @author James Renfro
@@ -45,14 +43,27 @@ public class FormResourceVersion1Impl implements FormResourceVersion1 {
 	@Value("${statement}") 
 	private String statement;
 	
-	public FormView read(String processDefinitionKey) {
-		FormRecord form = repository.findOne(processDefinitionKey);
+	public FormView read(String processDefinitionKey) throws StatusCodeError {
+		Form form = service.getForm(processDefinitionKey, null);
 		if (form == null) {
-			form = new FormRecord();
-			form.setId(processDefinitionKey);
-			form.setName("This is a quick test");
-			repository.save(form);
+			FormRecord.Builder formRecord = new FormRecord.Builder();
+			formRecord.id(processDefinitionKey);
+			formRecord.name("This is a quick test");
+			service.storeForm(processDefinitionKey, null, formRecord.build(), null);
 		}
+		
+//		SecurityContext context = SecurityContextHolder.getContext();
+//		Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
+//		
+//		if (authorities != null && !authorities.isEmpty()) {
+//			GrantedAuthority authority = authorities.iterator().next();
+//			
+//			if (authority instanceof ResourceAuthority) {
+//				ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
+//				form.setName(resourceAuthority.toString());
+//			}
+//		}
+		
 		return new FormView.Builder(form).build(context());
 	}
 	

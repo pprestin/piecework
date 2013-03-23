@@ -28,8 +28,6 @@ public interface Constants {
 	
 	public static final String ACTIVITI_NS_URI = "http://activiti.org/bpmn";
 	
-	public static final String AUTHENTICATION_STRATEGY_SINGLE_SIGN_ON = "SSO";
-	
 	public static final String XML_NAMESPACE = "piecework";
 	
 	public static final String APPROVER_ROLE_PERMISSION = "Approver";
@@ -37,4 +35,7 @@ public interface Constants {
 	public static final String OVERSEER_ROLE_PERMISSION = "Overseer";
 	public static final String OWNER_ROLE_PERMISSION = "Owner";
 
+	public static final String START_TASK_DEFINITION_KEY = "__startTask";
+	public static final String OVERSIGHT_DEFINITION_KEY = "__general";
+	
 }

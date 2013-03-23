@@ -30,14 +30,15 @@
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 
-<!-- 	<filter> -->
-<!-- 		<filter-name>filterChainProxy</filter-name> -->
-<!-- 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class> -->
-<!-- 	</filter> -->
+	<filter>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+	</filter>
 
-<!-- 	<filter-mapping> -->
-<!-- 		<filter-name>filterChainProxy</filter-name> -->
-<!-- 		 <servlet-name>CXFServlet</servlet-name> -->
-<!-- 	</filter-mapping> -->
+	<filter-mapping>
+		<filter-name>springSecurityFilterChain</filter-name>
+		<url-pattern>/*</url-pattern>
+<!-- 		<servlet-name>CXFServlet</servlet-name> -->
+	</filter-mapping>
 
 </web-app>

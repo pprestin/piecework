@@ -22,7 +22,8 @@ import javax.ws.rs.PathParam;
 
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
-import piecework.form.view.FormView;
+import piecework.exception.StatusCodeError;
+import piecework.form.model.view.FormView;
 
 /**
  * @author James Renfro
@@ -33,6 +34,6 @@ public interface FormResourceVersion1 extends Resource {
 	@GET
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-	public FormView read(@PathParam("processDefinitionKey") String processDefinitionKey);
+	public FormView read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
 
 }

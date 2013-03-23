@@ -24,8 +24,8 @@
 				<artifactId>tomcat-maven-plugin</artifactId>
 				<version>1.1</version>
 				<configuration>
+					<port>8080</port>
 					<path>/piecework</path>
-					<serverXml>../conf/server.xml</serverXml>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -158,6 +158,11 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

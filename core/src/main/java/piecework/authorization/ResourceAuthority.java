@@ -43,12 +43,27 @@ public class ResourceAuthority implements GrantedAuthority {
 	}
 	
 	@Override
-	public String getAuthority() {
+	public String toString() {
 		StringBuilder builder = new StringBuilder(role);
 		builder.append("[");
-		// TODO: Finish this
+		if (processDefinitionKeys != null && !processDefinitionKeys.isEmpty()) {
+			int count = 1;
+			int size = processDefinitionKeys.size();
+			for (String processDefinitionKey : processDefinitionKeys) {
+				builder.append(processDefinitionKey);
+				
+				if (count < size)
+					builder.append(", ");
+				count++;
+			}
+		}
 		builder.append("]");
-		return null;
+		return builder.toString();
+	}
+
+	@Override
+	public String getAuthority() {
+		return toString();
 	}
 	
 }
