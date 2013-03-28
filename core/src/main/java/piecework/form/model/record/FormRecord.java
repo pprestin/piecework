@@ -38,6 +38,10 @@ public class FormRecord implements Form {
 	@Id
 	private String id;
 		
+	private String processDefinitionKey;
+	
+	private String taskDefinitionKey;
+	
 	private String name;
 	
 	private String label;
@@ -45,10 +49,6 @@ public class FormRecord implements Form {
 	private String layout;
 	
 	private String logoUrl;
-	
-	private String requestUrl;
-	
-	private String responseUrl;
 	
 	private List<SectionRecord> dialogs;
 	
@@ -66,16 +66,14 @@ public class FormRecord implements Form {
 		this.id = builder.getId();
 		this.name = builder.getName();
 		this.label = builder.getLabel();
-//		this.processDefinitionKey = builder.getProcessDefinitionKey();
-//		this.taskDefinitionKey = builder.getTaskDefinitionKey();
+		this.processDefinitionKey = builder.getProcessDefinitionKey();
+		this.taskDefinitionKey = builder.getTaskDefinitionKey();
 		this.sections = builder.buildSections(builder, builder.getSections());
 		this.dialogs = builder.buildSections(null, builder.getDialogs());
 //		this.attachments = buildAttachments(builder.getAttachments());
 		this.layout = builder.getLayout();
 //		this.message = builder.getMessage();
 //		this.actionUrl = builder.getActionUrl();
-		this.requestUrl = builder.getRequestUrl();
-		this.responseUrl = builder.getResponseUrl();
 //		this.readOnly = builder.getReadOnly() != null ? builder.getReadOnly().toString() : null;
 //		this.replaceFrom = builder.getReplaceFrom();
 		this.logoUrl = builder.getLogoUrl();
@@ -145,22 +143,6 @@ public class FormRecord implements Form {
 		this.layout = layout;
 	}
 
-	public String getRequestUrl() {
-		return requestUrl;
-	}
-
-	public String getResponseUrl() {
-		return responseUrl;
-	}
-
-	public void setResponseUrl(String responseUrl) {
-		this.responseUrl = responseUrl;
-	}
-
-	public void setRemoteUrl(String remoteUrl) {
-		this.requestUrl = remoteUrl;
-	}
-
 	public List<SectionRecord> getDialogs() {
 		return dialogs;
 	}
@@ -207,11 +189,6 @@ public class FormRecord implements Form {
 	public void setLogoUrl(String logoUrl) {
 		this.logoUrl = logoUrl;
 	}
-
-	public void setRequestUrl(String requestUrl) {
-		this.requestUrl = requestUrl;
-	}
-	
 	
 	public final static class Builder extends FormBuilder<FormRecord> {
 
@@ -248,12 +225,12 @@ public class FormRecord implements Form {
 
 	@Override
 	public String getProcessDefinitionKey() {
-		return null;
+		return processDefinitionKey;
 	}
 
 	@Override
 	public String getTaskDefinitionKey() {
-		return null;
+		return taskDefinitionKey;
 	}
 
 	@Override

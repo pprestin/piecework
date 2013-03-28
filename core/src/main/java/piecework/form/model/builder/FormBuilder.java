@@ -23,7 +23,6 @@ import piecework.common.view.ViewContext;
 import piecework.form.model.Form;
 import piecework.form.model.Section;
 import piecework.form.model.view.AttachmentView;
-import piecework.form.model.view.FormView;
 import piecework.form.model.view.SectionView;
 
 /**
@@ -62,8 +61,6 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 		this.dialogs = sectionBuilders(form.getDialogs());
 		this.sections = sectionBuilders(form.getSections());
 		this.logoUrl = form.getLogoUrl();
-		this.requestUrl = form.getRequestUrl();
-		this.responseUrl = form.getResponseUrl();
 		this.layout = form.getLayout();
 		this.submissionId = form.getSubmissionId();
 	}

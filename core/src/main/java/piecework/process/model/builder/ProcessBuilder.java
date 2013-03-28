@@ -15,6 +15,10 @@
  */
 package piecework.process.model.builder;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import piecework.common.view.ViewContext;
 import piecework.form.model.builder.Builder;
 
@@ -26,6 +30,10 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 	private String processDefinitionKey;
 	private String engine;
 	private String engineProcessDefinitionKey;
+	private String startRequestFormIdentifier;
+	private String startResponseFormIdentifier;
+	private Map<String, String> taskRequestFormIdentifiers;
+	private Map<String, String> taskResponseFormIdentifiers;
 	
 	public ProcessBuilder() {
 		super();
@@ -56,6 +64,30 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 		this.engineProcessDefinitionKey = engineProcessDefinitionKey;
 		return this;
 	}
+	
+	public ProcessBuilder<P> startRequestFormIdentifier(String startRequestFormIdentifier) {
+		this.startRequestFormIdentifier = startRequestFormIdentifier;
+		return this;
+	}
+	
+	public ProcessBuilder<P> startResponseFormIdentifier(String startResponseFormIdentifier) {
+		this.startResponseFormIdentifier = startResponseFormIdentifier;
+		return this;
+	}
+	
+	public ProcessBuilder<P> taskRequestFormIdentifier(String taskDefinitionKey, String formIdentifier) {
+		if (this.taskRequestFormIdentifiers == null)
+			this.taskRequestFormIdentifiers = new HashMap<String, String>();
+		this.taskRequestFormIdentifiers.put(taskDefinitionKey, formIdentifier);
+		return this;
+	}
+	
+	public ProcessBuilder<P> taskResponseFormIdentifier(String taskDefinitionKey, String formIdentifier) {
+		if (this.taskResponseFormIdentifiers == null)
+			this.taskResponseFormIdentifiers = new HashMap<String, String>();
+		this.taskResponseFormIdentifiers.put(taskDefinitionKey, formIdentifier);
+		return this;
+	}
 
 	public String getProcessDefinitionKey() {
 		return processDefinitionKey;
@@ -67,5 +99,25 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 
 	public String getEngineProcessDefinitionKey() {
 		return engineProcessDefinitionKey;
+	}
+
+	public String getStartRequestFormIdentifier() {
+		return startRequestFormIdentifier;
+	}
+
+	public String getStartResponseFormIdentifier() {
+		return startResponseFormIdentifier;
+	}
+
+	public Map<String, String> getTaskRequestFormIdentifiers() {
+		if (taskRequestFormIdentifiers != null && !taskRequestFormIdentifiers.isEmpty())
+			return Collections.unmodifiableMap(taskRequestFormIdentifiers);
+		return null;
+	}
+
+	public Map<String, String> getTaskResponseFormIdentifiers() {
+		if (taskResponseFormIdentifiers != null && !taskResponseFormIdentifiers.isEmpty())
+			return Collections.unmodifiableMap(taskResponseFormIdentifiers);
+		return null;
 	}
 }

@@ -16,17 +16,19 @@
 package piecework.form.resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.common.view.ViewContext;
+import piecework.exception.BadRequestError;
+import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.form.FormRepository;
+import piecework.form.FormPosition;
 import piecework.form.FormResourceVersion1;
 import piecework.form.FormService;
 import piecework.form.model.Form;
 import piecework.form.model.record.FormRecord;
 import piecework.form.model.view.FormView;
+import piecework.process.exception.ProcessNotFoundException;
 
 /**
  * @author James Renfro
@@ -37,19 +39,22 @@ public class FormResourceVersion1Impl implements FormResourceVersion1 {
 	@Autowired 
 	private FormService service;
 	
-	@Autowired 
-	private FormRepository repository;
-	
-	@Value("${statement}") 
-	private String statement;
-	
 	public FormView read(String processDefinitionKey) throws StatusCodeError {
-		Form form = service.getForm(processDefinitionKey, null);
-		if (form == null) {
-			FormRecord.Builder formRecord = new FormRecord.Builder();
-			formRecord.id(processDefinitionKey);
-			formRecord.name("This is a quick test");
-			service.storeForm(processDefinitionKey, null, formRecord.build(), null);
+		try {
+			Form form = service.getForm(processDefinitionKey, FormPosition.START_REQUEST, null);
+//			if (form == null) {
+//				FormRecord.Builder formRecord = new FormRecord.Builder();
+//				formRecord.name("This is a quick test");
+//				formRecord.processDefinitionKey("demo");
+//				form = service.storeForm(processDefinitionKey, FormPosition.START_REQUEST, null, formRecord.build());		
+//			}
+			
+			if (form == null)
+				throw new NotFoundError();
+			
+			return new FormView.Builder(form).build(context());
+		} catch (ProcessNotFoundException e) {
+			throw new BadRequestError();
 		}
 		
 //		SecurityContext context = SecurityContextHolder.getContext();
@@ -63,8 +68,6 @@ public class FormResourceVersion1Impl implements FormResourceVersion1 {
 //				form.setName(resourceAuthority.toString());
 //			}
 //		}
-		
-		return new FormView.Builder(form).build(context());
 	}
 	
 	private static ViewContext context() {

@@ -35,10 +35,6 @@ public interface Form extends Serializable {
 	
 	String getLogoUrl();
 
-	String getRequestUrl();
-	
-	String getResponseUrl();
-	
 	String getProcessDefinitionKey();
 	
 	String getTaskDefinitionKey();

@@ -29,8 +29,11 @@ import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.annotation.authentication.AuthenticationBuilder;
 import org.springframework.security.config.annotation.web.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.ExpressionUrlAuthorizations;
 import org.springframework.security.config.annotation.web.HttpConfiguration;
+import org.springframework.security.config.annotation.web.WebSecurityConfigurerAdapater;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -46,7 +49,7 @@ import piecework.security.RequestParameterAuthenticationFilter;
 @Configuration
 //@EnableGlobalMethodSecurity(securedEnabled=true, jsr250Enabled=true)
 @EnableWebSecurity
-public class SecurityConfiguration {
+public class SecurityConfiguration extends WebSecurityConfigurerAdapater {
 	
 	private static final Logger LOG = Logger.getLogger(SecurityConfiguration.class);
 	private enum AuthenticationType { NONE, PREAUTH, NORMAL }
@@ -60,6 +63,9 @@ public class SecurityConfiguration {
 	@Value("${authentication.type}")
 	String authenticationType;
 	
+	@Value("${authentication.testuser}")
+	String testUser;
+	
 	@Bean
 	public AccessDecisionManager resourceAccessDecisionManager() {
 		@SuppressWarnings("rawtypes")
@@ -67,44 +73,49 @@ public class SecurityConfiguration {
 		return new AffirmativeBased(Collections.singletonList(voter));
 	}
 	
-	@Bean
-    public HttpConfiguration httpConfiguration() throws Exception {
-		HttpConfiguration httpConfiguration = 
-        		new HttpConfiguration(authenticationManager());
-        httpConfiguration.setSharedObject(UserDetailsService.class, userDetailsService);
-        httpConfiguration.applyDefaultConfigurators();
-        httpConfiguration.authorizeUrls()
-	        .antMatchers("/static/**").permitAll()
-	        .antMatchers("/secure/**").authenticated();
-        
-        AuthenticationType type = authenticationType();
-        
-        switch (type) {
-        case NORMAL:
-        	httpConfiguration.formLogin()
-	        	.usernameParameter("j_username")
-	            .passwordParameter("j_password")
-	        	.loginProcessingUrl("/login")
-	        	.loginPage("/static/login.html")
-	        	.failureUrl("/static/login_error.html")
-	        	.defaultSuccessUrl("/", false)
-	        	.permitAll();
-        	break;
-        case NONE:
-        	httpConfiguration.addFilter(new RequestParameterAuthenticationFilter(authenticationManager()));
-        	break;
-        }
-        
-        return httpConfiguration;
-
-//        .securityFilterChains(springSecurityFilterChain);
-////        result.ignoring(ignoredRequests());
-////        configure(result);
-//        return result;
-    }
+//	@Bean
+//    public HttpConfiguration httpConfiguration() throws Exception {
+//		HttpConfiguration httpConfiguration = 
+//        		new HttpConfiguration(authenticationManager());
+//        httpConfiguration.setSharedObject(UserDetailsService.class, userDetailsService);
+//        httpConfiguration.applyDefaultConfigurators();
+//        httpConfiguration.authorizeUrls()
+//	        .antMatchers("/static/**").permitAll()
+//	        .antMatchers("/secure/**").authenticated();
+//        
+//        AuthenticationType type = authenticationType();
+//        
+//        switch (type) {
+//        case NORMAL:
+//        	httpConfiguration.formLogin()
+//	        	.usernameParameter("j_username")
+//	            .passwordParameter("j_password")
+//	        	.loginProcessingUrl("/login")
+//	        	.loginPage("/static/login.html")
+//	        	.failureUrl("/static/login_error.html")
+//	        	.defaultSuccessUrl("/", false)
+//	        	.permitAll();
+//        	break;
+//        case NONE:
+//        	httpConfiguration.addFilter(new RequestParameterAuthenticationFilter(authenticationManager()));
+//        	break;
+//        }
+//        
+//        return httpConfiguration;
+//
+////        .securityFilterChains(springSecurityFilterChain);
+//////        result.ignoring(ignoredRequests());
+//////        configure(result);
+////        return result;
+//    }
 	
 	@Bean
-    public AuthenticationManager authenticationManager() throws Exception {
+	public AuthenticationBuilder authenticationBuilder() {
+		return new AuthenticationBuilder();
+	}
+	
+	@Bean
+    public AuthenticationManager authenticationManager(AuthenticationBuilder builder) throws Exception {
 		switch (authenticationType()) {
 		case NONE:
 		case PREAUTH:
@@ -134,6 +145,34 @@ public class SecurityConfiguration {
 			LOG.fatal("AUTHENTICATION HAS BEEN DISABLED!!! This should only be allowed for development and should never happen in production.");
 		
 		return type;
+	}
+
+
+	@Override
+	protected void authorizeUrls(ExpressionUrlAuthorizations authorizations) {
+		authorizations.antMatchers("/static/**").permitAll()
+        	.antMatchers("/secure/**").authenticated();
+	}
+
+	@Override
+	protected void configure(HttpConfiguration httpConfiguration)
+			throws Exception {
+		AuthenticationType type = authenticationType();
+
+		switch (type) {
+		case NORMAL:
+			httpConfiguration.formLogin().usernameParameter("j_username")
+					.passwordParameter("j_password")
+					.loginProcessingUrl("/login")
+					.loginPage("/static/login.html")
+					.failureUrl("/static/login_error.html")
+					.defaultSuccessUrl("/", false).permitAll();
+			break;
+		case NONE:
+			httpConfiguration
+					.addFilter(new RequestParameterAuthenticationFilter(authenticationManager(), testUser));
+			break;
+		}
 	}
 		
 }

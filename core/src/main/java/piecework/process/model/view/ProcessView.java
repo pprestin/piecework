@@ -15,12 +15,15 @@
  */
 package piecework.process.model.view;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import piecework.common.view.ViewContext;
@@ -48,6 +51,18 @@ public class ProcessView implements piecework.process.model.Process {
 	@XmlElement(name = ProcessView.Elements.ENGINE_PROCESS_DEFINITION_KEY)
 	private final String engineProcessDefinitionKey;
 	
+	@XmlTransient
+	private final String startRequestFormIdentifier;
+	
+	@XmlTransient
+	private final String startResponseFormIdentifier;
+	
+	@XmlTransient
+	private final Map<String, String> taskRequestFormIdentifiers;
+	
+	@XmlTransient
+	private final Map<String, String> taskResponseFormIdentifiers;
+	
 	private ProcessView() {
 		this(new ProcessView.Builder(), new ViewContext());
 	}
@@ -57,6 +72,10 @@ public class ProcessView implements piecework.process.model.Process {
 		this.processDefinitionKey = builder.getProcessDefinitionKey();
 		this.engine = builder.getEngine();
 		this.engineProcessDefinitionKey = builder.getEngineProcessDefinitionKey();
+		this.startRequestFormIdentifier = builder.getStartRequestFormIdentifier();
+		this.startResponseFormIdentifier = builder.getStartResponseFormIdentifier();
+		this.taskRequestFormIdentifiers = builder.getTaskRequestFormIdentifiers();
+		this.taskResponseFormIdentifiers = builder.getTaskResponseFormIdentifiers();
 	}
 	
 	@Override
@@ -112,6 +131,22 @@ public class ProcessView implements piecework.process.model.Process {
 		static final String PROCESS_DEFINITION_KEY = "processDefinitionKey";
 		static final String ENGINE = "engine";
 		static final String ENGINE_PROCESS_DEFINITION_KEY = "engineProcessDefinitionKey";
+	}
+
+	public String getStartRequestFormIdentifier() {
+		return startRequestFormIdentifier;
+	}
+
+	public String getStartResponseFormIdentifier() {
+		return startResponseFormIdentifier;
+	}
+
+	public Map<String, String> getTaskRequestFormIdentifiers() {
+		return taskRequestFormIdentifiers;
+	}
+
+	public Map<String, String> getTaskResponseFormIdentifiers() {
+		return taskResponseFormIdentifiers;
 	}
 	
 }

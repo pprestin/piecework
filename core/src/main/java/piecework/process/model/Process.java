@@ -16,6 +16,7 @@
 package piecework.process.model;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -29,5 +30,13 @@ public interface Process extends Serializable {
 	String getEngine();
 	
 	String getEngineProcessDefinitionKey();
+	
+	String getStartRequestFormIdentifier();
+	
+	String getStartResponseFormIdentifier();
+
+	Map<String, String> getTaskRequestFormIdentifiers();
+
+	Map<String, String> getTaskResponseFormIdentifiers();
 	
 }

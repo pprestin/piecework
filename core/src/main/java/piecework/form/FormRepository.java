@@ -15,14 +15,13 @@
  */
 package piecework.form;
 
+import org.springframework.data.mongodb.repository.MongoRepository;
+
 import piecework.form.model.record.FormRecord;
-import piecework.persistence.MongoCollectionAwareRepository;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends MongoCollectionAwareRepository<FormRecord, String> {
+public interface FormRepository extends MongoRepository<FormRecord, String> {
 
-	FormRecord collectionFindOne(String id, String collectionName);
-	
 }

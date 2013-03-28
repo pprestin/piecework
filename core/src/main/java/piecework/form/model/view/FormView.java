@@ -86,12 +86,6 @@ public class FormView implements Form {
 	@XmlElement(name = FormView.Elements.LOGO_URL)
 	private final String logoUrl;
 	
-	@XmlElement(name = FormView.Elements.REQUEST_URL)
-	private final String requestUrl;
-	
-	@XmlElement(name = FormView.Elements.RESPONSE_URL)
-	private final String responseUrl;
-	
 	@XmlElement(name = FormView.Elements.REPLACE_FROM)
 	private final String replaceFrom;
 	
@@ -118,8 +112,6 @@ public class FormView implements Form {
 		this.layout = builder.getLayout();
 		this.message = builder.getMessage();
 		this.actionUrl = builder.getActionUrl();
-		this.requestUrl = builder.getRequestUrl();
-		this.responseUrl = builder.getResponseUrl();
 		this.readOnly = builder.getReadOnly() != null ? builder.getReadOnly().toString() : null;
 		this.replaceFrom = builder.getReplaceFrom();
 		this.logoUrl = builder.getLogoUrl();
@@ -196,15 +188,6 @@ public class FormView implements Form {
 
 	public String getLayout() {
 		return layout;
-	}
-	
-	@Override
-	public String getRequestUrl() {
-		return requestUrl;
-	}
-
-	public String getResponseUrl() {
-		return responseUrl;
 	}
 	
 //	@Override

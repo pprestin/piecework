@@ -15,4 +15,5 @@ foo
 *.ear
 
 # Data #
-web/data
+web/data:storage
+web/data/linux

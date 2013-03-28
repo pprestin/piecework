@@ -15,8 +15,12 @@
  */
 package piecework.process;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import piecework.form.FormPosition;
+import piecework.form.model.Form;
+import piecework.process.exception.ProcessNotFoundException;
 import piecework.process.model.record.ProcessRecord;
 
 /**
@@ -25,16 +29,54 @@ import piecework.process.model.record.ProcessRecord;
 @Service
 public class ProcessService {
 
-	public piecework.process.model.Process getProcess(String processDefinitionKey) {
-		// FIXME: Wire this up to persist
-		if (processDefinitionKey.equals("test")) {
-			ProcessRecord.Builder process = new ProcessRecord.Builder();
-			process.processDefinitionKey("test");
-			process.engine("activiti");
-			process.engineProcessDefinitionKey("test1");
-			return process.build();
+	@Autowired
+	private ProcessRepository repository;
+	
+	public piecework.process.model.Process getProcess(String processDefinitionKey) throws ProcessNotFoundException {
+		ProcessRecord record = repository.findOne(processDefinitionKey);
+	
+		if (record == null)
+			throw new ProcessNotFoundException(processDefinitionKey);
+		return record;
+	}
+	
+	public piecework.process.model.Process storeProcess(piecework.process.model.Process process) {
+		ProcessRecord.Builder builder = new ProcessRecord.Builder(process);
+		ProcessRecord record = builder.build();
+		return repository.save(record);
+	}
+	
+	public void addForm(FormPosition position, Form form) throws ProcessNotFoundException {
+		String processDefinitionKey = form.getProcessDefinitionKey();
+		
+		if (processDefinitionKey == null)
+			throw new ProcessNotFoundException(null);
+		
+		String taskDefinitionKey = form.getTaskDefinitionKey();
+		ProcessRecord record = repository.findOne(processDefinitionKey);
+		
+		if (record == null)
+			throw new ProcessNotFoundException(processDefinitionKey);
+		
+		String formId = form.getId();
+		
+		ProcessRecord.Builder builder = new ProcessRecord.Builder(record);
+		switch (position) {
+		case START_REQUEST:
+			builder.startRequestFormIdentifier(formId);
+			break;
+		case START_RESPONSE:
+			builder.startResponseFormIdentifier(formId);
+			break;
+		case TASK_REQUEST:
+			builder.taskRequestFormIdentifier(taskDefinitionKey, formId);
+			break;
+		case TASK_RESPONSE:
+			builder.taskResponseFormIdentifier(taskDefinitionKey, formId);
+			break;
 		}
-		return null;
+		
+		repository.save(builder.build());
 	}
 	
 }

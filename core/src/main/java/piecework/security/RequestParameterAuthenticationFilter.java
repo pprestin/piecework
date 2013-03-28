@@ -26,16 +26,21 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
  */
 public class RequestParameterAuthenticationFilter extends RequestHeaderAuthenticationFilter {
 
-	public RequestParameterAuthenticationFilter(AuthenticationManager authenticationManager) {
+	private final String testUser;
+	
+	public RequestParameterAuthenticationFilter(AuthenticationManager authenticationManager, String testUser) {
 		setAuthenticationManager(authenticationManager);
+		this.testUser = testUser;
 	}
 	
 	protected Object getPreAuthenticatedPrincipal(HttpServletRequest request) {
         String principal = request.getParameter("userId");
 
-        if (principal == null) {
+        if (principal == null)
+        	principal = this.testUser;
+        
+        if (principal == null) 
             throw new PreAuthenticatedCredentialsNotFoundException("userId parameter not found in request.");
-        }
 
         return principal;
     }

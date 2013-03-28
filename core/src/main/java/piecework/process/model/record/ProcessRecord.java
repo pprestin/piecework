@@ -15,31 +15,61 @@
  */
 package piecework.process.model.record;
 
+import java.util.Map;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import piecework.common.view.ViewContext;
 
 
 /**
  * @author James Renfro
  */
+@Document(collection = "process")
 public class ProcessRecord implements piecework.process.model.Process {
 
 	private static final long serialVersionUID = 1L;
-	
+
+	@Id
 	private String id;
+	
 	private String processDefinitionKey;
+	
 	private String engine;
+	
 	private String engineProcessDefinitionKey;
+	
+	private String startRequestFormIdentifier;
+	
+	private String startResponseFormIdentifier;
+	
+	private Map<String, String> taskRequestFormIdentifiers;
+	
+	private Map<String, String> taskResponseFormIdentifiers;
+	
+	private ProcessRecord() {
+		
+	}
 	
 	private ProcessRecord(ProcessRecord.Builder builder) {
 		this.id = builder.getId();
 		this.processDefinitionKey = builder.getProcessDefinitionKey();
 		this.engine = builder.getEngine();
 		this.engineProcessDefinitionKey = builder.getEngineProcessDefinitionKey();
+		this.startRequestFormIdentifier = builder.getStartRequestFormIdentifier();
+		this.startResponseFormIdentifier = builder.getStartResponseFormIdentifier();
+		this.taskRequestFormIdentifiers = builder.getTaskRequestFormIdentifiers();
+		this.taskResponseFormIdentifiers = builder.getTaskResponseFormIdentifiers();
 	}
 	
 	@Override
 	public String getId() {
 		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 	
 	@Override
@@ -69,6 +99,39 @@ public class ProcessRecord implements piecework.process.model.Process {
 		this.engineProcessDefinitionKey = engineProcessDefinitionKey;
 	}
 
+	public String getStartRequestFormIdentifier() {
+		return startRequestFormIdentifier;
+	}
+
+	public void setStartRequestFormIdentifier(String startRequestFormIdentifier) {
+		this.startRequestFormIdentifier = startRequestFormIdentifier;
+	}
+
+	public String getStartResponseFormIdentifier() {
+		return startResponseFormIdentifier;
+	}
+
+	public void setStartResponseFormIdentifier(String startResponseFormIdentifier) {
+		this.startResponseFormIdentifier = startResponseFormIdentifier;
+	}
+
+	public Map<String, String> getTaskRequestFormIdentifiers() {
+		return taskRequestFormIdentifiers;
+	}
+
+	public void setTaskRequestFormIdentifiers(
+			Map<String, String> taskRequestFormIdentifiers) {
+		this.taskRequestFormIdentifiers = taskRequestFormIdentifiers;
+	}
+
+	public Map<String, String> getTaskResponseFormIdentifiers() {
+		return taskResponseFormIdentifiers;
+	}
+
+	public void setTaskResponseFormIdentifiers(
+			Map<String, String> taskResponseFormIdentifiers) {
+		this.taskResponseFormIdentifiers = taskResponseFormIdentifiers;
+	}
 	
 	public final static class Builder extends piecework.process.model.builder.ProcessBuilder<ProcessRecord> {
 		

@@ -37,22 +37,22 @@ import com.mongodb.ServerAddress;
 @Profile("standalone")
 public class StandaloneMongoConfiguration {
 
-	@Value("${mongo_db}")
+	@Value("${mongo.db}")
 	private String mongoDb;
 	
-	@Value("${mongo_bindip}")
+	@Value("${mongo.bindip}")
 	private String mongoBindIp;
 	
-	@Value("${mongo_port}")
+	@Value("${mongo.port}")
 	private int mongoPort;
 	
-	@Value("${mongo_username}")
+	@Value("${mongo.username}")
 	private String mongoUsername;
 	
-	@Value("${mongo_password}")
+	@Value("${mongo.password}")
 	private String mongoPassword;
 	
-	@Value("${mongo_filesystem}")
+	@Value("${mongo.filesystem}")
 	private String mongoFilesystem;
 	
 	@Bean

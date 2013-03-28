@@ -15,7 +15,13 @@
  */
 package piecework.persistence;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Scanner;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -24,7 +30,10 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.util.JSON;
 
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -79,7 +88,9 @@ public class EmbeddedMongoInstance implements DisposableBean {
 	@PostConstruct
 	public void startEmbeddedMongo() throws IOException {
 		LOG.debug("Starting embedded Mongodb on port " + port + "...");
-		MongodConfig mongodConfig = new MongodConfig(Version.Main.V2_0, new Net(bindIp, port, ipv6), new Storage(storePath, replSetName, oplogSize), new Timeout());
+		
+		String storageDirectory = storePath + File.pathSeparator + "storage";
+		MongodConfig mongodConfig = new MongodConfig(Version.Main.V2_0, new Net(bindIp, port, ipv6), new Storage(storageDirectory, replSetName, oplogSize), new Timeout());
 		//mongodConfig = new MongodConfig(Version.Main.V2_0, port, false, storePath);
 
 		IDirectory artifactStorePath = new FixedPath(storePath);
@@ -107,6 +118,8 @@ public class EmbeddedMongoInstance implements DisposableBean {
 		    DB db = mongo.getDB(dbName);
 		    db.addUser(username, password.toCharArray());
 		    
+		    importData(db);
+		    
 		    mongo.close();
 		    
 		} catch (IOException ex) {
@@ -124,6 +137,60 @@ public class EmbeddedMongoInstance implements DisposableBean {
 		} else {
 			LOG.debug("No mongod process instance to stop");
 		}
+	}
+	
+	private void importData(final DB db) {
+		
+		File directory = new File(storePath, "dbs");
+		
+		if (!directory.exists()) {
+			LOG.debug("No startup data exists");
+			return;
+		}
+		
+		File dbDirectory = new File(directory, dbName);
+		
+		if (!dbDirectory.exists()) {
+			LOG.debug("No startup data exists for " + dbName);
+			return;
+		}
+		
+		File[] collectionFiles = dbDirectory.listFiles();
+		
+		for (File collectionFile : collectionFiles) {
+            
+			if (collectionFile.isFile() && collectionFile.exists()) {
+
+				String collectionName = collectionFile.getName();
+
+
+                LOG.debug("Loading collection '" + collectionName + "'...");
+
+                DBCollection dbCollection = db.getCollection(collectionName);
+
+                try {
+	                LOG.debug("Loading JSON from file '" + collectionFile.getName() + "'");
+	                importCollection(dbCollection, new FileInputStream(collectionFile));
+                } catch (FileNotFoundException fnfe) {
+                	LOG.warn("Unable to initialize local mongo with data from " + collectionFile.getAbsolutePath(), fnfe);
+                }
+			}
+        }
+	}
+	
+	/**
+	 * Imports data into a collection
+	 * 
+	 * @param collection
+	 * @param jsonStream
+	 */
+	private void importCollection(final DBCollection collection, final InputStream jsonStream) {
+		@SuppressWarnings("unchecked")
+		final List<DBObject> list = (List<DBObject>) JSON.parse(new Scanner(jsonStream).useDelimiter("\\A").next());
+
+		LOG.debug("Have " + list.size() + " obejcts to load...");
+
+		collection.insert(list);
 	}
 
 	public int getPort() {
