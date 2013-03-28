@@ -1,0 +1,59 @@
+[
+      { "_id" : "50d8e2a7e4b0384270585d23", 
+        "name" : "", 
+        "label" : "Demonstration Form", 
+        "layout" : "panels", 
+        "logoUrl" : "",
+        "dialogs" : [ 	
+            { 	"id" : "9603a9a1-dd11-48d3-8da7-79377150539f", 	
+                "name" : "", 	
+                "label" : "Submit", 	
+                "description" : "", 	
+                "actionValue" : "submit" } 
+        ], 
+        "sections" : [ 	
+            { 	"id" : "be7f8d3c-237c-4396-9d12-39676d03ca71", 	
+                "name" : "", 	
+                "label" : "About You", 	
+                "description" : "", 	
+                "fields" : [ 	
+                    { "id" : "a28b40ae-a98d-4b1a-bb5a-ab1903bac405", 	
+                        "propertyName" : "YourName", 	
+                        "label" : { 	"tagName" : "label", 	"text" : "Your Name" }, 	
+                        "editable" : "true", 	
+                        "required" : "true", 	
+                        "restricted" : "false", 	
+                        "typeAttr" : "text", 	
+                        "elements" : [ 	
+                            { 	"tagName" : "input", 	
+                                "styleAttr" : "", 	
+                                "typeAttr" : "text", 	
+                                "maxSize" : "255", 	
+                                "minSize" : "0", 	
+                                "displaySize" : "40", 	
+                                "text" : "" } 
+                        ] 
+                    }, 
+                    { 	"id" : "1ec63718-43b3-409c-b369-fb32026cb879", 	
+                        "propertyName" : "YourAge", 	
+                        "label" : { 	"tagName" : "label", 	"text" : "Your Age" }, 	
+                        "editable" : "true", 	
+                        "required" : "false", 	
+                        "restricted" : "false", 	
+                        "typeAttr" : "text", 	
+                        "elements" : [ 	
+                            { 	"tagName" : "input", 	
+                                "styleAttr" : "", 	
+                                "typeAttr" : "text", 	
+                                "maxSize" : "255", 	
+                                "minSize" : "0", 	
+                                "displaySize" : "40", 	
+                                "text" : "" } 
+                        ] 
+                    } 
+                ]
+            } 
+        ], 
+        "lastModifiedBy" : "000000000000", 
+        "version" : 8 }
+]
