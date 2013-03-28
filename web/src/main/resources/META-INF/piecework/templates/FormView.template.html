@@ -1,5 +1,32 @@
 <html>
+<head>
+	<script type="text/javascript" src="/piecework/static/js/vendor/jquery.min.js"></script>
+	<script type="text/javascript" src="/piecework/static/js/vendor/handlebars.js"></script>
+	<script id="entry-template" type="text/x-handlebars-template">
+		<div class="entry">
+  		<h1>{{title}}</h1>
+  			<div class="body">
+    			{{body}}
+  			</div>
+		</div>
+	</script>
+</head>
 
-Hello there sdfw! <%name%>
+<body>
+	<div id="placeholder"></div>
+</body>
+
+<!-- <%name%> -->
+
+<script type="text/javascript">
+	$(document).ready( function() {
+		var source   = $("#entry-template").html();
+		var template = Handlebars.compile(source);
+		
+	  	var context = { title: "<%name%>", body: "This is my first post!"}
+	  	var html    = template(context);
+		$('#placeholder').html(html);
+	});
+</script>
 
 </html>

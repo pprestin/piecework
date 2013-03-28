@@ -33,6 +33,7 @@ import org.springframework.security.config.annotation.authentication.Authenticat
 import org.springframework.security.config.annotation.web.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.ExpressionUrlAuthorizations;
 import org.springframework.security.config.annotation.web.HttpConfiguration;
+import org.springframework.security.config.annotation.web.SpringSecurityFilterChainBuilder.IgnoredRequestRegistry;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurerAdapater;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -153,6 +154,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapater {
 		authorizations.antMatchers("/static/**").permitAll()
         	.antMatchers("/secure/**").authenticated();
 	}
+	
+	@Override
+	protected void ignoredRequests(IgnoredRequestRegistry ignoredRequests) {
+        ignoredRequests
+            .antMatchers("/static/**");
+    }
 
 	@Override
 	protected void configure(HttpConfiguration httpConfiguration)
