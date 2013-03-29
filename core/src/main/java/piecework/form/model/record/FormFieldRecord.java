@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import piecework.form.model.Constraint;
 import piecework.form.model.FormField;
 import piecework.form.model.FormFieldElement;
@@ -28,10 +31,12 @@ import piecework.form.model.Option;
 /**
  * @author James Renfro
  */
+@Document(collection="field")
 public class FormFieldRecord implements FormField, Serializable {
 
 	private static final long serialVersionUID = 832929218519020243L;
 	
+	@Id
 	private String id;
 	private String propertyName;
 	private FormFieldElementRecord label;
@@ -51,31 +56,31 @@ public class FormFieldRecord implements FormField, Serializable {
 		
 	}
 	
-	public FormFieldRecord(FormField contract) {
-		this.id = contract.getId() != null ? contract.getId() : UUID.randomUUID().toString();
-		this.propertyName = contract.getPropertyName();
-		this.label = contract.getLabel() != null ? new FormFieldElementRecord(contract.getLabel()) : null;
-		this.directions = contract.getDirections() != null ? new FormFieldElementRecord(contract.getDirections()) : null;
-		this.editable = contract.getEditable();
-		this.required = contract.getRequired();
-		this.restricted = contract.getRestricted();
-		this.typeAttr = contract.getTypeAttr();
-		List<? extends FormFieldElement> elementContracts = contract.getElements();
+	public FormFieldRecord(FormField field) {
+		this.id = field.getId() != null ? field.getId() : UUID.randomUUID().toString();
+		this.propertyName = field.getPropertyName();
+		this.label = field.getLabel() != null ? new FormFieldElementRecord(field.getLabel()) : null;
+		this.directions = field.getDirections() != null ? new FormFieldElementRecord(field.getDirections()) : null;
+		this.editable = field.getEditable();
+		this.required = field.getRequired();
+		this.restricted = field.getRestricted();
+		this.typeAttr = field.getTypeAttr();
+		List<? extends FormFieldElement> elementContracts = field.getElements();
 		if (elementContracts != null && !elementContracts.isEmpty()) {
 			this.elements = new ArrayList<FormFieldElementRecord>(elementContracts.size());
 			for (FormFieldElement elementContract : elementContracts) {
 				elements.add(new FormFieldElementRecord(elementContract));
 			}
 		}
-		this.optionProvider = contract.getOptionProvider() != null ? new OptionProviderRecord(contract.getOptionProvider()) : null;
-		List<? extends Option> optionContracts = contract.getOptions();
+		this.optionProvider = field.getOptionProvider() != null ? new OptionProviderRecord(field.getOptionProvider()) : null;
+		List<? extends Option> optionContracts = field.getOptions();
 		if (optionContracts != null && !optionContracts.isEmpty()) {
 			this.options = new ArrayList<OptionRecord>(optionContracts.size());
 			for (Option optionContract : optionContracts) {
 				options.add(new OptionRecord(optionContract));
 			}
 		}
-		List<? extends Constraint> constraintContracts = contract.getConstraints();
+		List<? extends Constraint> constraintContracts = field.getConstraints();
 		if (constraintContracts != null && !constraintContracts.isEmpty()) {
 			this.constraints = new ArrayList<ConstraintRecord>(constraintContracts.size());
 			for (Constraint constraintContract : constraintContracts) {
@@ -84,8 +89,8 @@ public class FormFieldRecord implements FormField, Serializable {
 		} else {
 			this.constraints = null;
 		}
-		this.message = contract.getMessage();
-		this.messageType = contract.getMessageType();
+		this.message = field.getMessage();
+		this.messageType = field.getMessageType();
 	}
 	
 	public String getId() {

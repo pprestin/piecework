@@ -27,8 +27,9 @@ import org.apache.cxf.binding.BindingFactoryManager;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxrs.provider.json.JSONProvider;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -97,21 +98,27 @@ public class ApplicationConfiguration {
 	}
 	
 	@Bean
-	public JSONProvider<Object> jsonProvider() {
-		JSONProvider<Object> jsonProvider = new JSONProvider<Object>();
-		
-		List<String> keys = new ArrayList<String>();
-		keys.add("elements");
-		keys.add("fields");
-		keys.add("sections");
-		
-		jsonProvider.setArrayKeys(keys);
-		jsonProvider.setAttributesToElements(true);
-//		jsonProvider.setDropCollectionWrapperElement(true);
-		jsonProvider.setSerializeAsArray(true);
-		
-		return jsonProvider;
+	public JacksonJsonProvider jsonProvider() {
+		return new JacksonJsonProvider(new ObjectMapper());
 	}
+	
+//	@Bean
+//	public JSONProvider<Object> jsonProvider() {
+//		JSONProvider<Object> jsonProvider = new JSONProvider<Object>();
+//		
+//		List<String> keys = new ArrayList<String>();
+//		keys.add("elements");
+//		keys.add("fields");
+//		keys.add("options");
+//		keys.add("sections");
+//		
+//		jsonProvider.setArrayKeys(keys);
+//		jsonProvider.setAttributesToElements(true);
+//		jsonProvider.setDropCollectionWrapperElement(true);
+//		jsonProvider.setSerializeAsArray(true);
+//		
+//		return jsonProvider;
+//	}
 	
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {

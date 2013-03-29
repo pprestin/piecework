@@ -36,9 +36,8 @@ public interface FormResourceVersion1 extends Resource {
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
 	public FormView read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
 	
-	
 	@GET
-	@Path("{processDefinitionKey}/{processInstanceId}")
+	@Path("{processDefinitionKey}/current/{processInstanceId}")
 	@RolesAllowed({AuthorizationRole.USER})
 	public FormView read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 

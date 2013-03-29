@@ -36,8 +36,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
-import org.apache.cxf.jaxrs.provider.json.JSONProvider;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -67,8 +67,11 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 	@Value("${templates.directory}")
 	private String templatesDirectory;
 	
+//	@Autowired
+//	private JSONProvider<Object> jsonProvider;
+	
 	@Autowired
-	private JSONProvider<Object> jsonProvider;
+	private JacksonJsonProvider jsonProvider;
 	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -119,7 +122,8 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 			    Mustache mustache = mf.compile(new InputStreamReader(input), "page"); //getTemplateName(type));
 			    
 			    OutputStream jsonStream = new ByteArrayOutputStream();
-			    jsonProvider.writeTo(t, genericType, annotations, mediaType, httpHeaders, jsonStream);
+			    jsonProvider.writeTo(t, type, genericType, annotations, mediaType, httpHeaders, jsonStream);
+//			    jsonProvider.writeTo(t, genericType, annotations, mediaType, httpHeaders, jsonStream);
 			    
 			    String json = jsonStream.toString();
 			    

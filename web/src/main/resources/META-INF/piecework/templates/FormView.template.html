@@ -9,12 +9,14 @@
 	<link rel="stylesheet" type="text/css" media='screen and (max-width: 700px)' href="/piecework/static/css/piecework.mobile.css"></link>
 	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/piecework.form.css"></link>
 	<script type="text/javascript" src="/piecework/static/js/vendor/jquery.min.js"></script>
+	<script type="text/javascript" src="/piecework/static/js/vendor/underscore-min.js"></script>
+	<script type="text/javascript" src="/piecework/static/js/vendor/backbone.js"></script>
 	<script type="text/javascript" src="/piecework/static/js/vendor/handlebars.js"></script>
+	
+<!-- 	<script type="text/javascript" src="/piecework/static/lib/bootstrap/js/bootstrap.min.js"></script> -->
 	<script id="form-template" type="text/x-handlebars-template">
-		{{#with form}}
 		<div class="sections">
 			{{#each sections}}
-				{{#with section}}
 					<div id="{{id}}" class="section {{#if selected}}selected{{/if}} {{#if editable}}selectable{{/if}}">
 					<div class="section-header">
 						<h3>{{label}}</h3>
@@ -24,20 +26,24 @@
 					</div>
 					<div class="section-content">
 						{{#each fields}}
-							{{#each formField}}
 								{{#label}}
-								<label for="{{../propertyName}}">{{$}}
+								<label for="{{../propertyName}}">{{text}}
 								</label>
 								{{/label}}
 								<div id="{{id}}" class="field {{#if required}}required{{/if}}">{{form_field}}</div>
-							{{/each}}
 						{{/each}}
 					</div>
 				</div>
-				{{/with}}
 			{{/each}}
 		</div>
-		{{/with}}
+	</script>
+	
+	<script id='field-text-template' type="text/x-handlebars-template">
+		<{{tagName}}>Textbox</{{tagName}}>
+	</script>
+	
+	<script id='field-select-template' type="text/x-handlebars-template">
+		<div>Listbox</div>
 	</script>
 </head>
 
@@ -84,7 +90,7 @@
 				 		Thanks for submitting your form. Your confirmation number is <%resource.processInstanceId%>.
 				 	</h3>
 					<%/resource.processInstanceId%>
-					<div id="form-placeholder">
+					<div id="formplaceholder">
 						<input type="hidden" name="_submissionId" value="<%resource.submissionId%>"></input>
 					</div>
 				</div>
@@ -98,46 +104,192 @@
 <!-- <%name%> -->
 
 <script type="text/javascript">
-	$(document).ready( function() {
-		Handlebars.registerHelper('form_field', function(formField) {
-			var builder = '';
+	$(document).ready(function() {
+// 		Handlebars.registerHelper('form_field', function(formField) {
+// 			var builder = '';
 			
-			var type = this.type;
-			if (type == null)
-				type = 'text';
+// 			var type = this.type;
+// 			if (type == null)
+// 				type = 'text';
 			
-			if (type == 'radio' || type == 'checkbox') {
-				
-			} else {
-				
-				var elementTag = '';
-// 				for ()
-				
-				
-				
-// // 				{{#if type
-// // 				{{#each elements}}
-// // 					<div class="element">
-// // 						<{{formFieldElement.tagName}} type="{{formFieldElement.type}}" name="{{../propertyName}}" value="{{value}}" {{#unless editable}}disabled{{/unless}}>	
-// // 						{{formFieldElement.$}}
-// // 						</{{formFieldElement.tagName}}>
-// // 					</div>
-// // 				{{/each}}
 			
-// 				divTag += '</div>';
+// // 			if ((type != 'text') && this.options != null) {
+// // 				for (var i=0;i<this.options.length;i++) {
+// // 					var tagName 
+// // 				}
 				
-// 				builder += divTag;
-			}
+// // 			} else 
+				
+// 			if (this.elements != null) {
+// 				for (var i=0;i<this.elements.length;i++) {
+// 					var element = this.elements[i];
+// 					var elementTag = '<div class=element>';
+// 					var tagName = element.formFieldElement.tagName;
+// 					var value = null;
+					
+// 					if (element.formFieldElement.value != null) {
+// 						value = element.formFieldElement.value;
+// 					} else if (type == 'radio' || type == 'checkbox') {
+// 						value = 'on';
+// 					}
+										
+// 					elementTag += '<' + tagName + ' name="' + this.propertyName + '"';
+					
+// 					if (element.formFieldElement.type != null) {
+// 						elementTag += ' type="' + element.formFieldElement.type + '" ';
+// 					}
+					
+// 					if (value != null) {
+// 						elementTag += ' value="' + value + '" ';
+// 					}
+					
+// 					if (element.formFieldElement.class != null) {
+// 						elementTag += ' class="' + element.formFieldElement.class + '" ';
+// 					}
+					
+// 					if (!this.editable) {
+// 						elementTag += 'disabled';
+// 					}
+					
+// 					elementTag += '>';
+					
+// 					if ((type == 'select-one' || type == 'select-multiple') && this.options != null) {
+// 						for (var j=0;j<this.options.length;j++) {
+// 							var option = this.options[j].option;
+// 							var optionTag = '<option value="' + option.value + '"';
+							
+// 							if (option.selected) {
+// 								optionTag += ' selected';
+// 							}
+							
+// 							optionTag += '></option>';
+// 							elementTag += optionTag;
+// 						}
+// 					} else if (element.formFieldElement.$ != null) {
+// 						elementTag += element.formFieldElement.$;
+// 					}
+					
+// 					elementTag += '</' + tagName + '>';
+// 					elementTag += '</div>';
+					
+// 					builder += elementTag;
+// 				}
+// 			}
 			
-			return new Handlebars.SafeString(builder);
-		});
+// 			return new Handlebars.SafeString(builder);
+// 		});
 		
-		var source   = $("#form-template").html();
-		var template = Handlebars.compile(source);
+// 		var source   = $("#form-template").html();
+// 		var template = Handlebars.compile(source);
 		
-	  	var context = <%& json %>;
-	  	var html    = template(context);
-		$('#form-placeholder').html(html);
+// 	  	var context = <%& json %>;
+// 	  	var html    = template(context);
+	  	
+// 	  	var FieldModel = Backbone.Model.extend({
+// 	  	  initialize: function() {
+// 	  		this.id = null;
+// 	  		this.propertyName = null;
+// 	  		this.label = null;
+// 	  		this.editable = false;
+// 	  		this.required = false;
+// 	  		this.restricted = false;
+// 	  		this.type = 'text';
+// 	  		this.elements = null;
+// 	  	  }
+// 	  	});
+	  
+// 	  	var FieldListCollection = Backbone.Collection.extend({
+// 	  	  	model: FieldModel,
+// 	  	  	url: "/fields"
+// 	  	});
+	  	
+// 	  	var sections = context.sections;
+// 	  	for (var i=0;i<sections.length;i++) {
+// 	  		var section = sections[i];
+// 	  		var fields = section.fields;
+// 	  		for (var j=0;j<fields.length;j++) {
+// 		  		var field = fields[j];
+// 		  		var fieldModel = new FieldModel(field);
+		
+// 	  		}
+	  		
+// // 	  		field.fetch();
+// 	  	}
+	  	
+	  	var FormFieldView = Backbone.View.extend({
+	  		
+	  		render: function() {
+	  			var selector = '#field-' + this.model.typeAttr + '-template';
+	  			var source   = $(selector).html();
+	  			if (source != null) {
+	  				var template = Handlebars.compile(source);
+	  				this.$el.html(template(this.model));
+	  			}
+	  		    return this;
+	  		}
+	  	
+	  	});
+	  	
+	  	
+	  	var SectionView = Backbone.View.extend({	  	
+	  		
+  			render: function() {
+  				_.each(this.model.fields, function (field) {
+  		            $(this.el).append(new FormFieldView({model:field}).render().el);
+  		        }, this);
+	  		    return this;
+	  		}
+	  	
+	  	});
+	  	
+	  	var FormView = Backbone.View.extend({	  	
+	  		
+  			render: function() {
+  				
+  				_.each(this.model.sections, function (section) {
+  		            $(this.el).append(new SectionView({model:section}).render().el);
+  		        }, this);
+  				
+// 	  			this.$el.html('Hello new world!');
+	  		    return this;
+	  		}
+	  	
+	  	});
+	  		  	
+	  	var formView = new FormView({el: $('#formplaceholder'), model:<%& json %>});	  
+	  	formView.render();
+	  	
+	  	
+// 	 	// Router
+// 	  	var AppRouter = Backbone.Router.extend({
+	  	 
+// 	  	    routes:{
+// 	  	        "":"list",
+// 	  	        "fields/:id":"fieldDetail"
+// 	  	    },
+	  	 
+// 	  	    list:function () {
+// 	  	        this.fieldList = new FieldListCollection();
+// 	  	        this.fieldListView = new WineListView({model:this.fieldList});
+// 	  	        this.fieldList.fetch();
+// 	  	        $('#sidebar').html(this.fieldListView.render().el);
+// 	  	    },
+	  	 
+// 	  	    fieldDetail:function (id) {
+// 	  	        this.field = this.fieldList.get(id);
+// 	  	        this.fieldView = new FormFieldView({model:this.field});
+// 	  	        $('#content').html(this.fieldView.render().el);
+// 	  	    }
+// 	  	});
+	  	 
+// 	  	var app = new AppRouter();
+// 	  	Backbone.history.start();
+
+	  	
+		// Parse the javascript object and create models 
+	  	
+	  	
+// 		$('#form-placeholder').html(html);
 	});
 </script>
 

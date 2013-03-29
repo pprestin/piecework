@@ -27,7 +27,6 @@ import piecework.form.model.OptionProvider;
 import piecework.form.model.view.ConstraintView;
 import piecework.form.model.view.FormFieldElementView;
 import piecework.form.model.view.OptionProviderView;
-import piecework.form.model.view.OptionView;
 
 /**
  * @author James Renfro

@@ -19,6 +19,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.mongodb.core.mapping.DBRef;
+
 import piecework.form.model.FormField;
 import piecework.form.model.Section;
 
@@ -33,6 +35,7 @@ public class SectionRecord implements Section, Serializable {
 	private String name;
 	private String label;
 	private String description;
+//	@DBRef
 	private List<FormFieldRecord> fields;
 	private String actionValue;
 	
@@ -40,20 +43,19 @@ public class SectionRecord implements Section, Serializable {
 		
 	}
 	
-	public SectionRecord(Section contract) {
-		this.id = contract.getId();
-		this.name = contract.getName();
-		this.label = contract.getLabel();
-		this.description = contract.getDescription();
-		List<? extends FormField> formFieldContracts =
-				contract.getFields();
-		if (formFieldContracts != null && !formFieldContracts.isEmpty()) {
-			this.fields = new ArrayList<FormFieldRecord>(formFieldContracts.size());
-			for (FormField formFieldContract : formFieldContracts) {
-				this.fields.add(new FormFieldRecord(formFieldContract));
+	public SectionRecord(Section section) {
+		this.id = section.getId();
+		this.name = section.getName();
+		this.label = section.getLabel();
+		this.description = section.getDescription();
+		List<? extends FormField> fields = section.getFields();
+		if (fields != null && !fields.isEmpty()) {
+			this.fields = new ArrayList<FormFieldRecord>(fields.size());
+			for (FormField field : fields) {
+				this.fields.add(new FormFieldRecord(field));
 			}
 		}
-		this.actionValue = contract.getActionValue();
+		this.actionValue = section.getActionValue();
 	}
 
 	public String getId() {
