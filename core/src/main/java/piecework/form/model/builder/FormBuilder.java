@@ -24,6 +24,7 @@ import piecework.form.model.Form;
 import piecework.form.model.Section;
 import piecework.form.model.view.AttachmentView;
 import piecework.form.model.view.SectionView;
+import piecework.util.LayoutUtil;
 
 /**
  * @author James Renfro
@@ -33,11 +34,12 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 	private String label;
 	private String processDefinitionKey;
 	private String taskDefinitionKey;
+	private String processInstanceId;
 	private List<String> formIds;
 	private List<SectionBuilder<?>> sections;
 	private List<SectionBuilder<?>> dialogs;
 	private List<AttachmentView.Builder> attachments;
-	private String layout;
+	private LayoutUtil.Layout layout;
 	private String message;
 	private String actionUrl;
 	private String logoUrl;
@@ -56,12 +58,12 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 		this.name = form.getName();
 		this.label = form.getLabel();
 		this.message = form.getMessage();
+		this.layout = LayoutUtil.getLayout(form.getLayout());
 		this.processDefinitionKey = form.getProcessDefinitionKey();
 		this.taskDefinitionKey = form.getTaskDefinitionKey();
 		this.dialogs = sectionBuilders(form.getDialogs());
 		this.sections = sectionBuilders(form.getSections());
 		this.logoUrl = form.getLogoUrl();
-		this.layout = form.getLayout();
 		this.submissionId = form.getSubmissionId();
 	}
 	
@@ -73,33 +75,33 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 		if (builders == null || builders.isEmpty())
 			return null;
 		
-//		String taskDefinitionKey = formBuilder != null ? formBuilder.taskDefinitionKey : null;
-//		LayoutUtil.Layout layout = LayoutUtil.getLayout(formBuilder != null ? formBuilder.layout : null);
-		
 		List<S> sections = new ArrayList<S>(builders.size());
-//		boolean beforeSelectedSection = true;
-//		boolean formReadOnly = formBuilder != null && formBuilder.readOnly != null ? formBuilder.readOnly.booleanValue() : false;
+		boolean beforeSelectedSection = true;
+		boolean formReadOnly = formBuilder != null && formBuilder.readOnly != null ? formBuilder.readOnly.booleanValue() : false;
 		for (SectionBuilder<?> builder : builders) {
-//			String sectionName = builder.getName();
-//			boolean selected = false;
-//			boolean readOnly = false;
-//			boolean selectable = false;
-//			switch (layout) {
-//			case PANELS:
-//				selected = beforeSelectedSection;
-//				readOnly = formReadOnly;
-//				selectable = true;
-//				break;
-//			case FLOW:
-//			case WIZARD:
-//				selected = LayoutUtil.isSelectedSection(layout, taskDefinitionKey, sectionName);
-//				readOnly = formReadOnly || (!selected && beforeSelectedSection);
-//				selectable = beforeSelectedSection;
-//				break;
-//			}
+			String sectionName = builder.getName();
+			boolean selected = false;
+			boolean readOnly = false;
+			boolean selectable = false;
+			switch (layout) {
+			case PANELS:
+				selected = beforeSelectedSection;
+				readOnly = formReadOnly;
+				selectable = true;
+				break;
+			case FLOW:
+			case WIZARD:
+				selected = LayoutUtil.isSelectedSection(layout, taskDefinitionKey, sectionName);
+				readOnly = formReadOnly || (!selected && beforeSelectedSection);
+				selectable = beforeSelectedSection;
+				break;
+			}
+			builder.editable(!readOnly);
+			builder.selected(selected);
+			builder.visible(selectable);
 			sections.add((S) builder.build());
-//			if (selected)
-//				beforeSelectedSection = false;
+			if (selected)
+				beforeSelectedSection = false;
 		}
 		return Collections.unmodifiableList(sections);
 	}
@@ -137,6 +139,11 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 		this.taskDefinitionKey = taskDefinitionKey;
 		return this;
 	}
+	
+	public FormBuilder<F> processInstanceId(String processInstanceId) {
+		this.processInstanceId = processInstanceId;
+		return this;
+	}
 
 	public FormBuilder<F> formId(String formId) {
 		if (this.formIds == null)
@@ -172,7 +179,7 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 	}
 
 	public FormBuilder<F> layout(String layout) {
-		this.layout = layout;
+		this.layout = LayoutUtil.getLayout(layout);
 		return this;
 	}
 
@@ -248,7 +255,7 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 	}
 
 	public String getLayout() {
-		return layout;
+		return layout.toString();
 	}
 
 	public String getMessage() {
@@ -281,6 +288,10 @@ public abstract class FormBuilder<F extends Form> extends Builder {
 
 	public String getSubmissionId() {
 		return submissionId;
+	}
+
+	public String getProcessInstanceId() {
+		return processInstanceId;
 	}
 
 }

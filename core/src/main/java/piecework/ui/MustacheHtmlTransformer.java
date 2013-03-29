@@ -16,6 +16,7 @@
 package piecework.ui;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,12 +36,19 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
+import org.apache.cxf.jaxrs.provider.json.JSONProvider;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import piecework.identity.InternalUserDetails;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
@@ -59,6 +67,8 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 	@Value("${templates.directory}")
 	private String templatesDirectory;
 	
+	@Autowired
+	private JSONProvider<Object> jsonProvider;
 	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -87,13 +97,33 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 			OutputStream entityStream) throws IOException,
 			WebApplicationException {
 		
+		String userId = null;
+		String userName = null;
+		
+		SecurityContext context = SecurityContextHolder.getContext();
+		Authentication authentication = context.getAuthentication();
+		
+		Object principal = authentication != null ? authentication.getPrincipal() : null;
+		
+		if (principal != null && principal instanceof InternalUserDetails) {
+			InternalUserDetails userDetails = InternalUserDetails.class.cast(principal);
+			userId = userDetails.getUsername();
+			userName = userDetails.getDisplayName();
+		}
+		
 		Resource resource = getResource(type);
 		if (resource.exists()) {
 			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), resource.getInputStream());
 			try {
 				MustacheFactory mf = new DefaultMustacheFactory();
-			    Mustache mustache = mf.compile(new InputStreamReader(input), getTemplateName(type));
-			    mustache.execute(new PrintWriter(entityStream), t).flush();
+			    Mustache mustache = mf.compile(new InputStreamReader(input), "page"); //getTemplateName(type));
+			    
+			    OutputStream jsonStream = new ByteArrayOutputStream();
+			    jsonProvider.writeTo(t, genericType, annotations, mediaType, httpHeaders, jsonStream);
+			    
+			    String json = jsonStream.toString();
+			    
+			    mustache.execute(new PrintWriter(entityStream), new Page(t, json, userId, userName)).flush();
 			} catch (IOException e) {
 				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
 			} finally {
@@ -102,7 +132,7 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 			}
 		} else {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
-		}	
+		}
 	}
 	
 	private String getTemplateName(Class<?> type) {

@@ -35,6 +35,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.util.JSON;
 
+import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -42,8 +43,9 @@ import de.flapdoodle.embed.mongo.config.AbstractMongoConfig.Net;
 import de.flapdoodle.embed.mongo.config.AbstractMongoConfig.Storage;
 import de.flapdoodle.embed.mongo.config.AbstractMongoConfig.Timeout;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.RuntimeConfig;
+import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version;
+import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.config.io.ProcessOutput;
 import de.flapdoodle.embed.process.extract.ITempNaming;
 import de.flapdoodle.embed.process.extract.UUIDTempNaming;
@@ -90,20 +92,20 @@ public class EmbeddedMongoInstance implements DisposableBean {
 		LOG.debug("Starting embedded Mongodb on port " + port + "...");
 		
 		String storageDirectory = storePath + File.pathSeparator + "storage";
-		MongodConfig mongodConfig = new MongodConfig(Version.Main.V2_0, new Net(bindIp, port, ipv6), new Storage(storageDirectory, replSetName, oplogSize), new Timeout());
+		MongodConfig mongodConfig = new MongodConfig(Version.Main.PRODUCTION, new Net(bindIp, port, ipv6), new Storage(storageDirectory, replSetName, oplogSize), new Timeout());
 		//mongodConfig = new MongodConfig(Version.Main.V2_0, port, false, storePath);
 
-		IDirectory artifactStorePath = new FixedPath(storePath);
-		ITempNaming executableNaming = new UUIDTempNaming(); // new
+//		IDirectory artifactStorePath = new FixedPath(storePath);
+//		ITempNaming executableNaming = new UUIDTempNaming(); // new
 																// UserTempNaming();
-		RuntimeConfig runtimeConfig = new RuntimeConfig();
-		runtimeConfig.getDownloadConfig().setArtifactStorePathNaming(
-				artifactStorePath);
-		runtimeConfig.setExecutableNaming(executableNaming);
-		runtimeConfig.setProcessOutput(new ProcessOutput(Processors.logTo(java.util.logging.Logger.global,
-						java.util.logging.Level.FINEST), Processors.logTo(java.util.logging.Logger.global,
-						java.util.logging.Level.FINEST), Processors.logTo(java.util.logging.Logger.global,
-						java.util.logging.Level.FINEST)));
+		IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(Command.MongoD).build();
+//		runtimeConfig.getDownloadConfig().setArtifactStorePathNaming(
+//				artifactStorePath);
+//		runtimeConfig.setExecutableNaming(executableNaming);
+//		runtimeConfig.setProcessOutput(new ProcessOutput(Processors.logTo(java.util.logging.Logger.global,
+//						java.util.logging.Level.FINEST), Processors.logTo(java.util.logging.Logger.global,
+//						java.util.logging.Level.FINEST), Processors.logTo(java.util.logging.Logger.global,
+//						java.util.logging.Level.FINEST)));
 		MongodStarter runtime = MongodStarter.getInstance(runtimeConfig);
 
 		mongodExecutable = null;
@@ -163,7 +165,6 @@ public class EmbeddedMongoInstance implements DisposableBean {
 
 				String collectionName = collectionFile.getName();
 
-
                 LOG.debug("Loading collection '" + collectionName + "'...");
 
                 DBCollection dbCollection = db.getCollection(collectionName);
@@ -190,7 +191,9 @@ public class EmbeddedMongoInstance implements DisposableBean {
 
 		LOG.debug("Have " + list.size() + " obejcts to load...");
 
-		collection.insert(list);
+//		collection.insert(list);
+		for (DBObject object : list) 
+			collection.save(object);
 	}
 
 	public int getPort() {

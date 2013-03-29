@@ -55,9 +55,11 @@ import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 
 import piecework.authorization.AuthorizationRoleMapper;
+import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.util.KeyManagerCabinet;
 
 /**
@@ -126,7 +128,9 @@ public class LdapConfiguration {
 		
 	@Bean
 	public UserDetailsService userDetailsService() throws Exception {		
-		return new LdapUserDetailsService(userSearch(), authoritiesPopulator());
+		LdapUserDetailsService userDetailsService = new LdapUserDetailsService(userSearch(), authoritiesPopulator());
+		userDetailsService.setUserDetailsMapper(new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper()));
+		return userDetailsService;
 	}
 	
 	@Bean

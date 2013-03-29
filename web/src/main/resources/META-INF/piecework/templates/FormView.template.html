@@ -1,31 +1,143 @@
 <html>
 <head>
+	<meta http-equiv="X-UA-Compatible" content="IE=8" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=0.6, maximum-scale=4.0, user-scalable=yes" />
+	<title><% name %></title>
+	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/vendor/jqueryui-smoothness/jquery-ui-1.8.20.custom.css"></link>
+	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/piecework.css"></link>
+	<link rel="stylesheet" type="text/css" media='screen and (max-width: 700px)' href="/piecework/static/css/piecework.mobile.css"></link>
+	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/piecework.form.css"></link>
 	<script type="text/javascript" src="/piecework/static/js/vendor/jquery.min.js"></script>
 	<script type="text/javascript" src="/piecework/static/js/vendor/handlebars.js"></script>
-	<script id="entry-template" type="text/x-handlebars-template">
-		<div class="entry">
-  		<h1>{{title}}</h1>
-  			<div class="body">
-    			{{body}}
-  			</div>
+	<script id="form-template" type="text/x-handlebars-template">
+		{{#with form}}
+		<div class="sections">
+			{{#each sections}}
+				{{#with section}}
+					<div id="{{id}}" class="section {{#if selected}}selected{{/if}} {{#if editable}}selectable{{/if}}">
+					<div class="section-header">
+						<h3>{{label}}</h3>
+						{{#description}}
+							<div class="directions">{{description}}</div>
+						{{/description}}
+					</div>
+					<div class="section-content">
+						{{#each fields}}
+							{{#each formField}}
+								{{#label}}
+								<label for="{{../propertyName}}">{{$}}
+								</label>
+								{{/label}}
+								<div id="{{id}}" class="field {{#if required}}required{{/if}}">{{form_field}}</div>
+							{{/each}}
+						{{/each}}
+					</div>
+				</div>
+				{{/with}}
+			{{/each}}
 		</div>
+		{{/with}}
 	</script>
 </head>
 
-<body>
-	<div id="placeholder"></div>
+<body class="restflow form <% resource.layout %>">
+	<div style="display:none">
+		<div id="userName"><% userName %></div>
+		<div id="userId"><% userId %></div>
+		<div id="serviceUri"><% serviceUri %></div>
+		<div id="version"><% version %></div>
+		<div id="resourcesPath"><% resourcesPath %></xsl:value-of></div>
+	</div>
+	
+	<form id="taskForm" method="POST">
+		<div class="screen-header">
+			<div class="userInformation"><% userName %></div>
+		</div>
+		<div class="page">
+			<div class="page-toolbar">
+				<%#resource.processInstanceId%>
+				Testing
+				<%/resource.processInstanceId%>
+				<div class="attachmentToolbar"></div>
+				<div class="taskToolbar"></div>
+			</div>
+			<div class="page-header">
+				<%#resource.logoUrl%>
+			 	<div class="page-logo">
+					 <img src="<% resource.logoUrl %>"></img>
+				</div>
+				<%/resource.logoUrl%>
+			 	<h2><% resource.label %></h2>
+			</div>
+			<div class="go-back">Sections</div>
+			<div class="page-main">
+				<div class="page-notification">
+					<% resource.message %>
+				</div>
+				<div class="navigation">
+				 	<div id="breadcrumbs"></div>
+				</div>
+				<div class="content">
+					<%#resource.processInstanceId%>
+					<h3 class="confirmation">
+				 		Thanks for submitting your form. Your confirmation number is <%resource.processInstanceId%>.
+				 	</h3>
+					<%/resource.processInstanceId%>
+					<div id="form-placeholder">
+						<input type="hidden" name="_submissionId" value="<%resource.submissionId%>"></input>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+	
+<!-- 	<div id="placeholder"></div> -->
 </body>
 
 <!-- <%name%> -->
 
 <script type="text/javascript">
 	$(document).ready( function() {
-		var source   = $("#entry-template").html();
+		Handlebars.registerHelper('form_field', function(formField) {
+			var builder = '';
+			
+			var type = this.type;
+			if (type == null)
+				type = 'text';
+			
+			if (type == 'radio' || type == 'checkbox') {
+				
+			} else {
+				
+				var elementTag = '';
+// 				for ()
+				
+				
+				
+// // 				{{#if type
+// // 				{{#each elements}}
+// // 					<div class="element">
+// // 						<{{formFieldElement.tagName}} type="{{formFieldElement.type}}" name="{{../propertyName}}" value="{{value}}" {{#unless editable}}disabled{{/unless}}>	
+// // 						{{formFieldElement.$}}
+// // 						</{{formFieldElement.tagName}}>
+// // 					</div>
+// // 				{{/each}}
+			
+// 				divTag += '</div>';
+				
+// 				builder += divTag;
+			}
+			
+			return new Handlebars.SafeString(builder);
+		});
+		
+		var source   = $("#form-template").html();
 		var template = Handlebars.compile(source);
 		
-	  	var context = { title: "<%name%>", body: "This is my first post!"}
+	  	var context = <%& json %>;
 	  	var html    = template(context);
-		$('#placeholder').html(html);
+		$('#form-placeholder').html(html);
 	});
 </script>
 

@@ -106,17 +106,17 @@ public class SectionRecord implements Section, Serializable {
 	}
 
 	@Override
-	public String getSelected() {
+	public Boolean getSelected() {
 		return null;
 	}
 
 	@Override
-	public String getSelectable() {
+	public Boolean getVisible() {
 		return null;
 	}
 
 	@Override
-	public String getReadOnly() {
+	public Boolean getEditable() {
 		return null;
 	}
 

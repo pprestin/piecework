@@ -73,4 +73,21 @@ public class FormResourceVersion1Impl implements FormResourceVersion1 {
 	private static ViewContext context() {
 		return new ViewContext("", "", "v1", "form");
 	}
+
+	@Override
+	public FormView read(String processDefinitionKey, String processInstanceId)
+			throws StatusCodeError {
+		try {
+			Form form = service.getForm(processDefinitionKey, FormPosition.START_RESPONSE, null);
+
+			if (form == null)
+				throw new NotFoundError();
+			
+			FormView.Builder builder = new FormView.Builder(form);
+			builder.processInstanceId(processInstanceId);
+			return builder.build(context());
+		} catch (ProcessNotFoundException e) {
+			throw new BadRequestError();
+		}
+	}
 }

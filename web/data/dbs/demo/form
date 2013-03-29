@@ -1,5 +1,5 @@
 [
-      { "_id" : "50d8e2a7e4b0384270585d23", 
+      { "_id" : "testdemoform", 
         "name" : "", 
         "label" : "Demonstration Form", 
         "layout" : "panels", 
@@ -50,6 +50,26 @@
                                 "displaySize" : "40", 	
                                 "text" : "" } 
                         ] 
+                    },
+                    {	"id":"2e5c30b7-033a-43b4-9962-5aea783f1e94",
+                    	"propertyName":"agreeToNotAnEmployee",
+                    	"label": {  	"tagName" : "label", 	"text" : "Agree" },
+                    	"options":[ {"value":"Yes","selected":"selected","label":"Yes"} ],
+                    	"type":"checkbox",
+                    	"editable":"false",
+                    	"required":"false",
+                    	"restricted":"false",
+                    	"elements": [
+                    		{	"tagName":"input",
+                    			"style":"",
+                    			"type":"checkbox",
+                    			"value":"Yes",
+                    			"maxSize":"255",
+                    			"minSize":"0",
+                    			"displaySize":"40",
+                    			"text":"Yes"
+                    		}
+                    	]
                     } 
                 ]
             } 

@@ -39,6 +39,8 @@ public interface Form extends Serializable {
 	
 	String getTaskDefinitionKey();
 	
+	String getProcessInstanceId();
+	
 	String getSubmissionId();
 	
 	<S extends Section> List<S> getDialogs();

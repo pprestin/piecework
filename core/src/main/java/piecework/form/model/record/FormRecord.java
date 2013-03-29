@@ -237,5 +237,10 @@ public class FormRecord implements Form {
 	public String getSubmissionId() {
 		return null;
 	}
+
+	@Override
+	public String getProcessInstanceId() {
+		return null;
+	}
 	
 }

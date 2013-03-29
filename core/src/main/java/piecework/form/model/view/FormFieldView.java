@@ -15,8 +15,6 @@
  */
 package piecework.form.model.view;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -79,13 +77,13 @@ public class FormFieldView implements FormField {
 	private final List<ConstraintView> constraints;
 	
 	@XmlAttribute(name = FormFieldView.Attributes.EDITABLE)
-	private final String editable;
+	private final Boolean editable;
 	
 	@XmlAttribute(name = FormFieldView.Attributes.REQUIRED)
-	private final String required;
+	private final Boolean required;
 	
 	@XmlAttribute(name = FormFieldView.Attributes.RESTRICTED)
-	private final String restricted;
+	private final Boolean restricted;
 	
 	@XmlElement(name = FormFieldView.Elements.MESSAGE)
 	private final String message;
@@ -107,8 +105,8 @@ public class FormFieldView implements FormField {
 		this.optionProvider = FormFieldView.Builder.buildOptionProvider(builder.getOptionProvider());
 		this.options = builder.buildOptions(builder.getOptions());
 		this.editable = FormFieldView.Builder.getEditable(builder.getEditable(), readOnly);
-		this.required = FormFieldView.Builder.getSafeBooleanString(builder.getRequired());
-		this.restricted = FormFieldView.Builder.getSafeBooleanString(builder.getRestricted());
+		this.required = builder.getRequired();
+		this.restricted = builder.getRestricted();
 		this.constraints = builder.buildConstraints(builder.getConstraints());
 		this.message = builder.getMessage();
 		this.messageType = builder.getMessageType();
@@ -150,15 +148,15 @@ public class FormFieldView implements FormField {
 		return options;
 	}
 
-	public String getEditable() {
+	public Boolean getEditable() {
 		return editable;
 	}
 
-	public String getRequired() {
+	public Boolean getRequired() {
 		return required;
 	}
 
-	public String getRestricted() {
+	public Boolean getRestricted() {
 		return restricted;
 	}
 	
@@ -231,7 +229,7 @@ public class FormFieldView implements FormField {
 			if (element == null)
 				return null;
 			
-			return new FormFieldElementView.Builder(FormFieldElementView.class.cast(element));
+			return new FormFieldElementView.Builder(FormFieldElement.class.cast(element));
 		}
 		
 		protected OptionBuilder<?> optionBuilder(Option option) {
@@ -249,8 +247,8 @@ public class FormFieldView implements FormField {
 			return b != null ? Boolean.toString(b) : null;
 		}
 		
-		private static String getEditable(Boolean editable, boolean readOnly) {
-			return !readOnly && editable != null ? Boolean.toString(editable) : Boolean.FALSE.toString();
+		private static Boolean getEditable(Boolean editable, boolean readOnly) {
+			return !readOnly && editable != null ? editable : Boolean.FALSE;
 		}
 	}
 }

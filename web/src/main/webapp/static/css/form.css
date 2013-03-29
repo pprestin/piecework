@@ -1,4 +1,376 @@
-## CSS 
+button.smallBtn {
+	float: right;
+	height: 20px;
+	margin: 4px;
+	width: 20px !important;
+}
+
+.actionConfirmationDialog {
+	background: #FFF;
+	border: 1px solid #BEBEBE;
+	box-shadow: 5px 5px 5px #ccc;
+	margin: 5px 20px 0px 0px;
+	margin-right: 30px;
+	padding: 5px;
+	position: fixed;
+	right: 0px;
+	width: 400px;
+	z-index: 102;
+	
+	-moz-box-shadow: 5px 5px 5px #ccc;
+  	-webkit-box-shadow: 5px 5px 5px #ccc; 	
+}
+
+.actionConfirmationDialog div.fieldInputWrapper {
+	display: inline-block;
+	*display: inline;
+	float: right;
+}
+
+.actionConfirmationDialog label.actionConfirmationDescription {
+	color: darkblue;
+	font-size: 12pt;
+	padding: 10px 20px;
+}
+
+.actionConfirmationDialog select {
+	height: auto !important;
+}
+
+.actionConfirmationDialog textarea {
+	height: 45px;
+	width: 350px;
+}
+
+.actionConfirmationDialog .dialogHeader {
+	background: #FFF;
+	font-size: 14pt;
+	padding: 10px 20px;
+}
+
+.actionConfirmationDialog .dialogContent {
+	background: #FFF;
+/* 	padding: 10px 20px 20px 20px; */
+	margin-bottom: 20px;
+}
+
+.actionConfirmationDialog label.actionConfirmationDescription {
+	margin: 0px;
+}
+
+.actionConfirmationDialog .field {
+	margin-top: 10px;
+}
+
+.actionConfirmationDialog .field div {
+	margin: 0px;
+	padding: 0px 20px;
+}
+
+.actionConfirmationDialog .field label {
+	padding: 0px 20px;
+	text-align: left;
+}
+
+.actionConfirmationDialog .toolbarItem {
+	float: right;
+}
+
+.attachment {
+	border: 1px solid #EEE;
+	line-height: 30px;
+	margin: 10px 10px 0px 0px;
+	padding: 10px 0px 10px 10px;
+}
+
+.attachment .attachmentLabel {
+	background-position: 0px 8px;
+	background-repeat: no-repeat;
+	padding-left: 20px;
+}
+
+.attachment .attachmentLabel.attachedFile {
+	background-image: url("../../public/images/AttachmentIcon.gif");
+}
+
+.attachment .attachmentLabel.externalLink {
+	background-image: url("../../public/images/ExternalLinkIcon.png");
+}
+
+.attachment .content {
+	display: inline-block;
+	*display: inline;
+	padding-top: 2px;
+	vertical-align: middle;
+	width: 360px;
+}
+
+.attachmentDescription {
+
+}
+
+.attachmentFile {
+	display: none;
+}
+
+.attachmentLink {
+	display: none;
+}
+
+.attachments {
+	
+}
+
+.attachFieldSet {
+	
+}
+
+.attachFieldSet .directions {
+	color: #AAA;
+}
+
+.attachFieldSet div {
+	padding-bottom: 10px;
+}
+
+.attachmentButtonToolbar {
+	height: 40px;
+}
+
+.attachmentsHeader {
+	font-size: 14pt;
+	padding: 7px 0px 10px;
+}
+
+.attachmentsToolbar {
+	float: right;
+}
+
+.dialog {
+	display: none;
+	overflow: auto;
+}
+
+/* div.breadcrumbs { */
+/* 	display: none; */
+/* 	padding: 15px 0px; */
+/* } */
+
+/* div.breadcrumbs .breadcrumb { */
+/* 	cursor: pointer; */
+/* 	line-height: 30px; */
+/* 	padding: 0px 20px; */
+/* } */
+
+/* div.breadcrumbs .breadcrumb.checked { */
+/* 	color: DarkSlateBlue; */
+/* } */
+
+div.fauxcontainer {
+	display: inline-block;
+	*display: inline;
+	margin-top: 9px;
+	vertical-align: top;
+}
+
+div.fauxcontainer input[type="checkbox"] {
+	display: none;
+}
+
+div.fauxbox {
+	background-color: #EFEFEF;
+	border: 1px solid #CCC;
+	height: 15px;
+	overflow: visible;
+	width: 15px;
+}
+
+div.fauxcheckmark {
+	height: 30px;
+	margin-top: -27px;
+	overflow: visible;
+	width: 30px;
+}
+
+.breadcrumbButton {
+	display: none;
+/* 	float: right; */
+/* 	margin: 2px; */
+/* 	height: 25px; */
+}
+
+.checked div.fauxcheckmark {
+	background-image: url('../../public/images/BlackCheckmark.png');
+	background-repeat: no-repeat;
+}
+
+/* .flowLayout .breadcrumbButton { */
+/* 	display: inline-block; */
+/* 	*display: inline; */
+/* } */
+
+.nextButton {
+	display: none;
+}
+
+.pageHeader {
+	height: 100px !important;
+}
+
+.pageMainColumn {
+	margin: 100px 0px 100px 0px !important;
+}
+
+.panelToolbar {
+	height: 50px !important;
+	margin: 0px 0px 0px 0px !important;
+	padding: 20px 0px 0px !important;
+}
+
+.previousButton {
+	display: none;
+}
+
+.showAttach #attachBtn {
+	background-color: #FFF;
+}
+
+.showAttach #attachDialog.dialog {
+	background-color: #FFF;
+	border: 1px solid #BEBEBE;
+	display: block;
+	margin: 2px;
+	padding: 20px;
+	position: fixed;
+	overflow: auto;
+	width: 450px;
+	z-index: 500;
+	box-shadow: 0 2px 2px rgba(0,0,0,.4);
+	-moz-box-shadow: -1px 1px 1px rgba(0,0,0,.4);
+	-webkit-box-shadow: 0 2px 2px rgba(0,0,0,.4);
+}
+
+.showAttachments #attachmentsBtn {
+	background: #FFF;
+}
+
+.showAttachments #attachmentDialog.dialog {
+	background-color: #FFF;
+	border: 1px solid #BEBEBE;
+	display: block;
+	margin: 2px;
+	padding: 20px;
+	position: fixed;
+	overflow: auto;
+	width: 450px;
+	z-index: 500;
+	box-shadow: 0 2px 2px rgba(0,0,0,.4);
+	-moz-box-shadow: -1px 1px 1px rgba(0,0,0,.4);
+	-webkit-box-shadow: 0 2px 2px rgba(0,0,0,.4);
+}
+
+.showFile .attachmentFile {
+	display: block;
+}
+
+.showFile .attachActionBtn {
+	display: none;
+}
+
+.showFile #attachCancelBtn {
+	display: block;
+}
+
+.showLink .attachmentLink {
+	display: block;
+	padding: 3px 2px;
+}
+
+.showLink .attachActionBtn {
+	display: none;
+}
+
+.showLink #attachCancelBtn {
+	display: block;
+}
+
+.file-attachment {
+	background-image: url("../../public/images/AttachmentIcon.gif");
+}
+
+#attachBtn {
+/* 	background-image: url("../../public/images/AttachmentIcon.gif"); */
+/* 	background-repeat: no-repeat; */
+}
+
+#attachCancelBtn {
+	display: none;
+	float: right;
+	height: 36px;
+	width: 36px;
+}
+
+#attachFileBtn {
+	background-color: #FFF;
+	background-image: url("../../public/images/AttachmentIcon.gif");
+	background-repeat: no-repeat;
+/* 	border: 0px; */
+	float: right;
+/* 	height: 24px; */
+/* 	width: 24px; */
+	height: 36px;
+	width: 36px;
+}
+
+#attachFileAction {
+	color: blue;
+	cursor: pointer;
+	float: right;
+	line-height: 30px;
+	padding: 10px 0px 0px;
+}
+
+#attachLinkBtn {
+	background-color: #FFF;
+	background-repeat: no-repeat;
+/* 	border: 0px; */
+	float: right;
+	height: 36px;
+	width: 36px;
+}
+
+#attachmentFilePath {
+	padding: 5px 3px;
+}
+
+#attachmentFileDescription {
+	height: 70px;
+	width: 434px;
+}
+
+#attachUrl {
+	height: 25px;
+	width: 320px;
+}
+
+#attachmentFile {
+	opacity: 0; 
+	filter:alpha(opacity: 0);
+	height: 1px;
+	width: 1px;
+	padding: 0px;
+	margin: 0px;
+}
+
+button#deleteBtn {
+	height: 32px;
+	width: 32px;
+}
+
+#workflowSubHeader {
+	height: 35px;
+}
+
 
 
 

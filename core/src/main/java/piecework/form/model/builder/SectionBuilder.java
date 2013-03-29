@@ -32,7 +32,7 @@ public abstract class SectionBuilder<S extends Section> extends Builder {
 	private String description;
 	private List<FormFieldBuilder<?>> fields;
 	private String actionValue;
-	private boolean readOnly;
+	private boolean editable;
 	private boolean selected;
 	private boolean visible;
 	
@@ -47,9 +47,9 @@ public abstract class SectionBuilder<S extends Section> extends Builder {
 		this.description = section.getDescription();
 		this.fields = fieldBuilders(section.getFields());
 		this.actionValue = section.getActionValue();
-		this.readOnly = Boolean.valueOf(section.getReadOnly()).booleanValue();
-		this.selected = Boolean.valueOf(section.getSelected()).booleanValue();
-		this.visible = Boolean.valueOf(section.getSelectable()).booleanValue();
+		this.editable = section.getEditable() != null && Boolean.valueOf(section.getEditable()).booleanValue();
+		this.selected = section.getSelected() != null && Boolean.valueOf(section.getSelected()).booleanValue();
+		this.visible = section.getVisible() != null && Boolean.valueOf(section.getVisible()).booleanValue();
 	}
 	
 	public abstract S build();
@@ -98,6 +98,21 @@ public abstract class SectionBuilder<S extends Section> extends Builder {
 		return this;
 	}
 			
+	public SectionBuilder<S> selected(boolean selected) {
+		this.selected = selected;
+		return this;
+	}
+	
+	public SectionBuilder<S> visible(boolean visible) {
+		this.visible = visible;
+		return this;
+	}
+	
+	public SectionBuilder<S> editable(boolean editable) {
+		this.editable = editable;
+		return this;
+	}
+	
 	public SectionBuilder<S> actionValue(String actionValue) {
 		this.actionValue = actionValue;
 		return this;
@@ -127,15 +142,15 @@ public abstract class SectionBuilder<S extends Section> extends Builder {
 		return actionValue;
 	}
 
-	public boolean isReadOnly() {
-		return readOnly;
-	}
-
 	public boolean isSelected() {
 		return selected;
 	}
 
 	public boolean isVisible() {
 		return visible;
+	}
+
+	public boolean isEditable() {
+		return editable;
 	}
 }

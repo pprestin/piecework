@@ -27,6 +27,7 @@ import org.apache.cxf.binding.BindingFactoryManager;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
+import org.apache.cxf.jaxrs.provider.json.JSONProvider;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -85,7 +86,7 @@ public class ApplicationConfiguration {
 		providers.add(new StatusCodeErrorMapper());
 		providers.add(new AccessDeniedExceptionMapper());
 		providers.add(mustacheHtmlTransformer);
-//		providers.add(authenticationHandler);
+		providers.add(jsonProvider());
 		sf.setProviders(providers);
 
 		BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);
@@ -93,6 +94,23 @@ public class ApplicationConfiguration {
 		factory.setBus(sf.getBus());
 		manager.registerBindingFactory(JAXRSBindingFactory.JAXRS_BINDING_ID, factory);
 		return sf.create();
+	}
+	
+	@Bean
+	public JSONProvider<Object> jsonProvider() {
+		JSONProvider<Object> jsonProvider = new JSONProvider<Object>();
+		
+		List<String> keys = new ArrayList<String>();
+		keys.add("elements");
+		keys.add("fields");
+		keys.add("sections");
+		
+		jsonProvider.setArrayKeys(keys);
+		jsonProvider.setAttributesToElements(true);
+//		jsonProvider.setDropCollectionWrapperElement(true);
+		jsonProvider.setSerializeAsArray(true);
+		
+		return jsonProvider;
 	}
 	
 	@Bean

@@ -56,13 +56,13 @@ public final class SectionView implements Section {
 	private final String description;
 	
 	@XmlAttribute(name = SectionView.Attributes.SELECTED)
-	private final String selected;
+	private final Boolean selected;
 	
 	@XmlAttribute(name = SectionView.Attributes.SELECTABLE)
-	private final String selectable;
+	private final Boolean selectable;
 	
 	@XmlAttribute(name = SectionView.Attributes.READ_ONLY)
-	private final String readOnly;
+	private final Boolean readOnly;
 	
 	@XmlElementWrapper(name = SectionView.Lists.FIELDS)
 	@XmlElementRef
@@ -80,9 +80,9 @@ public final class SectionView implements Section {
 		this.name = builder.getName();
 		this.label = builder.getLabel();
 		this.description = builder.getDescription();
-		this.readOnly = Boolean.toString(builder.isReadOnly());
-		this.selected = Boolean.toString(builder.isSelected());
-		this.selectable = Boolean.toString(builder.isVisible());
+		this.readOnly = Boolean.valueOf(builder.isEditable());
+		this.selected = Boolean.valueOf(builder.isSelected());
+		this.selectable = Boolean.valueOf(builder.isVisible());
 		this.fields = buildFields(builder.getFields(), false);
 		this.actionValue = builder.getActionValue();
 	}
@@ -153,7 +153,7 @@ public final class SectionView implements Section {
 			super();
 		}
 		
-		public Builder(SectionView section) {
+		public Builder(Section section) {
 			super(section);
 		}
 
@@ -168,15 +168,15 @@ public final class SectionView implements Section {
 		}
 	}
 
-	public String getReadOnly() {
+	public Boolean getEditable() {
 		return readOnly;
 	}
 
-	public String getSelected() {
+	public Boolean getSelected() {
 		return selected;
 	}
 
-	public String getSelectable() {
+	public Boolean getVisible() {
 		return selectable;
 	}
 }

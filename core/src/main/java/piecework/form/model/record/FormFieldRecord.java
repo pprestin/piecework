@@ -36,9 +36,9 @@ public class FormFieldRecord implements FormField, Serializable {
 	private String propertyName;
 	private FormFieldElementRecord label;
 	private FormFieldElementRecord directions;
-	private String editable;
-	private String required;
-	private String restricted;
+	private Boolean editable;
+	private Boolean required;
+	private Boolean restricted;
 	private String typeAttr;
 	private List<FormFieldElementRecord> elements;
 	private OptionProviderRecord optionProvider;
@@ -129,27 +129,27 @@ public class FormFieldRecord implements FormField, Serializable {
 		this.optionProvider = optionProvider;
 	}
 
-	public String getEditable() {
+	public Boolean getEditable() {
 		return editable;
 	}
 	
-	public void setEditable(String editable) {
+	public void setEditable(Boolean editable) {
 		this.editable = editable;
 	}
 	
-	public String getRequired() {
+	public Boolean getRequired() {
 		return required;
 	}
 	
-	public void setRequired(String required) {
+	public void setRequired(Boolean required) {
 		this.required = required;
 	}
 	
-	public String getRestricted() {
+	public Boolean getRestricted() {
 		return restricted;
 	}
 
-	public void setRestricted(String restricted) {
+	public void setRestricted(Boolean restricted) {
 		this.restricted = restricted;
 	}
 

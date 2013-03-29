@@ -15,7 +15,6 @@
  */
 package piecework.form.model.view;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -58,6 +57,9 @@ public class FormView implements Form {
 	
 	@XmlTransient
 	private final String processDefinitionKey;
+	
+	@XmlAttribute(name=FormView.Attributes.PROCESS_INSTANCE_ID)
+	private final String processInstanceId;
 	
 	@XmlElement(name = FormView.Elements.TASK_DEFINITION_KEY)
 	private final String taskDefinitionKey;
@@ -106,6 +108,7 @@ public class FormView implements Form {
 		this.label = builder.getLabel();
 		this.processDefinitionKey = builder.getProcessDefinitionKey();
 		this.taskDefinitionKey = builder.getTaskDefinitionKey();
+		this.processInstanceId = builder.getProcessInstanceId();
 		this.sections = builder.buildSections(builder, builder.getSections());
 		this.dialogs = builder.buildSections(null, builder.getDialogs());
 		this.attachments = builder.buildAttachments(builder.getAttachments());
@@ -225,6 +228,7 @@ public class FormView implements Form {
 
 	static class Attributes {
 		final static String ID = "id";
+		final static String PROCESS_INSTANCE_ID = "processInstanceId";
 		final static String READ_ONLY = "readOnly";
 		final static String SUBMISSION_ID = "submissionId";
 	}
@@ -315,9 +319,13 @@ public class FormView implements Form {
 		
 		@SuppressWarnings("unchecked")
 		protected <S extends Section> SectionBuilder<S> sectionBuilder(S section) {
-			return (SectionBuilder<S>) new SectionView.Builder((SectionView) section);
+			return (SectionBuilder<S>) new SectionView.Builder(section);
 		}
 		
+	}
+
+	public String getProcessInstanceId() {
+		return processInstanceId;
 	}
 }
 	

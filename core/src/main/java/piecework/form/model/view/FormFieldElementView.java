@@ -155,7 +155,7 @@ public final class FormFieldElementView implements FormFieldElement {
 			super();
 		}
 		
-		public Builder(FormFieldElementView element) {
+		public Builder(FormFieldElement element) {
 			super(element);
 		}
 		

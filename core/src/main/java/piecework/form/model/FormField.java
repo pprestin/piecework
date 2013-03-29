@@ -41,11 +41,11 @@ public interface FormField {
 	
 	<C extends Constraint> List<C> getConstraints();
 
-	String getEditable();
+	Boolean getEditable();
 
-	String getRequired();
+	Boolean getRequired();
 	
-	String getRestricted();
+	Boolean getRestricted();
 	
 	String getMessage();
 	

@@ -3,7 +3,7 @@
       "processDefinitionKey" : "demo", 
       "engine" : "activiti",
       "engineProcessDefinitionKey" : "actdemo",
-      "startRequestFormIdentifier" : "50d8e2a7e4b0384270585d23",
+      "startRequestFormIdentifier" : "testdemoform",
       "startResponseFormIdentifier" : ""
     }   
 ]

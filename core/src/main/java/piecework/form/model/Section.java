@@ -34,10 +34,10 @@ public interface Section {
 	
 	String getActionValue();
 	
-	String getSelected();
+	Boolean getSelected();
 
-	String getSelectable();
+	Boolean getVisible();
 
-	String getReadOnly();
+	Boolean getEditable();
 
 }
