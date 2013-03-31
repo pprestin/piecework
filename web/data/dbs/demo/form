@@ -45,15 +45,15 @@
                             { 	"tagName" : "input", 	
                                 "styleAttr" : "", 	
                                 "typeAttr" : "text", 	
-                                "maxSize" : "255", 	
+                                "maxSize" : "3", 	
                                 "minSize" : "0", 	
-                                "displaySize" : "40", 	
+                                "displaySize" : "4", 	
                                 "text" : "" } 
                         ] 
                     },
                     {	"_id":"2e5c30b7-033a-43b4-9962-5aea783f1e94",
-                    	"propertyName":"agreeToNotAnEmployee",
-                    	"label": {  	"tagName" : "label", 	"text" : "Agree" },
+                    	"propertyName":"isAnEmployee",
+                    	"label": {  	"tagName" : "label", 	"text" : "Are you an employee?" },
                     	"options":[ {"value":"Yes","selected":"selected","label":"Yes"} ],
                     	"typeAttr":"checkbox",
                     	"editable": true,
@@ -92,38 +92,14 @@
 								"text" : ""
 							}
 						],
-						"optionProvider" : {
-							"labelExpression" : "Colleges.CollegeName",
-							"valueExpression" : "Colleges.CollegeAbbreviation",
-							"storeLocal" : "true",
-							"disabled" : "false",
-							"endpoint" : {
-								"_id" : null,
-								"url" : "https://ws.admin.washington.edu/student/v4/public/college.json",
-								"method" : "",
-								"mediaType" : ""
-							}
-						},
 						"options" : [
 							{
 								"label" : "",
 								"value" : ""
 							},
 							{
-								"label" : "UW Bothell",
-								"value" : "BOTHL"
-							},
-							{
-								"label" : "UW Tacoma",
-								"value" : "TACOMA"
-							},
-							{
-								"label" : "Arts &amp; Sciences",
-								"value" : "A &amp; S"
-							},
-							{
-								"label" : "Built Environments",
-								"value" : "BE"
+								"label" : "Arts & Sciences",
+								"value" : "A & S"
 							},
 							{
 								"label" : "Business School",
@@ -140,26 +116,6 @@
 							{
 								"label" : "Engineering",
 								"value" : "ENGR"
-							},
-							{
-								"label" : "Environment",
-								"value" : "ENV"
-							},
-							{
-								"label" : "Information School",
-								"value" : "INFORM"
-							},
-							{
-								"label" : "Interdisc Graduate Progr",
-								"value" : "INDGP"
-							},
-							{
-								"label" : "Interdisc Undergrad Prog",
-								"value" : "INDUG"
-							},
-							{
-								"label" : "Interschool or Col",
-								"value" : "INTCOL"
 							},
 							{
 								"label" : "Law",

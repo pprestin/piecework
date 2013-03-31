@@ -14,36 +14,59 @@
 	<script type="text/javascript" src="/piecework/static/js/vendor/handlebars.js"></script>
 	
 <!-- 	<script type="text/javascript" src="/piecework/static/lib/bootstrap/js/bootstrap.min.js"></script> -->
-	<script id="form-template" type="text/x-handlebars-template">
-		<div class="sections">
-			{{#each sections}}
-					<div id="{{id}}" class="section {{#if selected}}selected{{/if}} {{#if editable}}selectable{{/if}}">
-					<div class="section-header">
-						<h3>{{label}}</h3>
-						{{#description}}
-							<div class="directions">{{description}}</div>
-						{{/description}}
-					</div>
-					<div class="section-content">
-						{{#each fields}}
-								{{#label}}
-								<label for="{{../propertyName}}">{{text}}
-								</label>
-								{{/label}}
-								<div id="{{id}}" class="field {{#if required}}required{{/if}}">{{form_field}}</div>
-						{{/each}}
-					</div>
-				</div>
-			{{/each}}
+
+	<script id='section-template' type="text/x-handlebars-template">
+		<div id="{{id}}" class="section {{#if selected}}selected{{/if}} {{#if editable}}selectable{{/if}}">
+			<div class="section-header">
+				<h3>{{label}}</h3>
+				{{#if description}}
+					<div class="directions">{{description}}</div>
+				{{/if}}
+			</div>
+			<div class="section-content"></div>
 		</div>
 	</script>
 	
 	<script id='field-text-template' type="text/x-handlebars-template">
-		<{{tagName}}>Textbox</{{tagName}}>
+		{{#if label}}
+			<label for="{{../propertyName}}">{{label.text}}</label>
+		{{/if}}
+		{{#each elements}}
+			<div class="element">
+				<{{tagName}} name="{{../propertyName}}" {{#if ../typeAttr}}type="{{../typeAttr}}"{{/if}} maxlength="{{maxSize}}" size="{{displaySize}}">
+				
+				</{{tagName}}>
+			</div>
+		{{/each}}
 	</script>
 	
-	<script id='field-select-template' type="text/x-handlebars-template">
-		<div>Listbox</div>
+	<script id='field-checkbox-template' type="text/x-handlebars-template">
+		{{#if label}}
+			<label for="{{../propertyName}}">{{label.text}}</label>
+		{{/if}}
+		<div class="element">
+			{{#if options}}
+				{{#each options}}
+					<input type="checkbox" name="{{../propertyName}}" value="{{value}}"></input>
+					{{#if label}}
+						<label>{{label}}</label>
+					{{/if}}
+				{{/each}}
+			{{/if}}
+		</div>
+	</script>
+	
+	<script id='field-select-one-template' type="text/x-handlebars-template">
+		{{#if label}}
+			<label for="{{../propertyName}}">{{label.text}}</label>
+		{{/if}}
+		<div class="element">
+			<select name="{{propertyName}}">
+			{{#each options}}
+				<option value="{{value}}">{{label}}</option>
+			{{/each}}
+			</select>
+		</div>
 	</script>
 </head>
 
@@ -104,81 +127,7 @@
 <!-- <%name%> -->
 
 <script type="text/javascript">
-	$(document).ready(function() {
-// 		Handlebars.registerHelper('form_field', function(formField) {
-// 			var builder = '';
-			
-// 			var type = this.type;
-// 			if (type == null)
-// 				type = 'text';
-			
-			
-// // 			if ((type != 'text') && this.options != null) {
-// // 				for (var i=0;i<this.options.length;i++) {
-// // 					var tagName 
-// // 				}
-				
-// // 			} else 
-				
-// 			if (this.elements != null) {
-// 				for (var i=0;i<this.elements.length;i++) {
-// 					var element = this.elements[i];
-// 					var elementTag = '<div class=element>';
-// 					var tagName = element.formFieldElement.tagName;
-// 					var value = null;
-					
-// 					if (element.formFieldElement.value != null) {
-// 						value = element.formFieldElement.value;
-// 					} else if (type == 'radio' || type == 'checkbox') {
-// 						value = 'on';
-// 					}
-										
-// 					elementTag += '<' + tagName + ' name="' + this.propertyName + '"';
-					
-// 					if (element.formFieldElement.type != null) {
-// 						elementTag += ' type="' + element.formFieldElement.type + '" ';
-// 					}
-					
-// 					if (value != null) {
-// 						elementTag += ' value="' + value + '" ';
-// 					}
-					
-// 					if (element.formFieldElement.class != null) {
-// 						elementTag += ' class="' + element.formFieldElement.class + '" ';
-// 					}
-					
-// 					if (!this.editable) {
-// 						elementTag += 'disabled';
-// 					}
-					
-// 					elementTag += '>';
-					
-// 					if ((type == 'select-one' || type == 'select-multiple') && this.options != null) {
-// 						for (var j=0;j<this.options.length;j++) {
-// 							var option = this.options[j].option;
-// 							var optionTag = '<option value="' + option.value + '"';
-							
-// 							if (option.selected) {
-// 								optionTag += ' selected';
-// 							}
-							
-// 							optionTag += '></option>';
-// 							elementTag += optionTag;
-// 						}
-// 					} else if (element.formFieldElement.$ != null) {
-// 						elementTag += element.formFieldElement.$;
-// 					}
-					
-// 					elementTag += '</' + tagName + '>';
-// 					elementTag += '</div>';
-					
-// 					builder += elementTag;
-// 				}
-// 			}
-			
-// 			return new Handlebars.SafeString(builder);
-// 		});
-		
+	$(document).ready(function() {		
 // 		var source   = $("#form-template").html();
 // 		var template = Handlebars.compile(source);
 		
@@ -223,6 +172,7 @@
 	  			var source   = $(selector).html();
 	  			if (source != null) {
 	  				var template = Handlebars.compile(source);
+	  				this.$el.attr('class', 'field');
 	  				this.$el.html(template(this.model));
 	  			}
 	  		    return this;
@@ -234,8 +184,14 @@
 	  	var SectionView = Backbone.View.extend({	  	
 	  		
   			render: function() {
+  				var selector = '#section-template';
+		  			var source   = $(selector).html();
+  		  		if (source != null) {
+	  		  		var template = Handlebars.compile(source);
+	  				this.$el.html(template(this.model));	
+  		  		}
   				_.each(this.model.fields, function (field) {
-  		            $(this.el).append(new FormFieldView({model:field}).render().el);
+  		            $(this.el).find('.section-content').append(new FormFieldView({model:field}).render().el);
   		        }, this);
 	  		    return this;
 	  		}
