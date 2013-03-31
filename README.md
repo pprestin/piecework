@@ -19,8 +19,7 @@ For example, to start up with tomcat using maven on Linux, you'll want to do som
 	> cd piecework
 	> mvn tomcat:run -Dpiecework.config.location=/Users/someuser/piecework-config
 
-If you don't want to use TLS protected LDAP for identity and authorization behind a Single-Sign-On authentication layer, then you'll want to make some modifications in the integration sub-project. 
-
+If you don't want to use TLS protected LDAP for identity and authorization behind a Single-Sign-On authentication layer, then you'll want to make some modifications to the ldap configuration.
 
 
 
