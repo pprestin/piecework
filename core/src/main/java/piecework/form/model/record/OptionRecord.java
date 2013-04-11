@@ -16,6 +16,7 @@
 package piecework.form.model.record;
 
 import piecework.form.model.Option;
+import piecework.form.model.builder.OptionBuilder;
 
 /**
  * @author James Renfro
@@ -26,14 +27,14 @@ public class OptionRecord implements Option {
 	private String label;
 	private String value;
 	
-	public OptionRecord() {
+	private OptionRecord() {
 		
 	}
 	
-	public OptionRecord(Option contract) {
-		this.id = contract.getId();
-		this.label = contract.getLabel();
-		this.value = contract.getValue();
+	private OptionRecord(OptionRecord.Builder builder) {
+		this.id = builder.getId();
+		this.label = builder.getLabel();
+		this.value = builder.getValue();
 	}
 	
 	public String getId() {
@@ -64,4 +65,22 @@ public class OptionRecord implements Option {
 		return null;
 	}
 
+	public final static class Builder extends OptionBuilder<OptionRecord> {
+
+		public Builder() {
+			super();
+		}
+		
+		public Builder(Option option) {
+			super(option);
+		}
+
+
+		@Override
+		public OptionRecord build() {
+			return new OptionRecord(this);
+		}
+		
+	}
+	
 }

@@ -18,6 +18,7 @@ package piecework.form.model.record;
 import java.util.List;
 
 import piecework.form.model.Constraint;
+import piecework.form.model.builder.ConstraintBuilder;
 
 /**
  * @author James Renfro
@@ -30,16 +31,16 @@ public class ConstraintRecord implements Constraint {
 	private String value;
 	private String effect;
 
-	public ConstraintRecord() {
+	private ConstraintRecord() {
 		
 	}
 	
-	public ConstraintRecord(Constraint contract) {
-		this.constraintTypeCode = contract.getConstraintTypeCode();
-		this.referencedPropertyNames = contract.getReferencedPropertyNames();
-		this.operator = contract.getOperator();
-		this.value = contract.getValue();
-		this.effect = contract.getEffect();
+	private ConstraintRecord(ConstraintRecord.Builder builder) {
+		this.constraintTypeCode = builder.getConstraintTypeCode();
+		this.referencedPropertyNames = builder.getReferencedPropertyNames();
+		this.operator = builder.getOperator();
+		this.value = builder.getValue();
+		this.effect = builder.getEffect();
 	}
 
 	public String getConstraintTypeCode() {
@@ -82,4 +83,20 @@ public class ConstraintRecord implements Constraint {
 		this.effect = effect;
 	}
 	
+	public final static class Builder extends ConstraintBuilder<ConstraintRecord> {
+
+		public Builder() {
+			super();
+		}
+		
+		public Builder(Constraint constraint) {
+			super(constraint);
+		}
+		
+		@Override
+		public ConstraintRecord build() {
+			return new ConstraintRecord(this);
+		}
+
+	}
 }

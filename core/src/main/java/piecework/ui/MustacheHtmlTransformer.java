@@ -48,6 +48,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import piecework.common.view.UserView;
 import piecework.identity.InternalUserDetails;
 
 import com.github.mustachejava.DefaultMustacheFactory;
@@ -67,21 +68,18 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 	@Value("${templates.directory}")
 	private String templatesDirectory;
 	
-//	@Autowired
-//	private JSONProvider<Object> jsonProvider;
-	
 	@Autowired
 	private JacksonJsonProvider jsonProvider;
 	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		Resource resource = getResource(type);
+		Resource resource = getTemplateResource(type);
 		return resource != null && resource.exists();
 	}
 
 	@Override
 	public long getSize(Object t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		Resource resource = getResource(type);
+		Resource resource = getTemplateResource(type);
 		long size = 0;
 		if (resource.exists()) {
 			try {
@@ -114,20 +112,19 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 			userName = userDetails.getDisplayName();
 		}
 		
-		Resource resource = getResource(type);
-		if (resource.exists()) {
-			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), resource.getInputStream());
+		Resource template = getTemplateResource(type);
+		if (template.exists()) {
+			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), template.getInputStream());
 			try {
 				MustacheFactory mf = new DefaultMustacheFactory();
-			    Mustache mustache = mf.compile(new InputStreamReader(input), "page"); //getTemplateName(type));
+			    Mustache mustache = mf.compile(new InputStreamReader(input), "page"); 
 			    
 			    OutputStream jsonStream = new ByteArrayOutputStream();
-			    jsonProvider.writeTo(t, type, genericType, annotations, mediaType, httpHeaders, jsonStream);
-//			    jsonProvider.writeTo(t, genericType, annotations, mediaType, httpHeaders, jsonStream);
-			    
+			    jsonProvider.writeTo(t, type, genericType, annotations, mediaType, httpHeaders, jsonStream);			    
 			    String json = jsonStream.toString();
 			    
-			    mustache.execute(new PrintWriter(entityStream), new Page(t, json, userId, userName)).flush();
+			    UserView user = new UserView.Builder().visibleId(userId).displayName(userName).build(null);
+			    mustache.execute(new PrintWriter(entityStream), new Page(t, json, user)).flush();
 			} catch (IOException e) {
 				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
 			} finally {
@@ -139,11 +136,7 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 		}
 	}
 	
-	private String getTemplateName(Class<?> type) {
-		return new StringBuilder(type.getSimpleName()).append(".template").toString();
-	}
-
-	private Resource getResource(Class<?> type) {
+	private Resource getTemplateResource(Class<?> type) {
 		String templateName = new StringBuilder(type.getSimpleName()).append(".template.html").toString();
 		Resource resource = null;
 		if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}"))

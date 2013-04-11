@@ -73,43 +73,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapater {
 		AccessDecisionVoter voter = new ResourceAccessVoter();
 		return new AffirmativeBased(Collections.singletonList(voter));
 	}
-	
-//	@Bean
-//    public HttpConfiguration httpConfiguration() throws Exception {
-//		HttpConfiguration httpConfiguration = 
-//        		new HttpConfiguration(authenticationManager());
-//        httpConfiguration.setSharedObject(UserDetailsService.class, userDetailsService);
-//        httpConfiguration.applyDefaultConfigurators();
-//        httpConfiguration.authorizeUrls()
-//	        .antMatchers("/static/**").permitAll()
-//	        .antMatchers("/secure/**").authenticated();
-//        
-//        AuthenticationType type = authenticationType();
-//        
-//        switch (type) {
-//        case NORMAL:
-//        	httpConfiguration.formLogin()
-//	        	.usernameParameter("j_username")
-//	            .passwordParameter("j_password")
-//	        	.loginProcessingUrl("/login")
-//	        	.loginPage("/static/login.html")
-//	        	.failureUrl("/static/login_error.html")
-//	        	.defaultSuccessUrl("/", false)
-//	        	.permitAll();
-//        	break;
-//        case NONE:
-//        	httpConfiguration.addFilter(new RequestParameterAuthenticationFilter(authenticationManager()));
-//        	break;
-//        }
-//        
-//        return httpConfiguration;
-//
-////        .securityFilterChains(springSecurityFilterChain);
-//////        result.ignoring(ignoredRequests());
-//////        configure(result);
-////        return result;
-//    }
-	
+		
 	@Bean
 	public AuthenticationBuilder authenticationBuilder() {
 		return new AuthenticationBuilder();

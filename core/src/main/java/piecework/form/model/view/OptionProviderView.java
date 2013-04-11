@@ -41,7 +41,7 @@ public class OptionProviderView implements OptionProvider<EndpointView> {
 	private final String id;
 	
 	@XmlAttribute(name = OptionProviderView.Attributes.STORE_LOCAL)
-	private final String storeLocal;
+	private final boolean storeLocal;
 	
 	@XmlElement(name = OptionProviderView.Elements.LABEL_EXPRESSION)
 	private final String labelExpression;
@@ -53,7 +53,7 @@ public class OptionProviderView implements OptionProvider<EndpointView> {
 	private final EndpointView endpoint;
 	
 	@XmlAttribute(name = OptionProviderView.Attributes.DISABLED)
-	private final String disabled;
+	private final boolean disabled;
 	
 	private OptionProviderView() {
 		this(new OptionProviderView.Builder());
@@ -63,9 +63,9 @@ public class OptionProviderView implements OptionProvider<EndpointView> {
 		this.id = builder.getId();
 		this.labelExpression = builder.getLabelExpression();
 		this.valueExpression = builder.getValueExpression();
-		this.storeLocal = Boolean.toString(builder.isStoreLocal());
+		this.storeLocal = builder.isStoreLocal();
 		this.endpoint = builder.buildEndpoint(builder.getEndpoint());
-		this.disabled = Boolean.toString(builder.isDisabled());
+		this.disabled = builder.isDisabled();
 	}
 	
 	public String getId() {
@@ -80,7 +80,7 @@ public class OptionProviderView implements OptionProvider<EndpointView> {
 		return valueExpression;
 	}
 
-	public String getStoreLocal() {
+	public boolean getStoreLocal() {
 		return storeLocal;
 	}
 
@@ -88,7 +88,7 @@ public class OptionProviderView implements OptionProvider<EndpointView> {
 		return endpoint;
 	}
 
-	public String getDisabled() {
+	public boolean getDisabled() {
 		return disabled;
 	}
 

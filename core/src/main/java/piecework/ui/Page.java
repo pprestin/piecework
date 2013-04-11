@@ -15,6 +15,8 @@
  */
 package piecework.ui;
 
+import piecework.common.view.UserView;
+
 
 
 /**
@@ -24,30 +26,24 @@ public class Page {
 
 	private final Object resource;
 	private final String json;
-	private final String userId;
-	private final String userName;
+	private final UserView user;
 	
-	public Page(Object resource, String json, String userId, String userName) {
+	public Page(Object resource, String json, UserView user) {
 		this.resource = resource;
 		this.json = json;
-		this.userId = userId;
-		this.userName = userName;
+		this.user = user;
 	}
 
 	public Object getResource() {
 		return resource;
 	}
 
-	public String getUserId() {
-		return userId;
-	}
-
-	public String getUserName() {
-		return userName;
-	}
-
 	public String getJson() {
 		return json;
+	}
+
+	public UserView getUser() {
+		return user;
 	}
 	
 }

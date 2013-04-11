@@ -212,7 +212,7 @@ public class FormRecord implements Form {
 		
 		@SuppressWarnings("unchecked")
 		protected <S extends Section> SectionBuilder<S> sectionBuilder(S section) {
-			return (SectionBuilder<S>) new SectionView.Builder((SectionView) section);
+			return (SectionBuilder<S>) new SectionRecord.Builder((SectionRecord) section);
 		}
 		
 	}

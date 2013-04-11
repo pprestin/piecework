@@ -27,6 +27,13 @@ import piecework.form.model.Constraint;
 import piecework.form.model.FormField;
 import piecework.form.model.FormFieldElement;
 import piecework.form.model.Option;
+import piecework.form.model.builder.ConstraintBuilder;
+import piecework.form.model.builder.FormFieldBuilder;
+import piecework.form.model.builder.FormFieldElementBuilder;
+import piecework.form.model.builder.OptionBuilder;
+import piecework.form.model.view.ConstraintView;
+import piecework.form.model.view.FormFieldElementView;
+import piecework.form.model.view.OptionView;
 
 /**
  * @author James Renfro
@@ -52,39 +59,39 @@ public class FormFieldRecord implements FormField, Serializable {
 	private String message;
 	private String messageType;
 	
-	public FormFieldRecord() {
+	private FormFieldRecord() {
 		
 	}
 	
-	public FormFieldRecord(FormField field) {
+	private FormFieldRecord(FormFieldRecord.Builder field) {
 		this.id = field.getId() != null ? field.getId() : UUID.randomUUID().toString();
 		this.propertyName = field.getPropertyName();
-		this.label = field.getLabel() != null ? new FormFieldElementRecord(field.getLabel()) : null;
-		this.directions = field.getDirections() != null ? new FormFieldElementRecord(field.getDirections()) : null;
+		this.label = (FormFieldElementRecord) (field.getLabel() != null ? field.getLabel().build() : null);
+		this.directions = (FormFieldElementRecord) (field.getDirections() != null ? field.getDirections().build() : null);
 		this.editable = field.getEditable();
 		this.required = field.getRequired();
 		this.restricted = field.getRestricted();
 		this.typeAttr = field.getTypeAttr();
-		List<? extends FormFieldElement> elementContracts = field.getElements();
-		if (elementContracts != null && !elementContracts.isEmpty()) {
-			this.elements = new ArrayList<FormFieldElementRecord>(elementContracts.size());
-			for (FormFieldElement elementContract : elementContracts) {
-				elements.add(new FormFieldElementRecord(elementContract));
+		List<FormFieldElementBuilder<?>> elementBuilders = field.getElements();
+		if (elementBuilders != null && !elementBuilders.isEmpty()) {
+			this.elements = new ArrayList<FormFieldElementRecord>(elementBuilders.size());
+			for (FormFieldElementBuilder<?> elementBuilder : elementBuilders) {
+				elements.add((FormFieldElementRecord) elementBuilder.build());
 			}
 		}
-		this.optionProvider = field.getOptionProvider() != null ? new OptionProviderRecord(field.getOptionProvider()) : null;
-		List<? extends Option> optionContracts = field.getOptions();
-		if (optionContracts != null && !optionContracts.isEmpty()) {
-			this.options = new ArrayList<OptionRecord>(optionContracts.size());
-			for (Option optionContract : optionContracts) {
-				options.add(new OptionRecord(optionContract));
+		this.optionProvider = (OptionProviderRecord) (field.getOptionProvider() != null ? field.getOptionProvider().build() : null);
+		List<OptionBuilder<?>> optionBuilders = field.getOptions();
+		if (optionBuilders != null && !optionBuilders.isEmpty()) {
+			this.options = new ArrayList<OptionRecord>(optionBuilders.size());
+			for (OptionBuilder<?> optionBuilder : optionBuilders) {
+				options.add((OptionRecord) optionBuilder.build());
 			}
 		}
-		List<? extends Constraint> constraintContracts = field.getConstraints();
-		if (constraintContracts != null && !constraintContracts.isEmpty()) {
-			this.constraints = new ArrayList<ConstraintRecord>(constraintContracts.size());
-			for (Constraint constraintContract : constraintContracts) {
-				this.constraints.add(new ConstraintRecord(constraintContract));
+		List<ConstraintBuilder<?>> constraintBuilders = field.getConstraints();
+		if (constraintBuilders != null && !constraintBuilders.isEmpty()) {
+			this.constraints = new ArrayList<ConstraintRecord>(constraintBuilders.size());
+			for (ConstraintBuilder<?> constraintBuilder : constraintBuilders) {
+				this.constraints.add((ConstraintRecord) constraintBuilder.build());
 			}
 		} else {
 			this.constraints = null;
@@ -206,4 +213,54 @@ public class FormFieldRecord implements FormField, Serializable {
 		this.messageType = messageType;
 	}
 	
+	public final static class Builder extends FormFieldBuilder<FormFieldRecord> {
+
+		public Builder() {
+			super();
+		}
+		
+		public Builder(FormField field) {
+			super(field);
+		}
+
+		@Override
+		public FormFieldRecord build(boolean readOnly) {
+			return new FormFieldRecord(this);
+		}
+
+		@Override
+		protected ConstraintBuilder<?> constraintBuilder(Constraint constraint) {
+			if (constraint == null)
+				return null;
+			
+			return new ConstraintRecord.Builder(constraint);
+		}
+		
+		@Override
+		protected FormFieldElementBuilder<?> elementBuilder(FormFieldElement element) {
+			if (element == null)
+				return null;
+			
+			return new FormFieldElementRecord.Builder(FormFieldElement.class.cast(element));
+		}
+		
+		protected OptionBuilder<?> optionBuilder(Option option) {
+			if (option == null)
+				return null;
+			
+			return new OptionRecord.Builder(option);
+		}
+						
+		static OptionProviderRecord buildOptionProvider(OptionProviderRecord.Builder builder) {
+			return builder != null ? builder.build() : null;
+		}
+			
+		private static String getSafeBooleanString(Boolean b) {
+			return b != null ? Boolean.toString(b) : null;
+		}
+		
+		private static Boolean getEditable(Boolean editable, boolean readOnly) {
+			return !readOnly && editable != null ? editable : Boolean.FALSE;
+		}
+	}
 }

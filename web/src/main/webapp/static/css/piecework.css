@@ -5,9 +5,9 @@ html,body {
 body {
 	background-color: Gainsboro; 
 /* 	font: normal normal normal 1em helvetica, clean, sans-serif; */
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 14px;
-	font-weight: normal;
+/* 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; */
+/* 	font-size: 14px; */
+/* 	font-weight: normal; */
 	margin: 0px;
 /* 	min-width: 600px; */
 	padding: 0px;
@@ -243,12 +243,12 @@ label.warning {
 }
 
 select {
-	background-color: white;
+/* 	background-color: white; */
 	border: 1px solid #AAA;
-	border-radius: 4px;
-	font-size: 1em;
-	height: 24px;
-	padding: 4px;
+/* 	border-radius: 4px; */
+/* 	font-size: 1em; */
+/* 	height: 24px; */
+/* 	padding: 4px; */
 }
 
 select.fieldInput.error {
@@ -282,6 +282,10 @@ ul li {
 
 ul li:last-child {
 	border-bottom: 1px solid transparent;
+}
+
+.alert {
+	margin-bottom: 0px;
 }
 
 .dialog {
@@ -351,6 +355,8 @@ ul li:last-child {
 }
 
 .page .page-header {
+	border-bottom: 1px solid transparent;
+	margin: 0px;
 	min-width: 850px;
 	white-space: nowrap;
 }
@@ -474,7 +480,7 @@ ul li:last-child {
 }
 
 .page .section .field {
-	padding: 5px 0px;
+/* 	padding: 5px 0px; */
 	vertical-align: top;
 }
 

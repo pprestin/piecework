@@ -19,10 +19,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.data.mongodb.core.mapping.DBRef;
-
 import piecework.form.model.FormField;
 import piecework.form.model.Section;
+import piecework.form.model.builder.FormFieldBuilder;
+import piecework.form.model.builder.SectionBuilder;
+import piecework.form.model.view.FormFieldView;
 
 /**
  * @author James Renfro
@@ -39,20 +40,20 @@ public class SectionRecord implements Section, Serializable {
 	private List<FormFieldRecord> fields;
 	private String actionValue;
 	
-	public SectionRecord() {
+	private SectionRecord() {
 		
 	}
 	
-	public SectionRecord(Section section) {
+	private SectionRecord(SectionRecord.Builder section) {
 		this.id = section.getId();
 		this.name = section.getName();
 		this.label = section.getLabel();
 		this.description = section.getDescription();
-		List<? extends FormField> fields = section.getFields();
+		List<FormFieldBuilder<?>> fields = section.getFields();
 		if (fields != null && !fields.isEmpty()) {
 			this.fields = new ArrayList<FormFieldRecord>(fields.size());
-			for (FormField field : fields) {
-				this.fields.add(new FormFieldRecord(field));
+			for (FormFieldBuilder<?> field : fields) {
+				this.fields.add((FormFieldRecord) field.build(false));
 			}
 		}
 		this.actionValue = section.getActionValue();
@@ -122,4 +123,24 @@ public class SectionRecord implements Section, Serializable {
 		return null;
 	}
 
+	public final static class Builder extends SectionBuilder<SectionRecord> {
+
+		public Builder() {
+			super();
+		}
+		
+		public Builder(Section section) {
+			super(section);
+		}
+
+		@Override
+		public SectionRecord build() {
+			return new SectionRecord(this);
+		}
+		
+		@SuppressWarnings("unchecked")
+		protected <F extends FormField> FormFieldBuilder<F> fieldBuilder(F field) {
+			return (FormFieldBuilder<F>) new FormFieldRecord.Builder(field);
+		}
+	}
 }

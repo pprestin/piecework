@@ -46,12 +46,6 @@ import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
-import de.flapdoodle.embed.process.config.io.ProcessOutput;
-import de.flapdoodle.embed.process.extract.ITempNaming;
-import de.flapdoodle.embed.process.extract.UUIDTempNaming;
-import de.flapdoodle.embed.process.io.Processors;
-import de.flapdoodle.embed.process.io.directories.FixedPath;
-import de.flapdoodle.embed.process.io.directories.IDirectory;
 
 /**
  * 
@@ -93,19 +87,7 @@ public class EmbeddedMongoInstance implements DisposableBean {
 		
 		String storageDirectory = storePath + File.pathSeparator + "storage";
 		MongodConfig mongodConfig = new MongodConfig(Version.Main.PRODUCTION, new Net(bindIp, port, ipv6), new Storage(storageDirectory, replSetName, oplogSize), new Timeout());
-		//mongodConfig = new MongodConfig(Version.Main.V2_0, port, false, storePath);
-
-//		IDirectory artifactStorePath = new FixedPath(storePath);
-//		ITempNaming executableNaming = new UUIDTempNaming(); // new
-																// UserTempNaming();
 		IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(Command.MongoD).build();
-//		runtimeConfig.getDownloadConfig().setArtifactStorePathNaming(
-//				artifactStorePath);
-//		runtimeConfig.setExecutableNaming(executableNaming);
-//		runtimeConfig.setProcessOutput(new ProcessOutput(Processors.logTo(java.util.logging.Logger.global,
-//						java.util.logging.Level.FINEST), Processors.logTo(java.util.logging.Logger.global,
-//						java.util.logging.Level.FINEST), Processors.logTo(java.util.logging.Logger.global,
-//						java.util.logging.Level.FINEST)));
 		MongodStarter runtime = MongodStarter.getInstance(runtimeConfig);
 
 		mongodExecutable = null;

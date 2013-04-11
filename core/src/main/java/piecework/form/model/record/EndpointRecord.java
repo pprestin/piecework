@@ -16,6 +16,7 @@
 package piecework.form.model.record;
 
 import piecework.form.model.Endpoint;
+import piecework.form.model.builder.EndpointBuilder;
 
 /**
  * @author James Renfro
@@ -27,15 +28,15 @@ public class EndpointRecord implements Endpoint {
 	private String method;
 	private String mediaType;
 	
-	public EndpointRecord() {
+	private EndpointRecord() {
 		
 	}
 	
-	public EndpointRecord(Endpoint contract) {
-		this.id = contract.getId();
-		this.url = contract.getUrl();
-		this.method = contract.getMethod();
-		this.mediaType = contract.getMediaType();
+	private EndpointRecord(EndpointRecord.Builder builder) {
+		this.id = builder.getId();
+		this.url = builder.getUrl();
+		this.method = builder.getMethod();
+		this.mediaType = builder.getMediaType();
 	}
 	
 	public String getId() {
@@ -62,5 +63,20 @@ public class EndpointRecord implements Endpoint {
 	public void setMediaType(String mediaType) {
 		this.mediaType = mediaType;
 	}
-	
+	public final static class Builder extends EndpointBuilder<EndpointRecord> {
+
+		public Builder() {
+			super();
+		}
+		
+		public Builder(Endpoint endpoint) {
+			super(endpoint);
+		}
+		
+		@Override
+		public EndpointRecord build() {
+			return new EndpointRecord(this);
+		}
+		
+	}
 }

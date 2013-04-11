@@ -16,6 +16,7 @@
 package piecework.form.model.record;
 
 import piecework.form.model.FormFieldElement;
+import piecework.form.model.builder.FormFieldElementBuilder;
 
 /**
  * @author James Renfro
@@ -34,22 +35,22 @@ public class FormFieldElementRecord implements FormFieldElement {
 	private String displaySize;
 	private String text;
 	
-	public FormFieldElementRecord() {
+	private FormFieldElementRecord() {
 		
 	}
 	
-	public FormFieldElementRecord(FormFieldElement contract) {
-		this.id = contract.getId();
-		this.tagName = contract.getTagName();
-		this.classAttr = contract.getClassAttr();
-		this.styleAttr = contract.getStyleAttr();
-		this.titleAttr = contract.getTitleAttr();
-		this.typeAttr = contract.getTypeAttr();
-		this.valueAttr = contract.getValueAttr();
-		this.maxSize = contract.getMaxSize();
-		this.minSize = contract.getMinSize();
-		this.displaySize = contract.getDisplaySize();
-		this.text = contract.getText();
+	private FormFieldElementRecord(FormFieldElementRecord.Builder builder) {
+		this.id = builder.getId();
+		this.tagName = builder.getTagName();
+		this.classAttr = builder.getClassAttr();
+		this.styleAttr = builder.getStyleAttr();
+		this.titleAttr = builder.getTitleAttr();
+		this.typeAttr = builder.getTypeAttr();
+		this.valueAttr = builder.getValueAttr();
+		this.maxSize = builder.getMaxSize();
+		this.minSize = builder.getMinSize();
+		this.displaySize = builder.getDisplaySize();
+		this.text = builder.getText();
 	}
 	
 	public String getId() {
@@ -139,4 +140,19 @@ public class FormFieldElementRecord implements FormFieldElement {
 		this.text = text;
 	}
 
+	public final static class Builder extends FormFieldElementBuilder<FormFieldElementRecord> {
+		
+		public Builder() {
+			super();
+		}
+		
+		public Builder(FormFieldElement element) {
+			super(element);
+		}
+		
+		public FormFieldElementRecord build() {
+			return new FormFieldElementRecord(this);
+		}
+
+	}
 }

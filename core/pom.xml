@@ -76,6 +76,7 @@
 		<dependency>
 			<groupId>org.apache.directory.server</groupId>
 			<artifactId>apacheds-all</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.aspectj</groupId>

@@ -16,6 +16,7 @@
 package piecework.config;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.owasp.validator.html.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -102,24 +104,6 @@ public class ApplicationConfiguration {
 		return new JacksonJsonProvider(new ObjectMapper());
 	}
 	
-//	@Bean
-//	public JSONProvider<Object> jsonProvider() {
-//		JSONProvider<Object> jsonProvider = new JSONProvider<Object>();
-//		
-//		List<String> keys = new ArrayList<String>();
-//		keys.add("elements");
-//		keys.add("fields");
-//		keys.add("options");
-//		keys.add("sections");
-//		
-//		jsonProvider.setArrayKeys(keys);
-//		jsonProvider.setAttributesToElements(true);
-//		jsonProvider.setDropCollectionWrapperElement(true);
-//		jsonProvider.setSerializeAsArray(true);
-//		
-//		return jsonProvider;
-//	}
-	
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {
 		// This is the list of places to look for configuration properties
@@ -160,6 +144,17 @@ public class ApplicationConfiguration {
 		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
 		configurer.setIgnoreUnresolvablePlaceholders(true);
 		return configurer;
+	}
+	
+	@Bean
+	public Policy antisamyPolicy() throws Exception {
+		ClassPathResource policyResource = new ClassPathResource("META-INF/piecework/antisamy-1.4.3.xml");
+		URL policyUrl = policyResource.getURL();
+		
+//		if (!policyFile.exists())
+//			throw new Exception("Unable to create the user input santitization policy bean because the file was not available on the classpath!");
+		
+		return Policy.getInstance(policyUrl);
 	}
 	
 }

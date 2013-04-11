@@ -56,6 +56,11 @@ public abstract class UserBuilder<U extends User> extends Builder {
 	
 	public abstract U build(ViewContext context);
 		
+	public UserBuilder<U> id(String id) {
+		super.id(id);
+		return this;
+	}
+	
 	public UserBuilder<U> visibleId(String visibleId) {
 		this.visibleId = visibleId;
 		return this;

@@ -36,6 +36,8 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
 			
 				if (grantedAuthority.equals("ROLE_ADMIN")) {
 					mapped.add(new ResourceAuthority(AuthorizationRole.OWNER, "demo"));
+					mapped.add(new ResourceAuthority(AuthorizationRole.INITIATOR, "demo"));
+					mapped.add(new ResourceAuthority(AuthorizationRole.USER, "demo"));
 				}
 			}
 			return mapped;

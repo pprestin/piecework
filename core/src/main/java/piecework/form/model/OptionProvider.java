@@ -26,10 +26,10 @@ public interface OptionProvider<E extends Endpoint> {
 	
 	String getValueExpression();
 	
-	String getStoreLocal();
+	boolean getStoreLocal();
 	
 	E getEndpoint();
 	
-	String getDisabled();
+	boolean getDisabled();
 	
 }

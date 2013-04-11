@@ -17,6 +17,8 @@ package piecework.form.model.record;
 
 import piecework.form.model.Endpoint;
 import piecework.form.model.OptionProvider;
+import piecework.form.model.builder.EndpointBuilder;
+import piecework.form.model.builder.OptionProviderBuilder;
 
 /**
  * @author James Renfro
@@ -26,21 +28,21 @@ public class OptionProviderRecord implements OptionProvider<EndpointRecord> {
 	private String id;
 	private String labelExpression;
 	private String valueExpression;
-	private String storeLocal;
-	private String disabled;
+	private boolean storeLocal;
+	private boolean disabled;
 	private EndpointRecord endpoint;
 	
-	public OptionProviderRecord() {
+	private OptionProviderRecord() {
 		
 	}
 	
-	public OptionProviderRecord(OptionProvider<? extends Endpoint> contract) {
-		this.id = contract.getId();
-		this.labelExpression = contract.getLabelExpression();
-		this.valueExpression = contract.getValueExpression();
-		this.storeLocal = contract.getStoreLocal();
-		this.disabled = contract.getDisabled();
-		this.endpoint = new EndpointRecord(contract.getEndpoint());
+	private OptionProviderRecord(OptionProviderRecord.Builder builder) {
+		this.id = builder.getId();
+		this.labelExpression = builder.getLabelExpression();
+		this.valueExpression = builder.getValueExpression();
+		this.storeLocal = builder.isStoreLocal();
+		this.disabled = builder.isDisabled();
+		this.endpoint = (EndpointRecord) (builder.getEndpoint() != null ? builder.getEndpoint().build() : null);
 	}
 	
 	public String getId() {
@@ -65,16 +67,16 @@ public class OptionProviderRecord implements OptionProvider<EndpointRecord> {
 		this.valueExpression = valueExpression;
 	}
 
-	public String getStoreLocal() {
+	public boolean getStoreLocal() {
 		return storeLocal;
 	}
-	public void setStoreLocal(String storeLocal) {
+	public void setStoreLocal(boolean storeLocal) {
 		this.storeLocal = storeLocal;
 	}
-	public String getDisabled() {
+	public boolean getDisabled() {
 		return disabled;
 	}
-	public void setDisabled(String disabled) {
+	public void setDisabled(boolean disabled) {
 		this.disabled = disabled;
 	}
 	public EndpointRecord getEndpoint() {
@@ -84,5 +86,25 @@ public class OptionProviderRecord implements OptionProvider<EndpointRecord> {
 		this.endpoint = endpoint;
 	}
 	
+	public final static class Builder extends OptionProviderBuilder<OptionProviderRecord> {
 
+		public Builder() {
+			super();
+		}
+		
+		public Builder(OptionProvider<?> provider) {
+			super(provider);
+		}
+		
+		@Override
+		public OptionProviderRecord build() {
+			return new OptionProviderRecord(this);
+		}
+
+		@Override
+		public EndpointBuilder<?> endpointBuilder(Endpoint endpoint) {
+			return new EndpointRecord.Builder(endpoint);
+		}
+		
+	}
 }

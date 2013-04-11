@@ -257,7 +257,7 @@ public abstract class FormFieldBuilder<F extends FormField> extends Builder {
 		return this.typeAttr;
 	}
 
-	public OptionProviderView.Builder getOptionProvider() {
+	public OptionProviderBuilder<?> getOptionProvider() {
 		return optionProvider;
 	}
 

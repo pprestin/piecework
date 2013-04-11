@@ -36,6 +36,7 @@ import piecework.form.model.builder.ConstraintBuilder;
 import piecework.form.model.builder.FormFieldBuilder;
 import piecework.form.model.builder.FormFieldElementBuilder;
 import piecework.form.model.builder.OptionBuilder;
+import piecework.form.model.builder.OptionProviderBuilder;
 
 /**
  * @author James Renfro
@@ -239,8 +240,8 @@ public class FormFieldView implements FormField {
 			return new OptionView.Builder(option);
 		}
 						
-		static OptionProviderView buildOptionProvider(OptionProviderView.Builder builder) {
-			return builder != null ? builder.build() : null;
+		static OptionProviderView buildOptionProvider(OptionProviderBuilder<?> builder) {
+			return (OptionProviderView) (builder != null ? builder.build() : null);
 		}
 			
 		private static String getSafeBooleanString(Boolean b) {

@@ -1,19 +1,32 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
 	<meta http-equiv="X-UA-Compatible" content="IE=8" />
 	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=0.6, maximum-scale=4.0, user-scalable=yes" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 	<meta name="viewport" content="width=device-width, initial-scale=0.6, maximum-scale=4.0, user-scalable=yes" /> -->
 	<title><% name %></title>
-	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/vendor/jqueryui-smoothness/jquery-ui-1.8.20.custom.css"></link>
+	<link href="/piecework/static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="/piecework/static/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+<!-- 	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/vendor/jqueryui-smoothness/jquery-ui-1.8.20.custom.css"></link> -->
 	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/piecework.css"></link>
-	<link rel="stylesheet" type="text/css" media='screen and (max-width: 700px)' href="/piecework/static/css/piecework.mobile.css"></link>
+<!-- 	<link rel="stylesheet" type="text/css" media='screen and (max-width: 700px)' href="/piecework/static/css/piecework.mobile.css"></link> -->
 	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/piecework.form.css"></link>
-	<script type="text/javascript" src="/piecework/static/js/vendor/jquery.min.js"></script>
-	<script type="text/javascript" src="/piecework/static/js/vendor/underscore-min.js"></script>
-	<script type="text/javascript" src="/piecework/static/js/vendor/backbone.js"></script>
-	<script type="text/javascript" src="/piecework/static/js/vendor/handlebars.js"></script>
 	
-<!-- 	<script type="text/javascript" src="/piecework/static/lib/bootstrap/js/bootstrap.min.js"></script> -->
+	<script id="dialog-template" type="text/x-handlebars-template">
+		<button id="{{id}}" type="button" class="btn" role="button" data-toggle="modal" data-target="#{{id}}_dialog">{{label}}</button>
+		<div id="{{id}}_dialog" class="modal hide fade" for="{{id}}">
+			<div class="modal-header"><h3>{{label}}</h3></div>
+			<div class="modal-body">
+				<label class="actionConfirmationDescription">{{description}}</label>
+			</div>
+			<div class="modal-footer">
+				<input type="hidden" class="actionValue" value="{{actionValue}}"></input>
+				<button type="button" role="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<button type="submit" role="button" class="btn btn-primary">OK</button>
+			</div>
+		</div>
+	</script>
 
 	<script id='section-template' type="text/x-handlebars-template">
 		<div id="{{id}}" class="section {{#if selected}}selected{{/if}} {{#if editable}}selectable{{/if}}">
@@ -70,26 +83,24 @@
 	</script>
 </head>
 
-<body class="restflow form <% resource.layout %>">
+<body>
+<!-- class="restflow form <% resource.layout %>"> -->
 	<div style="display:none">
-		<div id="userName"><% userName %></div>
-		<div id="userId"><% userId %></div>
+		<div id="userName"><% user.displayName %></div>
+		<div id="userId"><% user.visibleId %></div>
 		<div id="serviceUri"><% serviceUri %></div>
 		<div id="version"><% version %></div>
 		<div id="resourcesPath"><% resourcesPath %></xsl:value-of></div>
 	</div>
 	
-	<form id="taskForm" method="POST">
+	<form id="main-form" method="POST">
 		<div class="screen-header">
 			<div class="userInformation"><% userName %></div>
 		</div>
 		<div class="page">
 			<div class="page-toolbar">
-				<%#resource.processInstanceId%>
-				Testing
-				<%/resource.processInstanceId%>
-				<div class="attachmentToolbar"></div>
-				<div class="taskToolbar"></div>
+				<div id="attachmentToolbar" class="pull-right"></div>
+				<div id="task-toolbar" class="pull-right"></div>
 			</div>
 			<div class="page-header">
 				<%#resource.logoUrl%>
@@ -101,9 +112,12 @@
 			</div>
 			<div class="go-back">Sections</div>
 			<div class="page-main">
-				<div class="page-notification">
-					<% resource.message %>
+				<%#resource.message%>
+				<div class="alert">
+				  <button type="button" class="close" data-dismiss="alert">&times;</button>
+				  <div class="page-notification"><%resource.message%></div>
 				</div>
+				<%/resource.message%>
 				<div class="navigation">
 				 	<div id="breadcrumbs"></div>
 				</div>
@@ -113,7 +127,7 @@
 				 		Thanks for submitting your form. Your confirmation number is <%resource.processInstanceId%>.
 				 	</h3>
 					<%/resource.processInstanceId%>
-					<div id="formplaceholder">
+					<div class="form-content-placeholder">
 						<input type="hidden" name="_submissionId" value="<%resource.submissionId%>"></input>
 					</div>
 				</div>
@@ -121,132 +135,14 @@
 		</div>
 	</form>
 	
-<!-- 	<div id="placeholder"></div> -->
 </body>
-
-<!-- <%name%> -->
-
+<script type="text/javascript" src="/piecework/static/js/piecework.deps.js"></script>
+<script type="text/javascript" src="/piecework/static/js/piecework.form.js"></script>
+	
 <script type="text/javascript">
-	$(document).ready(function() {		
-// 		var source   = $("#form-template").html();
-// 		var template = Handlebars.compile(source);
-		
-// 	  	var context = <%& json %>;
-// 	  	var html    = template(context);
-	  	
-// 	  	var FieldModel = Backbone.Model.extend({
-// 	  	  initialize: function() {
-// 	  		this.id = null;
-// 	  		this.propertyName = null;
-// 	  		this.label = null;
-// 	  		this.editable = false;
-// 	  		this.required = false;
-// 	  		this.restricted = false;
-// 	  		this.type = 'text';
-// 	  		this.elements = null;
-// 	  	  }
-// 	  	});
-	  
-// 	  	var FieldListCollection = Backbone.Collection.extend({
-// 	  	  	model: FieldModel,
-// 	  	  	url: "/fields"
-// 	  	});
-	  	
-// 	  	var sections = context.sections;
-// 	  	for (var i=0;i<sections.length;i++) {
-// 	  		var section = sections[i];
-// 	  		var fields = section.fields;
-// 	  		for (var j=0;j<fields.length;j++) {
-// 		  		var field = fields[j];
-// 		  		var fieldModel = new FieldModel(field);
-		
-// 	  		}
-	  		
-// // 	  		field.fetch();
-// 	  	}
-	  	
-	  	var FormFieldView = Backbone.View.extend({
-	  		
-	  		render: function() {
-	  			var selector = '#field-' + this.model.typeAttr + '-template';
-	  			var source   = $(selector).html();
-	  			if (source != null) {
-	  				var template = Handlebars.compile(source);
-	  				this.$el.attr('class', 'field');
-	  				this.$el.html(template(this.model));
-	  			}
-	  		    return this;
-	  		}
-	  	
-	  	});
-	  	
-	  	
-	  	var SectionView = Backbone.View.extend({	  	
-	  		
-  			render: function() {
-  				var selector = '#section-template';
-		  			var source   = $(selector).html();
-  		  		if (source != null) {
-	  		  		var template = Handlebars.compile(source);
-	  				this.$el.html(template(this.model));	
-  		  		}
-  				_.each(this.model.fields, function (field) {
-  		            $(this.el).find('.section-content').append(new FormFieldView({model:field}).render().el);
-  		        }, this);
-	  		    return this;
-	  		}
-	  	
-	  	});
-	  	
-	  	var FormView = Backbone.View.extend({	  	
-	  		
-  			render: function() {
-  				
-  				_.each(this.model.sections, function (section) {
-  		            $(this.el).append(new SectionView({model:section}).render().el);
-  		        }, this);
-  				
-// 	  			this.$el.html('Hello new world!');
-	  		    return this;
-	  		}
-	  	
-	  	});
-	  		  	
-	  	var formView = new FormView({el: $('#formplaceholder'), model:<%& json %>});	  
-	  	formView.render();
-	  	
-	  	
-// 	 	// Router
-// 	  	var AppRouter = Backbone.Router.extend({
-	  	 
-// 	  	    routes:{
-// 	  	        "":"list",
-// 	  	        "fields/:id":"fieldDetail"
-// 	  	    },
-	  	 
-// 	  	    list:function () {
-// 	  	        this.fieldList = new FieldListCollection();
-// 	  	        this.fieldListView = new WineListView({model:this.fieldList});
-// 	  	        this.fieldList.fetch();
-// 	  	        $('#sidebar').html(this.fieldListView.render().el);
-// 	  	    },
-	  	 
-// 	  	    fieldDetail:function (id) {
-// 	  	        this.field = this.fieldList.get(id);
-// 	  	        this.fieldView = new FormFieldView({model:this.field});
-// 	  	        $('#content').html(this.fieldView.render().el);
-// 	  	    }
-// 	  	});
-	  	 
-// 	  	var app = new AppRouter();
-// 	  	Backbone.history.start();
-
-	  	
-		// Parse the javascript object and create models 
-	  	
-	  	
-// 		$('#form-placeholder').html(html);
-	});
+	app = {};
+	app.resource = <%& json %>;
 </script>
-
+<script type="text/javascript" src="/piecework/static/js/piecework.js"></script>
+<script type="text/javascript" src="/piecework/static/lib/bootstrap/js/bootstrap.min.js"></script>
 </html>

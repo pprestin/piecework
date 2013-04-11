@@ -15,27 +15,69 @@
  */
 package piecework.util;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
+ * Simple wrapper class on a Map<String, List<String>> that also can contains a previous version. 
+ * 
  * @author James Renfro
  */
-public interface PropertyValueReader {
+public class PropertyValueReader {
 
-	String getFirstValue(String propertyName);
+	private final Map<String, List<String>> formData;
+	private String title;
+	private final PropertyValueReader previous;
 	
-	List<String> getValuesAsStrings(String propertyName);
+	public PropertyValueReader(Map<String, List<String>> formData) {
+		this(formData, null, null);
+	}
 	
-	Set<String> keySet();
+	public PropertyValueReader(Map<String, List<String>> formData, String title) {
+		this(formData, title, null);
+	}
 	
-	Set<Map.Entry<String, List<String>>> entrySet();
+	public PropertyValueReader(Map<String, List<String>> formData, String title, PropertyValueReader previous) {
+		this.formData = formData;
+		this.title = title;
+		this.previous = previous;
+	}
 	
-	boolean hasPreviousValue(String propertyName);
+	public PropertyValueReader(PropertyValueReader delegate, PropertyValueReader previous) {
+		this.formData = delegate.formData;
+		this.title = delegate.title;
+		this.previous = previous;
+	}
 	
-	List<String> getPreviousValues(String propertyName);
+	public String getFirstValue(String propertyName) {
+		List<String> values = getValuesAsStrings(propertyName);
+		return values != null && !values.isEmpty() ? values.iterator().next() : null;
+	}
 	
-	String getTitle();
+	@SuppressWarnings("unchecked")
+	public List<String> getValuesAsStrings(String propertyName) {	
+		return (List<String>) (formData != null ? formData.get(propertyName) : Collections.emptyList());
+	}
+	
+	public boolean hasPreviousValue(String propertyName) {
+		List<String> previousValues = previous != null ? previous.getValuesAsStrings(propertyName) : null;
+		
+		return previousValues != null && !previousValues.isEmpty() && !StringUtils.isEmpty(previousValues.iterator().next());
+	}
+
+	public List<String> getPreviousValues(String propertyName) {
+		return previous != null ? previous.getValuesAsStrings(propertyName) : null;
+	}
+	
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
 	
 }
