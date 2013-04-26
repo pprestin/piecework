@@ -25,6 +25,10 @@ public interface Process extends Serializable {
 
 	String getId();
 	
+	String getProcessLabel();
+	
+	String getProcessSummary();
+	
 	String getProcessDefinitionKey();
 	
 	String getEngine();

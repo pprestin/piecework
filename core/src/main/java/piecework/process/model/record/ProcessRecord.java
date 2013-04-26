@@ -34,6 +34,10 @@ public class ProcessRecord implements piecework.process.model.Process {
 	@Id
 	private String id;
 	
+	private String processLabel;
+	
+	private String processSummary;
+	
 	private String processDefinitionKey;
 	
 	private String engine;
@@ -54,6 +58,8 @@ public class ProcessRecord implements piecework.process.model.Process {
 	
 	private ProcessRecord(ProcessRecord.Builder builder) {
 		this.id = builder.getId();
+		this.processLabel = builder.getProcessLabel();
+		this.processSummary = builder.getProcessSummary();
 		this.processDefinitionKey = builder.getProcessDefinitionKey();
 		this.engine = builder.getEngine();
 		this.engineProcessDefinitionKey = builder.getEngineProcessDefinitionKey();
@@ -151,6 +157,14 @@ public class ProcessRecord implements piecework.process.model.Process {
 		public ProcessRecord build(ViewContext context) {
 			return new ProcessRecord(this);
 		}
+	}
+
+	public String getProcessLabel() {
+		return processLabel;
+	}
+
+	public String getProcessSummary() {
+		return processSummary;
 	}
 
 }

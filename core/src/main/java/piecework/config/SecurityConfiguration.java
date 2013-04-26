@@ -32,7 +32,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.AuthenticationBuilder;
 import org.springframework.security.config.annotation.web.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.ExpressionUrlAuthorizations;
-import org.springframework.security.config.annotation.web.HttpConfiguration;
+import org.springframework.security.config.annotation.web.HttpConfigurator;
 import org.springframework.security.config.annotation.web.SpringSecurityFilterChainBuilder.IgnoredRequestRegistry;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
@@ -112,21 +112,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		return type;
 	}
 
-
 	@Override
-	protected void authorizeUrls(ExpressionUrlAuthorizations authorizations) {
-		authorizations.antMatchers("/static/**").permitAll()
-        	.antMatchers("/secure/**").authenticated();
-	}
-	
-	@Override
-	protected void ignoredRequests(IgnoredRequestRegistry ignoredRequests) {
-        ignoredRequests
-            .antMatchers("/static/**");
-    }
-
-	@Override
-	protected void configure(HttpConfiguration httpConfiguration)
+	public void configure(HttpConfigurator httpConfiguration)
 			throws Exception {
 		AuthenticationType type = authenticationType();
 
@@ -145,5 +132,19 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 			break;
 		}
 	}
+
+	@Override
+	protected void authorizeUrls(ExpressionUrlAuthorizations authorizations) {
+		authorizations.antMatchers("/static/**").permitAll()
+        	.antMatchers("/secure/**").authenticated();
+	}
+	
+	@Override
+	protected void ignoredRequests(IgnoredRequestRegistry ignoredRequests) {
+        ignoredRequests
+            .antMatchers("/static/**");
+    }
+
+
 		
 }

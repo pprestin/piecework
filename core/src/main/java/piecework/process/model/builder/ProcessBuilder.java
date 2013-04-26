@@ -27,6 +27,8 @@ import piecework.form.model.builder.Builder;
  */
 public abstract class ProcessBuilder<P extends piecework.process.model.Process> extends Builder {
 
+	private String processLabel;
+	private String processSummary;
 	private String processDefinitionKey;
 	private String engine;
 	private String engineProcessDefinitionKey;
@@ -41,6 +43,7 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 	
 	public ProcessBuilder(piecework.process.model.Process process) {
 		super(process.getId());
+		this.processLabel = process.getProcessLabel();
 		this.processDefinitionKey = process.getProcessDefinitionKey();
 		this.engine = process.getEngine();
 		this.engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
@@ -49,6 +52,16 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 	public abstract P build();
 	
 	public abstract P build(ViewContext context);
+	
+	public ProcessBuilder<P> processLabel(String processLabel) {
+		this.processLabel = processLabel;
+		return this;
+	}
+	
+	public ProcessBuilder<P> processSummary(String processSummary) {
+		this.processSummary = processSummary;
+		return this;
+	}
 	
 	public ProcessBuilder<P> processDefinitionKey(String processDefinitionKey) {
 		this.processDefinitionKey = processDefinitionKey;
@@ -119,5 +132,13 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 		if (taskResponseFormIdentifiers != null && !taskResponseFormIdentifiers.isEmpty())
 			return Collections.unmodifiableMap(taskResponseFormIdentifiers);
 		return null;
+	}
+
+	public String getProcessLabel() {
+		return processLabel;
+	}
+
+	public String getProcessSummary() {
+		return processSummary;
 	}
 }

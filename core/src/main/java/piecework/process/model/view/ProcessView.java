@@ -38,17 +38,23 @@ public class ProcessView implements piecework.process.model.Process {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlAttribute(name=ProcessView.Attributes.ID)
+	@XmlAttribute
 	@XmlID
 	protected final String id;
 	
-	@XmlElement(name = ProcessView.Elements.PROCESS_DEFINITION_KEY)
+	@XmlElement
+	private final String processLabel;
+	
+	@XmlElement
+	private final String processSummary;
+	
+	@XmlElement
 	private final String processDefinitionKey;
 	
-	@XmlElement(name = ProcessView.Elements.ENGINE)
+	@XmlElement
 	private final String engine;
 	
-	@XmlElement(name = ProcessView.Elements.ENGINE_PROCESS_DEFINITION_KEY)
+	@XmlElement
 	private final String engineProcessDefinitionKey;
 	
 	@XmlTransient
@@ -69,6 +75,8 @@ public class ProcessView implements piecework.process.model.Process {
 			
 	private ProcessView(ProcessView.Builder builder, ViewContext context) {
 		this.id = builder.getId();
+		this.processLabel = builder.getProcessLabel();
+		this.processSummary = builder.getProcessSummary();
 		this.processDefinitionKey = builder.getProcessDefinitionKey();
 		this.engine = builder.getEngine();
 		this.engineProcessDefinitionKey = builder.getEngineProcessDefinitionKey();
@@ -147,6 +155,14 @@ public class ProcessView implements piecework.process.model.Process {
 
 	public Map<String, String> getTaskResponseFormIdentifiers() {
 		return taskResponseFormIdentifiers;
+	}
+
+	public String getProcessLabel() {
+		return processLabel;
+	}
+
+	public String getProcessSummary() {
+		return processSummary;
 	}
 	
 }

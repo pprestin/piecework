@@ -131,15 +131,10 @@
 			</div>
 		</div>
 	</form>
-	
+	<script type="text/javascript">
+		piecework = {};
+		piecework.context = <%& json %>;
+	</script>
+	<script data-main="<% static %>/js/piecework-form.js" src='<% static %>/js/vendor/require.js'></script>
 </body>
-<script type="text/javascript" src="/piecework/static/js/piecework.deps.js"></script>
-<script type="text/javascript" src="/piecework/static/js/piecework.form.js"></script>
-	
-<script type="text/javascript">
-	app = {};
-	app.resource = <%& json %>;
-</script>
-<script type="text/javascript" src="/piecework/static/js/piecework.js"></script>
-<script type="text/javascript" src="/piecework/static/lib/bootstrap/js/bootstrap.min.js"></script>
 </html>

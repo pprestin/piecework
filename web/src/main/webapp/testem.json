@@ -1,0 +1,17 @@
+{
+	"framework": "mocha",
+	"src_files": [
+		"static/js/vendor/underscore.js",
+		"static/js/vendor/jquery.js",
+		"static/js/vendor/backbone.js",
+		"statis/js/vendor/handlebars.js",
+		"static/js/vendor/chai.js",
+		"static/js/vendor/sinon.js",
+		"static/js/vendor/sinon-chai.js",
+		"static/js/vendor/require.js",
+		"static/js/*.js",
+		"static/test/*.js",
+		"static/test/models/*.js"
+	],
+	"test_page": "static/test.html"
+}

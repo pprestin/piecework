@@ -45,27 +45,42 @@ public class FormView implements Form {
 	
 	private static final long serialVersionUID = -7335911090264165468L;
 
-	@XmlAttribute(name=FormView.Attributes.ID)
+	@XmlAttribute
 	@XmlID
-	protected final String id;
-	
-	@XmlElement(name = FormView.Elements.NAME, required = true)
-	private final String name;
-	
-	@XmlElement(name = FormView.Elements.LABEL)
-	private final String label;
-	
-	@XmlTransient
-	private final String processDefinitionKey;
+	private final String id;
 	
 	@XmlAttribute(name=FormView.Attributes.PROCESS_INSTANCE_ID)
 	private final String processInstanceId;
 	
-	@XmlElement(name = FormView.Elements.TASK_DEFINITION_KEY)
+	@XmlAttribute(name = FormView.Attributes.READ_ONLY)
+	private final String readOnly;
+	
+	@XmlAttribute(name = FormView.Attributes.SUBMISSION_ID)
+	private final String submissionId;
+	
+	@XmlElement
+	private final String name;
+	
+	@XmlElement
+	private final String label;
+	
+	@XmlElement
 	private final String taskDefinitionKey;
 	
+	@XmlElement
+	private final String layout;
+	
+	@XmlElement
+	private final String logoUrl;
+	
+	@XmlElement
+	private final String message;
+	
+	@XmlElement
+	private final String replaceFrom;
+
 	@XmlElementWrapper(name = FormView.Lists.SECTIONS)
-	@XmlElementRef(name = SectionView.Constants.ROOT_ELEMENT_NAME)
+	@XmlElementRef
 	private final List<SectionView> sections;
 	
 	@XmlElementWrapper(name = FormView.Lists.DIALOGS)
@@ -73,31 +88,15 @@ public class FormView implements Form {
 	private final List<SectionView> dialogs;
 	
 	@XmlElementWrapper(name = FormView.Lists.ATTACHMENTS)
-	@XmlElement(name = "attachment")
+	@XmlElementRef
 	private final List<AttachmentView> attachments;
 	
-	@XmlElement(name = FormView.Elements.LAYOUT)
-	private final String layout;
-	
-	@XmlElement(name = FormView.Elements.MESSAGE)
-	private final String message;
+	@XmlTransient
+	private final String processDefinitionKey;
 	
 	@XmlTransient
 	private final String actionUrl;
-	
-	@XmlElement(name = FormView.Elements.LOGO_URL)
-	private final String logoUrl;
-	
-	@XmlElement(name = FormView.Elements.REPLACE_FROM)
-	private final String replaceFrom;
-	
-	@XmlAttribute(name = FormView.Attributes.READ_ONLY)
-	private final String readOnly;
-	
-	@XmlAttribute(name = FormView.Attributes.SUBMISSION_ID)
-	private final String submissionId;
 
-	
 	private FormView() {
 		this(new FormView.Builder(), null);
 	}
@@ -241,21 +240,6 @@ public class FormView implements Form {
 		public static final String OVERSIGHT_DEFINITION_KEY = "__general";
 	}
 
-	static class Elements {
-		static final String ACTION_SECTION = "actionSection";
-		static final String ACTION_URL = "actionUrl";
-		static final String FORM_ID = "formId";
-		static final String NAME = "name";
-		static final String LABEL = "label";
-		static final String LAYOUT = "layout";
-		static final String LOGO_URL = "logoUrl";
-		static final String MESSAGE = "message";
-		static final String REPLACE_FROM = "replaceFrom";
-		static final String REQUEST_URL = "requestUrl";
-		static final String RESPONSE_URL = "responseUrl";
-		static final String TASK_DEFINITION_KEY = "taskId";
-	}
-	
 	public static class Layouts {
 		public static final String SINGLE_SCREEN = "Single Screen";
 		public static final String WIZARD = "Wizard";
