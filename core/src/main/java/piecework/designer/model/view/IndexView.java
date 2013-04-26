@@ -23,8 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = IndexView.Constants.ROOT_ELEMENT_NAME)
 public class IndexView {
 
-	
-	
+	public String temp;
 	
 	public static class Constants {
 		public static final String RESOURCE_LABEL = "Index";

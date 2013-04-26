@@ -1,6 +1,10 @@
 *.class
 
+# Bower Files #
+components
+
 # Eclipse Files #
+bin
 .project
 .settings
 .classpath

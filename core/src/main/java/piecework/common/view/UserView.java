@@ -34,7 +34,7 @@ import piecework.form.model.builder.UserBuilder;
  * 
  * @author James Renfro
  */
-@XmlRootElement
+@XmlRootElement(name = "user")
 public final class UserView implements User {
 
 	private static final long serialVersionUID = -3377941728797595948L;
@@ -177,7 +177,7 @@ public final class UserView implements User {
 	}
 	
 	static class Elements {
-		static final String DISPLAY_NAME = "name";
+		static final String DISPLAY_NAME = "displayName";
 		static final String FIRST_NAME = "firstName";
 		static final String MIDDLE_NAME = "middleName";
 		static final String LAST_NAME = "lastName";

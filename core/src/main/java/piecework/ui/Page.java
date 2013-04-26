@@ -24,11 +24,17 @@ import piecework.common.view.UserView;
  */
 public class Page {
 
+	private final String applicationName;
+	private final String pageName;
+	private final String urlbase;
 	private final Object resource;
 	private final String json;
 	private final UserView user;
 	
-	public Page(Object resource, String json, UserView user) {
+	public Page(String applicationName, String pageName, String urlbase, Object resource, String json, UserView user) {
+		this.applicationName = applicationName;
+		this.pageName = pageName;
+		this.urlbase = urlbase;
 		this.resource = resource;
 		this.json = json;
 		this.user = user;
@@ -44,6 +50,18 @@ public class Page {
 
 	public UserView getUser() {
 		return user;
+	}
+
+	public String getPageName() {
+		return pageName;
+	}
+
+	public String getApplicationName() {
+		return applicationName;
+	}
+	
+	public String getStatic() {
+		return urlbase;
 	}
 	
 }

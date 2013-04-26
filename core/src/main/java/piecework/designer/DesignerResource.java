@@ -19,6 +19,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
+import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;
@@ -27,7 +28,7 @@ import piecework.exception.StatusCodeError;
  * @author James Renfro
  */
 @Path("secure")
-public interface DesignerResource {
+public interface DesignerResource extends Resource {
 
 	@GET
 	@Path("")

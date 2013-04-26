@@ -60,9 +60,6 @@ public class ApplicationConfiguration {
 	
 	@Autowired 
 	piecework.Resource[] resources;
-			
-//	@Autowired
-//	AuthenticationHandler authenticationHandler;
 	
 	@Autowired
 	MustacheHtmlTransformer mustacheHtmlTransformer;

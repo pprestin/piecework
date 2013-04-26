@@ -15,6 +15,8 @@
  */
 package piecework.designer.concrete;
 
+import org.springframework.stereotype.Service;
+
 import piecework.designer.DesignerResource;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;
@@ -22,6 +24,7 @@ import piecework.exception.StatusCodeError;
 /**
  * @author James Renfro
  */
+@Service
 public class DesignerResourceImpl implements DesignerResource {
 
 	@Override

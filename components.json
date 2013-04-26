@@ -1,0 +1,19 @@
+{
+  "name": "piecework",
+  "version": "1.0.0",
+  "main": "web/src/main/webapp/static",
+  "ignore": [
+    ".jshintrc",
+    "**/*.txt"
+  ],
+  "dependencies": {
+    "backbone": null,
+    "backbone-amd": null,
+    "bootstrap": null,
+    "jquery": null,
+    "requirejs": null,
+    "underscore": null,
+    "underscore-amd": null,
+    "html5shiv": "~3.6.2"
+  }
+}

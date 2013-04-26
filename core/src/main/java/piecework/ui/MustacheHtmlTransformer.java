@@ -65,8 +65,14 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 
 	private static final Logger LOG = Logger.getLogger(MustacheHtmlTransformer.class);
 	
+	@Value("${application.name}")
+	private String applicationName;
+	
 	@Value("${templates.directory}")
 	private String templatesDirectory;
+	
+	@Value("${ui.static.urlbase}")
+	private String urlbase;
 	
 	@Autowired
 	private JacksonJsonProvider jsonProvider;
@@ -123,8 +129,9 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 			    jsonProvider.writeTo(t, type, genericType, annotations, mediaType, httpHeaders, jsonStream);			    
 			    String json = jsonStream.toString();
 			    
+			    String pageName = null;
 			    UserView user = new UserView.Builder().visibleId(userId).displayName(userName).build(null);
-			    mustache.execute(new PrintWriter(entityStream), new Page(t, json, user)).flush();
+			    mustache.execute(new PrintWriter(entityStream), new Page(applicationName, pageName, urlbase, t, json, user)).flush();
 			} catch (IOException e) {
 				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
 			} finally {
