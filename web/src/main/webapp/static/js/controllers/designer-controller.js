@@ -14,9 +14,8 @@ define([
 		}
 	},
     index: function(params) {
-      this.model = new Processes();
-      this.view = new ProcessListView({autoRender: true, model: this.model});
-//      this.view.subview('process-detail', new ProcessDetailView({model: this.model}));
+    	var collection = new Processes();
+    	this.view = new ProcessListView({autoRender: true, collection: collection});
     }
   });
 

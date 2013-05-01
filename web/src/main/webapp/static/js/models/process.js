@@ -4,8 +4,10 @@ define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 	var Process = Model.extend({
 		defaults : function() {
 			return {
-				label : "",
+				shortName : "",
+				formalName: "",
 				summary : "",
+				participants: "",
 				created : new Date()
 			};
 		},
