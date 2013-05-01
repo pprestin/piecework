@@ -46,19 +46,10 @@ define([ 'views/base/view', 'text!templates/process-detail.hbs' ], function(View
 	'use strict';
 
 	var ProcessDetailView = View.extend({
-		// Automatically render after initialize
 		autoRender : true,
-
-		className : 'process-list',
-
-		// Automatically append to the DOM on render
-		region : 'main',
-
-		// Save the template string in a prototype property.
-		// This is overwritten with the compiled template function.
-		// In the end you might want to used precompiled templates.
-		template : template
+		container: '#main-frame',
+	    template: template
 	});
 
-	return ProcessListView;
+	return ProcessDetailView;
 });

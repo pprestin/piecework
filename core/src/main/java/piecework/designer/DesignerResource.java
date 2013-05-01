@@ -18,6 +18,7 @@ package piecework.designer;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
@@ -27,11 +28,16 @@ import piecework.exception.StatusCodeError;
 /**
  * @author James Renfro
  */
-@Path("secure")
+@Path("")
 public interface DesignerResource extends Resource {
 
 	@GET
 	@Path("")
+	@RolesAllowed({AuthorizationRole.USER})
+	public Response root() throws StatusCodeError;
+	
+	@GET
+	@Path("secure")
 	@RolesAllowed({AuthorizationRole.USER})
 	public IndexView index() throws StatusCodeError;
 		

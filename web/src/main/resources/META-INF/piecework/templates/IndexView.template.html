@@ -41,88 +41,47 @@
   </head>
 
   <body>
-
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container-fluid">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="#"><% applicationName %></a>
-          <div class="nav-collapse collapse">
-            <p class="navbar-text pull-right">
-              <a href="#" class="navbar-link"><% user.displayName %></a>
-            </p>
-            <!-- 
-            <ul class="nav">
-              <li class="active"><a href="#">Home</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#contact">Contact</a></li>
-            </ul>
-            -->
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
-
-	<div class="container-fluid">
-		<div class="row-fluid">
-			<div id="left-frame" class="span2">
-				<div class="process-list well sidebar-nav">
-					
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container-fluid">
+				<button type="button" class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse">
+					<span class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+				<a class="brand" href="#"><% applicationName %></a>
+				<div class="nav-collapse collapse">
+					<p class="navbar-text pull-right">
+						<a href="#" class="navbar-link"><% user.displayName %></a>
+					</p>
+				<!-- 
+	            <ul class="nav">
+	              <li class="active"><a href="#">Home</a></li>
+	              <li><a href="#about">About</a></li>
+	              <li><a href="#contact">Contact</a></li>
+	            </ul>
+	            -->
 				</div>
 			</div>
+		</div>
+	</div>
 
-			<div id="main-frame" class="span10">
-				
-			</div>
+	<div class="container-fluid">
+		<div id="main-screen" class="row-fluid">
+			
 		</div>
 		<hr>
 		<footer>
 			<p></p>
 		</footer>
-
 	</div>
-	<!--/.fluid-container-->
+	
 
-<!-- 	<div id="process-description-dialog" class="modal hide fade"> -->
-<!-- 	  <div class="modal-header"> -->
-<!-- 	    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> -->
-<!-- 	    <h3>Describe &raquo;</h3> -->
-<!-- 	  </div> -->
-<!-- 	  <div class="modal-body"> -->
-<!-- 	    <form> -->
-<!-- 		  <fieldset> -->
-<!-- 		  	<div class="control-group"> -->
-<!-- 			    <label>Name your process</label> -->
-<!-- 			    <div class="controls"> -->
-<!-- 				    <input class="new-process-label span3" type="text" name="new_process_label" placeholder="Something short and descriptive" required> -->
-<!-- 				    <span class="help-inline hide">Required</span> -->
-<!-- 			    </div> -->
-<!-- 			</div> -->
-<!-- 			<div class="control-group"> -->
-<!-- 			    <label>Give a summary <span class="muted">(optional)</span></label> -->
-<!-- 			    <div class="controls"> -->
-<!-- 				    <textarea class="new-process-summary span5" name="new_process_summary" placeholder="Provide some more details"></textarea> -->
-<!-- 			    </div> -->
-<!-- 			</div> -->
-<!-- 		  </fieldset> -->
-<!-- 		</form> -->
-<!-- 	  </div> -->
-<!-- 	  <div class="modal-footer"> -->
-<!-- 	    <a href="#" class="btn" data-dismiss="modal">Close</a> -->
-<!-- 	    <a href="#" class="btn btn-primary">Accept</a> -->
-<!-- 	  </div> -->
-<!-- 	</div> -->
-		
  	<script type="text/javascript"> 
 		piecework = {};
 		piecework.context = <%& json %>;
  	</script>
 	<script data-main="<% static %>/js/index.js" src='<% static %>/js/vendor/require.js'></script>
-
 
   </body>
 </html>

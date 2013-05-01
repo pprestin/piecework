@@ -51,15 +51,17 @@
 //	return ProcessListView;
 //});
 
-
-define([ 'views/base/view', 'text!templates/process-list.hbs' ], function(View,
-		template) {
+define([ 'views/base/view', 'text!templates/process-list.hbs', 'views/process-detail-view' ], 
+		function(View, template, ProcessDetailView) {
 	'use strict';
 
 	var ProcessListView = View.extend({
-		autoRender: true,
-	    className: 'process-list',
-	    template: template
+		container: '.process-list',
+		initialize: function() {
+			View.prototype.initialize();
+			this.subview('dialog', new ProcessDetailView({model: this.model}));
+		},
+	    template: template, 
 	});
 
 	return ProcessListView;

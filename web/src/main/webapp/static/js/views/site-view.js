@@ -17,10 +17,10 @@ define([ 'views/base/view', 'text!templates/process-list.hbs' ], function(View,
 		template) {
 	'use strict';
 
-	var ProcessListView = View.extend({
-		container: '.process-list',
-	    template: template
-	});
-
-	return ProcessListView;
+//	var ProcessListView = View.extend({
+//		container: '.process-list',
+//	    template: template
+//	});
+//
+//	return ProcessListView;
 });

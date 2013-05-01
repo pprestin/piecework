@@ -3,11 +3,11 @@ define(['chaplin', 'views/site-view'], function(Chaplin, SiteView) {
 
   var Controller = Chaplin.Controller.extend({
     // Place your application-specific controller features here.
-    beforeAction: {
+/*    beforeAction: {
       '.*': function() {
         this.compose('site', SiteView);
       }
-    }
+    }*/
   });
 
   return Controller;
