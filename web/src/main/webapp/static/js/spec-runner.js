@@ -10,10 +10,7 @@ require.config({
 		underscore: 'vendor/underscore-amd'
 	},
     shim: {
-    	'backbone':{deps: ['underscore']},
-        'bootstrap':{deps: ['jquery']},
-        'chai':{deps: ['mocha']},
-        'underscore':{deps: []}
+        'chai':{deps: ['mocha']}
     }
 });
 
@@ -29,7 +26,7 @@ require([ 'require', 'chai', 'testem' ], function(require, chai) {
 	mocha.setup('bdd');
 
 	// Require base tests before starting
-	require([ '../test/models/process.test' ], function(process) {
+	require([ '../test/models/process-model.test' ], function(process) {
 		// Start runner
 		mocha.run();
 	});

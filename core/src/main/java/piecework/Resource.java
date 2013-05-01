@@ -16,6 +16,8 @@
 package piecework;
 
 /**
+ * Marker interface for REST resources
+ * 
  * @author James Renfro
  */
 public interface Resource {

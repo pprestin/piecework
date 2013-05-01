@@ -1,16 +1,14 @@
-define([
-	'jquery',
-	'underscore',
-	'backbone'
-], function ($, _, Backbone) {
-	var ProcessModel = Backbone.Model.extend({
+define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
+	'use strict';
+
+	var Process = Model.extend({
 		defaults : function() {
 			return {
 				label : "",
 				summary : "",
-				created: ""
+				created : new Date()
 			};
 		},
 	});
-	return ProcessModel;
+	return Process;
 });

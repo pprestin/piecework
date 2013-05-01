@@ -63,6 +63,7 @@ public class ApplicationConfiguration {
 	
 	@Autowired
 	MustacheHtmlTransformer mustacheHtmlTransformer;
+		
 	
 	@Bean
 	public Bus cxf() {
@@ -147,11 +148,8 @@ public class ApplicationConfiguration {
 	public Policy antisamyPolicy() throws Exception {
 		ClassPathResource policyResource = new ClassPathResource("META-INF/piecework/antisamy-1.4.3.xml");
 		URL policyUrl = policyResource.getURL();
-		
-//		if (!policyFile.exists())
-//			throw new Exception("Unable to create the user input santitization policy bean because the file was not available on the classpath!");
-		
+				
 		return Policy.getInstance(policyUrl);
 	}
-	
+		
 }
