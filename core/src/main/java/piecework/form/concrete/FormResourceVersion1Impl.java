@@ -165,6 +165,11 @@ public class FormResourceVersion1Impl implements FormResource {
 		return null;
 	}
 	
+	@Override
+	public String getPageName() {
+		return "Form";
+	}
+	
 	private static ViewContext context() {
 		return new ViewContext("", "", "v1", "form");
 	}

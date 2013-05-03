@@ -22,4 +22,6 @@ package piecework;
  */
 public interface Resource {
 
+	String getPageName();
+	
 }

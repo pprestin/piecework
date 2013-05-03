@@ -5,12 +5,17 @@
 				<div class="accordion-toggle">
 					<a class="section-toggle-switch" data-toggle="collapse" data-parent="#process-detail-accordian"
 						data-target="#process-basic-information">
-						<i class="section-open-indicator icon-chevron-right"></i>&nbsp;<span class="lead">Basic information</span>
+						{{#if shortName}}
+							<i class="section-open-indicator icon-chevron-right"></i>
+						{{else}}
+							<i class="section-open-indicator icon-chevron-down"></i>
+						{{/if}}
+						&nbsp;<span class="lead">Basic information</span>
 					</a>
-					<span class="pull-right"><button class="edit-button btn" type="button">Edit</button></span>
+					<span class="pull-right"><button class="edit-button btn" type="button">Done</button></span>
 				</div>		
 			</div>
-			<div id="process-basic-information" class="accordion-body collapse">
+			<div id="process-basic-information" class="accordion-body collapse {{#unless shortName}}in{{/unless}}">
 				<div class="accordion-inner">
 					<div class="alert alert-info tips-and-tricks">
 						<button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -63,7 +68,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="accordion-group">
+		<div class="accordion-group editing">
 			<div class="accordion-heading">
 				<div class="accordion-toggle">
 					<a class="section-toggle-switch" data-toggle="collapse" data-parent="#process-detail-accordian"
@@ -73,8 +78,25 @@
 					<span class="pull-right"><button class="edit-button btn" type="button">Edit</button></span>
 				</div>
 			</div>
-			<div id="process-interactions" class="accordion-body collapse">
-				<div class="accordion-inner">Anim pariatur cliche...</div>
+			<div id="process-interactions" class="accordion-body collapse in">
+				<div class="accordion-inner">
+					<div class="alert alert-info tips-and-tricks">
+						<button type="button" class="close" data-dismiss="alert">&times;</button>
+						A user interaction usually involves two or more screens. The simplest case is a data entry screen followed by a confirmation
+						screen that let's the user know the data was valid, and that can provide a confirmation number. 
+					</div>
+					<div class="pull-right">
+						<button class="btn add-screen-button" type="button" role="button">Add screen</button>
+					</div>
+					<p/>
+					<ul class="nav">
+						<li>
+							<div class="screen-list well">
+							</div>
+						</li>
+					</ul>
+					
+				</div>
 			</div>
 		</div>
 	</form>

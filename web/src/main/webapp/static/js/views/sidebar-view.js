@@ -3,21 +3,15 @@ define([ 'chaplin', 'views/base/view', 'text!templates/sidebar.hbs', 'models/pro
 	'use strict';
 
 	var SidebarView = View.extend({
-		autoRender : true,
-		container: '.sidebar-nav',
+		autoRender : false,
+		className: 'sidebar-nav well',
+		region: 'sidebar',
 	    template: template,
-	    events: {
-			'click': 'onStartButton',
-		},
-	   	initialize: function(options) {
-	   		View.__super__.initialize.apply(this, options);
+	    listen: {
+	        addedToDOM: '_includeSubviews'
+	    },
+		_includeSubviews: function() {
 			this.subview('content', new ProcessListView({collection: this.model}));
-		},
-		onStartButton: function() {
-			var contentView = this.subview('content');
-			contentView.onProcessDesign();
-			
-			//Chaplin.mediator.publish('newProcess', '');
 		}
 	});
 

@@ -5,21 +5,14 @@ define([ 'models/process', 'models/processes', 'views/base/view', 'views/process
 	var DesignerView = View.extend({
 		autoRender: true,
 		container : '#main-screen',
-//		events: {
-//			'click .start-button': 'onCreateProcess',
-//		},
 		id : 'designer-view',
 		template : template,
-//		initialize: function(options) {
-//			View.__super__.initialize.apply(this, options);
-//			//var collection = new Processes();
-//			//this.subview('sidebar', new SidebarView({model: collection}));
-//		},
 		regions : {
-			'#left-frame' : 'left',
-			'#main-frame' : 'main'
+			'#left-frame' : 'sidebar',
+			'#main-frame' : 'main',
+			'.sidebar-content' : 'sidebar-content',
+			'.screen-list' : 'screen-list',
 		},
-
 	});
 
 	return DesignerView;
