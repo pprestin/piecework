@@ -1,10 +1,9 @@
 define([
   'controllers/base/controller',
-  'views/designer-view',
   'models/processes',
-  'views/process-list-view',
-  'views/process-detail-view',
-], function(Controller, DesignerView, Processes, ProcessListView, ProcessDetailView) {
+  'views/designer-view',
+  'views/sidebar-view',
+], function(Controller, Processes, DesignerView, SidebarView) {
   'use strict';
 
   var DesignerController = Controller.extend({
@@ -15,7 +14,7 @@ define([
 	},
     index: function(params) {
     	var collection = new Processes();
-    	this.view = new ProcessListView({autoRender: true, collection: collection});
+    	this.view = new SidebarView({model: collection});
     }
   });
 

@@ -5,5 +5,7 @@ define(['controllers/designer-controller'], function() {
   // `match` is match method of the Router
   return function(match) {
     match('', 'designer#index');
+//    match('process-basic-information', 'designer#index');
+//    match('process-interactions', 'designer#index');
   };
 });

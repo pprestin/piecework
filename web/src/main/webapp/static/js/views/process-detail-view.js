@@ -6,24 +6,40 @@ define([ 'views/base/view', 'text!templates/process-detail.hbs', 'models/process
 		container: '#main-frame',
 	    template: template,
 	   	events: {
-	   		'click .btn-primary': 'save'
+	   		'change input': 'fieldValueChanged',
+	   		'click .edit-button': 'toggleEditing',
+	   		'hide .accordion-group': 'toggleSection',
+	   		'show .accordion-group': 'toggleSection',
 	   	},
-	    save: function() {
+	   		   	
+	   	fieldValueChanged: function(event) {
+	    	var attributeName = event.target.name;
+	    	var attributes = {};
+	    	var $controlGroup = this.$(event.target).closest('.control-group');
+	    	var isNotEmpty = event.target.value != null && event.target.value != '';
 	    	
-			var attributes = {
-				shortName : this.$('.process-short-name').val(),
-				formalName : this.$('.process-formal-name').val(),
-				summary : this.$('.process-summary').val(),
-				participants : this.$('.process-participants').val()
-			};
+	    	if (attributeName === undefined) 
+	    		return;
+				    	
+	    	attributes[attributeName] = event.target.value;
+	    	this.model.set(attributes);	
+	    	$controlGroup.toggleClass('hasData', isNotEmpty);
+	    },
+	    	    
+	    toggleEditing: function(event) {
+	    	var $editButton = this.$(event.currentTarget);
+	    	var $accordionGroup = $editButton.closest('.accordion-group');
+	    	$editButton.html(($accordionGroup.hasClass('editing') ? 'Done' : 'Edit'));
 	    	
-	    	// The model is actually a collection, owned by the ProcessListView
-	    	this.model.add(new Process(attributes));
-	    	
-	    	// Add the new process to the list on the left
-//	    	this.trigger('saved', process);
-	    }
-
+	    	$accordionGroup.toggleClass('editing');
+	    }, 
+	    
+	    toggleSection: function(event) {
+	    	var $accordionGroup = this.$(event.currentTarget);
+	    	$accordionGroup.find('.section-open-indicator').toggleClass('icon-chevron-right icon-chevron-down');
+	    	$accordionGroup.find('.edit-button').toggle();
+	    },
+	   	
 	});
 
 	return ProcessDetailView;

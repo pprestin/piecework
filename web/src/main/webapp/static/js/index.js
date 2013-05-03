@@ -4,8 +4,11 @@ requirejs.config({
     	backbone: 'vendor/backbone-amd',
     	bootstrap: '../lib/bootstrap/js/bootstrap',
     	chaplin: 'vendor/chaplin',
+    	css: 'vendor/css',
     	handlebars: 'vendor/handlebars',
     	jquery: 'vendor/jquery',
+    	less: 'vendor/less',
+    	normalize: 'vendor/normalize',
     	text: 'vendor/require-text-2.0.3',
         underscore: 'vendor/underscore-amd'
     },
@@ -17,19 +20,6 @@ requirejs.config({
     }
 });
 
-require(['designer', 'routes'], function(Designer, routes) {
+require(['designer', 'routes', 'bootstrap'], function(Designer, routes, Bootstrap) {
     (new Designer).initialize();
 });
-
-/*requirejs([
-	'views/process-item-list',
-	'bootstrap'
-], function (ProcessItemList) {
-		
-	$(function() {
-		var app = new ProcessItemList({el: $('#process-list')});
-		
-		//app.render();
-	});
-});
-*/

@@ -1,20 +1,29 @@
-define([ 'views/base/collection-view', 'views/process-detail-view', 'views/process-item-view' ], 
-		function(CollectionView, ProcessDetailView, ProcessItemView) {
+define([ 'chaplin', 'models/process', 'views/base/collection-view', 'views/process-detail-view', 'views/process-item-view' ], 
+		function(Chaplin, Process, CollectionView, ProcessDetailView, ProcessItemView) {
 	'use strict';
 
 	var ProcessListView = CollectionView.extend({
-		container: '.sidebar-nav',
+		autoRender: true,
+		className: "nav nav-list",
+		container: '.sidebar-content',
 		itemView: ProcessItemView,
+		tagName: 'ul',
 		initialize: function(options) {
 			CollectionView.__super__.initialize.apply(this, options);
-			this.subview('dialog', new ProcessDetailView({model: this.collection}));
+			Chaplin.mediator.subscribe('newProcess', this.onProcessDesign);
 		},
-		className: "nav nav-list",
-		tagName: 'ul',
-//		render: function() {
-//			this.$el.append('<li class="nav-header">MY PROCESSES</li>');
-//			CollectionView.__super__.render.apply(this);
-//		}
+		onProcessDesign: function() {
+			// Create a new process and pass it to the detail view, but don't add it to the collection
+			var process = new Process();
+			this.subview('dialog', new ProcessDetailView({model: process}));
+			this.listenTo(process, 'change', this.onProcessChanged);
+	   	},
+		onProcessChanged: function(process) {
+			// The process is only added to the collection when it changes
+			this.collection.set([process]);
+			this.renderItem(process);
+		},
+		
 	});
 
 	return ProcessListView;
