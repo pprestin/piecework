@@ -3,6 +3,12 @@
 # Bower Files #
 components
 
+# Node Files #
+node_components
+
+# Pushserve test server #
+pushserve
+
 # Eclipse Files #
 bin
 .project

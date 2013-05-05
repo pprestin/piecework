@@ -3,9 +3,7 @@ define([
 ], function(Model) {
   'use strict';
 
-  var User = Model.extend({
-    // This model is intentionally left blank
-  });
+  var User = Model.extend({});
 
   return User;
 });

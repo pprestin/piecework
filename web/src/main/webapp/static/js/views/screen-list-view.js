@@ -8,12 +8,6 @@ define([ 'chaplin', 'models/screen', 'views/base/collection-view', 'views/screen
 		region: 'screen-list',
 		itemView: ScreenItemView,
 		tagName: 'ul',
-		initialize: function(options) {
-			CollectionView.__super__.initialize.apply(this, options);
-		},
-		render: function(options) {
-			CollectionView.__super__.render.apply(this, options);
-		},
 		onScreenChanged: function(screen) {
 			if (screen === undefined)
 				return;

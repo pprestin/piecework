@@ -20,6 +20,7 @@ requirejs.config({
     }
 });
 
-require(['applications/process-designer', 'routes/process-routes', 'bootstrap'], function(ProcessDesigner, routes, Bootstrap) {
-    (new ProcessDesigner).initialize();
+requirejs(['applications/screen-designer'], function(ScreenDesigner) {
+    (new ScreenDesigner).initialize();
 });
+

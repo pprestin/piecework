@@ -33,17 +33,6 @@ define([ 'models/process', 'models/screen', 'views/base/view', 'views/screen-lis
 		},
 		
 		_addScreen: function(event) {
-//			var screenListView = this.subview('screens');
-//			if (screenListView == undefined) {
-//				var screens = this.model.attributes.screens;
-//				screens.add(new Screen({title: 'Testing'}));
-//				screenListView = new ScreenListView({collection: screens});
-//				this.subview('screens', screenListView);
-//				screenListView.listenTo(this, 'onScreenChanged', screenListView.onScreenChanged);
-//				for (var i=0;i<screens.length;i++) {
-//					this.trigger('onScreenChanged', screens[i]);
-//				}
-//			}
 			this.trigger('onScreenChanged', new Screen());
 		},
 			    
@@ -55,6 +44,9 @@ define([ 'models/process', 'models/screen', 'views/base/view', 'views/screen-lis
 	    	
 	    	if (attributeName === undefined) 
 	    		return;
+	    	
+	    	if (attributeName == 'shortName')
+	    		this.$('ul.breadcrumb').find('li.active').html(event.target.value);
 				    	
 	    	attributes[attributeName] = event.target.value;
 	    	this.model.set(attributes);	

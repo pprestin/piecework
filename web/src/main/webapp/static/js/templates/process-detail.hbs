@@ -1,3 +1,7 @@
+<ul class="breadcrumb well">
+  <li><a href="#">Processes</a> <span class="divider">/</span></li>
+  <li class="active">{{#if shortName}}{{ shortName }}{{else}}Untitled{{/if}}</li>
+</ul>
 <div class="accordion" id="process-detail-accordian">
 	<form id="process-detail-form">
 		<div class="accordion-group editing">
@@ -85,17 +89,20 @@
 						A user interaction usually involves two or more screens. The simplest case is a data entry screen followed by a confirmation
 						screen that let's the user know the data was valid, and that can provide a confirmation number. 
 					</div>
-					<div class="pull-right">
-						<button class="btn add-screen-button" type="button" role="button">Add screen</button>
+					<div class="navbar">
+						<div class="navbar-form">
+							<button class="btn add-screen-button pull-right" type="button" role="button">Add web page</button>
+						</div>
 					</div>
-					<p/>
-					<ul class="nav">
-						<li>
-							<div class="screen-list well">
-							</div>
-						</li>
-					</ul>
-					
+					<p></p>
+					<div>
+						<ul class="nav">
+							<li>
+								<div class="screen-list">
+								</div>
+							</li>
+						</ul>
+					</div>
 				</div>
 			</div>
 		</div>
