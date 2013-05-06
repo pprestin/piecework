@@ -7,7 +7,7 @@ define(['controllers/process-designer-controller'], function() {
     match('', 'process-designer#index');
     match('designer/edit', 'process-designer#edit');
     match('designer/edit/:processDefinitionKey', 'process-designer#edit');
-    match('designer/configure/:screenId', 'process-designer#configure');
+    match('designer/screen/:screenId', 'process-designer#screen');
 //    match('process-basic-information', 'designer#index');
 //    match('process-interactions', 'designer#index');
   };

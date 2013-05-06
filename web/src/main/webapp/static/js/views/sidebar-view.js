@@ -1,5 +1,5 @@
-define([ 'chaplin', 'views/base/view', 'text!templates/sidebar.hbs', 'models/process', 'views/process-list-view', ], 
-		function(Chaplin, View, template, Process, ProcessListView) {
+define([ 'chaplin', 'views/field-list-view', 'views/process-list-view', 'views/base/view', 'text!templates/sidebar.hbs' ], 
+		function(Chaplin, FieldListView, ProcessListView, View, template) {
 	'use strict';
 
 	var SidebarView = View.extend({
@@ -11,7 +11,10 @@ define([ 'chaplin', 'views/base/view', 'text!templates/sidebar.hbs', 'models/pro
 	        addedToDOM: '_includeSubviews'
 	    },
 		_includeSubviews: function() {
-			this.subview('content', new ProcessListView({collection: this.model}));
+			if (this.model.attributes.type == 'process')
+				this.subview('content', new ProcessListView({collection: this.model.attributes.collection}));
+			else
+				this.subview('content', new FieldListView({collection: this.model.attributes.collection}));
 		}
 	});
 

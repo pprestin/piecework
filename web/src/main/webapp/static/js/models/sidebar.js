@@ -1,17 +1,15 @@
 define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 	'use strict';
 
-	var Screen = Model.extend({
+	var Sidebar = Model.extend({
 		defaults : function() {
 			return {
 				title : "",
 				type: "",
-				url : "",
-				ordinal: 1,
-				process: null,
-				created : new Date()
+				actions: { add: "", remove: "" },
+				collection: null
 			};
 		},
 	});
-	return Screen;
+	return Sidebar;
 });

@@ -39,7 +39,7 @@ public class StandaloneLdapConfiguration {
 	@Value("33389")
 	private int port;
 	
-	@Bean 
+	@Bean(destroyMethod="destroy")
 	public ApacheDSContainer directoryServer(Environment env) throws Exception {
 		
 		File workingDirectory = new File(System.getProperty("java.io.tmpdir") + File.separator + "piecework-standalone-directory");
@@ -56,5 +56,5 @@ public class StandaloneLdapConfiguration {
 		
 		return container;
 	}
-		
+	
 }

@@ -1,17 +1,16 @@
 define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 	'use strict';
 
-	var Screen = Model.extend({
+	var Section = Model.extend({
 		defaults : function() {
 			return {
-				title : "",
-				type: "",
-				url : "",
+				title: "",
+				fieldIds: [],
 				ordinal: 1,
 				process: null,
 				created : new Date()
 			};
 		},
 	});
-	return Screen;
+	return Section;
 });
