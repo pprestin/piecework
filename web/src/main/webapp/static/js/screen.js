@@ -20,7 +20,7 @@ requirejs.config({
     }
 });
 
-requirejs(['applications/screen-designer'], function(ScreenDesigner) {
+requirejs(['applications/screen-designer', 'bootstrap'], function(ScreenDesigner) {
     (new ScreenDesigner).initialize();
 });
 

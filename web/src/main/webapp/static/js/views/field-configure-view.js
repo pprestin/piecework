@@ -2,6 +2,9 @@ define([ 'views/base/view', 'text!templates/field-configure.hbs' ], function(Vie
 	'use strict';
 
 	var ScreenItemView = View.extend({
+		autoRender: true,
+		container: 'body',
+		className: 'piecework-field-editor',
 		tagName: 'div',
 	    template: template,
 	});
