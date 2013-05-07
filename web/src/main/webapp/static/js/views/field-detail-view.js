@@ -3,7 +3,7 @@ define([ 'views/base/view', 'text!templates/field-detail.hbs' ], function(View, 
 
 	var FieldDetailView = View.extend({
 		autoRender: true,
-		className: 'field-layout selectable span4',
+		className: 'field-layout selectable',
 		tagName: 'div',
 	    template: template,
 	    listen: {
@@ -17,6 +17,7 @@ define([ 'views/base/view', 'text!templates/field-detail.hbs' ], function(View, 
 	    	
 	    	this.$el.attr('id', fieldId);
 	    	this.$el.attr('tabindex', ordinal);
+	    	this.$el.addClass(this.model.attributes.type + '-lo');
 		}
 	});
 

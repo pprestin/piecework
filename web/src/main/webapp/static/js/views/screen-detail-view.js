@@ -7,7 +7,11 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 		region: 'main',
 	    template: template,
 	    events: {
-	    	'click .add-field-button': '_addField',
+			'click .add-checkbox-button': '_addCheckbox',
+			'click .add-listbox-button': '_addListbox',
+			'click .add-radio-button': '_addRadio',
+			'click .add-textarea-button': '_addTextarea',
+			'click .add-textbox-button': '_addTextbox',
 	    	'click .add-section-button': '_addSection',
 	    	'click .remove-button': '_remove',
 	    	'keydown .selectable': '_onSelectableKey',
@@ -17,7 +21,7 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    listen: {
 	        addedToDOM: '_onAddedToDOM'
 	    },
-	    _addField: function() {
+	    _addField: function(type) {
 	    	var $selectedSectionLayout = $('.section-layout.selected');
 	    	
 	    	if ($selectedSectionLayout.length == 0)
@@ -41,7 +45,22 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    	var sectionView = this.subview(sectionId);
 	    	
 	    	if (sectionView !== undefined)
-	    		sectionView.addField();
+	    		sectionView.addField(type);
+	    },
+	    _addCheckbox: function() {
+	    	this._addField('checkbox');
+	    },
+	    _addListbox: function() {
+	    	this._addField('listbox');
+	    },
+	    _addRadio: function() {
+	    	this._addField('radio');
+	    },
+	    _addTextarea: function() {
+	    	this._addField('textarea');
+	    },
+	    _addTextbox: function() {
+	    	this._addField('textbox');
 	    },
 	    _addSection: function() {
 	    	var ordinal = $('.section-layout').length + 1;

@@ -10,10 +10,10 @@ define([ 'chaplin', 'models/field', 'views/field-detail-view', 'views/base/view'
 	    listen: {
 	        addedToDOM: '_onAddedToDOM'
 	    },
-	    addField: function() {
+	    addField: function(type) {
 	    	if (this.$el.hasClass('selected')) {
 		    	var sectionId = this.$el.prop('id');
-	    		var field = new Field({});
+	    		var field = new Field({type: type});
 		    	var fieldId = 'field-' + field.cid;
 		    	var container = '#' + sectionId + ' .section-content';		    	
 		    	this.subview(fieldId, new FieldDetailView({id: fieldId, container: container, model: field}));
