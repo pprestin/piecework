@@ -52,14 +52,14 @@
   			margin-top: 2px;
 		}
 		
-      	.control-group {
-      		display: none;
-			margin-bottom: 5px;
-	  	}
+/*       	.control-group { */
+/*       		display: none; */
+/* 			margin-bottom: 5px; */
+/* 	  	} */
 	  	
-	  	.control-group.hasData {
-	  		display: block;
-	  	}
+/* 	  	.control-group.hasData { */
+/* 	  		display: block; */
+/* 	  	} */
 
 		.editable {
       		display: none !important;
@@ -94,8 +94,7 @@
 			-webkit-border-radius: 4px;
 			-moz-border-radius: 4px;
 			border-radius: 4px;
-			height: 50px;
-			width: 130px;
+			min-height: 50px;
 		}
 		
 		.field-layout:after {
@@ -171,6 +170,12 @@
 		.section-layout.selected:after {
 			/*border: 1px solid black;*/
 			color: black;
+		}
+		
+		.section-layout.selected.for-deletion {
+			outline-color: Red;
+			outline-style: auto;
+			outline-width: 5px;
 		}
 
       	.sidebar-nav {

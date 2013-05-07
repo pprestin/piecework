@@ -3,8 +3,7 @@ define([ 'views/base/view', 'text!templates/field-detail.hbs' ], function(View, 
 
 	var FieldDetailView = View.extend({
 		autoRender: true,
-		className: 'field-layout selectable',
-		//container: '.section-content',
+		className: 'field-layout selectable span4',
 		tagName: 'div',
 	    template: template,
 	    listen: {
