@@ -12,6 +12,44 @@ body {
 	padding-bottom: 40px;
 }
 
+input[type="checkbox"].field-checkbox {
+	vertical-align: middle;
+}
+
+input[type="checkbox"].field-required {
+	vertical-align: top;
+}
+
+input[type="text"].field-label-input.after-checkbox {
+	vertical-align: top;
+}
+
+input[type="text"].field-label-input.unfocused {
+	background-color: transparent;
+	border: 1px solid transparent;
+	box-shadow: none !important;
+}
+
+input[type="text"].field-label-input.unfocused.empty {
+	border: 1px dashed green;
+	padding-left: 6px;
+}
+
+input[type="text"].field-label-input.unfocused:hover {
+	border: 1px dashed green;
+	padding-left: 6px;
+}
+
+label input[type="text"].field-label-input.unfocused {
+	padding-left: 0px;
+}
+
+select.field-label-input.unfocused {
+	background-color: transparent;
+	border: 1px solid transparent;
+	box-shadow: none !important;
+}
+	
 .accordion-heading .accordion-toggle [class ^="icon-"],.accordion-heading .accordion-toggle [class
 	*=" icon-"] {
 	vertical-align: baseline;
@@ -39,10 +77,6 @@ body {
 	margin-top: 2px;
 }
 
-/*       	.control-group { */ /*       		display: none; */
-	/* 			margin-bottom: 5px; */ /* 	  	} */
-	/* 	  	.control-group.hasData { */ /* 	  		display: block; */
-	/* 	  	} */
 .editable {
 	display: none !important;
 }
@@ -67,16 +101,26 @@ body {
 	display: none !important;
 }
 
+.field-center-checkbox {
+	margin: 5px 10px 15px;
+}
+
+.field-input {
+	
+}
+
 .field-layout {
 	position: relative;
 	margin: 15px 0;
-	padding: 39px 19px 14px;
+	/*padding: 39px 19px 14px;*/
+	padding: 0px;
 	background-color: #fff;
 	border: 1px solid #ddd;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
 	min-height: 50px;
+	min-width: 300px;
 }
 
 .field-layout:after {
@@ -126,10 +170,41 @@ body {
 	color: black;
 }
 
+.field-layout .control-group {
+	margin-bottom: 0px;
+}
+
+.field-layout-details {
+	background-color: #eee;
+	border-top: 1px solid #ddd;
+	padding: 5px 19px 5px 20px;
+}
+
+.field-layout-details ul {
+	margin-bottom: 0px;
+	padding-bottom: 0px;
+}
+
+.field-layout-example {
+	padding: 39px 19px 14px;
+}
+
 .navbar .breadcrumb {
 	background-color: transparent;
 	margin: 0px;
 	padding: 10px 0px;
+}
+
+.navbar-inner.nogray {
+	background-color: transparent;
+	background-image: none;
+	background-repeat: repeat-x;
+	border: 1px solid transparent;
+	border-radius: 0px;
+	filter: none;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
 }
 
 .section-layout {
@@ -141,7 +216,7 @@ body {
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
-	height: 300px;
+	height: 600px;
 	overflow-y: auto;
 }
 

@@ -1,5 +1,5 @@
-define([ 'chaplin', 'models/field', 'views/field-detail-view', 'views/base/view', 'text!templates/section-detail.hbs' ], 
-		function(Chaplin, Field, FieldDetailView, View, template) {
+define([ 'chaplin', 'models/field', 'views/field-checkbox-layout-view', 'views/field-listbox-layout-view', 'views/field-radio-layout-view', 'views/field-textarea-layout-view', 'views/field-textbox-layout-view', 'views/base/view', 'text!templates/section-detail.hbs' ], 
+		function(Chaplin, Field, CheckboxLayoutView, ListboxLayoutView, RadioLayoutView, TextareaLayoutView, TextboxLayoutView, View, template) {
 	'use strict';
 
 	var SectionDetailView = View.extend({
@@ -14,9 +14,21 @@ define([ 'chaplin', 'models/field', 'views/field-detail-view', 'views/base/view'
 	    	if (this.$el.hasClass('selected')) {
 		    	var sectionId = this.$el.prop('id');
 	    		var field = new Field({type: type});
-		    	var fieldId = 'field-' + field.cid;
-		    	var container = '#' + sectionId + ' .section-content';		    	
-		    	this.subview(fieldId, new FieldDetailView({id: fieldId, container: container, model: field}));
+	    		var fieldId = type + '-' + field.cid;
+	    		// Initialize the name to the view id
+	    		field.attributes.name = fieldId;
+	    		
+		    	var container = '#' + sectionId + ' .section-content';		    
+		    	if (type == 'checkbox')
+		    		this.subview(fieldId, new CheckboxLayoutView({id: fieldId, container: container, model: field}));
+		    	else if (type == 'listbox')
+		    		this.subview(fieldId, new ListboxLayoutView({id: fieldId, container: container, model: field}));
+		    	else if (type == 'radio')
+		    		this.subview(fieldId, new RadioLayoutView({id: fieldId, container: container, model: field}));
+		    	else if (type == 'textarea')
+		    		this.subview(fieldId, new TextareaLayoutView({id: fieldId, container: container, model: field}));
+		    	else
+		    		this.subview(fieldId, new TextboxLayoutView({id: fieldId, container: container, model: field}));
 	    	}
 	    },
 	    _onAddedToDOM: function() {
