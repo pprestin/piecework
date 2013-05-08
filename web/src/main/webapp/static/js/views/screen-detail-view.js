@@ -15,6 +15,7 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    	'click .add-section-button': '_addSection',
 	    	'click .remove-button': '_remove',
 	    	'keydown .dropdown-toggle': '_onKeyDropdownToggle',
+	    	'keydown ul.dropdown-menu li': '_onKeyDropdownToggle',
 	    	'keydown .selectable': '_onSelectableKey',
 	    	'keydown .accessible-btn': '_onButtonPress',
 	    	'focus .selectable': '_selectItem',
@@ -85,22 +86,26 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    },
 	    _onKeyDropdownToggle: function(event) {
 	    	var $target = $(event.target);
-	    	if ($target.hasClass('dropdown-toggle')) 
-	    		$target = $target.next('ul.dropdown-menu');
+//	    	if ($target.hasClass('dropdown-toggle')) 
+//	    		$target = $target.next('ul.dropdown-menu');
+	    	
+	    	var $focused = $('.dropdown-menu > li > a:focus');
+	    	var $li = $focused.closest('li');
+	    	if ($li.length == 0) {
+	    		$li = $target.next('ul.dropdown-menu').find('li:first');
+	    		$li.find('a').focus();
+	    		return;
+	    	}
 	    	
 	    	switch (event.keyCode) {
 			case 38: // Up arrow
-				var $oneAbove = $target.prev('ul.dropdown-menu li');
+				var $oneAbove = $li.prev('li').find('a');
 				if ($oneAbove.length == 1) {
 					$oneAbove.focus();
 				}
 				break;
 			case 40: // Down arrow
-				var $oneBelow = $target.next('ul.dropdown-menu li');
-				
-				if ($target.hasClass('dropdown-menu')) 
-					$oneBelow = $target.find('li:first').find('a');
-				
+				var $oneBelow = $li.next('li').find('a');
 				if ($oneBelow.length == 1) 
 					$oneBelow.focus();
 				

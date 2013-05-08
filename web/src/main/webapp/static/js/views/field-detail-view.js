@@ -82,7 +82,7 @@ define([ 'views/base/view'],
 			var value = parseInt($target.val());
 			var $fieldLayout = $(event.target).closest('.field-layout');
 			var $option = $fieldLayout.find('option:first').clone();
-			var $select = $fieldLayout.find('select');
+			var $select = $fieldLayout.find('select.field-input');
 			var counter = 1;
 			
 			$option.val('');
