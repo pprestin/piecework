@@ -1,6 +1,16 @@
-<div class="control-group">
-	<label for="field-label"><input type="text" class="field-label-input unfocused" placeholder="Label" maxlength="100"></input></label>
-	<div class="controls">
-		<input type="checkbox" class="field-input field-checkbox"></input>&nbsp;<input type="text" class="input-small field-label-input unfocused after-checkbox" placeholder="Text" maxlength="100"></input>
+<div class="field-layout-example">
+	<div class="control-group">
+		<label for="field-label"><input type="text" class="field-label-input unfocused" placeholder="Enter a label" maxlength="100"></input></label>
+		<div class="controls">
+			<input type="checkbox" class="field-input field-checkbox" name="{{name}}"></input>&nbsp;<input type="text" class="input-small field-label-input unfocused after-checkbox" placeholder="Text" maxlength="100"></input>
+		</div>
 	</div>
+</div>
+<div class="field-layout-details">
+	<div class="pull-right drag-handle" tabindex="-1"><i class="icon-align-justify icon-white pull-right"></i></div>
+	<ul class="inline form-inline">
+		<li><input type="text" class="input-medium field-label-input unfocused field-name hastooltip" placeholder="{{name}}" data-toggle="tooltip" data-original-title="Provide a name for this textbox"></li>
+		<li><input type="text" class="input-mini field-label-input unfocused field-quantity field-numeric hastooltip" value="1" size="2" maxlength="2" data-value-min="1" data-value-max="12" data-toggle="tooltip" data-original-title="Number of checkboxes"></li>
+		<li><div class="field-center-checkbox"><input type="checkbox" class="field-required hastooltip" data-toggle="tooltip" data-original-title="Check if this should be a required field"></input>&nbsp;Required</div></li>
+	</ul>
 </div>

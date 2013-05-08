@@ -1,6 +1,20 @@
-<div class="control-group">
-	<label for="field-label"><input type="text" class="field-label-input" placeholder="Label"></input></label>
-	<div class="controls">
-		<textarea class="field-input field-textarea"></textarea>
+<div class="field-layout-example">
+	<div class="control-group">
+		<label for="field-label"><input type="text" class="field-label-input unfocused empty" placeholder="Enter a label"></input></label>
+		<div class="controls">
+			<textarea class="field-input field-textarea" name="{{name}}"></textarea>
+		</div>
 	</div>
+</div>
+<div class="field-layout-details">
+	<ul class="inline form-inline">
+		<li><input type="text" class="input-medium field-label-input unfocused field-name hastooltip" placeholder="{{name}}" data-toggle="tooltip" data-original-title="Provide a name for this textbox"></li>
+		<li><input type="text" class="input-mini field-label-input unfocused field-size field-numeric hastooltip" data-value-min="100" data-value-max="5000" data-value-increment="100"  value="2000" size="5" maxlength="4" data-toggle="tooltip" data-original-title="Maximum number of characters allowed"></li>
+		<li><div class="field-center-checkbox"><input type="checkbox" class="field-required hastooltip" data-toggle="tooltip" data-original-title="Check if this should be a required field"></input>&nbsp;Required</div></li>
+		<!-- <li>
+			<div class="btn-group">
+				<button class="btn">Conditions</button>
+			</div>
+		</li>-->
+	</ul>
 </div>

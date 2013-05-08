@@ -44,6 +44,10 @@ label input[type="text"].field-label-input.unfocused {
 	padding-left: 0px;
 }
 
+input[type="text"].field-numeric {
+	text-align: right;
+}
+
 select.field-label-input.unfocused {
 	background-color: transparent;
 	border: 1px solid transparent;
@@ -77,6 +81,20 @@ select.field-label-input.unfocused {
 	margin-top: 2px;
 }
 
+.drag-handle {
+    cursor: grab;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+    padding: 5px;
+    vertical-align: bottom;
+    width: 100px;
+}
+.drag-handle:active {
+    cursor: grabbing;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+}
+
 .editable {
 	display: none !important;
 }
@@ -102,7 +120,7 @@ select.field-label-input.unfocused {
 }
 
 .field-center-checkbox {
-	margin: 5px 10px 15px;
+	
 }
 
 .field-input {
@@ -159,14 +177,15 @@ select.field-label-input.unfocused {
 	content: "Text area";
 }
 
-.field-layout.selected { /*border: 1px solid black;*/
-	outline-color: RoyalBlue;
+.field-layout.selected { 
+	/*background-color: LemonChiffon;*/
+	outline-color: Silver;
 	outline-style: auto;
 	outline-width: 5px;
 }
 
-.field-layout.selected:after { /*border: 1px solid black;*/
-	background-color: #eee;
+.field-layout.selected:after {
+	
 	color: black;
 }
 
@@ -183,6 +202,14 @@ select.field-label-input.unfocused {
 .field-layout-details ul {
 	margin-bottom: 0px;
 	padding-bottom: 0px;
+}
+
+.field-layout-details ul li {
+	border-left: 1px solid #ddd;
+}
+
+.field-layout-details ul li:first-child {
+	border-left: 1px solid transparent;
 }
 
 .field-layout-example {
@@ -205,6 +232,11 @@ select.field-label-input.unfocused {
 	-webkit-box-shadow: none;
 	-moz-box-shadow: none;
 	box-shadow: none;
+}
+
+.section-content {
+	list-style: none;
+	margin: 0px;
 }
 
 .section-layout {
@@ -237,7 +269,7 @@ select.field-label-input.unfocused {
 }
 
 .section-layout.selected { /*border: 1px solid black;*/
-	outline-color: RoyalBlue;
+	outline-color: Silver;
 	outline-style: auto;
 	outline-width: 5px;
 }

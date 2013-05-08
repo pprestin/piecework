@@ -7,6 +7,7 @@ requirejs.config({
     	css: 'vendor/css',
     	handlebars: 'vendor/handlebars',
     	jquery: 'vendor/jquery',
+    	jqueryui: 'vendor/jquery-ui-1.10.3.custom.min',
     	less: 'vendor/less',
     	normalize: 'vendor/normalize',
     	text: 'vendor/require-text-2.0.3',

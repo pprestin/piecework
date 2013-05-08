@@ -3,7 +3,7 @@ define([ 'views/field-detail-view', 'views/base/view', 'text!templates/field-che
 	'use strict';
 
 	var CheckboxLayoutView = FieldDetailView.extend({
-		className: 'field-layout selectable checkbox-lo',
+		className: 'selectable field-layout checkbox-lo',
 	    template: template,
 	});
 

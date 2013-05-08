@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/alert-view', 'views/section-detail-view', 'views/base/view', 'text!templates/screen-detail.hbs' ], 
+define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/alert-view', 'views/section-detail-view', 'views/base/view', 'text!templates/screen-detail.hbs', 'jqueryui' ], 
 		function(Chaplin, Alert, Screen, Section, AlertView, SectionDetailView, View, template) {
 	'use strict';
 
@@ -14,6 +14,7 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 			'click .add-textbox-button': '_addTextbox',
 	    	'click .add-section-button': '_addSection',
 	    	'click .remove-button': '_remove',
+	    	'keydown .dropdown-toggle': '_onKeyDropdownToggle',
 	    	'keydown .selectable': '_onSelectableKey',
 	    	'keydown .accessible-btn': '_onButtonPress',
 	    	'focus .selectable': '_selectItem',
@@ -63,7 +64,7 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    	this._addField('textbox');
 	    },
 	    _addSection: function() {
-	    	var ordinal = $('.section-layout').length + 1;
+	    	var ordinal = ($('.section-layout').length + 1) * 1000;
 	    	var section = new Section({ordinal: ordinal});
 	    	var sectionId = 'section-' + section.cid;
 	    	
@@ -81,6 +82,30 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	            $(".accessible-btn:focus").prev(".accessible-btn").focus();
 	            break;
 	        }
+	    },
+	    _onKeyDropdownToggle: function(event) {
+	    	var $target = $(event.target);
+	    	if ($target.hasClass('dropdown-toggle')) 
+	    		$target = $target.next('ul.dropdown-menu');
+	    	
+	    	switch (event.keyCode) {
+			case 38: // Up arrow
+				var $oneAbove = $target.prev('ul.dropdown-menu li');
+				if ($oneAbove.length == 1) {
+					$oneAbove.focus();
+				}
+				break;
+			case 40: // Down arrow
+				var $oneBelow = $target.next('ul.dropdown-menu li');
+				
+				if ($target.hasClass('dropdown-menu')) 
+					$oneBelow = $target.find('li:first').find('a');
+				
+				if ($oneBelow.length == 1) 
+					$oneBelow.focus();
+				
+				break;
+			}
 	    },
 	    _onSelectableKey: function(event) {
 	    	switch (event.keyCode) {
