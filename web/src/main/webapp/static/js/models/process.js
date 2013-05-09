@@ -4,12 +4,12 @@ define([ 'chaplin', 'models/base/model', 'models/screens' ], function(Chaplin, M
 	var Process = Model.extend({
 		defaults : function() {
 			return {
-//				processDefinitionKey : "",
 				processLabel: "",
 				processSummary : "",
 				participantSummary: "",
+				ordinal: 0,
 				screens: new Screens(),
-				created : new Date()
+				created: new Date()
 			};
 		},
 		idAttribute: 'processDefinitionKey',
@@ -17,9 +17,6 @@ define([ 'chaplin', 'models/base/model', 'models/screens' ], function(Chaplin, M
 		isNew: function() {
 		      return this.id == null || this.id == '';
 		},
-//		url: function() {
-//			return this.urlRoot + '/' + this.attributes.processDefinitionKey;
-//		}
 	});
 	return Process;
 });

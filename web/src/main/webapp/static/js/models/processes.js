@@ -3,10 +3,9 @@ define([ 'chaplin', 'models/base/collection', 'models/process'], function(Chapli
 
 	var Processes = Collection.extend({
 		model: Process,
-		comparator: 'created',
+		comparator: 'ordinal',
 		url: 'secure/v1/process',
 		parse: function(response, options) {
-			
 			return response.list;
 		},
 	});

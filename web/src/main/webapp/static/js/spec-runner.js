@@ -1,13 +1,11 @@
 // Configure RequireJS
 require.config({
-	baseUrl: 'js',
+	baseUrl: 'js/vendor',
 	paths: {
-		backbone: 'vendor/backbone-amd',
-		chai : 'vendor/chai',
-		jquery: 'vendor/jquery',
-		mocha: 'vendor/mocha',
+		backbone: 'backbone-amd',
+		models: '../models',
 		testem: '/testem',
-		underscore: 'vendor/underscore-amd'
+		underscore: 'underscore-amd'
 	},
     shim: {
         'chai':{deps: ['mocha']}
@@ -15,7 +13,7 @@ require.config({
 });
 
 // Require libraries
-require([ 'require', 'chai', 'testem' ], function(require, chai) {
+require([ 'require', 'chai', 'testem', 'mocha' ], function(require, chai) {
 
 	// Chai
 	assert = chai.assert;
@@ -26,7 +24,13 @@ require([ 'require', 'chai', 'testem' ], function(require, chai) {
 	mocha.setup('bdd');
 
 	// Require base tests before starting
-	require([ '../test/models/process-model.test' ], function(process) {
+	require([ 
+			'../test/models/field.test',
+			'../test/models/fields.test',
+	         '../test/models/process.test',
+	         '../test/models/processes.test',
+	          
+	        ], function(process) {
 		// Start runner
 		mocha.run();
 	});

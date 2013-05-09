@@ -13,6 +13,13 @@ define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 				created : new Date()
 			};
 		},
+		url: function() {
+			var process = this.get("process");
+			if (process == null)
+				return "";
+			var processDefinitionKey = process.get("processDefinitionKey");
+			return 'secure/v1/process/' + processDefinitionKey + '/field/' + this.id;
+		},
 	});
 	return Field;
 });
