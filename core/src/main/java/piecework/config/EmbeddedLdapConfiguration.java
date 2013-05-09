@@ -29,8 +29,8 @@ import org.springframework.security.ldap.server.ApacheDSContainer;
  * @author James Renfro
  */
 @Configuration
-@Profile({"standalone","ldap"})
-public class StandaloneLdapConfiguration {
+@Profile({"embedded-ldap","ldap"})
+public class EmbeddedLdapConfiguration {
 
 	private final static String ROOT = "dc=springframework,dc=org";
 	private final static String LDIF_LOCATION = "classpath*:META-INF/piecework/demo.ldif";

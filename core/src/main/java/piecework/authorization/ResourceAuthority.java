@@ -65,5 +65,13 @@ public class ResourceAuthority implements GrantedAuthority {
 	public String getAuthority() {
 		return toString();
 	}
+
+	public Set<String> getProcessDefinitionKeys() {
+		return processDefinitionKeys;
+	}
+
+	public String getRole() {
+		return role;
+	}
 	
 }

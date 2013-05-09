@@ -8,11 +8,22 @@ define([ 'chaplin', 'models/process', 'views/base/collection-view', 'views/proce
 		region: 'sidebar-content',
 		itemView: ProcessItemView,
 		tagName: 'ul',
-		onProcessChanged: function(process) {
-			// The process is only added/updated to the collection when it changes
-			this.collection.add(process, {merge:true});
-			this.renderItem(process);
-		},		
+		listen: {
+			
+			
+		},
+		initialize: function(options) {
+			CollectionView.__super__.initialize.apply(this, options);
+	   		this.collection.fetch();
+		},
+		
+		onProcessDefinitionKeyChanged: function(process, processDefinitionKey) {
+			this.collection.fetch();
+			
+//			// The process is only added/updated to the collection when it changes
+//			this.collection.add(process, {merge:true});
+//			this.renderItem(process);
+		},	
 	});
 
 	return ProcessListView;

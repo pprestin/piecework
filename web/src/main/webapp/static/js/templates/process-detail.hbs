@@ -1,6 +1,6 @@
 <ul class="breadcrumb well">
   <li><a href="#">Processes</a> <span class="divider">/</span></li>
-  <li class="active">{{#if shortName}}{{ shortName }}{{else}}Untitled{{/if}}</li>
+  <li class="active">{{#if processDefinitionKey}}{{ processDefinitionKey }}{{else}}Untitled{{/if}}</li>
 </ul>
 <div class="accordion" id="process-detail-accordian">
 	<form id="process-detail-form">
@@ -9,7 +9,7 @@
 				<div class="accordion-toggle">
 					<a class="section-toggle-switch" data-toggle="collapse" data-parent="#process-detail-accordian"
 						data-target="#process-basic-information">
-						{{#if shortName}}
+						{{#if processDefinitionKey}}
 							<i class="section-open-indicator icon-chevron-right"></i>
 						{{else}}
 							<i class="section-open-indicator icon-chevron-down"></i>
@@ -19,7 +19,7 @@
 					<span class="pull-right"><button class="edit-button btn" type="button">Done</button></span>
 				</div>		
 			</div>
-			<div id="process-basic-information" class="accordion-body collapse {{#unless shortName}}in{{/unless}}">
+			<div id="process-basic-information" class="accordion-body collapse {{#unless processDefinitionKey}}in{{/unless}}">
 				<div class="accordion-inner">
 					<div class="alert alert-info tips-and-tricks">
 						<button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -27,21 +27,21 @@
 					</div>
 					<fieldset>
 						<div class="control-group">
-							<label>Name</label>
+							<label>Key</label>
 							<div class="controls">
 								<div class="viewable process-short-name-readonly muted"></div>
 								<input class="editable process-short-name" type="text"
-									name="shortName" maxlength="25" size="25"
-									placeholder="What do you call it for short?" required> <span
+									name="processDefinitionKey" maxlength="25" size="25"
+									placeholder="Letters/numbers, no spaces" required> <span
 									class="help-inline hide">Required</span>
 							</div>
 						</div>
 						<div class="control-group">
-							<label>Formal name <span class="text-info">(optional)</span></label>
+							<label>Label <span class="text-info">(optional)</span></label>
 							<div class="controls">
 								<div class="viewable process-short-name-readonly muted"></div>
 								<input class="editable process-formal-name span6" type="text"
-									name="formalName" maxlength="80"
+									name="processLabel" maxlength="80"
 									placeholder="How would you refer to it officially?">
 								<span class="help-inline hide">Required</span>
 							</div>
@@ -51,7 +51,7 @@
 							<div class="controls">
 								<div class="viewable process-short-name-readonly muted"></div>
 								<textarea class="editable process-summary span8"
-									name="summary"
+									name="processSummary"
 									placeholder="Provide some more details about how the process works"
 									rows="4"></textarea>
 							</div>
@@ -61,7 +61,7 @@
 							<div class="controls">
 								<div class="viewable process-short-name-readonly muted"></div>
 								<textarea class="editable process-participants span8"
-									name="participants"
+									name="participantSummary"
 									placeholder="What people or groups have to take action?"></textarea>
 							</div>
 						</div>

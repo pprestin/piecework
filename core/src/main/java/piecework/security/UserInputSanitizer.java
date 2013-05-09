@@ -30,13 +30,14 @@ import org.owasp.validator.html.ScanException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import piecework.Sanitizer;
 import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
  */
 @Service
-public class UserInputSanitizer {
+public class UserInputSanitizer implements Sanitizer {
 
 	private static final Logger LOG = org.apache.log4j.Logger.getLogger(UserInputSanitizer.class);
 	

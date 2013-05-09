@@ -26,8 +26,8 @@ import piecework.persistence.EmbeddedMongoInstance;
  * @author James Renfro
  */
 @Configuration
-@Profile("standalone-mongo")
-public class StandaloneMongoConfiguration {
+@Profile("embedded-mongo")
+public class EmbeddedMongoConfiguration {
 
 	@Value("${mongo.db}")
 	private String mongoDb;

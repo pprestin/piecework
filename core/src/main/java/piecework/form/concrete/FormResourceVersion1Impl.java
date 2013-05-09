@@ -49,13 +49,13 @@ import piecework.util.PropertyValueReader;
 public class FormResourceVersion1Impl implements FormResource {
 
 	@Autowired 
-	private FormService service;
+	FormService service;
 	
 	@Autowired
-	private ProcessEngineRuntimeFacade runtime;
+	ProcessEngineRuntimeFacade runtime;
 	
 	@Autowired
-	private UserInputSanitizer sanitizer;
+	UserInputSanitizer sanitizer;
 	
 	
 	public FormView read(final String rawProcessDefinitionKey) throws StatusCodeError {

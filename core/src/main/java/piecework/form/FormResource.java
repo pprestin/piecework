@@ -37,24 +37,23 @@ public interface FormResource extends Resource {
 	@GET
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-	public FormView read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+	FormView read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
 	
 	@GET
 	@Path("{processDefinitionKey}/current/{processInstanceId}")
 	@RolesAllowed({AuthorizationRole.USER})
-	public FormView read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+	FormView read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
 	@POST
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("application/x-www-form-urlencoded")
-	public FormView submit(@PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
+	FormView submit(@PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
 	
 	@POST
 	@Path("{processDefinitionKey}/{processBusinessKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("application/x-www-form-urlencoded")
-	public FormView submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processBusinessKey") String processBusinessKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
+	FormView submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processBusinessKey") String processBusinessKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
 
-	
 }

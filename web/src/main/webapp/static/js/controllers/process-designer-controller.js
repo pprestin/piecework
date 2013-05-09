@@ -19,7 +19,7 @@ define([
   
   // FIXME: Just for development -- remove this!!!
   var field = new Field({id: '456', name: 'EmployeeName'});
-  var process = new Process({id: '123', shortName: 'Testing'});
+//  var process = new Process({id: '123', processDefinitionKey: 'Testing'});
   var user = new User({displayName: 'Test User'});
   // FIXME: End section to remove
   
@@ -27,7 +27,6 @@ define([
 	beforeAction: {
 		'edit': function() {
 			var processes = new Processes();
-			processes.add(process);
 			var sidebar = new Sidebar({collection: processes, title: 'PROCESSES', type: 'process', actions: { add: "#designer/edit" }});
 			this.compose('header', HeaderView, {model: user});
 			this.compose('designer', DesignerView, {model: processes});
@@ -35,7 +34,6 @@ define([
 		},
 		'index': function() {
 			var processes = new Processes();
-			processes.add(process);
 			var sidebar = new Sidebar({collection: processes, title: 'PROCESSES', type: 'process', actions: { add: "#designer/edit" }});
 			this.compose('header', HeaderView, {model: user});
 			this.compose('designer', DesignerView, {model: processes});
@@ -50,20 +48,25 @@ define([
 			this.compose('sidebar', SidebarView, {model: sidebar});
 		}
 	},
-//	configure: function(params) {
-//		// FIXME: Just for development -- swap for lookup from api by id
-//		var screen = new Screen({id: params.screenId, title:'New employee form', url: 'http://localhost:8000/static/sample_form.html', process: process})
-//		this.view = new ScreenConfigureView({model: screen});
-//	},
 	edit: function(params) {
-		var model = process;
-		// FIXME: Just for development
-    	if (params.processDefinitionKey != "123")
-    		model = new Process();
 		var sidebarView = this.compose('sidebar');
 		var processListView = sidebarView.subview('content');
-		this.view = new ProcessDetailView({model: model});	
-		processListView.listenTo(process, 'change', processListView.onProcessChanged);
+		var collection = processListView.collection;
+		var process;
+		if (params.processDefinitionKey !== undefined) {	
+			if (collection !== undefined && collection.length > 0)
+				process = collection.findWhere({processDefinitionKey: params.processDefinitionKey})
+			else {
+				process = new Process({processDefinitionKey: params.processDefinitionKey});
+				process.fetch();
+			} 
+				
+		} else {
+			process = new Process();
+		}
+		
+		this.view = new ProcessDetailView({model: process});	
+		processListView.listenTo(process, 'change:processDefinitionKey', processListView.onProcessDefinitionKeyChanged);
 	},
     index: function(params) {
     	var designerView = this.compose('designer');

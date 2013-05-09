@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,36 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.model;
+package piecework.security;
 
-import java.io.Serializable;
-import java.util.Map;
+import piecework.Sanitizer;
 
 /**
+ * This class is used in cases where the data has already been sanitized
+ * and stored.
+ * 
  * @author James Renfro
  */
-public interface Process extends Serializable {
+public class PassthroughSanitizer implements Sanitizer {
 
-	String getId();
-	
-	String getProcessDefinitionKey();
-	
-	String getProcessLabel();
-	
-	String getProcessSummary();
-	
-	String getParticipantSummary();
-	
-	String getEngine();
-	
-	String getEngineProcessDefinitionKey();
-	
-	String getStartRequestFormIdentifier();
-	
-	String getStartResponseFormIdentifier();
+	@Override
+	public String sanitize(String tainted) {
+		return tainted;
+	}
 
-	Map<String, String> getTaskRequestFormIdentifiers();
-
-	Map<String, String> getTaskResponseFormIdentifiers();
-	
 }

@@ -26,6 +26,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
 
 /**
@@ -34,13 +38,14 @@ import piecework.common.view.ViewContext;
 @XmlRootElement(name = ProcessView.Constants.ROOT_ELEMENT_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = ProcessView.Constants.TYPE_NAME)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProcessView implements piecework.process.model.Process {
 
 	private static final long serialVersionUID = 1L;
-
+	
 	@XmlAttribute
 	@XmlID
-	protected final String id;
+	private final String processDefinitionKey;
 	
 	@XmlElement
 	private final String processLabel;
@@ -49,13 +54,16 @@ public class ProcessView implements piecework.process.model.Process {
 	private final String processSummary;
 	
 	@XmlElement
-	private final String processDefinitionKey;
+	private final String participantSummary;
 	
 	@XmlElement
 	private final String engine;
 	
 	@XmlElement
 	private final String engineProcessDefinitionKey;
+	
+	@XmlElement
+	private final String uri;
 	
 	@XmlTransient
 	private final String startRequestFormIdentifier;
@@ -74,12 +82,13 @@ public class ProcessView implements piecework.process.model.Process {
 	}
 			
 	private ProcessView(ProcessView.Builder builder, ViewContext context) {
-		this.id = builder.getId();
+		this.processDefinitionKey = builder.getProcessDefinitionKey();
 		this.processLabel = builder.getProcessLabel();
 		this.processSummary = builder.getProcessSummary();
-		this.processDefinitionKey = builder.getProcessDefinitionKey();
+		this.participantSummary = builder.getParticipantSummary();
 		this.engine = builder.getEngine();
 		this.engineProcessDefinitionKey = builder.getEngineProcessDefinitionKey();
+		this.uri = context != null ? context.getUri(builder.getId()) : null;
 		this.startRequestFormIdentifier = builder.getStartRequestFormIdentifier();
 		this.startResponseFormIdentifier = builder.getStartResponseFormIdentifier();
 		this.taskRequestFormIdentifiers = builder.getTaskRequestFormIdentifiers();
@@ -87,10 +96,11 @@ public class ProcessView implements piecework.process.model.Process {
 	}
 	
 	@Override
+	@JsonIgnore
 	public String getId() {
-		return id;
+		return null;
 	}
-	
+		
 	@Override
 	public String getProcessDefinitionKey() {
 		return processDefinitionKey;
@@ -106,14 +116,25 @@ public class ProcessView implements piecework.process.model.Process {
 		return engineProcessDefinitionKey;
 	}
 
+	public String getUri() {
+		return uri;
+	}
+
 	public final static class Builder extends piecework.process.model.builder.ProcessBuilder<ProcessView> {
 		
 		public Builder() {
 			super();
 		}
 		
-		public Builder(piecework.process.model.Process process) {
-			super(process);
+		@SuppressWarnings("unchecked")
+		@Override
+		public ProcessView.Builder id(String id) {
+			super.id(id);
+			return this;
+		}
+		
+		public Builder(piecework.process.model.Process process, Sanitizer sanitizer) {
+			super(process, sanitizer);
 		}
 		
 		public ProcessView build() {
@@ -163,6 +184,10 @@ public class ProcessView implements piecework.process.model.Process {
 
 	public String getProcessSummary() {
 		return processSummary;
+	}
+
+	public String getParticipantSummary() {
+		return participantSummary;
 	}
 	
 }

@@ -20,6 +20,7 @@ import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
 
 
@@ -34,15 +35,19 @@ public class ProcessRecord implements piecework.process.model.Process {
 	@Id
 	private String id;
 	
+	private String processDefinitionKey;
+	
 	private String processLabel;
 	
 	private String processSummary;
 	
-	private String processDefinitionKey;
+	private String participantSummary;
 	
 	private String engine;
 	
 	private String engineProcessDefinitionKey;
+	
+	private boolean isDeleted;
 	
 	private String startRequestFormIdentifier;
 	
@@ -57,12 +62,14 @@ public class ProcessRecord implements piecework.process.model.Process {
 	}
 	
 	private ProcessRecord(ProcessRecord.Builder builder) {
-		this.id = builder.getId();
+		this.id = builder.getProcessDefinitionKey();
 		this.processLabel = builder.getProcessLabel();
 		this.processSummary = builder.getProcessSummary();
+		this.participantSummary = builder.getParticipantSummary();
 		this.processDefinitionKey = builder.getProcessDefinitionKey();
 		this.engine = builder.getEngine();
 		this.engineProcessDefinitionKey = builder.getEngineProcessDefinitionKey();
+		this.isDeleted = builder.isDeleted();
 		this.startRequestFormIdentifier = builder.getStartRequestFormIdentifier();
 		this.startResponseFormIdentifier = builder.getStartResponseFormIdentifier();
 		this.taskRequestFormIdentifiers = builder.getTaskRequestFormIdentifiers();
@@ -91,6 +98,14 @@ public class ProcessRecord implements piecework.process.model.Process {
 	@Override
 	public String getEngineProcessDefinitionKey() {
 		return engineProcessDefinitionKey;
+	}
+
+	public boolean isDeleted() {
+		return isDeleted;
+	}
+
+	public void setDeleted(boolean isDeleted) {
+		this.isDeleted = isDeleted;
 	}
 
 	public void setProcessDefinitionKey(String processDefinitionKey) {
@@ -141,12 +156,24 @@ public class ProcessRecord implements piecework.process.model.Process {
 	
 	public final static class Builder extends piecework.process.model.builder.ProcessBuilder<ProcessRecord> {
 		
+		private boolean isDeleted;
+		
 		public Builder() {
 			super();
 		}
 		
-		public Builder(piecework.process.model.Process process) {
-			super(process);
+		public Builder(piecework.process.model.Process process, Sanitizer sanitizer) {
+			super(process, sanitizer);
+		}
+		
+		public Builder delete() {
+			this.isDeleted = true;
+			return this;
+		}
+		
+		public Builder undelete() {
+			this.isDeleted = false;
+			return this;
 		}
 		
 		public ProcessRecord build() {
@@ -157,6 +184,10 @@ public class ProcessRecord implements piecework.process.model.Process {
 		public ProcessRecord build(ViewContext context) {
 			return new ProcessRecord(this);
 		}
+
+		public boolean isDeleted() {
+			return isDeleted;
+		}
 	}
 
 	public String getProcessLabel() {
@@ -165,6 +196,10 @@ public class ProcessRecord implements piecework.process.model.Process {
 
 	public String getProcessSummary() {
 		return processSummary;
+	}
+
+	public String getParticipantSummary() {
+		return participantSummary;
 	}
 
 }

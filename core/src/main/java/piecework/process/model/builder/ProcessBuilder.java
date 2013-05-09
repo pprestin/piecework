@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.form.model.builder.Builder;
 
@@ -27,9 +28,10 @@ import piecework.form.model.builder.Builder;
  */
 public abstract class ProcessBuilder<P extends piecework.process.model.Process> extends Builder {
 
+	private String processDefinitionKey;
 	private String processLabel;
 	private String processSummary;
-	private String processDefinitionKey;
+	private String participantSummary;
 	private String engine;
 	private String engineProcessDefinitionKey;
 	private String startRequestFormIdentifier;
@@ -41,12 +43,14 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 		super();
 	}
 	
-	public ProcessBuilder(piecework.process.model.Process process) {
+	public ProcessBuilder(piecework.process.model.Process process, Sanitizer sanitizer) {
 		super(process.getId());
-		this.processLabel = process.getProcessLabel();
-		this.processDefinitionKey = process.getProcessDefinitionKey();
-		this.engine = process.getEngine();
-		this.engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+		this.processLabel = sanitizer.sanitize(process.getProcessLabel());
+		this.processSummary = sanitizer.sanitize(process.getProcessSummary());
+		this.participantSummary = sanitizer.sanitize(process.getParticipantSummary());
+		this.processDefinitionKey = sanitizer.sanitize(process.getProcessDefinitionKey());
+		this.engine = sanitizer.sanitize(process.getEngine());
+		this.engineProcessDefinitionKey = sanitizer.sanitize(process.getEngineProcessDefinitionKey());
 	}
 	
 	public abstract P build();
@@ -140,5 +144,9 @@ public abstract class ProcessBuilder<P extends piecework.process.model.Process> 
 
 	public String getProcessSummary() {
 		return processSummary;
+	}
+
+	public String getParticipantSummary() {
+		return participantSummary;
 	}
 }

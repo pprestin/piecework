@@ -18,6 +18,7 @@ package piecework;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -26,13 +27,38 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import piecework.process.ProcessResource;
+import piecework.process.ProcessService;
+import piecework.process.concrete.ProcessResourceVersion1Impl;
+import piecework.security.PassthroughSanitizer;
+
 /**
  * @author James Renfro
  */
 @Configuration
 @Profile("test")
-public class ApplicationConfigurationForTest {
+public class ApplicationConfigurationForUnitTest {
 
+	@Bean
+	public Sanitizer sanitizer() {
+		return new PassthroughSanitizer();
+	}
+	
+	@Bean
+	public ProcessResource processResource() {
+		ProcessResourceVersion1Impl resource = new ProcessResourceVersion1Impl();
+		return resource;
+	}
+	
+	@Bean
+	public ProcessService processService() {
+		ProcessService mocked = Mockito.mock(ProcessService.class);
+		
+//		Mockito.when(mocked.storeProcess((Process)Mockito.any()))
+		
+		return mocked;
+	}
+	
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {
 		// This is the list of places to look for configuration properties
