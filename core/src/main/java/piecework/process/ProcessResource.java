@@ -46,7 +46,7 @@ public interface ProcessResource extends Resource {
 	@GET
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	ProcessView read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+	Response read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
 	
 	@PUT
 	@Path("{processDefinitionKey}")

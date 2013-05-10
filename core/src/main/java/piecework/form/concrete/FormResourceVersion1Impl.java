@@ -37,6 +37,7 @@ import piecework.form.model.Form;
 import piecework.form.model.view.FormView;
 import piecework.form.validation.AttributeValidation;
 import piecework.process.ProcessEngineRuntimeFacade;
+import piecework.process.exception.ProcessDeletedException;
 import piecework.process.exception.ProcessNotFoundException;
 import piecework.process.model.ProcessInstance;
 import piecework.security.UserInputSanitizer;
@@ -71,6 +72,8 @@ public class FormResourceVersion1Impl implements FormResource {
 			return new FormView.Builder(form).build(context());
 		} catch (ProcessNotFoundException e) {
 			throw new BadRequestError();
+		} catch (ProcessDeletedException e) {
+			throw new BadRequestError();
 		}
 		
 //		SecurityContext context = SecurityContextHolder.getContext();
@@ -103,6 +106,8 @@ public class FormResourceVersion1Impl implements FormResource {
 			builder.processInstanceId(processInstanceId);
 			return builder.build(context());
 		} catch (ProcessNotFoundException e) {
+			throw new BadRequestError();
+		} catch (ProcessDeletedException e) {
 			throw new BadRequestError();
 		}
 	}
@@ -160,6 +165,8 @@ public class FormResourceVersion1Impl implements FormResource {
 			}
 		} catch (ProcessNotFoundException e) {
 			throw new ForbiddenError();
+		} catch (ProcessDeletedException e) {
+			throw new BadRequestError();
 		}
 		
 		return null;

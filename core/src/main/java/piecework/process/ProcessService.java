@@ -19,6 +19,7 @@ import java.util.List;
 
 import piecework.form.FormPosition;
 import piecework.form.model.Form;
+import piecework.process.exception.ProcessDeletedException;
 import piecework.process.exception.ProcessNotFoundException;
 
 /**
@@ -35,7 +36,7 @@ public interface ProcessService {
 	List<piecework.process.model.Process> findProcesses(String... allowedRoles);
 
 	piecework.process.model.Process getProcess(String processDefinitionKey)
-			throws ProcessNotFoundException;
+			throws ProcessNotFoundException, ProcessDeletedException;
 
 	piecework.process.model.Process storeProcess(
 			piecework.process.model.Process process);

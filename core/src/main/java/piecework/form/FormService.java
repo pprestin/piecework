@@ -39,6 +39,7 @@ import piecework.form.model.record.FormRecord;
 import piecework.form.validation.AttributeValidation;
 import piecework.form.validation.FormValidator;
 import piecework.process.ProcessService;
+import piecework.process.exception.ProcessDeletedException;
 import piecework.process.exception.ProcessNotFoundException;
 import piecework.util.ManyMap;
 import piecework.util.PropertyValueReader;
@@ -83,13 +84,13 @@ public class FormService {
 //		return null;
 //	}
 	
-	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws ProcessNotFoundException {
+	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws ProcessNotFoundException, ProcessDeletedException {
 		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
 		
 		return form;
 	}
 	
-	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey, List<AttributeValidation> validations) throws ProcessNotFoundException {
+	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey, List<AttributeValidation> validations) throws ProcessNotFoundException, ProcessDeletedException {
 		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
 //		ManyMap<String, String> valuesMap = new ManyMap<String, String>(formData);
 		
@@ -125,7 +126,7 @@ public class FormService {
 		return null;
 	}
 	
-	public void validate(String processDefinitionKey, String taskDefinitionKey, List<String> sectionNames, PropertyValueReader reader) throws ValidationException, ProcessNotFoundException {
+	public void validate(String processDefinitionKey, String taskDefinitionKey, List<String> sectionNames, PropertyValueReader reader) throws ValidationException, ProcessNotFoundException, ProcessDeletedException {
 		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
 		
 		FormPosition position = FormPosition.TASK_REQUEST;
@@ -138,7 +139,7 @@ public class FormService {
 		validator.validate(process, form, previousReader, sectionNames, reader, true, true, true);
 	}
 	
-	public void storeValues(String processDefinitionKey, String taskDefinitionKey, String processBusinessKey, List<String> sectionNames, PropertyValueReader reader, boolean isRequiredNecessary) throws ValidationException, ProcessNotFoundException {
+	public void storeValues(String processDefinitionKey, String taskDefinitionKey, String processBusinessKey, List<String> sectionNames, PropertyValueReader reader, boolean isRequiredNecessary) throws ValidationException, ProcessNotFoundException, ProcessDeletedException {
 		long validationStart = System.currentTimeMillis();
 		
 		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
@@ -170,7 +171,7 @@ public class FormService {
 
 	}
 
-	private FormRecord getFormRecord(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws ProcessNotFoundException {
+	private FormRecord getFormRecord(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws ProcessNotFoundException, ProcessDeletedException {
 		
 		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
 		

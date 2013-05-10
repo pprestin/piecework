@@ -34,10 +34,12 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.exception.ForbiddenError;
+import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.process.ProcessResource;
 import piecework.process.ProcessService;
+import piecework.process.exception.ProcessDeletedException;
 import piecework.process.exception.ProcessNotFoundException;
 import piecework.process.model.view.ProcessView;
 import piecework.security.PassthroughSanitizer;
@@ -123,6 +125,8 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 					// If the current process does not exist, then return 404
 					throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 				}				
+			} catch (ProcessDeletedException exception) {
+				// It's okay if the process was already deleted - keep going
 			}
 		}
 		
@@ -141,7 +145,7 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 	}
 
 	@Override
-	public ProcessView read(String rawProcessDefinitionKey) throws StatusCodeError {
+	public Response read(String rawProcessDefinitionKey) throws StatusCodeError {
 		// Sanitize all user input
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 				
@@ -150,10 +154,15 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 			result = service.getProcess(processDefinitionKey);
 		} catch (ProcessNotFoundException e) {
 			throw new NotFoundError();
+		} catch (ProcessDeletedException e) {
+			throw new GoneError();
 		}
 				
 		// Can use PassthroughSanitizer on response, since data is coming from storage 
-		return new ProcessView.Builder(result, new PassthroughSanitizer()).build();
+		ProcessView view = new ProcessView.Builder(result, new PassthroughSanitizer()).build();
+	
+		ResponseBuilder responseBuilder = Response.ok(view);
+		return responseBuilder.build();
 	}
 	
 	@Override

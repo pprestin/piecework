@@ -15,6 +15,10 @@
  */
 package piecework.process.concrete;
 
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import piecework.ApplicationConfigurationForUnitTest;
+import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
 import piecework.process.ProcessResource;
 import piecework.process.model.view.ProcessView;
@@ -39,17 +44,57 @@ public class ProcessResourceVersion1ImplTest {
 	@Autowired
 	ProcessResource resource;
 	
+	String exampleProcessDefinitionKey;
+	String exampleProcessLabel;
+	
 	@Before
 	public void setup() {
-		
+		this.exampleProcessDefinitionKey = "demo";
+		this.exampleProcessLabel = "Testing";
 	}
 	
 	@Test
-	public void test() throws StatusCodeError {
-		ProcessView process = new ProcessView.Builder().processDefinitionKey("demo").build();
-		resource.create(process);
+	public void testCreateReadUpdateAndDeleteProcess() throws StatusCodeError {
+		// Create
+		ProcessView process = new ProcessView.Builder().processDefinitionKey(exampleProcessDefinitionKey)
+				.processLabel(exampleProcessLabel).build();
+		Response response = resource.create(process);
+		Assert.assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
+		Assert.assertEquals("/piecework/secure/v1/process/demo", response.getLocation().toString());
 		
+		// Read
+		response = resource.read(exampleProcessDefinitionKey);
+		ProcessView result = (ProcessView) response.getEntity();
+		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
+		Assert.assertEquals(exampleProcessLabel, result.getProcessLabel());
 		
+		// Update
+		ProcessView updated = new ProcessView.Builder().processDefinitionKey(exampleProcessDefinitionKey)
+				.processLabel("New Label").build();
+		response = resource.update("demo", updated);
+		result = (ProcessView) response.getEntity();
+		Assert.assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
+		
+		// Read again
+		response = resource.read(exampleProcessDefinitionKey);
+		result = (ProcessView) response.getEntity();
+		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
+		Assert.assertEquals("New Label", result.getProcessLabel());
+		
+		// Delete
+		response = resource.delete("demo");
+		result = (ProcessView) response.getEntity();
+		Assert.assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
+
+		// Read one final time
+		try {
+			response = resource.read(exampleProcessDefinitionKey);
+			Assert.fail("Didn't throw an exception that the process was gone");
+		} catch (GoneError e) {
+			// Ok, it worked
+		} 
 	}
 
 }

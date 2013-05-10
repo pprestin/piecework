@@ -18,7 +18,6 @@ package piecework;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -27,9 +26,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
 import piecework.process.ProcessService;
+import piecework.process.concrete.ProcessRepositoryStub;
 import piecework.process.concrete.ProcessResourceVersion1Impl;
+import piecework.process.concrete.ProcessServiceImpl;
 import piecework.security.PassthroughSanitizer;
 
 /**
@@ -52,11 +54,15 @@ public class ApplicationConfigurationForUnitTest {
 	
 	@Bean
 	public ProcessService processService() {
-		ProcessService mocked = Mockito.mock(ProcessService.class);
-		
+//		ProcessService mocked = Mockito.mock(ProcessService.class);
 //		Mockito.when(mocked.storeProcess((Process)Mockito.any()))
 		
-		return mocked;
+		return new ProcessServiceImpl();
+	}
+	
+	@Bean 
+	public ProcessRepository processRepository() {
+		return new ProcessRepositoryStub();
 	}
 	
 	@Bean

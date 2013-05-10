@@ -28,17 +28,18 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Sets;
-
+import piecework.Sanitizer;
 import piecework.authorization.ResourceAuthority;
 import piecework.form.FormPosition;
 import piecework.form.model.Form;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessService;
+import piecework.process.exception.ProcessDeletedException;
 import piecework.process.exception.ProcessNotFoundException;
 import piecework.process.model.record.ProcessRecord;
 import piecework.security.PassthroughSanitizer;
-import piecework.security.UserInputSanitizer;
+
+import com.google.common.collect.Sets;
 
 /**
  * @author James Renfro
@@ -50,7 +51,7 @@ public class ProcessServiceImpl implements ProcessService {
 	ProcessRepository repository;
 	
 	@Autowired
-	UserInputSanitizer sanitizer;
+	Sanitizer sanitizer;
 	
 	public void addForm(FormPosition position, Form form) throws ProcessNotFoundException {
 		String processDefinitionKey = form.getProcessDefinitionKey();
@@ -122,11 +123,14 @@ public class ProcessServiceImpl implements ProcessService {
 		return processes;
 	}
 	
-	public piecework.process.model.Process getProcess(String processDefinitionKey) throws ProcessNotFoundException {
+	public piecework.process.model.Process getProcess(String processDefinitionKey) throws ProcessNotFoundException, ProcessDeletedException {
 		ProcessRecord record = repository.findOne(processDefinitionKey);
 	
 		if (record == null)
 			throw new ProcessNotFoundException(processDefinitionKey);
+		if (record.isDeleted())
+			throw new ProcessDeletedException(processDefinitionKey);
+		
 		return record;
 	}
 	
