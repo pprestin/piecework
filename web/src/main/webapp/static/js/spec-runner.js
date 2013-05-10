@@ -4,16 +4,26 @@ require.config({
 	paths: {
 		backbone: 'backbone-amd',
 		models: '../models',
+		lib: '../lib',
+		templates: '../templates',
 		testem: '/testem',
-		underscore: 'underscore-amd'
+		text: 'require-text-2.0.3',
+		underscore: 'underscore-amd',
+		views: '../views',
 	},
     shim: {
-        'chai':{deps: ['mocha']}
+        'chai':{deps: ['mocha']},
+        'backbone':{deps: ['underscore','jquery'], exports: 'Backbone'},
+        'bootstrap':{deps: ['jquery']},
+        'handlebars':{exports: 'Handlebars'},
+        'sinon':{exports: 'sinon'},
+        'sinon-chai':{},
+        'underscore':{exports: '_'}
     }
 });
 
 // Require libraries
-require([ 'require', 'chai', 'testem', 'mocha' ], function(require, chai) {
+require([ 'require', 'chai', 'testem', 'mocha', 'sinon' ], function(require, chai) {
 
 	// Chai
 	assert = chai.assert;
@@ -29,7 +39,8 @@ require([ 'require', 'chai', 'testem', 'mocha' ], function(require, chai) {
 			'../test/models/fields.test',
 	         '../test/models/process.test',
 	         '../test/models/processes.test',
-	          
+	         '../test/views/process-detail-view.test',
+	         '../test/views/process-list-view.test'
 	        ], function(process) {
 		// Start runner
 		mocha.run();

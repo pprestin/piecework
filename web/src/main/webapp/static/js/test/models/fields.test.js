@@ -27,15 +27,6 @@ define([ 'models/field', 'models/fields', 'models/process', 'mocha', 'chai' ], f
 			should.exist(checkThird);
 			checkThird.should.be.an('object');
 			checkThird.get("name").should.equal("third");
-		}),
-		it("has correct url", function() {
-			var process = new Process({'processDefinitionKey': 'demo'});
-			var collection = new Fields({'process': process});
-			var url = collection.url;
-			url.should.be.a("function");
-			
-			var location = _.result(collection, 'url');
-			location.should.equal("secure/v1/process/demo/field");
-		});
+		})
 	});
 });
