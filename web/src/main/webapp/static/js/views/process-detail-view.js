@@ -1,5 +1,5 @@
-define([ 'models/process', 'models/screen', 'views/base/view', 'views/screen-list-view', 'text!templates/process-detail.hbs' ], 
-         function(Process, Screen, View, ScreenListView, template ) {
+define([ 'models/process', 'models/interaction', 'models/screen', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-detail.hbs' ], 
+         function(Process, Interaction, Screen, View, InteractionListView, template ) {
 	'use strict';
 
 	var ProcessDetailView = View.extend({
@@ -13,7 +13,9 @@ define([ 'models/process', 'models/screen', 'views/base/view', 'views/screen-lis
 	   	events: {
 	   		'change :input': '_fieldValueChanged',
 	   		'click .add-screen-button': '_addScreen',
+	   		'click .add-interaction-button': '_addInteraction',
 	   		'click .edit-button': '_toggleEditing',
+	   		'focus .selectable': '_selectItem',
 	   		'hide .accordion-group': '_toggleSection',
 	   		'keypress .process-short-name': '_onKeyProcessShortName',
 	   		'show .accordion-group': '_toggleSection',
@@ -23,8 +25,51 @@ define([ 'models/process', 'models/screen', 'views/base/view', 'views/screen-lis
 	   		View.__super__.initialize.apply(this, options);
 		},
 		
+		_addInteraction: function(event) {
+			var interactions = this.model.get("interactions");
+			var ordinal = interactions.length + 1;
+			var label = "Interaction " + ordinal;
+			var interaction = new Interaction({label: label, ordinal: ordinal});
+			interactions.add(interaction);
+			return interaction.cid;
+		},
+		
 		_addScreen: function(event) {
-			this.trigger('onScreenChanged', new Screen());
+			var layoutId;
+			var $selectedLayout = $('.group-layout.interaction.selected');
+	    	
+	    	if ($selectedLayout.length == 0)
+	    		$selectedLayout = $('.group-layout.interaction:first');
+	    	
+	    	if ($selectedLayout.length == 0) {
+	    		layoutId = this._addInteraction();
+	    		$selectedLayout = $('.group-layout.interaction:first');
+	    	}
+	    	
+	    	if ($selectedLayout.length > 0) {
+	    		$selectedLayout.addClass('selected');
+		    	$('.remove-button').removeAttr('disabled');
+	    	}
+	    	
+	    	if (layoutId === undefined)
+	    		layoutId = $selectedLayout.attr('id');
+	    	
+	    	if (layoutId === undefined)
+	    		return;
+	    	
+	    	var interactions = this.model.get("interactions");
+	    	var models = interactions.models;
+	    	// TODO: Is it worth having a map here to speed lookup?
+	    	for (var i=0;i<models.length;i++) {
+	    		if (models[i].cid == layoutId) {
+	    			var screens = models[i].get("screens");
+	    			var screenModels = screens.models;	    			
+		    		var ordinal = screenModels.length + 1;
+		    		screens.add(new Screen({ordinal: ordinal}));
+	    			break;
+	    		}
+	    	}
+	    	
 		},
 			    
 	   	_fieldValueChanged: function(event) {
@@ -48,11 +93,8 @@ define([ 'models/process', 'models/screen', 'views/base/view', 'views/screen-lis
 	    },
 	    
 		_onAddedToDOM: function() {
-			var screens = this.model.attributes.screens;
-			screens.add(new Screen({title: 'Testing'}));
-			var screenListView = new ScreenListView({collection: screens});
-			this.subview('screens', screenListView);
-			screenListView.listenTo(this, 'onScreenChanged', screenListView.onScreenChanged);
+			var interactions = this.model.attributes.interactions;
+			this.subview('interaction-list', new InteractionListView({collection: interactions}));
 		},
 		_onKeyProcessShortName: function(event) {
 			var $target = $(event.target);
@@ -89,6 +131,23 @@ define([ 'models/process', 'models/screen', 'views/base/view', 'views/screen-lis
 				}
 			});
 		},
+		_selectItem: function(event) {
+	    	var $target = $(event.target);
+	    	
+	    	// Prevent this event from bubbling higher, since we want to explicitly select
+	    	// the element that is closest to the target
+	    	event.stopPropagation();
+	    	var $selectable = $target; //.closest('.selectable');
+	    	
+	    	if ($selectable.hasClass('selected') && $selectable.is("not :focus")) {
+	    		$selectable.removeClass('selected');
+			    $('.remove-button').attr('disabled', 'disabled');
+	    	} else {
+	    		$('.selectable').removeClass('selected');
+		    	$selectable.addClass('selected');
+			    $('.remove-button').removeAttr('disabled');
+	    	}
+	    },
 	    _toggleEditing: function(event) {
 	    	var $editButton = this.$(event.currentTarget);
 	    	var $accordionGroup = $editButton.closest('.accordion-group');

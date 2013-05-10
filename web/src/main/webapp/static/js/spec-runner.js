@@ -5,6 +5,7 @@ require.config({
 		backbone: 'backbone-amd',
 		models: '../models',
 		lib: '../lib',
+		jqueryui: 'jquery-ui-1.10.3.custom.min',
 		templates: '../templates',
 		testem: '/testem',
 		text: 'require-text-2.0.3',

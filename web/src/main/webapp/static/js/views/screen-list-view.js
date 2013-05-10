@@ -4,10 +4,9 @@ define([ 'chaplin', 'models/screen', 'views/base/collection-view', 'views/screen
 
 	var ScreenListView = CollectionView.extend({
 		autoRender: true,
-		className: "nav",
-		region: 'screen-list',
+		className: "screen-list",
 		itemView: ScreenItemView,
-		tagName: 'ul',
+		tagName: 'ol',
 		onScreenChanged: function(screen) {
 			if (screen === undefined)
 				return;

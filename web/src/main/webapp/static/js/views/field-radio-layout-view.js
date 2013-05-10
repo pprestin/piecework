@@ -3,7 +3,7 @@ define([ 'views/field-detail-view', 'views/base/view', 'text!templates/field-rad
 	'use strict';
 
 	var RadioLayoutView = FieldDetailView.extend({
-		className: 'field-layout selectable radio-lo',
+//		className: 'field-layout selectable radio-lo',
 	    template: template,
 	});
 

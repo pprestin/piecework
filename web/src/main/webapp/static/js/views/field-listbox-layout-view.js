@@ -3,7 +3,7 @@ define([ 'views/field-detail-view', 'views/base/view', 'text!templates/field-lis
 	'use strict';
 
 	var ListboxLayoutView = FieldDetailView.extend({
-		className: 'field-layout selectable listbox-lo',
+//		className: 'field-layout selectable listbox-lo',
 	    template: template,
 	    events: {
 			'blur .field-listbox-edit': '_onBlurFieldListbox',

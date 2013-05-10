@@ -3,10 +3,11 @@ define([ 'views/base/view'],
 	'use strict';
 
 	var FieldDetailView = View.extend({
-		autoRender: true,
+		autoRender: false,
+		className: 'group-layout field selectable',
 		tagName: 'li',
 	    listen: {
-	        addedToDOM: '_onAddedToDOM'
+	        addedToParent: '_onAddedToParent'
 	    },
 	    events: {
 	    	'blur .field-label-input': '_onBlurFieldLabel',
@@ -18,15 +19,17 @@ define([ 'views/base/view'],
 	    	'focus .field-label-input': '_onFocusFieldLabel',
 	    	'keydown .field-numeric': '_onKeyFieldNumeric',
 	    },
-	    _onAddedToDOM: function() {
-	    	var fieldId = this.model.cid;
-	    	var ordinal = this.model.attributes.ordinal;
+	    _onAddedToParent: function() {
+//	    	var fieldId = this.model.cid;
+	    	var ordinal = this.model.get("ordinal");
 	    	if (ordinal == undefined)
 	    		ordinal = 1;
+	    	var type = this.model.get("type");
+	    	var label = type.charAt(0).toUpperCase() + type.slice(1);
 	    	
-	    	this.$el.attr('id', fieldId);
 	    	this.$el.attr('tabindex', ordinal);
 	    	$('.hastooltip').tooltip();
+	    	this.$el.attr('data-content', label);
 		},
 		_onBlurFieldLabel: function(event) {
 			var $target = $(event.target);

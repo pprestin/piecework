@@ -73,6 +73,7 @@ define([
     	this.view = new IntroView({model: designerView.model});
     },
     screen: function(params) {
+    	var process = new Process({id: '123', processDefinitionKey: 'Testing'});
     	var screenId = params.screenId;
     	var screen = new Screen({id: screenId, title:'New employee form', url: 'http://localhost:8000/static/sample_form.html', process: process})
 		this.view = new ScreenDetailView({model: screen});

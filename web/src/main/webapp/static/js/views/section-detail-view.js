@@ -1,11 +1,12 @@
-define([ 'chaplin', 'models/field', 'views/field-checkbox-layout-view', 'views/field-listbox-layout-view', 'views/field-radio-layout-view', 'views/field-textarea-layout-view', 'views/field-textbox-layout-view', 'views/base/view', 'text!templates/section-detail.hbs' ], 
-		function(Chaplin, Field, CheckboxLayoutView, ListboxLayoutView, RadioLayoutView, TextareaLayoutView, TextboxLayoutView, View, template) {
+define([ 'chaplin', 'models/field', 'views/base/collection-view', 'views/field-checkbox-layout-view', 'views/field-detail-view', 'views/field-detail-list-view','views/field-listbox-layout-view', 'views/field-radio-layout-view', 'views/field-textarea-layout-view', 'views/field-textbox-layout-view', 'views/base/view', 'text!templates/section-detail.hbs' ], 
+		function(Chaplin, Field, CollectionView, CheckboxLayoutView, FieldDetailView, FieldDetailListView, ListboxLayoutView, RadioLayoutView, TextareaLayoutView, TextboxLayoutView, View, template) {
 	'use strict';
 
 	var SectionDetailView = View.extend({
 		autoRender : true,
-		className: 'section-layout selectable',
+		className: 'group-layout section selectable',
 		container: '.screen-content',
+		tagName: 'li',
 	    template: template,
 	    events: {
 	    	'keydown .field-layout': '_onKeyFieldLayout',
@@ -13,37 +14,18 @@ define([ 'chaplin', 'models/field', 'views/field-checkbox-layout-view', 'views/f
 	    listen: {
 	        addedToDOM: '_onAddedToDOM'
 	    },
-	    addField: function(type) {
-	    	if (this.$el.hasClass('selected')) {
-	    		var ordinal = this.$el.find('.field-layout').length + 1;
-	    		ordinal += this.model.attributes.ordinal;
-		    	var sectionId = this.$el.prop('id');
-	    		var field = new Field({type: type, ordinal: ordinal});
-	    		var fieldId = type + '-' + field.cid;
-	    		// Initialize the name to the view id
-	    		field.attributes.name = fieldId;
-	    		
-		    	var container = '#' + sectionId + ' .section-content';		    
-		    	if (type == 'checkbox')
-		    		this.subview(fieldId, new CheckboxLayoutView({id: fieldId, container: container, model: field}));
-		    	else if (type == 'listbox')
-		    		this.subview(fieldId, new ListboxLayoutView({id: fieldId, container: container, model: field}));
-		    	else if (type == 'radio')
-		    		this.subview(fieldId, new RadioLayoutView({id: fieldId, container: container, model: field}));
-		    	else if (type == 'textarea')
-		    		this.subview(fieldId, new TextareaLayoutView({id: fieldId, container: container, model: field}));
-		    	else
-		    		this.subview(fieldId, new TextboxLayoutView({id: fieldId, container: container, model: field}));
-	    	}
-	    },
 	    _onAddedToDOM: function() {
-	    	var sectionId = this.model.cid;
-	    	var ordinal = this.model.attributes.ordinal;
+	    	var ordinal = this.model.get("ordinal");
+	    	var tabindex;
 	    	if (ordinal == undefined)
-	    		ordinal = 1000;
+	    		tabindex = 1000;
+	    	else
+	    		tabindex = ordinal * 1000;
 	    	
-	    	this.$el.attr('tabindex', ordinal);
-	    	this.$el.find('.section-content').sortable({ handle: ".drag-handle" });
+	    	this.$el.attr('tabindex', tabindex);
+	    	this.$el.attr('id', this.model.cid);
+	    	this.$el.attr('data-content', this.model.get("title"));
+	    	this.subview('field-list', new FieldDetailListView({container: '.section-content', collection: this.model.attributes.fields}));
 		},
 		_onKeyFieldLayout: function(event) {
 			// If the ctrl key is down then move the selected item

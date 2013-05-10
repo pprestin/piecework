@@ -1,5 +1,6 @@
-define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/alert-view', 'views/section-detail-view', 'views/base/view', 'text!templates/screen-detail.hbs', 'jqueryui' ], 
-		function(Chaplin, Alert, Screen, Section, AlertView, SectionDetailView, View, template) {
+define([ 'chaplin', 'models/alert', 'models/field', 'models/screen', 'models/section', 'views/alert-view', 
+         'views/base/collection-view', 'views/section-detail-view', 'views/base/view', 'text!templates/screen-detail.hbs', 'jqueryui' ], 
+		function(Chaplin, Alert, Field, Screen, Section, AlertView, CollectionView, SectionDetailView, View, template) {
 	'use strict';
 
 	var ScreenDetailView = View.extend({
@@ -24,14 +25,15 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	        addedToDOM: '_onAddedToDOM'
 	    },
 	    _addField: function(type) {
-	    	var $selectedSectionLayout = $('.section-layout.selected');
+	    	
+	    	var $selectedSectionLayout = $('.section.selectable.selected');
 	    	
 	    	if ($selectedSectionLayout.length == 0)
-	    		$selectedSectionLayout = $('.section-layout:first');
+	    		$selectedSectionLayout = $('.section.selectable:first');
 	    	
 	    	if ($selectedSectionLayout.length == 0) {
 	    		this._addSection();
-	    		$selectedSectionLayout = $('.section-layout:first');
+	    		$selectedSectionLayout = $('.section.selectable:first');
 	    	}
 	    	
 	    	if ($selectedSectionLayout.length > 0) {
@@ -44,10 +46,23 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    	if (sectionId === undefined)
 	    		return;
 	    	
-	    	var sectionView = this.subview(sectionId);
-	    	
-	    	if (sectionView !== undefined)
-	    		sectionView.addField(type);
+	    	var sectionModels = this.model.attributes.sections.models;
+	    	// TODO: Is it worth having a map here to speed lookup?
+	    	for (var i=0;i<sectionModels.length;i++) {
+	    		if (sectionModels[i].cid == sectionId) {
+	    			var fieldModels = sectionModels[i].attributes.fields.models;
+	    			
+		    		var ordinal = fieldModels.length + 1;
+		    		//ordinal += this.model.attributes.ordinal;
+		    		
+		    		var field = new Field({type: type, ordinal: ordinal});
+		    		var fieldId = type + '-' + field.cid;
+		    		// Initialize the name to the view id
+		    		field.attributes.name = fieldId;
+		    		sectionModels[i].attributes.fields.add(field);
+	    			break;
+	    		}
+	    	}
 	    },
 	    _addCheckbox: function() {
 	    	this._addField('checkbox');
@@ -65,11 +80,10 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    	this._addField('textbox');
 	    },
 	    _addSection: function() {
-	    	var ordinal = ($('.section-layout').length + 1) * 1000;
-	    	var section = new Section({ordinal: ordinal});
-	    	var sectionId = 'section-' + section.cid;
-	    	
-	    	this.subview(sectionId, new SectionDetailView({id: sectionId, model: section}));
+	    	var sections = this.model.get("sections");
+			var ordinal = sections.models.length + 1;
+			var title = "Section " + ordinal;
+	    	sections.add(new Section({title: title, ordinal: ordinal}));
 	    },
 	    _onButtonPress: function(event) {
 	    	switch (event.keyCode) {
@@ -86,9 +100,6 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    },
 	    _onKeyDropdownToggle: function(event) {
 	    	var $target = $(event.target);
-//	    	if ($target.hasClass('dropdown-toggle')) 
-//	    		$target = $target.next('ul.dropdown-menu');
-	    	
 	    	var $focused = $('.dropdown-menu > li > a:focus');
 	    	var $li = $focused.closest('li');
 	    	if ($li.length == 0) {
@@ -121,15 +132,15 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	        }
 	    },
 	    _remove: function(event) {
-	    	var $selected = $('.field-layout.selected');
+	    	var $selected = $('.field.selectable.selected');
 	    	
 	    	if ($selected.length > 0) {
 	    		$selected.remove();
 	    		$('.remove-button').attr('disabled', 'disabled');
 	    	} else {
-	    		$selected = $('.section-layout.selected');
+	    		$selected = $('.section.selected');
 	    		
-	    		if ($('#alert-remove-section').length > 0 || $selected.find('.field-layout').length == 0) {
+	    		if ($('#alert-remove-section').length > 0 || $selected.find('.field.selectable').length == 0) {
 	    			$selected.remove();
 	    			this.removeSubview('alert');
 	    			$('.remove-button').attr('disabled', 'disabled');
@@ -163,7 +174,7 @@ define([ 'chaplin', 'models/alert', 'models/screen', 'models/section', 'views/al
 	    	}
 	    },
 	    _onAddedToDOM: function() {
-	    	
+			this.subview('section-list', new CollectionView({autoRender:true, className:'section-list nav', container: '.screen-content', itemView: SectionDetailView, tagName: 'ul', collection: this.model.attributes.sections}));
 		}
 	});
 

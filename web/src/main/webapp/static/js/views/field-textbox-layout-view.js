@@ -3,7 +3,7 @@ define([ 'views/field-detail-view', 'views/base/view', 'text!templates/field-tex
 	'use strict';
 
 	var TextboxLayoutView = FieldDetailView.extend({
-		className: 'selectable field-layout textbox-lo',
+//		className: 'selectable field-layout textbox-lo',
 		template: template,
 	});
 

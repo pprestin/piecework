@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
+define([ 'chaplin', 'models/base/model', 'models/sections' ], function(Chaplin, Model, Sections) {
 	'use strict';
 
 	var Screen = Model.extend({
@@ -7,8 +7,8 @@ define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 				title : "",
 				type: "",
 				location : "",
+				sections: new Sections(),
 				ordinal: 1,
-				process: null,
 				created : new Date()
 			};
 		},

@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/base/model', 'models/screens' ], function(Chaplin, Model, Screens) {
+define([ 'chaplin', 'models/base/model', 'models/interactions' ], function(Chaplin, Model, Interactions) {
 	'use strict';
 
 	var Process = Model.extend({
@@ -8,7 +8,7 @@ define([ 'chaplin', 'models/base/model', 'models/screens' ], function(Chaplin, M
 				processSummary : "",
 				participantSummary: "",
 				ordinal: 0,
-				screens: new Screens(),
+				interactions: new Interactions(),
 				created: new Date()
 			};
 		},

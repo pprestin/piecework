@@ -177,16 +177,21 @@ select.field-label-input.unfocused {
 	content: "Text area";
 }
 
-.field-layout.selected { 
+.selectable.selected { 
 	/*background-color: LemonChiffon;*/
 	outline-color: Silver;
 	outline-style: auto;
 	outline-width: 5px;
 }
 
-.field-layout.selected:after {
-	
+.selectable.selected:after {
 	color: black;
+}
+
+.selectable.selected.for-deletion {
+	outline-color: Red;
+	outline-style: auto;
+	outline-width: 5px;
 }
 
 .field-layout .control-group {
@@ -214,6 +219,44 @@ select.field-label-input.unfocused {
 
 .field-layout-example {
 	padding: 39px 19px 14px;
+}
+
+.group-layout {
+	position: relative;
+	margin: 15px 0;
+	padding: 39px 19px 14px;
+	background-color: #fff;
+	border: 1px solid #ddd;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	overflow-y: auto;
+}
+
+.group-layout:after {
+	content: attr(data-content);
+	position: absolute;
+	top: -1px;
+	left: -1px;
+	padding: 3px 7px;
+	font-size: 12px;
+	font-weight: bold;
+	background-color: #f5f5f5;
+	border: 1px solid #ddd;
+	color: #9da0a4;
+	-webkit-border-radius: 4px 0 4px 0;
+	-moz-border-radius: 4px 0 4px 0;
+	border-radius: 4px 0 4px 0;
+}
+
+.group-layout.field {
+	padding: 0px;
+}
+
+.group-layout.selected.for-deletion {
+	outline-color: Red;
+	outline-style: auto;
+	outline-width: 5px;
 }
 
 .navbar .breadcrumb {
@@ -268,22 +311,6 @@ select.field-label-input.unfocused {
 	border-radius: 4px 0 4px 0;
 }
 
-.section-layout.selected { /*border: 1px solid black;*/
-	outline-color: Silver;
-	outline-style: auto;
-	outline-width: 5px;
-}
-
-.section-layout.selected:after { /*border: 1px solid black;*/
-	color: black;
-}
-
-.section-layout.selected.for-deletion {
-	outline-color: Red;
-	outline-style: auto;
-	outline-width: 5px;
-}
-
 .sidebar-nav {
 	padding: 9px 0;
 }
@@ -307,4 +334,8 @@ select.field-label-input.unfocused {
 		padding-left: 5px;
 		padding-right: 5px;
 	}
+}
+
+#process-interactions {
+	min-height: 300px;
 }
