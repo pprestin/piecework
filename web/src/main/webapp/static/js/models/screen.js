@@ -6,7 +6,7 @@ define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 			return {
 				title : "",
 				type: "",
-				url : "",
+				location : "",
 				ordinal: 1,
 				process: null,
 				created : new Date()
