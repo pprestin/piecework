@@ -62,7 +62,7 @@ define([ 'views/base/view'],
 		_onChangeFieldQuantity: function(event) {
 			var $target = $(event.target);
 			var value = parseInt($target.val());
-			var $fieldLayout = $(event.target).closest('.field-layout');
+			var $fieldLayout = $(event.target).closest('.selectable.field');
 			var $controls = $fieldLayout.find('.controls:first').clone();
 			var $controlGroup = $fieldLayout.find('.control-group');
 			var counter = 1;
@@ -83,7 +83,7 @@ define([ 'views/base/view'],
 		_onChangeFieldQuantityOptions: function(event) {
 			var $target = $(event.target);
 			var value = parseInt($target.val());
-			var $fieldLayout = $(event.target).closest('.field-layout');
+			var $fieldLayout = $(event.target).closest('.selectable.field');
 			var $option = $fieldLayout.find('option:first').clone();
 			var $select = $fieldLayout.find('select.field-input');
 			var counter = 1;
@@ -91,7 +91,7 @@ define([ 'views/base/view'],
 			$option.val('');
 			$option.text('');
 			
-			$fieldLayout.find('.controls').each(function(i, element) {
+			$select.find('option').each(function(i, element) {
 				if (i >= value)
 					$(element).remove();
 				
@@ -103,7 +103,7 @@ define([ 'views/base/view'],
 			}
 		},
 		_onChangeFieldRequired: function(event) {
-			var $fieldLayout = $(event.target).closest('.field-layout');
+			var $fieldLayout = $(event.target).closest('.selectable.field');
 			$fieldLayout.find('.field-input').attr('required', event.target.checked);
 		},
 		_onFocusFieldLabel: function(event) {

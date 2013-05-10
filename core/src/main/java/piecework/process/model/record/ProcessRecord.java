@@ -156,8 +156,6 @@ public class ProcessRecord implements piecework.process.model.Process {
 	
 	public final static class Builder extends piecework.process.model.builder.ProcessBuilder<ProcessRecord> {
 		
-		private boolean isDeleted;
-		
 		public Builder() {
 			super();
 		}
@@ -165,17 +163,7 @@ public class ProcessRecord implements piecework.process.model.Process {
 		public Builder(piecework.process.model.Process process, Sanitizer sanitizer) {
 			super(process, sanitizer);
 		}
-		
-		public Builder delete() {
-			this.isDeleted = true;
-			return this;
-		}
-		
-		public Builder undelete() {
-			this.isDeleted = false;
-			return this;
-		}
-		
+
 		public ProcessRecord build() {
 			return new ProcessRecord(this);
 		}
@@ -183,10 +171,6 @@ public class ProcessRecord implements piecework.process.model.Process {
 		@Override
 		public ProcessRecord build(ViewContext context) {
 			return new ProcessRecord(this);
-		}
-
-		public boolean isDeleted() {
-			return isDeleted;
 		}
 	}
 

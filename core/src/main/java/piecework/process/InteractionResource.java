@@ -30,38 +30,38 @@ import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.exception.StatusCodeError;
+import piecework.process.model.view.InteractionView;
 import piecework.process.model.view.ProcessView;
 
 /**
  * @author James Renfro
  */
-@Path("secure/v1/process")
-public interface ProcessResource extends Resource {
-
+@Path("secure/v1/process/{processDefinitionKey}/interaction")
+public interface InteractionResource extends Resource {
+	
 	@POST
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response create(ProcessView process) throws StatusCodeError;
+	Response create(@PathParam("processDefinitionKey") String processDefinitionKey, ProcessView process) throws StatusCodeError;
 	
 	@GET
-	@Path("{processDefinitionKey}")
+	@Path("{interactionId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+	Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId) throws StatusCodeError;
 	
 	@PUT
-	@Path("{processDefinitionKey}")
+	@Path("{interactionId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, ProcessView process) throws StatusCodeError;
+	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId, InteractionView interaction) throws StatusCodeError;
 	
 	@DELETE
-	@Path("{processDefinitionKey}")
+	@Path("{interactionId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response delete(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+	Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId) throws StatusCodeError;
 	
 	@GET
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
-	
-	
+	SearchResults searchInteractions(@PathParam("processDefinitionKey") String processDefinitionKey, @Context UriInfo uriInfo) throws StatusCodeError;
+
 }

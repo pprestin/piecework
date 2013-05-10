@@ -16,6 +16,9 @@
 package piecework.process.model;
 
 import java.io.Serializable;
+import java.util.List;
+
+import piecework.form.model.Section;
 
 /**
  * @author James Renfro
@@ -29,5 +32,7 @@ public interface Screen extends Serializable {
 	String getType();
 	
 	String getLocation();
+	
+	<S extends Section> List<S> getSections();
 	
 }

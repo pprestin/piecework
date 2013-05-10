@@ -44,6 +44,10 @@ label input[type="text"].field-label-input.unfocused {
 	padding-left: 0px;
 }
 
+input[type="text"].field-listbox-edit {
+	display: none;
+}
+
 input[type="text"].field-numeric {
 	text-align: right;
 }

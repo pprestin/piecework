@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,46 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.model.builder;
+package piecework.process.model.view;
 
+import java.util.List;
+
+import piecework.form.model.Section;
+import piecework.process.model.Screen;
 
 /**
  * @author James Renfro
  */
-public class Builder {
+public class ScreenView implements Screen {
 
-	private String id;
-	private boolean isDeleted;
-	
-	public Builder() {
-		this(null);
-	}
-	
-	public Builder(String id) {
-		this.id = id;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public <T extends Builder> T id(String id) {
-		this.id = id;
-		return (T) this;
-	}
-
+	@Override
 	public String getId() {
-		return id;
+		return null;
 	}
-	
-	public Builder delete() {
-		this.isDeleted = true;
-		return this;
+
+	@Override
+	public String getTitle() {
+		return null;
 	}
-	
-	public Builder undelete() {
-		this.isDeleted = false;
-		return this;
+
+	@Override
+	public String getType() {
+		return null;
 	}
-	
-	public boolean isDeleted() {
-		return isDeleted;
+
+	@Override
+	public String getLocation() {
+		return null;
 	}
+
+	@Override
+	public <S extends Section> List<S> getSections() {
+		return null;
+	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,46 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.model.builder;
+package piecework.process.model;
 
+import java.io.Serializable;
 
 /**
  * @author James Renfro
  */
-public class Builder {
+public interface Interaction extends Serializable {
 
-	private String id;
-	private boolean isDeleted;
+	String getId();
 	
-	public Builder() {
-		this(null);
-	}
+	String getLabel();
 	
-	public Builder(String id) {
-		this.id = id;
-	}
+//	<T extends Screen> List<T> getScreens();
 	
-	@SuppressWarnings("unchecked")
-	public <T extends Builder> T id(String id) {
-		this.id = id;
-		return (T) this;
-	}
-
-	public String getId() {
-		return id;
-	}
-	
-	public Builder delete() {
-		this.isDeleted = true;
-		return this;
-	}
-	
-	public Builder undelete() {
-		this.isDeleted = false;
-		return this;
-	}
-	
-	public boolean isDeleted() {
-		return isDeleted;
-	}
 }
