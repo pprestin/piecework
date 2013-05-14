@@ -15,7 +15,12 @@
  */
 package piecework.process.concrete;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -25,24 +30,30 @@ import javax.ws.rs.core.UriInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Sanitizer;
 import piecework.authorization.AuthorizationRole;
+import piecework.authorization.ResourceAuthority;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.exception.ForbiddenError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
+import piecework.form.FormPosition;
+import piecework.form.model.Form;
+import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
-import piecework.process.ProcessService;
-import piecework.process.exception.RecordDeletedException;
 import piecework.process.exception.RecordNotFoundException;
-import piecework.process.model.Interaction;
-import piecework.process.model.view.ProcessView;
+import piecework.process.model.Process;
 import piecework.security.PassthroughSanitizer;
+
+import com.google.common.collect.Sets;
 
 /**
  * @author James Renfro
@@ -51,7 +62,7 @@ import piecework.security.PassthroughSanitizer;
 public class ProcessResourceVersion1Impl implements ProcessResource {
 
 	@Autowired
-	ProcessService service;
+	ProcessRepository repository;
 	
 	@Autowired
 	Sanitizer sanitizer;
@@ -63,13 +74,13 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 	String baseServiceUri;
 	
 	@Override
-	public Response create(ProcessView process) throws StatusCodeError {
-		// ProcessService handles sanitizing of fields
-		piecework.process.model.Process result = service.storeProcess(process);
+	public Response create(Process process) throws StatusCodeError {
+		Process.Builder builder = new Process.Builder(process, sanitizer);
+		Process result = repository.save(builder.build());
 		
 		ResponseBuilder responseBuilder = Response.status(Status.CREATED);
 		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(result.getId()) : null;
+		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());		
 		return responseBuilder.build();
@@ -79,26 +90,25 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 	public Response delete(String rawProcessDefinitionKey) throws StatusCodeError {
 		// Sanitize all user input
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-
-		piecework.process.model.Process result;
 		
-		try {
-			result = service.deleteProcess(processDefinitionKey);
-		} catch (RecordNotFoundException nested) {
-			// If the current process does not exist, then return 404
+		Process record = repository.findOne(processDefinitionKey);
+		if (record == null)
 			throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
-		}	
+		
+		Process.Builder builder = new Process.Builder(record, sanitizer);
+		builder.delete();
+		Process result = repository.save(builder.build());
 
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
 		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(result.getId()) : null;
+		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
 		return responseBuilder.build();
 	}
 
 	@Override
-	public Response update(String rawProcessDefinitionKey, ProcessView process) throws StatusCodeError {
+	public Response update(String rawProcessDefinitionKey, Process process) throws StatusCodeError {
 		// Sanitize all user input
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String includedKey = sanitizer.sanitize(process.getProcessDefinitionKey());	
@@ -107,29 +117,28 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		// of the key -- this means we delete the old one and create a new one, assuming that the new one doesn't conflict
 		// with an existing key
 		if (!processDefinitionKey.equals(includedKey)) {
-			try {
-				// Check for a process with the new key
-				service.getProcess(includedKey);
-				// If the exception wasn't thrown then it means that a process with that key already exists
+
+			// Check for a process with the new key
+			Process record = repository.findOne(includedKey);
+				
+			// This means that a process with that key already exists
+			if (record != null)
 				throw new ForbiddenError(Constants.ExceptionCodes.process_change_key_duplicate, processDefinitionKey, includedKey);
-			} catch (RecordNotFoundException exception) {
-				try {
-					service.deleteProcess(processDefinitionKey);
-				} catch (RecordNotFoundException nested) {
-					// If the current process does not exist, then return 404
-					throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
-				}				
-			} catch (RecordDeletedException exception) {
-				// It's okay if the process was already deleted - keep going
+			
+			record = repository.findOne(processDefinitionKey);
+			if (record != null && !record.isDeleted()) {
+				Process.Builder builder = new Process.Builder(record, sanitizer);
+				builder.delete();
+				repository.save(builder.build());
 			}
 		}
 		
-		// ProcessService handles sanitizing of fields
-		piecework.process.model.Process result = service.storeProcess(process);
+		Process.Builder builder = new Process.Builder(process, sanitizer);
+		Process result = repository.save(builder.build());
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
 		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(result.getId()) : null;
+		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
 		
@@ -141,28 +150,23 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		// Sanitize all user input
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 				
-		piecework.process.model.Process result;
-		try {
-			result = service.getProcess(processDefinitionKey);
-		} catch (RecordNotFoundException e) {
+		Process result = repository.findOne(processDefinitionKey);
+		
+		if (result == null)
 			throw new NotFoundError();
-		} catch (RecordDeletedException e) {
+		if (result.isDeleted())
 			throw new GoneError();
-		}
 				
-		// Can use PassthroughSanitizer on response, since data is coming from storage 
-		ProcessView view = new ProcessView.Builder(result, new PassthroughSanitizer()).build();
-	
-		ResponseBuilder responseBuilder = Response.ok(view);
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(getViewContext()));
 		return responseBuilder.build();
 	}
 	
 	@Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {	
 		SearchResults.Builder resultsBuilder = new SearchResults.Builder();
-		List<piecework.process.model.Process> processes = service.findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
-		for (piecework.process.model.Process process : processes) {
-			resultsBuilder.item(new ProcessView.Builder(process, sanitizer).build(getViewContext()));
+		List<Process> processes = findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
+		for (Process process : processes) {
+			resultsBuilder.item(new Process.Builder(process, sanitizer).build(getViewContext()));
 		}
 		
 		return resultsBuilder.build();
@@ -173,4 +177,64 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "process", "Process");
 	}
 	
+	private List<piecework.process.model.Process> findProcesses(String ... allowedRoles) {
+		SecurityContext context = SecurityContextHolder.getContext();
+		Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
+		
+		Set<String> allowedRoleSet = allowedRoles != null && allowedRoles.length > 0 ? Sets.newHashSet(allowedRoles) : null;
+		Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
+		if (authorities != null && !authorities.isEmpty()) {
+			for (GrantedAuthority authority : authorities) {		
+				if (authority instanceof ResourceAuthority) {
+					ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
+					if (allowedRoleSet == null || allowedRoleSet.contains(resourceAuthority.getRole()))
+						allowedProcessDefinitionKeys.addAll(resourceAuthority.getProcessDefinitionKeys());
+				}
+			}
+		}
+		
+		List<piecework.process.model.Process> processes = new ArrayList<piecework.process.model.Process>();
+		Iterator<Process> iterator = repository.findAll(allowedProcessDefinitionKeys).iterator();
+		while (iterator.hasNext()) {
+			Process record = iterator.next();
+			if (!record.isDeleted())
+				processes.add(record);
+		}
+		
+		return processes;
+	}
+	
+	private void addForm(FormPosition position, Form form) throws RecordNotFoundException {
+		String processDefinitionKey = form.getProcessDefinitionKey();
+		
+		if (processDefinitionKey == null)
+			throw new RecordNotFoundException(null);
+		
+		String taskDefinitionKey = form.getTaskDefinitionKey();
+		Process record = repository.findOne(processDefinitionKey);
+		
+		if (record == null)
+			throw new RecordNotFoundException(processDefinitionKey);
+		
+		String formId = form.getId();
+		
+		// Since the data is coming from storage, use the PassthroughSanitizer
+		Process.Builder builder = new Process.Builder(record, new PassthroughSanitizer());
+//		switch (position) {
+//		case START_REQUEST:
+//			builder.startRequestFormIdentifier(formId);
+//			break;
+//		case START_RESPONSE:
+//			builder.startResponseFormIdentifier(formId);
+//			break;
+//		case TASK_REQUEST:
+//			builder.taskRequestFormIdentifier(taskDefinitionKey, formId);
+//			break;
+//		case TASK_RESPONSE:
+//			builder.taskResponseFormIdentifier(taskDefinitionKey, formId);
+//			break;
+//		}
+		
+		repository.save(builder.build());
+	}
 }

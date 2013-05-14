@@ -38,7 +38,6 @@ import piecework.form.model.builder.SectionBuilder;
 import piecework.form.model.record.FormRecord;
 import piecework.form.validation.AttributeValidation;
 import piecework.form.validation.FormValidator;
-import piecework.process.ProcessService;
 import piecework.process.exception.RecordDeletedException;
 import piecework.process.exception.RecordNotFoundException;
 import piecework.util.ManyMap;
@@ -58,9 +57,6 @@ public class FormService {
 	static {
 		FREEFORM_INPUT_TYPES = new HashSet<String>(Arrays.asList("text", "textarea", "person-lookup", "current-date", "current-user"));
 	}
-	
-	@Autowired
-	private ProcessService processService;
 	
 	@Autowired 
 	private FormRepository repository;
@@ -117,7 +113,7 @@ public class FormService {
 		FormRecord record = builder.build();
 		record = repository.save(record);
 		
-		processService.addForm(position, record);
+//		processService.addForm(position, record);
 		
 		return record;
 	}
@@ -127,43 +123,43 @@ public class FormService {
 	}
 	
 	public void validate(String processDefinitionKey, String taskDefinitionKey, List<String> sectionNames, PropertyValueReader reader) throws ValidationException, RecordNotFoundException, RecordDeletedException {
-		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
-		
-		FormPosition position = FormPosition.TASK_REQUEST;
-		
-		if (taskDefinitionKey == null)
-			position = FormPosition.START_REQUEST;
-		
-		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
-		PropertyValueReader previousReader = null;
-		validator.validate(process, form, previousReader, sectionNames, reader, true, true, true);
+//		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
+//		
+//		FormPosition position = FormPosition.TASK_REQUEST;
+//		
+//		if (taskDefinitionKey == null)
+//			position = FormPosition.START_REQUEST;
+//		
+//		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
+//		PropertyValueReader previousReader = null;
+//		validator.validate(process, form, previousReader, sectionNames, reader, true, true, true);
 	}
 	
 	public void storeValues(String processDefinitionKey, String taskDefinitionKey, String processBusinessKey, List<String> sectionNames, PropertyValueReader reader, boolean isRequiredNecessary) throws ValidationException, RecordNotFoundException, RecordDeletedException {
-		long validationStart = System.currentTimeMillis();
-		
-		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
-		
-		FormPosition position = FormPosition.TASK_REQUEST;
-		
-		if (taskDefinitionKey == null)
-			position = FormPosition.START_REQUEST;
-		
-		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
-		
-//		if (form == null)
-//			throw new InternalServerError();
-		
-		PropertyValueReader previousReader = null;
-		List<AttributeValidation> validations = validator.validate(process, form, previousReader, sectionNames, reader, true, isRequiredNecessary, true);
-				
-//				validator.validate(process, form, previousInstanceDocument, sectionNames, reader, null, !doForceStore, isRequiredNecessary, true);
+//		long validationStart = System.currentTimeMillis();
 //		
-//		if (LOG.isInfoEnabled())
-//			LOG.info("Validation for mongo took " + (System.currentTimeMillis() - validationStart) + " ms");
+//		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
+//		
+//		FormPosition position = FormPosition.TASK_REQUEST;
+//		
+//		if (taskDefinitionKey == null)
+//			position = FormPosition.START_REQUEST;
+//		
+//		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
+//		
+////		if (form == null)
+////			throw new InternalServerError();
+//		
+//		PropertyValueReader previousReader = null;
+//		List<AttributeValidation> validations = validator.validate(process, form, previousReader, sectionNames, reader, true, isRequiredNecessary, true);
 //				
-//		if (validations != null) 
-//			doStoreValues(namespace, processDefinitionKey, processInstanceId, reader.getTitle(), validations, doForceStore, context);
+////				validator.validate(process, form, previousInstanceDocument, sectionNames, reader, null, !doForceStore, isRequiredNecessary, true);
+////		
+////		if (LOG.isInfoEnabled())
+////			LOG.info("Validation for mongo took " + (System.currentTimeMillis() - validationStart) + " ms");
+////				
+////		if (validations != null) 
+////			doStoreValues(namespace, processDefinitionKey, processInstanceId, reader.getTitle(), validations, doForceStore, context);
 
 	}
 
@@ -173,25 +169,25 @@ public class FormService {
 
 	private FormRecord getFormRecord(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws RecordNotFoundException, RecordDeletedException {
 		
-		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
-		
-		String formId = getFormId(process, position, taskDefinitionKey);
+//		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
+//		
+//		String formId = getFormId(process, position, taskDefinitionKey);
 		
 		FormRecord form = null;
 		
-		if (formId != null) {
-			form = repository.findOne(formId);
-	
-			if (form != null) {
-				String layout = form.getLayout();
-				// If the layout is wizard then only the start task form is going to
-				// be returned, and the only section that will be editable is the
-				// one that
-				if (layout != null && layout.equalsIgnoreCase("wizard")) {
-					form = repository.findOne(process.getStartRequestFormIdentifier());
-				}
-			}
-		}
+//		if (formId != null) {
+//			form = repository.findOne(formId);
+//	
+//			if (form != null) {
+//				String layout = form.getLayout();
+//				// If the layout is wizard then only the start task form is going to
+//				// be returned, and the only section that will be editable is the
+//				// one that
+//				if (layout != null && layout.equalsIgnoreCase("wizard")) {
+//					form = repository.findOne(process.getStartRequestFormIdentifier());
+//				}
+//			}
+//		}
 		
 		return form;
 	}
@@ -199,20 +195,20 @@ public class FormService {
 	private String getFormId(piecework.process.model.Process process, FormPosition position, String taskDefinitionKey) {
 		String formId = null;
 		Map<String, String> map = null;
-		switch (position) {
-		case START_REQUEST:
-			formId = process.getStartRequestFormIdentifier();
-			break;
-		case START_RESPONSE:
-			formId = process.getStartResponseFormIdentifier();
-			break;
-		case TASK_REQUEST:
-			map = process.getTaskRequestFormIdentifiers();
-			break;
-		case TASK_RESPONSE:
-			map = process.getTaskRequestFormIdentifiers();
-			break;
-		}
+//		switch (position) {
+//		case START_REQUEST:
+//			formId = process.getStartRequestFormIdentifier();
+//			break;
+//		case START_RESPONSE:
+//			formId = process.getStartResponseFormIdentifier();
+//			break;
+//		case TASK_REQUEST:
+//			map = process.getTaskRequestFormIdentifiers();
+//			break;
+//		case TASK_RESPONSE:
+//			map = process.getTaskRequestFormIdentifiers();
+//			break;
+//		}
 		
 		if (map != null && !map.isEmpty()) {
 			String potentialFormId = map.get(taskDefinitionKey);

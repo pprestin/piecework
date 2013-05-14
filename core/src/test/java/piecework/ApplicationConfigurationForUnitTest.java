@@ -26,12 +26,19 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import piecework.process.InteractionRepository;
+import piecework.process.InteractionResource;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
-import piecework.process.ProcessService;
-import piecework.process.concrete.ProcessRepositoryStub;
+import piecework.process.ScreenRepository;
+import piecework.process.ScreenResource;
+import piecework.process.concrete.InteractionResourceVersion1Impl;
+import piecework.process.concrete.MongoRepositoryStub;
 import piecework.process.concrete.ProcessResourceVersion1Impl;
-import piecework.process.concrete.ProcessServiceImpl;
+import piecework.process.concrete.ScreenResourceVersion1Impl;
+import piecework.process.model.Interaction;
+import piecework.process.model.Process;
+import piecework.process.model.Screen;
 import piecework.security.PassthroughSanitizer;
 
 /**
@@ -53,16 +60,30 @@ public class ApplicationConfigurationForUnitTest {
 	}
 	
 	@Bean
-	public ProcessService processService() {
-//		ProcessService mocked = Mockito.mock(ProcessService.class);
-//		Mockito.when(mocked.storeProcess((Process)Mockito.any()))
-		
-		return new ProcessServiceImpl();
+	public InteractionResource interactionResource() {
+		InteractionResourceVersion1Impl resource = new InteractionResourceVersion1Impl();
+		return resource;
+	}
+	
+	@Bean
+	public ScreenResource screenResource() {
+		ScreenResourceVersion1Impl resource = new ScreenResourceVersion1Impl();
+		return resource;
 	}
 	
 	@Bean 
 	public ProcessRepository processRepository() {
 		return new ProcessRepositoryStub();
+	}
+	
+	@Bean 
+	public InteractionRepository interactionRepository() {
+		return new InteractionRepositoryStub();
+	}
+	
+	@Bean 
+	public ScreenRepository screenRepository() {
+		return new ScreenRepositoryStub();
 	}
 	
 	@Bean
@@ -76,5 +97,17 @@ public class ApplicationConfigurationForUnitTest {
 		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
 		configurer.setIgnoreUnresolvablePlaceholders(true);
 		return configurer;
+	}
+	
+	public class ProcessRepositoryStub extends MongoRepositoryStub<Process> implements ProcessRepository {
+		
+	}
+	
+	public class InteractionRepositoryStub extends MongoRepositoryStub<Interaction> implements InteractionRepository {
+
+	}
+
+	public class ScreenRepositoryStub extends MongoRepositoryStub<Screen> implements ScreenRepository {
+
 	}
 }

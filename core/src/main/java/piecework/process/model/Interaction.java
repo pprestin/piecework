@@ -63,14 +63,14 @@ public class Interaction implements Serializable {
 	@XmlElement
 	private final String label;
 	
-	@XmlTransient
-	@JsonIgnore
-	private final boolean isDeleted;
-	
 	@XmlElementWrapper(name="screens")
 	@XmlElementRef
 	@DBRef
 	private final List<Screen> screens;
+	
+	@XmlTransient
+	@JsonIgnore
+	private final boolean isDeleted;
 	
 	private Interaction() {
 		this(new Interaction.Builder(), new ViewContext());
@@ -81,8 +81,8 @@ public class Interaction implements Serializable {
 		this.id = builder.id;
 		this.label = builder.label;
 		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
-		this.isDeleted = builder.isDeleted;
 		this.screens = (List<Screen>) (builder.screens != null ? Collections.unmodifiableList(builder.screens) : Collections.emptyList());
+		this.isDeleted = builder.isDeleted;
 	}
 	
 	public String getId() {
@@ -159,6 +159,11 @@ public class Interaction implements Serializable {
 			return this;
 		}
 		
+		public Builder screens(List<Screen> screens) {
+			this.screens = screens;
+			return this;
+		}
+		
 		public Builder delete() {
 			this.isDeleted = true;
 			return this;
@@ -167,6 +172,14 @@ public class Interaction implements Serializable {
 		public Builder undelete() {
 			this.isDeleted = false;
 			return this;
+		}
+
+		public List<Screen> getScreens() {
+			return screens;
+		}
+
+		public String getId() {
+			return id;
 		}
 	}
 	

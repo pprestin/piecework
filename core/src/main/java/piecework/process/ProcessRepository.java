@@ -17,11 +17,11 @@ package piecework.process;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import piecework.process.model.record.ProcessRecord;
+import piecework.process.model.Process;
 
 /**
  * @author James Renfro
  */
-public interface ProcessRepository extends MongoRepository<ProcessRecord, String> {
+public interface ProcessRepository extends MongoRepository<Process, String> {
 
 }

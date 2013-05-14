@@ -30,7 +30,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.ApplicationConfigurationForUnitTest;
 import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
+import piecework.process.InteractionResource;
 import piecework.process.ProcessResource;
+import piecework.process.model.Interaction;
 import piecework.process.model.Process;
 
 /**
@@ -39,58 +41,65 @@ import piecework.process.model.Process;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes={ApplicationConfigurationForUnitTest.class})
 @ActiveProfiles("test")
-public class ProcessResourceVersion1ImplTest {
+public class InteractionResourceVersion1ImplTest {
 
 	@Autowired
-	ProcessResource resource;
+	ProcessResource processResource;
+	
+	@Autowired
+	InteractionResource interactionResource;
 	
 	String exampleProcessDefinitionKey;
 	String exampleProcessLabel;
 	
 	@Before
-	public void setup() {
+	public void setup() throws StatusCodeError {
 		this.exampleProcessDefinitionKey = "demo";
 		this.exampleProcessLabel = "Testing";
+		
+		Process process = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
+				.processLabel(exampleProcessLabel).build();
+		Response response = processResource.create(process);
+		Assert.assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
+		Assert.assertEquals("/piecework/secure/v1/process/demo", response.getLocation().toString());
 	}
 	
 	@Test
-	public void testCreateReadUpdateAndDeleteProcess() throws StatusCodeError {
+	public void testCreateReadUpdateAndDeleteInteraction() throws StatusCodeError {
 		// Create
-		Process process = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
-				.processLabel(exampleProcessLabel).build();
-		Response response = resource.create(process);
-		Assert.assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
-		Assert.assertEquals("/piecework/secure/v1/process/demo", response.getLocation().toString());
-		
-		// Read
-		response = resource.read(exampleProcessDefinitionKey);
-		Process result = (Process) response.getEntity();
+		Interaction interaction = new Interaction.Builder().build();
+		Response response = interactionResource.create(exampleProcessDefinitionKey, interaction);
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
-		Assert.assertEquals(exampleProcessLabel, result.getProcessLabel());
+		
+		Interaction actual = (Interaction) response.getEntity();
+		Assert.assertEquals("/piecework/secure/v1/interaction/demo/" + actual.getId(), actual.getUri());
+
+		// Read
+		response = interactionResource.read(exampleProcessDefinitionKey, actual.getId());
+		Interaction result = (Interaction) response.getEntity();
+		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		Assert.assertEquals("/piecework/secure/v1/interaction/demo/" + result.getId(), result.getUri());
 		
 		// Update
-		Process updated = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
-				.processLabel("New Label").build();
-		response = resource.update("demo", updated);
-		result = (Process) response.getEntity();
+		Interaction updated = new Interaction.Builder().id(actual.getId()).label("New Label").build();
+		response = interactionResource.update(exampleProcessDefinitionKey, actual.getId(), updated);
+		result = (Interaction) response.getEntity();
 		Assert.assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
 		
 		// Read again
-		response = resource.read(exampleProcessDefinitionKey);
-		result = (Process) response.getEntity();
+		response = interactionResource.read(exampleProcessDefinitionKey, actual.getId());
+		result = (Interaction) response.getEntity();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
-		Assert.assertEquals("New Label", result.getProcessLabel());
+		Assert.assertEquals("New Label", result.getLabel());
 		
 		// Delete
-		response = resource.delete("demo");
-		result = (Process) response.getEntity();
+		response = interactionResource.delete("demo", actual.getId());
+		result = (Interaction) response.getEntity();
 		Assert.assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
 
 		// Read one final time
 		try {
-			response = resource.read(exampleProcessDefinitionKey);
+			response = interactionResource.read(exampleProcessDefinitionKey, actual.getId());
 			Assert.fail("Didn't throw an exception that the process was gone");
 		} catch (GoneError e) {
 			// Ok, it worked

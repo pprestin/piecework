@@ -1,5 +1,5 @@
-define([ 'models/process', 'models/interaction', 'models/screen', 'models/screens', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-detail.hbs' ], 
-         function(Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
+define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'models/screens', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-detail.hbs' ], 
+         function(Chaplin, Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
 	'use strict';
 
 	var ProcessDetailView = View.extend({
@@ -25,52 +25,61 @@ define([ 'models/process', 'models/interaction', 'models/screen', 'models/screen
 	   		View.__super__.initialize.apply(this, options);
 		},
 		
-		_addInteraction: function(event) {
+		_addInteraction: function(event, includeNewScreen) {
 			var interactions = this.model.get("interactions");
 			var ordinal = interactions.length + 1;
 			var label = "Interaction " + ordinal;
 			var processDefinitionKey = this.model.get('processDefinitionKey');
 			var interaction = new Interaction({label: label, processDefinitionKey: processDefinitionKey, ordinal: ordinal});
+			
+			if (includeNewScreen !== undefined && includeNewScreen) {
+				var screen = new Screen();
+				interaction.set("screens", new Screens(screen));
+			}
+			
 			this.listenTo(interaction, 'sync', this._onInteractionSynced);
 			interaction.save();
 			return interaction.cid;
 		},
 		
 		_addScreen: function(event) {
-			var layoutId;
-			var $selectedLayout = $('.group-layout.interaction.selected');
+			var interactionId;
+			var $selectedInteraction = $('.group-layout.interaction.selected');
 	    	
-	    	if ($selectedLayout.length == 0)
-	    		$selectedLayout = $('.group-layout.interaction:first');
+	    	if ($selectedInteraction.length == 0)
+	    		$selectedInteraction = $('.group-layout.interaction:first');
 	    	
-	    	if ($selectedLayout.length == 0) {
-	    		layoutId = this._addInteraction();
-	    		$selectedLayout = $('.group-layout.interaction:first');
+	    	if ($selectedInteraction.length == 0) {
+	    		this._addInteraction(event, true);
+	    		return;
 	    	}
 	    	
-	    	if ($selectedLayout.length > 0) {
-	    		$selectedLayout.addClass('selected');
+	    	if ($selectedInteraction.length > 0) {
+	    		$selectedInteraction.addClass('selected');
 		    	$('.remove-button').removeAttr('disabled');
 	    	}
 	    	
-	    	if (layoutId === undefined)
-	    		layoutId = $selectedLayout.attr('id');
+	    	if (interactionId === undefined)
+	    		interactionId = $selectedInteraction.attr('id');
 	    	
-	    	if (layoutId === undefined)
+	    	if (interactionId === undefined)
 	    		return;
 	    	
-	    	var interactions = this.model.get("interactions");
-	    	var processDefinitionKey = this.model.get('processDefinitionKey');
-	    	var selectedInteraction = interactions.findWhere({id: layoutId});
-	    	var interactionId = selectedInteraction.get('id');
+	    	Chaplin.mediator.publish('addScreen', interactionId);
 	    	
-	    	var screens = selectedInteraction.get("screens");
-	    	var ordinal = screens == null ? 1 : screens.length;
-	    	var screen = new Screen({processDefinitionKey: processDefinitionKey, interactionId: interactionId, ordinal: ordinal});
-	    	
-	    	this.listenTo(screen, 'sync', this._onScreenSynced);
-	    	screens.add(screen);
-	    	screen.save();
+  	
+//	    	var interactions = this.model.get("interactions");
+//	    	var processDefinitionKey = this.model.get('processDefinitionKey');
+//	    	var selectedInteraction = interactions.findWhere({id: layoutId});
+//	    	var interactionId = selectedInteraction.get('id');
+//	    	
+//	    	var screens = selectedInteraction.get("screens");
+//	    	var ordinal = screens == null ? 1 : screens.length;
+//	    	var screen = new Screen({processDefinitionKey: processDefinitionKey, interactionId: interactionId, ordinal: ordinal});
+//	    	
+//	    	this.listenTo(screen, 'sync', this._onScreenSynced);
+//	    	screens.add(screen);
+//	    	screen.save();
 	    	
 //	    	// TODO: Is it worth having a map here to speed lookup?
 //	    	for (var i=0;i<models.length;i++) {
@@ -149,17 +158,6 @@ define([ 'models/process', 'models/interaction', 'models/screen', 'models/screen
 		_onInteractionSynced: function(interaction, options) {
 			var interactions = this.model.get("interactions");
 			interactions.add(interaction);
-		},
-		_onScreenSynced: function(screen, options) {
-//			var interactions = this.model.get("interactions");
-//			var interactionId = screen.get("interactionId");
-//			var interaction = interactions.findWhere({id: interactionId});
-//			var screens = interaction.get("screens");
-//			if (screens == null) {
-//				screens = new Screens();
-//				interaction.set("screens", screens);
-//			}
-//			screens.add(screen);
 		},
 		_selectItem: function(event) {
 	    	var $target = $(event.target);

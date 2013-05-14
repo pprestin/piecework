@@ -15,6 +15,7 @@
  */
 package piecework.process.concrete;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,38 +23,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import junit.framework.Assert;
+
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.cxf.common.util.StringUtils;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
-import piecework.process.ProcessRepository;
-import piecework.process.model.record.ProcessRecord;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**
  * @author James Renfro
  */
-public class ProcessRepositoryStub implements ProcessRepository {
+public class MongoRepositoryStub<T> implements MongoRepository<T, String> {
 
-	private final Map<String, ProcessRecord> map;
+	private final Map<String, T> map;
 	
-	public ProcessRepositoryStub() {
-		this.map = new HashMap<String, ProcessRecord>();
+	public MongoRepositoryStub() {
+		this.map = new HashMap<String, T>();
 	}
 	
 	@Override
-	public <S extends ProcessRecord> List<S> save(Iterable<S> records) {
+	public <S extends T> List<S> save(Iterable<S> records) {
 		Iterator<S> iterator = records.iterator();
 		List<S> list = new ArrayList<S>();
 		
 		while (iterator.hasNext()) {
 			S record = iterator.next();
 			
-			if (StringUtils.isEmpty(record.getId()))
-				record.setId(UUID.randomUUID().toString());
-			
-			map.put(record.getId(), record);
+			String id = verifyId(record);
+			map.put(id, record);
 			list.add(record);
 		}
 		
@@ -61,32 +60,29 @@ public class ProcessRepositoryStub implements ProcessRepository {
 	}
 
 	@Override
-	public List<ProcessRecord> findAll() {
-		return new ArrayList<ProcessRecord>(map.values());
+	public List<T> findAll() {
+		return new ArrayList<T>(map.values());
 	}
 
 	@Override
-	public List<ProcessRecord> findAll(Sort sort) {
+	public List<T> findAll(Sort sort) {
 		throw new NotImplementedException();
 	}
 
 	@Override
-	public Page<ProcessRecord> findAll(Pageable pageable) {
+	public Page<T> findAll(Pageable pageable) {
 		throw new NotImplementedException();
 	}
 
 	@Override
-	public <S extends ProcessRecord> S save(S record) {
-		if (StringUtils.isEmpty(record.getId()))
-			record.setId(UUID.randomUUID().toString());
-		
-		map.put(record.getId(), record);
-		
+	public <S extends T> S save(S record) {
+		String id = verifyId(record);
+		map.put(id, record);
 		return record;
 	}
 
 	@Override
-	public ProcessRecord findOne(String id) {
+	public T findOne(String id) {
 		return map.get(id);
 	}
 
@@ -96,13 +92,13 @@ public class ProcessRepositoryStub implements ProcessRepository {
 	}
 	
 	@Override
-	public Iterable<ProcessRecord> findAll(Iterable<String> ids) {
-		List<ProcessRecord> list = new ArrayList<ProcessRecord>();
+	public Iterable<T> findAll(Iterable<String> ids) {
+		List<T> list = new ArrayList<T>();
 		Iterator<String> iterator = ids.iterator();
 		
 		while (iterator.hasNext()) {
 			String id = iterator.next();
-			ProcessRecord record = map.get(id);
+			T record = map.get(id);
 			if (record != null)
 				list.add(record);
 		}
@@ -121,16 +117,16 @@ public class ProcessRepositoryStub implements ProcessRepository {
 	}
 
 	@Override
-	public void delete(ProcessRecord record) {
+	public void delete(T record) {
 		map.remove(record);
 	}
 
 	@Override
-	public void delete(Iterable<? extends ProcessRecord> entities) {
-		Iterator<? extends ProcessRecord> iterator = entities.iterator();
+	public void delete(Iterable<? extends T> entities) {
+		Iterator<? extends T> iterator = entities.iterator();
 		
 		while (iterator.hasNext()) {
-			ProcessRecord record = iterator.next();
+			T record = iterator.next();
 			map.remove(record);
 		}
 	}
@@ -138,6 +134,37 @@ public class ProcessRepositoryStub implements ProcessRepository {
 	@Override
 	public void deleteAll() {
 		map.clear();
+	}
+	
+	private String verifyId(Object record) {
+		Field[] fields = record.getClass().getDeclaredFields();
+		
+		Field idField = null;
+		for (Field field : fields) {
+			if (field.getAnnotation(Id.class) != null) {
+				idField = field;
+				break;
+			}
+		}
+		
+		Assert.assertNotNull(idField);
+		
+		String id = null;
+		
+		try {
+			idField.setAccessible(true);
+			id = (String) idField.get(record);
+				
+			if (id == null) {
+				id = UUID.randomUUID().toString();
+				idField.set(record, id);
+			}
+		} catch (IllegalArgumentException e) {
+			Assert.fail();
+		} catch (IllegalAccessException e) {
+			Assert.fail();
+		}
+		return id;
 	}
 
 }

@@ -123,11 +123,11 @@ public class Screen implements Serializable {
 			super();
 		}
 
-		public Builder(Screen interaction, Sanitizer sanitizer) {
-			this.id = sanitizer.sanitize(interaction.id);
-			this.title = sanitizer.sanitize(interaction.title);
-			this.type = sanitizer.sanitize(interaction.type);
-			this.location = sanitizer.sanitize(interaction.location);
+		public Builder(Screen screen, Sanitizer sanitizer) {
+			this.id = sanitizer.sanitize(screen.id);
+			this.title = sanitizer.sanitize(screen.title);
+			this.type = sanitizer.sanitize(screen.type);
+			this.location = sanitizer.sanitize(screen.location);
 		}
 
 		public Screen build() {

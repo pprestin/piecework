@@ -15,6 +15,8 @@
  */
 package piecework.process.concrete;
 
+import java.util.List;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -25,17 +27,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import piecework.Constants;
 import piecework.Sanitizer;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
+import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.process.InteractionRepository;
 import piecework.process.InteractionResource;
-import piecework.process.ProcessResource;
-import piecework.process.ProcessService;
+import piecework.process.ProcessRepository;
+import piecework.process.ScreenRepository;
 import piecework.process.model.Interaction;
+import piecework.process.model.Process;
+import piecework.process.model.Screen;
 import piecework.security.PassthroughSanitizer;
 
 /**
@@ -43,15 +49,15 @@ import piecework.security.PassthroughSanitizer;
  */
 @Service
 public class InteractionResourceVersion1Impl implements InteractionResource {
+		
+	@Autowired
+	ProcessRepository processRespository;
 	
 	@Autowired
-	ProcessService service;
+	InteractionRepository interactionRepository;
 	
 	@Autowired
-	ProcessResource processResource;
-	
-	@Autowired
-	InteractionRepository repository;
+	ScreenRepository screenRepository;
 	
 	@Autowired
 	Sanitizer sanitizer;
@@ -67,36 +73,81 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 			throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 
+		// Process must already exist
+		Process process = processRespository.findOne(processDefinitionKey);
+		if (process == null)
+			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
+		
+		// If the interaction has an id already then something is wrong -- probably should be a PUT
+		if (interaction.getId() != null) 
+			throw new BadRequestError(Constants.ExceptionCodes.interaction_id_invalid);
+		
+		// Builder will sanitize all input (including the screens)
 		Interaction.Builder builder = new Interaction.Builder(interaction, sanitizer);
+		
+		// Need to save screens to screen repository because Spring Data doesn't auto cascade saves
+		List<Screen> screens = builder.getScreens();
+		if (screens != null && !screens.isEmpty()) 
+			builder.screens(screenRepository.save(screens));
+		
 		Interaction record = builder.build();
+		
+		PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 		
 		// Save and return the result, no need to sanitize, since it's coming from storage and
 		// was already sanitized before being saved
 		Interaction result = new Interaction
-				.Builder(repository.save(record), new PassthroughSanitizer())
+				.Builder(interactionRepository.save(record), passthroughSanitizer)
 				.processDefinitionKey(processDefinitionKey)
 				.build(getViewContext());
 		
-		return Response.ok(result).build();
-	}
-
-	@Override
-	public Response read(String rawProcessDefinitionKey, String interactionId) throws StatusCodeError {
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-
-		Interaction result = getInteraction(interactionId);
-
-		ResponseBuilder responseBuilder = Response.ok(result);
+		// Ensure that a reference to the interaction is added on the process
+		Process.Builder processBuilder = new Process.Builder(process, passthroughSanitizer);
+		processBuilder.interaction(result);
+		processRespository.save(processBuilder.build());
+		
+		ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(result, new PassthroughSanitizer()).processDefinitionKey(processDefinitionKey).build(getViewContext()));
 		return responseBuilder.build();
 	}
 
 	@Override
-	public Response update(String rawProcessDefinitionKey, String interactionId, Interaction interaction) throws StatusCodeError {
+	public Response read(String rawProcessDefinitionKey, String rawInteractionId) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+		String interactionId = sanitizer.sanitize(rawInteractionId);
+
+		verifyProcessOwnsInteraction(processDefinitionKey, interactionId);
+		
+		Interaction result = getInteraction(interactionId);
+
+		ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(result, new PassthroughSanitizer()).processDefinitionKey(processDefinitionKey).build(getViewContext()));
+		return responseBuilder.build();
+	}
+
+	@Override
+	public Response update(String rawProcessDefinitionKey, String rawInteractionId, Interaction interaction) throws StatusCodeError {
+		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+		String interactionId = sanitizer.sanitize(rawInteractionId);
  
+		// Process must already exist
+		Process process = processRespository.findOne(processDefinitionKey);
+		if (process == null)
+			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
+
+		verifyProcessOwnsInteraction(processDefinitionKey, interactionId);
+		
 		Interaction.Builder builder = new Interaction.Builder(interaction, sanitizer);
+		
+		// Interaction must have same id as path param
+		if (builder.getId() == null || !builder.getId().equals(interactionId))
+			throw new BadRequestError(Constants.ExceptionCodes.interaction_invalid, processDefinitionKey);
+		
+		// Need to save screens to screen repository because Spring Data doesn't auto cascade saves
+		List<Screen> screens = builder.getScreens();
+		if (screens != null && !screens.isEmpty())
+			builder.screens(screenRepository.save(screens));
+
 		Interaction record = builder.build();
-		Interaction result = repository.save(record);
+		Interaction result = interactionRepository.save(record);
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
 		ViewContext context = getViewContext();
@@ -108,17 +159,27 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 	}
 
 	@Override
-	public Response delete(String rawProcessDefinitionKey, String interactionId) throws StatusCodeError {
+	public Response delete(String rawProcessDefinitionKey, String rawInteractionId) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+		String interactionId = sanitizer.sanitize(rawInteractionId);
 		
-//		Interaction record = repository.findOne(interactionId);
-//		if (record == null)
-//			throw new ProcessNotFoundException(processDefinitionKey);
-//		
-//		record.setDeleted(true);
-//		return repository.save(record);
+		verifyProcessOwnsInteraction(processDefinitionKey, interactionId);
 		
-		return null;
+		Interaction record = interactionRepository.findOne(interactionId);
+		if (record == null)
+			throw new NotFoundError();
+		
+		Interaction.Builder builder = new Interaction.Builder(record, new PassthroughSanitizer());
+		builder.delete();
+		
+		Interaction result = interactionRepository.save(builder.build());
+		
+		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
+		ViewContext context = getViewContext();
+		String location = context != null ? context.getApplicationUri(result.getId()) : null;
+		if (location != null)
+			responseBuilder.location(UriBuilder.fromPath(location).build());	
+		return responseBuilder.build();
 	}
 
 	@Override
@@ -133,13 +194,8 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "interaction", "Interaction");
 	}
 	
-//	@Override
-//	public ViewContext getViewContext() {
-//		return new ChildViewContext(processResource.getViewContext(), "interaction", "Interaction");
-//	}
-	
 	private Interaction getInteraction(String id) throws StatusCodeError {
-		Interaction record = repository.findOne(id);
+		Interaction record = interactionRepository.findOne(id);
 	
 		if (record == null)
 			throw new NotFoundError();
@@ -147,6 +203,28 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 			throw new GoneError();
 		
 		return record;
+	}
+	
+	private Process verifyProcessOwnsInteraction(String processDefinitionKey, String interactionId) throws StatusCodeError {
+		Process process = processRespository.findOne(processDefinitionKey);
+		if (process == null)
+			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
+
+		boolean hasInteraction = false;
+		List<Interaction> existingInteractions = process.getInteractions();
+		if (interactionId != null && existingInteractions != null && !existingInteractions.isEmpty()) {
+			for (Interaction existingInteraction : existingInteractions) {
+				if (existingInteraction.getId().equals(interactionId)) {
+					hasInteraction = true;
+					break;
+				}
+			}
+		}
+		
+		if (!hasInteraction) 
+			throw new BadRequestError(Constants.ExceptionCodes.interaction_invalid, processDefinitionKey);
+		
+		return process;
 	}
 
 }

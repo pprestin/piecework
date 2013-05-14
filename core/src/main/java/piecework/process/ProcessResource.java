@@ -30,7 +30,7 @@ import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.exception.StatusCodeError;
-import piecework.process.model.view.ProcessView;
+import piecework.process.model.Process;
 
 /**
  * @author James Renfro
@@ -41,7 +41,7 @@ public interface ProcessResource extends Resource {
 	@POST
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response create(ProcessView process) throws StatusCodeError;
+	Response create(Process process) throws StatusCodeError;
 	
 	@GET
 	@Path("{processDefinitionKey}")
@@ -51,7 +51,7 @@ public interface ProcessResource extends Resource {
 	@PUT
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, ProcessView process) throws StatusCodeError;
+	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, Process process) throws StatusCodeError;
 	
 	@DELETE
 	@Path("{processDefinitionKey}")

@@ -10,6 +10,16 @@ define([ 'chaplin', 'models/base/model', 'models/screens' ], function(Chaplin, M
 				created : new Date()
 			};
 		},
+		parse: function(response, options) {
+			var screens = response["screens"];
+			if (screens === undefined) {
+				response["screens"] = new Screens();
+			} else if (screens instanceof Array) {
+				response["screens"] = new Screens(screens);
+			}
+			
+			return response;
+		},
 		urlRoot: function() {
 			return 'secure/v1/interaction/' + this.get('processDefinitionKey');
 		},

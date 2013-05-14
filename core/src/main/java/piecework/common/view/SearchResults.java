@@ -13,12 +13,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 
-import piecework.process.model.view.ProcessView;
+import piecework.process.model.Interaction;
+import piecework.process.model.Screen;
 
 @XmlRootElement(name = SearchResults.Constants.ROOT_ELEMENT_NAME)
 @XmlType(name = SearchResults.Constants.TYPE_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlSeeAlso({ProcessView.class})
+@XmlSeeAlso({Process.class, Interaction.class, Screen.class})
 public class SearchResults implements Serializable {
 
 	private static final long serialVersionUID = -7773190153155500335L;
