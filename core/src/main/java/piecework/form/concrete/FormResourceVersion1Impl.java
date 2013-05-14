@@ -37,8 +37,8 @@ import piecework.form.model.Form;
 import piecework.form.model.view.FormView;
 import piecework.form.validation.AttributeValidation;
 import piecework.process.ProcessEngineRuntimeFacade;
-import piecework.process.exception.ProcessDeletedException;
-import piecework.process.exception.ProcessNotFoundException;
+import piecework.process.exception.RecordDeletedException;
+import piecework.process.exception.RecordNotFoundException;
 import piecework.process.model.ProcessInstance;
 import piecework.security.UserInputSanitizer;
 import piecework.util.PropertyValueReader;
@@ -69,10 +69,10 @@ public class FormResourceVersion1Impl implements FormResource {
 			if (form == null)
 				throw new NotFoundError();
 			
-			return new FormView.Builder(form).build(context());
-		} catch (ProcessNotFoundException e) {
+			return new FormView.Builder(form).build(getViewContext());
+		} catch (RecordNotFoundException e) {
 			throw new BadRequestError();
-		} catch (ProcessDeletedException e) {
+		} catch (RecordDeletedException e) {
 			throw new BadRequestError();
 		}
 		
@@ -104,10 +104,10 @@ public class FormResourceVersion1Impl implements FormResource {
 			
 			FormView.Builder builder = new FormView.Builder(form);
 			builder.processInstanceId(processInstanceId);
-			return builder.build(context());
-		} catch (ProcessNotFoundException e) {
+			return builder.build(getViewContext());
+		} catch (RecordNotFoundException e) {
 			throw new BadRequestError();
-		} catch (ProcessDeletedException e) {
+		} catch (RecordDeletedException e) {
 			throw new BadRequestError();
 		}
 	}
@@ -161,11 +161,11 @@ public class FormResourceVersion1Impl implements FormResource {
 				FormView.Builder builder = new FormView.Builder(form);
 				builder.submissionId(submissionId);
 					
-				return builder.build(context());
+				return builder.build(getViewContext());
 			}
-		} catch (ProcessNotFoundException e) {
+		} catch (RecordNotFoundException e) {
 			throw new ForbiddenError();
-		} catch (ProcessDeletedException e) {
+		} catch (RecordDeletedException e) {
 			throw new BadRequestError();
 		}
 		
@@ -173,12 +173,8 @@ public class FormResourceVersion1Impl implements FormResource {
 	}
 	
 	@Override
-	public String getPageName() {
-		return "Form";
-	}
-	
-	private static ViewContext context() {
-		return new ViewContext("", "", "v1", "form");
+	public ViewContext getViewContext() {
+		return new ViewContext("", "", "v1", "form", "Form");
 	}
 	
 	private void storeAttachments(String processDefinitionKey, String processInstanceId, String submissionId) throws StatusCodeError {

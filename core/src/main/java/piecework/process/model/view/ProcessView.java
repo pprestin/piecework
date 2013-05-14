@@ -88,7 +88,7 @@ public class ProcessView implements piecework.process.model.Process {
 		this.participantSummary = builder.getParticipantSummary();
 		this.engine = builder.getEngine();
 		this.engineProcessDefinitionKey = builder.getEngineProcessDefinitionKey();
-		this.uri = context != null ? context.getUri(builder.getId()) : null;
+		this.uri = context != null ? context.getApplicationUri(builder.getId()) : null;
 		this.startRequestFormIdentifier = builder.getStartRequestFormIdentifier();
 		this.startResponseFormIdentifier = builder.getStartResponseFormIdentifier();
 		this.taskRequestFormIdentifiers = builder.getTaskRequestFormIdentifiers();

@@ -15,7 +15,6 @@
  */
 package piecework.process.concrete;
 
-import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -39,8 +38,9 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.process.ProcessResource;
 import piecework.process.ProcessService;
-import piecework.process.exception.ProcessDeletedException;
-import piecework.process.exception.ProcessNotFoundException;
+import piecework.process.exception.RecordDeletedException;
+import piecework.process.exception.RecordNotFoundException;
+import piecework.process.model.Interaction;
 import piecework.process.model.view.ProcessView;
 import piecework.security.PassthroughSanitizer;
 
@@ -67,14 +67,11 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		// ProcessService handles sanitizing of fields
 		piecework.process.model.Process result = service.storeProcess(process);
 		
-		// Can use PassthroughSanitizer on response, since data is coming from storage 
-		ProcessView view = new ProcessView.Builder(result, new PassthroughSanitizer()).build(getViewContext());
-
 		ResponseBuilder responseBuilder = Response.status(Status.CREATED);
-		URI location = toURI(view.getUri());
+		ViewContext context = getViewContext();
+		String location = context != null ? context.getApplicationUri(result.getId()) : null;
 		if (location != null)
-			responseBuilder.location(location);
-		
+			responseBuilder.location(UriBuilder.fromPath(location).build());		
 		return responseBuilder.build();
 	}
 	
@@ -87,19 +84,16 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		
 		try {
 			result = service.deleteProcess(processDefinitionKey);
-		} catch (ProcessNotFoundException nested) {
+		} catch (RecordNotFoundException nested) {
 			// If the current process does not exist, then return 404
 			throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 		}	
-		
-		// Can use PassthroughSanitizer on response, since data is coming from storage 
-		ProcessView view = new ProcessView.Builder(result, new PassthroughSanitizer()).build(getViewContext());
-		
-		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-		URI location = toURI(view.getUri());
+
+		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
+		ViewContext context = getViewContext();
+		String location = context != null ? context.getApplicationUri(result.getId()) : null;
 		if (location != null)
-			responseBuilder.location(location);
-		
+			responseBuilder.location(UriBuilder.fromPath(location).build());	
 		return responseBuilder.build();
 	}
 
@@ -118,28 +112,26 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 				service.getProcess(includedKey);
 				// If the exception wasn't thrown then it means that a process with that key already exists
 				throw new ForbiddenError(Constants.ExceptionCodes.process_change_key_duplicate, processDefinitionKey, includedKey);
-			} catch (ProcessNotFoundException exception) {
+			} catch (RecordNotFoundException exception) {
 				try {
 					service.deleteProcess(processDefinitionKey);
-				} catch (ProcessNotFoundException nested) {
+				} catch (RecordNotFoundException nested) {
 					// If the current process does not exist, then return 404
 					throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 				}				
-			} catch (ProcessDeletedException exception) {
+			} catch (RecordDeletedException exception) {
 				// It's okay if the process was already deleted - keep going
 			}
 		}
 		
 		// ProcessService handles sanitizing of fields
 		piecework.process.model.Process result = service.storeProcess(process);
-				
-		// Can use PassthroughSanitizer on response, since data is coming from storage 
-		ProcessView view = new ProcessView.Builder(result, new PassthroughSanitizer()).build(getViewContext());
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-		URI location = toURI(view.getUri());
+		ViewContext context = getViewContext();
+		String location = context != null ? context.getApplicationUri(result.getId()) : null;
 		if (location != null)
-			responseBuilder.location(location);
+			responseBuilder.location(UriBuilder.fromPath(location).build());	
 		
 		return responseBuilder.build();
 	}
@@ -152,9 +144,9 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		piecework.process.model.Process result;
 		try {
 			result = service.getProcess(processDefinitionKey);
-		} catch (ProcessNotFoundException e) {
+		} catch (RecordNotFoundException e) {
 			throw new NotFoundError();
-		} catch (ProcessDeletedException e) {
+		} catch (RecordDeletedException e) {
 			throw new GoneError();
 		}
 				
@@ -177,19 +169,8 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 	}
 
 	@Override
-	public String getPageName() {
-		return "Process";
-	}
-	
-	private ViewContext getViewContext() {
-		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "process");
-	}
-	
-	private URI toURI(String uri) {
-		if (uri == null)
-			return null;
-		
-		return UriBuilder.fromPath(uri).build();
+	public ViewContext getViewContext() {
+		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "process", "Process");
 	}
 	
 }

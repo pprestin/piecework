@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 University of Washington
+ * Copyright 2012 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package piecework.process.exception;
 /**
  * @author James Renfro
  */
-public class ProcessDeletedException extends Exception {
+public class RecordNotFoundException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
-	public ProcessDeletedException(String message) {
+	public RecordNotFoundException(String message) {
 		super(message);
 	}
-	
+
 }

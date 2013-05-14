@@ -19,8 +19,8 @@ import java.util.List;
 
 import piecework.form.FormPosition;
 import piecework.form.model.Form;
-import piecework.process.exception.ProcessDeletedException;
-import piecework.process.exception.ProcessNotFoundException;
+import piecework.process.exception.RecordDeletedException;
+import piecework.process.exception.RecordNotFoundException;
 
 /**
  * @author James Renfro
@@ -28,15 +28,15 @@ import piecework.process.exception.ProcessNotFoundException;
 public interface ProcessService {
 
 	void addForm(FormPosition position, Form form)
-			throws ProcessNotFoundException;
+			throws RecordNotFoundException;
 
 	piecework.process.model.Process deleteProcess(String processDefinitionKey)
-			throws ProcessNotFoundException;
+			throws RecordNotFoundException;
 
 	List<piecework.process.model.Process> findProcesses(String... allowedRoles);
 
 	piecework.process.model.Process getProcess(String processDefinitionKey)
-			throws ProcessNotFoundException, ProcessDeletedException;
+			throws RecordNotFoundException, RecordDeletedException;
 
 	piecework.process.model.Process storeProcess(
 			piecework.process.model.Process process);

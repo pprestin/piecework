@@ -15,6 +15,8 @@
  */
 package piecework;
 
+import piecework.common.view.ViewContext;
+
 /**
  * Marker interface for REST resources
  * 
@@ -22,6 +24,6 @@ package piecework;
  */
 public interface Resource {
 
-	String getPageName();
+	ViewContext getViewContext();
 	
 }

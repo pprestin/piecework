@@ -10,6 +10,15 @@ define([ 'chaplin', 'models/base/model', 'models/screens' ], function(Chaplin, M
 				created : new Date()
 			};
 		},
+		urlRoot: function() {
+			return 'secure/v1/interaction/' + this.get('processDefinitionKey');
+		},
+		url: function() {
+			var uri = this.get("uri");
+			if (uri == null) 
+				return Model.__super__.url.apply(this);
+			return uri;
+		},
 	});
 	return Interaction;
 });

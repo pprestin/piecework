@@ -39,8 +39,8 @@ import piecework.form.model.record.FormRecord;
 import piecework.form.validation.AttributeValidation;
 import piecework.form.validation.FormValidator;
 import piecework.process.ProcessService;
-import piecework.process.exception.ProcessDeletedException;
-import piecework.process.exception.ProcessNotFoundException;
+import piecework.process.exception.RecordDeletedException;
+import piecework.process.exception.RecordNotFoundException;
 import piecework.util.ManyMap;
 import piecework.util.PropertyValueReader;
 import piecework.util.UserReference;
@@ -84,13 +84,13 @@ public class FormService {
 //		return null;
 //	}
 	
-	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws ProcessNotFoundException, ProcessDeletedException {
+	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws RecordNotFoundException, RecordDeletedException {
 		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
 		
 		return form;
 	}
 	
-	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey, List<AttributeValidation> validations) throws ProcessNotFoundException, ProcessDeletedException {
+	public Form getForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey, List<AttributeValidation> validations) throws RecordNotFoundException, RecordDeletedException {
 		FormRecord form = getFormRecord(processDefinitionKey, position, taskDefinitionKey);
 //		ManyMap<String, String> valuesMap = new ManyMap<String, String>(formData);
 		
@@ -106,7 +106,7 @@ public class FormService {
 //		return null;
 //	}
 	
-	public Form storeForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey, Form form) throws ProcessNotFoundException {
+	public Form storeForm(String processDefinitionKey, FormPosition position, String taskDefinitionKey, Form form) throws RecordNotFoundException {
 		
 		FormRecord.Builder builder = new FormRecord.Builder(form);
 		if (processDefinitionKey != null)
@@ -126,7 +126,7 @@ public class FormService {
 		return null;
 	}
 	
-	public void validate(String processDefinitionKey, String taskDefinitionKey, List<String> sectionNames, PropertyValueReader reader) throws ValidationException, ProcessNotFoundException, ProcessDeletedException {
+	public void validate(String processDefinitionKey, String taskDefinitionKey, List<String> sectionNames, PropertyValueReader reader) throws ValidationException, RecordNotFoundException, RecordDeletedException {
 		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
 		
 		FormPosition position = FormPosition.TASK_REQUEST;
@@ -139,7 +139,7 @@ public class FormService {
 		validator.validate(process, form, previousReader, sectionNames, reader, true, true, true);
 	}
 	
-	public void storeValues(String processDefinitionKey, String taskDefinitionKey, String processBusinessKey, List<String> sectionNames, PropertyValueReader reader, boolean isRequiredNecessary) throws ValidationException, ProcessNotFoundException, ProcessDeletedException {
+	public void storeValues(String processDefinitionKey, String taskDefinitionKey, String processBusinessKey, List<String> sectionNames, PropertyValueReader reader, boolean isRequiredNecessary) throws ValidationException, RecordNotFoundException, RecordDeletedException {
 		long validationStart = System.currentTimeMillis();
 		
 		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
@@ -171,7 +171,7 @@ public class FormService {
 
 	}
 
-	private FormRecord getFormRecord(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws ProcessNotFoundException, ProcessDeletedException {
+	private FormRecord getFormRecord(String processDefinitionKey, FormPosition position, String taskDefinitionKey) throws RecordNotFoundException, RecordDeletedException {
 		
 		piecework.process.model.Process process = processService.getProcess(processDefinitionKey);
 		

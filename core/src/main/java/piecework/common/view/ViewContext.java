@@ -20,24 +20,26 @@ package piecework.common.view;
  */
 public class ViewContext {
 
-	private final String baseUri;
+	private final String baseApplicationUri;
 	private final String baseServiceUri;
 	private final String version;
-	private final String resource;
+	private final String path;
+	private final String label;
 	
 	public ViewContext() {
-		this(null, null, null, null);
+		this(null, null, null, null, null);
 	}
 	
-	public ViewContext(String baseUri, String baseServiceUri, String version, String resource) {
-		this.baseUri = baseUri;
+	public ViewContext(String baseUri, String baseServiceUri, String version, String path, String label) {
+		this.baseApplicationUri = baseUri;
 		this.baseServiceUri = baseServiceUri;
 		this.version = version;
-		this.resource = resource;
+		this.path = path;
+		this.label = label;
 	}
 
-	public String getBaseUri() {
-		return baseUri;
+	public String getBaseApplicationUri() {
+		return baseApplicationUri;
 	}
 
 	public String getBaseServiceUri() {
@@ -48,20 +50,36 @@ public class ViewContext {
 		return version;
 	}
 
-	public String getResource() {
-		return resource;
+	public String getPath() {
+		return path;
 	}
 	
-	public String getUri(String id) {
+	public String getLabel() {
+		return label;
+	}
+
+	public String getApplicationUri(String ... ids) {
+
+		return buildUri(baseApplicationUri, ids);
+	}
+	
+	public String getServiceUri(String ... ids) {
+
+		return buildUri(baseServiceUri, ids);
+	}
+	
+	protected String buildUri(String base, String ... ids) {
 		StringBuilder builder = new StringBuilder();
 		
-		if (version != null && resource != null) {
-			builder.append(baseUri).append("/")
+		if (version != null && path != null) {
+			builder.append(base).append("/")
 				.append(version).append("/")
-				.append(resource);
+				.append(path);
 			
-			if (id != null)
-				builder.append("/").append(id);
+			if (ids != null && ids.length > 0) {
+				for (String id : ids) 
+					builder.append("/").append(id);
+			}
 			
 			return builder.toString();
 		}
@@ -69,20 +87,4 @@ public class ViewContext {
 		return null;
 	}
 	
-	public String getServiceUri(String id) {
-		StringBuilder builder = new StringBuilder();
-		
-		if (version != null && resource != null) {
-			builder.append(baseServiceUri).append("/")
-				.append(version).append("/")
-				.append(resource);
-			
-			if (id != null)
-				builder.append("/").append(id);
-			
-			return builder.toString();
-		}
-		
-		return null;
-	}
 }

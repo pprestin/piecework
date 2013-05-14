@@ -39,8 +39,10 @@ public interface Constants {
 	public static final String OVERSIGHT_DEFINITION_KEY = "__general";
 	
 	public static class ExceptionCodes {
+		public static final String interaction_invalid = "interaction_invalid";
 		public static final String process_change_key_duplicate = "process_change_key_duplicate";
 		public static final String process_does_not_exist = "process_does_not_exist";
+		public static final String screen_id_invalid = "screen_id_invalid";
 	}
 	
 }

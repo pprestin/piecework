@@ -3,7 +3,7 @@ define([ 'chaplin', 'models/base/collection', 'models/screen'], function(Chaplin
 
 	var Screens = Collection.extend({
 		model: Screen,
-		comparator: 'ordinal'
+		comparator: 'ordinal',
 	});
 	return Screens;
 });

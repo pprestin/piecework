@@ -13,41 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.model.view;
-
-import java.util.List;
-
-import piecework.form.model.Section;
-import piecework.process.model.Screen;
+package piecework.process.exception;
 
 /**
  * @author James Renfro
  */
-public class ScreenView implements Screen {
+public class RecordDeletedException extends Exception {
 
-	@Override
-	public String getId() {
-		return null;
+	private static final long serialVersionUID = 1L;
+
+	public RecordDeletedException(String message) {
+		super(message);
 	}
-
-	@Override
-	public String getTitle() {
-		return null;
-	}
-
-	@Override
-	public String getType() {
-		return null;
-	}
-
-	@Override
-	public String getLocation() {
-		return null;
-	}
-
-	@Override
-	public <S extends Section> List<S> getSections() {
-		return null;
-	}
-
+	
 }

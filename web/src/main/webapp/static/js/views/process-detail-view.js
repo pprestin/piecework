@@ -1,5 +1,5 @@
-define([ 'models/process', 'models/interaction', 'models/screen', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-detail.hbs' ], 
-         function(Process, Interaction, Screen, View, InteractionListView, template ) {
+define([ 'models/process', 'models/interaction', 'models/screen', 'models/screens', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-detail.hbs' ], 
+         function(Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
 	'use strict';
 
 	var ProcessDetailView = View.extend({
@@ -8,7 +8,7 @@ define([ 'models/process', 'models/interaction', 'models/screen', 'views/base/vi
 	    template: template,
 	    listen: {
 	        'addedToDOM': '_onAddedToDOM',
-	        'change model': '_onModelChanged'
+	        'sync model': '_onProcessSynced'
 	    },
 	   	events: {
 	   		'change :input': '_fieldValueChanged',
@@ -29,8 +29,10 @@ define([ 'models/process', 'models/interaction', 'models/screen', 'views/base/vi
 			var interactions = this.model.get("interactions");
 			var ordinal = interactions.length + 1;
 			var label = "Interaction " + ordinal;
-			var interaction = new Interaction({label: label, ordinal: ordinal});
-			interactions.add(interaction);
+			var processDefinitionKey = this.model.get('processDefinitionKey');
+			var interaction = new Interaction({label: label, processDefinitionKey: processDefinitionKey, ordinal: ordinal});
+			this.listenTo(interaction, 'sync', this._onInteractionSynced);
+			interaction.save();
 			return interaction.cid;
 		},
 		
@@ -58,18 +60,28 @@ define([ 'models/process', 'models/interaction', 'models/screen', 'views/base/vi
 	    		return;
 	    	
 	    	var interactions = this.model.get("interactions");
-	    	var models = interactions.models;
-	    	// TODO: Is it worth having a map here to speed lookup?
-	    	for (var i=0;i<models.length;i++) {
-	    		if (models[i].cid == layoutId) {
-	    			var screens = models[i].get("screens");
-	    			var screenModels = screens.models;	    			
-		    		var ordinal = screenModels.length + 1;
-		    		screens.add(new Screen({ordinal: ordinal}));
-	    			break;
-	    		}
-	    	}
+	    	var processDefinitionKey = this.model.get('processDefinitionKey');
+	    	var selectedInteraction = interactions.findWhere({id: layoutId});
+	    	var interactionId = selectedInteraction.get('id');
 	    	
+	    	var screens = selectedInteraction.get("screens");
+	    	var ordinal = screens == null ? 1 : screens.length;
+	    	var screen = new Screen({processDefinitionKey: processDefinitionKey, interactionId: interactionId, ordinal: ordinal});
+	    	
+	    	this.listenTo(screen, 'sync', this._onScreenSynced);
+	    	screens.add(screen);
+	    	screen.save();
+	    	
+//	    	// TODO: Is it worth having a map here to speed lookup?
+//	    	for (var i=0;i<models.length;i++) {
+//	    		if (models[i].cid == layoutId) {
+//	    			var screens = models[i].get("screens");
+//	    			var screenModels = screens.models;	    			
+//		    		var ordinal = screenModels.length + 1;		    		
+//		    		screens.add(new Screen({processDefinitionKey: processDefinitionKey, interactionId: interactionId, ordinal: ordinal}));
+//	    			break;
+//	    		}
+//	    	}
 		},
 			    
 	   	_fieldValueChanged: function(event) {
@@ -80,7 +92,7 @@ define([ 'models/process', 'models/interaction', 'models/screen', 'views/base/vi
 	    	if (attributeName === undefined) 
 	    		return;
 	    	
-	    	if (attributeName == 'processDefinitionKey')
+	    	if (attributeName == 'processDefinitionKey') 
 	    		this.$('ul.breadcrumb').find('li.active').html(event.target.value);
 				    	
 	    	var previous = this.model.get(attributeName);
@@ -119,17 +131,35 @@ define([ 'models/process', 'models/interaction', 'models/screen', 'views/base/vi
 				break;
 			};
 		},
-		_onModelChanged: function(model, options) {
+		_onProcessSynced: function(model, options) {
 			var model = this.model;
 			this.$(':input').each(function(i, element) {
 				var name = element.name;
 				if (name !== undefined && name != '') {
+//					if (name == 'processDefinitionKey') 
+//						model.get("interactions").url = model.url() + '/interaction';
+					
 					var previous = element.value;
 					var next = model.get(name);
 					if (previous === undefined || previous != next)
 						element.value = next;
 				}
 			});
+		},
+		_onInteractionSynced: function(interaction, options) {
+			var interactions = this.model.get("interactions");
+			interactions.add(interaction);
+		},
+		_onScreenSynced: function(screen, options) {
+//			var interactions = this.model.get("interactions");
+//			var interactionId = screen.get("interactionId");
+//			var interaction = interactions.findWhere({id: interactionId});
+//			var screens = interaction.get("screens");
+//			if (screens == null) {
+//				screens = new Screens();
+//				interaction.set("screens", screens);
+//			}
+//			screens.add(screen);
 		},
 		_selectItem: function(event) {
 	    	var $target = $(event.target);

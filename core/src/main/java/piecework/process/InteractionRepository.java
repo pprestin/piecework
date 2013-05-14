@@ -17,11 +17,11 @@ package piecework.process;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import piecework.process.model.record.InteractionRecord;
+import piecework.process.model.Interaction;
 
 /**
  * @author James Renfro
  */
-public interface InteractionRepository extends MongoRepository<InteractionRecord, String> {
+public interface InteractionRepository extends MongoRepository<Interaction, String> {
 
 }

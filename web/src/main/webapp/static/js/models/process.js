@@ -14,6 +14,12 @@ define([ 'chaplin', 'models/base/model', 'models/interactions' ], function(Chapl
 		},
 		idAttribute: 'processDefinitionKey',
 		urlRoot: 'secure/v1/process',
+		url: function() {
+			var uri = this.get("uri");
+			if (uri == null)
+				return Model.__super__.url.apply(this);
+			return uri;
+		},
 		isNew: function() {
 		      return this.id == null || this.id == '';
 		},

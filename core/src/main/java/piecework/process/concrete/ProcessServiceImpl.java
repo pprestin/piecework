@@ -34,8 +34,8 @@ import piecework.form.FormPosition;
 import piecework.form.model.Form;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessService;
-import piecework.process.exception.ProcessDeletedException;
-import piecework.process.exception.ProcessNotFoundException;
+import piecework.process.exception.RecordDeletedException;
+import piecework.process.exception.RecordNotFoundException;
 import piecework.process.model.record.ProcessRecord;
 import piecework.security.PassthroughSanitizer;
 
@@ -53,17 +53,17 @@ public class ProcessServiceImpl implements ProcessService {
 	@Autowired
 	Sanitizer sanitizer;
 	
-	public void addForm(FormPosition position, Form form) throws ProcessNotFoundException {
+	public void addForm(FormPosition position, Form form) throws RecordNotFoundException {
 		String processDefinitionKey = form.getProcessDefinitionKey();
 		
 		if (processDefinitionKey == null)
-			throw new ProcessNotFoundException(null);
+			throw new RecordNotFoundException(null);
 		
 		String taskDefinitionKey = form.getTaskDefinitionKey();
 		ProcessRecord record = repository.findOne(processDefinitionKey);
 		
 		if (record == null)
-			throw new ProcessNotFoundException(processDefinitionKey);
+			throw new RecordNotFoundException(processDefinitionKey);
 		
 		String formId = form.getId();
 		
@@ -87,10 +87,10 @@ public class ProcessServiceImpl implements ProcessService {
 		repository.save(builder.build());
 	}
 	
-	public piecework.process.model.Process deleteProcess(String processDefinitionKey) throws ProcessNotFoundException {
+	public piecework.process.model.Process deleteProcess(String processDefinitionKey) throws RecordNotFoundException {
 		ProcessRecord record = repository.findOne(processDefinitionKey);
 		if (record == null)
-			throw new ProcessNotFoundException(processDefinitionKey);
+			throw new RecordNotFoundException(processDefinitionKey);
 		
 		record.setDeleted(true);
 		return repository.save(record);
@@ -123,13 +123,13 @@ public class ProcessServiceImpl implements ProcessService {
 		return processes;
 	}
 	
-	public piecework.process.model.Process getProcess(String processDefinitionKey) throws ProcessNotFoundException, ProcessDeletedException {
+	public piecework.process.model.Process getProcess(String processDefinitionKey) throws RecordNotFoundException, RecordDeletedException {
 		ProcessRecord record = repository.findOne(processDefinitionKey);
 	
 		if (record == null)
-			throw new ProcessNotFoundException(processDefinitionKey);
+			throw new RecordNotFoundException(processDefinitionKey);
 		if (record.isDeleted())
-			throw new ProcessDeletedException(processDefinitionKey);
+			throw new RecordDeletedException(processDefinitionKey);
 		
 		return record;
 	}

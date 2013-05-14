@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.exception;
+package piecework.process;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import piecework.process.model.Screen;
 
 /**
  * @author James Renfro
  */
-public class ProcessNotFoundException extends Exception {
-
-	private static final long serialVersionUID = 1L;
-
-	public ProcessNotFoundException(String message) {
-		super(message);
-	}
+public interface ScreenRepository extends MongoRepository<Screen, String> {
 
 }

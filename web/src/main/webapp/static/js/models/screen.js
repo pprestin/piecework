@@ -12,6 +12,15 @@ define([ 'chaplin', 'models/base/model', 'models/sections' ], function(Chaplin, 
 				created : new Date()
 			};
 		},
+		urlRoot: function() {
+			return 'secure/v1/screen/' + this.get('processDefinitionKey') + '/' + this.get("interactionId");
+		},
+		url: function() {
+			var uri = this.get("uri");
+			if (uri == null) 
+				return Model.__super__.url.apply(this);
+			return uri;
+		},
 	});
 	return Screen;
 });

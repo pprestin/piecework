@@ -20,6 +20,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.springframework.stereotype.Service;
 
+import piecework.common.view.ViewContext;
 import piecework.designer.DesignerResource;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;
@@ -41,8 +42,8 @@ public class DesignerResourceImpl implements DesignerResource {
 	}
 	
 	@Override
-	public String getPageName() {
-		return "Process Designer";
+	public ViewContext getViewContext() {
+		return new ViewContext("", "", "v1", "design", "Process Designer");
 	}
 
 }
