@@ -106,7 +106,7 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		processBuilder.interaction(result);
 		processRespository.save(processBuilder.build());
 		
-		ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(result, new PassthroughSanitizer()).processDefinitionKey(processDefinitionKey).build(getViewContext()));
+		ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(result, passthroughSanitizer).processDefinitionKey(processDefinitionKey).build(getViewContext()));
 		return responseBuilder.build();
 	}
 

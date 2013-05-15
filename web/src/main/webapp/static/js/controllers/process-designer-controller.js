@@ -24,22 +24,21 @@ define([
   // FIXME: End section to remove
   
   var DesignerController = Controller.extend({
-	beforeAction: {
-		'edit': function() {
+	beforeAction: function(params, route) {
+		if (route.action == 'edit') {
 			var processes = new Processes();
 			var sidebar = new Sidebar({collection: processes, title: 'PROCESSES', type: 'process', actions: { add: "#designer/edit" }});
 			this.compose('header', HeaderView, {model: user});
 			this.compose('designer', DesignerView, {model: processes});
 			this.compose('sidebar', SidebarView, {model: sidebar});
-		},
-		'index': function() {
+			processes.fetch();
+		} else if (route.action == 'index') {
 			var processes = new Processes();
 			var sidebar = new Sidebar({collection: processes, title: 'PROCESSES', type: 'process', actions: { add: "#designer/edit" }});
 			this.compose('header', HeaderView, {model: user});
 			this.compose('designer', DesignerView, {model: processes});
 			this.compose('sidebar', SidebarView, {model: sidebar});
-		},
-		'screen': function() {
+		} else if (route.action == 'screen') {
 			var fields = new Fields();
 			fields.add(field);
 			var sidebar = new Sidebar({collection: fields, title: 'FIELDS', type: 'screen', actions: { add: null }});
@@ -58,14 +57,14 @@ define([
 				process = collection.findWhere({processDefinitionKey: params.processDefinitionKey})
 			else {
 				process = new Process({processDefinitionKey: params.processDefinitionKey});
-				process.fetch();
-			} 
-				
+			} 				
 		} else {
 			process = new Process();
+			process.save();
 		}
 		
-		this.view = new ProcessDetailView({model: process});	
+		this.view = new ProcessDetailView({model: process});
+		process.fetch();
 		processListView.listenTo(process, 'change:processDefinitionKey', processListView.onProcessDefinitionKeyChanged);
 	},
     index: function(params) {
@@ -77,7 +76,12 @@ define([
     	var screenId = params.screenId;
     	var screen = new Screen({id: screenId, title:'New employee form', url: 'http://localhost:8000/static/sample_form.html', process: process})
 		this.view = new ScreenDetailView({model: screen});
+    },
+    _onOnceProcessSynced: function(process, options) {
+    	this.view = new ProcessDetailView({model: process});
+		processListView.listenTo(process, 'change:processDefinitionKey', processListView.onProcessDefinitionKeyChanged);
     }
+    
   });
 
   return DesignerController;

@@ -15,7 +15,7 @@
     "underscore": null,
     "underscore-amd": null,
     "html5shiv": "~3.6.2",
-    "chaplin": "0.8.1",
+    "chaplin": null,
     "text": "https://github.com/requirejs/text.git#~2.0.6",
     "less": "~0.0.4"
   },

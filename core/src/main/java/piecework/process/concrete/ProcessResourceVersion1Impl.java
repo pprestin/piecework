@@ -50,6 +50,7 @@ import piecework.form.model.Form;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
 import piecework.process.exception.RecordNotFoundException;
+import piecework.process.model.Interaction;
 import piecework.process.model.Process;
 import piecework.security.PassthroughSanitizer;
 
@@ -78,11 +79,7 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		Process.Builder builder = new Process.Builder(process, sanitizer);
 		Process result = repository.save(builder.build());
 		
-		ResponseBuilder responseBuilder = Response.status(Status.CREATED);
-		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
-		if (location != null)
-			responseBuilder.location(UriBuilder.fromPath(location).build());		
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(getViewContext()));
 		return responseBuilder.build();
 	}
 	

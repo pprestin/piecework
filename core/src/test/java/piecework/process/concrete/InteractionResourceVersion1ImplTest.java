@@ -60,8 +60,7 @@ public class InteractionResourceVersion1ImplTest {
 		Process process = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
 				.processLabel(exampleProcessLabel).build();
 		Response response = processResource.create(process);
-		Assert.assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
-		Assert.assertEquals("/piecework/secure/v1/process/demo", response.getLocation().toString());
+		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 	}
 	
 	@Test

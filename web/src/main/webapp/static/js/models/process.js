@@ -1,4 +1,5 @@
-define([ 'chaplin', 'models/base/model', 'models/interactions' ], function(Chaplin, Model, Interactions) {
+define([ 'chaplin', 'models/base/model', 'models/interactions', 'models/screens' ], 
+		function(Chaplin, Model, Interactions, Screens) {
 	'use strict';
 
 	var Process = Model.extend({
@@ -13,6 +14,20 @@ define([ 'chaplin', 'models/base/model', 'models/interactions' ], function(Chapl
 			};
 		},
 		idAttribute: 'processDefinitionKey',
+		parse: function(response, options) {
+			var interactions = response["interactions"];
+			if (interactions === undefined) {
+				response["interactions"] = new Interactions();
+			} else if (interactions instanceof Array) {
+				for (var i=0;i<interactions.length;i++) {
+					interactions[i].screens = new Screens(interactions[i].screens);
+				}
+				
+				response["interactions"] = new Interactions(interactions);
+			}
+			
+			return response;
+		},
 		urlRoot: 'secure/v1/process',
 		url: function() {
 			var uri = this.get("uri");

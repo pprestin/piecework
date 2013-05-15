@@ -1,5 +1,5 @@
-define([ 'chaplin', 'models/screen', 'views/base/view', 'views/screen-list-view', 'text!templates/interaction-detail.hbs' ], 
-		function(Chaplin, Screen, View, ScreenListView, template) {
+define([ 'chaplin', 'models/screen', 'models/screens', 'views/base/collection-view', 'views/base/view', 'views/screen-item-view', 'views/screen-list-view', 'text!templates/interaction-detail.hbs' ], 
+		function(Chaplin, Screen, Screens, CollectionView, View, ScreenItemView, ScreenListView, template) {
 	'use strict';
 
 	var InteractionDetailView = View.extend({
@@ -11,9 +11,9 @@ define([ 'chaplin', 'models/screen', 'views/base/view', 'views/screen-list-view'
 	    	'addedToParent': '_addedToParent',
 	    	'sync model': '_onInteractionModelSynced'
 	    },
-	    initialize: function(options) {
-	   		View.__super__.initialize.apply(this, options);
-		},
+//	    initialize: function(options) {
+//	   		View.__super__.initialize.apply(this, options);
+//		},
 	    _addedToParent: function() {
 	    	var ordinal = this.model.get("ordinal");
 	    	var tabindex = ordinal * 1000;
@@ -21,13 +21,14 @@ define([ 'chaplin', 'models/screen', 'views/base/view', 'views/screen-list-view'
 	    	this.$el.attr('data-content', this.model.get("label"));
 	    	this.$el.attr('tabindex', tabindex);
 	    	this.$('.hastooltip').tooltip();
-	    	
-	    	var view = this.subview('screen-list');
-	    	if (view === undefined) {
-	    		var screens = this.model.get("screens");
-		    	view = new ScreenListView({collection: screens, container: '.interaction-content'});
-		    	this.subview('screen-list', view);	    
-	    	}
+//	    	var screenList = this.subview('screen-list-view');
+//	    	if (screenList === undefined) {
+//	    		var screens = this.model.get("screens");
+//		    	this.subview('screen-list-view', new ScreenListView({collection: screens}));
+//	    	}
+//	    	var screens = this.model.get("screens");
+//	    	new ScreenListView({collection: screens});
+	    	this.subview('section-list', new CollectionView({autoRender:true, className:'section-list nav', container: '.interaction-content', itemView: ScreenItemView, tagName: 'ul', collection: this.model.get("screens")}));
 	    },
 	    _onAddScreen: function(interactionId) {
 	    	// Check to see if this model is the one that needs to respond to the add screen event
@@ -56,8 +57,7 @@ define([ 'chaplin', 'models/screen', 'views/base/view', 'views/screen-list-view'
 			});
 		},
 		_onScreenModelSynced: function(screen, options) {
-			var interaction = this.model;
-			var screens = interaction.get("screens");
+			var screens = this.model.get("screens");
 			screens.add(screen);
 		},
 	});

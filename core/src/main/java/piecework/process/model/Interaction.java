@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -58,6 +59,10 @@ public class Interaction implements Serializable {
 	private final String id;
 	
 	@XmlAttribute
+	@Transient
+	private final String processDefinitionKey;
+	
+	@XmlAttribute
 	private final String uri;
 	
 	@XmlElement
@@ -79,6 +84,7 @@ public class Interaction implements Serializable {
 	@SuppressWarnings("unchecked")
 	private Interaction(Interaction.Builder builder, ViewContext context) {
 		this.id = builder.id;
+		this.processDefinitionKey = builder.processDefinitionKey;
 		this.label = builder.label;
 		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
 		this.screens = (List<Screen>) (builder.screens != null ? Collections.unmodifiableList(builder.screens) : Collections.emptyList());
@@ -87,6 +93,10 @@ public class Interaction implements Serializable {
 	
 	public String getId() {
 		return id;
+	}
+
+	public String getProcessDefinitionKey() {
+		return processDefinitionKey;
 	}
 
 	public String getLabel() {
@@ -120,11 +130,12 @@ public class Interaction implements Serializable {
 		public Builder(Interaction interaction, Sanitizer sanitizer) {
 			this.id = sanitizer.sanitize(interaction.id);
 			this.label = sanitizer.sanitize(interaction.label);
+			this.processDefinitionKey = sanitizer.sanitize(interaction.processDefinitionKey);
 			
 			if (interaction.screens != null && !interaction.screens.isEmpty()) {
 				this.screens = new ArrayList<Screen>(interaction.screens.size());
 				for (Screen screen : interaction.screens) {
-					this.screens.add(new Screen.Builder(screen, sanitizer).build());
+					this.screens.add(new Screen.Builder(screen, sanitizer).processDefinitionKey(processDefinitionKey).build());
 				}
 			}
 		}

@@ -59,12 +59,15 @@ public class ProcessResourceVersion1ImplTest {
 		Process process = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
 				.processLabel(exampleProcessLabel).build();
 		Response response = resource.create(process);
-		Assert.assertEquals(Status.CREATED.getStatusCode(), response.getStatus());
-		Assert.assertEquals("/piecework/secure/v1/process/demo", response.getLocation().toString());
+		Process result = (Process) response.getEntity();
+		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
+		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
+		Assert.assertEquals(exampleProcessLabel, result.getProcessLabel());
+		Assert.assertEquals("/piecework/secure/v1/process/demo", result.getUri());
 		
 		// Read
 		response = resource.read(exampleProcessDefinitionKey);
-		Process result = (Process) response.getEntity();
+		result = (Process) response.getEntity();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
 		Assert.assertEquals(exampleProcessLabel, result.getProcessLabel());

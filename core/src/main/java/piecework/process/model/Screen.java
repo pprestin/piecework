@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.Sanitizer;
@@ -50,6 +51,10 @@ public class Screen implements Serializable {
 	@XmlID
 	@Id
 	private final String id;
+	
+	@XmlAttribute
+	@Transient
+	private final String processDefinitionKey;
 	
 	@XmlAttribute
 	private final String uri;
@@ -77,6 +82,7 @@ public class Screen implements Serializable {
 
 	private Screen(Screen.Builder builder, ViewContext context) {
 		this.id = builder.id;
+		this.processDefinitionKey = builder.processDefinitionKey;
 		this.title = builder.title;
 		this.type = builder.type;
 		this.location = builder.location;
@@ -87,6 +93,10 @@ public class Screen implements Serializable {
 	
 	public String getId() {
 		return id;
+	}
+
+	public String getProcessDefinitionKey() {
+		return processDefinitionKey;
 	}
 
 	public String getUri() {
@@ -125,6 +135,7 @@ public class Screen implements Serializable {
 
 		public Builder(Screen screen, Sanitizer sanitizer) {
 			this.id = sanitizer.sanitize(screen.id);
+			this.processDefinitionKey = sanitizer.sanitize(screen.processDefinitionKey);
 			this.title = sanitizer.sanitize(screen.title);
 			this.type = sanitizer.sanitize(screen.type);
 			this.location = sanitizer.sanitize(screen.location);

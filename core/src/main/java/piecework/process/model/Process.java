@@ -163,7 +163,7 @@ public class Process implements Serializable {
 			if (process.interactions != null && !process.interactions.isEmpty()) {
 				this.interactions = new ArrayList<Interaction>(process.interactions.size());
 				for (Interaction interaction : process.interactions) {
-					this.interactions.add(new Interaction.Builder(interaction, sanitizer).build());
+					this.interactions.add(new Interaction.Builder(interaction, sanitizer).processDefinitionKey(processDefinitionKey).build());
 				}
 			}
 		}

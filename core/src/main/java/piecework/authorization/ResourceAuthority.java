@@ -39,7 +39,7 @@ public class ResourceAuthority implements GrantedAuthority {
 	public boolean isAuthorized(String roleAllowed, String processDefinitionKeyAllowed) {
 		if (roleAllowed == null)
 			return false;
-		return role.equals(roleAllowed) && (processDefinitionKeyAllowed == null || processDefinitionKeys.contains(processDefinitionKeyAllowed));
+		return role.equals(roleAllowed) && (processDefinitionKeyAllowed == null || processDefinitionKeys.isEmpty() || processDefinitionKeys.contains(processDefinitionKeyAllowed));
 	}
 	
 	@Override

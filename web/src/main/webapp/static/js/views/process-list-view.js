@@ -8,11 +8,11 @@ define([ 'chaplin', 'models/process', 'views/base/collection-view', 'views/proce
 		region: 'sidebar-content',
 		itemView: ProcessItemView,
 		tagName: 'ul',
-		initialize: function(options) {
-			CollectionView.__super__.initialize.apply(this, options);
-	   		if (options.test === undefined)
-	   			this.collection.fetch();
-		},
+//		initialize: function(options) {
+//			CollectionView.__super__.initialize.apply(this, options);
+//	   		if (options.test === undefined)
+//	   			this.collection.fetch();
+//		},
 		onProcessDefinitionKeyChanged: function(process, processDefinitionKey) {
 			this.collection.fetch();
 		},
@@ -20,6 +20,3 @@ define([ 'chaplin', 'models/process', 'views/base/collection-view', 'views/proce
 
 	return ProcessListView;
 });
-
-
-

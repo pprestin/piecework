@@ -114,8 +114,7 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 	    },
 	    
 		_onAddedToDOM: function() {
-			var interactions = this.model.attributes.interactions;
-			this.subview('interaction-list', new InteractionListView({collection: interactions}));
+			
 		},
 		_onKeyProcessShortName: function(event) {
 			var $target = $(event.target);
@@ -154,10 +153,21 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 						element.value = next;
 				}
 			});
+			var interactionList = this.subview('interaction-list');
+			if (interactionList === undefined) {
+				var interactions = this.model.get("interactions");
+				this.subview('interaction-list', new InteractionListView({collection: interactions}));
+			}
 		},
 		_onInteractionSynced: function(interaction, options) {
 			var interactions = this.model.get("interactions");
 			interactions.add(interaction);
+			
+			var interactionList = this.subview('interaction-list');
+			if (interactionList === undefined) {
+				var interactions = this.model.get("interactions");
+				this.subview('interaction-list', new InteractionListView({collection: interactions}));
+			}
 		},
 		_selectItem: function(event) {
 	    	var $target = $(event.target);

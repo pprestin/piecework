@@ -8,13 +8,13 @@ define([ 'chaplin', 'views/field-list-view', 'views/process-list-view', 'views/b
 		region: 'sidebar',
 	    template: template,
 	    listen: {
-	        addedToDOM: '_includeSubviews'
+	        'addedToDOM': '_addedToDOM'
 	    },
-		_includeSubviews: function() {
+	    _addedToDOM: function() {
 			if (this.model.attributes.type == 'process')
-				this.subview('content', new ProcessListView({collection: this.model.attributes.collection}));
+				this.subview('content', new ProcessListView({collection: this.model.get("collection")}));
 			else
-				this.subview('content', new FieldListView({collection: this.model.attributes.collection}));
+				this.subview('content', new FieldListView({collection: this.model.get("collection")}));
 		}
 	});
 
