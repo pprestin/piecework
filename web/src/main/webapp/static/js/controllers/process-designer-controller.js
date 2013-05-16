@@ -19,7 +19,7 @@ define([
   
   // FIXME: Just for development -- remove this!!!
   var field = new Field({id: '456', name: 'EmployeeName'});
-//  var process = new Process({id: '123', processDefinitionKey: 'Testing'});
+  //var process = new Process({id: '123', processDefinitionKey: 'Testing'});
   var user = new User({displayName: 'Test User'});
   // FIXME: End section to remove
   
@@ -34,6 +34,7 @@ define([
 			processes.fetch();
 		} else if (route.action == 'index') {
 			var processes = new Processes();
+			//processes.add(process);
 			var sidebar = new Sidebar({collection: processes, title: 'PROCESSES', type: 'process', actions: { add: "#designer/edit" }});
 			this.compose('header', HeaderView, {model: user});
 			this.compose('designer', DesignerView, {model: processes});
@@ -64,12 +65,17 @@ define([
 		}
 		
 		this.view = new ProcessDetailView({model: process});
-		process.fetch();
+		//processes.fetch();
+		//process.fetch();
 		processListView.listenTo(process, 'change:processDefinitionKey', processListView.onProcessDefinitionKeyChanged);
+		//processes.fetch();
 	},
     index: function(params) {
+		var sidebarView = this.compose('sidebar');
     	var designerView = this.compose('designer');
+    	var processes = sidebarView.model.get("collection");
     	this.view = new IntroView({model: designerView.model});
+    	processes.fetch();
     },
     screen: function(params) {
     	var process = new Process({id: '123', processDefinitionKey: 'Testing'});

@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +38,8 @@ import com.mongodb.ServerAddress;
 @Configuration
 public class MongoConfiguration {
 
+	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);
+	
 	@Autowired 
 	Environment env;
 	
@@ -53,13 +56,15 @@ public class MongoConfiguration {
 	private String mongoPassword;
 	
 	@Bean
-	public MongoTemplate mongoTemplate() throws UnknownHostException {
+	public MongoTemplate mongoTemplate(Environment env) throws UnknownHostException {
 
+		LOG.info("There are " + mongoNumberOfInstances + " mongo instances");
 		List<ServerAddress> serverAddresses = new LinkedList<ServerAddress>();
 		for (int i=1;i<=mongoNumberOfInstances;i++) {
 			String mongoBindIp = env.getProperty("mongo.bindip." + i);
-			int mongoPort = env.getProperty("mongo.port." + i, Integer.class, Integer.valueOf(27017)).intValue();
+			int mongoPort = env.getProperty("mongo.port." + i, Integer.class, Integer.valueOf(37017)).intValue();
 			
+			LOG.info("Connecting to mongo at " + mongoBindIp + ":" + mongoPort);
 			serverAddresses.add(new ServerAddress(mongoBindIp, mongoPort));
 		}
 
