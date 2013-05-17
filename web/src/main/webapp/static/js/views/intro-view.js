@@ -4,7 +4,8 @@ define([ 'chaplin', 'views/base/view', 'text!templates/intro.hbs', 'models/proce
 
 	var IntroView = View.extend({
 		autoRender : true,
-		region: 'main',
+		container: '#main-screen',
+//		region: 'main',
 	    template: template,
 	});
 

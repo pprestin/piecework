@@ -32,12 +32,6 @@ public class EmbeddedMongoConfiguration {
 	@Value("${mongo.db}")
 	private String mongoDb;
 	
-	@Value("${mongo.bindip.1}")
-	private String mongoBindIp;
-	
-	@Value("${mongo.port.1}")
-	private int mongoPort;
-	
 	@Value("${mongo.username}")
 	private String mongoUsername;
 	
@@ -49,6 +43,6 @@ public class EmbeddedMongoConfiguration {
 		
 	@Bean
 	public EmbeddedMongoInstance mongoInstance() {
-		return new EmbeddedMongoInstance(mongoBindIp, mongoPort, mongoDb, mongoUsername, mongoPassword, mongoFilesystem);
+		return new EmbeddedMongoInstance("127.0.0.1", 37017, mongoDb, mongoUsername, mongoPassword, mongoFilesystem);
 	}
 }

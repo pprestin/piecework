@@ -141,6 +141,7 @@ public class ApplicationConfiguration {
 		configurer.setEnvironment(environment);
 		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
 		configurer.setIgnoreUnresolvablePlaceholders(true);
+
 		return configurer;
 	}
 	

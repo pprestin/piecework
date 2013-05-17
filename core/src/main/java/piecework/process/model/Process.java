@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
@@ -137,6 +138,12 @@ public class Process implements Serializable {
 		return isDeleted;
 	}
 
+	@XmlTransient
+	@JsonIgnore
+	public boolean isEmpty() {
+		return StringUtils.isEmpty(processLabel) && StringUtils.isEmpty(processSummary) && StringUtils.isEmpty(participantSummary) && StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
+	}
+	
 	public final static class Builder {
 		
 		private String processDefinitionKey;		

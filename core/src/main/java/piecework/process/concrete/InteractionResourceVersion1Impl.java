@@ -186,7 +186,17 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 	public SearchResults searchInteractions(String rawProcessDefinitionKey, UriInfo uriInfo) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		
-		return null;
+		Process process = getProcess(processDefinitionKey);
+
+		SearchResults.Builder builder = new SearchResults.Builder();
+		List<Interaction> existingInteractions = process.getInteractions();
+		if (existingInteractions != null && !existingInteractions.isEmpty()) {
+			for (Interaction existingInteraction : existingInteractions) {
+				builder.item(new Interaction.Builder(existingInteraction, new PassthroughSanitizer()).processDefinitionKey(processDefinitionKey).build(getViewContext()));
+			}
+		}
+		
+		return builder.build();
 	}
 	
 	@Override
@@ -205,10 +215,15 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		return record;
 	}
 	
-	private Process verifyProcessOwnsInteraction(String processDefinitionKey, String interactionId) throws StatusCodeError {
+	private Process getProcess(String processDefinitionKey) throws BadRequestError {
 		Process process = processRespository.findOne(processDefinitionKey);
 		if (process == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
+		return process;
+	}
+	
+	private Process verifyProcessOwnsInteraction(String processDefinitionKey, String interactionId) throws StatusCodeError {
+		Process process = getProcess(processDefinitionKey);
 
 		boolean hasInteraction = false;
 		List<Interaction> existingInteractions = process.getInteractions();

@@ -1,14 +1,19 @@
-define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'models/screens', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-detail.hbs' ], 
+define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'models/screens', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-designer.hbs' ], 
          function(Chaplin, Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
 	'use strict';
 
-	var ProcessDetailView = View.extend({
-		autoRender : true,
-		container: '#main-frame',
-	    template: template,
+	var ProcessDesignerView = View.extend({
+		autoRender: true,
+		container : '#main-screen',
+		id: 'process-designer-view',
+		template: template,
+		regions : {
+			'#left-frame' : 'sidebar',
+			'.sidebar-content' : 'sidebar-content',
+			'.screen-list' : 'screen-list',
+		},
 	    listen: {
 	        'addedToDOM': '_onAddedToDOM',
-	        'sync model': '_onProcessSynced'
 	    },
 	   	events: {
 	   		'change :input': '_fieldValueChanged',
@@ -21,37 +26,35 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 	   		'show .accordion-group': '_toggleSection',
 	   	},
 	   		    	
-	   	initialize: function(options) {
-	   		View.__super__.initialize.apply(this, options);
-	   		this.model.fetch();
-		},
+//	   	initialize: function(options) {
+//	   		View.__super__.initialize.apply(this, options);
+//	   		this.model.fetch();
+//		},
 		
-		render: function(options) {
-	   		View.__super__.render.apply(this, options);
-	   		
-	   		var model = this.model;
-	   		this.$(':input').each(function(i, element) {
-				var name = element.name;
-				if (name !== undefined && name != '') {
-					var previous = element.value;
-					var next = model.get(name);
-					if (previous === undefined || previous != next)
-						element.value = next;
-				}
-			});
-	   		
-//	   		var interactionList = this.subview('interaction-list-view');
-//	   		if (interactionList !== undefined)
-//	   			interactionList.render();
-	   		
-	   		return this;
+//		render: function(options) {
+//	   		View.__super__.render.apply(this, options);
+//	   		return this;
+//		},
+		
+		onCollectionReady: function() {
+			var process = this.model.getProcess();
+			var interactions = this.model.getInteractions();
+			
+			if (process.get("processDefinitionKey") !== undefined)
+				this._onProcessSynced(process);
+			
+			var interactionArray = process.get("interactions");
+			for (var i=0;i<interactionArray.length;i++) {
+				interactions.add(interactionArray[i]);
+			}
 		},
 		
 		_addInteraction: function(event, includeNewScreen) {
-			var interactions = this.model.get("interactions");
+			var process = this.model.getProcess();
+			var interactions = process.get("interactions");
 			var ordinal = interactions.length + 1;
 			var label = "Interaction " + ordinal;
-			var processDefinitionKey = this.model.get('processDefinitionKey');
+			var processDefinitionKey = process.get('processDefinitionKey');
 			var interaction = new Interaction({label: label, processDefinitionKey: processDefinitionKey, ordinal: ordinal});
 			
 			if (includeNewScreen !== undefined && includeNewScreen) {
@@ -88,31 +91,6 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 	    		return;
 	    	
 	    	Chaplin.mediator.publish('addScreen', interactionId);
-	    	
-  	
-//	    	var interactions = this.model.get("interactions");
-//	    	var processDefinitionKey = this.model.get('processDefinitionKey');
-//	    	var selectedInteraction = interactions.findWhere({id: layoutId});
-//	    	var interactionId = selectedInteraction.get('id');
-//	    	
-//	    	var screens = selectedInteraction.get("screens");
-//	    	var ordinal = screens == null ? 1 : screens.length;
-//	    	var screen = new Screen({processDefinitionKey: processDefinitionKey, interactionId: interactionId, ordinal: ordinal});
-//	    	
-//	    	this.listenTo(screen, 'sync', this._onScreenSynced);
-//	    	screens.add(screen);
-//	    	screen.save();
-	    	
-//	    	// TODO: Is it worth having a map here to speed lookup?
-//	    	for (var i=0;i<models.length;i++) {
-//	    		if (models[i].cid == layoutId) {
-//	    			var screens = models[i].get("screens");
-//	    			var screenModels = screens.models;	    			
-//		    		var ordinal = screenModels.length + 1;		    		
-//		    		screens.add(new Screen({processDefinitionKey: processDefinitionKey, interactionId: interactionId, ordinal: ordinal}));
-//	    			break;
-//	    		}
-//	    	}
 		},		    
 	   	_fieldValueChanged: function(event) {
 	    	var attributeName = event.target.name;
@@ -124,21 +102,22 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 	    	
 	    	if (attributeName == 'processDefinitionKey') 
 	    		this.$('ul.breadcrumb').find('li.active').html(event.target.value);
-				    	
-	    	var previous = this.model.get(attributeName);
+	    	
+	    	var process = this.model.getProcess();	    	
+	    	var previous;
+	    	if (process !== undefined)
+	    		previous = process.get(attributeName);
+	    	
 	    	if (previous === undefined || previous != event.target.value) {
 	    		var attributes = {};
 	    		attributes[attributeName] = event.target.value;
-	    		this.model.save(attributes, {wait: true});
+	    		
+	    		process.save(attributes, {wait: true});
 	    	}
 	    	$controlGroup.toggleClass('hasData', isNotEmpty);
 	    },
 		_onAddedToDOM: function() {
-			var interactionList = this.subview('interaction-list-view');
-			if (interactionList === undefined || interactionList.collection.length == 0) {
-				var interactions = this.model.get("interactions");
-				this.subview('interaction-list-view', new InteractionListView({collection: interactions}));
-			}
+			
 		},
 		_onKeyProcessShortName: function(event) {
 			var $target = $(event.target);
@@ -163,19 +142,30 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 				break;
 			};
 		},
-		_onProcessSynced: function(model, options) {
-			Chaplin.mediator.publish('processReady', model);
-			this.render();
+		_onProcessSynced: function(process, options) {
+			this.$(':input').each(function(i, element) {
+				var name = element.name;
+				if (name !== undefined && name != '') {
+					var previous = element.value;
+					var next = process.get(name);
+					if (previous === undefined || previous != next) {
+						if (name == 'processDefinitionKey' && this.model !== undefined) 
+							this.model.get("collection").fetch();
+						element.value = next;
+					}
+				}
+			});
+	   		
+//	   		var interactionList = this.subview('interaction-list-view');
+//			if (interactionList === undefined || interactionList.collection.length == 0) {
+//				var interactions = process.get("interactions");
+//				this.subview('interaction-list-view', new InteractionListView({collection: interactions}));
+//			}
 		},
 		_onInteractionSynced: function(interaction, options) {
-			var interactions = this.model.get("interactions");
+			var process = this.model.getProcess();
+			var interactions = process.get("interactions");
 			interactions.add(interaction);
-			
-//			var interactionList = this.subview('interaction-list');
-//			if (interactionList === undefined) {
-//				var interactions = this.model.get("interactions");
-//				this.subview('interaction-list', new InteractionListView({collection: interactions}));
-//			}
 		},
 		_selectItem: function(event) {
 	    	var $target = $(event.target);
@@ -205,8 +195,7 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 	    	//var $editButton = $accordionGroup.find('.edit-button');
 	    	$accordionGroup.find('.section-open-indicator').toggleClass('icon-chevron-right icon-chevron-down');
 	    },
-	   	
 	});
 
-	return ProcessDetailView;
+	return ProcessDesignerView;
 });

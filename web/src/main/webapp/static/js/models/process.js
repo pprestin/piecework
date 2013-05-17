@@ -15,16 +15,19 @@ define([ 'chaplin', 'models/base/model', 'models/interactions', 'models/screens'
 		},
 		idAttribute: 'processDefinitionKey',
 		parse: function(response, options) {
-			var interactions = response["interactions"];
-			if (interactions === undefined) {
-				response["interactions"] = new Interactions();
-			} else if (interactions instanceof Array) {
-				for (var i=0;i<interactions.length;i++) {
-					interactions[i].screens = new Screens(interactions[i].screens);
-				}
-				
-				response["interactions"] = new Interactions(interactions);
-			}
+			if (response == null)
+				return;
+			
+//			var interactions = response["interactions"];
+//			if (interactions === undefined) {
+//				response["interactions"] = new Interactions();
+//			} else if (interactions instanceof Array) {
+//				for (var i=0;i<interactions.length;i++) {
+//					interactions[i].screens = new Screens(interactions[i].screens);
+//				}
+//				
+//				response["interactions"] = new Interactions(interactions);
+//			}
 			
 			return response;
 		},

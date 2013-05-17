@@ -3,7 +3,7 @@ define([ 'chaplin', 'views/field-list-view', 'views/process-list-view', 'views/b
 	'use strict';
 
 	var SidebarView = View.extend({
-		autoRender : false,
+		autoRender : true,
 		className: 'sidebar-nav well',
 		region: 'sidebar',
 	    template: template,

@@ -20,7 +20,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,12 +38,9 @@ import com.mongodb.ServerAddress;
 public class MongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);
-	
-	@Autowired 
-	Environment env;
-	
-	@Value("${mongo.size}")
-	private int mongoNumberOfInstances;
+		
+	@Value("${mongo.server.addresses}")
+	private String mongoServerAddresses;
 	
 	@Value("${mongo.db}")
 	private String mongoDb;
@@ -57,21 +53,28 @@ public class MongoConfiguration {
 	
 	@Bean
 	public MongoTemplate mongoTemplate(Environment env) throws UnknownHostException {
-
-		LOG.info("There are " + mongoNumberOfInstances + " mongo instances");
-		List<ServerAddress> serverAddresses = new LinkedList<ServerAddress>();
-		for (int i=1;i<=mongoNumberOfInstances;i++) {
-			String mongoBindIp = env.getProperty("mongo.bindip." + i);
-			int mongoPort = env.getProperty("mongo.port." + i, Integer.class, Integer.valueOf(37017)).intValue();
-			
-			LOG.info("Connecting to mongo at " + mongoBindIp + ":" + mongoPort);
-			serverAddresses.add(new ServerAddress(mongoBindIp, mongoPort));
-		}
-
-		Mongo mongo = new Mongo(serverAddresses);
+		Mongo mongo = new Mongo(getServerAddresses());
 		UserCredentials credentials = new UserCredentials(mongoUsername, mongoPassword);
 		
 		return new MongoTemplate(new SimpleMongoDbFactory(mongo, mongoDb, credentials));
+	}
+	
+	private List<ServerAddress> getServerAddresses() throws UnknownHostException {
+		List<ServerAddress> serverAddresses = new LinkedList<ServerAddress>();
+		String[] addresses = mongoServerAddresses.split(",");
+		for (String address : addresses) {
+			String ip = null;
+			int port = 37017;
+			String[] tokens = address.split(":");
+			if (tokens.length > 0) {
+				ip = tokens[0];
+				if (tokens.length > 1) {
+					port = Integer.parseInt(tokens[1]);
+				}
+			}
+			serverAddresses.add(new ServerAddress(ip, port));
+		}
+		return serverAddresses;
 	}
 	
 }

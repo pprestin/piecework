@@ -4,7 +4,7 @@ define([ 'chaplin', 'models/alert', 'models/field', 'models/screen', 'models/sec
 	'use strict';
 
 	var ScreenDetailView = View.extend({
-		autoRender : true,
+		autoRender : false,
 		region: 'main',
 	    template: template,
 	    events: {

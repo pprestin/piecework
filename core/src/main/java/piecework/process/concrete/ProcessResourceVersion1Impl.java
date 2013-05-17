@@ -50,7 +50,6 @@ import piecework.form.model.Form;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
 import piecework.process.exception.RecordNotFoundException;
-import piecework.process.model.Interaction;
 import piecework.process.model.Process;
 import piecework.security.PassthroughSanitizer;
 
@@ -119,14 +118,21 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 			Process record = repository.findOne(includedKey);
 				
 			// This means that a process with that key already exists
-			if (record != null)
+			if (record != null && !record.isDeleted())
 				throw new ForbiddenError(Constants.ExceptionCodes.process_change_key_duplicate, processDefinitionKey, includedKey);
 			
 			record = repository.findOne(processDefinitionKey);
-			if (record != null && !record.isDeleted()) {
-				Process.Builder builder = new Process.Builder(record, sanitizer);
-				builder.delete();
-				repository.save(builder.build());
+			if (record != null) {
+				PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+//				if (record.isEmpty()) {
+					// Don't bother to keep old process definitions 
+					Process.Builder builder = new Process.Builder(record, passthroughSanitizer);
+					repository.delete(builder.build());
+//				} else if (!record.isDeleted()) {
+//					Process.Builder builder = new Process.Builder(record, passthroughSanitizer);
+//					builder.delete();
+//					repository.save(builder.build());
+//				}
 			}
 		}
 		
