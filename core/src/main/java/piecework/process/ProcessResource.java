@@ -62,6 +62,5 @@ public interface ProcessResource extends Resource {
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
 	SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
-	
-	
+
 }

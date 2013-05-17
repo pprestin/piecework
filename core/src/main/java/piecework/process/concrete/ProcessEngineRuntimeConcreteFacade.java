@@ -15,6 +15,7 @@
  */
 package piecework.process.concrete;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import piecework.process.ProcessEngineRuntimeFacade;
 import piecework.process.model.ProcessInstance;
+import piecework.process.model.Task;
 
 /**
  * @author James Renfro
@@ -29,22 +31,36 @@ import piecework.process.model.ProcessInstance;
 @Service
 public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeFacade {
 
-	@Override
+    @Override
+    public ProcessInstance findInstance(String processDefinitionKey, String processInstanceId, String processInstanceAlias) {
+        return null;
+    }
+
+    @Override
+    public List<ProcessInstance> findInstances(String processDefinitionKey) {
+        return null;
+    }
+
+    @Override
+    public Task findTask(String processDefinitionKey, String taskId) {
+        return null;
+    }
+
+    @Override
+    public List<Task> findTasks(String processDefinitionKey, String userId) {
+        return null;
+    }
+
+    @Override
+    public void completeTask(String processDefinitionKey, String taskId) {
+
+    }
+
+    @Override
 	public ProcessInstance start(final String processDefinitionKey, final String processBusinessKey, final Map<String, ?> data) {
 		final String processInstanceId = UUID.randomUUID().toString();
 		// FIXME: Stubbed out, fill in later
-		return new ProcessInstance() {
-
-			@Override
-			public String getProcessDefinitionKey() {
-				return processDefinitionKey;
-			}
-
-			@Override
-			public String getProcessInstanceId() {
-				return processInstanceId;
-			}
-		};
+		return new ProcessInstance.Builder().build();
 	}
 
 }

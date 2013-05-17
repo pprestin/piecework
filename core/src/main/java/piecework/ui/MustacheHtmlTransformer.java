@@ -48,7 +48,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import piecework.common.view.UserView;
+import piecework.common.model.User;
 import piecework.identity.InternalUserDetails;
 
 import com.github.mustachejava.DefaultMustacheFactory;
@@ -130,7 +130,7 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 			    String json = jsonStream.toString();
 			    
 			    String pageName = null;
-			    UserView user = new UserView.Builder().visibleId(userId).displayName(userName).build(null);
+			    User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
 			    mustache.execute(new PrintWriter(entityStream), new Page(applicationName, pageName, urlbase, t, json, user)).flush();
 			} catch (IOException e) {
 				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);

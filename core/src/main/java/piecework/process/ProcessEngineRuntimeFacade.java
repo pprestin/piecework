@@ -16,17 +16,30 @@
 package piecework.process;
 
 import java.util.Map;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import piecework.process.model.ProcessInstance;
+import piecework.process.model.Task;
 
 /**
  * @author James Renfro
  */
-@Service
 public interface ProcessEngineRuntimeFacade {
 
 	ProcessInstance start(String processDefinitionKey, String processBusinessKey, Map<String, ?> data);
-	
+
+    ProcessInstance findInstance(String processDefinitionKey, String processInstanceId, String processInstanceAlias);
+
+    List<ProcessInstance> findInstances(String processDefinitionKey);
+
+    Task findTask(String processDefinitionKey, String taskId);
+
+    List<Task> findTasks(String processDefinitionKey, String userId);
+
+    void completeTask(String processDefinitionKey, String taskId);
+
+
+
 }

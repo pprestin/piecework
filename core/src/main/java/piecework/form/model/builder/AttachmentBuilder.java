@@ -43,21 +43,21 @@ public abstract class AttachmentBuilder<A extends Attachment> extends Builder {
 		this.description = attachment.getDescription();
 		this.contentType = attachment.getContentType();
 		this.externalUrl = attachment.getExternalUrl();
-		this.user = userBuilder(attachment.getUser());
+//		this.user = userBuilder(attachment.getUser());
 		this.lastModified = attachment.getLastModified();
 	}
 	
 	public abstract A build(ViewContext context);
 		
-	protected abstract UserBuilder<?> userBuilder(User user);
-	
-	@SuppressWarnings("unchecked")
-	public <U extends User> U buildUser(ViewContext context) {
-		if (user == null)
-			return null;
-		
-		return (U)user.build(context);
-	}
+//	protected abstract UserBuilder<?> userBuilder(User user);
+//
+//	@SuppressWarnings("unchecked")
+//	public <U extends User> U buildUser(ViewContext context) {
+//		if (user == null)
+//			return null;
+//
+//		return (U)user.build(context);
+//	}
 	
 	public AttachmentBuilder<?> processDefinitionKey(String processDefinitionKey) {
 		this.processDefinitionKey = processDefinitionKey;

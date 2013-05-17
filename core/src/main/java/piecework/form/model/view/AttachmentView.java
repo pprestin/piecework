@@ -9,7 +9,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import piecework.common.model.User;
-import piecework.common.view.UserView;
 import piecework.common.view.ViewContext;
 import piecework.form.model.Attachment;
 import piecework.form.model.builder.AttachmentBuilder;
@@ -48,7 +47,7 @@ public final class AttachmentView implements Attachment {
 	private final String externalUrl;
 	
 	@XmlElement(name = Elements.USER)
-	private final UserView user;
+	private final User user;
 	
 	@XmlElement(name = Elements.LAST_MODIFIED)
 	private final String lastModified;
@@ -64,7 +63,8 @@ public final class AttachmentView implements Attachment {
 		this.description = builder.getDescription();
 		this.contentType = builder.getContentType();
 		this.externalUrl = builder.getExternalUrl();
-		this.user = builder.buildUser(context);
+//		this.user = builder.buildUser(context);
+        this.user = null;
 		this.lastModified = builder.getLastModified();
 	}
 	
@@ -135,11 +135,6 @@ public final class AttachmentView implements Attachment {
 		@Override
 		public AttachmentView build(ViewContext context) {
 			return new AttachmentView(this, context);
-		}
-
-		@Override
-		protected UserBuilder<?> userBuilder(User user) {
-			return new UserView.Builder(user);
 		}
 
 		

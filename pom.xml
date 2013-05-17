@@ -24,6 +24,7 @@
 		<module>integration</module>
 		<module>processes</module>
 		<module>web</module>
-	</modules>
+        <module>engine</module>
+    </modules>
 	
 </project>
