@@ -20,6 +20,7 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 	   		'click .add-screen-button': '_addScreen',
 	   		'click .add-interaction-button': '_addInteraction',
 	   		'click .edit-button': '_toggleEditing',
+	   		'click .remove-button': '_remove',
 	   		'focus .selectable': '_selectItem',
 	   		'hide .accordion-group': '_toggleSection',
 	   		'keypress .process-short-name': '_onKeyProcessShortName',
@@ -166,6 +167,9 @@ define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'mo
 			var process = this.model.getProcess();
 			var interactions = process.get("interactions");
 			interactions.add(interaction);
+		},
+		_remove: function(event) {
+			alert("remove!");
 		},
 		_selectItem: function(event) {
 	    	var $target = $(event.target);

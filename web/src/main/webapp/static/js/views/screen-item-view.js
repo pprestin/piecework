@@ -3,7 +3,7 @@ define([ 'views/base/view', 'text!templates/screen-item.hbs' ],
 	'use strict';
 
 	var ScreenItemView = View.extend({
-		className: 'screen-item',
+		className: 'group-layout screen-item selectable',
 		tagName: 'li',
 	    template: template,
 //	    render: function(options) {
