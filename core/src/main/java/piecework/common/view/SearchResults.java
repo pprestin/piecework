@@ -7,19 +7,25 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 
-import piecework.process.model.Interaction;
-import piecework.process.model.Screen;
+import piecework.model.Button;
+import piecework.model.Constraint;
+import piecework.model.Field;
+import piecework.model.FormValue;
+import piecework.model.Interaction;
+import piecework.model.ProcessInstance;
+import piecework.model.Screen;
+import piecework.model.Section;
+import piecework.model.Task;
 
 @XmlRootElement(name = SearchResults.Constants.ROOT_ELEMENT_NAME)
 @XmlType(name = SearchResults.Constants.TYPE_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlSeeAlso({Process.class, Interaction.class, Screen.class})
+@XmlSeeAlso({Button.class, Constraint.class, Field.class, FormValue.class, Interaction.class, Process.class, ProcessInstance.class, Screen.class, Section.class, Task.class})
 public class SearchResults implements Serializable {
 
 	private static final long serialVersionUID = -7773190153155500335L;
@@ -48,11 +54,11 @@ public class SearchResults implements Serializable {
 	private final String to;
 	
 	@XmlElementWrapper(name="list")
-	@XmlElementRef
+	@XmlElement(name="item")
 	private final List<Object> list;
 	
 	@XmlElementWrapper(name="definitions")
-	@XmlElementRef
+	@XmlElement(name="definition")
 	protected List<Object> definitions;
 	
 	private SearchResults() {
@@ -182,6 +188,13 @@ public class SearchResults implements Serializable {
 			if (this.list == null)
 				this.list = new ArrayList<Object>();
 			this.list.add(item);
+			return this;
+		}
+		
+		public Builder items(List<?> items) {
+			if (this.list == null)
+				this.list = new ArrayList<Object>();
+			this.list.addAll(items);
 			return this;
 		}
 		

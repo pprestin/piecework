@@ -26,6 +26,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import piecework.model.Interaction;
+import piecework.model.Process;
+import piecework.model.Screen;
 import piecework.process.InteractionRepository;
 import piecework.process.InteractionResource;
 import piecework.process.ProcessRepository;
@@ -35,10 +38,8 @@ import piecework.process.ScreenResource;
 import piecework.process.concrete.InteractionResourceVersion1Impl;
 import piecework.process.concrete.MongoRepositoryStub;
 import piecework.process.concrete.ProcessResourceVersion1Impl;
+import piecework.process.concrete.ResourceHelper;
 import piecework.process.concrete.ScreenResourceVersion1Impl;
-import piecework.process.model.Interaction;
-import piecework.process.model.Process;
-import piecework.process.model.Screen;
 import piecework.security.PassthroughSanitizer;
 
 /**
@@ -51,6 +52,11 @@ public class ApplicationConfigurationForUnitTest {
 	@Bean
 	public Sanitizer sanitizer() {
 		return new PassthroughSanitizer();
+	}
+	
+	@Bean
+	public ResourceHelper helper() {
+		return new ResourceHelper();
 	}
 	
 	@Bean

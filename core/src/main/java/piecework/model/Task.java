@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.model;
+package piecework.model;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -23,6 +23,7 @@ import piecework.Sanitizer;
 import piecework.common.model.User;
 import piecework.common.view.ViewContext;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.*;
@@ -30,14 +31,16 @@ import javax.xml.bind.annotation.*;
 /**
  * @author James Renfro
  */
-@XmlRootElement(name = ProcessInstance.Constants.ROOT_ELEMENT_NAME)
+@XmlRootElement(name = Task.Constants.ROOT_ELEMENT_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = ProcessInstance.Constants.TYPE_NAME)
+@XmlType(name = Task.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = ProcessInstance.Constants.ROOT_ELEMENT_NAME)
-public class Task {
+@Document(collection = Task.Constants.ROOT_ELEMENT_NAME)
+public class Task implements Serializable {
 
-    @XmlAttribute
+    private static final long serialVersionUID = 8102389797252020510L;
+
+	@XmlAttribute
     @XmlID
     @Id
     private final String taskInstanceId;
@@ -65,7 +68,6 @@ public class Task {
         this(new Task.Builder(), new ViewContext());
     }
 
-    @SuppressWarnings("unchecked")
     private Task(Task.Builder builder, ViewContext context) {
         this.taskInstanceId = builder.taskInstanceId;
         this.taskDefinitionKey = builder.taskDefinitionKey;
@@ -76,7 +78,35 @@ public class Task {
         this.isDeleted = builder.isDeleted;
     }
 
-    public final static class Builder {
+    public String getTaskInstanceId() {
+		return taskInstanceId;
+	}
+
+	public String getTaskDefinitionKey() {
+		return taskDefinitionKey;
+	}
+
+	public String getTaskInstanceLabel() {
+		return taskInstanceLabel;
+	}
+
+	public User getAssignee() {
+		return assignee;
+	}
+
+	public List<User> getCandidateAssignees() {
+		return candidateAssignees;
+	}
+
+	public String getUri() {
+		return uri;
+	}
+
+	public boolean isDeleted() {
+		return isDeleted;
+	}
+
+	public final static class Builder {
 
         private String taskInstanceId;
         private String taskDefinitionKey;

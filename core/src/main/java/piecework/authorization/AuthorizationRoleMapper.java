@@ -39,6 +39,7 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
 					mapped.add(new ResourceAuthority(AuthorizationRole.OWNER, "demo"));
 					mapped.add(new ResourceAuthority(AuthorizationRole.INITIATOR, "demo"));
 					mapped.add(new ResourceAuthority(AuthorizationRole.USER, "demo"));
+					mapped.add(new ResourceAuthority(AuthorizationRole.OVERSEER, "Demonstration"));
 					
 					mapped.add(new ResourceAuthority(AuthorizationRole.OWNER, "Demo"));
 					mapped.add(new ResourceAuthority(AuthorizationRole.OWNER, "Demonstration"));

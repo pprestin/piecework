@@ -12,7 +12,6 @@ import piecework.common.model.User;
 import piecework.common.view.ViewContext;
 import piecework.form.model.Attachment;
 import piecework.form.model.builder.AttachmentBuilder;
-import piecework.form.model.builder.UserBuilder;
 
 /**
  * This bean is used to generate xml and json representations for of a workflow

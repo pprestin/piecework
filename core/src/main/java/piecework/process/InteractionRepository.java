@@ -17,7 +17,7 @@ package piecework.process;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import piecework.process.model.Interaction;
+import piecework.model.Interaction;
 
 /**
  * @author James Renfro

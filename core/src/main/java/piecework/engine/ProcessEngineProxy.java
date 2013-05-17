@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
+package piecework.engine;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+import java.util.Map;
 
-import piecework.model.Screen;
+import piecework.model.ProcessInstance;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
  */
-public interface ScreenRepository extends MongoRepository<Screen, String> {
+public interface ProcessEngineProxy {
 
+	String getEngineKey();
+	
+	ProcessInstance start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data);
+	
+	ProcessInstance cancel(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey);
+
+	List<ProcessInstance> findInstances(String engineProcessDefinitionKey, ManyMap<String, String> queryParameters);
+	
 }

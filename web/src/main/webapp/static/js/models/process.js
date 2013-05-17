@@ -5,7 +5,7 @@ define([ 'chaplin', 'models/base/model', 'models/interactions', 'models/screens'
 	var Process = Model.extend({
 		defaults : function() {
 			return {
-				processLabel: "",
+				processDefinitionLabel: "",
 				processSummary : "",
 				participantSummary: "",
 				ordinal: 0,

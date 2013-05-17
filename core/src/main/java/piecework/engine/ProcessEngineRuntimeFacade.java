@@ -13,33 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
+package piecework.engine;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
-import org.springframework.stereotype.Service;
-
-import piecework.process.model.ProcessInstance;
-import piecework.process.model.Task;
+import piecework.model.ProcessInstance;
+import piecework.model.Task;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
  */
 public interface ProcessEngineRuntimeFacade {
 
-	ProcessInstance start(String processDefinitionKey, String processBusinessKey, Map<String, ?> data);
+	ProcessInstance start(String engine, String engineProcessDefinitionKey, String alias, Map<String, ?> data);
 
-    ProcessInstance findInstance(String processDefinitionKey, String processInstanceId, String processInstanceAlias);
+	ProcessInstance cancel(String engine, String engineProcessDefinitionKey, String processInstanceId, String alias);
+	
+    ProcessInstance findInstance(String engine, String engineProcessDefinitionKey, String processInstanceId, String alias);
 
-    List<ProcessInstance> findInstances(String processDefinitionKey);
+    List<ProcessInstance> findInstances(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters);
 
     Task findTask(String processDefinitionKey, String taskId);
 
-    List<Task> findTasks(String processDefinitionKey, String userId);
+    List<Task> findTasks(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters, String userId);
 
     void completeTask(String processDefinitionKey, String taskId);
-
-
 
 }

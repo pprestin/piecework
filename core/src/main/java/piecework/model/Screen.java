@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.model;
+package piecework.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -50,14 +55,11 @@ public class Screen implements Serializable {
 	@XmlAttribute
 	@XmlID
 	@Id
-	private final String id;
+	private final String screenId;
 	
 	@XmlAttribute
 	@Transient
 	private final String processDefinitionKey;
-	
-	@XmlAttribute
-	private final String uri;
 	
 	@XmlElement
 	private final String title;
@@ -68,31 +70,39 @@ public class Screen implements Serializable {
 	@XmlElement
 	private final String location;
 	
+	@XmlElementWrapper(name="sections")
+	@XmlElementRef
+	private final List<Section> sections;
+	
+	@XmlAttribute
+    private final int ordinal;
+	
 	@XmlTransient
 	@JsonIgnore
 	private final boolean isDeleted;
 	
-//	@XmlElementWrapper(name="screens")
-//	@XmlElementRef
-//	private final List<Section> sections;
+	@XmlAttribute
+	private final String uri;
+
 
 	private Screen() {
 		this(new Screen.Builder(), new ViewContext());
 	}
 
 	private Screen(Screen.Builder builder, ViewContext context) {
-		this.id = builder.id;
+		this.screenId = builder.screenId;
 		this.processDefinitionKey = builder.processDefinitionKey;
 		this.title = builder.title;
 		this.type = builder.type;
 		this.location = builder.location;
+		this.ordinal = builder.ordinal;
 		this.isDeleted = builder.isDeleted;
-		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.id) : null;
-//		this.sections = builder.sections != null ? Collections.unmodifiableList(builder.sections) : null;
+		this.sections = builder.sections != null ? Collections.unmodifiableList(builder.sections) : null;
+		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	}
 	
-	public String getId() {
-		return id;
+	public String getScreenId() {
+		return screenId;
 	}
 
 	public String getProcessDefinitionKey() {
@@ -121,12 +131,14 @@ public class Screen implements Serializable {
 
 	public final static class Builder {
 
-		private String id;
+		private String screenId;
 		private String processDefinitionKey;
 		private String interactionId;
 		private String title;
 		private String type;
 		private String location;
+		private List<Section> sections;
+		private int ordinal;
 		private boolean isDeleted;
 		
 		public Builder() {
@@ -134,11 +146,19 @@ public class Screen implements Serializable {
 		}
 
 		public Builder(Screen screen, Sanitizer sanitizer) {
-			this.id = sanitizer.sanitize(screen.id);
+			this.screenId = sanitizer.sanitize(screen.screenId);
 			this.processDefinitionKey = sanitizer.sanitize(screen.processDefinitionKey);
 			this.title = sanitizer.sanitize(screen.title);
 			this.type = sanitizer.sanitize(screen.type);
 			this.location = sanitizer.sanitize(screen.location);
+			this.ordinal = screen.ordinal;
+			
+			if (screen.sections != null && !screen.sections.isEmpty()) {
+				this.sections = new ArrayList<Section>(screen.sections.size());
+				for (Section section : screen.sections) {
+					this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
+				}
+			}
 		}
 
 		public Screen build() {
@@ -149,8 +169,8 @@ public class Screen implements Serializable {
 			return new Screen(this, context);
 		}
 		
-		public Builder id(String id) {
-			this.id = id;
+		public Builder screenId(String screenId) {
+			this.screenId = screenId;
 			return this;
 		}
 		
@@ -179,12 +199,17 @@ public class Screen implements Serializable {
 			return this;
 		}
 		
-//		public Builder screen(Screen screen) {
-//			if (this.screens == null)
-//				this.screens = new ArrayList<Screen>();
-//			this.screens.add(screen);
-//			return this;
-//		}
+		public Builder section(Section section) {
+			if (this.sections == null)
+				this.sections = new ArrayList<Section>();
+			this.sections.add(section);
+			return this;
+		}
+		
+		public Builder ordinal(int ordinal) {
+            this.ordinal = ordinal;
+            return this;
+        }
 		
 		public Builder delete() {
 			this.isDeleted = true;

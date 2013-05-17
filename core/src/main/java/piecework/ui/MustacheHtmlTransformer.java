@@ -49,6 +49,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import piecework.common.model.User;
+import piecework.common.view.SearchResults;
 import piecework.identity.InternalUserDetails;
 
 import com.github.mustachejava.DefaultMustacheFactory;
@@ -79,13 +80,12 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		Resource resource = getTemplateResource(type);
-		return resource != null && resource.exists();
+		return hasTemplateResource(type);
 	}
 
 	@Override
 	public long getSize(Object t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		Resource resource = getTemplateResource(type);
+		Resource resource = getTemplateResource(type, t);
 		long size = 0;
 		if (resource.exists()) {
 			try {
@@ -118,7 +118,7 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 			userName = userDetails.getDisplayName();
 		}
 		
-		Resource template = getTemplateResource(type);
+		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
 			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), template.getInputStream());
 			try {
@@ -143,8 +143,25 @@ public class MustacheHtmlTransformer extends AbstractConfigurableProvider implem
 		}
 	}
 	
-	private Resource getTemplateResource(Class<?> type) {
-		String templateName = new StringBuilder(type.getSimpleName()).append(".template.html").toString();
+	private boolean hasTemplateResource(Class<?> type) {
+		if (type.equals(SearchResults.class))
+			return true;
+		
+		Resource resource = getTemplateResource(type, null);
+		return resource != null && resource.exists();
+	}
+	
+	private Resource getTemplateResource(Class<?> type, Object t) {
+		StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
+		
+		if (type.equals(SearchResults.class)) {
+			SearchResults results = SearchResults.class.cast(t);
+			templateNameBuilder.append(".").append(results.getResourceName());
+		}
+			
+		templateNameBuilder.append(".template.html");
+		
+		String templateName = templateNameBuilder.toString();
 		Resource resource = null;
 		if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}"))
 			resource = new FileSystemResource(templatesDirectory + File.separator + templateName);

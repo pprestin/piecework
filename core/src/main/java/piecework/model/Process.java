@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.model;
+package piecework.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class Process implements Serializable {
 	private final String processDefinitionKey;
 	
 	@XmlElement
-	private final String processLabel;
+	private final String processDefinitionLabel;
 	
 	@XmlElement
 	private final String processSummary;
@@ -92,7 +92,7 @@ public class Process implements Serializable {
 	@SuppressWarnings("unchecked")
 	private Process(Process.Builder builder, ViewContext context) {
 		this.processDefinitionKey = builder.processDefinitionKey;
-		this.processLabel = builder.processLabel;
+		this.processDefinitionLabel = builder.processDefinitionLabel;
 		this.processSummary = builder.processSummary;
 		this.participantSummary = builder.participantSummary;
 		this.engine = builder.engine;
@@ -106,8 +106,8 @@ public class Process implements Serializable {
 		return processDefinitionKey;
 	}
 
-	public String getProcessLabel() {
-		return processLabel;
+	public String getProcessDefinitionLabel() {
+		return processDefinitionLabel;
 	}
 
 	public String getProcessSummary() {
@@ -141,13 +141,13 @@ public class Process implements Serializable {
 	@XmlTransient
 	@JsonIgnore
 	public boolean isEmpty() {
-		return StringUtils.isEmpty(processLabel) && StringUtils.isEmpty(processSummary) && StringUtils.isEmpty(participantSummary) && StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
+		return StringUtils.isEmpty(processDefinitionLabel) && StringUtils.isEmpty(processSummary) && StringUtils.isEmpty(participantSummary) && StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
 	}
 	
 	public final static class Builder {
 		
 		private String processDefinitionKey;		
-		private String processLabel;		
+		private String processDefinitionLabel;		
 		private String processSummary;		
 		private String participantSummary;		
 		private String engine;		
@@ -159,9 +159,9 @@ public class Process implements Serializable {
 			super();
 		}
 				
-		public Builder(piecework.process.model.Process process, Sanitizer sanitizer) {
+		public Builder(piecework.model.Process process, Sanitizer sanitizer) {
 			this.processDefinitionKey = sanitizer.sanitize(process.processDefinitionKey);
-			this.processLabel = sanitizer.sanitize(process.processLabel);
+			this.processDefinitionLabel = sanitizer.sanitize(process.processDefinitionLabel);
 			this.processSummary = sanitizer.sanitize(process.processSummary);
 			this.participantSummary = sanitizer.sanitize(process.participantSummary);
 			this.engine = sanitizer.sanitize(process.engine);
@@ -188,8 +188,8 @@ public class Process implements Serializable {
 			return this;
 		}
 		
-		public Builder processLabel(String processLabel) {
-			this.processLabel = processLabel;
+		public Builder processDefinitionLabel(String processDefinitionLabel) {
+			this.processDefinitionLabel = processDefinitionLabel;
 			return this;
 		}
 		

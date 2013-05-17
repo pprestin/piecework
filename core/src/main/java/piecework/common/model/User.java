@@ -20,7 +20,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
-import piecework.process.model.ProcessInstance;
+import piecework.model.ProcessInstance;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;

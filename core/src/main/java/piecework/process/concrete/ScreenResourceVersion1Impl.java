@@ -33,12 +33,12 @@ import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
+import piecework.model.Interaction;
+import piecework.model.Screen;
 import piecework.process.InteractionRepository;
 import piecework.process.ProcessRepository;
 import piecework.process.ScreenRepository;
 import piecework.process.ScreenResource;
-import piecework.process.model.Interaction;
-import piecework.process.model.Screen;
 import piecework.security.PassthroughSanitizer;
 
 /**
@@ -72,7 +72,7 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String interactionId = sanitizer.sanitize(rawInteractionId);
 		
-		piecework.process.model.Process process = processRepository.findOne(processDefinitionKey);
+		piecework.model.Process process = processRepository.findOne(processDefinitionKey);
 		
 		if (process == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
@@ -84,7 +84,7 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 		if (interaction == null)
 			throw new BadRequestError(Constants.ExceptionCodes.interaction_invalid, interactionId);
 		
-		if (screen.getId() != null) 
+		if (screen.getScreenId() != null) 
 			throw new BadRequestError(Constants.ExceptionCodes.screen_id_invalid);
 
 		Screen.Builder screenBuilder = new Screen.Builder(screen, sanitizer);
@@ -125,7 +125,7 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String interactionId = sanitizer.sanitize(rawInteractionId);
 		
-		piecework.process.model.Process process = processRepository.findOne(processDefinitionKey);
+		piecework.model.Process process = processRepository.findOne(processDefinitionKey);
 		
 		if (process == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
@@ -143,7 +143,7 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
 		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(result.getId()) : null;
+		String location = context != null ? context.getApplicationUri(result.getScreenId()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
 		

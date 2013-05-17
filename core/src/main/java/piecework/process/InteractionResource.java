@@ -30,7 +30,7 @@ import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.exception.StatusCodeError;
-import piecework.process.model.Interaction;
+import piecework.model.Interaction;
 
 /**
  * @author James Renfro

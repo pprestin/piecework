@@ -30,8 +30,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.ApplicationConfigurationForUnitTest;
 import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
+import piecework.model.Process;
 import piecework.process.ProcessResource;
-import piecework.process.model.Process;
 
 /**
  * @author James Renfro
@@ -57,12 +57,12 @@ public class ProcessResourceVersion1ImplTest {
 	public void testCreateReadUpdateAndDeleteProcess() throws StatusCodeError {
 		// Create
 		Process process = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
-				.processLabel(exampleProcessLabel).build();
+				.processDefinitionLabel(exampleProcessLabel).build();
 		Response response = resource.create(process);
 		Process result = (Process) response.getEntity();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
-		Assert.assertEquals(exampleProcessLabel, result.getProcessLabel());
+		Assert.assertEquals(exampleProcessLabel, result.getProcessDefinitionLabel());
 		Assert.assertEquals("/piecework/secure/v1/process/demo", result.getUri());
 		
 		// Read
@@ -70,11 +70,11 @@ public class ProcessResourceVersion1ImplTest {
 		result = (Process) response.getEntity();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
-		Assert.assertEquals(exampleProcessLabel, result.getProcessLabel());
+		Assert.assertEquals(exampleProcessLabel, result.getProcessDefinitionLabel());
 		
 		// Update
 		Process updated = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
-				.processLabel("New Label").build();
+				.processDefinitionLabel("New Label").build();
 		response = resource.update("demo", updated);
 		result = (Process) response.getEntity();
 		Assert.assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
@@ -84,7 +84,7 @@ public class ProcessResourceVersion1ImplTest {
 		result = (Process) response.getEntity();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
-		Assert.assertEquals("New Label", result.getProcessLabel());
+		Assert.assertEquals("New Label", result.getProcessDefinitionLabel());
 		
 		// Delete
 		response = resource.delete("demo");

@@ -31,9 +31,8 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.AuthenticationBuilder;
 import org.springframework.security.config.annotation.web.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.ExpressionUrlAuthorizations;
 import org.springframework.security.config.annotation.web.HttpConfigurator;
-import org.springframework.security.config.annotation.web.SpringSecurityFilterChainBuilder.IgnoredRequestRegistry;
+import org.springframework.security.config.annotation.web.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -113,10 +112,23 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	}
 
 	@Override
+    public void configure(WebSecurityConfiguration builder) throws Exception {
+        builder
+            .ignoring()
+                .antMatchers("/static/**");
+    }
+
+	
+	@Override
 	public void configure(HttpConfigurator httpConfiguration)
 			throws Exception {
 		AuthenticationType type = authenticationType();
 
+		httpConfiguration
+			.authorizeUrls()
+			.antMatchers("/static/**").permitAll()
+        	.antMatchers("/secure/**").authenticated();
+		
 		switch (type) {
 		case NORMAL:
 			httpConfiguration.formLogin().usernameParameter("j_username")
@@ -133,17 +145,17 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		}
 	}
 
-	@Override
-	protected void authorizeUrls(ExpressionUrlAuthorizations authorizations) {
-		authorizations.antMatchers("/static/**").permitAll()
-        	.antMatchers("/secure/**").authenticated();
-	}
+//	@Override
+//	protected void authorizeUrls(ExpressionUrlAuthorizations interceptUrls) {
+//		interceptUrls.antMatchers("/static/**").permitAll()
+//        	.antMatchers("/secure/**").authenticated();
+//	}
 	
-	@Override
-	protected void ignoredRequests(IgnoredRequestRegistry ignoredRequests) {
-        ignoredRequests
-            .antMatchers("/static/**");
-    }
+//	@Override
+//	protected void ignoredRequests(IgnoredRequestRegistry ignoredRequests) {
+//        ignoredRequests
+//            .antMatchers("/static/**");
+//    }
 
 
 		

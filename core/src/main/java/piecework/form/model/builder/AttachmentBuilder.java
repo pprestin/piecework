@@ -29,7 +29,7 @@ public abstract class AttachmentBuilder<A extends Attachment> extends Builder {
 	private String description;
 	private String contentType;
 	private String externalUrl;
-	private UserBuilder<?> user;
+	private User user;
 	private String lastModified;
 			
 	public AttachmentBuilder() {
@@ -43,7 +43,7 @@ public abstract class AttachmentBuilder<A extends Attachment> extends Builder {
 		this.description = attachment.getDescription();
 		this.contentType = attachment.getContentType();
 		this.externalUrl = attachment.getExternalUrl();
-//		this.user = userBuilder(attachment.getUser());
+		this.user = attachment.getUser();
 		this.lastModified = attachment.getLastModified();
 	}
 	
@@ -89,7 +89,7 @@ public abstract class AttachmentBuilder<A extends Attachment> extends Builder {
 		return this;
 	}
 	
-	public AttachmentBuilder<?> user(UserBuilder<?> user) {
+	public AttachmentBuilder<?> user(User user) {
 		this.user = user;
 		return this;
 	}
@@ -123,7 +123,7 @@ public abstract class AttachmentBuilder<A extends Attachment> extends Builder {
 		return externalUrl;
 	}
 
-	public UserBuilder<?> getUser() {
+	public User getUser() {
 		return user;
 	}
 

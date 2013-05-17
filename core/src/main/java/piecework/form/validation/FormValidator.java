@@ -58,7 +58,7 @@ public class FormValidator {
 	@Autowired
 	private ConstraintValidatorRegistry registry;
 	
-	public List<AttributeValidation> validate(piecework.process.model.Process process, Form form, PropertyValueReader previousReader, List<String> sectionIds,
+	public List<AttributeValidation> validate(piecework.model.Process process, Form form, PropertyValueReader previousReader, List<String> sectionIds,
 			PropertyValueReader reader, boolean doExceptionOnError, boolean isRequiredNecessary, boolean isForStorage) throws ValidationException {
 		
 		long start = System.currentTimeMillis();

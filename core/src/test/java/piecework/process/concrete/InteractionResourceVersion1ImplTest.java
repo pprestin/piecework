@@ -30,10 +30,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.ApplicationConfigurationForUnitTest;
 import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
+import piecework.model.Interaction;
+import piecework.model.Process;
 import piecework.process.InteractionResource;
 import piecework.process.ProcessResource;
-import piecework.process.model.Interaction;
-import piecework.process.model.Process;
 
 /**
  * @author James Renfro
@@ -58,7 +58,7 @@ public class InteractionResourceVersion1ImplTest {
 		this.exampleProcessLabel = "Testing";
 		
 		Process process = new Process.Builder().processDefinitionKey(exampleProcessDefinitionKey)
-				.processLabel(exampleProcessLabel).build();
+				.processDefinitionLabel(exampleProcessLabel).build();
 		Response response = processResource.create(process);
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 	}

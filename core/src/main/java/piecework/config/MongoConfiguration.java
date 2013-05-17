@@ -23,7 +23,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
@@ -52,7 +51,7 @@ public class MongoConfiguration {
 	private String mongoPassword;
 	
 	@Bean
-	public MongoTemplate mongoTemplate(Environment env) throws UnknownHostException {
+	public MongoTemplate mongoTemplate() throws UnknownHostException {
 		Mongo mongo = new Mongo(getServerAddresses());
 		UserCredentials credentials = new UserCredentials(mongoUsername, mongoPassword);
 		
@@ -76,5 +75,5 @@ public class MongoConfiguration {
 		}
 		return serverAddresses;
 	}
-	
+		
 }

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=8" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title><% name %></title>
+	<link href="<% static %>/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="<% static %>/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+<!-- 	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/piecework.css"></link> -->
+<!-- 	<link rel="stylesheet" type="text/css" media="all" href="/piecework/static/css/piecework.form.css"></link> -->
+</head>
+<body role="application">
+	<div class="defaultHidden" id="loadHtml"></div>
+	<form id="main-form" method="POST">
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<div class="row">
+						<div class="pull-right"><% user.displayName %></div>
+					</div>
+					<div class="row">
+						<ul class="nav">
+							<li><input title="Search by keyword" role="" class="searchField" name="keyword" id="keyword" type="text"></li>
+							<li>
+								<button class="btn" role="button" id="filterButton" type="button">Limit</button>
+								<button class="btn" role="button" id="instanceSearchButton" type="submit">Search</button>
+								<button class="btn" role="button" id="instanceClearButton" type="button">Clear</button>
+							</li>
+							<li class="pull-right">
+								<button class="btn" title="Export all results" id="exportButton" type="button">Export</button>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="screen-header">
+			<div class="userInformation"><% user.displayName %></div>
+		</div>
+		<div class="page">
+			<div class="page-toolbar">
+				<div id="attachmentToolbar" class="pull-right"></div>
+				<div id="task-toolbar" class="pull-right"></div>
+			</div>
+			<div class="page-header">
+				<
+			</div>
+			<div class="go-back">Sections</div>
+			<div class="page-main">
+				<%#resource.message%>
+				<div class="alert">
+				  <button type="button" class="close" data-dismiss="alert">&times;</button>
+				  <div class="page-notification"><%resource.message%></div>
+				</div>
+				<%/resource.message%>
+				<div class="navigation">
+				 	<div id="breadcrumbs"></div>
+				</div>
+				<div class="content">
+					<%#resource.processInstanceId%>
+					<h3 class="confirmation">
+				 		Thanks for submitting your form. Your confirmation number is <%resource.processInstanceId%>.
+				 	</h3>
+					<%/resource.processInstanceId%>
+					<div class="form-content-placeholder">
+						<input type="hidden" name="_submissionId" value="<%resource.submissionId%>"></input>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+	<script type="text/javascript">
+		piecework = {};
+		piecework.context = <%& json %>;
+	</script>
+	<script data-main="<% static %>/js/search.js" src='<% static %>/js/vendor/require.js'></script>
+</body>
+</html>

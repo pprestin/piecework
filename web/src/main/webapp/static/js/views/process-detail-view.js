@@ -1,5 +1,14 @@
-define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'models/screens', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-detail.hbs' ], 
-         function(Chaplin, Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
+define([ 
+         'chaplin', 
+         'models/process', 
+         'models/interaction', 
+         'models/screen', 
+         'models/screens', 
+         'views/base/view', 
+         'views/interaction-list-view', 
+         'text!templates/process-detail.hbs' 
+        ], 
+function(Chaplin, Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
 	'use strict';
 
 	var ProcessDetailView = View.extend({

@@ -35,13 +35,13 @@ import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
+import piecework.model.Interaction;
+import piecework.model.Process;
+import piecework.model.Screen;
 import piecework.process.InteractionRepository;
 import piecework.process.InteractionResource;
 import piecework.process.ProcessRepository;
 import piecework.process.ScreenRepository;
-import piecework.process.model.Interaction;
-import piecework.process.model.Process;
-import piecework.process.model.Screen;
 import piecework.security.PassthroughSanitizer;
 
 /**

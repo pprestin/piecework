@@ -1,5 +1,5 @@
-define([ 'chaplin', 'models/field', 'models/screen', 'views/field-configure-view', 'views/base/view', 'text!templates/screen-configure.hbs'], 
-		function(Chaplin, Field, Screen, FieldConfigureView, View, template) {
+define([ 'chaplin', 'models/field', 'models/screen', 'views/base/view', 'text!templates/screen-configure.hbs'], 
+		function(Chaplin, Field, Screen, View, template) {
 	'use strict';
 
 	var ScreenConfigureView = View.extend({
@@ -17,8 +17,8 @@ define([ 'chaplin', 'models/field', 'models/screen', 'views/field-configure-view
 			$(':input').each(function(i, element) {
 				var $input = $(element);
 				var name = element.name;
-				var fieldView = new FieldConfigureView({model: new Field({name:name})});
-				view.subview(name, fieldView);
+//				var fieldView = new FieldConfigureView({model: new Field({name:name})});
+//				view.subview(name, fieldView);
 				
 				$input.popover({ 
 				    html : true,

@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.common.view.ViewContext;
+import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
@@ -36,10 +37,9 @@ import piecework.form.FormService;
 import piecework.form.model.Form;
 import piecework.form.model.view.FormView;
 import piecework.form.validation.AttributeValidation;
-import piecework.process.ProcessEngineRuntimeFacade;
+import piecework.model.ProcessInstance;
 import piecework.process.exception.RecordDeletedException;
 import piecework.process.exception.RecordNotFoundException;
-import piecework.process.model.ProcessInstance;
 import piecework.security.UserInputSanitizer;
 import piecework.util.PropertyValueReader;
 
@@ -146,7 +146,7 @@ public class FormResourceVersion1Impl implements FormResource {
 				service.validate(processDefinitionKey, null, null, reader);
 				service.storeValues(processDefinitionKey, null, processBusinessKey, null, reader, true);
 				
-				ProcessInstance instance = runtime.start(processDefinitionKey, processBusinessKey, formData);
+				ProcessInstance instance = runtime.start(null, processDefinitionKey, processBusinessKey, formData);
 				
 				String processInstanceId = instance.getProcessInstanceId();
 			

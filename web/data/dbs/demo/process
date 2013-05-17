@@ -1,10 +1,1 @@
-[
-    { "_id" : "demo", 
-      "processDefinitionKey" : "demo", 
-      "engine" : "activiti",
-      "engineProcessDefinitionKey" : "actdemo",
-      "startRequestFormIdentifier" : "testdemoform",
-      "startResponseFormIdentifier" : ""
-    }   
-]
-        
+[{ "_id" : "Demonstration", "_class" : "piecework.process.model.Process", "processDefinitionLabel" : "This is another test", "engine": "activiti", "engineProcessDefinitionKey": "SupplierRegistration", "processSummary" : "", "participantSummary" : "", "isDeleted" : false, "interactions" : [ { "$ref" : "interaction", "$id" : { "$oid" : "51957215e4b0d5b91a60556a" } }, { "$ref" : "interaction", "$id" : { "$oid" : "51957a48e4b0d5b91a60556f" } } ] } ]  

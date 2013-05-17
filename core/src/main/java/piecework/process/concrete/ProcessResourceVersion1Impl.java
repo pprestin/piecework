@@ -15,12 +15,7 @@
  */
 package piecework.process.concrete;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -30,15 +25,11 @@ import javax.ws.rs.core.UriInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Sanitizer;
 import piecework.authorization.AuthorizationRole;
-import piecework.authorization.ResourceAuthority;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.exception.ForbiddenError;
@@ -47,13 +38,11 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormPosition;
 import piecework.form.model.Form;
+import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
 import piecework.process.exception.RecordNotFoundException;
-import piecework.process.model.Process;
 import piecework.security.PassthroughSanitizer;
-
-import com.google.common.collect.Sets;
 
 /**
  * @author James Renfro
@@ -63,6 +52,9 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 
 	@Autowired
 	ProcessRepository repository;
+	
+	@Autowired
+	ResourceHelper helper;
 	
 	@Autowired
 	Sanitizer sanitizer;
@@ -84,7 +76,6 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 	
 	@Override
 	public Response delete(String rawProcessDefinitionKey) throws StatusCodeError {
-		// Sanitize all user input
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		
 		Process record = repository.findOne(processDefinitionKey);
@@ -167,7 +158,7 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 	@Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {	
 		SearchResults.Builder resultsBuilder = new SearchResults.Builder();
-		List<Process> processes = findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
+		List<Process> processes = helper.findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
 		for (Process process : processes) {
 			resultsBuilder.item(new Process.Builder(process, sanitizer).build(getViewContext()));
 		}
@@ -180,32 +171,7 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "process", "Process");
 	}
 	
-	private List<piecework.process.model.Process> findProcesses(String ... allowedRoles) {
-		SecurityContext context = SecurityContextHolder.getContext();
-		Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
-		
-		Set<String> allowedRoleSet = allowedRoles != null && allowedRoles.length > 0 ? Sets.newHashSet(allowedRoles) : null;
-		Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
-		if (authorities != null && !authorities.isEmpty()) {
-			for (GrantedAuthority authority : authorities) {		
-				if (authority instanceof ResourceAuthority) {
-					ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
-					if (allowedRoleSet == null || allowedRoleSet.contains(resourceAuthority.getRole()))
-						allowedProcessDefinitionKeys.addAll(resourceAuthority.getProcessDefinitionKeys());
-				}
-			}
-		}
-		
-		List<piecework.process.model.Process> processes = new ArrayList<piecework.process.model.Process>();
-		Iterator<Process> iterator = repository.findAll(allowedProcessDefinitionKeys).iterator();
-		while (iterator.hasNext()) {
-			Process record = iterator.next();
-			if (!record.isDeleted())
-				processes.add(record);
-		}
-		
-		return processes;
-	}
+
 	
 	private void addForm(FormPosition position, Form form) throws RecordNotFoundException {
 		String processDefinitionKey = form.getProcessDefinitionKey();
