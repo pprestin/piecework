@@ -157,11 +157,16 @@ public class LdapConfiguration {
 		context.setAnonymousReadOnly(true);
 		return context;
 	}
-	
+
+    @Bean
+    public AuthorizationRoleMapper authorizationRoleMapper() {
+        return new AuthorizationRoleMapper();
+    }
+
 	@Bean
 	public AuthenticationProvider authenticationProvider() throws Exception {
 		LdapAuthenticationProvider provider = new LdapAuthenticationProvider(authenticator(), authoritiesPopulator());
-		provider.setAuthoritiesMapper(new AuthorizationRoleMapper());
+		provider.setAuthoritiesMapper(authorizationRoleMapper());
 		return provider;
 	}
 	

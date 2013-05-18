@@ -15,11 +15,11 @@
  */
 package piecework.authorization;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.security.core.GrantedAuthority;
+import piecework.Sanitizer;
+import piecework.common.view.ViewContext;
 
 /**
  * @author James Renfro
@@ -30,10 +30,14 @@ public class ResourceAuthority implements GrantedAuthority {
 	
 	private final String role;
 	private final Set<String> processDefinitionKeys;
+
+    private ResourceAuthority() {
+        this(new Builder());
+    }
 	
-	public ResourceAuthority(String role, String... processDefinitionKeys) {
-		this.role = role;
-		this.processDefinitionKeys = new HashSet<String>(Arrays.asList(processDefinitionKeys));
+	private ResourceAuthority(Builder builder) {
+		this.role = builder.role;
+		this.processDefinitionKeys = builder.processDefinitionKeys != null ? Collections.unmodifiableSet(builder.processDefinitionKeys) : null;
 	}
 	
 	public boolean isAuthorized(String roleAllowed, String processDefinitionKeyAllowed) {
@@ -73,5 +77,43 @@ public class ResourceAuthority implements GrantedAuthority {
 	public String getRole() {
 		return role;
 	}
-	
+
+
+    public final static class Builder {
+
+        private String role;
+        private Set<String> processDefinitionKeys;
+
+        public Builder() {
+            super();
+        }
+
+        public Builder(ResourceAuthority authority, Sanitizer sanitizer) {
+            this.role = sanitizer.sanitize(authority.role);
+            if (authority.processDefinitionKeys != null && !authority.processDefinitionKeys.isEmpty()) {
+                this.processDefinitionKeys = new HashSet<String>(authority.processDefinitionKeys.size());
+                for (String processDefinitionKey : authority.processDefinitionKeys) {
+                    this.processDefinitionKeys.add(sanitizer.sanitize(processDefinitionKey));
+                }
+            }
+        }
+
+        public ResourceAuthority build() {
+            return new ResourceAuthority(this);
+        }
+
+        public Builder role(String role) {
+            this.role = role;
+            return this;
+        }
+
+        public Builder processDefinitionKey(String processDefinitionKey) {
+            if (this.processDefinitionKeys == null)
+                this.processDefinitionKeys = new HashSet<String>();
+            this.processDefinitionKeys.add(processDefinitionKey);
+            return this;
+        }
+
+    }
+
 }
