@@ -24,17 +24,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.Mongo;
 import com.mongodb.ServerAddress;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import piecework.model.ProcessInstance;
 
 /**
  * @author James Renfro
  */
 @Configuration
-public class MongoConfiguration {
+public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);
 		
@@ -51,13 +54,30 @@ public class MongoConfiguration {
 	private String mongoPassword;
 	
 	@Bean
-	public MongoTemplate mongoTemplate() throws UnknownHostException {
-		Mongo mongo = new Mongo(getServerAddresses());
-		UserCredentials credentials = new UserCredentials(mongoUsername, mongoPassword);
-		
-		return new MongoTemplate(new SimpleMongoDbFactory(mongo, mongoDb, credentials));
-	}
-	
+    public Mongo mongo() throws Exception {
+         return new Mongo(getServerAddresses());
+    }
+
+    @Bean
+    public GridFsTemplate gridFsTemplate() throws Exception {
+        return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
+    }
+
+    @Override
+    protected String getDatabaseName() {
+        return mongoDb;
+    }
+
+    @Override
+    protected String getMappingBasePackage() {
+        return ProcessInstance.class.getPackage().getName();
+    }
+
+    @Override
+    protected UserCredentials getUserCredentials() {
+        return new UserCredentials(mongoUsername, mongoPassword);
+    }
+
 	private List<ServerAddress> getServerAddresses() throws UnknownHostException {
 		List<ServerAddress> serverAddresses = new LinkedList<ServerAddress>();
 		String[] addresses = mongoServerAddresses.split(",");

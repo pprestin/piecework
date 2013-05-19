@@ -45,5 +45,10 @@ public interface Constants {
 		public static final String process_does_not_exist = "process_does_not_exist";
 		public static final String screen_id_invalid = "screen_id_invalid";
 	}
+
+    public static class SubmissionTypes {
+        public static final String START = "start";
+        public static final String COMPLETE = "complete";
+    }
 	
 }

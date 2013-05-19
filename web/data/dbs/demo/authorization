@@ -1,0 +1,1 @@
+[{ "_id" : "ROLE_USER", "groupId" : "User", "groupDisplayName" : "User", "groupNamespace" : "LDAP", "authorities" : [{ "role" : "ROLE_CREATOR" }, { "role" : "ROLE_INITIATOR", "processDefinitionKeys" : [ "Demonstration" ] } }]

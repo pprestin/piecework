@@ -16,12 +16,11 @@
 package piecework.form;
 
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
@@ -31,13 +30,14 @@ import piecework.form.model.view.FormView;
 /**
  * @author James Renfro
  */
-@Path("secure/v1/form")
+@Path("secure/form")
+@Produces("text/html")
 public interface FormResource extends Resource {
 	
 	@GET
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-	FormView read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context HttpServletRequest request) throws StatusCodeError;
 	
 	@GET
 	@Path("{processDefinitionKey}/current/{processInstanceId}")

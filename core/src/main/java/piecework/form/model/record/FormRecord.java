@@ -77,7 +77,7 @@ public class FormRecord implements Form {
 //		this.readOnly = builder.getReadOnly() != null ? builder.getReadOnly().toString() : null;
 //		this.replaceFrom = builder.getReplaceFrom();
 		this.logoUrl = builder.getLogoUrl();
-//		this.submissionId = builder.getSubmissionId();
+//		this.submissionId = builder.getRequestId();
 	}
 	
 //	@SuppressWarnings("rawtypes")

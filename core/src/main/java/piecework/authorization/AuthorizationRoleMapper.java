@@ -41,16 +41,16 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
 			for (GrantedAuthority authority : authorities) {
 				String grantedAuthority = authority.getAuthority();
 			
-				if (grantedAuthority.equals("ROLE_ADMIN")) {
-					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.CREATOR).build());
-					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OWNER).processDefinitionKey("demo").build());
-					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.INITIATOR).processDefinitionKey("demo").build());
-					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.USER).processDefinitionKey("demo").build());
-					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OVERSEER).processDefinitionKey("Demonstration").build());
-					
-					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OWNER).processDefinitionKey("Demo").build());
-					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OWNER).processDefinitionKey("Demonstration").build());
-				} else {
+//				if (grantedAuthority.equals("ROLE_ADMIN")) {
+//					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.CREATOR).build());
+//					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OWNER).processDefinitionKey("demo").build());
+//					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.INITIATOR).processDefinitionKey("demo").build());
+//					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.USER).processDefinitionKey("demo").build());
+//					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OVERSEER).processDefinitionKey("Demonstration").build());
+//
+//					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OWNER).processDefinitionKey("Demo").build());
+//					mapped.add(new ResourceAuthority.Builder().role(AuthorizationRole.OWNER).processDefinitionKey("Demonstration").build());
+//				} else {
                     Authorization authorization = repository.findOne(grantedAuthority);
                     List<ResourceAuthority> resourceAuthorities = authorization.getAuthorities();
                     if (resourceAuthorities != null && !resourceAuthorities.isEmpty()) {
@@ -58,7 +58,7 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
                             mapped.add(resourceAuthority);
                         }
                     }
-                }
+//                }
 			}
 			return mapped;
 		}

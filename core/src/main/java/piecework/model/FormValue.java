@@ -17,6 +17,7 @@ package piecework.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -124,6 +125,11 @@ public class FormValue implements Serializable {
 			this.values.add(value);
 			return this;
 		}
+
+        public Builder values(String ... values) {
+            this.values = Arrays.asList(values);
+            return this;
+        }
 	}
 	
 	public static class Constants {

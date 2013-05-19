@@ -189,6 +189,13 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
+        public Builder formValue(String key, String ... values) {
+            if (this.formData == null)
+                this.formData = new ArrayList<FormValue>();
+            this.formData.add(new FormValue.Builder().name(key).values(values).build());
+            return this;
+        }
+
         public Builder delete() {
             this.isDeleted = true;
             return this;
