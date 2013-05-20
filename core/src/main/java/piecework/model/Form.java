@@ -42,9 +42,6 @@ public class Form {
     @XmlAttribute
     private final String submissionType;
 
-    @XmlAttribute
-    private final String requestId;
-
     @XmlElement
     private final Screen screen;
 
@@ -68,10 +65,6 @@ public class Form {
         return submissionType;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
     public Screen getScreen() {
         return screen;
     }
@@ -87,7 +80,6 @@ public class Form {
     private Form(Form.Builder builder, ViewContext context) {
         this.formInstanceId = builder.formInstanceId;
         this.submissionType = builder.submissionType;
-        this.requestId = builder.requestId;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
         this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
@@ -98,7 +90,6 @@ public class Form {
         private String formInstanceId;
         private String processDefinitionKey;
         private String submissionType;
-        private String requestId;
         private Screen screen;
         private List<FormValue> formData;
 
@@ -109,7 +100,6 @@ public class Form {
         public Builder(Form form, Sanitizer sanitizer) {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
-            this.requestId = sanitizer.sanitize(form.requestId);
             this.screen = form.screen != null ? new Screen.Builder(form.screen, sanitizer).build() : null;
 
             if (form.formData != null && !form.formData.isEmpty()) {
@@ -140,11 +130,6 @@ public class Form {
 
         public Builder submissionType(String submissionType) {
             this.submissionType = submissionType;
-            return this;
-        }
-
-        public Builder requestId(String requestId) {
-            this.requestId = requestId;
             return this;
         }
 

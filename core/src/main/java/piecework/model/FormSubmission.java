@@ -21,6 +21,7 @@ import piecework.Sanitizer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -34,11 +35,13 @@ public class FormSubmission {
 
     private final String submissionType;
 
-    private final String formInstanceId;
-
-    public final String requestId;
+    private final String requestId;
 
     private final List<FormValue> formData;
+
+    private final Date submissionDate;
+
+    private final String submitterId;
 
     private FormSubmission() {
         this(new FormSubmission.Builder());
@@ -47,32 +50,59 @@ public class FormSubmission {
     private FormSubmission(FormSubmission.Builder builder) {
         this.submissionId = builder.submissionId;
         this.submissionType = builder.submissionType;
-        this.formInstanceId = builder.formInstanceId;
         this.requestId = builder.requestId;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.submissionDate = builder.submissionDate;
+        this.submitterId = builder.submitterId;
+    }
+
+    public String getSubmissionId() {
+        return submissionId;
+    }
+
+    public String getSubmissionType() {
+        return submissionType;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public List<FormValue> getFormData() {
+        return formData;
+    }
+
+    public Date getSubmissionDate() {
+        return submissionDate;
+    }
+
+    public String getSubmitterId() {
+        return submitterId;
     }
 
     public final static class Builder {
 
         private String submissionId;
         private String submissionType;
-        private String formInstanceId;
         private String requestId;
         private List<FormValue> formData;
+        private Date submissionDate;
+        private String submitterId;
 
         public Builder() {
             super();
         }
 
-        public Builder(FormSubmission instance, Sanitizer sanitizer) {
-            this.submissionId = sanitizer.sanitize(instance.submissionId);
-            this.submissionType = sanitizer.sanitize(instance.submissionType);
-            this.formInstanceId = sanitizer.sanitize(instance.formInstanceId);
-            this.requestId = sanitizer.sanitize(instance.requestId);
+        public Builder(FormSubmission submission, Sanitizer sanitizer) {
+            this.submissionId = sanitizer.sanitize(submission.submissionId);
+            this.submissionType = sanitizer.sanitize(submission.submissionType);
+            this.requestId = sanitizer.sanitize(submission.requestId);
+            this.submissionDate = submission.submissionDate;
+            this.submissionId = sanitizer.sanitize(submissionId);
 
-            if (instance.formData != null && !instance.formData.isEmpty()) {
-                this.formData = new ArrayList<FormValue>(instance.formData.size());
-                for (FormValue formValue : instance.formData) {
+            if (submission.formData != null && !submission.formData.isEmpty()) {
+                this.formData = new ArrayList<FormValue>(submission.formData.size());
+                for (FormValue formValue : submission.formData) {
                     this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
                 }
             }
@@ -87,11 +117,6 @@ public class FormSubmission {
             return this;
         }
 
-        public Builder formInstanceId(String formInstanceId) {
-            this.formInstanceId = formInstanceId;
-            return this;
-        }
-
         public Builder submissionType(String submissionType) {
             this.submissionType = submissionType;
             return this;
@@ -99,6 +124,23 @@ public class FormSubmission {
 
         public Builder requestId(String requestId) {
             this.requestId = requestId;
+            return this;
+        }
+
+        public Builder submissionDate(Date submissionDate) {
+            this.submissionDate = submissionDate;
+            return this;
+        }
+
+        public Builder submitterId(String submitterId) {
+            this.submitterId = submitterId;
+            return this;
+        }
+
+        public Builder formValue(String key, String ... values) {
+            if (this.formData == null)
+                this.formData = new ArrayList<FormValue>();
+            this.formData.add(new FormValue.Builder().name(key).values(values).build());
             return this;
         }
     }

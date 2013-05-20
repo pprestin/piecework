@@ -37,18 +37,42 @@ public interface Constants {
 
 	public static final String START_TASK_DEFINITION_KEY = "__startTask";
 	public static final String OVERSIGHT_DEFINITION_KEY = "__general";
-	
+
 	public static class ExceptionCodes {
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
+        public static final String process_business_key_limit = "process_business_key_limit";
 		public static final String process_change_key_duplicate = "process_change_key_duplicate";
 		public static final String process_does_not_exist = "process_does_not_exist";
+        public static final String request_does_not_match = "request_does_not_match";
 		public static final String screen_id_invalid = "screen_id_invalid";
+        public static final String user_does_not_match = "user_does_not_match";
 	}
+
+    public static class FieldTypes {
+        public static final String CHECKBOX = "checkbox";
+        public static final String FILE = "file";
+        public static final String RADIO = "radio";
+        public static final String SELECT_ONE = "select-one";
+        public static final String SELECT_MULTIPLE = "select-multiple";
+        public static final String TEXT = "text";
+        public static final String TEXTAREA = "textarea";
+    }
 
     public static class SubmissionTypes {
         public static final String START = "start";
         public static final String COMPLETE = "complete";
     }
-	
+
+    public static class SubmissionDirectives {
+        public static final String SUBMISSION_DISPOSITION = "__PIECEWORK_SUBMISSION_DISPOSITION";
+
+    }
+
+    public static class SubmissionDirectiveDispositionValues {
+        public static final String CANCEL = "CANCEL";
+        public static final String COMPLETE = "COMPLETE";
+        public static final String SAVE = "SAVE";
+    }
+
 }

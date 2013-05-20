@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.Sanitizer;
@@ -71,7 +72,12 @@ public class ProcessInstance implements Serializable {
     @XmlElementWrapper(name="formData")
 	@XmlElementRef 
 	private final List<FormValue> formData;
-    
+
+    @XmlTransient
+    @JsonIgnore
+    @DBRef
+    private final List<FormSubmission> submissions;
+
     @XmlElement
     private final String uri;
 
@@ -90,6 +96,7 @@ public class ProcessInstance implements Serializable {
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
         this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
         this.isDeleted = builder.isDeleted;
     }
@@ -117,6 +124,10 @@ public class ProcessInstance implements Serializable {
 	public List<FormValue> getFormData() {
 		return formData;
 	}
+
+    public List<FormSubmission> getSubmissions() {
+        return submissions;
+    }
 	
 	public String getUri() {
 		return uri;
@@ -134,6 +145,7 @@ public class ProcessInstance implements Serializable {
         private String processDefinitionLabel;
         private String processInstanceLabel;
         private List<FormValue> formData;
+        private List<FormSubmission> submissions;
         private boolean isDeleted;
 
         public Builder() {
@@ -154,6 +166,13 @@ public class ProcessInstance implements Serializable {
 					this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
 				}
 			}
+
+            if (instance.submissions != null && !instance.submissions.isEmpty()) {
+                this.submissions = new ArrayList<FormSubmission>(instance.submissions.size());
+                for (FormSubmission submission : instance.submissions) {
+                    this.submissions.add(new FormSubmission.Builder(submission, sanitizer).build());
+                }
+            }
         }
 
         public ProcessInstance build() {
@@ -193,6 +212,15 @@ public class ProcessInstance implements Serializable {
             if (this.formData == null)
                 this.formData = new ArrayList<FormValue>();
             this.formData.add(new FormValue.Builder().name(key).values(values).build());
+            return this;
+        }
+
+        public Builder submission(FormSubmission submission) {
+            if (this.formData == null)
+                this.formData = submission.getFormData();
+            if (this.submissions == null)
+                this.submissions = new ArrayList<FormSubmission>();
+            this.submissions.add(submission);
             return this;
         }
 

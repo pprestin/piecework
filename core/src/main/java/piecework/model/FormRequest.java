@@ -16,12 +16,9 @@
 package piecework.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.Sanitizer;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author James Renfro
@@ -32,51 +29,91 @@ public class FormRequest {
     @Id
     private final String requestId;
 
-    private final String remoteAddress;
+    private final String processDefinitionKey;
+
+    private final String remoteAddr;
 
     private final String remoteHost;
 
-    private final String remotePort;
+    private final int remotePort;
 
     private final String remoteUser;
+
+    @DBRef
+    private final Screen screen;
+
+    private final String submissionType;
 
     private FormRequest() {
         this(new FormRequest.Builder());
     }
     private FormRequest(FormRequest.Builder builder) {
         this.requestId = builder.requestId;
-        this.remoteAddress = builder.remoteAddress;
+        this.processDefinitionKey = builder.processDefinitionKey;
+        this.remoteAddr = builder.remoteAddr;
         this.remoteHost = builder.remoteHost;
         this.remotePort = builder.remotePort;
         this.remoteUser = builder.remoteUser;
+        this.screen = builder.screen;
+        this.submissionType = builder.submissionType;
     }
 
     public String getRequestId() {
         return requestId;
     }
 
-    public String getRemoteAddress() {
-        return remoteAddress;
+    public String getRemoteAddr() {
+        return remoteAddr;
+    }
+
+    public String getProcessDefinitionKey() {
+        return processDefinitionKey;
+    }
+
+    public String getRemoteHost() {
+        return remoteHost;
+    }
+
+    public int getRemotePort() {
+        return remotePort;
+    }
+
+    public String getRemoteUser() {
+        return remoteUser;
+    }
+
+    public Screen getScreen() {
+        return screen;
+    }
+
+    public String getSubmissionType() {
+        return submissionType;
     }
 
     public final static class Builder {
 
         private String requestId;
-        private String remoteAddress;
+        private String processDefinitionKey;
+        private String remoteAddr;
         private String remoteHost;
-        private String remotePort;
+        private int remotePort;
         private String remoteUser;
+        private Screen screen;
+        private String submissionType;
 
         public Builder() {
             super();
         }
 
-        public Builder(FormRequest instance, Sanitizer sanitizer) {
-            this.requestId = sanitizer.sanitize(instance.requestId);
-            this.remoteAddress = sanitizer.sanitize(instance.remoteAddress);
-            this.remoteHost = sanitizer.sanitize(instance.remoteHost);
-            this.remotePort = sanitizer.sanitize(instance.remotePort);
-            this.remoteUser = sanitizer.sanitize(instance.remoteUser);
+        public Builder(FormRequest request, Sanitizer sanitizer) {
+            this.requestId = sanitizer.sanitize(request.requestId);
+            this.processDefinitionKey = sanitizer.sanitize(request.processDefinitionKey);
+            this.remoteAddr = sanitizer.sanitize(request.remoteAddr);
+            this.remoteHost = sanitizer.sanitize(request.remoteHost);
+            this.remotePort = request.remotePort;
+            this.remoteUser = sanitizer.sanitize(request.remoteUser);
+            this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
+            this.submissionType = sanitizer.sanitize(request.submissionType);
         }
 
         public FormRequest build() {
@@ -88,8 +125,13 @@ public class FormRequest {
             return this;
         }
 
-        public Builder remoteAddress(String remoteAddress) {
-            this.remoteAddress = remoteAddress;
+        public Builder processDefinitionKey(String processDefinitionKey) {
+            this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder remoteAddr(String remoteAddr) {
+            this.remoteAddr = remoteAddr;
             return this;
         }
 
@@ -98,13 +140,23 @@ public class FormRequest {
             return this;
         }
 
-        public Builder remotePort(String remotePort) {
+        public Builder remotePort(int remotePort) {
             this.remotePort = remotePort;
             return this;
         }
 
         public Builder remoteUser(String remoteUser) {
             this.remoteUser = remoteUser;
+            return this;
+        }
+
+        public Builder screen(Screen screen) {
+            this.screen = screen;
+            return this;
+        }
+
+        public Builder submissionType(String submissionType) {
+            this.submissionType = submissionType;
             return this;
         }
     }

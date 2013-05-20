@@ -69,6 +69,9 @@ public class Screen implements Serializable {
 	
 	@XmlElement
 	private final String location;
+
+    @XmlAttribute
+    private final boolean isAttachmentAllowed;
 	
 	@XmlElementWrapper(name="sections")
 	@XmlElementRef
@@ -97,6 +100,7 @@ public class Screen implements Serializable {
 		this.location = builder.location;
 		this.ordinal = builder.ordinal;
 		this.isDeleted = builder.isDeleted;
+        this.isAttachmentAllowed = builder.isAttachmentAllowed;
 		this.sections = builder.sections != null ? Collections.unmodifiableList(builder.sections) : null;
 		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	}
@@ -125,7 +129,19 @@ public class Screen implements Serializable {
 		return location;
 	}
 
-	public boolean isDeleted() {
+    public boolean isAttachmentAllowed() {
+        return isAttachmentAllowed;
+    }
+
+    public List<Section> getSections() {
+        return sections;
+    }
+
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    public boolean isDeleted() {
 		return isDeleted;
 	}
 
@@ -137,6 +153,7 @@ public class Screen implements Serializable {
 		private String title;
 		private String type;
 		private String location;
+        private boolean isAttachmentAllowed;
 		private List<Section> sections;
 		private int ordinal;
 		private boolean isDeleted;
@@ -150,6 +167,7 @@ public class Screen implements Serializable {
 			this.processDefinitionKey = sanitizer.sanitize(screen.processDefinitionKey);
 			this.title = sanitizer.sanitize(screen.title);
 			this.type = sanitizer.sanitize(screen.type);
+            this.isAttachmentAllowed = screen.isAttachmentAllowed;
 			this.location = sanitizer.sanitize(screen.location);
 			this.ordinal = screen.ordinal;
 			
@@ -198,6 +216,11 @@ public class Screen implements Serializable {
 			this.location = location;
 			return this;
 		}
+
+        public Builder attachmentAllowed(boolean isAttachmentAllowed) {
+            this.isAttachmentAllowed = isAttachmentAllowed;
+            return this;
+        }
 		
 		public Builder section(Section section) {
 			if (this.sections == null)

@@ -22,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.exception.StatusCodeError;
@@ -38,22 +39,29 @@ public interface FormResource extends Resource {
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context HttpServletRequest request) throws StatusCodeError;
-	
-	@GET
-	@Path("{processDefinitionKey}/current/{processInstanceId}")
-	@RolesAllowed({AuthorizationRole.USER})
-	FormView read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
-	@POST
-	@Path("{processDefinitionKey}")
-	@RolesAllowed({AuthorizationRole.INITIATOR})
-	@Consumes("application/x-www-form-urlencoded")
-	FormView submit(@PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
-	
-	@POST
-	@Path("{processDefinitionKey}/{processBusinessKey}")
-	@RolesAllowed({AuthorizationRole.INITIATOR})
-	@Consumes("application/x-www-form-urlencoded")
-	FormView submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processBusinessKey") String processBusinessKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
+    @POST
+    @Path("{processDefinitionKey}/{requestId}")
+    @RolesAllowed({AuthorizationRole.INITIATOR})
+    @Consumes("multipart/form-data")
+    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+
+
+//	@GET
+//	@Path("{processDefinitionKey}/current/{processInstanceId}")
+//	@RolesAllowed({AuthorizationRole.USER})
+//	FormView read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+//
+//	@POST
+//	@Path("{processDefinitionKey}")
+//	@RolesAllowed({AuthorizationRole.INITIATOR})
+//	@Consumes("application/x-www-form-urlencoded")
+//    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
+//
+//	@POST
+//	@Path("{processDefinitionKey}/{processBusinessKey}")
+//	@RolesAllowed({AuthorizationRole.INITIATOR})
+//	@Consumes("application/x-www-form-urlencoded")
+//    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processBusinessKey") String processBusinessKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
 
 }
