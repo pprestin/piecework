@@ -22,10 +22,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.task.IdentityLink;
+import org.activiti.engine.task.IdentityLinkType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import piecework.common.model.User;
 import piecework.model.ProcessInstance;
+import piecework.model.Task;
 import piecework.util.ManyMap;
 
 /**
@@ -36,6 +41,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Autowired
 	RuntimeService runtimeService;
+
+    @Autowired
+    TaskService taskService;
 
 	@Override
 	public String start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data) {
@@ -117,8 +125,35 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 		}
 		return instances;
 	}
-	
-	private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
+
+    @Override
+    public Task findTask(String engineProcessDefinitionKey, String taskId) {
+        org.activiti.engine.task.Task activitiTask = taskService.createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
+
+        Task.Builder taskBuilder = new Task.Builder()
+                .taskInstanceId(activitiTask.getId())
+                .taskInstanceLabel(activitiTask.getDescription());
+
+        List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(taskId);
+
+        if (identityLinks != null && !identityLinks.isEmpty()) {
+            for (IdentityLink identityLink : identityLinks) {
+                String type = identityLink.getType();
+
+                if (type == null)
+                    continue;
+
+                if (type.equals(IdentityLinkType.ASSIGNEE))
+                    taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
+                else if (type.equals(IdentityLinkType.CANDIDATE))
+                    taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
+            }
+        }
+
+        return taskBuilder.build();
+    }
+
+    private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = null;
 		if (engineProcessInstanceId == null)
 			activitiInstance = runtimeService

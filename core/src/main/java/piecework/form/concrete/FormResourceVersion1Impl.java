@@ -22,19 +22,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
-import piecework.designer.ScreenRepository;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
 import piecework.form.*;
@@ -43,6 +39,7 @@ import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
+import piecework.security.PassthroughSanitizer;
 
 /**
  * @author James Renfro
@@ -51,9 +48,6 @@ import piecework.process.*;
 public class FormResourceVersion1Impl implements FormResource {
 
     private static final Logger LOG = Logger.getLogger(FormResourceVersion1Impl.class);
-
-    @Autowired
-    GridFsTemplate gridFsTemplate;
 
     @Autowired
     ProcessEngineRuntimeFacade facade;
@@ -65,13 +59,10 @@ public class FormResourceVersion1Impl implements FormResource {
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
-    PageRepository pageRepository;
+    RequestHandler requestHandler;
 
     @Autowired
-    RequestRepository requestRepository;
-
-    @Autowired
-    ScreenRepository screenRepository;
+    ResponseHandler responseHandler;
 
     @Autowired
     SubmissionHandler submissionHandler;
@@ -107,46 +98,26 @@ public class FormResourceVersion1Impl implements FormResource {
         // Pick the first interaction and the first screen
         Interaction interaction = interactions.iterator().next();
 
-        List<Screen> screens = interaction.getScreens();
+        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, interaction, null);
 
-        if (screens == null || screens.isEmpty())
-            throw new InternalServerError();
-
-        Screen screen = screens.iterator().next();
-        String location = screen.getLocation();
-
-        // Generate a new uuid for this request
-        String requestId = UUID.randomUUID().toString();
-
-        FormRequest formRequest = new FormRequest.Builder()
-                .requestId(requestId)
-                .processDefinitionKey(processDefinitionKey)
-                .remoteAddr(request.getRemoteAddr())
-                .remoteHost(request.getRemoteHost())
-                .remotePort(request.getRemotePort())
-                .remoteUser(request.getRemoteUser())
-                .screen(screen)
-                .submissionType(Constants.SubmissionTypes.START)
-                .build();
-
-        formRequest = requestRepository.save(formRequest);
-
-        Form form = new Form.Builder()
-                .formInstanceId(formRequest.getRequestId())
-                .processDefinitionKey(processDefinitionKey)
-                .submissionType(Constants.SubmissionTypes.START)
-                .screen(screen)
-                .build();
-
-        if (StringUtils.isNotEmpty(location)) {
-            // If the location is not blank then delegate to the
-            GridFsResource resource = gridFsTemplate.getResource(location);
-            String contentType = resource.getContentType();
-            return Response.ok(new StreamingPageContent(form, resource), contentType).build();
-        }
-
-        return Response.ok(form).build();
+        return responseHandler.handle(formRequest);
 	}
+
+    @Override
+    public Response read(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("taskId") String rawTaskId, @Context HttpServletRequest request) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        String taskId = sanitizer.sanitize(rawTaskId);
+
+        Process process = processRepository.findOne(processDefinitionKey);
+
+        if (process == null)
+            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
+
+        Task task = facade.findTask(process.getEngine(), process.getEngineProcessDefinitionKey(), taskId);
+
+
+        return null;
+    }
 
     @Override
     public Response submit(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, String rawRequestId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
@@ -158,26 +129,7 @@ public class FormResourceVersion1Impl implements FormResource {
         if (process == null)
             throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
 
-        FormRequest formRequest = requestRepository.findOne(requestId);
-
-        if (formRequest == null) {
-            LOG.warn("Request being submitted for invalid/missing requestId " + requestId);
-            throw new ForbiddenError(Constants.ExceptionCodes.request_does_not_match);
-        }
-
-        if (request.getRemoteUser() != null && formRequest.getRemoteUser() != null && !request.getRemoteUser().equals(formRequest.getRemoteUser())) {
-            LOG.error("Wrong user submitting form: " + request.getRemoteUser() + " not " + formRequest.getRemoteUser());
-            throw new ForbiddenError(Constants.ExceptionCodes.user_does_not_match);
-        }
-
-        if (request.getRemoteHost() != null && formRequest.getRemoteHost() != null && !request.getRemoteHost().equals(formRequest.getRemoteHost()))
-            LOG.warn("This should not happen -- submission remote host (" + request.getRemoteHost() + ") does not match request (" + formRequest.getRemoteHost() + ")");
-
-        if (request.getRemoteAddr() != null && formRequest.getRemoteAddr() != null && !request.getRemoteAddr().equals(formRequest.getRemoteAddr()))
-            LOG.warn("This should not happen -- submission remote address (" + request.getRemoteAddr() + ") does not match request (" + formRequest.getRemoteAddr() + ")");
-
-        if (request.getRemotePort() != formRequest.getRemotePort())
-            LOG.warn("This should not happen -- submission remote port (" + request.getRemotePort() + ") does not match request (" + formRequest.getRemotePort() + ")");
+        FormRequest formRequest = requestHandler.handle(request, requestId);
 
         FormSubmission submission = submissionHandler.handle(formRequest, body);
 
@@ -188,30 +140,57 @@ public class FormResourceVersion1Impl implements FormResource {
             throw new BadRequestError(new ValidationResultList(results));
         }
 
-        ProcessInstance instance = new ProcessInstance.Builder()
-                .processDefinitionKey(process.getProcessDefinitionKey())
-                .processDefinitionLabel(process.getProcessDefinitionLabel())
-                .processInstanceLabel(validation.getTitle())
-                .formValueMap(validation.getFormValueMap())
+        ProcessInstance previous = formRequest.getProcessInstanceId() != null ? processInstanceRepository.findOne(formRequest.getProcessInstanceId()) : null;
+
+        ProcessInstance.Builder instanceBuilder;
+
+        if (previous != null) {
+            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
+
+
+
+        } else {
+            String engineInstanceId = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), null, validation.getFormValueMap());
+
+            instanceBuilder = new ProcessInstance.Builder()
+                    .processDefinitionKey(process.getProcessDefinitionKey())
+                    .processDefinitionLabel(process.getProcessDefinitionLabel())
+                    .processInstanceLabel(validation.getTitle())
+                    .engineProcessInstanceId(engineInstanceId);
+        }
+
+        instanceBuilder.formValueMap(validation.getFormValueMap())
                 .restrictedValueMap(validation.getRestrictedValueMap())
-                .submission(submission)
-                .build();
-
-        ProcessInstance result = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), instance.getAlias(), instance.getFormValueMap());
+                .submission(submission);
 
 
+        ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
 
-//        String submissionId = getSubmissionId(formData);
+        List<Interaction> interactions = process.getInteractions();
 
-//        // Ensure that we always set a process business key
-//        if (processBusinessKey == null)
-//            processBusinessKey = UUID.randomUUID().toString();
-//
-//        // FIXME: Add in description for why this error is returned
-//        if (processBusinessKey.length() > 140)
-//            throw new BadRequestError(Constants.ExceptionCodes.process_business_key_limit);
+        // Pick the first interaction
+        Interaction interaction = interactions.iterator().next();
 
-        return null;
+        // Pick the next screen
+
+        List<Screen> screens = interaction.getScreens();
+
+        if (screens == null || screens.isEmpty())
+            throw new InternalServerError();
+
+        FormRequest nextFormRequest = null;
+
+        if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
+            nextFormRequest = requestHandler.create(request, processDefinitionKey, stored.getProcessInstanceId(), interaction, formRequest.getScreen());
+
+        // If the request handler doesn't have another request to process, then
+        // provide the generic thank you page back to the user
+        if (nextFormRequest == null) {
+
+            Response.ok();
+        }
+
+        return responseHandler.handle(nextFormRequest);
     }
 
     @Override

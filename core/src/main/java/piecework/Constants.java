@@ -69,8 +69,8 @@ public interface Constants {
     }
 
     public static class SubmissionTypes {
-        public static final String START = "start";
-        public static final String COMPLETE = "complete";
+        public static final String FINAL = "final";
+        public static final String INTERIM = "interim";
     }
 
     public static class SubmissionDirectives {
@@ -79,7 +79,7 @@ public interface Constants {
 
     public static class SubmissionDirectiveDispositionValues {
         public static final String CANCEL = "CANCEL";
-        public static final String COMPLETE = "COMPLETE";
+        public static final String COMPLETE = "FINAL";
         public static final String SAVE = "SAVE";
     }
 

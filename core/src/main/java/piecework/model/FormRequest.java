@@ -31,6 +31,8 @@ public class FormRequest {
 
     private final String processDefinitionKey;
 
+    private final String processInstanceId;
+
     private final String remoteAddr;
 
     private final String remoteHost;
@@ -50,6 +52,7 @@ public class FormRequest {
     private FormRequest(FormRequest.Builder builder) {
         this.requestId = builder.requestId;
         this.processDefinitionKey = builder.processDefinitionKey;
+        this.processInstanceId = builder.processInstanceId;
         this.remoteAddr = builder.remoteAddr;
         this.remoteHost = builder.remoteHost;
         this.remotePort = builder.remotePort;
@@ -68,6 +71,10 @@ public class FormRequest {
 
     public String getProcessDefinitionKey() {
         return processDefinitionKey;
+    }
+
+    public String getProcessInstanceId() {
+        return processInstanceId;
     }
 
     public String getRemoteHost() {
@@ -94,6 +101,7 @@ public class FormRequest {
 
         private String requestId;
         private String processDefinitionKey;
+        private String processInstanceId;
         private String remoteAddr;
         private String remoteHost;
         private int remotePort;
@@ -108,6 +116,7 @@ public class FormRequest {
         public Builder(FormRequest request, Sanitizer sanitizer) {
             this.requestId = sanitizer.sanitize(request.requestId);
             this.processDefinitionKey = sanitizer.sanitize(request.processDefinitionKey);
+            this.processInstanceId = sanitizer.sanitize(request.processInstanceId);
             this.remoteAddr = sanitizer.sanitize(request.remoteAddr);
             this.remoteHost = sanitizer.sanitize(request.remoteHost);
             this.remotePort = request.remotePort;
@@ -127,6 +136,11 @@ public class FormRequest {
 
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder processInstanceId(String processInstanceId) {
+            this.processInstanceId = processInstanceId;
             return this;
         }
 

@@ -20,6 +20,7 @@ import java.util.Map;
 
 import piecework.Registrant;
 import piecework.model.ProcessInstance;
+import piecework.model.Task;
 import piecework.util.ManyMap;
 
 /**
@@ -34,5 +35,7 @@ public interface ProcessEngineProxy extends Registrant<ProcessEngineProxy> {
 	ProcessInstance findInstance(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey, boolean includeVariables);
 	
 	List<ProcessInstance> findInstances(String engineProcessDefinitionKey, ManyMap<String, String> queryParameters);
-	
+
+    Task findTask(String engineProcessDefinitionKey, String taskId);
+
 }

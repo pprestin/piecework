@@ -44,6 +44,11 @@ public interface FormResource extends Resource {
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context HttpServletRequest request) throws StatusCodeError;
 
+    @GET
+    @Path("{processDefinitionKey}/{taskId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context HttpServletRequest request) throws StatusCodeError;
+
     @POST
     @Path("{processDefinitionKey}/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR})

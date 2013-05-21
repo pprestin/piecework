@@ -41,6 +41,7 @@ import piecework.exception.BadRequestError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
+import piecework.process.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceResource;
 import piecework.process.ProcessRepository;
 import piecework.security.PassthroughSanitizer;
@@ -54,6 +55,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 	@Autowired
 	ProcessRepository repository;
+
+    @Autowired
+    ProcessInstanceRepository processInstanceRepository;
 	
 	@Autowired
 	ResourceHelper helper;
@@ -75,11 +79,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		Process process = getProcess(processDefinitionKey);
 		Map<String, Object> data = null;
-		ProcessInstance result = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), instance.getAlias(), data);
+		String engineProcessInstanceId = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), instance.getAlias(), data);
 		
-		ProcessInstance.Builder builder = new ProcessInstance.Builder(result, new PassthroughSanitizer())
+		ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, sanitizer)
 			.processDefinitionKey(processDefinitionKey)
-			.processDefinitionLabel(process.getProcessDefinitionLabel());
+			.processDefinitionLabel(process.getProcessDefinitionLabel())
+            .engineProcessInstanceId(engineProcessInstanceId);
+
+        processInstanceRepository.save(builder.build());
 		
 		return Response.ok(builder.build(getViewContext())).build();
 	}

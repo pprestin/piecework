@@ -21,6 +21,8 @@ import org.apache.commons.collections.map.MultiKeyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @author James Renfro
  */
@@ -31,7 +33,12 @@ public class Registry {
 	
 	@Autowired
 	Registrant<?>[] registrants;
-	
+
+    @SuppressWarnings("unchecked")
+    public <V extends Registrant<C>, C> List<V> retrieve(Class<C> type) {
+        return (List<V>) map.get(type);
+    }
+
 	@SuppressWarnings("unchecked")
 	public <V extends Registrant<C>, C> V retrieve(Class<C> type, String key) {
 		return (V) map.get(type, key);

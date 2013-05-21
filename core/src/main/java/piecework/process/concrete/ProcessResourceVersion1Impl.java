@@ -37,7 +37,7 @@ import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormPosition;
-import piecework.form.model.Form;
+import piecework.model.Form;
 import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
@@ -174,19 +174,20 @@ public class ProcessResourceVersion1Impl implements ProcessResource {
 
 	
 	private void addForm(FormPosition position, Form form) throws RecordNotFoundException {
-		String processDefinitionKey = form.getProcessDefinitionKey();
-		
-		if (processDefinitionKey == null)
-			throw new RecordNotFoundException(null);
-		
-		String taskDefinitionKey = form.getTaskDefinitionKey();
-		Process record = repository.findOne(processDefinitionKey);
-		
-		if (record == null)
-			throw new RecordNotFoundException(processDefinitionKey);
-		
-		String formId = form.getId();
-		
+//		String processDefinitionKey = form.getProcessDefinitionKey();
+//
+//		if (processDefinitionKey == null)
+//			throw new RecordNotFoundException(null);
+//
+//		String taskDefinitionKey = form.getTaskDefinitionKey();
+//		Process record = repository.findOne(processDefinitionKey);
+//
+//		if (record == null)
+//			throw new RecordNotFoundException(processDefinitionKey);
+//
+//		String formId = form.getId();
+
+        Process record = null;
 		// Since the data is coming from storage, use the PassthroughSanitizer
 		Process.Builder builder = new Process.Builder(record, new PassthroughSanitizer());
 //		switch (position) {

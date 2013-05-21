@@ -15,14 +15,15 @@
  */
 package piecework.form.validation;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.cxf.common.util.StringUtils;
 import org.springframework.stereotype.Service;
 
 import piecework.form.legacy.AttributeValidation;
-import piecework.form.model.Constraint;
 import piecework.form.legacy.AttributeValidation.Status;
+import piecework.model.Constraint;
 import piecework.util.PropertyValueReader;
 
 /**
@@ -39,7 +40,7 @@ public class RequiredSameConstraintValidator implements ConstraintValidator<Cons
 			boolean isText, boolean isUnchanged) {
 		
 		List<String> currentValues = propertyValueReader.getValuesAsStrings(propertyName);
-		List<String> referencedPropertyNames = constraint.getReferencedPropertyNames();
+		List<String> referencedPropertyNames = Collections.singletonList(constraint.getName());
 
 		if (referencedPropertyNames != null && referencedPropertyNames.size() > 0) {
 			String referencedPropertyName = referencedPropertyNames.iterator().next();

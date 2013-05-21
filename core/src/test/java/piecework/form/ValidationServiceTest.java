@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import piecework.Constants;
 import piecework.form.legacy.AttributeValidation;
+import piecework.form.validation.FormValidation;
 import piecework.form.validation.ValidationService;
 import piecework.model.Constraint;
 import piecework.model.Field;
@@ -89,7 +90,7 @@ public class ValidationServiceTest {
 		ProcessInstance instance = null;
 		
 	
-		List<AttributeValidation> validations = validationService.validate(submission, instance, testScreen, "basic");
+		FormValidation validation = validationService.validate(submission, instance, testScreen, "basic");
 		
 		
 	}

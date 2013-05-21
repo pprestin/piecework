@@ -88,6 +88,12 @@ public class ValidationService {
 				
 				for (Field field : fields) {
 					String fieldName = field.getName();
+
+                    if (fieldName == null) {
+                        LOG.warn("Field is missing name " + field.getFieldId());
+                        continue;
+                    }
+
 					List<String> values = submissionValueMap.get(fieldName);
 					List<String> previousValues = instanceValueMap.get(fieldName);
 					String inputType = field.getType();

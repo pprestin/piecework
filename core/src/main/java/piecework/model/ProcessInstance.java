@@ -124,7 +124,11 @@ public class ProcessInstance implements Serializable {
 		return processInstanceId;
 	}
 
-	public String getAlias() {
+    public String getEngineProcessInstanceId() {
+        return engineProcessInstanceId;
+    }
+
+    public String getAlias() {
 		return alias;
 	}
 
@@ -143,7 +147,11 @@ public class ProcessInstance implements Serializable {
 	public List<FormValue> getFormData() {
 		return formData;
 	}
-	
+
+    public List<FormValue> getRestrictedData() {
+        return restrictedData;
+    }
+
 	@JsonIgnore
 	public ManyMap<String, String> getFormValueMap() {
     	ManyMap<String, String> map = new ManyMap<String, String>();
@@ -265,6 +273,11 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
+        public Builder formData(List<FormValue> formData) {
+            this.formData = formData;
+            return this;
+        }
+
         public Builder formValueMap(Map<String, List<String>> formValueMap) {
             ManyMap<String, String> map = new ManyMap<String, String>();
             if (this.formData != null && !this.formData.isEmpty()) {
@@ -284,6 +297,11 @@ public class ProcessInstance implements Serializable {
                     this.formData.add(new FormValue.Builder().name(entry.getKey()).values(values.toArray(new String[values.size()])).build());
                 }
             }
+            return this;
+        }
+
+        public Builder restrictedData(List<FormValue> restrictedData) {
+            this.restrictedData = restrictedData;
             return this;
         }
 
@@ -309,21 +327,35 @@ public class ProcessInstance implements Serializable {
             return this;
         }
         
-        public Builder updateFormValues(List<FormValue> formValues) {
-        	Map<String, FormValue> map = new HashMap<String, FormValue>();
-        	if (this.formData != null && !this.formData.isEmpty()) {
-        		for (FormValue formValue : this.formData) {
-        			map.put(formValue.getName(), formValue);
-        		}
-        	}
-        		
-        	if (formValues != null && !formValues.isEmpty()) {
-        		for (FormValue formValue : formValues) {
-        			map.put(formValue.getName(), formValue);
-        		}
-        	}
-        	
-        	this.formData = Collections.unmodifiableList(new ArrayList<FormValue>(map.values()));
+//        public Builder updateFormValues(List<FormValue> formValues) {
+//        	Map<String, FormValue> map = new HashMap<String, FormValue>();
+//        	if (this.formData != null && !this.formData.isEmpty()) {
+//        		for (FormValue formValue : this.formData) {
+//        			map.put(formValue.getName(), formValue);
+//        		}
+//        	}
+//
+//        	if (formValues != null && !formValues.isEmpty()) {
+//        		for (FormValue formValue : formValues) {
+//        			map.put(formValue.getName(), formValue);
+//        		}
+//        	}
+//
+//        	this.formData = Collections.unmodifiableList(new ArrayList<FormValue>(map.values()));
+//        	return this;
+//        }
+
+        public Builder attachment(Attachment attachment) {
+            if (this.attachments == null)
+                this.attachments = new ArrayList<Attachment>();
+            this.attachments.add(attachment);
+            return this;
+        }
+
+        public Builder attachments(List<Attachment> attachments) {
+        	if (this.attachments != null)
+        		this.attachments = new ArrayList<Attachment>();
+        	this.attachments.addAll(attachments);
         	return this;
         }
 
@@ -333,19 +365,12 @@ public class ProcessInstance implements Serializable {
             this.submissions.add(submission);
             return this;
         }
-        
-        public Builder attachment(Attachment attachment) {
-            if (this.attachments == null)
-                this.attachments = new ArrayList<Attachment>();
-            this.attachments.add(attachment);
-            return this;
-        }
 
-        public Builder appendAttachments(List<Attachment> attachments) {
-        	if (this.attachments != null)
-        		this.attachments = new ArrayList<Attachment>();
-        	this.attachments.addAll(attachments);
-        	return this;
+        public Builder submissions(List<FormSubmission> submissions) {
+            if (this.submissions != null)
+                this.submissions = new ArrayList<FormSubmission>();
+            this.submissions.addAll(submissions);
+            return this;
         }
         
         public Builder delete() {

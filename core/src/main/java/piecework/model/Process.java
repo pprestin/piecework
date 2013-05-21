@@ -76,7 +76,7 @@ public class Process implements Serializable {
 	@XmlElement
 	private final String uri;
 	
-	@XmlElementWrapper(name="screens")
+	@XmlElementWrapper(name="interactions")
 	@XmlElementRef
 	@DBRef
 	private final List<Interaction> interactions;

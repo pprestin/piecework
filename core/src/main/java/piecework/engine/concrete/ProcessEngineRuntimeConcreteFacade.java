@@ -18,7 +18,6 @@ package piecework.engine.concrete;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,21 +50,26 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
 
     @Override
     public List<ProcessInstance> findInstances(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters) {
-        List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
-    	
-        if (proxies != null) {
-	        for (ProcessEngineProxy proxy : proxies) {
-	        	if (proxy.getEngineKey().equals(engine))
-	        		instances.addAll(proxy.findInstances(engineProcessDefinitionKey, queryParameters));
-	        }
-        }
-        
-    	return instances;
+//        List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
+//
+//        List<ProcessEngineProxy> proxies = registry.retrieve(ProcessEngineProxy.class);
+//
+//        if (proxies != null) {
+//	        for (ProcessEngineProxy proxy : proxies) {
+//	        	if (proxy.getKey().equals(engine))
+//	        		instances.addAll(proxy.findInstances(engineProcessDefinitionKey, queryParameters));
+//	        }
+//        }
+
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
+    	return proxy.findInstances(engineProcessDefinitionKey, queryParameters);
     }
 
     @Override
-    public Task findTask(String processDefinitionKey, String taskId) {
-        return null;
+    public Task findTask(String engine, String engineProcessDefinitionKey, String taskId) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
+
+        return proxy.findTask(engineProcessDefinitionKey, taskId);
     }
 
     @Override
@@ -80,7 +84,6 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
 
     @Override
 	public String start(String engine, final String engineProcessDefinitionKey, final String processBusinessKey, final Map<String, ?> data) {
-
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
 
         return proxy.start(engineProcessDefinitionKey, processBusinessKey, data);

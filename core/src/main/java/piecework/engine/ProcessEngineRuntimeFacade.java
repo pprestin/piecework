@@ -35,7 +35,7 @@ public interface ProcessEngineRuntimeFacade {
 
     List<ProcessInstance> findInstances(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters);
 
-    Task findTask(String processDefinitionKey, String taskId);
+    Task findTask(String engine, String engineProcessDefinitionKey, String taskId);
 
     List<Task> findTasks(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters, String userId);
 

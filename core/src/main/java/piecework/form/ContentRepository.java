@@ -35,7 +35,7 @@ import java.util.Map;
  * @author James Renfro
  */
 @Service
-public class PageRepository {
+public class ContentRepository {
 
     @Autowired
     GridFsTemplate gridFsTemplate;

@@ -162,6 +162,18 @@ public class Task implements Serializable {
             return this;
         }
 
+        public Builder assignee(User assignee) {
+            this.assignee = assignee;
+            return this;
+        }
+
+        public Builder candidateAssignee(User candidateAssignee) {
+            if (this.candidateAssignees == null)
+                this.candidateAssignees = new ArrayList<User>();
+            this.candidateAssignees.add(candidateAssignee);
+            return this;
+        }
+
         public Builder delete() {
             this.isDeleted = true;
             return this;
