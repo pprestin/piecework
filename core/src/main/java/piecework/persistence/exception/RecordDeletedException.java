@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
-
-import org.springframework.data.mongodb.repository.MongoRepository;
-
-import piecework.model.Screen;
+package piecework.persistence.exception;
 
 /**
  * @author James Renfro
  */
-public interface ScreenRepository extends MongoRepository<Screen, String> {
+public class RecordDeletedException extends Exception {
 
+	private static final long serialVersionUID = 1L;
+
+	public RecordDeletedException(String message) {
+		super(message);
+	}
+	
 }

@@ -143,7 +143,11 @@ public class Field implements Serializable {
 		return type;
 	}
 
-	public boolean isRequired() {
+    public boolean isRestricted() {
+        return restricted;
+    }
+
+    public boolean isRequired() {
 		return required;
 	}
 

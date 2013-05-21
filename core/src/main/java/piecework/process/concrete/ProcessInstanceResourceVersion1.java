@@ -43,6 +43,7 @@ import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.process.ProcessInstanceResource;
 import piecework.process.ProcessRepository;
+import piecework.security.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 /**
@@ -76,7 +77,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		Map<String, Object> data = null;
 		ProcessInstance result = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), instance.getAlias(), data);
 		
-		ProcessInstance.Builder builder = new ProcessInstance.Builder(result, sanitizer)
+		ProcessInstance.Builder builder = new ProcessInstance.Builder(result, new PassthroughSanitizer())
 			.processDefinitionKey(processDefinitionKey)
 			.processDefinitionLabel(process.getProcessDefinitionLabel());
 		

@@ -44,7 +44,7 @@ import org.springframework.core.io.Resource;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
-import piecework.ui.MustacheHtmlTransformer;
+import piecework.ui.HtmlProvider;
 import piecework.util.AcceptablePropertiesFilenameFilter;
 
 /**
@@ -62,7 +62,7 @@ public class ApplicationConfiguration {
 	piecework.Resource[] resources;
 	
 	@Autowired
-	MustacheHtmlTransformer mustacheHtmlTransformer;
+    HtmlProvider htmlProvider;
 		
 	
 	@Bean
@@ -86,7 +86,7 @@ public class ApplicationConfiguration {
 		providers.add(new GeneralExceptionMapper());
 		providers.add(new StatusCodeErrorMapper());
 		providers.add(new AccessDeniedExceptionMapper());
-		providers.add(mustacheHtmlTransformer);
+		providers.add(htmlProvider);
 		providers.add(jsonProvider());
 		sf.setProviders(providers);
 

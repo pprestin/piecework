@@ -15,39 +15,34 @@
  */
 package piecework.form.concrete;
 
-import java.io.IOException;
 import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.gridfs.GridFSFile;
 import org.apache.commons.lang.StringUtils;
-import org.apache.cxf.jaxrs.ext.multipart.Attachment;
-import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
+import piecework.designer.ScreenRepository;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
-import piecework.form.FormResource;
-import piecework.form.PageRepository;
-import piecework.form.validation.FormValidator;
+import piecework.form.*;
+import piecework.form.validation.FormValidation;
+import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
-import piecework.security.UserInputSanitizer;
-import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -59,6 +54,9 @@ public class FormResourceVersion1Impl implements FormResource {
 
     @Autowired
     GridFsTemplate gridFsTemplate;
+
+    @Autowired
+    ProcessEngineRuntimeFacade facade;
 
     @Autowired
     ProcessRepository processRepository;
@@ -76,16 +74,16 @@ public class FormResourceVersion1Impl implements FormResource {
     ScreenRepository screenRepository;
 
     @Autowired
-    SubmissionRepository submissionRepository;
+    SubmissionHandler submissionHandler;
 	
 	@Autowired
 	ProcessEngineRuntimeFacade runtime;
 	
 	@Autowired
-	UserInputSanitizer sanitizer;
+    Sanitizer sanitizer;
 
     @Autowired
-    FormValidator validator;
+    ValidationService validationService;
 
     @Value("${base.application.uri}")
     String baseApplicationUri;
@@ -142,7 +140,9 @@ public class FormResourceVersion1Impl implements FormResource {
 
         if (StringUtils.isNotEmpty(location)) {
             // If the location is not blank then delegate to the
-            return pageRepository.getPageResponse(form, location);
+            GridFsResource resource = gridFsTemplate.getResource(location);
+            String contentType = resource.getContentType();
+            return Response.ok(new StreamingPageContent(form, resource), contentType).build();
         }
 
         return Response.ok(form).build();
@@ -179,73 +179,29 @@ public class FormResourceVersion1Impl implements FormResource {
         if (request.getRemotePort() != formRequest.getRemotePort())
             LOG.warn("This should not happen -- submission remote port (" + request.getRemotePort() + ") does not match request (" + formRequest.getRemotePort() + ")");
 
-        Screen screen = formRequest.getScreen();
+        FormSubmission submission = submissionHandler.handle(formRequest, body);
 
-        if (screen == null) {
-            LOG.error("No screen configured for request " + requestId);
-            throw new InternalServerError();
+        FormValidation validation = validationService.validate(submission, null, formRequest.getScreen(), null);
+
+        List<ValidationResult> results = validation.getResults();
+        if (results != null && !results.isEmpty()) {
+            throw new BadRequestError(new ValidationResultList(results));
         }
 
-        FormSubmission.Builder submissionBuilder = new FormSubmission.Builder()
-                .requestId(requestId)
-                .submissionDate(new Date())
-                .submissionType(formRequest.getSubmissionType());
+        ProcessInstance instance = new ProcessInstance.Builder()
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .processDefinitionLabel(process.getProcessDefinitionLabel())
+                .processInstanceLabel(validation.getTitle())
+                .formValueMap(validation.getFormValueMap())
+                .restrictedValueMap(validation.getRestrictedValueMap())
+                .submission(submission)
+                .build();
 
-        ManyMap<String, String> formData = new ManyMap<String, String>();
-
-        List<Attachment> attachments = body.getAllAttachments();
-        if (attachments != null && !attachments.isEmpty()) {
-            for (Attachment attachment : attachments) {
-                ContentDisposition contentDisposition = attachment.getContentDisposition();
-                MediaType contentType = attachment.getContentType();
-
-                // Don't process if there's no content type
-                if (contentType == null)
-                    continue;
-
-                if (contentType.equals("text/plain")) {
-                    // Treat as a String form value
-                    String key = sanitizer.sanitize(attachment.getContentId());
-                    String value = sanitizer.sanitize(attachment.getObject(String.class));
-
-                    submissionBuilder.formValue(key, value);
-                }
-                if (contentDisposition != null && screen.isAttachmentAllowed()) {
-                    String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
-                    try {
-                        BasicDBObject metadata = new BasicDBObject();
-                        metadata.append("Content-Type", contentType);
-                        String uuid = UUID.randomUUID().toString();
-                        GridFSFile file = gridFsTemplate.store(attachment.getDataHandler().getInputStream(), uuid, metadata);
-
-                        submissionBuilder.formValue(filename, uuid);
-                    } catch (IOException e) {
-                        LOG.error("Unable to save this attachment with filename: " + filename);
-                    }
-                }
-            }
-        }
-
-        FormSubmission submission = submissionBuilder.build();
-
-        if (request.getRemoteUser() != null && formRequest.getRemoteUser() != null) {
-            // If this is not an anonymous submission, then the data will be saved before actually validating or modifying the process instance data
-            // so the user can come back to it later if she wants to
+        ProcessInstance result = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), instance.getAlias(), instance.getFormValueMap());
 
 
-//            String submissionDisposition = body.getAttachmentObject(Constants.SubmissionDirectives.SUBMISSION_DISPOSITION, String.class);
-//
-//            if (submissionDisposition != null) {
-//                if (submissionDisposition.equals(Constants.SubmissionDirectiveDispositionValues.SAVE)) {
-//
-//
-//                }
-//            }
-        	
-        }
 
-
-        String submissionId = getSubmissionId(formData);
+//        String submissionId = getSubmissionId(formData);
 
 //        // Ensure that we always set a process business key
 //        if (processBusinessKey == null)
@@ -255,7 +211,11 @@ public class FormResourceVersion1Impl implements FormResource {
 //        if (processBusinessKey.length() > 140)
 //            throw new BadRequestError(Constants.ExceptionCodes.process_business_key_limit);
 
+        return null;
+    }
 
+    @Override
+    public Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
         return null;
     }
 

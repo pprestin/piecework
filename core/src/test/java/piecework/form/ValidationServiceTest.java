@@ -21,7 +21,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import piecework.Constants;
-import piecework.form.validation.AttributeValidation;
+import piecework.form.legacy.AttributeValidation;
+import piecework.form.validation.ValidationService;
 import piecework.model.Constraint;
 import piecework.model.Field;
 import piecework.model.FormSubmission;

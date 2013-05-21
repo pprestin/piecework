@@ -41,7 +41,7 @@ import piecework.form.model.Form;
 import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
-import piecework.process.exception.RecordNotFoundException;
+import piecework.persistence.exception.RecordNotFoundException;
 import piecework.security.PassthroughSanitizer;
 
 /**

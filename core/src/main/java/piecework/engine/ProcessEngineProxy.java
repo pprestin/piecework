@@ -18,17 +18,16 @@ package piecework.engine;
 import java.util.List;
 import java.util.Map;
 
+import piecework.Registrant;
 import piecework.model.ProcessInstance;
 import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
  */
-public interface ProcessEngineProxy {
+public interface ProcessEngineProxy extends Registrant<ProcessEngineProxy> {
 
-	String getEngineKey();
-	
-	ProcessInstance start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data);
+	String start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data);
 	
 	ProcessInstance cancel(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey, String reason);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.model;
+package piecework.designer;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import piecework.model.Interaction;
 
 /**
  * @author James Renfro
  */
-public interface Endpoint {
+public interface InteractionRepository extends MongoRepository<Interaction, String> {
 
-	String getId();
-	
-	String getUrl();
-	
-	String getMethod();
-	
-	String getMediaType();
-	
 }

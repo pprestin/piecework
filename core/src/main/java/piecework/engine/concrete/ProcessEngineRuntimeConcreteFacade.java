@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import piecework.Registry;
 import piecework.engine.ProcessEngineProxy;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.model.ProcessInstance;
@@ -36,7 +37,7 @@ import piecework.util.ManyMap;
 public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeFacade {
 
 	@Autowired
-	ProcessEngineProxy[] proxies;
+    Registry registry;
 	
 	@Override
 	public ProcessInstance cancel(String engine, String engineProcessDefinitionKey, String processInstanceId, String processInstanceAlias) {
@@ -78,10 +79,11 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
     }
 
     @Override
-	public ProcessInstance start(String engine, final String engineProcessDefinitionKey, final String processBusinessKey, final Map<String, ?> data) {
-		final String processInstanceId = UUID.randomUUID().toString();
-		// FIXME: Stubbed out, fill in later
-		return new ProcessInstance.Builder().build();
+	public String start(String engine, final String engineProcessDefinitionKey, final String processBusinessKey, final Map<String, ?> data) {
+
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
+
+        return proxy.start(engineProcessDefinitionKey, processBusinessKey, data);
 	}
 
 

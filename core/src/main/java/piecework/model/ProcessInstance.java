@@ -60,6 +60,10 @@ public class ProcessInstance implements Serializable {
     @Id
     private final String processInstanceId;
 
+    @XmlTransient
+    @JsonIgnore
+    private final String engineProcessInstanceId;
+
     @XmlAttribute
     private final String alias;
 
@@ -75,6 +79,10 @@ public class ProcessInstance implements Serializable {
     @XmlElementWrapper(name="formData")
 	@XmlElementRef 
 	private final List<FormValue> formData;
+
+    @XmlTransient
+    @JsonIgnore
+    private final List<FormValue> restrictedData;
 
     @XmlTransient
     @JsonIgnore
@@ -99,11 +107,13 @@ public class ProcessInstance implements Serializable {
 
     private ProcessInstance(ProcessInstance.Builder builder, ViewContext context) {
         this.processInstanceId = builder.processInstanceId;
+        this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.alias = builder.alias;
         this.processDefinitionKey = builder.processDefinitionKey;
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.restrictedData = builder.restrictedData != null ? Collections.unmodifiableList(builder.restrictedData) : null;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
         this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
@@ -164,11 +174,13 @@ public class ProcessInstance implements Serializable {
 	public final static class Builder {
 
         private String processInstanceId;
+        private String engineProcessInstanceId;
         private String alias;
         private String processDefinitionKey;
         private String processDefinitionLabel;
         private String processInstanceLabel;
         private List<FormValue> formData;
+        private List<FormValue> restrictedData;
         private List<Attachment> attachments;
         private List<FormSubmission> submissions;
         private boolean isDeleted;
@@ -179,6 +191,7 @@ public class ProcessInstance implements Serializable {
 
         public Builder(piecework.model.ProcessInstance instance, Sanitizer sanitizer) {
             this.processInstanceId = sanitizer.sanitize(instance.processInstanceId);
+            this.engineProcessInstanceId = sanitizer.sanitize(instance.engineProcessInstanceId);
             this.alias = sanitizer.sanitize(instance.alias);
             this.processDefinitionKey = sanitizer.sanitize(instance.processDefinitionKey);
             this.processDefinitionLabel = sanitizer.sanitize(instance.processDefinitionLabel);
@@ -220,6 +233,11 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
+        public Builder engineProcessInstanceId(String engineProcessInstanceId) {
+            this.engineProcessInstanceId = engineProcessInstanceId;
+            return this;
+        }
+
         public Builder alias(String alias) {
             this.alias = alias;
             return this;
@@ -246,6 +264,50 @@ public class ProcessInstance implements Serializable {
             this.formData.add(new FormValue.Builder().name(key).values(values).build());
             return this;
         }
+
+        public Builder formValueMap(Map<String, List<String>> formValueMap) {
+            ManyMap<String, String> map = new ManyMap<String, String>();
+            if (this.formData != null && !this.formData.isEmpty()) {
+                for (FormValue formValue : this.formData) {
+                    map.put(formValue.getName(), formValue.getAllValues());
+                }
+            }
+            if (formValueMap != null && !formValueMap.isEmpty()) {
+                for (Map.Entry<String, List<String>> entry : formValueMap.entrySet()) {
+                    map.put(entry.getKey(), entry.getValue());
+                }
+            }
+            this.formData = new ArrayList<FormValue>();
+            if (!map.isEmpty()) {
+                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+                    List<String> values = entry.getValue();
+                    this.formData.add(new FormValue.Builder().name(entry.getKey()).values(values.toArray(new String[values.size()])).build());
+                }
+            }
+            return this;
+        }
+
+        public Builder restrictedValueMap(Map<String, List<String>> restrictedValueMap) {
+            ManyMap<String, String> map = new ManyMap<String, String>();
+            if (this.restrictedData != null && !this.restrictedData.isEmpty()) {
+                for (FormValue formValue : this.restrictedData) {
+                    map.put(formValue.getName(), formValue.getAllValues());
+                }
+            }
+            if (restrictedValueMap != null && !restrictedValueMap.isEmpty()) {
+                for (Map.Entry<String, List<String>> entry : restrictedValueMap.entrySet()) {
+                    map.put(entry.getKey(), entry.getValue());
+                }
+            }
+            this.restrictedData = new ArrayList<FormValue>();
+            if (!map.isEmpty()) {
+                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+                    List<String> values = entry.getValue();
+                    this.restrictedData.add(new FormValue.Builder().name(entry.getKey()).values(values.toArray(new String[values.size()])).build());
+                }
+            }
+            return this;
+        }
         
         public Builder updateFormValues(List<FormValue> formValues) {
         	Map<String, FormValue> map = new HashMap<String, FormValue>();
@@ -266,8 +328,6 @@ public class ProcessInstance implements Serializable {
         }
 
         public Builder submission(FormSubmission submission) {
-            if (this.formData == null)
-                this.formData = submission.getFormData();
             if (this.submissions == null)
                 this.submissions = new ArrayList<FormSubmission>();
             this.submissions.add(submission);

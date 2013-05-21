@@ -29,17 +29,17 @@ import org.springframework.core.io.Resource;
 import piecework.model.Interaction;
 import piecework.model.Process;
 import piecework.model.Screen;
-import piecework.process.InteractionRepository;
-import piecework.process.InteractionResource;
+import piecework.designer.InteractionRepository;
+import piecework.designer.InteractionResource;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
-import piecework.process.ScreenRepository;
-import piecework.process.ScreenResource;
-import piecework.process.concrete.InteractionResourceVersion1Impl;
+import piecework.designer.ScreenRepository;
+import piecework.designer.ScreenResource;
+import piecework.designer.concrete.InteractionResourceVersion1Impl;
 import piecework.process.concrete.MongoRepositoryStub;
 import piecework.process.concrete.ProcessResourceVersion1Impl;
 import piecework.process.concrete.ResourceHelper;
-import piecework.process.concrete.ScreenResourceVersion1Impl;
+import piecework.designer.concrete.ScreenResourceVersion1Impl;
 import piecework.security.PassthroughSanitizer;
 
 /**

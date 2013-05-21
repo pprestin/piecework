@@ -17,11 +17,11 @@ package piecework.form;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import piecework.form.model.record.FormRecord;
+import piecework.model.Form;
 
 /**
  * @author James Renfro
  */
-public interface FormRepository extends MongoRepository<FormRecord, String> {
+public interface FormRepository extends MongoRepository<Form, String> {
 
 }

@@ -36,37 +36,28 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Autowired
 	RuntimeService runtimeService;
-	
-	@Override
-	public String getEngineKey() {
-		return "activiti";
-	}
 
 	@Override
-	public ProcessInstance start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data) {
+	public String start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data) {
 		
 		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = runtimeService.startProcessInstanceByKey(engineProcessDefinitionKey, processBusinessKey, engineData);
 		
-		ProcessInstance.Builder builder = new ProcessInstance.Builder()
-			.processInstanceId(activitiInstance.getId())
-			.alias(processBusinessKey);
-		
-		return builder.build();
+		return activitiInstance.getId();
 	}
 
 	@Override
-	public ProcessInstance cancel(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey, String reason) {
+	public ProcessInstance cancel(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey, String reason) {
 		
-		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, processInstanceId, processBusinessKey);
+		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
 		
 		if (activitiInstance != null) {
 			ProcessInstance deletedInstance = new ProcessInstance.Builder()
-				.processInstanceId(activitiInstance.getId())
+				.engineProcessInstanceId(activitiInstance.getId())
 				.alias(activitiInstance.getBusinessKey())
 				.build();
 			
-			runtimeService.deleteProcessInstance(processInstanceId, reason);
+			runtimeService.deleteProcessInstance(engineProcessInstanceId, reason);
 		
 			return deletedInstance;
 		}
@@ -76,13 +67,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	
 	@Override
 	public ProcessInstance findInstance(String engineProcessDefinitionKey,
-			String processInstanceId, String processBusinessKey,
+			String engineProcessInstanceId, String processBusinessKey,
 			boolean includeVariables) {
 		
-		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, processInstanceId, processBusinessKey);
+		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
 		
 		ProcessInstance.Builder builder = new ProcessInstance.Builder()
-				.processInstanceId(activitiInstance.getId())
+				.engineProcessInstanceId(activitiInstance.getId())
 				.alias(processBusinessKey);
 
 		if (includeVariables) {
@@ -127,9 +118,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 		return instances;
 	}
 	
-	private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey) {
+	private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = null;
-		if (processInstanceId == null)
+		if (engineProcessInstanceId == null)
 			activitiInstance = runtimeService
 				.createProcessInstanceQuery()
 				.processDefinitionKey(engineProcessDefinitionKey)
@@ -139,10 +130,19 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 			activitiInstance = runtimeService
 				.createProcessInstanceQuery()
 				.processDefinitionKey(engineProcessDefinitionKey)
-				.processInstanceId(processInstanceId)
+				.processInstanceId(engineProcessInstanceId)
 				.singleResult();
 		
 		return activitiInstance;
 	}
 
+    @Override
+    public Class<ProcessEngineProxy> getType() {
+        return ProcessEngineProxy.class;
+    }
+
+    @Override
+    public String getKey() {
+        return "activiti";
+    }
 }

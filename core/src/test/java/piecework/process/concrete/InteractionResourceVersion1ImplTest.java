@@ -32,7 +32,7 @@ import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Interaction;
 import piecework.model.Process;
-import piecework.process.InteractionResource;
+import piecework.designer.InteractionResource;
 import piecework.process.ProcessResource;
 
 /**

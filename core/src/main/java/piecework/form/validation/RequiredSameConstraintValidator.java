@@ -20,8 +20,9 @@ import java.util.List;
 import org.apache.cxf.common.util.StringUtils;
 import org.springframework.stereotype.Service;
 
+import piecework.form.legacy.AttributeValidation;
 import piecework.form.model.Constraint;
-import piecework.form.validation.AttributeValidation.Status;
+import piecework.form.legacy.AttributeValidation.Status;
 import piecework.util.PropertyValueReader;
 
 /**

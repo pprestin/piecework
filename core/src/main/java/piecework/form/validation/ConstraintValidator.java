@@ -16,6 +16,7 @@
 package piecework.form.validation;
 
 import piecework.Registrant;
+import piecework.form.legacy.AttributeValidation;
 import piecework.util.PropertyValueReader;
 
 /**

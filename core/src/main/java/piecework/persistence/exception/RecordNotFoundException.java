@@ -13,23 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.model;
+package piecework.persistence.exception;
 
 /**
  * @author James Renfro
  */
-public interface OptionProvider<E extends Endpoint> {
+public class RecordNotFoundException extends Exception {
 
-	String getId();
-	
-	String getLabelExpression();
-	
-	String getValueExpression();
-	
-	boolean getStoreLocal();
-	
-	E getEndpoint();
-	
-	boolean getDisabled();
-	
+	private static final long serialVersionUID = 1L;
+
+	public RecordNotFoundException(String message) {
+		super(message);
+	}
+
 }

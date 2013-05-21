@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.form.legacy;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 
 import piecework.exception.StatusCodeError;
 import piecework.exception.ValidationException;
+import piecework.form.FormPosition;
+import piecework.form.FormRepository;
 import piecework.form.model.Form;
 import piecework.form.model.Message;
 import piecework.form.model.builder.FormFieldBuilder;
@@ -36,10 +38,8 @@ import piecework.form.model.builder.FormFieldElementBuilder;
 import piecework.form.model.builder.OptionBuilder;
 import piecework.form.model.builder.SectionBuilder;
 import piecework.form.model.record.FormRecord;
-import piecework.form.validation.AttributeValidation;
-import piecework.form.validation.FormValidator;
-import piecework.process.exception.RecordDeletedException;
-import piecework.process.exception.RecordNotFoundException;
+import piecework.persistence.exception.RecordDeletedException;
+import piecework.persistence.exception.RecordNotFoundException;
 import piecework.util.ManyMap;
 import piecework.util.PropertyValueReader;
 import piecework.util.UserReference;
@@ -60,9 +60,7 @@ public class OldFormService {
 	
 	@Autowired 
 	private FormRepository repository;
-	
-	@Autowired
-	private FormValidator validator;
+
 	
 	public List<String> findProcessInstanceIds(String processDefinitionKey) throws StatusCodeError {
 		return null;

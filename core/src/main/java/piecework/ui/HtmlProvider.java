@@ -62,9 +62,9 @@ import com.github.mustachejava.MustacheFactory;
 @Produces("text/html")
 @Provider
 @Service
-public class MustacheHtmlTransformer extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
+public class HtmlProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
 
-	private static final Logger LOG = Logger.getLogger(MustacheHtmlTransformer.class);
+	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
 	
 	@Value("${application.name}")
 	private String applicationName;

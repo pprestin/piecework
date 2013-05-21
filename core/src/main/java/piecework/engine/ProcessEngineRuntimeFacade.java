@@ -27,7 +27,7 @@ import piecework.util.ManyMap;
  */
 public interface ProcessEngineRuntimeFacade {
 
-	ProcessInstance start(String engine, String engineProcessDefinitionKey, String alias, Map<String, ?> data);
+	String start(String engine, String engineProcessDefinitionKey, String alias, Map<String, ?> data);
 
 	ProcessInstance cancel(String engine, String engineProcessDefinitionKey, String processInstanceId, String alias);
 	

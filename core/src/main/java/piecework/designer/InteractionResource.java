@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
+package piecework.designer;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
@@ -30,37 +30,37 @@ import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.exception.StatusCodeError;
-import piecework.model.Screen;
+import piecework.model.Interaction;
 
 /**
  * @author James Renfro
  */
-@Path("secure/v1/screen/{processDefinitionKey}/{interactionId}")
-public interface ScreenResource extends Resource {
+@Path("secure/v1/interaction/{processDefinitionKey}")
+public interface InteractionResource extends Resource {
 	
 	@POST
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response create(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId, Screen screen) throws StatusCodeError;
+	Response create(@PathParam("processDefinitionKey") String processDefinitionKey, Interaction interaction) throws StatusCodeError;
 	
 	@GET
 	@Path("{interactionId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId, @PathParam("screenId") String screenId) throws StatusCodeError;
+	Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId) throws StatusCodeError;
 	
 	@PUT
 	@Path("{interactionId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId, @PathParam("screenId") String screenId, Screen screen) throws StatusCodeError;
+	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId, Interaction interaction) throws StatusCodeError;
 	
 	@DELETE
 	@Path("{interactionId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId, @PathParam("screenId") String screenId) throws StatusCodeError;
+	Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId) throws StatusCodeError;
 	
 	@GET
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	SearchResults searchInteractions(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("interactionId") String interactionId, @Context UriInfo uriInfo) throws StatusCodeError;
+	SearchResults searchInteractions(@PathParam("processDefinitionKey") String processDefinitionKey, @Context UriInfo uriInfo) throws StatusCodeError;
 
 }

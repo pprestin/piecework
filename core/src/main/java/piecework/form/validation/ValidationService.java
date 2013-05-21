@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.form.validation;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -69,7 +69,10 @@ public class ValidationService {
 		
 		ManyMap<String, String> submissionValueMap = submission.getFormValueMap();
 		ManyMap<String, String> instanceValueMap = instance != null ? instance.getFormValueMap() : new ManyMap<String, String>();
-		
+
+        String title = submissionValueMap.getOne("title");
+        validationBuilder.title(title);
+
 		if (sections != null) {
 			for (Section section : sections) {
 				if (section == null)
@@ -330,7 +333,10 @@ public class ValidationService {
 						}  
 						
 						// Ensure that we save the form value
-						validationBuilder.formValue(fieldName, values.toArray(new String[values.size()]));
+                        if (field.isRestricted())
+                            validationBuilder.restrictedValue(fieldName, values.toArray(new String[values.size()]));
+                        else
+						    validationBuilder.formValue(fieldName, values.toArray(new String[values.size()]));
 					}
 				}
 			}			
