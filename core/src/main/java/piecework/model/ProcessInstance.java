@@ -18,7 +18,9 @@ package piecework.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -39,6 +41,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -77,6 +80,11 @@ public class ProcessInstance implements Serializable {
     @JsonIgnore
     @DBRef
     private final List<FormSubmission> submissions;
+    
+    @XmlTransient
+    @JsonIgnore
+    @DBRef
+    private final List<Attachment> attachments;
 
     @XmlElement
     private final String uri;
@@ -96,6 +104,7 @@ public class ProcessInstance implements Serializable {
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
         this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
         this.isDeleted = builder.isDeleted;
@@ -124,11 +133,26 @@ public class ProcessInstance implements Serializable {
 	public List<FormValue> getFormData() {
 		return formData;
 	}
+	
+	@JsonIgnore
+	public ManyMap<String, String> getFormValueMap() {
+    	ManyMap<String, String> map = new ManyMap<String, String>();
+    	if (formData != null && !formData.isEmpty()) {
+    		for (FormValue formValue : formData) {
+    			map.put(formValue.getName(), formValue.getAllValues());
+    		}
+    	}
+    	return map;
+    }
 
     public List<FormSubmission> getSubmissions() {
         return submissions;
     }
 	
+	public List<Attachment> getAttachments() {
+		return attachments;
+	}
+
 	public String getUri() {
 		return uri;
 	}
@@ -145,6 +169,7 @@ public class ProcessInstance implements Serializable {
         private String processDefinitionLabel;
         private String processInstanceLabel;
         private List<FormValue> formData;
+        private List<Attachment> attachments;
         private List<FormSubmission> submissions;
         private boolean isDeleted;
 
@@ -171,6 +196,13 @@ public class ProcessInstance implements Serializable {
                 this.submissions = new ArrayList<FormSubmission>(instance.submissions.size());
                 for (FormSubmission submission : instance.submissions) {
                     this.submissions.add(new FormSubmission.Builder(submission, sanitizer).build());
+                }
+            }
+            
+            if (instance.attachments != null && !instance.attachments.isEmpty()) {
+                this.attachments = new ArrayList<Attachment>(instance.attachments.size());
+                for (Attachment attachment : instance.attachments) {
+                    this.attachments.add(new Attachment.Builder(attachment, sanitizer).build());
                 }
             }
         }
@@ -214,6 +246,24 @@ public class ProcessInstance implements Serializable {
             this.formData.add(new FormValue.Builder().name(key).values(values).build());
             return this;
         }
+        
+        public Builder updateFormValues(List<FormValue> formValues) {
+        	Map<String, FormValue> map = new HashMap<String, FormValue>();
+        	if (this.formData != null && !this.formData.isEmpty()) {
+        		for (FormValue formValue : this.formData) {
+        			map.put(formValue.getName(), formValue);
+        		}
+        	}
+        		
+        	if (formValues != null && !formValues.isEmpty()) {
+        		for (FormValue formValue : formValues) {
+        			map.put(formValue.getName(), formValue);
+        		}
+        	}
+        	
+        	this.formData = Collections.unmodifiableList(new ArrayList<FormValue>(map.values()));
+        	return this;
+        }
 
         public Builder submission(FormSubmission submission) {
             if (this.formData == null)
@@ -223,7 +273,21 @@ public class ProcessInstance implements Serializable {
             this.submissions.add(submission);
             return this;
         }
+        
+        public Builder attachment(Attachment attachment) {
+            if (this.attachments == null)
+                this.attachments = new ArrayList<Attachment>();
+            this.attachments.add(attachment);
+            return this;
+        }
 
+        public Builder appendAttachments(List<Attachment> attachments) {
+        	if (this.attachments != null)
+        		this.attachments = new ArrayList<Attachment>();
+        	this.attachments.addAll(attachments);
+        	return this;
+        }
+        
         public Builder delete() {
             this.isDeleted = true;
             return this;

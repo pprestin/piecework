@@ -77,7 +77,7 @@ public class PageRepository {
                                 tag.setAttributes(attributes);
                             }
 
-                            tag.addChild(new HiddenInputNode("PROCESS_FORM_SUBMISSION_TOKEN", form.getRequestId()));
+                            tag.addChild(new HiddenInputNode("PROCESS_FORM_SUBMISSION_TOKEN", form.getFormInstanceId()));
                         }
                     }
                     // tells visitor to continue traversing the DOM tree

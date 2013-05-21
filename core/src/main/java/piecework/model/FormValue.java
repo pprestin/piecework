@@ -26,8 +26,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import piecework.Sanitizer;
@@ -49,6 +51,10 @@ public class FormValue implements Serializable {
 	
 	@XmlElement
 	private final String value;
+	
+	@XmlTransient
+	@JsonIgnore
+    private final boolean restricted;
 	
 	@XmlElementWrapper(name="values")
 	@XmlElement
@@ -72,6 +78,7 @@ public class FormValue implements Serializable {
 		} 
 		this.value = temporarySingle;
 		this.values = temporaryList;
+		this.restricted = builder.restricted;
 	}
 	
 	public String getName() {
@@ -85,25 +92,37 @@ public class FormValue implements Serializable {
 	public List<String> getValues() {
 		return values;
 	}
+	
+	public List<String> getAllValues() {
+		if (this.value != null)
+			return Collections.singletonList(value);
+		return this.values;
+	}
+
+	public boolean isRestricted() {
+		return restricted;
+	}
 
 	public final static class Builder {
 
 		private String name;
 		private List<String> values;
+		private boolean restricted;
 		
 		public Builder() {
 			super();
 		}
 
-		public Builder(FormValue screen, Sanitizer sanitizer) {
-			this.name = sanitizer.sanitize(screen.name);
+		public Builder(FormValue formValue, Sanitizer sanitizer) {
+			this.name = sanitizer.sanitize(formValue.name);
 			
-			if (screen.values != null && !screen.values.isEmpty()) {
-				this.values = new ArrayList<String>(screen.values.size());
-				for (String value : screen.values) {
+			if (formValue.values != null && !formValue.values.isEmpty()) {
+				this.values = new ArrayList<String>(formValue.values.size());
+				for (String value : formValue.values) {
 					this.values.add(sanitizer.sanitize(value));
 				}
 			}
+			this.restricted = formValue.restricted;
 		}
 
 		public FormValue build() {
@@ -129,6 +148,11 @@ public class FormValue implements Serializable {
         public Builder values(String ... values) {
             this.values = Arrays.asList(values);
             return this;
+        }
+        
+        public Builder restricted() {
+        	this.restricted = true;
+        	return this;
         }
 	}
 	

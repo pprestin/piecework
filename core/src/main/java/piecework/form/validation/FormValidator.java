@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import piecework.Registry;
 import piecework.exception.ValidationException;
 import piecework.form.model.Constraint;
 import piecework.form.model.Form;
@@ -56,7 +57,7 @@ public class FormValidator {
 	private OptionResolver optionResolver;
 	
 	@Autowired
-	private ConstraintValidatorRegistry registry;
+	private Registry registry;
 	
 	public List<AttributeValidation> validate(piecework.model.Process process, Form form, PropertyValueReader previousReader, List<String> sectionIds,
 			PropertyValueReader reader, boolean doExceptionOnError, boolean isRequiredNecessary, boolean isForStorage) throws ValidationException {

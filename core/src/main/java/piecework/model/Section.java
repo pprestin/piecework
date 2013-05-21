@@ -51,24 +51,24 @@ public class Section {
 	@XmlAttribute
 	@XmlID
 	@Id
-	private String sectionId;
+	private final String sectionId;
 	
 	@XmlElement
-	private String sectionName;
+	private final String tagId;
 	
 	@XmlElement
-	private String title;
+	private final String title;
 	
 	@XmlElement
-	private String description;
+	private final String description;
 	
 	@XmlElementWrapper(name="fields")
 	@XmlElementRef
-    private List<Field> fields;
+    private final List<Field> fields;
 	
 	@XmlElementWrapper(name="buttons")
 	@XmlElementRef
-    private List<Button> buttons;
+    private final List<Button> buttons;
     
 	@XmlAttribute
     private final int ordinal;
@@ -86,7 +86,7 @@ public class Section {
 
 	private Section(Section.Builder builder, ViewContext context) {
 		this.sectionId = builder.sectionId;
-		this.sectionName = builder.sectionName;
+		this.tagId = builder.tagId;
 		this.title = builder.title;
 		this.description = builder.description;
 		this.ordinal = builder.ordinal;
@@ -100,48 +100,24 @@ public class Section {
 		return sectionId;
 	}
 
-	public void setSectionId(String sectionId) {
-		this.sectionId = sectionId;
-	}
-
-	public String getSectionName() {
-		return sectionName;
-	}
-
-	public void setSectionName(String sectionName) {
-		this.sectionName = sectionName;
+	public String getTagId() {
+		return tagId;
 	}
 
 	public String getTitle() {
 		return title;
 	}
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
 	public String getDescription() {
 		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	public List<Field> getFields() {
 		return fields;
 	}
 
-	public void setFields(List<Field> fields) {
-		this.fields = fields;
-	}
-
 	public List<Button> getButtons() {
 		return buttons;
-	}
-
-	public void setButtons(List<Button> buttons) {
-		this.buttons = buttons;
 	}
 
 	public int getOrdinal() {
@@ -160,7 +136,7 @@ public class Section {
 
 		private String sectionId;
 		private String processDefinitionKey;
-		private String sectionName;
+		private String tagId;
 		private String title;
 		private String description;
         private List<Field> fields;
@@ -174,7 +150,7 @@ public class Section {
 
         public Builder(Section field, Sanitizer sanitizer) {
             this.sectionId = sanitizer.sanitize(field.sectionId);
-            this.sectionName = sanitizer.sanitize(field.sectionName);
+            this.tagId = sanitizer.sanitize(field.tagId);
             this.title = sanitizer.sanitize(field.title);
             this.description = sanitizer.sanitize(field.description);
             this.ordinal = field.ordinal;
@@ -199,8 +175,8 @@ public class Section {
             return this;
         }
         
-        public Builder sectionName(String sectionName) {
-            this.sectionName = sectionName;
+        public Builder tagId(String tagId) {
+            this.tagId = tagId;
             return this;
         }
         

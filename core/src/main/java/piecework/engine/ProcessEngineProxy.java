@@ -30,8 +30,10 @@ public interface ProcessEngineProxy {
 	
 	ProcessInstance start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data);
 	
-	ProcessInstance cancel(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey);
+	ProcessInstance cancel(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey, String reason);
 
+	ProcessInstance findInstance(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey, boolean includeVariables);
+	
 	List<ProcessInstance> findInstances(String engineProcessDefinitionKey, ManyMap<String, String> queryParameters);
 	
 }

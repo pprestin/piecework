@@ -15,7 +15,7 @@
  */
 package piecework.exception;
 
-import piecework.common.view.ValidationResultList;
+import piecework.model.ValidationResultList;
 
 
 

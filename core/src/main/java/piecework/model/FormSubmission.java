@@ -15,14 +15,17 @@
  */
 package piecework.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import piecework.Sanitizer;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import piecework.Sanitizer;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -38,6 +41,9 @@ public class FormSubmission {
     private final String requestId;
 
     private final List<FormValue> formData;
+    
+    @DBRef
+    private final List<Attachment> attachments;
 
     private final Date submissionDate;
 
@@ -52,6 +58,7 @@ public class FormSubmission {
         this.submissionType = builder.submissionType;
         this.requestId = builder.requestId;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissionDate = builder.submissionDate;
         this.submitterId = builder.submitterId;
     }
@@ -71,8 +78,22 @@ public class FormSubmission {
     public List<FormValue> getFormData() {
         return formData;
     }
+    
+    public ManyMap<String, String> getFormValueMap() {
+    	ManyMap<String, String> map = new ManyMap<String, String>();
+    	if (formData != null && !formData.isEmpty()) {
+    		for (FormValue formValue : formData) {
+    			map.put(formValue.getName(), formValue.getAllValues());
+    		}
+    	}
+    	return map;
+    }
 
-    public Date getSubmissionDate() {
+    public List<Attachment> getAttachments() {
+		return attachments;
+	}
+
+	public Date getSubmissionDate() {
         return submissionDate;
     }
 
@@ -86,6 +107,7 @@ public class FormSubmission {
         private String submissionType;
         private String requestId;
         private List<FormValue> formData;
+        private List<Attachment> attachments;
         private Date submissionDate;
         private String submitterId;
 
@@ -104,6 +126,13 @@ public class FormSubmission {
                 this.formData = new ArrayList<FormValue>(submission.formData.size());
                 for (FormValue formValue : submission.formData) {
                     this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
+                }
+            }
+            
+            if (submission.attachments != null && !submission.attachments.isEmpty()) {
+                this.attachments = new ArrayList<Attachment>(submission.attachments.size());
+                for (Attachment attachment : submission.attachments) {
+                    this.attachments.add(new Attachment.Builder(attachment, sanitizer).build());
                 }
             }
         }
@@ -141,6 +170,13 @@ public class FormSubmission {
             if (this.formData == null)
                 this.formData = new ArrayList<FormValue>();
             this.formData.add(new FormValue.Builder().name(key).values(values).build());
+            return this;
+        }
+        
+        public Builder attachment(Attachment attachment) {
+            if (this.attachments == null)
+                this.attachments = new ArrayList<Attachment>();
+            this.attachments.add(attachment);
             return this;
         }
     }

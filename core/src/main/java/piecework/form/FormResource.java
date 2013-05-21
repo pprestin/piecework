@@ -17,16 +17,20 @@ package piecework.form;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.exception.StatusCodeError;
-import piecework.form.model.view.FormView;
 
 /**
  * @author James Renfro
@@ -45,6 +49,12 @@ public interface FormResource extends Resource {
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes("multipart/form-data")
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{requestId}/{validationId}")
+    @RolesAllowed({AuthorizationRole.INITIATOR})
+    @Consumes("multipart/form-data")
+    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
 
 
 //	@GET

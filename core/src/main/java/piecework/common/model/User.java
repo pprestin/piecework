@@ -15,18 +15,21 @@
  */
 package piecework.common.model;
 
+import java.io.Serializable;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+
 import piecework.Sanitizer;
 import piecework.common.view.ViewContext;
-import piecework.model.ProcessInstance;
-
-import javax.xml.bind.annotation.*;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author James Renfro
@@ -35,10 +38,11 @@ import java.util.Map;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = User.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = User.Constants.ROOT_ELEMENT_NAME)
 public class User implements Serializable {
 
-    @XmlAttribute
+    private static final long serialVersionUID = -4312076944171057691L;
+
+	@XmlAttribute
     @XmlID
     @Id
     private final String userId;
@@ -62,7 +66,6 @@ public class User implements Serializable {
         this(new User.Builder(), new ViewContext());
     }
 
-    @SuppressWarnings("unchecked")
     private User(User.Builder builder, ViewContext context) {
         this.userId = builder.userId;
         this.visibleId = builder.visibleId;
@@ -72,7 +75,31 @@ public class User implements Serializable {
         this.uri = context != null ? context.getApplicationUri(builder.userId) : null;
     }
 
-    public final static class Builder {
+    public String getUserId() {
+		return userId;
+	}
+
+	public String getVisibleId() {
+		return visibleId;
+	}
+
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public String getEmailAddress() {
+		return emailAddress;
+	}
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public String getUri() {
+		return uri;
+	}
+
+	public final static class Builder {
 
         private String userId;
         private String visibleId;
@@ -84,12 +111,12 @@ public class User implements Serializable {
             super();
         }
 
-        public Builder(User task, Sanitizer sanitizer) {
-            this.userId = sanitizer.sanitize(task.userId);
-            this.visibleId = sanitizer.sanitize(task.visibleId);
-            this.displayName = sanitizer.sanitize(task.displayName);
-            this.emailAddress = sanitizer.sanitize(task.emailAddress);
-            this.phoneNumber = sanitizer.sanitize(task.phoneNumber);
+        public Builder(User user, Sanitizer sanitizer) {
+            this.userId = sanitizer.sanitize(user.userId);
+            this.visibleId = sanitizer.sanitize(user.visibleId);
+            this.displayName = sanitizer.sanitize(user.displayName);
+            this.emailAddress = sanitizer.sanitize(user.emailAddress);
+            this.phoneNumber = sanitizer.sanitize(user.phoneNumber);
         }
 
         public User build() {

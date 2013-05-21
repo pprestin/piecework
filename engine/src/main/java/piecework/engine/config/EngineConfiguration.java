@@ -27,10 +27,11 @@ import org.activiti.engine.TaskService;
 import org.activiti.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.activiti.spring.ProcessEngineFactoryBean;
 import org.activiti.spring.SpringProcessEngineConfiguration;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -43,37 +44,37 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class EngineConfiguration {
 
-	@Value("${activiti.datasource.hibernate.dialect}")
-	String activitiDataSourceHiberateDialect;
+	@Autowired 
+	Environment env;
 	
-	@Value("${activiti.datasource.driver.name}")
-	String activitiDataSourceDriverName;
-	
-	@Value("${activiti.datasource.url}")
-	String activitiDataSourceUrl;
-	
-	@Value("${activiti.datasource.username}")
-	String activitiDataSourceUsername;
-	
-	@Value("${activiti.datasource.password}")
-	String activitiDataSourcePassword;
-	
-	@Value("${activiti.datasource.ddl.auto}")
-	String activitiDataSourceAutoDDL;
-	
-	@Value("${activiti.datasource.show.sql}")
-	String activitiDataSourceShowSQL;
+//	@Value("${activiti.datasource.hibernate.dialect}")
+//	String activitiDataSourceHiberateDialect;
+//	
+//	@Value("${activiti.datasource.driver.name}")
+//	String activitiDataSourceDriverName;
+//	
+//	@Value("${activiti.datasource.url}")
+//	String activitiDataSourceUrl;
+//	
+//	@Value("${activiti.datasource.username}")
+//	String activitiDataSourceUsername;
+//	
+//	@Value("${activiti.datasource.password}")
+//	String activitiDataSourcePassword;
+//	
+//	@Value("${activiti.datasource.ddl.auto}")
+//	String activitiDataSourceAutoDDL;
+//	
+//	@Value("${activiti.datasource.show.sql}")
+//	String activitiDataSourceShowSQL;
 	
 	@Bean
 	public DataSource activitiDataSource() throws ClassNotFoundException {
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-		
-		@SuppressWarnings("unchecked")
-		Class<? extends Driver> driverClass = (Class<? extends Driver>) Class.forName(activitiDataSourceDriverName);
-		dataSource.setDriverClass(driverClass);
-		dataSource.setUrl(activitiDataSourceUrl);
-		dataSource.setUsername(activitiDataSourceUsername);
-		dataSource.setPassword(activitiDataSourcePassword);
+		dataSource.setDriverClass(env.getPropertyAsClass("activiti.datasource.driver.name", Driver.class));
+		dataSource.setUrl(env.getProperty("activiti.datasource.url"));
+		dataSource.setUsername("activiti.datasource.username");
+		dataSource.setPassword("activiti.datasource.password");
 
 		return dataSource;
 	}

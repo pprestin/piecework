@@ -16,6 +16,8 @@
 package piecework.engine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -41,15 +43,72 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
 	@Override
-	public ProcessInstance start(String engineProcessDefinitionKey,
-			String processBusinessKey, Map<String, ?> data) {
-		return null;
+	public ProcessInstance start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data) {
+		
+		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
+		org.activiti.engine.runtime.ProcessInstance activitiInstance = runtimeService.startProcessInstanceByKey(engineProcessDefinitionKey, processBusinessKey, engineData);
+		
+		ProcessInstance.Builder builder = new ProcessInstance.Builder()
+			.processInstanceId(activitiInstance.getId())
+			.alias(processBusinessKey);
+		
+		return builder.build();
 	}
 
 	@Override
-	public ProcessInstance cancel(String engineProcessDefinitionKey,
-			String processInstanceId, String processBusinessKey) {
+	public ProcessInstance cancel(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey, String reason) {
+		
+		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, processInstanceId, processBusinessKey);
+		
+		if (activitiInstance != null) {
+			ProcessInstance deletedInstance = new ProcessInstance.Builder()
+				.processInstanceId(activitiInstance.getId())
+				.alias(activitiInstance.getBusinessKey())
+				.build();
+			
+			runtimeService.deleteProcessInstance(processInstanceId, reason);
+		
+			return deletedInstance;
+		}
+		
 		return null;
+	}
+	
+	@Override
+	public ProcessInstance findInstance(String engineProcessDefinitionKey,
+			String processInstanceId, String processBusinessKey,
+			boolean includeVariables) {
+		
+		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, processInstanceId, processBusinessKey);
+		
+		ProcessInstance.Builder builder = new ProcessInstance.Builder()
+				.processInstanceId(activitiInstance.getId())
+				.alias(processBusinessKey);
+
+		if (includeVariables) {
+			Map<String, Object> variables = runtimeService
+					.getVariables(activitiInstance.getId());
+			if (variables != null) {
+				for (Map.Entry<String, Object> entry : variables.entrySet()) {
+					Object value = entry.getValue();
+				
+					if (value instanceof Iterable) {
+						Iterable<?> iterable = Iterable.class.cast(value);
+						Iterator<?> iterator = iterable.iterator();
+						List<String> values = new ArrayList<String>();
+						while (iterator.hasNext()) {
+							Object item = iterator.next();
+							values.add(String.valueOf(item));
+						}
+						if (!values.isEmpty())
+							builder.formValue(entry.getKey(), values.toArray(new String[values.size()]));
+					} else {
+						builder.formValue(entry.getKey(), String.valueOf(value));
+					}
+				}
+			}
+		}
+		return builder.build();
 	}
 
 	@Override
@@ -66,6 +125,24 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 			}
 		}
 		return instances;
+	}
+	
+	private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String processInstanceId, String processBusinessKey) {
+		org.activiti.engine.runtime.ProcessInstance activitiInstance = null;
+		if (processInstanceId == null)
+			activitiInstance = runtimeService
+				.createProcessInstanceQuery()
+				.processDefinitionKey(engineProcessDefinitionKey)
+				.processInstanceBusinessKey(processBusinessKey)
+				.singleResult();
+		else
+			activitiInstance = runtimeService
+				.createProcessInstanceQuery()
+				.processDefinitionKey(engineProcessDefinitionKey)
+				.processInstanceId(processInstanceId)
+				.singleResult();
+		
+		return activitiInstance;
 	}
 
 }

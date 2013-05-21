@@ -68,7 +68,7 @@ public class RequiredSameConstraintValidator implements ConstraintValidator<Cons
 	}
 
 	@Override
-	public Class<Constraint> getConstraintType() {
+	public Class<Constraint> getType() {
 		return Constraint.class;
 	}
 

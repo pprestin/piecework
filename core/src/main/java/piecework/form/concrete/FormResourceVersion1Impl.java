@@ -241,19 +241,19 @@ public class FormResourceVersion1Impl implements FormResource {
 //
 //                }
 //            }
-
+        	
         }
 
 
         String submissionId = getSubmissionId(formData);
 
-        // Ensure that we always set a process business key
-        if (processBusinessKey == null)
-            processBusinessKey = UUID.randomUUID().toString();
-
-        // FIXME: Add in description for why this error is returned
-        if (processBusinessKey.length() > 140)
-            throw new BadRequestError(Constants.ExceptionCodes.process_business_key_limit);
+//        // Ensure that we always set a process business key
+//        if (processBusinessKey == null)
+//            processBusinessKey = UUID.randomUUID().toString();
+//
+//        // FIXME: Add in description for why this error is returned
+//        if (processBusinessKey.length() > 140)
+//            throw new BadRequestError(Constants.ExceptionCodes.process_business_key_limit);
 
 
         return null;

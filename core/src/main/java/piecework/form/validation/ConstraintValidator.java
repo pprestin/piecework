@@ -15,17 +15,14 @@
  */
 package piecework.form.validation;
 
+import piecework.Registrant;
 import piecework.util.PropertyValueReader;
 
 /**
  * @author James Renfro
  */
-public interface ConstraintValidator<C> {
+public interface ConstraintValidator<C> extends Registrant<C> {
 
 	AttributeValidation validate(String propertyName, C constraint, PropertyValueReader propertyValueReader, boolean isFieldSpecificUpdate, boolean isRestricted, boolean isText, boolean isUnchanged);
-	
-	Class<C> getConstraintType();
-	
-	String getKey();
-	
+
 }

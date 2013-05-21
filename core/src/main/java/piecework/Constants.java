@@ -38,6 +38,15 @@ public interface Constants {
 	public static final String START_TASK_DEFINITION_KEY = "__startTask";
 	public static final String OVERSIGHT_DEFINITION_KEY = "__general";
 
+	public static class ConstraintTypes {
+		public static final String IS_ALL_VALUES_MATCH = "IS_ALL_VALUES_MATCH";
+		public static final String IS_EMAIL_ADDRESS = "IS_EMAIL_ADDRESS";
+		public static final String IS_NUMERIC = "IS_NUMERIC";
+		public static final String IS_ONLY_REQUIRED_WHEN = "IS_ONLY_REQUIRED_WHEN";
+		public static final String IS_VALID_USER = "IS_VALID_USER";
+		public static final String IS_LIMITED_TO = "IS_LIMITED_TO";
+	}
+	
 	public static class ExceptionCodes {
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
@@ -66,7 +75,6 @@ public interface Constants {
 
     public static class SubmissionDirectives {
         public static final String SUBMISSION_DISPOSITION = "__PIECEWORK_SUBMISSION_DISPOSITION";
-
     }
 
     public static class SubmissionDirectiveDispositionValues {
@@ -75,4 +83,9 @@ public interface Constants {
         public static final String SAVE = "SAVE";
     }
 
+    public static class ValidationStatus {
+    	public static final String ERROR = "error";
+    	public static final String SUCCESS = "success";
+    	public static final String WARNING = "warning";
+    }
 }
