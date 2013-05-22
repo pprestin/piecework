@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security;
+package piecework.security.concrete;
 
-import piecework.Sanitizer;
+import piecework.security.Sanitizer;
 
 /**
  * This class is used in cases where the data has already been sanitized

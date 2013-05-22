@@ -26,6 +26,7 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricDetail;
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricProcessInstanceQuery;
 import org.activiti.engine.runtime.Execution;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.common.model.User;
+import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
 import piecework.util.ManyMap;
@@ -52,116 +54,135 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     @Autowired
     TaskService taskService;
 
+
+
+
 	@Override
-	public String start(String engineProcessDefinitionKey, String processBusinessKey, Map<String, ?> data) {
-		
+	public String start(Process process, String processBusinessKey, Map<String, ?> data) {
+		String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
 		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = runtimeService.startProcessInstanceByKey(engineProcessDefinitionKey, processBusinessKey, engineData);
-		
 		return activitiInstance.getId();
 	}
 
 	@Override
-	public ProcessInstance cancel(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey, String reason) {
-		
-		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
+	public boolean cancel(Process process, String engineProcessInstanceId, String processBusinessKey, String reason) {
+        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
 		
 		if (activitiInstance != null) {
-			ProcessInstance deletedInstance = new ProcessInstance.Builder()
-				.engineProcessInstanceId(activitiInstance.getId())
-				.alias(activitiInstance.getBusinessKey())
-				.build();
-			
-			runtimeService.deleteProcessInstance(engineProcessInstanceId, reason);
-		
-			return deletedInstance;
+			runtimeService.deleteProcessInstance(activitiInstance.getProcessInstanceId(), reason);
+			return true;
 		}
 		
-		return null;
-	}
-	
-	@Override
-	public ProcessInstance findInstance(String engineProcessDefinitionKey,
-			String engineProcessInstanceId, String processBusinessKey,
-			boolean includeVariables) {
-
-        HistoricProcessInstance detail = historyService.createHistoricProcessInstanceQuery().
-
-		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
-		
-		ProcessInstance.Builder builder = new ProcessInstance.Builder()
-				.engineProcessInstanceId(activitiInstance.getId())
-				.alias(processBusinessKey);
-
-		if (includeVariables) {
-			Map<String, Object> variables = runtimeService
-					.getVariables(activitiInstance.getId());
-			if (variables != null) {
-				for (Map.Entry<String, Object> entry : variables.entrySet()) {
-					Object value = entry.getValue();
-				
-					if (value instanceof Iterable) {
-						Iterator<?> iterator = Iterable.class.cast(value).iterator();
-						List<String> values = new ArrayList<String>();
-						while (iterator.hasNext()) {
-							Object item = iterator.next();
-							values.add(String.valueOf(item));
-						}
-						if (!values.isEmpty())
-							builder.formValue(entry.getKey(), values.toArray(new String[values.size()]));
-					} else {
-						builder.formValue(entry.getKey(), String.valueOf(value));
-					}
-				}
-			}
-		}
-		return builder.build();
-	}
-
-	@Override
-	public List<ProcessInstance> findInstances(String engineProcessDefinitionKey, ManyMap<String, String> queryParameters) {
-		List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
-		List<org.activiti.engine.runtime.ProcessInstance> sources = runtimeService.createProcessInstanceQuery().list();
-		if (sources != null) {
-			for (org.activiti.engine.runtime.ProcessInstance source : sources) {
-
-
-
-                ProcessInstance instance = new ProcessInstance.Builder()
-					.processInstanceId(source.getProcessInstanceId())
-					.alias(source.getBusinessKey())
-					.build();
-				instances.add(instance);
-			}
-		}
-		return instances;
+		return false;
 	}
 
     @Override
-    public Task findTask(String engineProcessDefinitionKey, String taskId) {
-        org.activiti.engine.task.Task activitiTask = taskService.createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
+    public void completeTask(Process process, String taskId) {
 
-        Task.Builder taskBuilder = new Task.Builder()
-                .taskInstanceId(activitiTask.getId())
-                .taskInstanceLabel(activitiTask.getDescription());
+    }
 
-        List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(taskId);
+    @Override
+	public ProcessExecution findExecution(ProcessExecutionCriteria criteria) {
 
-        if (identityLinks != null && !identityLinks.isEmpty()) {
-            for (IdentityLink identityLink : identityLinks) {
-                String type = identityLink.getType();
+        boolean includeVariables = false;
 
-                if (type == null)
-                    continue;
+        HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery();
 
-                if (type.equals(IdentityLinkType.ASSIGNEE))
-                    taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
-                else if (type.equals(IdentityLinkType.CANDIDATE))
-                    taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
-            }
-        }
+        // FIXME: Implement this
 
-        return taskBuilder.build();
+        return null;
+
+//        if (criteria.)
+//
+//        query.
+//
+//
+//		org.activiti.engine.history.HistoricProcessInstance historicInstance =
+//
+//        ProcessExecution execution = new ProcessExecution.Builder()
+//                .executionId(activitiInstance.getId())
+//                .businessKey(activitiInstance.getBusinessKey())
+//                .
+//
+//
+//		if (includeVariables) {
+//			Map<String, Object> variables = runtimeService
+//					.getVariables(activitiInstance.getId());
+//			if (variables != null) {
+//				for (Map.Entry<String, Object> entry : variables.entrySet()) {
+//					Object value = entry.getValue();
+//
+//					if (value instanceof Iterable) {
+//						Iterator<?> iterator = Iterable.class.cast(value).iterator();
+//						List<String> values = new ArrayList<String>();
+//						while (iterator.hasNext()) {
+//							Object item = iterator.next();
+//							values.add(String.valueOf(item));
+//						}
+//						if (!values.isEmpty())
+//							builder.formValue(entry.getKey(), values.toArray(new String[values.size()]));
+//					} else {
+//						builder.formValue(entry.getKey(), String.valueOf(value));
+//					}
+//				}
+//			}
+//		}
+//		return builder.build();
+	}
+
+	@Override
+	public List<ProcessExecution> findExecutions(ProcessExecutionCriteria criteria) {
+
+        return null;
+//		List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
+//		List<org.activiti.engine.runtime.ProcessInstance> sources = runtimeService.createProcessInstanceQuery().list();
+//		if (sources != null) {
+//			for (org.activiti.engine.runtime.ProcessInstance source : sources) {
+//
+//
+//
+//                ProcessInstance instance = new ProcessInstance.Builder()
+//					.processInstanceId(source.getProcessInstanceId())
+//					.alias(source.getBusinessKey())
+//					.build();
+//				instances.add(instance);
+//			}
+//		}
+//		return instances;
+	}
+
+    @Override
+    public Task findTask(TaskCriteria criteria) {
+        return null;
+//        org.activiti.engine.task.Task activitiTask = taskService.createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
+//
+//        Task.Builder taskBuilder = new Task.Builder()
+//                .taskInstanceId(activitiTask.getId())
+//                .taskInstanceLabel(activitiTask.getDescription());
+//
+//        List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(taskId);
+//
+//        if (identityLinks != null && !identityLinks.isEmpty()) {
+//            for (IdentityLink identityLink : identityLinks) {
+//                String type = identityLink.getType();
+//
+//                if (type == null)
+//                    continue;
+//
+//                if (type.equals(IdentityLinkType.ASSIGNEE))
+//                    taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
+//                else if (type.equals(IdentityLinkType.CANDIDATE))
+//                    taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
+//            }
+//        }
+//
+//        return taskBuilder.build();
+    }
+
+    public List<Task> findTasks(TaskCriteria criteria) {
+        return null;
     }
 
     private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
@@ -181,6 +202,24 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 		
 		return activitiInstance;
 	}
+
+    private org.activiti.engine.history.HistoricProcessInstance findActivitiHistoricInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
+        org.activiti.engine.history.HistoricProcessInstance activitiInstance = null;
+        if (engineProcessInstanceId == null)
+            activitiInstance = historyService
+                    .createHistoricProcessInstanceQuery()
+                    .processDefinitionKey(engineProcessDefinitionKey)
+                    .processInstanceBusinessKey(processBusinessKey)
+                    .singleResult();
+        else
+            activitiInstance = historyService
+                    .createHistoricProcessInstanceQuery()
+                    .processDefinitionKey(engineProcessDefinitionKey)
+                    .processInstanceId(engineProcessInstanceId)
+                    .singleResult();
+
+        return activitiInstance;
+    }
 
     @Override
     public Class<ProcessEngineProxy> getType() {

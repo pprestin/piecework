@@ -16,7 +16,6 @@
 package piecework.process.concrete;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,7 +32,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.Sanitizer;
+import piecework.engine.ProcessExecution;
+import piecework.engine.ProcessExecutionCriteria;
+import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
 import piecework.common.view.SearchResults;
@@ -53,7 +54,7 @@ import piecework.process.ProcessInstancePayload;
 import piecework.process.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceResource;
 import piecework.process.ProcessRepository;
-import piecework.security.PassthroughSanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 /**
@@ -91,17 +92,20 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	
 	@Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstance rawInstance) throws StatusCodeError {
-        return doCreate(request, rawProcessDefinitionKey, rawInstance, null, null);
+        ProcessInstancePayload payload = new ProcessInstancePayload().processInstance(rawInstance);
+        return create(request, rawProcessDefinitionKey, payload);
 	}
 	
 	@Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
-		return doCreate(request, rawProcessDefinitionKey, null, null, formData);
+        ProcessInstancePayload payload = new ProcessInstancePayload().formData(formData);
+        return create(request, rawProcessDefinitionKey, payload);
 	}
 
 	@Override
 	public Response createMultipart(HttpServletRequest request, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
-        return doCreate(request, rawProcessDefinitionKey, null, body, null);
+        ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
+        return create(request, rawProcessDefinitionKey, payload);
 	}
 
 	@Override
@@ -110,10 +114,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 		
 		Process process = getProcess(processDefinitionKey);
-		
-		ProcessInstance result = facade.findInstance(process.getEngine(), process.getEngineProcessDefinitionKey(), processInstanceId, null);
-		
-		ProcessInstance.Builder builder = new ProcessInstance.Builder(result, sanitizer)
+        ProcessInstance instance = getProcessInstance(process, processInstanceId);
+
+        // TODO: Use execution to decorate instance with useful information
+		ProcessExecution execution = facade.findExecution(new ProcessExecutionCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
+
+        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
 			.processDefinitionKey(processDefinitionKey)
 			.processDefinitionLabel(process.getProcessDefinitionLabel());
 	
@@ -126,14 +132,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 		
 		Process process = getProcess(processDefinitionKey);
-		ProcessInstance instance = getProcessInstance(processInstanceId);
+		ProcessInstance instance = getProcessInstance(process, processInstanceId);
 
 		if (!facade.cancel(process, processInstanceId, null, null))
             throw new ConflictError();
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
 		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey(), result.getProcessInstanceId()) : null;
+		String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
 		return responseBuilder.build();
@@ -143,8 +149,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
 		ManyMap<String, String> queryParameters = new ManyMap<String, String>();
-		
-		
+
 		for (Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
 			String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
 			List<String> rawValues = rawQueryParameterEntry.getValue();
@@ -160,7 +165,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 			.resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
 		List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
 		for (Process process : processes) {			
-			resultsBuilder.items(facade.findInstances(process.getEngine(), process.getEngineProcessDefinitionKey(), queryParameters));
+			//resultsBuilder.items(facade.findInstances(process.getEngine(), process.getEngineProcessDefinitionKey(), queryParameters));
 			// TODO: Add limiting/filtering by search results from form data
 		}
 		

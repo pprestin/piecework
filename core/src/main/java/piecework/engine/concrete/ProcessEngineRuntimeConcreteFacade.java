@@ -22,10 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.Registry;
-import piecework.engine.ProcessEngineProxy;
-import piecework.engine.ProcessEngineRuntimeFacade;
-import piecework.model.ProcessInstance;
-import piecework.model.Task;
+import piecework.engine.*;
+import piecework.model.*;
+import piecework.model.Process;
 import piecework.util.ManyMap;
 
 /**
@@ -37,58 +36,46 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
 	@Autowired
     Registry registry;
 
+    @Override
+    public String start(piecework.model.Process process, String alias, Map<String, ?> data) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        return proxy.start(process, alias, data);
+    }
 
+    @Override
+    public boolean cancel(Process process, String processInstanceId, String alias, String reason) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        return proxy.cancel(process, processInstanceId, alias, reason);
+    }
 
+    @Override
+    public ProcessExecution findExecution(ProcessExecutionCriteria criteria) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
+        return proxy.findExecution(criteria);
+    }
 
-//	@Override
-//	public boolean cancel(String engine, String engineProcessDefinitionKey, String processInstanceId, String processInstanceAlias) {
-//		return null;
-//	}
-//
-//    @Override
-//    public ProcessInstance findInstance(String engine, String engineProcessDefinitionKey, String processInstanceId, String processInstanceAlias) {
-//        return null;
-//    }
-//
-//    @Override
-//    public List<ProcessInstance> findInstances(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters) {
-////        List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
-////
-////        List<ProcessEngineProxy> proxies = registry.retrieve(ProcessEngineProxy.class);
-////
-////        if (proxies != null) {
-////	        for (ProcessEngineProxy proxy : proxies) {
-////	        	if (proxy.getKey().equals(engine))
-////	        		instances.addAll(proxy.findInstances(engineProcessDefinitionKey, queryParameters));
-////	        }
-////        }
-//
-//        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
-//    	return proxy.findInstances(engineProcessDefinitionKey, queryParameters);
-//    }
-//
-//    @Override
-//    public Task findTask(String engine, String engineProcessDefinitionKey, String taskId) {
-//        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
-//
-//        return proxy.findTask(engineProcessDefinitionKey, taskId);
-//    }
-//
-//    @Override
-//    public List<Task> findTasks(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters, String userId) {
-//        return null;
-//    }
-//
-//    @Override
-//    public void completeTask(String processDefinitionKey, String taskId) {
-//
-//    }
-//
-//    @Override
-//	public String start(String engine, final String engineProcessDefinitionKey, final String processBusinessKey, final Map<String, ?> data) {
-//        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
-//
-//        return proxy.start(engineProcessDefinitionKey, processBusinessKey, data);
-//	}
+    @Override
+    public List<ProcessExecution> findExecutions(ProcessExecutionCriteria criteria) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
+        return proxy.findExecutions(criteria);
+    }
+
+    @Override
+    public Task findTask(TaskCriteria criteria) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
+        return proxy.findTask(criteria);
+    }
+
+    @Override
+    public List<Task> findTasks(TaskCriteria criteria) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
+        return proxy.findTasks(criteria);
+    }
+
+    @Override
+    public void completeTask(Process process, String taskId) {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        proxy.completeTask(process, taskId);
+    }
 
 }

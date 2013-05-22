@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 
-import piecework.Sanitizer;
+import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 
 /**

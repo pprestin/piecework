@@ -32,7 +32,8 @@ import javax.xml.bind.annotation.XmlType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-import piecework.Sanitizer;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 
 /**
@@ -59,7 +60,13 @@ public class FormValue implements Serializable {
 	@XmlElementWrapper(name="values")
 	@XmlElement
 	private final List<String> values;
-	
+
+    @XmlTransient
+    @JsonIgnore
+    @DBRef
+    private final List<Secret> secrets;
+
+
 	private FormValue() {
 		this(new FormValue.Builder(), new ViewContext());
 	}
@@ -78,6 +85,7 @@ public class FormValue implements Serializable {
 		} 
 		this.value = temporarySingle;
 		this.values = temporaryList;
+        this.secrets = builder.secrets;
 		this.restricted = builder.restricted;
 	}
 	
@@ -107,6 +115,7 @@ public class FormValue implements Serializable {
 
 		private String name;
 		private List<String> values;
+        private List<Secret> secrets;
 		private boolean restricted;
 		
 		public Builder() {
@@ -158,6 +167,13 @@ public class FormValue implements Serializable {
         public Builder restricted() {
         	this.restricted = true;
         	return this;
+        }
+
+        public Builder secret(Secret secret) {
+            if (this.secrets == null)
+                this.secrets = new ArrayList<Secret>();
+            this.secrets.add(secret);
+            return this;
         }
 	}
 	

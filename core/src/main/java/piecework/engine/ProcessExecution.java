@@ -16,6 +16,7 @@
 package piecework.engine;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Details of a process execution that are stored by the engine and may need to be used
@@ -32,6 +33,7 @@ public class ProcessExecution {
     private final long duration;
     private final String initiatorId;
     private final String deleteReason;
+    private final Map<String, ?> data;
 
     private ProcessExecution() {
         this(new Builder());
@@ -44,6 +46,7 @@ public class ProcessExecution {
         this.endTime = builder.endTime;
         this.duration = builder.duration;
         this.initiatorId = builder.initiatorId;
+        this.data = builder.data;
         this.deleteReason = builder.deleteReason;
     }
 
@@ -75,6 +78,10 @@ public class ProcessExecution {
         return deleteReason;
     }
 
+    public Map<String, ?> getData() {
+        return data;
+    }
+
     public final static class Builder {
 
         private String businessKey;
@@ -83,6 +90,7 @@ public class ProcessExecution {
         private Date endTime;
         private long duration;
         private String initiatorId;
+        private Map<String, ?> data;
         private String deleteReason;
 
         public Builder() {
@@ -120,6 +128,11 @@ public class ProcessExecution {
 
         public Builder initiatorId(String initiatorId) {
             this.initiatorId = initiatorId;
+            return this;
+        }
+
+        public Builder data(Map<String, ?> data) {
+            this.data = data;
             return this;
         }
 

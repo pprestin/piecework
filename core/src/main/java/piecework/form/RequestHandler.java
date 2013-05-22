@@ -95,6 +95,7 @@ public class RequestHandler {
                 .requestId(requestId)
                 .processDefinitionKey(processDefinitionKey)
                 .processInstanceId(processInstanceId)
+                .interaction(interaction)
                 .screen(nextScreen)
                 .submissionType(submissionType);
 

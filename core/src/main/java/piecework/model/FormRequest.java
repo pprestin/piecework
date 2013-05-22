@@ -18,7 +18,7 @@ package piecework.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import piecework.Sanitizer;
+import piecework.security.Sanitizer;
 
 /**
  * @author James Renfro
@@ -46,6 +46,9 @@ public class FormRequest {
     private final String certificateIssuer;
 
     @DBRef
+    private final Interaction interaction;
+
+    @DBRef
     private final Screen screen;
 
     private final String submissionType;
@@ -63,6 +66,7 @@ public class FormRequest {
         this.remoteUser = builder.remoteUser;
         this.certificateSubject = builder.certificateSubject;
         this.certificateIssuer = builder.certificateIssuer;
+        this.interaction = builder.interaction;
         this.screen = builder.screen;
         this.submissionType = builder.submissionType;
     }
@@ -103,6 +107,10 @@ public class FormRequest {
         return certificateIssuer;
     }
 
+    public Interaction getInteraction() {
+        return interaction;
+    }
+
     public Screen getScreen() {
         return screen;
     }
@@ -122,6 +130,7 @@ public class FormRequest {
         private String remoteUser;
         private String certificateSubject;
         private String certificateIssuer;
+        private Interaction interaction;
         private Screen screen;
         private String submissionType;
 
@@ -139,6 +148,7 @@ public class FormRequest {
             this.remoteUser = sanitizer.sanitize(request.remoteUser);
             this.certificateSubject = sanitizer.sanitize(request.certificateSubject);
             this.certificateIssuer = sanitizer.sanitize(request.certificateIssuer);
+            this.interaction = request.interaction != null ? new Interaction.Builder(request.interaction, sanitizer).build() : null;
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.submissionType = sanitizer.sanitize(request.submissionType);
         }
@@ -189,6 +199,11 @@ public class FormRequest {
 
         public Builder certificateIssuer(String certificateIssuer) {
             this.certificateIssuer = certificateIssuer;
+            return this;
+        }
+
+        public Builder interaction(Interaction interaction) {
+            this.interaction = interaction;
             return this;
         }
 

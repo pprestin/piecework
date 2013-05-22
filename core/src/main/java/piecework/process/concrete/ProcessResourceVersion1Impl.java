@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.Sanitizer;
+import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
@@ -42,7 +42,7 @@ import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
 import piecework.persistence.exception.RecordNotFoundException;
-import piecework.security.PassthroughSanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
 
 /**
  * @author James Renfro

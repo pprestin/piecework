@@ -31,6 +31,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import piecework.engine.config.TestConfiguration;
+import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.util.ManyMap;
 
@@ -38,7 +39,6 @@ import piecework.util.ManyMap;
  * @author James Renfro
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration(classes={EngineConfiguration.class}, initializers={PropertySourceInitializer.class})
 @ContextConfiguration(classes={TestConfiguration.class})
 @ActiveProfiles("test")
 public class ActivitiEngineProxyTest {
@@ -59,33 +59,60 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithNoData() {
-		String instanceId = engineProxy.start(EXAMPLE_PROCESS_DEFINITION_KEY, null, null);
+        Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
+		String instanceId = engineProxy.start(process, null, null);
 		Assert.assertNotNull(instanceId);
 
-        ProcessInstance instance = engineProxy.findInstance(EXAMPLE_PROCESS_DEFINITION_KEY, instance.getProcessInstanceId(), null, true);
+        ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
+                .engine(process.getEngine())
+                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .executionId(instanceId)
+                .build();
 
+        ProcessExecution execution = engineProxy.findExecution(criteria);
 
+        Assert.assertNotNull(execution);
+        Assert.assertEquals(instanceId, execution.getExecutionId());
     }
 	
 	@Test
 	public void testStartWithAliasAndNoData() {
-		ProcessInstance instance = engineProxy.start(EXAMPLE_PROCESS_DEFINITION_KEY, "test1", null);
-		Assert.assertNotNull(instance.getProcessInstanceId());
-		Assert.assertNotNull(instance.getAlias());
-		Assert.assertEquals("test1", instance.getAlias());
+        Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
+		String instanceId = engineProxy.start(process, "test1", null);
+		Assert.assertNotNull(instanceId);
+
+        ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
+                .engine(process.getEngine())
+                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .executionId(instanceId)
+                .build();
+
+        ProcessExecution execution = engineProxy.findExecution(criteria);
+
+        Assert.assertNotNull(execution);
+        Assert.assertEquals(instanceId, execution.getExecutionId());
+        Assert.assertEquals("test1", execution.getBusinessKey());
 	}
 	
 	@Test
 	public void testStartWithAliasAndSomeData() {
+        Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
 		Map<String, ?> data = new ManyMap<String, String>();
 		((ManyMap<String, String>)data).putOne("InitiatorId", "testuser");
-		ProcessInstance instance = engineProxy.start(EXAMPLE_PROCESS_DEFINITION_KEY, "test1", data);
-		Assert.assertNotNull(instance.getProcessInstanceId());
-		Assert.assertNotNull(instance.getAlias());
-		Assert.assertEquals("test1", instance.getAlias());
-		
-		instance = engineProxy.findInstance(EXAMPLE_PROCESS_DEFINITION_KEY, instance.getProcessInstanceId(), null, true);
-		Assert.assertEquals("testuser", instance.getFormData().get(0).getValue());
+        String instanceId = engineProxy.start(process, "test1", data);
+        Assert.assertNotNull(instanceId);
+
+        ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
+                .engine(process.getEngine())
+                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .executionId(instanceId)
+                .build();
+
+        ProcessExecution execution = engineProxy.findExecution(criteria);
+
+        Assert.assertNotNull(execution);
+        Assert.assertEquals(instanceId, execution.getExecutionId());
+        Assert.assertEquals("testuser", execution.getData().get("InitiatorId"));
 	}
 	
 }

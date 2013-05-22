@@ -29,7 +29,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.Sanitizer;
+import piecework.engine.TaskCriteria;
+import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
@@ -39,7 +40,7 @@ import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
-import piecework.security.PassthroughSanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
 
 /**
  * @author James Renfro
@@ -66,9 +67,6 @@ public class FormResourceVersion1Impl implements FormResource {
 
     @Autowired
     SubmissionHandler submissionHandler;
-	
-	@Autowired
-	ProcessEngineRuntimeFacade runtime;
 	
 	@Autowired
     Sanitizer sanitizer;
@@ -113,10 +111,28 @@ public class FormResourceVersion1Impl implements FormResource {
         if (process == null)
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
-        Task task = facade.findTask(process.getEngine(), process.getEngineProcessDefinitionKey(), taskId);
+        TaskCriteria criteria = new TaskCriteria.Builder()
+                .engine(process.getEngine())
+                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .taskId(taskId)
+                .build();
 
+        Task task = facade.findTask(criteria);
 
-        return null;
+        Interaction selectedInteraction = null;
+        List<Interaction> interactions = process.getInteractions();
+        if (interactions != null && !interactions.isEmpty()) {
+            for (Interaction interaction : interactions) {
+                 if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
+                     selectedInteraction = interaction;
+                     break;
+                 }
+            }
+        }
+
+        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, selectedInteraction, null);
+
+        return responseHandler.handle(formRequest);
     }
 
     @Override
@@ -131,7 +147,8 @@ public class FormResourceVersion1Impl implements FormResource {
 
         FormRequest formRequest = requestHandler.handle(request, requestId);
 
-        FormSubmission submission = submissionHandler.handle(formRequest, body);
+        ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
+        FormSubmission submission = submissionHandler.handle(formRequest, payload);
 
         FormValidation validation = validationService.validate(submission, null, formRequest.getScreen(), null);
 
@@ -146,8 +163,6 @@ public class FormResourceVersion1Impl implements FormResource {
 
         if (previous != null) {
             instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
-
-
 
         } else {
             String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
@@ -168,10 +183,10 @@ public class FormResourceVersion1Impl implements FormResource {
 
         List<Interaction> interactions = process.getInteractions();
 
-        // Pick the first interaction
-        Interaction interaction = interactions.iterator().next();
+        Interaction interaction = formRequest.getInteraction();
 
-        // Pick the next screen
+        if (interaction == null)
+            throw new InternalServerError();
 
         List<Screen> screens = interaction.getScreens();
 
@@ -183,11 +198,10 @@ public class FormResourceVersion1Impl implements FormResource {
         if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
             nextFormRequest = requestHandler.create(request, processDefinitionKey, stored.getProcessInstanceId(), interaction, formRequest.getScreen());
 
-        // If the request handler doesn't have another request to process, then
-        // provide the generic thank you page back to the user
+        // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
         if (nextFormRequest == null) {
 
-            Response.ok();
+            return Response.noContent().build();
         }
 
         return responseHandler.handle(nextFormRequest);

@@ -16,9 +16,7 @@
 package piecework.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -38,7 +36,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import piecework.Sanitizer;
+import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 
 /**
@@ -72,6 +70,9 @@ public class Interaction implements Serializable {
 	@XmlElementRef
 	@DBRef
 	private final List<Screen> screens;
+
+    @XmlElementWrapper(name="taskDefinitionKeys")
+    private final Set<String> taskDefinitionKeys;
 	
 	@XmlTransient
 	@JsonIgnore
@@ -88,6 +89,7 @@ public class Interaction implements Serializable {
 		this.label = builder.label;
 		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
 		this.screens = (List<Screen>) (builder.screens != null ? Collections.unmodifiableList(builder.screens) : Collections.emptyList());
+        this.taskDefinitionKeys = (Set<String>) (builder.taskDefinitionKeys != null ? Collections.unmodifiableSet(builder.taskDefinitionKeys) : Collections.emptySet());
 		this.isDeleted = builder.isDeleted;
 	}
 	
@@ -107,7 +109,11 @@ public class Interaction implements Serializable {
 		return screens;
 	}
 
-	public String getUri() {
+    public Set<String> getTaskDefinitionKeys() {
+        return taskDefinitionKeys;
+    }
+
+    public String getUri() {
 		return uri;
 	}
 
@@ -121,6 +127,7 @@ public class Interaction implements Serializable {
 		private String id;
 		private String label;
 		private List<Screen> screens;
+        private Set<String> taskDefinitionKeys;
 		private boolean isDeleted;
 		
 		public Builder() {
@@ -138,6 +145,12 @@ public class Interaction implements Serializable {
 					this.screens.add(new Screen.Builder(screen, sanitizer).processDefinitionKey(processDefinitionKey).build());
 				}
 			}
+            if (interaction.taskDefinitionKeys != null && !interaction.taskDefinitionKeys.isEmpty()) {
+                this.taskDefinitionKeys = new HashSet<String>(interaction.taskDefinitionKeys.size());
+                for (String taskDefinitionKey : interaction.taskDefinitionKeys) {
+                    this.taskDefinitionKeys.add(sanitizer.sanitize(taskDefinitionKey));
+                }
+            }
 		}
 
 		public Interaction build() {
@@ -174,6 +187,13 @@ public class Interaction implements Serializable {
 			this.screens = screens;
 			return this;
 		}
+
+        public Builder taskDefinitionKey(String taskDefinitionKey) {
+            if (this.taskDefinitionKeys == null)
+                this.taskDefinitionKeys = new HashSet<String>();
+            this.taskDefinitionKeys.add(taskDefinitionKey);
+            return this;
+        }
 		
 		public Builder delete() {
 			this.isDeleted = true;

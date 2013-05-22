@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.Sanitizer;
+import piecework.security.Sanitizer;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.exception.BadRequestError;
@@ -42,7 +42,7 @@ import piecework.designer.InteractionRepository;
 import piecework.designer.InteractionResource;
 import piecework.process.ProcessRepository;
 import piecework.designer.ScreenRepository;
-import piecework.security.PassthroughSanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
 
 /**
  * @author James Renfro

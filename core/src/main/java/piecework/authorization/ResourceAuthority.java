@@ -18,8 +18,7 @@ package piecework.authorization;
 import java.util.*;
 
 import org.springframework.security.core.GrantedAuthority;
-import piecework.Sanitizer;
-import piecework.common.view.ViewContext;
+import piecework.security.Sanitizer;
 
 /**
  * @author James Renfro

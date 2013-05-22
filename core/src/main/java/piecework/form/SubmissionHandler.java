@@ -17,29 +17,24 @@ package piecework.form;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.gridfs.GridFSFile;
-import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
-import piecework.Sanitizer;
-import piecework.exception.InternalServerError;
+import piecework.security.Sanitizer;
 import piecework.exception.StatusCodeError;
 import piecework.model.FormRequest;
 import piecework.model.FormSubmission;
 import piecework.model.Screen;
 import piecework.process.ProcessInstancePayload;
 import piecework.process.SubmissionRepository;
-import piecework.security.UserInputSanitizer;
-import piecework.util.ManyMap;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**

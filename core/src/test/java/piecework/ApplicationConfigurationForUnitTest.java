@@ -40,7 +40,8 @@ import piecework.process.concrete.MongoRepositoryStub;
 import piecework.process.concrete.ProcessResourceVersion1Impl;
 import piecework.process.concrete.ResourceHelper;
 import piecework.designer.concrete.ScreenResourceVersion1Impl;
-import piecework.security.PassthroughSanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
+import piecework.security.Sanitizer;
 
 /**
  * @author James Renfro

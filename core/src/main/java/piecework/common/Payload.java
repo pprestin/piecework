@@ -33,22 +33,22 @@ public class Payload<T> {
     private MultipartBody multipartBody;
     private Map<String, List<String>> formData;
 
-    public Payload processInstance(T instance) {
+    public <P extends Payload<T>> P processInstance(T instance) {
         this.type = PayloadType.INSTANCE;
         this.instance = instance;
-        return this;
+        return (P)this;
     }
 
-    public Payload multipartBody(MultipartBody multipartBody) {
+    public <P extends Payload<T>> P multipartBody(MultipartBody multipartBody) {
         this.type = PayloadType.MULTIPART;
         this.multipartBody = multipartBody;
-        return this;
+        return (P)this;
     }
 
-    public Payload formData(Map<String, List<String>> formData) {
+    public <P extends Payload<T>> P formData(Map<String, List<String>> formData) {
         this.type = PayloadType.FORMDATA;
         this.formData = formData;
-        return this;
+        return (P)this;
     }
 
     public PayloadType getType() {

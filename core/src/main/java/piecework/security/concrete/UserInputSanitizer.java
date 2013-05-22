@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security;
+package piecework.security.concrete;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +30,7 @@ import org.owasp.validator.html.ScanException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import piecework.Sanitizer;
+import piecework.security.Sanitizer;
 import piecework.util.ManyMap;
 
 /**
