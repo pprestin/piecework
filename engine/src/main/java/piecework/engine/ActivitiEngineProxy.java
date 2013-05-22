@@ -21,8 +21,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricDetail;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.runtime.Execution;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +42,9 @@ import piecework.util.ManyMap;
  */
 @Service
 public class ActivitiEngineProxy implements ProcessEngineProxy {
+
+    @Autowired
+    HistoryService historyService;
 
 	@Autowired
 	RuntimeService runtimeService;
@@ -77,7 +84,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	public ProcessInstance findInstance(String engineProcessDefinitionKey,
 			String engineProcessInstanceId, String processBusinessKey,
 			boolean includeVariables) {
-		
+
+        HistoricProcessInstance detail = historyService.createHistoricProcessInstanceQuery().
+
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
 		
 		ProcessInstance.Builder builder = new ProcessInstance.Builder()
@@ -92,8 +101,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 					Object value = entry.getValue();
 				
 					if (value instanceof Iterable) {
-						Iterable<?> iterable = Iterable.class.cast(value);
-						Iterator<?> iterator = iterable.iterator();
+						Iterator<?> iterator = Iterable.class.cast(value).iterator();
 						List<String> values = new ArrayList<String>();
 						while (iterator.hasNext()) {
 							Object item = iterator.next();
@@ -116,7 +124,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 		List<org.activiti.engine.runtime.ProcessInstance> sources = runtimeService.createProcessInstanceQuery().list();
 		if (sources != null) {
 			for (org.activiti.engine.runtime.ProcessInstance source : sources) {
-				ProcessInstance instance = new ProcessInstance.Builder()
+
+
+
+                ProcessInstance instance = new ProcessInstance.Builder()
 					.processInstanceId(source.getProcessInstanceId())
 					.alias(source.getBusinessKey())
 					.build();

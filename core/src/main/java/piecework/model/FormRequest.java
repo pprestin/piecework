@@ -41,6 +41,10 @@ public class FormRequest {
 
     private final String remoteUser;
 
+    private final String certificateSubject;
+
+    private final String certificateIssuer;
+
     @DBRef
     private final Screen screen;
 
@@ -57,6 +61,8 @@ public class FormRequest {
         this.remoteHost = builder.remoteHost;
         this.remotePort = builder.remotePort;
         this.remoteUser = builder.remoteUser;
+        this.certificateSubject = builder.certificateSubject;
+        this.certificateIssuer = builder.certificateIssuer;
         this.screen = builder.screen;
         this.submissionType = builder.submissionType;
     }
@@ -89,6 +95,14 @@ public class FormRequest {
         return remoteUser;
     }
 
+    public String getCertificateSubject() {
+        return certificateSubject;
+    }
+
+    public String getCertificateIssuer() {
+        return certificateIssuer;
+    }
+
     public Screen getScreen() {
         return screen;
     }
@@ -106,6 +120,8 @@ public class FormRequest {
         private String remoteHost;
         private int remotePort;
         private String remoteUser;
+        private String certificateSubject;
+        private String certificateIssuer;
         private Screen screen;
         private String submissionType;
 
@@ -121,6 +137,8 @@ public class FormRequest {
             this.remoteHost = sanitizer.sanitize(request.remoteHost);
             this.remotePort = request.remotePort;
             this.remoteUser = sanitizer.sanitize(request.remoteUser);
+            this.certificateSubject = sanitizer.sanitize(request.certificateSubject);
+            this.certificateIssuer = sanitizer.sanitize(request.certificateIssuer);
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.submissionType = sanitizer.sanitize(request.submissionType);
         }
@@ -161,6 +179,16 @@ public class FormRequest {
 
         public Builder remoteUser(String remoteUser) {
             this.remoteUser = remoteUser;
+            return this;
+        }
+
+        public Builder certificateSubject(String certificateSubject) {
+            this.certificateSubject = certificateSubject;
+            return this;
+        }
+
+        public Builder certificateIssuer(String certificateIssuer) {
+            this.certificateIssuer = certificateIssuer;
             return this;
         }
 

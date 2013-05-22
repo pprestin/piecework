@@ -48,6 +48,7 @@ public interface Constants {
 	}
 	
 	public static class ExceptionCodes {
+        public static final String certificate_does_not_match = "certificate_does_not_match";
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
         public static final String process_business_key_limit = "process_business_key_limit";

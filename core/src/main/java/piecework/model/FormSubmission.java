@@ -15,10 +15,7 @@
  */
 package piecework.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -26,6 +23,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.Sanitizer;
 import piecework.util.ManyMap;
+
+import javax.ws.rs.core.MediaType;
 
 /**
  * @author James Renfro
@@ -166,7 +165,21 @@ public class FormSubmission {
             return this;
         }
 
+        public Builder formData(Map<String, List<String>> formData) {
+            for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
+                formValue(entry.getKey(), entry.getValue());
+            }
+            return this;
+        }
+
         public Builder formValue(String key, String ... values) {
+            if (this.formData == null)
+                this.formData = new ArrayList<FormValue>();
+            this.formData.add(new FormValue.Builder().name(key).values(values).build());
+            return this;
+        }
+
+        public Builder formValue(String key, List<String> values) {
             if (this.formData == null)
                 this.formData = new ArrayList<FormValue>();
             this.formData.add(new FormValue.Builder().name(key).values(values).build());

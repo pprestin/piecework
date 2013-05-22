@@ -7,6 +7,7 @@ import piecework.exception.StatusCodeError;
 import piecework.model.ProcessInstance;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
@@ -25,19 +26,19 @@ public interface ProcessInstanceResource extends Resource {
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes({"application/xml","application/json"})
-    Response create(@PathParam("processDefinitionKey") String processDefinitionKey, ProcessInstance instance) throws StatusCodeError;
+    Response create(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, ProcessInstance instance) throws StatusCodeError;
 
     @POST
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("application/x-www-form-urlencoded")
-    Response create(@PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
+    Response create(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
 	
 	@POST
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("multipart/form-data")
-	Response createMultipart(@PathParam("processDefinitionKey") String processDefinitionKey, MultipartBody body) throws StatusCodeError;
+	Response createMultipart(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, MultipartBody body) throws StatusCodeError;
 	
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}")

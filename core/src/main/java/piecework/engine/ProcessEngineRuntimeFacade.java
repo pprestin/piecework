@@ -18,6 +18,7 @@ package piecework.engine;
 import java.util.List;
 import java.util.Map;
 
+import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
 import piecework.util.ManyMap;
@@ -25,20 +26,7 @@ import piecework.util.ManyMap;
 /**
  * @author James Renfro
  */
-public interface ProcessEngineRuntimeFacade {
+public interface ProcessEngineRuntimeFacade extends ProcessEngineCapabilities {
 
-	String start(String engine, String engineProcessDefinitionKey, String alias, Map<String, ?> data);
-
-	ProcessInstance cancel(String engine, String engineProcessDefinitionKey, String processInstanceId, String alias);
-	
-    ProcessInstance findInstance(String engine, String engineProcessDefinitionKey, String processInstanceId, String alias);
-
-    List<ProcessInstance> findInstances(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters);
-
-    Task findTask(String engine, String engineProcessDefinitionKey, String taskId);
-
-    List<Task> findTasks(String engine, String engineProcessDefinitionKey, ManyMap<String, String> queryParameters, String userId);
-
-    void completeTask(String processDefinitionKey, String taskId);
 
 }

@@ -149,6 +149,11 @@ public class FormValue implements Serializable {
             this.values = Arrays.asList(values);
             return this;
         }
+
+        public Builder values(List<String> values) {
+            this.values = values;
+            return this;
+        }
         
         public Builder restricted() {
         	this.restricted = true;

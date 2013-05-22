@@ -104,7 +104,7 @@ public class FormResourceVersion1Impl implements FormResource {
 	}
 
     @Override
-    public Response read(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("taskId") String rawTaskId, @Context HttpServletRequest request) throws StatusCodeError {
+    public Response read(String rawProcessDefinitionKey, String rawTaskId, HttpServletRequest request) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
 
@@ -150,7 +150,7 @@ public class FormResourceVersion1Impl implements FormResource {
 
 
         } else {
-            String engineInstanceId = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), null, validation.getFormValueMap());
+            String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
 
             instanceBuilder = new ProcessInstance.Builder()
                     .processDefinitionKey(process.getProcessDefinitionKey())

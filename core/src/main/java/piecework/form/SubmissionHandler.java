@@ -30,6 +30,7 @@ import piecework.exception.StatusCodeError;
 import piecework.model.FormRequest;
 import piecework.model.FormSubmission;
 import piecework.model.Screen;
+import piecework.process.ProcessInstancePayload;
 import piecework.process.SubmissionRepository;
 import piecework.security.UserInputSanitizer;
 import piecework.util.ManyMap;
@@ -38,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -57,23 +59,36 @@ public class SubmissionHandler {
     @Autowired
     SubmissionRepository submissionRepository;
 
-    public FormSubmission handle(FormRequest formRequest, MultipartBody body) throws StatusCodeError {
+    public FormSubmission handle(FormRequest formRequest, ProcessInstancePayload payload) throws StatusCodeError {
         String requestId = formRequest.getRequestId();
         Screen screen = formRequest.getScreen();
-
-        if (screen == null) {
-            LOG.error("No screen configured for request " + requestId);
-            throw new InternalServerError();
-        }
+        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
 
         FormSubmission.Builder submissionBuilder = new FormSubmission.Builder()
                 .requestId(requestId)
                 .submissionDate(new Date())
                 .submissionType(formRequest.getSubmissionType());
 
-        List<Attachment> attachments = body.getAllAttachments();
+        switch (payload.getType()) {
+            case INSTANCE:
+                submissionBuilder.formData(payload.getInstance().getFormValueMap());
+                break;
+            case FORMDATA:
+                submissionBuilder.formData(payload.getFormData());
+                break;
+            case MULTIPART:
+                multipart(submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
+                break;
+        }
+
+        FormSubmission result = submissionBuilder.build();
+        return submissionRepository.save(result);
+    }
+
+    private void multipart(FormSubmission.Builder submissionBuilder, MultipartBody body, boolean isAttachmentAllowed) {
+        List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body.getAllAttachments();
         if (attachments != null && !attachments.isEmpty()) {
-            for (Attachment attachment : attachments) {
+            for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
                 ContentDisposition contentDisposition = attachment.getContentDisposition();
                 MediaType contentType = attachment.getContentType();
 
@@ -88,7 +103,7 @@ public class SubmissionHandler {
 
                     submissionBuilder.formValue(key, value);
                 }
-                if (contentDisposition != null && screen.isAttachmentAllowed()) {
+                if (contentDisposition != null && isAttachmentAllowed) {
                     String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
                     try {
                         BasicDBObject metadata = new BasicDBObject();
@@ -103,9 +118,6 @@ public class SubmissionHandler {
                 }
             }
         }
-
-        FormSubmission result = submissionBuilder.build();
-        return submissionRepository.save(result);
     }
 
 }

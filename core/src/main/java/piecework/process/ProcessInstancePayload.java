@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.engine;
+package piecework.process;
 
-import java.util.List;
-import java.util.Map;
-
-import piecework.Registrant;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.util.ManyMap;
+import piecework.common.Payload;
+import piecework.model.ProcessInstance;
 
 /**
  * @author James Renfro
  */
-public interface ProcessEngineProxy extends Registrant<ProcessEngineProxy>, ProcessEngineCapabilities {
+public class ProcessInstancePayload extends Payload<ProcessInstance> {
 
 }

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -34,13 +35,21 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Sanitizer;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.Payload;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.BadRequestError;
+import piecework.exception.ConflictError;
+import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
+import piecework.form.RequestHandler;
+import piecework.form.SubmissionHandler;
+import piecework.model.FormRequest;
+import piecework.model.FormSubmission;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
+import piecework.process.ProcessInstancePayload;
 import piecework.process.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceResource;
 import piecework.process.ProcessRepository;
@@ -64,6 +73,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	
 	@Autowired
 	ProcessEngineRuntimeFacade facade;
+
+    @Autowired
+    RequestHandler requestHandler;
+
+    @Autowired
+    SubmissionHandler submissionHandler;
 	
 	@Autowired
 	Sanitizer sanitizer;
@@ -75,30 +90,18 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	String baseServiceUri;
 	
 	@Override
-	public Response create(String rawProcessDefinitionKey, ProcessInstance instance) throws StatusCodeError {
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-		Process process = getProcess(processDefinitionKey);
-		Map<String, Object> data = null;
-		String engineProcessInstanceId = facade.start(process.getEngine(), process.getEngineProcessDefinitionKey(), instance.getAlias(), data);
-		
-		ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, sanitizer)
-			.processDefinitionKey(processDefinitionKey)
-			.processDefinitionLabel(process.getProcessDefinitionLabel())
-            .engineProcessInstanceId(engineProcessInstanceId);
-
-        processInstanceRepository.save(builder.build());
-		
-		return Response.ok(builder.build(getViewContext())).build();
+	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstance rawInstance) throws StatusCodeError {
+        return doCreate(request, rawProcessDefinitionKey, rawInstance, null, null);
 	}
 	
 	@Override
-	public Response create(String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
-		return null;
+	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
+		return doCreate(request, rawProcessDefinitionKey, null, null, formData);
 	}
 
 	@Override
-	public Response createMultipart(String processDefinitionKey, MultipartBody body) throws StatusCodeError {
-		return null;
+	public Response createMultipart(HttpServletRequest request, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
+        return doCreate(request, rawProcessDefinitionKey, null, body, null);
 	}
 
 	@Override
@@ -123,8 +126,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 		
 		Process process = getProcess(processDefinitionKey);
-		
-		ProcessInstance result = facade.cancel(process.getEngine(), process.getEngineProcessDefinitionKey(), processInstanceId, null);
+		ProcessInstance instance = getProcessInstance(processInstanceId);
+
+		if (!facade.cancel(process, processInstanceId, null, null))
+            throw new ConflictError();
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
 		ViewContext context = getViewContext();
@@ -166,11 +171,42 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	public ViewContext getViewContext() {
 		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "instance", "Instance");
 	}
-	
+
+    private Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstancePayload payload) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = getProcess(processDefinitionKey);
+
+        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, null, null);
+
+        ProcessInstance.Builder builder = payload.getType() == Payload.PayloadType.INSTANCE ? new ProcessInstance.Builder(payload.getInstance(), sanitizer) : new ProcessInstance.Builder();
+        builder.processDefinitionKey(processDefinitionKey).processDefinitionLabel(process.getProcessDefinitionLabel());
+
+        ProcessInstance instance = builder.build();
+
+        FormSubmission submission = submissionHandler.handle(formRequest, payload);
+
+        String engineProcessInstanceId = facade.start(process, instance.getAlias(), instance.getFormValueMap());
+        builder.engineProcessInstanceId(engineProcessInstanceId);
+
+        ProcessInstance persisted = processInstanceRepository.save(builder.build());
+
+        return Response.ok(new ProcessInstance.Builder(persisted, new PassthroughSanitizer()).build(getViewContext())).build();
+    }
+
 	private Process getProcess(String processDefinitionKey) throws BadRequestError {
 		Process record = repository.findOne(processDefinitionKey);
 		if (record == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 		return record;
 	}
+
+    private ProcessInstance getProcessInstance(Process process, String processInstanceId) throws NotFoundError {
+        ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
+
+        if (instance == null)
+            throw new NotFoundError();
+
+        return instance;
+    }
+
 }

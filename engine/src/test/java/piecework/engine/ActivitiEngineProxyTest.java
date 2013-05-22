@@ -59,10 +59,13 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithNoData() {
-		ProcessInstance instance = engineProxy.start(EXAMPLE_PROCESS_DEFINITION_KEY, null, null);
-		Assert.assertNotNull(instance.getProcessInstanceId());
-		Assert.assertNull(instance.getAlias());
-	}
+		String instanceId = engineProxy.start(EXAMPLE_PROCESS_DEFINITION_KEY, null, null);
+		Assert.assertNotNull(instanceId);
+
+        ProcessInstance instance = engineProxy.findInstance(EXAMPLE_PROCESS_DEFINITION_KEY, instance.getProcessInstanceId(), null, true);
+
+
+    }
 	
 	@Test
 	public void testStartWithAliasAndNoData() {

@@ -19,11 +19,7 @@ import java.sql.Driver;
 
 import javax.sql.DataSource;
 
-import org.activiti.engine.FormService;
-import org.activiti.engine.ProcessEngine;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
+import org.activiti.engine.*;
 import org.activiti.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.activiti.spring.ProcessEngineFactoryBean;
 import org.activiti.spring.SpringProcessEngineConfiguration;
@@ -46,28 +42,7 @@ public class EngineConfiguration {
 
 	@Autowired 
 	Environment env;
-	
-//	@Value("${activiti.datasource.hibernate.dialect}")
-//	String activitiDataSourceHiberateDialect;
-//	
-//	@Value("${activiti.datasource.driver.name}")
-//	String activitiDataSourceDriverName;
-//	
-//	@Value("${activiti.datasource.url}")
-//	String activitiDataSourceUrl;
-//	
-//	@Value("${activiti.datasource.username}")
-//	String activitiDataSourceUsername;
-//	
-//	@Value("${activiti.datasource.password}")
-//	String activitiDataSourcePassword;
-//	
-//	@Value("${activiti.datasource.ddl.auto}")
-//	String activitiDataSourceAutoDDL;
-//	
-//	@Value("${activiti.datasource.show.sql}")
-//	String activitiDataSourceShowSQL;
-	
+
 	@Bean
 	public DataSource activitiDataSource() throws ClassNotFoundException {
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
@@ -109,6 +84,11 @@ public class EngineConfiguration {
 	public FormService activitiFormService(ApplicationContext applicationContext) throws Exception {
 		return activitiEngine(applicationContext).getFormService();
 	}
+
+    @Bean
+    public HistoryService activitiHistoryService(ApplicationContext applicationContext) throws Exception {
+        return activitiEngine(applicationContext).getHistoryService();
+    }
 
 	@Bean
 	public RepositoryService activitiRepositoryService(ApplicationContext applicationContext) throws Exception {

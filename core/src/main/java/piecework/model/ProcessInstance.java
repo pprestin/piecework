@@ -326,24 +326,6 @@ public class ProcessInstance implements Serializable {
             }
             return this;
         }
-        
-//        public Builder updateFormValues(List<FormValue> formValues) {
-//        	Map<String, FormValue> map = new HashMap<String, FormValue>();
-//        	if (this.formData != null && !this.formData.isEmpty()) {
-//        		for (FormValue formValue : this.formData) {
-//        			map.put(formValue.getName(), formValue);
-//        		}
-//        	}
-//
-//        	if (formValues != null && !formValues.isEmpty()) {
-//        		for (FormValue formValue : formValues) {
-//        			map.put(formValue.getName(), formValue);
-//        		}
-//        	}
-//
-//        	this.formData = Collections.unmodifiableList(new ArrayList<FormValue>(map.values()));
-//        	return this;
-//        }
 
         public Builder attachment(Attachment attachment) {
             if (this.attachments == null)
