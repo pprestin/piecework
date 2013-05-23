@@ -27,6 +27,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,16 +35,14 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.engine.ProcessExecution;
 import piecework.engine.ProcessExecutionCriteria;
+import piecework.engine.exception.ProcessEngineException;
+import piecework.exception.*;
 import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
-import piecework.exception.BadRequestError;
-import piecework.exception.ConflictError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
 import piecework.form.RequestHandler;
 import piecework.form.SubmissionHandler;
 import piecework.model.FormRequest;
@@ -62,6 +61,8 @@ import piecework.util.ManyMap;
  */
 @Service
 public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource {
+
+    private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
 
 	@Autowired
 	ProcessRepository repository;
@@ -116,14 +117,19 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		Process process = getProcess(processDefinitionKey);
         ProcessInstance instance = getProcessInstance(process, processInstanceId);
 
-        // TODO: Use execution to decorate instance with useful information
-		ProcessExecution execution = facade.findExecution(new ProcessExecutionCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
+        try {
+            // TODO: Use execution to decorate instance with useful information
+            ProcessExecution execution = facade.findExecution(new ProcessExecutionCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
 
-        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
-			.processDefinitionKey(processDefinitionKey)
-			.processDefinitionLabel(process.getProcessDefinitionLabel());
-	
-		return Response.ok(builder.build(getViewContext())).build();
+            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+                .processDefinitionKey(processDefinitionKey)
+                .processDefinitionLabel(process.getProcessDefinitionLabel());
+
+            return Response.ok(builder.build(getViewContext())).build();
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to find execution ", e);
+            throw new InternalServerError();
+        }
 	}
 
 	@Override
@@ -134,15 +140,21 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		Process process = getProcess(processDefinitionKey);
 		ProcessInstance instance = getProcessInstance(process, processInstanceId);
 
-		if (!facade.cancel(process, processInstanceId, null, null))
-            throw new ConflictError();
-		
-		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
-		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
-		if (location != null)
-			responseBuilder.location(UriBuilder.fromPath(location).build());	
-		return responseBuilder.build();
+        try {
+            if (!facade.cancel(process, processInstanceId, null, null))
+                throw new ConflictError();
+
+            ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+            ViewContext context = getViewContext();
+            String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
+            if (location != null)
+                responseBuilder.location(UriBuilder.fromPath(location).build());
+            return responseBuilder.build();
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to cancel execution ", e);
+            throw new InternalServerError();
+        }
 	}
 
 	@Override
@@ -190,12 +202,18 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         FormSubmission submission = submissionHandler.handle(formRequest, payload);
 
-        String engineProcessInstanceId = facade.start(process, instance.getAlias(), instance.getFormValueMap());
-        builder.engineProcessInstanceId(engineProcessInstanceId);
+        try {
+            String engineProcessInstanceId = facade.start(process, instance.getAlias(), instance.getFormValueMap());
+            builder.engineProcessInstanceId(engineProcessInstanceId);
 
-        ProcessInstance persisted = processInstanceRepository.save(builder.build());
+            ProcessInstance persisted = processInstanceRepository.save(builder.build());
 
-        return Response.ok(new ProcessInstance.Builder(persisted, new PassthroughSanitizer()).build(getViewContext())).build();
+            return Response.ok(new ProcessInstance.Builder(persisted, new PassthroughSanitizer()).build(getViewContext())).build();
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to cancel execution ", e);
+            throw new InternalServerError();
+        }
+
     }
 
 	private Process getProcess(String processDefinitionKey) throws BadRequestError {

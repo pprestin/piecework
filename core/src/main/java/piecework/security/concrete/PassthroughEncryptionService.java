@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security;
+package piecework.security.concrete;
 
 import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.springframework.stereotype.Service;
 import piecework.model.Secret;
+import piecework.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -24,10 +26,15 @@ import java.security.GeneralSecurityException;
 /**
  * @author James Renfro
  */
-public interface EncryptionService {
+public class PassthroughEncryptionService implements EncryptionService {
 
-    Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException;
+    @Override
+    public Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException {
+        return new Secret.Builder().ciphertext(text.getBytes("UTF-8")).build();
+    }
 
-    String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException;
-
+    @Override
+    public String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException {
+        return new String(secret.getCiphertext(), "UTF-8");
+    }
 }

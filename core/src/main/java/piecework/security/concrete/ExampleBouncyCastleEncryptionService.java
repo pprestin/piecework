@@ -15,6 +15,16 @@
  */
 package piecework.security.concrete;
 
+import org.bouncycastle.crypto.BufferedBlockCipher;
+import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.BlockCipherPadding;
+import org.bouncycastle.crypto.paddings.PKCS7Padding;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -41,7 +51,7 @@ import java.util.Date;
  *
  * @author James Renfro
  */
-public class ExampleEncryptionService implements EncryptionService {
+public class ExampleBouncyCastleEncryptionService implements EncryptionService {
 
     @Autowired
     Environment environment;
@@ -50,29 +60,48 @@ public class ExampleEncryptionService implements EncryptionService {
     private SecureRandom random;
 
     @Override
-    public Secret encrypt(String text) throws GeneralSecurityException, UnsupportedEncodingException {
+    public Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException {
         String encryptionKeyName = environment.getProperty("encryption.key.name");
-        String encryptionCipherAlgorithm = environment.getProperty("encryption.cipher.algorithm");
+        BufferedBlockCipher cipher = cipher();
 
-        Cipher cipher = Cipher.getInstance(encryptionCipherAlgorithm);
+        byte[] key = secretKey.getEncoded();
         byte[] iv = new byte[cipher.getBlockSize()];
+
         // Generate a random initialization vector for this encryption
         random.nextBytes(iv);
 
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
-        AlgorithmParameters params = cipher.getParameters();
-        byte[] ciphertext = cipher.doFinal(text.getBytes("UTF-8"));
+        cipher.init(true, new ParametersWithIV(new KeyParameter(key), iv));
 
-        return new Secret.Builder().name(encryptionKeyName).date(new Date()).ciphertext(ciphertext).iv(iv).build();
+        byte[] clear = text.getBytes("UTF-8");
+        byte[] hidden = new byte[cipher.getOutputSize(clear.length)];
+        int bytesProcessed = cipher.processBytes(clear, 0, clear.length, hidden, 0);
+        bytesProcessed += cipher.doFinal(hidden, bytesProcessed);
+
+        if (bytesProcessed != hidden.length)
+            throw new GeneralSecurityException("Unable to correctly encrypt input data");
+
+        return new Secret.Builder().name(encryptionKeyName).date(new Date()).ciphertext(hidden).iv(iv).build();
     }
 
     @Override
-    public String decrypt(Secret secret) throws GeneralSecurityException, UnsupportedEncodingException {
-        String encryptionCipherAlgorithm = environment.getProperty("encryption.cipher.algorithm");
+    public String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException {
+        BufferedBlockCipher cipher = cipher();
+        byte[] key = secretKey.getEncoded();
+        byte[] iv = secret.getIv();
+        cipher.init(false, new ParametersWithIV(new KeyParameter(key), iv));
 
-        Cipher cipher = Cipher.getInstance(encryptionCipherAlgorithm);
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(secret.getIv()));
-        return new String(cipher.doFinal(secret.getCiphertext()));
+        byte[] hidden = secret.getCiphertext();
+        byte[] temporary;
+
+        temporary = new byte[cipher.getOutputSize(hidden.length)];
+        int bytesProcessed = cipher.processBytes(hidden, 0, hidden.length, temporary, 0);
+        bytesProcessed += cipher.doFinal(temporary, bytesProcessed);
+
+        byte[] clear = new byte[bytesProcessed];
+
+        System.arraycopy(temporary, 0, clear, 0, bytesProcessed);
+
+        return new String(clear, "UTF-8");
     }
 
     @PostConstruct
@@ -81,30 +110,22 @@ public class ExampleEncryptionService implements EncryptionService {
         String encryptionPseudoRandomGenerator = environment.getProperty("encryption.pseudorandom.generator");
         String encryptionKeyAlgorithm = environment.getProperty("encryption.key.algorithm");
         String encryptionKeyValue = environment.getProperty("encryption.key.value");
-        int encryptionKeySize = environment.getProperty("encryption.key.size", Integer.class, 128);
+        int encryptionKeySize = environment.getProperty("encryption.key.size", Integer.class, 256);
 
-        byte[] salt = new byte[20];
+        byte[] salt = new byte[8];
         random = SecureRandom.getInstance(encryptionPseudoRandomGenerator);
         random.nextBytes(salt);
-
         SecretKeyFactory factory = SecretKeyFactory.getInstance(encryptionFactoryAlgorithm);
         int iterationCount = random.nextInt(3001) + 1000;
         KeySpec spec = new PBEKeySpec(encryptionKeyValue.toCharArray(), salt, iterationCount, encryptionKeySize);
-
         SecretKey tmp = factory.generateSecret(spec);
         secretKey = new SecretKeySpec(tmp.getEncoded(), encryptionKeyAlgorithm);
     }
 
-//    @PostConstruct
-//    public void init() throws GeneralSecurityException {
-//        byte[] salt = new byte[32];
-//        SecureRandom random = SecureRandom.getInstance(encryptionPseudoRandomGenerator);
-//        random.nextBytes(salt);
-//        SecretKeyFactory factory = SecretKeyFactory.getInstance(encryptionFactoryAlgorithm);
-//        int iterationCount = random.nextInt(3001) + 1000;
-//        KeySpec spec = new PBEKeySpec(encryptionKeyValue.toCharArray(), salt, iterationCount, encryptionKeySize);
-//        SecretKey tmp = factory.generateSecret(spec);
-//        secretKey = new SecretKeySpec(tmp.getEncoded(), encryptionKeyAlgorithm);
-//    }
+    private BufferedBlockCipher cipher() {
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESEngine()), new PKCS7Padding());
+        cipher.reset();
+        return cipher;
+    }
 
 }

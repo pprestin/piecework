@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security.concrete;
+package piecework.security;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,7 +33,7 @@ import piecework.security.concrete.config.EncryptionTestConfiguration;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes={EncryptionTestConfiguration.class})
 @ActiveProfiles("test")
-public class ExampleEncryptionServiceTest {
+public class EncryptionServiceTest {
 
     @Autowired
     EncryptionService encryptionService;

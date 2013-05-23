@@ -15,10 +15,7 @@
  */
 package piecework.form.validation;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.cxf.common.util.StringUtils;
@@ -28,13 +25,7 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Registry;
-import piecework.model.Constraint;
-import piecework.model.Field;
-import piecework.model.FormSubmission;
-import piecework.model.Option;
-import piecework.model.ProcessInstance;
-import piecework.model.Screen;
-import piecework.model.Section;
+import piecework.model.*;
 import piecework.util.ManyMap;
 import piecework.util.OptionResolver;
 
@@ -58,9 +49,11 @@ public class ValidationService {
 		long start = System.currentTimeMillis();
 		
 		FormValidation.Builder validationBuilder = new FormValidation.Builder();
-		
+
+        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
+
 		// Only include attachments in the validation result if attachments are allowed
-		if (screen.isAttachmentAllowed()) 
+		if (isAttachmentAllowed)
 			validationBuilder.attachments(submission.getAttachments());
 		
 		boolean hasErrorResult = false;
@@ -68,6 +61,7 @@ public class ValidationService {
 		List<Section> sections = screen.getSections();
 		
 		ManyMap<String, String> submissionValueMap = submission.getFormValueMap();
+        Set<String> unvalidatedFieldNames = new HashSet<String>(submissionValueMap.keySet());
 		ManyMap<String, String> instanceValueMap = instance != null ? instance.getFormValueMap() : new ManyMap<String, String>();
 
         String title = submissionValueMap.getOne("title");
@@ -93,6 +87,9 @@ public class ValidationService {
                         LOG.warn("Field is missing name " + field.getFieldId());
                         continue;
                     }
+
+                    // Remove any form values from the attachment map, since this has a field already
+                    unvalidatedFieldNames.remove(fieldName);
 
 					List<String> values = submissionValueMap.get(fieldName);
 					List<String> previousValues = instanceValueMap.get(fieldName);
@@ -248,8 +245,22 @@ public class ValidationService {
 						// so just bail out so we don't erroneously create a SUCCESS validation for it
 						if (!field.isEditable()) 
 							continue;
-						
-						if (field.isRequired()) {	
+
+                        boolean isRequired = field.isRequired();
+
+                        if (onlyRequiredWhenConstraints != null && !onlyRequiredWhenConstraints.isEmpty()) {
+
+                            for (Constraint constraint : onlyRequiredWhenConstraints) {
+                                String name = constraint.getName();
+                                String value = constraint.getValue();
+
+                                String testValue = submissionValueMap.getOne(name);
+
+                                isRequired = testValue != null && value != null && testValue.equals(value);
+                            }
+                        }
+
+						if (isRequired) {
 							if (isFieldSpecificUpdate) {
 								validationBuilder.warning(fieldName, "Field is required");
 								continue;
@@ -276,37 +287,6 @@ public class ValidationService {
 						}
 						
 					}
-					
-
-					
-//					if (elements != null && !elements.isEmpty()) {
-//						int i = 0;
-//						int numberOfValues = hasValues ? values.size() : 0;
-//						for (FormFieldElement element : elements) {
-//						
-//							String value = numberOfValues > i ? values.get(i) : null;
-//							
-//							if (value == null)
-//								continue;
-//							
-//							int maxSize = element.getMaxSize() != null ? Integer.parseInt(element.getMaxSize()) : -1;
-//							int minSize = element.getMinSize() != null ? Integer.parseInt(element.getMinSize()) : -1;
-//							
-//							if (minSize > -1 || maxSize > -1) {
-//								if (values != null) {
-//									if (minSize > -1 && value.length() < minSize) {
-//										hasErrorResult = true;
-//										results.add(new AttributeValidation(Status.ERROR, propertyName, Collections.singletonList(value), "Must be more than " + minSize + " characters", isRestricted, isText, isUnchanged));
-//									}
-//									if (maxSize > -1 && value.length() > maxSize) {
-//										hasErrorResult = true;
-//										results.add(new AttributeValidation(Status.ERROR, propertyName, Collections.singletonList(value), "Must be less than " + maxSize + " characters", isRestricted, isText, isUnchanged));
-//									}
-//								}
-//							}
-//							i++;
-//						}
-//					}
 
 					// FIXME: Handle special constraint validation
 //					if (registry != null) {
@@ -327,8 +307,7 @@ public class ValidationService {
 //								results.add(result);
 //							}
 //						}	
-//					}					
-					
+//					}
 
 					if (!hasErrorResult && hasAtLeastEmptyValue) {
 						if (isPersonLookup) {
@@ -347,6 +326,27 @@ public class ValidationService {
 				}
 			}			
 		}
+
+        if (isAttachmentAllowed) {
+            List<FormValue> formValues = submission.getFormData();
+            if (formValues != null && !formValues.isEmpty()) {
+                for (FormValue formValue : formValues) {
+                    if (unvalidatedFieldNames.contains(formValue.getName())) {
+                        Attachment.Builder attachmentBuilder = new Attachment.Builder()
+                                .name(formValue.getName())
+                                .description(formValue.getValue())
+                                .lastModified(new Date());
+
+                        if (formValue.getContentType() != null) {
+                            attachmentBuilder
+                                .contentType(formValue.getContentType())
+                                .location(formValue.getLocation());
+                        }
+                        validationBuilder.attachment(attachmentBuilder.build());
+                    }
+                }
+            }
+        }
 		
 		if (LOG.isDebugEnabled()) {
 			long end = System.currentTimeMillis();

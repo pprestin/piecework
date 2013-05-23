@@ -15,29 +15,25 @@
  */
 package piecework.engine;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.activiti.engine.ActivitiException;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
-import org.activiti.engine.history.HistoricDetail;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricProcessInstanceQuery;
-import org.activiti.engine.runtime.Execution;
+import org.activiti.engine.history.HistoricTaskInstanceQuery;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
+import org.activiti.engine.task.TaskQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.common.model.User;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
 import piecework.model.Task;
-import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -55,10 +51,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     TaskService taskService;
 
 
-
-
 	@Override
-	public String start(Process process, String processBusinessKey, Map<String, ?> data) {
+	public String start(Process process, String processBusinessKey, Map<String, ?> data) throws ProcessEngineException {
 		String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
 		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = runtimeService.startProcessInstanceByKey(engineProcessDefinitionKey, processBusinessKey, engineData);
@@ -66,7 +60,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
 	@Override
-	public boolean cancel(Process process, String engineProcessInstanceId, String processBusinessKey, String reason) {
+	public boolean cancel(Process process, String engineProcessInstanceId, String processBusinessKey, String reason) throws ProcessEngineException {
         String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
 		
@@ -79,110 +73,175 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
-    public void completeTask(Process process, String taskId) {
+    public boolean completeTask(Process process, String taskId) throws ProcessEngineException {
+        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
 
+        try {
+            org.activiti.engine.task.Task activitiTask = taskService.createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
+
+            if (activitiTask != null)  {
+                taskService.complete(taskId);
+                return true;
+            }
+
+        } catch (ActivitiException exception) {
+            throw new ProcessEngineException("Activiti unable to complete task ", exception);
+        }
+
+        return false;
     }
 
     @Override
-	public ProcessExecution findExecution(ProcessExecutionCriteria criteria) {
+	public ProcessExecution findExecution(ProcessExecutionCriteria criteria) throws ProcessEngineException {
 
         boolean includeVariables = false;
 
-        HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery();
+        HistoricProcessInstance instance = instanceQuery(criteria).singleResult();
 
-        // FIXME: Implement this
+        if (instance != null) {
+            ProcessExecution.Builder executionBuilder = new ProcessExecution.Builder()
+                .executionId(instance.getId())
+                .businessKey(instance.getBusinessKey())
+                .initiatorId(instance.getStartUserId())
+                .deleteReason(instance.getDeleteReason());
+
+
+            if (criteria.isIncludeVariables()) {
+                Map<String, Object> variables = runtimeService.getVariables(instance.getId());
+                executionBuilder.data(variables);
+            }
+
+            return executionBuilder.build();
+        }
 
         return null;
-
-//        if (criteria.)
-//
-//        query.
-//
-//
-//		org.activiti.engine.history.HistoricProcessInstance historicInstance =
-//
-//        ProcessExecution execution = new ProcessExecution.Builder()
-//                .executionId(activitiInstance.getId())
-//                .businessKey(activitiInstance.getBusinessKey())
-//                .
-//
-//
-//		if (includeVariables) {
-//			Map<String, Object> variables = runtimeService
-//					.getVariables(activitiInstance.getId());
-//			if (variables != null) {
-//				for (Map.Entry<String, Object> entry : variables.entrySet()) {
-//					Object value = entry.getValue();
-//
-//					if (value instanceof Iterable) {
-//						Iterator<?> iterator = Iterable.class.cast(value).iterator();
-//						List<String> values = new ArrayList<String>();
-//						while (iterator.hasNext()) {
-//							Object item = iterator.next();
-//							values.add(String.valueOf(item));
-//						}
-//						if (!values.isEmpty())
-//							builder.formValue(entry.getKey(), values.toArray(new String[values.size()]));
-//					} else {
-//						builder.formValue(entry.getKey(), String.valueOf(value));
-//					}
-//				}
-//			}
-//		}
-//		return builder.build();
 	}
 
 	@Override
-	public List<ProcessExecution> findExecutions(ProcessExecutionCriteria criteria) {
+	public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
 
-        return null;
-//		List<ProcessInstance> instances = new ArrayList<ProcessInstance>();
-//		List<org.activiti.engine.runtime.ProcessInstance> sources = runtimeService.createProcessInstanceQuery().list();
-//		if (sources != null) {
-//			for (org.activiti.engine.runtime.ProcessInstance source : sources) {
-//
-//
-//
-//                ProcessInstance instance = new ProcessInstance.Builder()
-//					.processInstanceId(source.getProcessInstanceId())
-//					.alias(source.getBusinessKey())
-//					.build();
-//				instances.add(instance);
-//			}
-//		}
-//		return instances;
+        HistoricProcessInstanceQuery query = instanceQuery(criteria);
+
+        ProcessExecutionResults.Builder resultsBuilder = new ProcessExecutionResults.Builder();
+
+        List<HistoricProcessInstance> instances;
+        if (criteria.getFirstResult() != null && criteria.getMaxResults() != null) {
+            int firstResult = criteria.getFirstResult().intValue();
+            int maxResults = criteria.getMaxResults().intValue();
+
+            resultsBuilder.firstResult(firstResult);
+            resultsBuilder.maxResults(maxResults);
+            resultsBuilder.total(query.count());
+
+            instances = query.listPage(firstResult, maxResults);
+        } else {
+            instances = query.list();
+            int size = instances.size();
+
+            resultsBuilder.firstResult(0);
+            resultsBuilder.maxResults(size);
+            resultsBuilder.total(size);
+        }
+
+        List<ProcessExecution> executions;
+        if (instances != null && !instances.isEmpty()) {
+            executions = new ArrayList<ProcessExecution>(instances.size());
+
+
+            for (HistoricProcessInstance instance : instances) {
+                ProcessExecution.Builder executionBuilder = new ProcessExecution.Builder()
+                        .executionId(instance.getId())
+                        .businessKey(instance.getBusinessKey())
+                        .initiatorId(instance.getStartUserId())
+                        .deleteReason(instance.getDeleteReason());
+
+
+                if (criteria.isIncludeVariables()) {
+                    Map<String, Object> variables = runtimeService.getVariables(instance.getId());
+                    executionBuilder.data(variables);
+                }
+
+                executions.add(executionBuilder.build());
+            }
+        } else {
+            executions = Collections.emptyList();
+        }
+
+        resultsBuilder.executions(executions);
+
+        return resultsBuilder.build();
 	}
 
     @Override
-    public Task findTask(TaskCriteria criteria) {
-        return null;
-//        org.activiti.engine.task.Task activitiTask = taskService.createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
-//
-//        Task.Builder taskBuilder = new Task.Builder()
-//                .taskInstanceId(activitiTask.getId())
-//                .taskInstanceLabel(activitiTask.getDescription());
-//
-//        List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(taskId);
-//
-//        if (identityLinks != null && !identityLinks.isEmpty()) {
-//            for (IdentityLink identityLink : identityLinks) {
-//                String type = identityLink.getType();
-//
-//                if (type == null)
-//                    continue;
-//
-//                if (type.equals(IdentityLinkType.ASSIGNEE))
-//                    taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
-//                else if (type.equals(IdentityLinkType.CANDIDATE))
-//                    taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
-//            }
-//        }
-//
-//        return taskBuilder.build();
+    public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
+        org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
+
+        Task.Builder taskBuilder = new Task.Builder()
+                .taskInstanceId(activitiTask.getId())
+                .taskInstanceLabel(activitiTask.getDescription());
+
+        List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(activitiTask.getId());
+
+        if (identityLinks != null && !identityLinks.isEmpty()) {
+            for (IdentityLink identityLink : identityLinks) {
+                String type = identityLink.getType();
+
+                if (type == null)
+                    continue;
+
+                if (type.equals(IdentityLinkType.ASSIGNEE))
+                    taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
+                else if (type.equals(IdentityLinkType.CANDIDATE))
+                    taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
+            }
+        }
+
+        return taskBuilder.build();
     }
 
-    public List<Task> findTasks(TaskCriteria criteria) {
-        return null;
+    public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
+        TaskQuery query = taskQuery(criteria);
+
+        TaskResults.Builder resultsBuilder = new TaskResults.Builder();
+
+        List<org.activiti.engine.task.Task> instances;
+        if (criteria.getFirstResult() != null && criteria.getMaxResults() != null) {
+            int firstResult = criteria.getFirstResult().intValue();
+            int maxResults = criteria.getMaxResults().intValue();
+
+            resultsBuilder.firstResult(firstResult);
+            resultsBuilder.maxResults(maxResults);
+            resultsBuilder.total(query.count());
+
+            instances = query.listPage(firstResult, maxResults);
+        } else {
+            instances = query.list();
+            int size = instances.size();
+
+            resultsBuilder.firstResult(0);
+            resultsBuilder.maxResults(size);
+            resultsBuilder.total(size);
+        }
+
+        List<Task> tasks;
+        if (instances != null && !instances.isEmpty()) {
+            tasks = new ArrayList<Task>(instances.size());
+
+
+            for (org.activiti.engine.task.Task instance : instances) {
+                Task.Builder executionBuilder = new Task.Builder()
+                        .taskInstanceId(instance.getId())
+                        .assignee(new User.Builder().userId(instance.getAssignee()).build());
+
+                tasks.add(executionBuilder.build());
+            }
+        } else {
+            tasks = Collections.emptyList();
+        }
+
+        resultsBuilder.executions(tasks);
+
+        return resultsBuilder.build();
     }
 
     private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
@@ -199,7 +258,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 				.processDefinitionKey(engineProcessDefinitionKey)
 				.processInstanceId(engineProcessInstanceId)
 				.singleResult();
-		
+
 		return activitiInstance;
 	}
 
@@ -219,6 +278,192 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                     .singleResult();
 
         return activitiInstance;
+    }
+
+    private HistoricProcessInstanceQuery instanceQuery(ProcessExecutionCriteria criteria) {
+        HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery();
+
+        if (criteria.getEngineProcessDefinitionKey() != null)
+            query.processDefinitionKey(criteria.getEngineProcessDefinitionKey());
+
+        List<String> executionIds = criteria.getExecutionIds();
+        if (executionIds != null && !executionIds.isEmpty())
+            query.processInstanceIds(new HashSet<String>(criteria.getExecutionIds()));
+
+        if (criteria.getBusinessKey() != null)
+            query.processInstanceBusinessKey(criteria.getBusinessKey());
+
+        if (criteria.getStartedAfter() != null)
+            query.startedAfter(criteria.getStartedAfter());
+
+        if (criteria.getStartedBefore() != null)
+            query.startedBefore(criteria.getStartedBefore());
+
+        if (criteria.getCompletedBefore() != null)
+            query.finishedBefore(criteria.getCompletedBefore());
+
+        if (criteria.getCompletedAfter() != null)
+            query.finishedAfter(criteria.getCompletedAfter());
+
+        if (criteria.getInitiatedBy() != null)
+            query.startedBy(criteria.getInitiatedBy());
+
+        ProcessExecutionCriteria.OrderBy orderBy = criteria.getOrderBy();
+        if (orderBy != null) {
+            switch (orderBy) {
+                case START_TIME_ASC:
+                    query.orderByProcessInstanceStartTime().asc();
+                    break;
+                case START_TIME_DESC:
+                    query.orderByProcessInstanceStartTime().desc();
+                    break;
+                case END_TIME_ASC:
+                    query.orderByProcessInstanceEndTime().asc();
+                    break;
+                case END_TIME_DESC:
+                    query.orderByProcessInstanceEndTime().desc();
+                    break;
+            }
+        }
+
+        if (criteria.getComplete()) {
+            if (criteria.getComplete().booleanValue())
+                query.finished();
+            else
+                query.unfinished();
+        }
+
+        return query;
+    }
+
+    private TaskQuery taskQuery(TaskCriteria criteria) {
+        TaskQuery query = taskService.createTaskQuery();
+
+        if (criteria.getEngineProcessDefinitionKey() != null)
+            query.processDefinitionKey(criteria.getEngineProcessDefinitionKey());
+
+        List<String> taskIds = criteria.getTaskIds();
+        if (taskIds != null && taskIds.size() == 1)
+            query.taskId(taskIds.iterator().next());
+
+        if (criteria.getExecutionId() != null)
+            query.processInstanceId(criteria.getExecutionId());
+
+        if (criteria.getBusinessKey() != null)
+            query.processInstanceBusinessKey(criteria.getBusinessKey());
+
+        if (criteria.getAssigneeId() != null)
+            query.taskAssignee(criteria.getAssigneeId());
+
+        if (criteria.getCandidateAssigneeId() != null)
+            query.taskCandidateUser(criteria.getCandidateAssigneeId());
+
+        if (criteria.getCreatedAfter() != null)
+            query.taskCreatedAfter(criteria.getCreatedAfter());
+
+        if (criteria.getCreatedBefore() != null)
+            query.taskCreatedBefore(criteria.getCreatedBefore());
+
+        if (criteria.getDueBefore() != null)
+            query.dueBefore(criteria.getDueBefore());
+
+        if (criteria.getDueAfter() != null)
+            query.dueAfter(criteria.getDueAfter());
+
+        if (criteria.getMaxPriority() != null)
+            query.taskMaxPriority(criteria.getMaxPriority());
+
+        if (criteria.getMinPriority() != null)
+            query.taskMinPriority(criteria.getMinPriority());
+
+        TaskCriteria.OrderBy orderBy = criteria.getOrderBy();
+        if (orderBy != null) {
+           switch (orderBy) {
+               case CREATED_TIME_ASC:
+                   query.orderByTaskCreateTime().asc();
+                   break;
+               case CREATED_TIME_DESC:
+                   query.orderByTaskCreateTime().desc();
+                   break;
+               case DUE_TIME_ASC:
+                   query.orderByDueDate().asc();
+                   break;
+               case DUE_TIME_DESC:
+                   query.orderByDueDate().desc();
+                   break;
+               case PRIORITY_ASC:
+                   query.orderByTaskPriority().asc();
+                   break;
+               case PRIORITY_DESC:
+                   query.orderByTaskPriority().desc();
+                   break;
+           }
+        }
+
+        if (criteria.getActive() != null) {
+            if (criteria.getActive().booleanValue())
+                query.active();
+            else
+                query.suspended();
+        }
+
+        return query;
+    }
+
+    private HistoricTaskInstanceQuery historicTaskQuery(TaskCriteria criteria) {
+        HistoricTaskInstanceQuery query = historyService.createHistoricTaskInstanceQuery();
+
+        if (criteria.getEngineProcessDefinitionKey() != null)
+            query.processDefinitionKey(criteria.getEngineProcessDefinitionKey());
+
+        List<String> taskIds = criteria.getTaskIds();
+        if (taskIds != null && taskIds.size() == 1)
+            query.taskId(taskIds.iterator().next());
+
+        if (criteria.getExecutionId() != null)
+            query.processInstanceId(criteria.getExecutionId());
+
+        if (criteria.getAssigneeId() != null)
+            query.taskAssignee(criteria.getAssigneeId());
+
+        if (criteria.getDueBefore() != null)
+            query.taskDueBefore(criteria.getDueBefore());
+
+        if (criteria.getDueAfter() != null)
+            query.taskDueAfter(criteria.getDueAfter());
+
+        TaskCriteria.OrderBy orderBy = criteria.getOrderBy();
+        if (orderBy != null) {
+            switch (orderBy) {
+                case CREATED_TIME_ASC:
+                    query.orderByHistoricTaskInstanceStartTime().asc();
+                    break;
+                case CREATED_TIME_DESC:
+                    query.orderByHistoricTaskInstanceStartTime().desc();
+                    break;
+                case DUE_TIME_ASC:
+                    query.orderByTaskDueDate().asc();
+                    break;
+                case DUE_TIME_DESC:
+                    query.orderByTaskDueDate().desc();
+                    break;
+                case PRIORITY_ASC:
+                    query.orderByTaskPriority().asc();
+                    break;
+                case PRIORITY_DESC:
+                    query.orderByTaskPriority().desc();
+                    break;
+            }
+        }
+
+        if (criteria.getComplete() != null) {
+            if (criteria.getComplete().booleanValue())
+                query.finished();
+            else
+                query.unfinished();
+        }
+
+        return query;
     }
 
     @Override

@@ -15,6 +15,7 @@
  */
 package piecework.process.concrete;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,8 @@ import piecework.Constants;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.TaskCriteria;
+import piecework.engine.exception.ProcessEngineException;
+import piecework.exception.InternalServerError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
@@ -36,6 +39,8 @@ import javax.ws.rs.core.Response;
  */
 @Service
 public class TaskResourceVersion1 {
+
+    private static final Logger LOG = Logger.getLogger(TaskResourceVersion1.class);
 
     @Autowired
     ProcessEngineRuntimeFacade facade;
@@ -67,9 +72,14 @@ public class TaskResourceVersion1 {
                 .taskId(taskId)
                 .build();
 
-        Task task = facade.findTask(criteria);
+        try {
+            Task task = facade.findTask(criteria);
 
-        return Response.ok(new Task.Builder(task, new PassthroughSanitizer()).build(getViewContext())).build();
+            return Response.ok(new Task.Builder(task, new PassthroughSanitizer()).build(getViewContext())).build();
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to find task ", e);
+            throw new InternalServerError();
+        }
     }
 
     public ViewContext getViewContext() {

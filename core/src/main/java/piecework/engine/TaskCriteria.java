@@ -28,6 +28,7 @@ public class TaskCriteria {
 
     private final String engine;
     private final String engineProcessDefinitionKey;
+    private final String executionId;
     private final String businessKey;
     private final List<String> taskIds;
     private final Integer minPriority;
@@ -40,6 +41,8 @@ public class TaskCriteria {
     private final Date dueAfter;
     private final String assigneeId;
     private final String candidateAssigneeId;
+    private final Integer firstResult;
+    private final Integer maxResults;
     private final OrderBy orderBy;
 
     private TaskCriteria() {
@@ -49,6 +52,7 @@ public class TaskCriteria {
     private TaskCriteria(Builder builder) {
         this.engine = builder.engine;
         this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
+        this.executionId = builder.executionId;
         this.businessKey = builder.businessKey;
         this.taskIds = builder.taskIds;
         this.minPriority = builder.minPriority;
@@ -61,6 +65,8 @@ public class TaskCriteria {
         this.dueAfter = builder.dueAfter;
         this.assigneeId = builder.assigneeId;
         this.candidateAssigneeId = builder.candidateAssigneeId;
+        this.firstResult = builder.firstResult;
+        this.maxResults = builder.maxResults;
         this.orderBy = builder.orderBy;
     }
 
@@ -70,6 +76,10 @@ public class TaskCriteria {
 
     public String getEngineProcessDefinitionKey() {
         return engineProcessDefinitionKey;
+    }
+
+    public String getExecutionId() {
+        return executionId;
     }
 
     public String getBusinessKey() {
@@ -120,6 +130,14 @@ public class TaskCriteria {
         return candidateAssigneeId;
     }
 
+    public Integer getFirstResult() {
+        return firstResult;
+    }
+
+    public Integer getMaxResults() {
+        return maxResults;
+    }
+
     public OrderBy getOrderBy() {
         return orderBy;
     }
@@ -128,6 +146,7 @@ public class TaskCriteria {
 
         private String engine;
         private String engineProcessDefinitionKey;
+        private String executionId;
         private String businessKey;
         private List<String> taskIds;
         private Integer minPriority;
@@ -140,6 +159,8 @@ public class TaskCriteria {
         private Date dueAfter;
         private String assigneeId;
         private String candidateAssigneeId;
+        private Integer firstResult;
+        private Integer maxResults;
         private OrderBy orderBy;
 
         public Builder() {
@@ -157,6 +178,11 @@ public class TaskCriteria {
 
         public Builder engineProcessDefinitionKey(String engineProcessDefinitionKey) {
             this.engineProcessDefinitionKey = engineProcessDefinitionKey;
+            return this;
+        }
+
+        public Builder executionId(String executionId) {
+            this.executionId = executionId;
             return this;
         }
 
@@ -226,6 +252,16 @@ public class TaskCriteria {
 
         public Builder candidateAssigneeId(String candidateAssigneeId) {
             this.candidateAssigneeId = candidateAssigneeId;
+            return this;
+        }
+
+        public Builder firstResult(Integer firstResult) {
+            this.firstResult = firstResult;
+            return this;
+        }
+
+        public Builder maxResults(Integer maxResults) {
+            this.maxResults = maxResults;
             return this;
         }
 

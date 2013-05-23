@@ -15,7 +15,6 @@
  */
 package piecework.engine.concrete;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +22,9 @@ import org.springframework.stereotype.Service;
 
 import piecework.Registry;
 import piecework.engine.*;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -37,45 +36,45 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
     Registry registry;
 
     @Override
-    public String start(piecework.model.Process process, String alias, Map<String, ?> data) {
+    public String start(piecework.model.Process process, String alias, Map<String, ?> data) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
         return proxy.start(process, alias, data);
     }
 
     @Override
-    public boolean cancel(Process process, String processInstanceId, String alias, String reason) {
+    public boolean cancel(Process process, String processInstanceId, String alias, String reason) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
         return proxy.cancel(process, processInstanceId, alias, reason);
     }
 
     @Override
-    public ProcessExecution findExecution(ProcessExecutionCriteria criteria) {
+    public ProcessExecution findExecution(ProcessExecutionCriteria criteria) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
         return proxy.findExecution(criteria);
     }
 
     @Override
-    public List<ProcessExecution> findExecutions(ProcessExecutionCriteria criteria) {
+    public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
         return proxy.findExecutions(criteria);
     }
 
     @Override
-    public Task findTask(TaskCriteria criteria) {
+    public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
         return proxy.findTask(criteria);
     }
 
     @Override
-    public List<Task> findTasks(TaskCriteria criteria) {
+    public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
         return proxy.findTasks(criteria);
     }
 
     @Override
-    public void completeTask(Process process, String taskId) {
+    public boolean completeTask(Process process, String taskId) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
-        proxy.completeTask(process, taskId);
+        return proxy.completeTask(process, taskId);
     }
 
 }

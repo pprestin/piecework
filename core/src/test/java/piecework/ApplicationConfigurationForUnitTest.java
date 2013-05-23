@@ -26,6 +26,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import piecework.form.RequestHandler;
+import piecework.model.FormRequest;
 import piecework.model.Interaction;
 import piecework.model.Process;
 import piecework.model.Screen;
@@ -36,8 +38,9 @@ import piecework.process.ProcessResource;
 import piecework.designer.ScreenRepository;
 import piecework.designer.ScreenResource;
 import piecework.designer.concrete.InteractionResourceVersion1Impl;
+import piecework.process.RequestRepository;
 import piecework.process.concrete.MongoRepositoryStub;
-import piecework.process.concrete.ProcessResourceVersion1Impl;
+import piecework.process.concrete.ProcessResourceVersion1;
 import piecework.process.concrete.ResourceHelper;
 import piecework.designer.concrete.ScreenResourceVersion1Impl;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -54,7 +57,12 @@ public class ApplicationConfigurationForUnitTest {
 	public Sanitizer sanitizer() {
 		return new PassthroughSanitizer();
 	}
-	
+
+    @Bean
+    public RequestHandler requestHandler() {
+        return new RequestHandler();
+    }
+
 	@Bean
 	public ResourceHelper helper() {
 		return new ResourceHelper();
@@ -62,7 +70,7 @@ public class ApplicationConfigurationForUnitTest {
 	
 	@Bean
 	public ProcessResource processResource() {
-		ProcessResourceVersion1Impl resource = new ProcessResourceVersion1Impl();
+		ProcessResourceVersion1 resource = new ProcessResourceVersion1();
 		return resource;
 	}
 	
@@ -87,6 +95,11 @@ public class ApplicationConfigurationForUnitTest {
 	public InteractionRepository interactionRepository() {
 		return new InteractionRepositoryStub();
 	}
+
+    @Bean
+    public RequestRepositoryStub requestRepository() {
+        return new RequestRepositoryStub();
+    }
 	
 	@Bean 
 	public ScreenRepository screenRepository() {
@@ -113,6 +126,10 @@ public class ApplicationConfigurationForUnitTest {
 	public class InteractionRepositoryStub extends MongoRepositoryStub<Interaction> implements InteractionRepository {
 
 	}
+
+    public class RequestRepositoryStub extends MongoRepositoryStub<FormRequest> implements RequestRepository {
+
+    }
 
 	public class ScreenRepositoryStub extends MongoRepositoryStub<Screen> implements ScreenRepository {
 

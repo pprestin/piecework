@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security;
-
-import org.bouncycastle.crypto.InvalidCipherTextException;
-import piecework.model.Secret;
-
-import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
+package piecework.engine.exception;
 
 /**
  * @author James Renfro
  */
-public interface EncryptionService {
+public class ProcessEngineException extends Exception {
 
-    Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException;
+    public ProcessEngineException() {
+        super();
+    }
 
-    String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException;
+    public ProcessEngineException(String message) {
+        super(message);
+    }
+
+    public ProcessEngineException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
 }

@@ -56,8 +56,16 @@ public class FormValue implements Serializable {
 	@XmlTransient
 	@JsonIgnore
     private final boolean restricted;
-	
-	@XmlElementWrapper(name="values")
+
+    @XmlTransient
+    @JsonIgnore
+    private final String contentType;
+
+    @XmlTransient
+    @JsonIgnore
+    private final String location;
+
+    @XmlElementWrapper(name="values")
 	@XmlElement
 	private final List<String> values;
 
@@ -65,7 +73,6 @@ public class FormValue implements Serializable {
     @JsonIgnore
     @DBRef
     private final List<Secret> secrets;
-
 
 	private FormValue() {
 		this(new FormValue.Builder(), new ViewContext());
@@ -87,6 +94,8 @@ public class FormValue implements Serializable {
 		this.values = temporaryList;
         this.secrets = builder.secrets;
 		this.restricted = builder.restricted;
+        this.contentType = builder.contentType;
+        this.location = builder.location;
 	}
 	
 	public String getName() {
@@ -111,12 +120,26 @@ public class FormValue implements Serializable {
 		return restricted;
 	}
 
-	public final static class Builder {
+    public String getContentType() {
+        return contentType;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public List<Secret> getSecrets() {
+        return secrets;
+    }
+
+    public final static class Builder {
 
 		private String name;
 		private List<String> values;
         private List<Secret> secrets;
 		private boolean restricted;
+        private String contentType;
+        private String location;
 		
 		public Builder() {
 			super();
@@ -167,6 +190,16 @@ public class FormValue implements Serializable {
         public Builder restricted() {
         	this.restricted = true;
         	return this;
+        }
+
+        public Builder contentType(String contentType) {
+            this.contentType = contentType;
+            return this;
+        }
+
+        public Builder location(String location) {
+            this.location = location;
+            return this;
         }
 
         public Builder secret(Secret secret) {

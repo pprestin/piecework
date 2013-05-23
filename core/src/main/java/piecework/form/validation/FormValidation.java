@@ -145,7 +145,9 @@ public class FormValidation implements Serializable {
         }
         
         public Builder attachments(List<Attachment> attachments) {
-        	this.attachments = attachments;
+            if (this.attachments == null)
+                this.attachments = new ArrayList<Attachment>();
+        	this.attachments.addAll(attachments);
         	return this;
         }
         

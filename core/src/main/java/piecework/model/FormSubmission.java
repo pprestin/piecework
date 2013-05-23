@@ -163,6 +163,13 @@ public class FormSubmission {
             return this;
         }
 
+        public Builder formContent(String contentType, String key, String value, String location) {
+            if (this.formData == null)
+                this.formData = new ArrayList<FormValue>();
+            this.formData.add(new FormValue.Builder().contentType(contentType).name(key).value(value).location(location).build());
+            return this;
+        }
+
         public Builder formData(Map<String, List<String>> formData) {
             for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
                 formValue(entry.getKey(), entry.getValue());
@@ -188,6 +195,13 @@ public class FormSubmission {
             if (this.attachments == null)
                 this.attachments = new ArrayList<Attachment>();
             this.attachments.add(attachment);
+            return this;
+        }
+
+        public Builder attachments(List<Attachment> attachments) {
+            if (this.attachments == null)
+                this.attachments = new ArrayList<Attachment>();
+            this.attachments.addAll(attachments);
             return this;
         }
     }

@@ -15,19 +15,23 @@
  */
 package piecework.security.concrete.config;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
+import piecework.security.EncryptionService;
+import piecework.security.concrete.ExampleBouncyCastleEncryptionService;
+import piecework.security.concrete.ExampleEncryptionService;
+import piecework.security.concrete.PassthroughEncryptionService;
 
 /**
  * @author James Renfro
  */
 @Configuration
 @Profile("test")
-@PropertySource("classpath:META-INF/default.properties")
+@PropertySource("classpath:META-INF/piecework/default.properties")
 public class EncryptionTestConfiguration {
 
-
+   @Bean
+   public EncryptionService encryptionService() {
+       return new ExampleBouncyCastleEncryptionService();
+   }
 
 }

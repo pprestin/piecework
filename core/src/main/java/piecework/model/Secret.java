@@ -41,7 +41,7 @@ public class Secret {
         this.id = builder.id;
         this.name = builder.name;
         this.date = builder.date;
-        this.ciphertext = builder.iv;
+        this.ciphertext = builder.ciphertext;
         this.iv = builder.iv;
     }
 

@@ -30,12 +30,15 @@ public class ProcessExecutionCriteria {
     private final String engineProcessDefinitionKey;
     private final String businessKey;
     private final List<String> executionIds;
-    private final boolean complete;
+    private final Boolean complete;
     private final Date startedBefore;
     private final Date startedAfter;
     private final Date completedBefore;
     private final Date completedAfter;
     private final String initiatedBy;
+    private final Integer firstResult;
+    private final Integer maxResults;
+    private final boolean includeVariables;
     private final OrderBy orderBy;
 
     private ProcessExecutionCriteria() {
@@ -54,6 +57,9 @@ public class ProcessExecutionCriteria {
         this.completedAfter = builder.completedAfter;
         this.initiatedBy = builder.initiatedBy;
         this.orderBy = builder.orderBy;
+        this.firstResult = builder.firstResult;
+        this.maxResults = builder.maxResults;
+        this.includeVariables = builder.includeVariables;
     }
 
     public String getEngine() {
@@ -72,7 +78,7 @@ public class ProcessExecutionCriteria {
         return executionIds;
     }
 
-    public boolean isComplete() {
+    public Boolean getComplete() {
         return complete;
     }
 
@@ -100,19 +106,34 @@ public class ProcessExecutionCriteria {
         return orderBy;
     }
 
+    public Integer getFirstResult() {
+        return firstResult;
+    }
+
+    public Integer getMaxResults() {
+        return maxResults;
+    }
+
+    public boolean isIncludeVariables() {
+        return includeVariables;
+    }
+
     public final static class Builder {
 
         private String engine;
         private String engineProcessDefinitionKey;
         private String businessKey;
         private List<String> executionIds;
-        private boolean complete;
+        private Boolean complete;
         private Date startedBefore;
         private Date startedAfter;
         private Date completedBefore;
         private Date completedAfter;
         private String initiatedBy;
         private OrderBy orderBy;
+        private Integer firstResult;
+        private Integer maxResults;
+        private boolean includeVariables;
 
         public Builder() {
             super();
@@ -151,8 +172,8 @@ public class ProcessExecutionCriteria {
             return this;
         }
 
-        public Builder complete() {
-            this.complete = true;
+        public Builder complete(Boolean complete) {
+            this.complete = complete;
             return this;
         }
 
@@ -183,6 +204,21 @@ public class ProcessExecutionCriteria {
 
         public Builder orderBy(OrderBy orderBy) {
             this.orderBy = orderBy;
+            return this;
+        }
+
+        public Builder firstResult(Integer firstResult) {
+            this.firstResult = firstResult;
+            return this;
+        }
+
+        public Builder maxResults(Integer maxResults) {
+            this.maxResults = maxResults;
+            return this;
+        }
+
+        public Builder includeVariables() {
+            this.includeVariables = true;
             return this;
         }
 

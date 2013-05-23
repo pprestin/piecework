@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.security.Sanitizer;
@@ -49,22 +50,21 @@ public class Attachment implements Serializable {
 
 	@XmlAttribute
 	@XmlID
+    @Id
 	private final String attachmentId;
 	
 	@XmlElement
-	private final String type;
-	
-	@XmlElement
-	private final String label;
-	
+	private final String name;
+
 	@XmlElement
 	private final String description;
 	
 	@XmlElement
 	private final String contentType;
 	
-	@XmlElement
-	private final String externalUrl;
+	@XmlTransient
+    @JsonIgnore
+	private final String location;
 	
 	@XmlElement
 	private final User user;
@@ -88,11 +88,10 @@ public class Attachment implements Serializable {
 
     private Attachment(Attachment.Builder builder, ViewContext context) {
         this.attachmentId = builder.attachmentId;
-        this.type = builder.type;
-        this.label = builder.label;
+        this.name = builder.name;
         this.description = builder.description;
         this.contentType = builder.contentType;
-        this.externalUrl = builder.externalUrl;
+        this.location = builder.location;
         this.user = builder.user;
         this.ordinal = builder.ordinal;
         this.lastModified = builder.lastModified;
@@ -104,24 +103,20 @@ public class Attachment implements Serializable {
 		return attachmentId;
 	}
 
-	public String getType() {
-		return type;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getLabel() {
-		return label;
-	}
+    public String getLocation() {
+        return location;
+    }
 
-	public String getDescription() {
+    public String getDescription() {
 		return description;
 	}
 
 	public String getContentType() {
 		return contentType;
-	}
-
-	public String getExternalUrl() {
-		return externalUrl;
 	}
 
 	public User getUser() {
@@ -148,11 +143,10 @@ public class Attachment implements Serializable {
 
     	private String attachmentId;
     	private String processDefinitionKey;
-    	private String type;
-        private String label;
+    	private String name;
         private String description;
         private String contentType;
-        private String externalUrl;
+        private String location;
         private User user;
         private Date lastModified;
         private int ordinal;
@@ -164,11 +158,10 @@ public class Attachment implements Serializable {
 
         public Builder(Attachment field, Sanitizer sanitizer) {
             this.attachmentId = sanitizer.sanitize(field.attachmentId);
-            this.type = sanitizer.sanitize(field.type);
-            this.label = field.label;
+            this.name = sanitizer.sanitize(field.name);
             this.description = sanitizer.sanitize(field.description);
             this.contentType = field.contentType;
-            this.externalUrl = field.externalUrl;
+            this.location = field.location;
             this.user = field.user != null ? new User.Builder(field.user, sanitizer).build() : null;
             this.lastModified = field.lastModified;
             this.ordinal = field.ordinal;
@@ -193,13 +186,8 @@ public class Attachment implements Serializable {
             return this;
         }
         
-        public Builder type(String type) {
-            this.type = type;
-            return this;
-        }
-        
-        public Builder label(String label) {
-            this.label = label;
+        public Builder name(String name) {
+            this.name = name;
             return this;
         }
         
@@ -213,8 +201,8 @@ public class Attachment implements Serializable {
             return this;
         }
         
-        public Builder externalUrl(String externalUrl) {
-            this.externalUrl = externalUrl;
+        public Builder location(String location) {
+            this.location = location;
             return this;
         }
         

@@ -67,6 +67,7 @@ public class SubmissionHandler {
         switch (payload.getType()) {
             case INSTANCE:
                 submissionBuilder.formData(payload.getInstance().getFormValueMap());
+                submissionBuilder.attachments(payload.getInstance().getAttachments());
                 break;
             case FORMDATA:
                 submissionBuilder.formData(payload.getFormData());
@@ -91,22 +92,24 @@ public class SubmissionHandler {
                 if (contentType == null)
                     continue;
 
-                if (contentType.equals("text/plain")) {
-                    // Treat as a String form value
-                    String key = sanitizer.sanitize(attachment.getContentId());
-                    String value = sanitizer.sanitize(attachment.getObject(String.class));
+                String contentId = sanitizer.sanitize(attachment.getContentId());
 
-                    submissionBuilder.formValue(key, value);
-                }
-                if (contentDisposition != null && isAttachmentAllowed) {
+                if (contentType.equals("text/plain")) {
+                    LOG.info("Processing multipart with content type " + contentType.toString() + " and content id " + attachment.getContentId());
+                    // Treat as a String form value
+                    String value = sanitizer.sanitize(attachment.getObject(String.class));
+                    submissionBuilder.formValue(contentId, value);
+                } else if (contentDisposition != null && isAttachmentAllowed) {
                     String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
+                    LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
                     try {
                         BasicDBObject metadata = new BasicDBObject();
                         metadata.append("Content-Type", contentType);
                         String uuid = UUID.randomUUID().toString();
                         GridFSFile file = gridFsTemplate.store(attachment.getDataHandler().getInputStream(), uuid, metadata);
 
-                        submissionBuilder.formValue(filename, uuid);
+                        submissionBuilder.formContent(contentType.toString(), contentId, filename, uuid);
+
                     } catch (IOException e) {
                         LOG.error("Unable to save this attachment with filename: " + filename);
                     }

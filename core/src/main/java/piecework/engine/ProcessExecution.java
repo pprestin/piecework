@@ -94,7 +94,7 @@ public class ProcessExecution {
         private String deleteReason;
 
         public Builder() {
-            super();
+
         }
 
         public ProcessExecution build() {

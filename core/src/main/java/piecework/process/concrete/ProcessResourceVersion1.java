@@ -48,7 +48,7 @@ import piecework.security.concrete.PassthroughSanitizer;
  * @author James Renfro
  */
 @Service
-public class ProcessResourceVersion1Impl implements ProcessResource {
+public class ProcessResourceVersion1 implements ProcessResource {
 
 	@Autowired
 	ProcessRepository repository;

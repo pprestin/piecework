@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.engine.TaskCriteria;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
@@ -46,9 +47,9 @@ import piecework.security.concrete.PassthroughSanitizer;
  * @author James Renfro
  */
 @Service
-public class FormResourceVersion1Impl implements FormResource {
+public class FormResourceVersion1 implements FormResource {
 
-    private static final Logger LOG = Logger.getLogger(FormResourceVersion1Impl.class);
+    private static final Logger LOG = Logger.getLogger(FormResourceVersion1.class);
 
     @Autowired
     ProcessEngineRuntimeFacade facade;
@@ -117,22 +118,28 @@ public class FormResourceVersion1Impl implements FormResource {
                 .taskId(taskId)
                 .build();
 
-        Task task = facade.findTask(criteria);
+        try {
+            Task task = facade.findTask(criteria);
 
-        Interaction selectedInteraction = null;
-        List<Interaction> interactions = process.getInteractions();
-        if (interactions != null && !interactions.isEmpty()) {
-            for (Interaction interaction : interactions) {
-                 if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
-                     selectedInteraction = interaction;
-                     break;
-                 }
+            Interaction selectedInteraction = null;
+            List<Interaction> interactions = process.getInteractions();
+            if (interactions != null && !interactions.isEmpty()) {
+                for (Interaction interaction : interactions) {
+                     if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
+                         selectedInteraction = interaction;
+                         break;
+                     }
+                }
             }
+
+            FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, selectedInteraction, null);
+
+            return responseHandler.handle(formRequest);
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to find task ", e);
+            throw new InternalServerError();
         }
-
-        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, selectedInteraction, null);
-
-        return responseHandler.handle(formRequest);
     }
 
     @Override
@@ -150,7 +157,11 @@ public class FormResourceVersion1Impl implements FormResource {
         ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
         FormSubmission submission = submissionHandler.handle(formRequest, payload);
 
-        FormValidation validation = validationService.validate(submission, null, formRequest.getScreen(), null);
+        ProcessInstance instance = null;
+        if (formRequest.getProcessInstanceId() != null)
+            instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
+
+        FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), null);
 
         List<ValidationResult> results = validation.getResults();
         if (results != null && !results.isEmpty()) {
@@ -165,19 +176,24 @@ public class FormResourceVersion1Impl implements FormResource {
             instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
 
         } else {
-            String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
+            try {
+                String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
 
-            instanceBuilder = new ProcessInstance.Builder()
-                    .processDefinitionKey(process.getProcessDefinitionKey())
-                    .processDefinitionLabel(process.getProcessDefinitionLabel())
-                    .processInstanceLabel(validation.getTitle())
-                    .engineProcessInstanceId(engineInstanceId);
+                instanceBuilder = new ProcessInstance.Builder()
+                        .processDefinitionKey(process.getProcessDefinitionKey())
+                        .processDefinitionLabel(process.getProcessDefinitionLabel())
+                        .processInstanceLabel(validation.getTitle())
+                        .engineProcessInstanceId(engineInstanceId);
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to start instance ", e);
+                throw new InternalServerError();
+            }
         }
 
         instanceBuilder.formValueMap(validation.getFormValueMap())
                 .restrictedValueMap(validation.getRestrictedValueMap())
                 .submission(submission);
-
 
         ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
 
@@ -208,97 +224,33 @@ public class FormResourceVersion1Impl implements FormResource {
     }
 
     @Override
-    public Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
-        return null;
+    public Response validate(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("requestId") String rawRequestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        String requestId = sanitizer.sanitize(rawRequestId);
+
+        Process process = processRepository.findOne(processDefinitionKey);
+
+        if (process == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
+
+        FormRequest formRequest = requestHandler.handle(request, requestId);
+
+        ProcessInstance instance = null;
+        if (formRequest.getProcessInstanceId() != null)
+            instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
+
+        ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
+        FormSubmission submission = submissionHandler.handle(formRequest, payload);
+
+        FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), validationId);
+
+        List<ValidationResult> results = validation.getResults();
+        if (results != null && !results.isEmpty()) {
+            throw new BadRequestError(new ValidationResultList(results));
+        }
+
+        return Response.noContent().build();
     }
-
-    /*
-	@Override
-	public FormView read(final String rawProcessDefinitionKey, final String rawProcessInstanceId)
-			throws StatusCodeError {
-		// Sanitize all user input
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
-				
-//		try {
-//			Form form = service.getForm(processDefinitionKey, FormPosition.START_RESPONSE, null);
-//
-//			if (form == null)
-//				throw new NotFoundError();
-//
-//			FormView.Builder builder = new FormView.Builder(form);
-//			builder.processInstanceId(processInstanceId);
-//			return builder.build(getViewContext());
-//		} catch (RecordNotFoundException e) {
-//			throw new BadRequestError();
-//		} catch (RecordDeletedException e) {
-//			throw new BadRequestError();
-//		}
-        return null;
-	}
-
-	@Override
-	public Response submit(final String rawProcessDefinitionKey, final MultivaluedMap<String, String> rawFormData) throws StatusCodeError {
-		return this.submit(rawProcessDefinitionKey, null, rawFormData);
-	}
-	
-	@Override
-	public Response submit(final String rawProcessDefinitionKey, final String rawProcessBusinessKey, final MultivaluedMap<String, String> rawFormData) throws StatusCodeError {
-		// Sanitize all user input
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-		String processBusinessKey = sanitizer.sanitize(rawProcessBusinessKey);
-		Map<String, List<String>> formData = sanitizer.sanitize(rawFormData);
-	
-		String submissionId = getSubmissionId(formData);
-		
-		// Ensure that we always set a process business key
-		if (processBusinessKey == null)
-			processBusinessKey = UUID.randomUUID().toString();
-
-		// FIXME: Add in description for why this error is returned
-		if (processBusinessKey.length() > 140)
-			throw new BadRequestError(Constants.ExceptionCodes.process_business_key_limit);
-
-		// FIXME: Add logic to handle attachments in the case where the previous validation failed
-//		if (submissionId != null)
-//			storeAttachments(processDefinitionKey, processBusinessKey, submissionId);
-
-
-
-
-//		PropertyValueReader reader = new PropertyValueReader(formData);
-//
-//		try {
-//			try {
-//				// Use sanitized form data to validate that all constraints are met before creating a new
-//				service.validate(processDefinitionKey, null, null, reader);
-//				service.storeValues(processDefinitionKey, null, processBusinessKey, null, reader, true);
-//
-//				ProcessInstance instance = runtime.start(null, processDefinitionKey, processBusinessKey, formData);
-//
-//				String processInstanceId = instance.getProcessInstanceId();
-//
-//			} catch (ValidationException validationException) {
-//				List<AttributeValidation> validations = validationException.getValidations();
-//
-//				Form form = service.getForm(processDefinitionKey, FormPosition.START_REQUEST, null, validations);
-//
-//				if (form == null)
-//					throw new NotFoundError();
-//
-//				FormView.Builder builder = new FormView.Builder(form);
-//				builder.submissionId(submissionId);
-//
-//				return builder.build(getViewContext());
-//			}
-//		} catch (RecordNotFoundException e) {
-//			throw new ForbiddenError();
-//		} catch (RecordDeletedException e) {
-//			throw new BadRequestError();
-//		}
-		
-		return null;
-	}  */
 	
 	@Override
 	public ViewContext getViewContext() {
