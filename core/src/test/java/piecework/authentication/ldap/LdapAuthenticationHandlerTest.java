@@ -36,7 +36,7 @@ public class LdapAuthenticationHandlerTest {
 //	@Autowired
 //	LdapContextSource groupLdapContextSource;
 //	
-//	@Test
+//	@MyTest
 //	public void testSimpleAuthentication() {
 //		SpringSecurityLdapTemplate ldapTemplate = new SpringSecurityLdapTemplate(personLdapContextSource);
 //		
@@ -45,7 +45,7 @@ public class LdapAuthenticationHandlerTest {
 //	}
 //	
 //	@SuppressWarnings("unchecked")
-//	@Test
+//	@MyTest
 //	public void testAuthenticationHandler() throws SecurityException, NoSuchMethodException {
 //
 //		String id = "rod";

@@ -29,9 +29,8 @@ import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.authentication.AuthenticationBuilder;
 import org.springframework.security.config.annotation.web.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.HttpConfigurator;
+import org.springframework.security.config.annotation.web.HttpConfiguration;
 import org.springframework.security.config.annotation.web.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
@@ -73,13 +72,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		return new AffirmativeBased(Collections.singletonList(voter));
 	}
 		
-	@Bean
-	public AuthenticationBuilder authenticationBuilder() {
-		return new AuthenticationBuilder();
-	}
+//	@Bean
+//	public AuthenticationBuilder authenticationBuilder() {
+//		return new AuthenticationBuilder();
+//	}
 	
 	@Bean
-    public AuthenticationManager authenticationManager(AuthenticationBuilder builder) throws Exception {
+    public AuthenticationManager authenticationManager() throws Exception {
 		switch (authenticationType()) {
 		case NONE:
 		case PREAUTH:
@@ -120,7 +119,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	
 	@Override
-	public void configure(HttpConfigurator httpConfiguration)
+	public void configure(HttpConfiguration httpConfiguration)
 			throws Exception {
 		AuthenticationType type = authenticationType();
 
@@ -140,7 +139,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 			break;
 		case NONE:
 			httpConfiguration
-					.addFilter(new RequestParameterAuthenticationFilter(authenticationManager(null), testUser));
+					.addFilter(new RequestParameterAuthenticationFilter(authenticationManager(), testUser));
 			break;
 		}
 	}

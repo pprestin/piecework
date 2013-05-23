@@ -31,6 +31,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import piecework.engine.config.TestConfiguration;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.util.ManyMap;
@@ -58,7 +59,7 @@ public class ActivitiEngineProxyTest {
 	}
 	
 	@Test
-	public void testStartWithNoData() {
+	public void testStartWithNoData() throws ProcessEngineException {
         Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
 		String instanceId = engineProxy.start(process, null, null);
 		Assert.assertNotNull(instanceId);
@@ -76,7 +77,7 @@ public class ActivitiEngineProxyTest {
     }
 	
 	@Test
-	public void testStartWithAliasAndNoData() {
+	public void testStartWithAliasAndNoData() throws ProcessEngineException {
         Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
 		String instanceId = engineProxy.start(process, "test1", null);
 		Assert.assertNotNull(instanceId);
@@ -95,7 +96,7 @@ public class ActivitiEngineProxyTest {
 	}
 	
 	@Test
-	public void testStartWithAliasAndSomeData() {
+	public void testStartWithAliasAndSomeData() throws ProcessEngineException {
         Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
 		Map<String, ?> data = new ManyMap<String, String>();
 		((ManyMap<String, String>)data).putOne("InitiatorId", "testuser");

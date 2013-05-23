@@ -46,7 +46,8 @@ public class EngineConfiguration {
 	@Bean
 	public DataSource activitiDataSource() throws ClassNotFoundException {
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-		dataSource.setDriverClass(env.getPropertyAsClass("activiti.datasource.driver.name", Driver.class));
+        Class<Driver> driverClass = env.getPropertyAsClass("activiti.datasource.driver.name", Driver.class);
+		dataSource.setDriverClass(driverClass);
 		dataSource.setUrl(env.getProperty("activiti.datasource.url"));
 		dataSource.setUsername("activiti.datasource.username");
 		dataSource.setPassword("activiti.datasource.password");
