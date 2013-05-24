@@ -1,4 +1,4 @@
-package piecework.form;
+package piecework.persistence;
 
 import piecework.model.Content;
 
@@ -9,8 +9,6 @@ import java.util.List;
  * @author James Renfro
  */
 public interface ContentRepository {
-
-    Content findOne(String contentId);
 
     Content findByLocation(String location);
 

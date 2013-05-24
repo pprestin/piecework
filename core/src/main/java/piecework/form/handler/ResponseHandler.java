@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.form.handler;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import piecework.exception.StatusCodeError;
+import piecework.form.StreamingPageContent;
+import piecework.model.Content;
 import piecework.model.Form;
 import piecework.model.FormRequest;
+import piecework.persistence.ContentRepository;
 
 import javax.ws.rs.core.Response;
 
@@ -50,9 +52,9 @@ public class ResponseHandler {
 
         if (StringUtils.isNotEmpty(location)) {
             // If the location is not blank then delegate to the
-            GridFsResource resource = gridFsTemplate.getResource(location);
-            String contentType = resource.getContentType();
-            return Response.ok(new StreamingPageContent(form, resource), contentType).build();
+            Content content = contentRepository.findByLocation(location);
+            String contentType = content.getContentType();
+            return Response.ok(new StreamingPageContent(form, content), contentType).build();
         }
 
         return Response.ok(form).build();

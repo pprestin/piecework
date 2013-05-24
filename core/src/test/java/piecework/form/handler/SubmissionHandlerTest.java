@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package piecework.form;
+package piecework.form.handler;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.form.handler.SubmissionHandler;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.model.*;
 import piecework.process.ProcessInstancePayload;
@@ -74,7 +75,5 @@ public class SubmissionHandlerTest {
         Assert.assertEquals("2", values.get(1));
         Assert.assertEquals("3", values.get(2));
     }
-
-
 
 }

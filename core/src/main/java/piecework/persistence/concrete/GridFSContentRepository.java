@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.concrete;
+package piecework.persistence.concrete;
 
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
-import piecework.form.ContentRepository;
+import piecework.persistence.ContentRepository;
 import piecework.model.Content;
 
 import java.io.IOException;
@@ -43,12 +42,6 @@ public class GridFSContentRepository implements ContentRepository {
     GridFsOperations gridFsOperations;
 
     @Override
-    public Content findOne(String contentId) {
-        GridFSDBFile file = gridFsOperations.findOne(query(Criteria.where("_id").is(contentId)));
-        return toContent(file);
-    }
-
-    @Override
     public Content findByLocation(String location) {
         GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
         return toContent(file);
@@ -63,6 +56,7 @@ public class GridFSContentRepository implements ContentRepository {
             for (GridFsResource resource : resources) {
                 contents.add(toContent(resource));
             }
+            return contents;
         }
         return Collections.emptyList();
     }

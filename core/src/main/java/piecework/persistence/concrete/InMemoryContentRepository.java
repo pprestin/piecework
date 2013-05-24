@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.concrete;
+package piecework.persistence.concrete;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.compress.utils.IOUtils;
 import org.bouncycastle.jce.provider.JDKMessageDigest;
-import piecework.form.ContentRepository;
+import piecework.persistence.ContentRepository;
 import piecework.model.Content;
 
 import java.io.ByteArrayInputStream;
@@ -40,11 +40,6 @@ public class InMemoryContentRepository implements ContentRepository {
     public InMemoryContentRepository() {
         this.contentMap = new Hashtable<String, Content>();
         this.contentLocationMap = new Hashtable<String, Content>();
-    }
-
-    @Override
-    public Content findOne(String contentId) {
-        return contentMap.get(contentId);
     }
 
     @Override

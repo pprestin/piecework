@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.form.handler;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.form.handler.RequestHandler;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.exception.ForbiddenError;
 import piecework.model.FormRequest;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.form.handler;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;

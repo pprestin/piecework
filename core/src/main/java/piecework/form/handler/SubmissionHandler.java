@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.form.handler;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.gridfs.GridFSFile;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import piecework.model.Content;
+import piecework.persistence.ContentRepository;
 import piecework.security.Sanitizer;
 import piecework.exception.StatusCodeError;
 import piecework.model.FormRequest;
@@ -114,7 +112,7 @@ public class SubmissionHandler {
 
                         content = contentRepository.save(content);
 
-                        submissionBuilder.formContent(contentType.toString(), contentId, filename, content.getContentId());
+                        submissionBuilder.formContent(contentType.toString(), contentId, filename, content.getLocation());
 
                     } catch (IOException e) {
                         LOG.error("Unable to save this attachment with filename: " + filename);

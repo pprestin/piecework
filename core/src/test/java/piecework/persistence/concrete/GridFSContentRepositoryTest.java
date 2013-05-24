@@ -13,67 +13,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.concrete;
+package piecework.persistence.concrete;
 
 import junit.framework.Assert;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.persistence.ContentRepository;
 import piecework.model.Content;
 import piecework.test.ExampleFactory;
+import piecework.test.config.PersistenceTestConfiguration;
 
 import java.util.List;
 
 /**
  * @author James Renfro
  */
-public class InMemoryContentRepositoryTest {
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes={PersistenceTestConfiguration.class})
+@ActiveProfiles("test")
+public class GridFSContentRepositoryTest {
 
-    InMemoryContentRepository contentRepository;
-
-    @Before
-    public void setup() {
-        this.contentRepository = new InMemoryContentRepository();
-    }
-
-    @Test
-    public void testSaveAndFindOne() throws Exception {
-        Content content = contentRepository.save(ExampleFactory.exampleContent());
-        Assert.assertNotNull(content.getContentId());
-
-        Content stored = contentRepository.findOne(content.getContentId());
-
-        Assert.assertEquals(content.getContentId(), stored.getContentId());
-        Assert.assertEquals(14, stored.getLength().longValue());
-        Assert.assertNotNull(stored.getLastModified());
-        Assert.assertEquals(ExampleFactory.exampleContent().getContentType(), stored.getContentType());
-    }
+    @Autowired
+    ContentRepository contentRepository;
 
     @Test
     public void testFindByLocation() throws Exception {
-        Content content = contentRepository.save(ExampleFactory.exampleContent());
+        Content expected = ExampleFactory.exampleContent();
+
+        Content content = contentRepository.save(expected);
         Assert.assertNotNull(content.getContentId());
 
-        Content stored = contentRepository.findByLocation(ExampleFactory.exampleContent().getLocation());
+        Content stored = contentRepository.findByLocation(expected.getLocation());
 
         Assert.assertEquals(content.getContentId(), stored.getContentId());
         Assert.assertEquals(14, stored.getLength().longValue());
         Assert.assertNotNull(stored.getLastModified());
-        Assert.assertEquals(ExampleFactory.exampleContent().getContentType(), stored.getContentType());
+        Assert.assertEquals(expected.getContentType(), stored.getContentType());
     }
 
     @Test
     public void testFindByLocationPattern() throws Exception {
-        Content content = contentRepository.save(ExampleFactory.exampleContent());
+        Content expected = ExampleFactory.exampleContent();
+
+        Content content = contentRepository.save(expected);
         Assert.assertNotNull(content.getContentId());
 
-        List<Content> results = contentRepository.findByLocationPattern("/test/.+");
+        List<Content> results = contentRepository.findByLocationPattern("/test/*");
 
         Assert.assertEquals(1, results.size());
         Content stored = results.get(0);
         Assert.assertEquals(content.getContentId(), stored.getContentId());
         Assert.assertEquals(14, stored.getLength().longValue());
         Assert.assertNotNull(stored.getLastModified());
-        Assert.assertEquals(ExampleFactory.exampleContent().getContentType(), stored.getContentType());
+        Assert.assertEquals(expected.getContentType(), stored.getContentType());
     }
 
 }
