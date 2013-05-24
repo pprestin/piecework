@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
+package piecework.test.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,19 +26,22 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import piecework.form.ContentRepository;
 import piecework.form.RequestHandler;
-import piecework.model.FormRequest;
-import piecework.model.Interaction;
-import piecework.model.Process;
-import piecework.model.Screen;
+import piecework.form.SubmissionHandler;
+import piecework.form.concrete.GridFSContentRepository;
+import piecework.form.concrete.InMemoryContentRepository;
+import piecework.model.*;
 import piecework.designer.InteractionRepository;
 import piecework.designer.InteractionResource;
+import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
 import piecework.designer.ScreenRepository;
 import piecework.designer.ScreenResource;
 import piecework.designer.concrete.InteractionResourceVersion1Impl;
 import piecework.process.RequestRepository;
+import piecework.process.SubmissionRepository;
 import piecework.process.concrete.MongoRepositoryStub;
 import piecework.process.concrete.ProcessResourceVersion1;
 import piecework.process.concrete.ResourceHelper;
@@ -46,12 +49,14 @@ import piecework.designer.concrete.ScreenResourceVersion1Impl;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.Sanitizer;
 
+import javax.ws.rs.BeanParam;
+
 /**
  * @author James Renfro
  */
 @Configuration
 @Profile("test")
-public class ApplicationConfigurationForUnitTest {
+public class UnitTestConfiguration {
 
 	@Bean
 	public Sanitizer sanitizer() {
@@ -61,6 +66,11 @@ public class ApplicationConfigurationForUnitTest {
     @Bean
     public RequestHandler requestHandler() {
         return new RequestHandler();
+    }
+
+    @Bean
+    public SubmissionHandler submissionHandler() {
+        return new SubmissionHandler();
     }
 
 	@Bean
@@ -85,15 +95,20 @@ public class ApplicationConfigurationForUnitTest {
 		ScreenResourceVersion1Impl resource = new ScreenResourceVersion1Impl();
 		return resource;
 	}
-	
+
+    @Bean
+    public ContentRepository contentRepository() {
+        return new InMemoryContentRepository();
+    }
+
+    @Bean
+    public InteractionRepository interactionRepository() {
+        return new InteractionRepositoryStub();
+    }
+
 	@Bean 
 	public ProcessRepository processRepository() {
 		return new ProcessRepositoryStub();
-	}
-	
-	@Bean 
-	public InteractionRepository interactionRepository() {
-		return new InteractionRepositoryStub();
 	}
 
     @Bean
@@ -105,6 +120,11 @@ public class ApplicationConfigurationForUnitTest {
 	public ScreenRepository screenRepository() {
 		return new ScreenRepositoryStub();
 	}
+
+    @Bean
+    public SubmissionRepository submissionRepository() {
+        return new SubmissionRepositoryStub();
+    }
 	
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {
@@ -134,4 +154,9 @@ public class ApplicationConfigurationForUnitTest {
 	public class ScreenRepositoryStub extends MongoRepositoryStub<Screen> implements ScreenRepository {
 
 	}
+
+    public class SubmissionRepositoryStub extends MongoRepositoryStub<FormSubmission> implements SubmissionRepository {
+
+    }
+
 }

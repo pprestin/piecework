@@ -15,54 +15,104 @@
  */
 package piecework.form;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.test.config.UnitTestConfiguration;
+import piecework.exception.ForbiddenError;
+import piecework.model.FormRequest;
+import piecework.model.Interaction;
 import piecework.model.Process;
-import piecework.process.ProcessRepository;
+import piecework.model.Screen;
+import piecework.test.ExampleFactory;
 
 import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author James Renfro
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes={UnitTestConfiguration.class})
+@ActiveProfiles("test")
 public class RequestHandlerTest {
-
-    private static final String EXAMPLE_PROCESS_DEFINITION_KEY = "example";
 
     @Autowired
     RequestHandler requestHandler;
 
-    @Autowired
-    ProcessRepository processRepository;
-
-    HttpServletRequest request;
-
-
+    HttpServletRequest servletRequest;
+    Process process;
+    String processInstanceId;
 
     @Before
     public void setUp() throws Exception {
-        this.request = Mockito.mock(HttpServletRequest.class);
-
-
-
-//        Process process = new Process.Builder()
-//                .interaction()
-//                .build();
-
+        this.servletRequest = Mockito.mock(HttpServletRequest.class);
+        this.process = ExampleFactory.exampleProcess();
+        this.processInstanceId = "123";
     }
 
     @Test
-    public void testCreate() throws Exception {
+    public void testCreateAndHandleInitialRequest() throws Exception {
+        Mockito.when(servletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+        Mockito.when(servletRequest.getRemoteHost()).thenReturn("127.0.0.1");
+        Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
+        Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester");
 
-//        requestHandler.create(request, TEST)
+        Interaction firstInteraction = process.getInteractions().iterator().next();
+        FormRequest formRequest = requestHandler.create(servletRequest, process.getProcessDefinitionKey(), firstInteraction);
+        assertValid(formRequest);
 
+        FormRequest handleRequest = requestHandler.handle(servletRequest, formRequest.getRequestId());
+        assertEqual(formRequest, handleRequest);
     }
 
     @Test
-    public void testHandle() throws Exception {
+    public void testCreateAndHandleInitialRequestWrongUser() throws Exception {
+        Mockito.when(servletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+        Mockito.when(servletRequest.getRemoteHost()).thenReturn("127.0.0.1");
+        Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
+        Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester").thenReturn("somebodyelse");
 
+        Interaction firstInteraction = process.getInteractions().iterator().next();
+        FormRequest formRequest = requestHandler.create(servletRequest, process.getProcessDefinitionKey(), firstInteraction);
+        assertValid(formRequest);
+
+        boolean isExceptionThrown = false;
+        try {
+            requestHandler.handle(servletRequest, formRequest.getRequestId());
+        } catch (ForbiddenError error) {
+            isExceptionThrown = true;
+        }
+
+        Assert.assertTrue(isExceptionThrown);
+    }
+
+    private void assertValid(FormRequest formRequest) {
+        Assert.assertNotNull(formRequest);
+        Assert.assertNotNull(formRequest.getRequestId());
+        Assert.assertEquals(process.getProcessDefinitionKey(), formRequest.getProcessDefinitionKey());
+        Assert.assertNull(formRequest.getProcessInstanceId());
+
+        // Interaction should be first interaction from example factory
+        Interaction actualInteraction = formRequest.getInteraction();
+        Interaction expectedInteraction = ExampleFactory.exampleInteractionWithTwoScreens();
+        Assert.assertEquals(expectedInteraction.getLabel(), actualInteraction.getLabel());
+
+        Screen actualScreen = formRequest.getScreen();
+        Screen expectedScreen = ExampleFactory.exampleScreenWithTwoSections();
+        Assert.assertEquals(expectedScreen.getTitle(), actualScreen.getTitle());
+    }
+
+    private void assertEqual(FormRequest expected, FormRequest actual) {
+        assertValid(actual);
+
+        Assert.assertEquals(expected.getRequestId(), actual.getRequestId());
+        Assert.assertEquals(expected.getProcessDefinitionKey(), actual.getProcessDefinitionKey());
     }
 
 }

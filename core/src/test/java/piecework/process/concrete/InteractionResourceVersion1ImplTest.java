@@ -27,7 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import piecework.ApplicationConfigurationForUnitTest;
+import piecework.test.config.UnitTestConfiguration;
 import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Interaction;
@@ -39,7 +39,7 @@ import piecework.process.ProcessResource;
  * @author James Renfro
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes={ApplicationConfigurationForUnitTest.class})
+@ContextConfiguration(classes={UnitTestConfiguration.class})
 @ActiveProfiles("test")
 public class InteractionResourceVersion1ImplTest {
 

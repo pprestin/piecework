@@ -13,38 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.test;
+package piecework.engine.test;
 
 import piecework.Constants;
-import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.UUID;
 
 /**
  * @author James Renfro
  */
 public class ExampleFactory {
-
-    public static Content exampleContent() {
-        return new Content.Builder()
-                .contentType("text/plain")
-                .location("/test/0002")
-                .inputStream(new ByteArrayInputStream("This is a test".getBytes()))
-                .build();
-    }
-
-    public static FormRequest exampleFormRequest() {
-        return new FormRequest.Builder()
-                .requestId(UUID.randomUUID().toString())
-                .screen(exampleScreenWithTwoSections())
-                .submissionType(Constants.SubmissionTypes.INTERIM)
-                .build();
-    }
-
 
     public static Field employeeNameField() {
         return new Field.Builder()
@@ -115,7 +93,6 @@ public class ExampleFactory {
     public static Screen exampleScreenWithTwoSections() {
 
         return new Screen.Builder()
-                .title("First screen")
                 .section(exampleSectionWithTwoFields())
                 .section(exampleSectionWithOneField())
                 .attachmentAllowed(false)
@@ -124,7 +101,6 @@ public class ExampleFactory {
 
     public static Screen exampleThankYouScreen() {
         return new Screen.Builder()
-                .title("Second screen")
                 .section(exampleSectionWithConfirmationNumber())
                 .attachmentAllowed(false)
                 .build();
@@ -147,15 +123,6 @@ public class ExampleFactory {
                 .engineProcessDefinitionKey("example")
                 .build();
 
-    }
-
-    public static ProcessInstance exampleProcessInstance() {
-        Process process = exampleProcess();
-        return new ProcessInstance.Builder()
-                .processDefinitionKey(process.getProcessDefinitionKey())
-                .processDefinitionLabel(process.getProcessDefinitionLabel())
-                .engineProcessInstanceId(UUID.randomUUID().toString())
-                .build();
     }
 
 

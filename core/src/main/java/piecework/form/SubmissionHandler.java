@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
+import piecework.model.Content;
 import piecework.security.Sanitizer;
 import piecework.exception.StatusCodeError;
 import piecework.model.FormRequest;
@@ -46,7 +47,7 @@ public class SubmissionHandler {
     private static final Logger LOG = Logger.getLogger(SubmissionHandler.class);
 
     @Autowired
-    GridFsTemplate gridFsTemplate;
+    ContentRepository contentRepository;
 
     @Autowired
     Sanitizer sanitizer;
@@ -73,7 +74,7 @@ public class SubmissionHandler {
                 submissionBuilder.formData(payload.getFormData());
                 break;
             case MULTIPART:
-                multipart(submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
+                multipart(requestId, submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
                 break;
         }
 
@@ -81,7 +82,7 @@ public class SubmissionHandler {
         return submissionRepository.save(result);
     }
 
-    private void multipart(FormSubmission.Builder submissionBuilder, MultipartBody body, boolean isAttachmentAllowed) {
+    private void multipart(String requestId, FormSubmission.Builder submissionBuilder, MultipartBody body, boolean isAttachmentAllowed) {
         List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body.getAllAttachments();
         if (attachments != null && !attachments.isEmpty()) {
             for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
@@ -103,12 +104,17 @@ public class SubmissionHandler {
                     String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
                     LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
                     try {
-                        BasicDBObject metadata = new BasicDBObject();
-                        metadata.append("Content-Type", contentType);
-                        String uuid = UUID.randomUUID().toString();
-                        GridFSFile file = gridFsTemplate.store(attachment.getDataHandler().getInputStream(), uuid, metadata);
+                        String location = "/submissions/" + requestId + "/" + UUID.randomUUID().toString();
 
-                        submissionBuilder.formContent(contentType.toString(), contentId, filename, uuid);
+                        Content content = new Content.Builder()
+                                .contentType(contentType.toString())
+                                .location(location)
+                                .inputStream(attachment.getDataHandler().getInputStream())
+                                .build();
+
+                        content = contentRepository.save(content);
+
+                        submissionBuilder.formContent(contentType.toString(), contentId, filename, content.getContentId());
 
                     } catch (IOException e) {
                         LOG.error("Unable to save this attachment with filename: " + filename);

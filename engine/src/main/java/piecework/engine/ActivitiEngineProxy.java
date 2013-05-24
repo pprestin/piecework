@@ -326,7 +326,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             }
         }
 
-        if (criteria.getComplete()) {
+        if (criteria.getComplete() != null) {
             if (criteria.getComplete().booleanValue())
                 query.finished();
             else

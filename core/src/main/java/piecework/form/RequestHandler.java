@@ -19,7 +19,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.exception.ForbiddenError;
@@ -52,8 +51,12 @@ public class RequestHandler {
     @Value("${certificate.subject.header}")
     String certificateSubjectHeader;
 
+    public FormRequest create(HttpServletRequest request, String processDefinitionKey, Interaction interaction) throws StatusCodeError {
+        return create(request, processDefinitionKey, interaction, null, null);
+    }
 
-    public FormRequest create(HttpServletRequest request, String processDefinitionKey, String processInstanceId, Interaction interaction, Screen currentScreen) throws StatusCodeError {
+
+    public FormRequest create(HttpServletRequest servletRequest, String processDefinitionKey, Interaction interaction, Screen currentScreen, String processInstanceId) throws StatusCodeError {
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
 
@@ -99,20 +102,20 @@ public class RequestHandler {
                 .screen(nextScreen)
                 .submissionType(submissionType);
 
-        if (request != null) {
+        if (servletRequest != null) {
             String certificateIssuer = null;
             String certificateSubject = null;
 
             if (StringUtils.isNotEmpty(certificateIssuerHeader))
-                certificateIssuer = request.getHeader(certificateIssuerHeader);
+                certificateIssuer = servletRequest.getHeader(certificateIssuerHeader);
 
             if (StringUtils.isNotEmpty(certificateSubjectHeader))
-                certificateSubject = request.getHeader(certificateSubjectHeader);
+                certificateSubject = servletRequest.getHeader(certificateSubjectHeader);
 
-            formRequestBuilder.remoteAddr(request.getRemoteAddr())
-                    .remoteHost(request.getRemoteHost())
-                    .remotePort(request.getRemotePort())
-                    .remoteUser(request.getRemoteUser())
+            formRequestBuilder.remoteAddr(servletRequest.getRemoteAddr())
+                    .remoteHost(servletRequest.getRemoteHost())
+                    .remotePort(servletRequest.getRemotePort())
+                    .remoteUser(servletRequest.getRemoteUser())
                     .certificateIssuer(certificateIssuer)
                     .certificateSubject(certificateSubject);
         }

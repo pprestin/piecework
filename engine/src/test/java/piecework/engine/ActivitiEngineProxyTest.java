@@ -16,6 +16,7 @@
 package piecework.engine;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.Assert;
@@ -32,6 +33,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import piecework.engine.config.TestConfiguration;
 import piecework.engine.exception.ProcessEngineException;
+import piecework.engine.test.ExampleFactory;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.util.ManyMap;
@@ -44,23 +46,25 @@ import piecework.util.ManyMap;
 @ActiveProfiles("test")
 public class ActivitiEngineProxyTest {
 
-	private static final String EXAMPLE_PROCESS_DEFINITION_KEY = "example";
 	
 	@Autowired
 	ProcessEngineProxy engineProxy;
 	
 	@Autowired
 	RepositoryService repositoryService;
-	
+
+    private Process process;
+
 	@Before
 	public void setup() throws IOException {
+        process = ExampleFactory.exampleProcess();
+
 		ClassPathResource resource = new ClassPathResource("META-INF/example.bpmn20.xml");
-		repositoryService.createDeployment().name(EXAMPLE_PROCESS_DEFINITION_KEY).addInputStream("example.bpmn20.xml", resource.getInputStream()).deploy();
-	}
+		repositoryService.createDeployment().name(process.getEngineProcessDefinitionKey()).addInputStream("example.bpmn20.xml", resource.getInputStream()).deploy();
+    }
 	
 	@Test
 	public void testStartWithNoData() throws ProcessEngineException {
-        Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
 		String instanceId = engineProxy.start(process, null, null);
 		Assert.assertNotNull(instanceId);
 
@@ -78,8 +82,7 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithAliasAndNoData() throws ProcessEngineException {
-        Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
-		String instanceId = engineProxy.start(process, "test1", null);
+        String instanceId = engineProxy.start(process, "test1", null);
 		Assert.assertNotNull(instanceId);
 
         ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
@@ -97,12 +100,12 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithAliasAndSomeData() throws ProcessEngineException {
-        Process process = new Process.Builder().processDefinitionKey(EXAMPLE_PROCESS_DEFINITION_KEY).build();
 		Map<String, ?> data = new ManyMap<String, String>();
-		((ManyMap<String, String>)data).putOne("InitiatorId", "testuser");
+		((ManyMap<String, String>)data).putOne("EmployeeID", "testuser");
         String instanceId = engineProxy.start(process, "test1", data);
         Assert.assertNotNull(instanceId);
 
+        // First, retrieve without including variables
         ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
                 .engine(process.getEngine())
                 .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
@@ -113,7 +116,23 @@ public class ActivitiEngineProxyTest {
 
         Assert.assertNotNull(execution);
         Assert.assertEquals(instanceId, execution.getExecutionId());
-        Assert.assertEquals("testuser", execution.getData().get("InitiatorId"));
+        Assert.assertNull(execution.getData());
+
+
+        // Then include variables in criteria
+        criteria = new ProcessExecutionCriteria.Builder()
+                .engine(process.getEngine())
+                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .executionId(instanceId)
+                .includeVariables()
+                .build();
+
+        execution = engineProxy.findExecution(criteria);
+
+        Assert.assertNotNull(execution);
+        Assert.assertEquals(instanceId, execution.getExecutionId());
+        List<String> employeeIDs = (List<String>)execution.getData().get("EmployeeID");
+        Assert.assertEquals("testuser", employeeIDs.get(0));
 	}
 	
 }

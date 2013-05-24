@@ -97,7 +97,7 @@ public class FormResourceVersion1 implements FormResource {
         // Pick the first interaction and the first screen
         Interaction interaction = interactions.iterator().next();
 
-        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, interaction, null);
+        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, interaction, null, null);
 
         return responseHandler.handle(formRequest);
 	}
@@ -132,7 +132,7 @@ public class FormResourceVersion1 implements FormResource {
                 }
             }
 
-            FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, selectedInteraction, null);
+            FormRequest formRequest = requestHandler.create(request, processDefinitionKey, selectedInteraction, null, null);
 
             return responseHandler.handle(formRequest);
 
@@ -212,7 +212,7 @@ public class FormResourceVersion1 implements FormResource {
         FormRequest nextFormRequest = null;
 
         if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-            nextFormRequest = requestHandler.create(request, processDefinitionKey, stored.getProcessInstanceId(), interaction, formRequest.getScreen());
+            nextFormRequest = requestHandler.create(request, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
 
         // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
         if (nextFormRequest == null) {
