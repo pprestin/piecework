@@ -221,6 +221,12 @@ public class Field implements Serializable {
 
         public Builder() {
             super();
+            this.maxInputs = 1;
+            this.minInputs = 1;
+            this.minValueLength = 0;
+            this.maxValueLength = 255;
+            this.ordinal = -1;
+            this.editable = true;
         }
 
         public Builder(Field field, Sanitizer sanitizer) {

@@ -17,6 +17,7 @@ package piecework.form;
 
 import org.htmlcleaner.*;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
+import piecework.model.Content;
 import piecework.model.Form;
 
 import javax.ws.rs.WebApplicationException;
@@ -33,16 +34,16 @@ import java.util.Map;
 public class StreamingPageContent implements StreamingOutput {
 
     private final Form form;
-    private final GridFsResource resource;
+    private final Content content;
 
-    public StreamingPageContent(Form form, GridFsResource resource) {
+    public StreamingPageContent(Form form, Content content) {
         this.form = form;
-        this.resource = resource;
+        this.content = content;
     }
 
     public void write(OutputStream output) throws IOException, WebApplicationException {
         HtmlCleaner cleaner = new HtmlCleaner();
-        TagNode node = cleaner.clean(resource.getInputStream());
+        TagNode node = cleaner.clean(content.getInputStream());
 
         final URL siteUrl = null;
         node.traverse(new TagNodeVisitor() {

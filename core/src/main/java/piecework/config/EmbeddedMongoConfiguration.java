@@ -15,12 +15,16 @@
  */
 package piecework.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.google.common.io.Files;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
+import org.springframework.core.env.Environment;
 import piecework.persistence.EmbeddedMongoInstance;
+
+import java.io.File;
 
 /**
  * @author James Renfro
@@ -29,20 +33,22 @@ import piecework.persistence.EmbeddedMongoInstance;
 @Profile("embedded-mongo")
 public class EmbeddedMongoConfiguration {
 
-	@Value("${mongo.db}")
-	private String mongoDb;
-	
-	@Value("${mongo.username}")
-	private String mongoUsername;
-	
-	@Value("${mongo.password}")
-	private String mongoPassword;
-	
-	@Value("${mongo.filesystem}")
-	private String mongoFilesystem;
-		
+    @Autowired
+    Environment environment;
+
 	@Bean
 	public EmbeddedMongoInstance mongoInstance() {
-		return new EmbeddedMongoInstance("127.0.0.1", 37017, mongoDb, mongoUsername, mongoPassword, mongoFilesystem);
+        String mongoDb = environment.getProperty("mongo.db");
+        String mongoUsername = environment.getProperty("mongo.username");
+        String mongoPassword = environment.getProperty("mongo.password");
+        String mongoFilesystem = environment.getProperty("mongo.filesystem");
+
+        if (StringUtils.isEmpty(mongoFilesystem)) {
+            File temporaryDirectory = Files.createTempDir();
+            mongoFilesystem = temporaryDirectory.getAbsolutePath();
+        }
+
+        return new EmbeddedMongoInstance("127.0.0.1", 37017, mongoDb, mongoUsername, mongoPassword, mongoFilesystem);
 	}
+
 }

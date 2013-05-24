@@ -42,7 +42,11 @@ public class ValidationService {
 
 	@Autowired(required=false)
 	Registry registry;
-	
+
+
+    public FormValidation validate(FormSubmission submission, ProcessInstance instance, Screen screen) {
+        return validate(submission, instance, screen, null);
+    }
 	
 	public FormValidation validate(FormSubmission submission, ProcessInstance instance, Screen screen, String validationId) {
 		

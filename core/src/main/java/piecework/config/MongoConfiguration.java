@@ -20,9 +20,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -40,19 +42,10 @@ import piecework.model.ProcessInstance;
 public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);
-		
-	@Value("${mongo.server.addresses}")
-	private String mongoServerAddresses;
-	
-	@Value("${mongo.db}")
-	private String mongoDb;
 
-	@Value("${mongo.username}")
-	private String mongoUsername;
-	
-	@Value("${mongo.password}")
-	private String mongoPassword;
-	
+    @Autowired
+    Environment environment;
+
 	@Bean
     public Mongo mongo() throws Exception {
          return new Mongo(getServerAddresses());
@@ -60,12 +53,13 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
 
     @Bean
     public GridFsTemplate gridFsTemplate() throws Exception {
-        return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
+        String bucket = environment.getProperty("mongo.gridfs.bucket");
+        return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter(), bucket);
     }
 
     @Override
     protected String getDatabaseName() {
-        return mongoDb;
+        return environment.getProperty("mongo.db");
     }
 
     @Override
@@ -75,10 +69,13 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
 
     @Override
     protected UserCredentials getUserCredentials() {
+        String mongoUsername = environment.getProperty("mongo.username");
+        String mongoPassword = environment.getProperty("mongo.password");
         return new UserCredentials(mongoUsername, mongoPassword);
     }
 
 	private List<ServerAddress> getServerAddresses() throws UnknownHostException {
+        String mongoServerAddresses = environment.getProperty("mongo.server.addresses");
 		List<ServerAddress> serverAddresses = new LinkedList<ServerAddress>();
 		String[] addresses = mongoServerAddresses.split(",");
 		for (String address : addresses) {

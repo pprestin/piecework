@@ -15,18 +15,20 @@
  */
 package piecework.test.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import piecework.form.ContentRepository;
-import piecework.form.RequestHandler;
-import piecework.form.concrete.GridFSContentRepository;
+import org.springframework.context.annotation.*;
+import piecework.config.EmbeddedMongoConfiguration;
+import piecework.config.MongoConfiguration;
+import piecework.persistence.ContentRepository;
+import piecework.persistence.EmbeddedMongoInstance;
+import piecework.persistence.concrete.GridFSContentRepository;
 
 /**
  * @author James Renfro
  */
 @Configuration
 @Profile("test")
+@Import({EmbeddedMongoConfiguration.class, MongoConfiguration.class})
+@PropertySource("classpath:META-INF/mongo.test.properties")
 public class PersistenceTestConfiguration {
 
     @Bean

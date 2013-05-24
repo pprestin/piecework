@@ -51,6 +51,9 @@ public class InMemoryContentRepository implements ContentRepository {
     public List<Content> findByLocationPattern(String locationPattern) throws IOException {
         List<Content> contents = new ArrayList<Content>();
 
+        if (locationPattern.contains("*"))
+            locationPattern = locationPattern.replace("*", ".*");
+
         Pattern pattern = Pattern.compile(locationPattern, 0);
 
         for (Map.Entry<String, Content> entry : contentLocationMap.entrySet()) {

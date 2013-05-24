@@ -36,9 +36,6 @@ public class ResponseHandler {
     @Autowired
     ContentRepository contentRepository;
 
-    @Autowired
-    GridFsTemplate gridFsTemplate;
-
     public Response handle(FormRequest formRequest) throws StatusCodeError {
 
         Form form = new Form.Builder()

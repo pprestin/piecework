@@ -18,6 +18,7 @@ package piecework.test.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -26,11 +27,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-import piecework.form.ContentRepository;
-import piecework.form.RequestHandler;
-import piecework.form.SubmissionHandler;
-import piecework.form.concrete.GridFSContentRepository;
-import piecework.form.concrete.InMemoryContentRepository;
+import piecework.form.handler.ResponseHandler;
+import piecework.persistence.ContentRepository;
+import piecework.form.handler.RequestHandler;
+import piecework.form.handler.SubmissionHandler;
+import piecework.persistence.concrete.InMemoryContentRepository;
 import piecework.model.*;
 import piecework.designer.InteractionRepository;
 import piecework.designer.InteractionResource;
@@ -49,8 +50,6 @@ import piecework.designer.concrete.ScreenResourceVersion1Impl;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.Sanitizer;
 
-import javax.ws.rs.BeanParam;
-
 /**
  * @author James Renfro
  */
@@ -66,6 +65,11 @@ public class UnitTestConfiguration {
     @Bean
     public RequestHandler requestHandler() {
         return new RequestHandler();
+    }
+
+    @Bean
+    public ResponseHandler responseHandler() {
+        return new ResponseHandler();
     }
 
     @Bean

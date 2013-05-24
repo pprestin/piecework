@@ -38,7 +38,7 @@ public class InMemoryContentRepositoryTest {
 
     @Test
     public void testFindByLocation() throws Exception {
-        Content expected = ExampleFactory.exampleContent();
+        Content expected = ExampleFactory.exampleContent("/test1");
 
         Content content = contentRepository.save(expected);
         Assert.assertNotNull(content.getContentId());
@@ -52,12 +52,12 @@ public class InMemoryContentRepositoryTest {
 
     @Test
     public void testFindByLocationPattern() throws Exception {
-        Content expected = ExampleFactory.exampleContent();
+        Content expected = ExampleFactory.exampleContent("/test2");
 
         Content content = contentRepository.save(expected);
         Assert.assertNotNull(content.getContentId());
 
-        List<Content> results = contentRepository.findByLocationPattern("/test/.+");
+        List<Content> results = contentRepository.findByLocationPattern("/test2/*");
 
         Assert.assertEquals(1, results.size());
         Content stored = results.get(0);

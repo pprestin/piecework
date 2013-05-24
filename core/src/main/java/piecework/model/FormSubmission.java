@@ -199,9 +199,11 @@ public class FormSubmission {
         }
 
         public Builder attachments(List<Attachment> attachments) {
-            if (this.attachments == null)
-                this.attachments = new ArrayList<Attachment>();
-            this.attachments.addAll(attachments);
+            if (attachments != null) {
+                if (this.attachments == null)
+                    this.attachments = new ArrayList<Attachment>();
+                this.attachments.addAll(attachments);
+            }
             return this;
         }
     }

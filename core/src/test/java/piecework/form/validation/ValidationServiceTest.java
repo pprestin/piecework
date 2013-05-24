@@ -15,66 +15,28 @@
  */
 package piecework.form.validation;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import piecework.Constants;
-import piecework.model.Constraint;
-import piecework.model.Field;
-import piecework.model.FormSubmission;
-import piecework.model.ProcessInstance;
-import piecework.model.Screen;
-import piecework.model.Section;
+import piecework.model.*;
+import piecework.test.ExampleFactory;
+
+import java.util.List;
 
 /**
  * @author James Renfro
  */
 public class ValidationServiceTest {
 
-	Screen testScreen;
 	ValidationService validationService;
-	
+
 	@Before
 	public void setUp() {
 		this.validationService = new ValidationService();
-		Field employeeNameField = new Field.Builder()
-			.type(Constants.FieldTypes.TEXT)
-			.maxValueLength(40)
-			.build();
-		
-		Field budgetNumberField = new Field.Builder()
-			.type(Constants.FieldTypes.TEXT)
-			.maxValueLength(20)
-			.constraint(new Constraint.Builder().type(Constants.ConstraintTypes.IS_NUMERIC).build())
-			.build();
-		
-		Section step1 = new Section.Builder()
-			.tagId("basic")
-			.field(employeeNameField)
-			.field(budgetNumberField)
-			.ordinal(1)
-			.build();
-		
-		Field supervisorIdField = new Field.Builder()
-			.type(Constants.FieldTypes.TEXT)
-			.constraint(new Constraint.Builder().type(Constants.ConstraintTypes.IS_VALID_USER).build())
-			.maxValueLength(40)
-			.build();
-		
-		Section step2 = new Section.Builder()
-			.tagId("supplemental")
-			.field(supervisorIdField)
-			.ordinal(2)
-			.build();
-		
-		this.testScreen = new Screen.Builder()
-			.section(step1)
-			.section(step2)
-			.attachmentAllowed(false)
-			.build();
 	}
-	
-	
+
 	@Test
 	public void testValidateFirstOfTwoSections() {
 		FormSubmission submission = new FormSubmission.Builder()
@@ -83,11 +45,55 @@ public class ValidationServiceTest {
 			.build();
 
 		ProcessInstance instance = null;
-		
-	
-		FormValidation validation = validationService.validate(submission, instance, testScreen, "basic");
-		
-		
+		FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(), "basic");
+
+        List<ValidationResult> results = validation.getResults();
+		Assert.assertNull(results);
 	}
+
+    @Test
+    public void testValidateFirstOfTwoSectionsFailed() {
+        FormSubmission submission = new FormSubmission.Builder()
+                .formValue("employeeName", "John Test")
+                .build();
+
+        ProcessInstance instance = null;
+        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(), "basic");
+
+        List<ValidationResult> results = validation.getResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(1, results.size());
+    }
+
+    @Test
+    public void testValidateBothOfTwoSections() {
+        FormSubmission submission = new FormSubmission.Builder()
+                .formValue("employeeName", "John Test")
+                .formValue("budgetNumber", "123456")
+                .formValue("supervisorId", "sup1234")
+                .build();
+
+        ProcessInstance instance = null;
+        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections());
+
+        List<ValidationResult> results = validation.getResults();
+        Assert.assertNull(results);
+    }
+
+    @Test
+    public void testValidateBothOfTwoSectionsFailed() {
+        FormSubmission submission = new FormSubmission.Builder()
+                .formValue("budgetNumber", "123456")
+                .formValue("supervisorId", "sup1234")
+                .build();
+
+        ProcessInstance instance = null;
+        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections());
+
+        List<ValidationResult> results = validation.getResults();
+        Assert.assertNotNull(results);
+        Assert.assertEquals(1, results.size());
+    }
+
 
 }

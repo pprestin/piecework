@@ -84,8 +84,12 @@ public class EmbeddedMongoInstance implements DisposableBean {
 	@PostConstruct
 	public void startEmbeddedMongo() throws IOException {
 		LOG.debug("Starting embedded Mongodb on port " + port + "...");
-		
-		String storageDirectory = storePath + File.pathSeparator + "storage";
+
+		String storageDirectory = storePath + File.separator + "storage";
+
+        File databaseDirectory = new File(storageDirectory);
+        databaseDirectory.deleteOnExit();
+
 		MongodConfig mongodConfig = new MongodConfig(Version.Main.PRODUCTION, new Net(bindIp, port, ipv6), new Storage(storageDirectory, replSetName, oplogSize), new Timeout());
 		IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(Command.MongoD).build();
 		MongodStarter runtime = MongodStarter.getInstance(runtimeConfig);
@@ -102,7 +106,7 @@ public class EmbeddedMongoInstance implements DisposableBean {
 		    DB db = mongo.getDB(dbName);
 		    db.addUser(username, password.toCharArray());
 		    
-		    importData(db);
+//		    importData(db);
 		    
 		    mongo.close();
 		    

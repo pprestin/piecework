@@ -29,17 +29,17 @@ import java.util.UUID;
  */
 public class ExampleFactory {
 
-    public static Content exampleContent() {
+    public static Content exampleContent(String root) {
         return new Content.Builder()
                 .contentType("text/plain")
-                .location("/test/0002")
+                .location(root + "/" + UUID.randomUUID().toString())
                 .inputStream(new ByteArrayInputStream("This is a test".getBytes()))
                 .build();
     }
 
-    public static FormRequest exampleFormRequest() {
+    public static FormRequest exampleFormRequest(String formInstanceId) {
         return new FormRequest.Builder()
-                .requestId(UUID.randomUUID().toString())
+                .requestId(formInstanceId)
                 .screen(exampleScreenWithTwoSections())
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .build();
@@ -119,6 +119,7 @@ public class ExampleFactory {
                 .section(exampleSectionWithTwoFields())
                 .section(exampleSectionWithOneField())
                 .attachmentAllowed(false)
+                .location("/test/example1.html")
                 .build();
     }
 
