@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.form.StreamingPageContent;
+import piecework.form.response.StreamingPageContent;
 import piecework.model.Content;
 import piecework.model.FormRequest;
 import piecework.persistence.ContentRepository;

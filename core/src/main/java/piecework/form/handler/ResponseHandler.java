@@ -17,9 +17,8 @@ package piecework.form.handler;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import piecework.exception.StatusCodeError;
-import piecework.form.StreamingPageContent;
+import piecework.form.response.StreamingPageContent;
 import piecework.model.Content;
 import piecework.model.Form;
 import piecework.model.FormRequest;

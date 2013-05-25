@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.form.response;
 
 import org.htmlcleaner.*;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
+import piecework.form.HiddenInputNode;
 import piecework.model.Content;
 import piecework.model.Form;
+import piecework.model.Screen;
+import piecework.util.ManyMap;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
@@ -44,32 +47,7 @@ public class StreamingPageContent implements StreamingOutput {
     public void write(OutputStream output) throws IOException, WebApplicationException {
         HtmlCleaner cleaner = new HtmlCleaner();
         TagNode node = cleaner.clean(content.getInputStream());
-
-        final URL siteUrl = null;
-        node.traverse(new TagNodeVisitor() {
-            public boolean visit(TagNode tagNode, HtmlNode htmlNode) {
-                if (htmlNode instanceof TagNode) {
-                    TagNode tag = (TagNode) htmlNode;
-                    String tagName = tag.getName();
-                    if ("form".equals(tagName)) {
-                        String id = tag.getAttributeByName("id");
-
-                        if (id == null || id.equalsIgnoreCase("main-form")) {
-                            Map<String, String> attributes = new HashMap<String, String>();
-                            attributes.put("action", form.getUri());
-                            attributes.put("method", "POST");
-                            attributes.put("enctype", "multipart/form-data");
-                            tag.setAttributes(attributes);
-                        }
-
-                        tag.addChild(new HiddenInputNode("PROCESS_FORM_SUBMISSION_TOKEN", form.getFormInstanceId()));
-                    }
-                }
-                // tells visitor to continue traversing the DOM tree
-                return true;
-            }
-        });
-
+        node.traverse(new DecoratingVisitor(form));
         SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
         serializer.writeToStream(node, output);
     }
