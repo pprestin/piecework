@@ -15,13 +15,16 @@
  */
 package piecework;
 
+import piecework.form.FieldAttributeDefinition;
+import piecework.form.FieldTagDefinition;
+
 /**
  * This interface contains constant values for resource parameters - path, query, etc.
  * 
  * @author James Renfro
  */
 public interface Constants {
-	
+
 	public static class LimitType {
 		public static final String PROCESS_DEFINITION_KEY = "processDefinitionKey";
 	}

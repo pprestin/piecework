@@ -139,6 +139,17 @@ public class ExampleFactory {
                 .build();
     }
 
+    public static Form exampleForm() {
+        Process process = exampleProcess();
+        return new Form.Builder()
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .submissionType(Constants.SubmissionTypes.INTERIM)
+                .formInstanceId("12345")
+                .formValue(employeeNameField().getName(), "Joe Testington")
+                .screen(exampleScreenWithTwoSections())
+                .build();
+    }
+
     public static Process exampleProcess() {
         return new Process.Builder()
                 .processDefinitionKey("Demonstration")

@@ -19,11 +19,10 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
+import piecework.util.ManyMap;
 
 import javax.xml.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -71,6 +70,16 @@ public class Form {
 
     public List<FormValue> getFormData() {
         return formData;
+    }
+
+    public Map<String, FormValue> getFormValueMap() {
+        Map<String, FormValue> map = new HashMap<String, FormValue>();
+        if (formData != null && !formData.isEmpty()) {
+            for (FormValue formValue : formData) {
+                map.put(formValue.getName(), formValue);
+            }
+        }
+        return map;
     }
 
     public String getUri() {

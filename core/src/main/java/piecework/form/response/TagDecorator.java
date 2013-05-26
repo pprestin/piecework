@@ -7,7 +7,7 @@ import org.htmlcleaner.TagNode;
  */
 public interface TagDecorator {
 
-    void decorate(TagNode tag);
+    void decorate(TagNode tag, String id, String cls, String name);
 
     boolean canDecorate(String id, String cls, String name);
 
