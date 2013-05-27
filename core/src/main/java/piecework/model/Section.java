@@ -218,6 +218,14 @@ public class Section {
 			this.isDeleted = false;
 			return this;
 		}
+
+        public int numberOfButtons() {
+            return buttons != null ? buttons.size() : 0;
+        }
+
+        public int numberOfFields() {
+            return fields != null ? fields.size() : 0;
+        }
 	}
 	
 	public static class Constants {

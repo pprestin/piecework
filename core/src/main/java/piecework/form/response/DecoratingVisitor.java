@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Decorates HTML based on
+ *
  * @author James Renfro
  */
 public class DecoratingVisitor implements TagNodeVisitor {
@@ -102,8 +104,10 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name) {
+            String formUri = form.getUri() != null ? form.getUri() : "";
+
             Map<String, String> attributes = new HashMap<String, String>();
-            attributes.put("action", form.getUri());
+            attributes.put("action", formUri);
             attributes.put("method", "POST");
             attributes.put("enctype", "multipart/form-data");
             tag.setAttributes(attributes);
