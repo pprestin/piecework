@@ -221,6 +221,7 @@ public class Field implements Serializable {
 
         public Builder() {
             super();
+            this.displayValueLength = -1;
             this.maxInputs = 1;
             this.minInputs = 1;
             this.minValueLength = 0;
@@ -337,6 +338,13 @@ public class Field implements Serializable {
         	if (this.constraints == null)
         		this.constraints = new ArrayList<Constraint>();
         	this.constraints.add(constraint);
+            return this;
+        }
+
+        public Builder option(Option option) {
+            if (this.options == null)
+                this.options = new ArrayList<Option>();
+            this.options.add(option);
             return this;
         }
         

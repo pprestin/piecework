@@ -15,9 +15,11 @@
  */
 package piecework.form.response;
 
+import org.apache.commons.io.IOUtils;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.SimpleHtmlSerializer;
 import org.htmlcleaner.TagNode;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -34,11 +36,14 @@ public class DecoratingVisitorTest {
     @Test
     public void testVisit() throws Exception {
         Form form = ExampleFactory.exampleForm();
-        ClassPathResource resource = new ClassPathResource("piecework/form/resources/DecoratingVisitorTest.input.html");
-        TagNode node = cleaner.clean(resource.getInputStream());
+        ClassPathResource inputResource = new ClassPathResource("piecework/form/response/DecoratingVisitorTest.input.html");
+        TagNode node = cleaner.clean(inputResource.getInputStream());
         node.traverse(new DecoratingVisitor(form));
         SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
-        serializer.writeToStream(node, System.out);
+//        serializer.writeToStream(node, System.out);
+
+        ClassPathResource outputResource = new ClassPathResource("piecework/form/response/DecoratingVisitorTest.output.html");
+        Assert.assertEquals(IOUtils.toString(outputResource.getInputStream()), serializer.getAsString(node));
     }
 
 }

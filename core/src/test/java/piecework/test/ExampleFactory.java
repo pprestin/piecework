@@ -78,12 +78,64 @@ public class ExampleFactory {
                 .build();
     }
 
+    public static Field actionTypeField() {
+        return new Field.Builder()
+                .type(Constants.FieldTypes.SELECT_MULTIPLE)
+                .name("action")
+                .option(new Option.Builder().label("Grant bonus").value("bonus").build())
+                .option(new Option.Builder().label("Reprimand").value("reprimand").build())
+                .option(new Option.Builder().label("Promote").value("promote").build())
+                .option(new Option.Builder().label("Demote").value("demote").build())
+                .editable()
+                .required()
+                .build();
+    }
+
+    public static Field locationField() {
+        return new Field.Builder()
+                .type(Constants.FieldTypes.SELECT_ONE)
+                .name("location")
+                .option(new Option.Builder().label("In-state").value("in state").build())
+                .option(new Option.Builder().label("Out-of-state").value("out of state").build())
+                .option(new Option.Builder().label("Waiver").value("waiver").build())
+                .editable()
+                .required()
+                .build();
+    }
+
+    public static Field descriptionField() {
+        return new Field.Builder()
+                .type(Constants.FieldTypes.TEXTAREA)
+                .name("Description")
+                .maxValueLength(4000)
+                .build();
+    }
+
     public static Field confirmationField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.TEXT)
                 .name("ConfirmationNumber")
                 .constraint(new Constraint.Builder().type(Constants.ConstraintTypes.IS_CONFIRMATION_NUMBER).build())
                 .maxValueLength(40)
+                .build();
+    }
+
+    public static Field allowedField() {
+        return new Field.Builder()
+                .type(Constants.FieldTypes.CHECKBOX)
+                .name("Allowed")
+                .option(new Option.Builder().value("Yes").label("Yes").build())
+                .editable()
+                .build();
+    }
+
+    public static Field applicableField() {
+        return new Field.Builder()
+                .type(Constants.FieldTypes.RADIO)
+                .name("Applicable")
+                .option(new Option.Builder().value("Yes").label("Yes").build())
+                .option(new Option.Builder().value("No").label("No").build())
+                .editable()
                 .build();
     }
 
@@ -100,6 +152,11 @@ public class ExampleFactory {
         return new Section.Builder()
                 .tagId("supplemental")
                 .field(supervisorIdField())
+                .field(actionTypeField())
+                .field(locationField())
+                .field(descriptionField())
+                .field(allowedField())
+                .field(applicableField())
                 .ordinal(2)
                 .build();
     }

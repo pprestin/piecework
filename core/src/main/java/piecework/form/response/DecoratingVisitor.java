@@ -39,6 +39,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
     public DecoratingVisitor(Form form) {
         this.form = form;
         this.decoratorMap = new ManyMap<String, TagDecorator>();
+        initialize();
     }
 
     public void initialize() {
@@ -163,42 +164,49 @@ public class DecoratingVisitor implements TagNodeVisitor {
             attributes.putAll(fieldTag.getAttributes());
             tag.setAttributes(attributes);
 
+            String value = null;
+
             if (formValue != null) {
                 List<String> values = formValue.getAllValues();
 
-                if (values.size() > index) {
-                    String value = values.get(index);
 
-                    switch (fieldTag) {
-                        case CHECKBOX:
-                        case RADIO:
-                        case TEXT:
-                            attributes.put("value", value);
-                            break;
-                        case TEXTAREA:
-                            if (value != null)
-                                tag.addChild(new ContentNode(value));
-                            break;
-                        case SELECT_MULTIPLE:
-                        case SELECT_ONE:
-                            List<Option> options = field.getOptions();
-                            if (options != null && !options.isEmpty()) {
-                                tag.removeAllChildren();
+                if (values.size() > index)
+                    value = values.get(index);
+            }
 
-                                for (Option option : options) {
-                                    TagNode optionNode = new TagNode("option");
-                                    Map<String, String> optionAttributes = new HashMap<String, String>();
-                                    optionAttributes.put("value", option.getValue());
-                                    if (option.getValue() != null && value != null && option.getValue().equals(value))
-                                        optionAttributes.put("selected", "selected");
-                                    optionNode.setAttributes(optionAttributes);
-                                    optionNode.addChild(new ContentNode(option.getLabel()));
-                                    tag.addChild(optionNode);
-                                }
-                            }
-                            break;
+            switch (fieldTag) {
+                case TEXT:
+                    if (field.getMaxValueLength() > 0)
+                        attributes.put("maxlength", "" + field.getMaxValueLength());
+                    if (field.getDisplayValueLength() > 0)
+                        attributes.put("size", "" + field.getDisplayValueLength());
+                case CHECKBOX:
+                case RADIO:
+                    if (value != null)
+                        attributes.put("value", value);
+                    break;
+                case TEXTAREA:
+                    if (value != null)
+                        tag.addChild(new ContentNode(value));
+                    break;
+                case SELECT_MULTIPLE:
+                case SELECT_ONE:
+                    List<Option> options = field.getOptions();
+                    if (options != null && !options.isEmpty()) {
+                        tag.removeAllChildren();
+
+                        for (Option option : options) {
+                            TagNode optionNode = new TagNode("option");
+                            Map<String, String> optionAttributes = new HashMap<String, String>();
+                            optionAttributes.put("value", option.getValue());
+                            if (option.getValue() != null && value != null && option.getValue().equals(value))
+                                optionAttributes.put("selected", "selected");
+                            optionNode.setAttributes(optionAttributes);
+                            optionNode.addChild(new ContentNode(option.getLabel()));
+                            tag.addChild(optionNode);
+                        }
                     }
-                }
+                    break;
             }
 
             this.index++;
