@@ -61,22 +61,17 @@ public class FormResourceVersion1 implements FormResource {
     ProcessRepository processRepository;
 
     @Autowired
-    ProcessInstanceRepository processInstanceRepository;
+    ProcessInstanceService processInstanceService;
 
     @Autowired
     RequestHandler requestHandler;
 
     @Autowired
     ResponseHandler responseHandler;
-
-    @Autowired
-    SubmissionHandler submissionHandler;
 	
 	@Autowired
     Sanitizer sanitizer;
 
-    @Autowired
-    ValidationService validationService;
 
     @Value("${base.application.uri}")
     String baseApplicationUri;
@@ -150,76 +145,12 @@ public class FormResourceVersion1 implements FormResource {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
-        Process process = processRepository.findOne(processDefinitionKey);
-
-        if (process == null)
-            throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
-
-        FormRequest formRequest = requestHandler.handle(request, requestId);
-
         ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
-        FormSubmission submission = submissionHandler.handle(formRequest, payload);
 
-        ProcessInstance instance = null;
-        if (formRequest.getProcessInstanceId() != null)
-            instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
-
-        FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), null);
-
-        List<ValidationResult> results = validation.getResults();
-        if (results != null && !results.isEmpty()) {
-            throw new BadRequestError(new ValidationResultList(results));
-        }
-
-        ProcessInstance previous = formRequest.getProcessInstanceId() != null ? processInstanceRepository.findOne(formRequest.getProcessInstanceId()) : null;
-
-        ProcessInstance.Builder instanceBuilder;
-
-        if (previous != null) {
-            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
-
-        } else {
-            try {
-                String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
-
-                instanceBuilder = new ProcessInstance.Builder()
-                        .processDefinitionKey(process.getProcessDefinitionKey())
-                        .processDefinitionLabel(process.getProcessDefinitionLabel())
-                        .processInstanceLabel(validation.getTitle())
-                        .engineProcessInstanceId(engineInstanceId);
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to start instance ", e);
-                throw new InternalServerError();
-            }
-        }
-
-        instanceBuilder.formValueMap(validation.getFormValueMap())
-                .restrictedValueMap(validation.getRestrictedValueMap())
-                .submission(submission);
-
-        ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
-
-        List<Interaction> interactions = process.getInteractions();
-
-        Interaction interaction = formRequest.getInteraction();
-
-        if (interaction == null)
-            throw new InternalServerError();
-
-        List<Screen> screens = interaction.getScreens();
-
-        if (screens == null || screens.isEmpty())
-            throw new InternalServerError();
-
-        FormRequest nextFormRequest = null;
-
-        if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-            nextFormRequest = requestHandler.create(request, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
+        FormRequest nextFormRequest = processInstanceService.submit(processDefinitionKey, requestId, request, payload);
 
         // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
         if (nextFormRequest == null) {
-
             return Response.noContent().build();
         }
 
@@ -231,26 +162,9 @@ public class FormResourceVersion1 implements FormResource {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
-        Process process = processRepository.findOne(processDefinitionKey);
-
-        if (process == null)
-            throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
-
-        FormRequest formRequest = requestHandler.handle(request, requestId);
-
-        ProcessInstance instance = null;
-        if (formRequest.getProcessInstanceId() != null)
-            instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
-
         ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
-        FormSubmission submission = submissionHandler.handle(formRequest, payload);
 
-        FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), validationId);
-
-        List<ValidationResult> results = validation.getResults();
-        if (results != null && !results.isEmpty()) {
-            throw new BadRequestError(new ValidationResultList(results));
-        }
+        processInstanceService.validate(processDefinitionKey, requestId, validationId, request, payload);
 
         return Response.noContent().build();
     }

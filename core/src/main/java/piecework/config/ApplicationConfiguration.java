@@ -71,7 +71,7 @@ public class ApplicationConfiguration {
 	}
 	
 	@Bean 
-	public Server server() {
+	public Server apiServer() {
 		Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
 		extensionMappings.put("json", "application/json");
 		extensionMappings.put("xml", "application/xml");
@@ -79,7 +79,7 @@ public class ApplicationConfiguration {
 		
 		JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
 		sf.setServiceBeanObjects((Object[])resources);
-		sf.setAddress("/");
+		sf.setAddress("/api");
 		sf.setExtensionMappings(extensionMappings);
 		
 		List<Object> providers = new ArrayList<Object>();
@@ -96,6 +96,33 @@ public class ApplicationConfiguration {
 		manager.registerBindingFactory(JAXRSBindingFactory.JAXRS_BINDING_ID, factory);
 		return sf.create();
 	}
+
+    @Bean
+    public Server applicationServer() {
+        Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
+        extensionMappings.put("json", "application/json");
+        extensionMappings.put("xml", "application/xml");
+        extensionMappings.put("html", "text/html");
+
+        JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
+        sf.setServiceBeanObjects((Object[])resources);
+        sf.setAddress("/");
+        sf.setExtensionMappings(extensionMappings);
+
+        List<Object> providers = new ArrayList<Object>();
+        providers.add(new GeneralExceptionMapper());
+        providers.add(new StatusCodeErrorMapper());
+        providers.add(new AccessDeniedExceptionMapper());
+        providers.add(htmlProvider);
+        providers.add(jsonProvider());
+        sf.setProviders(providers);
+
+        BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);
+        JAXRSBindingFactory factory = new JAXRSBindingFactory();
+        factory.setBus(sf.getBus());
+        manager.registerBindingFactory(JAXRSBindingFactory.JAXRS_BINDING_ID, factory);
+        return sf.create();
+    }
 	
 	@Bean
 	public JacksonJsonProvider jsonProvider() {

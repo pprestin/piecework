@@ -176,7 +176,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		SearchResults.Builder resultsBuilder = new SearchResults.Builder()
 			.resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
 		List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
-		for (Process process : processes) {			
+		for (Process process : processes) {
+
 			//resultsBuilder.items(facade.findInstances(process.getEngine(), process.getEngineProcessDefinitionKey(), queryParameters));
 			// TODO: Add limiting/filtering by search results from form data
 		}
