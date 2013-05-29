@@ -22,6 +22,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,22 +30,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.common.RequestDetails;
 import piecework.engine.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
-import piecework.form.handler.SubmissionHandler;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
 import piecework.form.*;
-import piecework.form.validation.FormValidation;
-import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
-import piecework.security.concrete.PassthroughSanitizer;
 
 /**
  * @author James Renfro
@@ -79,6 +77,14 @@ public class FormResourceVersion1 implements FormResource {
     @Value("${base.service.uri}")
     String baseServiceUri;
 
+    @Value("${certificate.issuer.header}")
+    String certificateIssuerHeader;
+
+    @Value("${certificate.subject.header}")
+    String certificateSubjectHeader;
+
+
+
 	public Response read(final String rawProcessDefinitionKey, HttpServletRequest request) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 
@@ -95,7 +101,8 @@ public class FormResourceVersion1 implements FormResource {
         // Pick the first interaction and the first screen
         Interaction interaction = interactions.iterator().next();
 
-        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, interaction, null, null);
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, null, null);
 
         return responseHandler.handle(formRequest);
 	}
@@ -130,7 +137,8 @@ public class FormResourceVersion1 implements FormResource {
                 }
             }
 
-            FormRequest formRequest = requestHandler.create(request, processDefinitionKey, selectedInteraction, null, null);
+            RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+            FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, selectedInteraction, null, null);
 
             return responseHandler.handle(formRequest);
 
@@ -145,9 +153,31 @@ public class FormResourceVersion1 implements FormResource {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
+        // Make sure that we're dealing with an existing process and that the request identifier is not empty
+        piecework.model.Process process = verifyInputs(processDefinitionKey, requestId);
 
-        FormRequest nextFormRequest = processInstanceService.submit(processDefinitionKey, requestId, request, payload);
+        // This will guarantee that the request is valid
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        Screen screen = formRequest.getScreen();
+
+        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).multipartBody(body);
+        ProcessInstance stored = processInstanceService.submit(process, screen, payload);
+
+        Interaction interaction = formRequest.getInteraction();
+
+        if (interaction == null)
+            throw new InternalServerError();
+
+        List<Screen> screens = interaction.getScreens();
+
+        if (screens == null || screens.isEmpty())
+            throw new InternalServerError();
+
+        FormRequest nextFormRequest = null;
+
+        if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
+            nextFormRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
 
         // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
         if (nextFormRequest == null) {
@@ -162,9 +192,17 @@ public class FormResourceVersion1 implements FormResource {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
+        // Make sure that we're dealing with an existing process and that the request identifier is not empty
+        piecework.model.Process process = verifyInputs(processDefinitionKey, requestId);
 
-        processInstanceService.validate(processDefinitionKey, requestId, validationId, request, payload);
+        // This will guarantee that the request is valid
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        Screen screen = formRequest.getScreen();
+
+        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).validationId(validationId).multipartBody(body);
+
+        processInstanceService.validate(process, screen, payload);
 
         return Response.noContent().build();
     }
@@ -197,4 +235,17 @@ public class FormResourceVersion1 implements FormResource {
 		}
 		return null;
 	}
+
+
+    private Process verifyInputs(String processDefinitionKey, String requestId) throws StatusCodeError {
+        piecework.model.Process process = processRepository.findOne(processDefinitionKey);
+
+        if (process == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        return process;
+    }
 }

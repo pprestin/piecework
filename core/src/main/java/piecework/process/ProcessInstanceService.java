@@ -15,10 +15,12 @@
  */
 package piecework.process;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
@@ -59,9 +61,6 @@ public class ProcessInstanceService {
     RequestHandler requestHandler;
 
     @Autowired
-    ResponseHandler responseHandler;
-
-    @Autowired
     SubmissionHandler submissionHandler;
 
     @Autowired
@@ -70,97 +69,155 @@ public class ProcessInstanceService {
     @Autowired
     ValidationService validationService;
 
-     public FormRequest submit(String processDefinitionKey, String requestId, HttpServletRequest request, ProcessInstancePayload payload) throws StatusCodeError {
 
-         piecework.model.Process process = processRepository.findOne(processDefinitionKey);
+    public ProcessInstance submit(Process process, Screen screen, ProcessInstancePayload payload) throws StatusCodeError {
 
-         if (process == null)
-             throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
+        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
 
-         FormRequest formRequest = requestHandler.handle(request, requestId);
+        // Create a new submission to store the data submitted
+        FormSubmission submission = submissionHandler.handle(payload, isAttachmentAllowed);
 
-         FormSubmission submission = submissionHandler.handle(formRequest, payload);
+        // If an instance already exists then get it from the repository
+        ProcessInstance previous = null;
+        if (StringUtils.isNotBlank(payload.getProcessInstanceId()))
+            previous = processInstanceRepository.findOne(payload.getProcessInstanceId());
 
-         ProcessInstance instance = null;
-         if (formRequest.getProcessInstanceId() != null)
-             instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
+        // Validate the submission
+        FormValidation validation = validationService.validate(submission, previous, screen, payload.getValidationId());
 
-         FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), null);
+        List<ValidationResult> results = validation.getResults();
+        if (results != null && !results.isEmpty()) {
+            // Throw an exception if the submitter needs to adjust the data
+            throw new BadRequestError(new ValidationResultList(results));
+        }
 
-         List<ValidationResult> results = validation.getResults();
-         if (results != null && !results.isEmpty()) {
-             throw new BadRequestError(new ValidationResultList(results));
-         }
+        return store(process, submission, validation, previous);
+    }
 
-         ProcessInstance previous = formRequest.getProcessInstanceId() != null ? processInstanceRepository.findOne(formRequest.getProcessInstanceId()) : null;
+    public void validate(Process process, Screen screen, ProcessInstancePayload payload) throws StatusCodeError {
 
-         ProcessInstance.Builder instanceBuilder;
+        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
 
-         if (previous != null) {
-             instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
+        // Create a new submission to store the data submitted
+        FormSubmission submission = submissionHandler.handle(payload, isAttachmentAllowed);
 
-         } else {
-             try {
-                 String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
+        // If an instance already exists then get it from the repository
+        ProcessInstance previous = null;
+        if (StringUtils.isNotBlank(payload.getProcessInstanceId()))
+            previous = processInstanceRepository.findOne(payload.getProcessInstanceId());
 
-                 instanceBuilder = new ProcessInstance.Builder()
-                         .processDefinitionKey(process.getProcessDefinitionKey())
-                         .processDefinitionLabel(process.getProcessDefinitionLabel())
-                         .processInstanceLabel(validation.getTitle())
-                         .engineProcessInstanceId(engineInstanceId);
+        // Validate the submission
+        FormValidation validation = validationService.validate(submission, previous, screen, payload.getValidationId());
 
-             } catch (ProcessEngineException e) {
-                 LOG.error("Process engine unable to start instance ", e);
-                 throw new InternalServerError();
-             }
-         }
+        List<ValidationResult> results = validation.getResults();
+        if (results != null && !results.isEmpty()) {
+            // Throw an exception if the submitter needs to adjust the data
+            throw new BadRequestError(new ValidationResultList(results));
+        }
+    }
 
-         instanceBuilder.formValueMap(validation.getFormValueMap())
-                 .restrictedValueMap(validation.getRestrictedValueMap())
-                 .submission(submission);
 
-         ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
+    private ProcessInstance store(Process process, FormSubmission submission, FormValidation validation, ProcessInstance previous) throws StatusCodeError {
+        ProcessInstance.Builder instanceBuilder;
 
-         List<Interaction> interactions = process.getInteractions();
+        if (previous != null) {
+            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
+        } else {
+            try {
+                String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
 
-         Interaction interaction = formRequest.getInteraction();
+                instanceBuilder = new ProcessInstance.Builder()
+                        .processDefinitionKey(process.getProcessDefinitionKey())
+                        .processDefinitionLabel(process.getProcessDefinitionLabel())
+                        .processInstanceLabel(validation.getTitle())
+                        .engineProcessInstanceId(engineInstanceId);
 
-         if (interaction == null)
-             throw new InternalServerError();
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to start instance ", e);
+                throw new InternalServerError();
+            }
+        }
 
-         List<Screen> screens = interaction.getScreens();
+        instanceBuilder.formValueMap(validation.getFormValueMap())
+                .restrictedValueMap(validation.getRestrictedValueMap())
+                .submission(submission);
 
-         if (screens == null || screens.isEmpty())
-             throw new InternalServerError();
+        return processInstanceRepository.save(instanceBuilder.build());
+    }
 
-         FormRequest nextFormRequest = null;
+//    public FormRequest submit(String processDefinitionKey, String requestId, ProcessInstancePayload payload) throws StatusCodeError {
+//
+//        piecework.model.Process process = processRepository.findOne(processDefinitionKey);
+//
+//        if (process == null)
+//            throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
+//
+//        RequestDetails requestDetails = payload.getRequestDetails();
+//
+//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//
+//        FormSubmission submission = submissionHandler.handle(formRequest, payload);
+//
+//        ProcessInstance instance = null;
+//        if (formRequest.getProcessInstanceId() != null)
+//            instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
+//
+//        FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), null);
+//
+//        List<ValidationResult> results = validation.getResults();
+//        if (results != null && !results.isEmpty()) {
+//            throw new BadRequestError(new ValidationResultList(results));
+//        }
+//
+//        ProcessInstance previous = formRequest.getProcessInstanceId() != null ? processInstanceRepository.findOne(formRequest.getProcessInstanceId()) : null;
+//
+//        ProcessInstance.Builder instanceBuilder;
+//
+//        if (previous != null) {
+//            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
+//
+//        } else {
+//            try {
+//                String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
+//
+//                instanceBuilder = new ProcessInstance.Builder()
+//                        .processDefinitionKey(process.getProcessDefinitionKey())
+//                        .processDefinitionLabel(process.getProcessDefinitionLabel())
+//                        .processInstanceLabel(validation.getTitle())
+//                        .engineProcessInstanceId(engineInstanceId);
+//
+//            } catch (ProcessEngineException e) {
+//                LOG.error("Process engine unable to start instance ", e);
+//                throw new InternalServerError();
+//            }
+//        }
+//
+//        instanceBuilder.formValueMap(validation.getFormValueMap())
+//                .restrictedValueMap(validation.getRestrictedValueMap())
+//                .submission(submission);
+//
+//        ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
+//
+//        List<Interaction> interactions = process.getInteractions();
+//
+//        Interaction interaction = formRequest.getInteraction();
+//
+//        if (interaction == null)
+//            throw new InternalServerError();
+//
+//        List<Screen> screens = interaction.getScreens();
+//
+//        if (screens == null || screens.isEmpty())
+//            throw new InternalServerError();
+//
+//        FormRequest nextFormRequest = null;
+//
+//        if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
+//            nextFormRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
+//
+//        return nextFormRequest;
+//    }
 
-         if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-             nextFormRequest = requestHandler.create(request, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
 
-         return nextFormRequest;
-     }
-
-     public void validate(String processDefinitionKey, String requestId, String validationId, HttpServletRequest request, ProcessInstancePayload payload) throws StatusCodeError {
-         Process process = processRepository.findOne(processDefinitionKey);
-
-         if (process == null)
-             throw new ForbiddenError(Constants.ExceptionCodes.process_does_not_exist);
-
-         FormRequest formRequest = requestHandler.handle(request, requestId);
-
-         ProcessInstance instance = null;
-         if (formRequest.getProcessInstanceId() != null)
-             instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
-
-         FormSubmission submission = submissionHandler.handle(formRequest, payload);
-
-         FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), validationId);
-
-         List<ValidationResult> results = validation.getResults();
-         if (results != null && !results.isEmpty()) {
-             throw new BadRequestError(new ValidationResultList(results));
-         }
-     }
 
 }

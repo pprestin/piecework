@@ -53,15 +53,13 @@ public class SubmissionHandler {
     @Autowired
     SubmissionRepository submissionRepository;
 
-    public FormSubmission handle(FormRequest formRequest, ProcessInstancePayload payload) throws StatusCodeError {
-        String requestId = formRequest.getRequestId();
-        Screen screen = formRequest.getScreen();
-        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
+    public FormSubmission handle(ProcessInstancePayload payload, boolean isAttachmentAllowed) throws StatusCodeError {
+        String requestId = payload.getRequestId();
 
         FormSubmission.Builder submissionBuilder = new FormSubmission.Builder()
                 .requestId(requestId)
-                .submissionDate(new Date())
-                .submissionType(formRequest.getSubmissionType());
+                .submissionDate(new Date());
+//                .submissionType(submissionType);
 
         switch (payload.getType()) {
             case INSTANCE:
@@ -72,7 +70,7 @@ public class SubmissionHandler {
                 submissionBuilder.formData(payload.getFormData());
                 break;
             case MULTIPART:
-                multipart(requestId, submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
+                multipart(submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
                 break;
         }
 
@@ -80,7 +78,7 @@ public class SubmissionHandler {
         return submissionRepository.save(result);
     }
 
-    private void multipart(String requestId, FormSubmission.Builder submissionBuilder, MultipartBody body, boolean isAttachmentAllowed) {
+    private void multipart(FormSubmission.Builder submissionBuilder, MultipartBody body, boolean isAttachmentAllowed) {
         List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body.getAllAttachments();
         if (attachments != null && !attachments.isEmpty()) {
             for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
@@ -102,7 +100,7 @@ public class SubmissionHandler {
                     String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
                     LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
                     try {
-                        String location = "/submissions/" + requestId + "/" + UUID.randomUUID().toString();
+                        String location = "/submissions/" + UUID.randomUUID().toString();
 
                         Content content = new Content.Builder()
                                 .contentType(contentType.toString())

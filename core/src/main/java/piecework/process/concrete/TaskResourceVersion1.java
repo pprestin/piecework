@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.RequestDetails;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
@@ -98,6 +99,12 @@ public class TaskResourceVersion1 implements TaskResource {
     @Value("${base.service.uri}")
     String baseServiceUri;
 
+    @Value("${certificate.issuer.header}")
+    String certificateIssuerHeader;
+
+    @Value("${certificate.subject.header}")
+    String certificateSubjectHeader;
+
     @Override
     public Response complete(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("taskId") String rawTaskId, @PathParam("action") String rawAction, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
@@ -109,7 +116,8 @@ public class TaskResourceVersion1 implements TaskResource {
         if (process == null)
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
-        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null);
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, null);
 
         ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
         FormSubmission submission = submissionHandler.handle(formRequest, payload);

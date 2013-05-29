@@ -16,6 +16,7 @@
 package piecework.process;
 
 import piecework.common.Payload;
+import piecework.common.RequestDetails;
 import piecework.model.ProcessInstance;
 
 /**
@@ -23,4 +24,44 @@ import piecework.model.ProcessInstance;
  */
 public class ProcessInstancePayload extends Payload<ProcessInstance> {
 
+    private RequestDetails requestDetails;
+    private String processInstanceId;
+    private String requestId;
+    private String validationId;
+
+    public ProcessInstancePayload requestDetails(RequestDetails requestDetails) {
+        this.requestDetails = requestDetails;
+        return this;
+    }
+
+    public ProcessInstancePayload processInstanceId(String processInstanceId) {
+        this.processInstanceId = processInstanceId;
+        return this;
+    }
+
+    public ProcessInstancePayload requestId(String requestId) {
+        this.requestId = requestId;
+        return this;
+    }
+
+    public ProcessInstancePayload validationId(String validationId) {
+        this.validationId = validationId;
+        return this;
+    }
+
+    public String getProcessInstanceId() {
+        return processInstanceId;
+    }
+
+    public RequestDetails getRequestDetails() {
+        return requestDetails;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public String getValidationId() {
+        return validationId;
+    }
 }

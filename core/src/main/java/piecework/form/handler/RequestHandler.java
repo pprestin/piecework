@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.common.RequestDetails;
 import piecework.exception.ForbiddenError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
@@ -45,18 +46,11 @@ public class RequestHandler {
     @Autowired
     RequestRepository requestRepository;
 
-    @Value("${certificate.issuer.header}")
-    String certificateIssuerHeader;
-
-    @Value("${certificate.subject.header}")
-    String certificateSubjectHeader;
-
-    public FormRequest create(HttpServletRequest request, String processDefinitionKey, Interaction interaction) throws StatusCodeError {
-        return create(request, processDefinitionKey, interaction, null, null);
+    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey, Interaction interaction) throws StatusCodeError {
+        return create(requestDetails, processDefinitionKey, interaction, null, null);
     }
 
-
-    public FormRequest create(HttpServletRequest servletRequest, String processDefinitionKey, Interaction interaction, Screen currentScreen, String processInstanceId) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey, Interaction interaction, Screen currentScreen, String processInstanceId) throws StatusCodeError {
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
 
@@ -102,28 +96,19 @@ public class RequestHandler {
                 .screen(nextScreen)
                 .submissionType(submissionType);
 
-        if (servletRequest != null) {
-            String certificateIssuer = null;
-            String certificateSubject = null;
-
-            if (StringUtils.isNotEmpty(certificateIssuerHeader))
-                certificateIssuer = servletRequest.getHeader(certificateIssuerHeader);
-
-            if (StringUtils.isNotEmpty(certificateSubjectHeader))
-                certificateSubject = servletRequest.getHeader(certificateSubjectHeader);
-
-            formRequestBuilder.remoteAddr(servletRequest.getRemoteAddr())
-                    .remoteHost(servletRequest.getRemoteHost())
-                    .remotePort(servletRequest.getRemotePort())
-                    .remoteUser(servletRequest.getRemoteUser())
-                    .certificateIssuer(certificateIssuer)
-                    .certificateSubject(certificateSubject);
+        if (requestDetails != null) {
+            formRequestBuilder.remoteAddr(requestDetails.getRemoteAddr())
+                    .remoteHost(requestDetails.getRemoteHost())
+                    .remotePort(requestDetails.getRemotePort())
+                    .remoteUser(requestDetails.getRemoteUser())
+                    .certificateIssuer(requestDetails.getCertificateIssuer())
+                    .certificateSubject(requestDetails.getCertificateSubject());
         }
 
         return requestRepository.save(formRequestBuilder.build());
     }
 
-    public FormRequest handle(HttpServletRequest request, String requestId) throws StatusCodeError {
+    public FormRequest handle(RequestDetails request, String requestId) throws StatusCodeError {
         FormRequest formRequest = requestRepository.findOne(requestId);
 
         if (formRequest == null) {
@@ -147,14 +132,8 @@ public class RequestHandler {
                 LOG.warn("This should not happen -- submission remote port (" + request.getRemotePort() + ") does not match request (" + formRequest.getRemotePort() + ")");
 
             if (formRequest.getCertificateIssuer() != null && formRequest.getCertificateSubject() != null) {
-                String certificateIssuer = null;
-                String certificateSubject = null;
-
-                if (StringUtils.isNotEmpty(certificateIssuerHeader))
-                    certificateIssuer = request.getHeader(certificateIssuerHeader);
-
-                if (StringUtils.isNotEmpty(certificateSubjectHeader))
-                    certificateSubject = request.getHeader(certificateSubjectHeader);
+                String certificateIssuer = request.getCertificateIssuer();
+                String certificateSubject = request.getCertificateSubject();
 
                 if (StringUtils.isEmpty(certificateIssuer) || StringUtils.isEmpty(certificateSubject) ||
                         !certificateIssuer.equals(formRequest.getCertificateIssuer()) ||

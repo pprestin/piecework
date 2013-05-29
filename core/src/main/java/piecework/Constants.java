@@ -59,7 +59,8 @@ public interface Constants {
 		public static final String process_change_key_duplicate = "process_change_key_duplicate";
 		public static final String process_does_not_exist = "process_does_not_exist";
         public static final String request_does_not_match = "request_does_not_match";
-		public static final String screen_id_invalid = "screen_id_invalid";
+		public static final String request_id_required = "request_id_required";
+        public static final String screen_id_invalid = "screen_id_invalid";
         public static final String user_does_not_match = "user_does_not_match";
 	}
 

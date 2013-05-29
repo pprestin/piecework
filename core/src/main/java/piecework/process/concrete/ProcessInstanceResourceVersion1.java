@@ -33,10 +33,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.common.RequestDetails;
 import piecework.engine.ProcessExecution;
 import piecework.engine.ProcessExecutionCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
+import piecework.model.*;
+import piecework.model.Process;
 import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
@@ -45,10 +48,6 @@ import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.SubmissionHandler;
-import piecework.model.FormRequest;
-import piecework.model.FormSubmission;
-import piecework.model.Process;
-import piecework.model.ProcessInstance;
 import piecework.process.ProcessInstancePayload;
 import piecework.process.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceResource;
@@ -90,7 +89,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	
 	@Value("${base.service.uri}")
 	String baseServiceUri;
-	
+
+    @Value("${certificate.issuer.header}")
+    String certificateIssuerHeader;
+
+    @Value("${certificate.subject.header}")
+    String certificateSubjectHeader;
+
 	@Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstance rawInstance) throws StatusCodeError {
         ProcessInstancePayload payload = new ProcessInstancePayload().processInstance(rawInstance);
@@ -194,14 +199,17 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = getProcess(processDefinitionKey);
 
-        FormRequest formRequest = requestHandler.create(request, processDefinitionKey, null, null, null);
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, null, null, null);
+        Screen screen = formRequest.getScreen();
 
         ProcessInstance.Builder builder = payload.getType() == Payload.PayloadType.INSTANCE ? new ProcessInstance.Builder(payload.getInstance(), sanitizer) : new ProcessInstance.Builder();
         builder.processDefinitionKey(processDefinitionKey).processDefinitionLabel(process.getProcessDefinitionLabel());
 
         ProcessInstance instance = builder.build();
 
-        FormSubmission submission = submissionHandler.handle(formRequest, payload);
+        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
+        FormSubmission submission = submissionHandler.handle(payload, isAttachmentAllowed);
 
         try {
             String engineProcessInstanceId = facade.start(process, instance.getAlias(), instance.getFormValueMap());
