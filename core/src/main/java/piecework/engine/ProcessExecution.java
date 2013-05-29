@@ -15,6 +15,12 @@
  */
 package piecework.engine;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import javax.xml.bind.annotation.*;
 import java.util.Date;
 import java.util.Map;
 
@@ -24,15 +30,41 @@ import java.util.Map;
  *
  * @author James Renfro
  */
+@XmlRootElement(name = ProcessExecution.Constants.ROOT_ELEMENT_NAME)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = ProcessExecution.Constants.TYPE_NAME)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Document(collection = ProcessExecution.Constants.ROOT_ELEMENT_NAME)
 public class ProcessExecution {
 
-    private final String businessKey;
+    @XmlAttribute
+    @XmlID
+    @Id
     private final String executionId;
+
+    @XmlTransient
+    @JsonIgnore
+    private final String businessKey;
+
+    @XmlElement
     private final Date startTime;
+
+    @XmlElement
     private final Date endTime;
+
+    @XmlAttribute
     private final long duration;
+
+    @XmlTransient
+    @JsonIgnore
     private final String initiatorId;
+
+    @XmlTransient
+    @JsonIgnore
     private final String deleteReason;
+
+    @XmlTransient
+    @JsonIgnore
     private final Map<String, ?> data;
 
     private ProcessExecution() {
@@ -143,4 +175,9 @@ public class ProcessExecution {
 
     }
 
+    public static class Constants {
+        public static final String RESOURCE_LABEL = "Execution";
+        public static final String ROOT_ELEMENT_NAME = "execution";
+        public static final String TYPE_NAME = "ExecutionType";
+    }
 }

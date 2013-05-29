@@ -15,6 +15,7 @@
  */
 package piecework.process.concrete;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -43,10 +44,7 @@ import piecework.form.validation.FormValidation;
 import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstancePayload;
-import piecework.process.ProcessInstanceRepository;
-import piecework.process.ProcessRepository;
-import piecework.process.TaskResource;
+import piecework.process.*;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
@@ -80,6 +78,9 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
+    ProcessInstanceService processInstanceService;
 
     @Autowired
     RequestHandler requestHandler;
@@ -118,53 +119,15 @@ public class TaskResourceVersion1 implements TaskResource {
 
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
         FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, null);
+        Screen screen = formRequest.getScreen();
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
-        FormSubmission submission = submissionHandler.handle(formRequest, payload);
-
-        ProcessInstance instance = null;
-        if (formRequest.getProcessInstanceId() != null)
-            instance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
-
-        FormValidation validation = validationService.validate(submission, instance, formRequest.getScreen(), null);
-
-        List<ValidationResult> results = validation.getResults();
-        if (results != null && !results.isEmpty()) {
-            throw new BadRequestError(new ValidationResultList(results));
-        }
-
-        ProcessInstance previous = formRequest.getProcessInstanceId() != null ? processInstanceRepository.findOne(formRequest.getProcessInstanceId()) : null;
-
-        ProcessInstance.Builder instanceBuilder;
-
-        if (previous != null) {
-            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
-
-        } else {
-            try {
-                String engineInstanceId = facade.start(process, null, validation.getFormValueMap());
-
-                instanceBuilder = new ProcessInstance.Builder()
-                        .processDefinitionKey(process.getProcessDefinitionKey())
-                        .processDefinitionLabel(process.getProcessDefinitionLabel())
-                        .processInstanceLabel(validation.getTitle())
-                        .engineProcessInstanceId(engineInstanceId);
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to start instance ", e);
-                throw new InternalServerError();
-            }
-        }
-
-        instanceBuilder.formValueMap(validation.getFormValueMap())
-                .restrictedValueMap(validation.getRestrictedValueMap())
-                .submission(submission);
-
-        ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
-
+        ProcessInstancePayload payload = new ProcessInstancePayload().requestId(formRequest.getRequestId()).multipartBody(body);
+        ProcessInstance instance = processInstanceService.submit(process, screen, payload);
 
         try {
-            facade.completeTask(process, taskId);
+            if (action != null && action.equals("complete"))
+                facade.completeTask(process, taskId);
+
             return Response.noContent().build();
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to complete task ", e);
@@ -199,7 +162,7 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Override
     public Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        throw new NotImplementedException();
     }
 
     @Override
@@ -246,6 +209,10 @@ public class TaskResourceVersion1 implements TaskResource {
                             criteriaBuilder.maxPriority(Integer.valueOf(value));
                         else if (key.equals("minPriority"))
                             criteriaBuilder.minPriority(Integer.valueOf(value));
+                        else if (key.equals("maxResults"))
+                            criteriaBuilder.maxResults(Integer.valueOf(value));
+                        else if (key.equals("firstResult"))
+                            criteriaBuilder.firstResult(Integer.valueOf(value));
 
                     } catch (NumberFormatException e) {
                         LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);

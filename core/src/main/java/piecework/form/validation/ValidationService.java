@@ -52,7 +52,7 @@ public class ValidationService {
 		
 		long start = System.currentTimeMillis();
 		
-		FormValidation.Builder validationBuilder = new FormValidation.Builder();
+		FormValidation.Builder validationBuilder = new FormValidation.Builder().instance(instance).submission(submission);
 
         boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
 

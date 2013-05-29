@@ -26,8 +26,15 @@ public class ProcessInstancePayload extends Payload<ProcessInstance> {
 
     private RequestDetails requestDetails;
     private String processInstanceId;
+    private String alias;
     private String requestId;
     private String validationId;
+
+    public ProcessInstancePayload processInstance(ProcessInstance instance) {
+        super.processInstance(instance);
+        this.alias = instance.getAlias();
+        return this;
+    }
 
     public ProcessInstancePayload requestDetails(RequestDetails requestDetails) {
         this.requestDetails = requestDetails;
@@ -36,6 +43,11 @@ public class ProcessInstancePayload extends Payload<ProcessInstance> {
 
     public ProcessInstancePayload processInstanceId(String processInstanceId) {
         this.processInstanceId = processInstanceId;
+        return this;
+    }
+
+    public ProcessInstancePayload alias(String alias) {
+        this.alias = alias;
         return this;
     }
 
@@ -51,6 +63,10 @@ public class ProcessInstancePayload extends Payload<ProcessInstance> {
 
     public String getProcessInstanceId() {
         return processInstanceId;
+    }
+
+    public String getAlias() {
+        return alias;
     }
 
     public RequestDetails getRequestDetails() {

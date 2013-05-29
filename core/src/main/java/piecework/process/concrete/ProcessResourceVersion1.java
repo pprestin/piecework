@@ -122,7 +122,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 //				} else if (!record.isDeleted()) {
 //					Process.Builder builder = new Process.Builder(record, passthroughSanitizer);
 //					builder.delete();
-//					repository.save(builder.build());
+//					processRepository.save(builder.build());
 //				}
 			}
 		}
@@ -180,7 +180,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 //			throw new RecordNotFoundException(null);
 //
 //		String taskDefinitionKey = form.getTaskDefinitionKey();
-//		Process record = repository.findOne(processDefinitionKey);
+//		Process record = processRepository.findOne(processDefinitionKey);
 //
 //		if (record == null)
 //			throw new RecordNotFoundException(processDefinitionKey);

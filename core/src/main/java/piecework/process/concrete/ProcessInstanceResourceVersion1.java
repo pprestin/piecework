@@ -15,7 +15,7 @@
  */
 package piecework.process.concrete;
 
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,18 +28,23 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessExecution;
 import piecework.engine.ProcessExecutionCriteria;
+import piecework.engine.ProcessExecutionResults;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.process.*;
 import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
@@ -48,10 +53,6 @@ import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.SubmissionHandler;
-import piecework.process.ProcessInstancePayload;
-import piecework.process.ProcessInstanceRepository;
-import piecework.process.ProcessInstanceResource;
-import piecework.process.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
@@ -64,7 +65,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
 
 	@Autowired
-	ProcessRepository repository;
+	ProcessRepository processRepository;
+
+    @Autowired
+    ProcessInstanceService processInstanceService;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
@@ -77,9 +81,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     RequestHandler requestHandler;
-
-    @Autowired
-    SubmissionHandler submissionHandler;
 	
 	@Autowired
 	Sanitizer sanitizer;
@@ -123,12 +124,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = getProcessInstance(process, processInstanceId);
 
         try {
-            // TODO: Use execution to decorate instance with useful information
             ProcessExecution execution = facade.findExecution(new ProcessExecutionCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
 
             ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
                 .processDefinitionKey(processDefinitionKey)
-                .processDefinitionLabel(process.getProcessDefinitionLabel());
+                .processDefinitionLabel(process.getProcessDefinitionLabel())
+                .execution(execution);
 
             return Response.ok(builder.build(getViewContext())).build();
         } catch (ProcessEngineException e) {
@@ -167,26 +168,101 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
 		ManyMap<String, String> queryParameters = new ManyMap<String, String>();
 
-		for (Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
+        ProcessExecutionCriteria.Builder criteria = new ProcessExecutionCriteria.Builder();
+        String limitToProcessDefinitionKey = null;
+        String limitToProcessInstanceId = null;
+
+        DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
+
+        for (Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
 			String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
 			List<String> rawValues = rawQueryParameterEntry.getValue();
 			if (rawValues != null && !rawValues.isEmpty()) {
 				for (String rawValue : rawValues) {
 					String value = sanitizer.sanitize(rawValue);
 					queryParameters.putOne(key, value);
+
+                    try {
+                        if (key.equals("processDefinitionKey"))
+                            limitToProcessDefinitionKey = value;
+                        else if (key.equals("processInstanceId"))
+                            limitToProcessInstanceId = value;
+                        else if (key.equals("complete"))
+                            criteria.complete(Boolean.valueOf(value));
+                        else if (key.equals("initiatedBy"))
+                            criteria.initiatedBy(value);
+                        else if (key.equals("completedAfter"))
+                            criteria.completedAfter(dateTimeFormatter.parseDateTime(value).toDate());
+                        else if (key.equals("completedBefore"))
+                            criteria.completedBefore(dateTimeFormatter.parseDateTime(value).toDate());
+                        else if (key.equals("startedAfter"))
+                            criteria.startedAfter(dateTimeFormatter.parseDateTime(value).toDate());
+                        else if (key.equals("startedBefore"))
+                            criteria.startedBefore(dateTimeFormatter.parseDateTime(value).toDate());
+                        else if (key.equals("maxResults"))
+                            criteria.maxResults(Integer.valueOf(value));
+                        else if (key.equals("firstResult"))
+                            criteria.firstResult(Integer.valueOf(value));
+
+                    } catch (NumberFormatException e) {
+                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
+                    } catch (IllegalArgumentException e) {
+                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
+                    }
 				}
 			}
 		}
-		
+
+        boolean noResults = false;
+
+        ProcessInstance single = null;
+        if (limitToProcessInstanceId != null) {
+            single = processInstanceRepository.findOne(limitToProcessInstanceId);
+
+            if (single != null)
+                criteria.executionId(single.getEngineProcessInstanceId());
+            else
+                noResults = true;
+        }
+
 		SearchResults.Builder resultsBuilder = new SearchResults.Builder()
 			.resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
-		List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
-		for (Process process : processes) {
 
-			//resultsBuilder.items(facade.findInstances(process.getEngine(), process.getEngineProcessDefinitionKey(), queryParameters));
-			// TODO: Add limiting/filtering by search results from form data
-		}
-		
+        if (! noResults) {
+            List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
+            for (Process process : processes) {
+                if (limitToProcessDefinitionKey == null || limitToProcessDefinitionKey.equals(process.getProcessDefinitionKey()))
+                    criteria.engineProcessDefinitionKey(process.getEngineProcessDefinitionKey());
+            }
+
+            try {
+                List<String> processInstanceIds = new ArrayList<String>();
+
+                ProcessExecutionResults results = facade.findExecutions(criteria.build());
+
+                long total = results.getTotal();
+                long firstResult = results.getFirstResult();
+                long maxResults = results.getMaxResults();
+
+                if (results.getExecutions() != null) {
+                    Map<String, ProcessExecution> executionMap = new HashMap<String, ProcessExecution>();
+                    for (ProcessExecution execution : results.getExecutions()) {
+                        processInstanceIds.add(execution.getBusinessKey());
+                        executionMap.put(execution.getBusinessKey(), execution);
+                    }
+
+                    Iterable<ProcessInstance> instances = processInstanceRepository.findAll(processInstanceIds);
+                    PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                    for (ProcessInstance instance : instances) {
+                        resultsBuilder.item(new ProcessInstance.Builder(instance, passthroughSanitizer).build(getViewContext()));
+                    }
+                }
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to find executions ", e);
+                throw new InternalServerError();
+            }
+        }
 		return resultsBuilder.build();
 	}
 
@@ -203,30 +279,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, null, null, null);
         Screen screen = formRequest.getScreen();
 
-        ProcessInstance.Builder builder = payload.getType() == Payload.PayloadType.INSTANCE ? new ProcessInstance.Builder(payload.getInstance(), sanitizer) : new ProcessInstance.Builder();
-        builder.processDefinitionKey(processDefinitionKey).processDefinitionLabel(process.getProcessDefinitionLabel());
+        ProcessInstance instance = processInstanceService.submit(process, screen, payload);
 
-        ProcessInstance instance = builder.build();
-
-        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
-        FormSubmission submission = submissionHandler.handle(payload, isAttachmentAllowed);
-
-        try {
-            String engineProcessInstanceId = facade.start(process, instance.getAlias(), instance.getFormValueMap());
-            builder.engineProcessInstanceId(engineProcessInstanceId);
-
-            ProcessInstance persisted = processInstanceRepository.save(builder.build());
-
-            return Response.ok(new ProcessInstance.Builder(persisted, new PassthroughSanitizer()).build(getViewContext())).build();
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to cancel execution ", e);
-            throw new InternalServerError();
-        }
-
+        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
     }
 
 	private Process getProcess(String processDefinitionKey) throws BadRequestError {
-		Process record = repository.findOne(processDefinitionKey);
+		Process record = processRepository.findOne(processDefinitionKey);
 		if (record == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 		return record;

@@ -38,6 +38,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import piecework.engine.ProcessExecution;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.util.ManyMap;
@@ -94,6 +95,9 @@ public class ProcessInstance implements Serializable {
     private final List<Attachment> attachments;
 
     @XmlElement
+    private final transient ProcessExecution execution;
+
+    @XmlElement
     private final String uri;
 
     @XmlTransient
@@ -115,6 +119,7 @@ public class ProcessInstance implements Serializable {
         this.restrictedData = builder.restrictedData != null ? Collections.unmodifiableList(builder.restrictedData) : null;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
+        this.execution = builder.execution;
         this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
         this.isDeleted = builder.isDeleted;
     }
@@ -190,6 +195,7 @@ public class ProcessInstance implements Serializable {
         private List<FormValue> restrictedData;
         private List<Attachment> attachments;
         private List<FormSubmission> submissions;
+        private ProcessExecution execution;
         private boolean isDeleted;
 
         public Builder() {
@@ -361,6 +367,11 @@ public class ProcessInstance implements Serializable {
 
         public Builder undelete() {
             this.isDeleted = false;
+            return this;
+        }
+
+        public Builder execution(ProcessExecution execution) {
+            this.execution = execution;
             return this;
         }
     }

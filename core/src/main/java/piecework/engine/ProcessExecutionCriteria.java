@@ -16,6 +16,7 @@
 package piecework.engine;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class ProcessExecutionCriteria {
     public enum OrderBy { START_TIME_ASC, START_TIME_DESC, END_TIME_ASC, END_TIME_DESC };
 
     private final String engine;
-    private final String engineProcessDefinitionKey;
+    private final List<String> engineProcessDefinitionKeys;
     private final String businessKey;
     private final List<String> executionIds;
     private final Boolean complete;
@@ -47,7 +48,7 @@ public class ProcessExecutionCriteria {
 
     private ProcessExecutionCriteria(Builder builder) {
         this.engine = builder.engine;
-        this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
+        this.engineProcessDefinitionKeys = builder.engineProcessDefinitionKeys != null ? Collections.unmodifiableList(builder.engineProcessDefinitionKeys) : null;
         this.businessKey = builder.businessKey;
         this.executionIds = builder.executionIds;
         this.complete = builder.complete;
@@ -66,8 +67,8 @@ public class ProcessExecutionCriteria {
         return engine;
     }
 
-    public String getEngineProcessDefinitionKey() {
-        return engineProcessDefinitionKey;
+    public List<String> getEngineProcessDefinitionKeys() {
+        return engineProcessDefinitionKeys;
     }
 
     public String getBusinessKey() {
@@ -121,7 +122,7 @@ public class ProcessExecutionCriteria {
     public final static class Builder {
 
         private String engine;
-        private String engineProcessDefinitionKey;
+        private List<String> engineProcessDefinitionKeys;
         private String businessKey;
         private List<String> executionIds;
         private Boolean complete;
@@ -149,7 +150,9 @@ public class ProcessExecutionCriteria {
         }
 
         public Builder engineProcessDefinitionKey(String engineProcessDefinitionKey) {
-            this.engineProcessDefinitionKey = engineProcessDefinitionKey;
+            if (this.engineProcessDefinitionKeys == null)
+                this.engineProcessDefinitionKeys = new ArrayList<String>();
+            this.engineProcessDefinitionKeys.add(engineProcessDefinitionKey);
             return this;
         }
 

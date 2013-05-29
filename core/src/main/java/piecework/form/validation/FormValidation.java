@@ -19,9 +19,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import piecework.Constants;
-import piecework.model.Attachment;
-import piecework.model.FormValue;
-import piecework.model.ValidationResult;
+import piecework.model.*;
 import piecework.util.ManyMap;
 
 /**
@@ -42,6 +40,10 @@ public class FormValidation implements Serializable {
 	private final List<ValidationResult> results;
 	
 	private final Set<String> unchangedFields;
+
+    private final FormSubmission submission;
+
+    private final ProcessInstance instance;
 	
 	private FormValidation() {
 		this(new Builder());
@@ -54,7 +56,9 @@ public class FormValidation implements Serializable {
         this.restrictedValueMap = builder.restrictedValueMap != null ? Collections.unmodifiableMap(builder.restrictedValueMap) : null;
 		this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
 		this.unchangedFields = builder.unchangedFields != null ? Collections.unmodifiableSet(builder.unchangedFields) : null;
-	}
+	    this.submission = builder.submission;
+        this.instance = builder.instance;
+    }
 
     public String getTitle() {
         return title;
@@ -80,7 +84,15 @@ public class FormValidation implements Serializable {
 		return unchangedFields;
 	}
 
-	public final static class Builder {
+    public FormSubmission getSubmission() {
+        return submission;
+    }
+
+    public ProcessInstance getInstance() {
+        return instance;
+    }
+
+    public final static class Builder {
 
         private String title;
         private List<ValidationResult> results;
@@ -88,6 +100,8 @@ public class FormValidation implements Serializable {
         private ManyMap<String, String> restrictedValueMap;
         private List<Attachment> attachments;
         private Set<String> unchangedFields;
+        private FormSubmission submission;
+        private ProcessInstance instance;
 
         public Builder() {
             super();
@@ -156,6 +170,16 @@ public class FormValidation implements Serializable {
         		this.unchangedFields = new HashSet<String>();
         	this.unchangedFields.add(unchangedField);
         	return this;
+        }
+
+        public Builder submission(FormSubmission submission) {
+            this.submission = submission;
+            return this;
+        }
+
+        public Builder instance(ProcessInstance instance) {
+            this.instance = instance;
+            return this;
         }
         
 	}

@@ -125,17 +125,7 @@ public class FormResourceVersion1 implements FormResource {
 
         try {
             Task task = facade.findTask(criteria);
-
-            Interaction selectedInteraction = null;
-            List<Interaction> interactions = process.getInteractions();
-            if (interactions != null && !interactions.isEmpty()) {
-                for (Interaction interaction : interactions) {
-                     if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
-                         selectedInteraction = interaction;
-                         break;
-                     }
-                }
-            }
+            Interaction selectedInteraction = selectInteraction(process, task);
 
             RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
             FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, selectedInteraction, null, null);
@@ -212,7 +202,7 @@ public class FormResourceVersion1 implements FormResource {
 		return new ViewContext(baseApplicationUri, baseServiceUri, null, "form", "Form");
 	}
 	
-	private void storeAttachments(String processDefinitionKey, String processInstanceId, String submissionId) throws StatusCodeError {
+//	private void storeAttachments(String processDefinitionKey, String processInstanceId, String submissionId) throws StatusCodeError {
 //		List<AttachmentReference> attachments = listAttachments(processDefinitionKey, submissionId);
 //		if (attachments != null && !attachments.isEmpty()) {
 //			for (AttachmentReference attachment : attachments) {
@@ -225,17 +215,30 @@ public class FormResourceVersion1 implements FormResource {
 //				capability.attach().storeAttachment(namespace, processDefinitionKey, processInstanceId, taskId, label, description, contentType, userId, url);
 //			}
 //		}
-	}
+//	}
 	
-	private String getSubmissionId(Map<String, List<String>> parameters) {
-		List<String> submissionIds = parameters.get("_submissionId");
-		if (submissionIds != null && !submissionIds.isEmpty()) {
-			String submissionId = submissionIds.get(0);
-			return submissionId;
-		}
-		return null;
-	}
+//	private String getSubmissionId(Map<String, List<String>> parameters) {
+//		List<String> submissionIds = parameters.get("_submissionId");
+//		if (submissionIds != null && !submissionIds.isEmpty()) {
+//			String submissionId = submissionIds.get(0);
+//			return submissionId;
+//		}
+//		return null;
+//	}
 
+    private Interaction selectInteraction(Process process, Task task) {
+        Interaction selectedInteraction = null;
+        List<Interaction> interactions = process.getInteractions();
+        if (interactions != null && !interactions.isEmpty()) {
+            for (Interaction interaction : interactions) {
+                if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
+                    selectedInteraction = interaction;
+                    break;
+                }
+            }
+        }
+        return selectedInteraction;
+    }
 
     private Process verifyInputs(String processDefinitionKey, String requestId) throws StatusCodeError {
         piecework.model.Process process = processRepository.findOne(processDefinitionKey);
