@@ -17,17 +17,18 @@ package piecework.engine;
 
 import java.util.*;
 
-import org.activiti.engine.ActivitiException;
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
+import com.google.common.collect.Sets;
+import junit.framework.Assert;
+import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricProcessInstanceQuery;
 import org.activiti.engine.history.HistoricTaskInstanceQuery;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
 import org.activiti.engine.task.TaskQuery;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import piecework.common.model.User;
@@ -46,6 +47,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Autowired
 	RuntimeService runtimeService;
+
+    @Autowired
+    RepositoryService repositoryService;
 
     @Autowired
     TaskService taskService;
@@ -119,42 +123,41 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
+        Assert.assertNotNull(criteria.getEngineProcessDefinitionKeys());
+        Assert.assertFalse(criteria.getEngineProcessDefinitionKeys().isEmpty());
 
         HistoricProcessInstanceQuery query = instanceQuery(criteria);
 
         ProcessExecutionResults.Builder resultsBuilder = new ProcessExecutionResults.Builder();
 
         List<HistoricProcessInstance> instances;
-        if (criteria.getFirstResult() != null && criteria.getMaxResults() != null) {
-            int firstResult = criteria.getFirstResult().intValue();
-            int maxResults = criteria.getMaxResults().intValue();
 
-            resultsBuilder.firstResult(firstResult);
-            resultsBuilder.maxResults(maxResults);
-            resultsBuilder.total(query.count());
+        // Can't use paging since we're going to filter after the fact
+        instances = query.list();
+        int size = instances.size();
 
-            instances = query.listPage(firstResult, maxResults);
-        } else {
-            instances = query.list();
-            int size = instances.size();
+        resultsBuilder.firstResult(0);
+        resultsBuilder.maxResults(size);
+        resultsBuilder.total(size);
 
-            resultsBuilder.firstResult(0);
-            resultsBuilder.maxResults(size);
-            resultsBuilder.total(size);
-        }
+        // Only need to worry about filtering if there are more than 1 key, since with 1 key
+        // it's part of the search that Activiti performs --- see the instanceQuery() method
+        SortedSet<String> engineProcessDefinitionKeys = new TreeSet<String>(criteria.getEngineProcessDefinitionKeys());
+        Set<String> processDefinitionIds = getProcessDefinitionIds(engineProcessDefinitionKeys.toArray(new String[engineProcessDefinitionKeys.size()]));
 
         List<ProcessExecution> executions;
         if (instances != null && !instances.isEmpty()) {
             executions = new ArrayList<ProcessExecution>(instances.size());
 
-
             for (HistoricProcessInstance instance : instances) {
+                if (!processDefinitionIds.contains(instance.getProcessDefinitionId()))
+                    continue;
+
                 ProcessExecution.Builder executionBuilder = new ProcessExecution.Builder()
                         .executionId(instance.getId())
                         .businessKey(instance.getBusinessKey())
                         .initiatorId(instance.getStartUserId())
                         .deleteReason(instance.getDeleteReason());
-
 
                 if (criteria.isIncludeVariables()) {
                     Map<String, Object> variables = runtimeService.getVariables(instance.getId());
@@ -283,8 +286,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     private HistoricProcessInstanceQuery instanceQuery(ProcessExecutionCriteria criteria) {
         HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery();
 
-        if (criteria.getEngineProcessDefinitionKey() != null)
-            query.processDefinitionKey(criteria.getEngineProcessDefinitionKey());
+        // Activiti only allows us to filter by a single process definition key at a time -- so if there are more than 1
+        // we have to filter the result set
+        if (criteria.getEngineProcessDefinitionKeys() != null && criteria.getEngineProcessDefinitionKeys().size() == 1)
+            query.processDefinitionKey(criteria.getEngineProcessDefinitionKeys().get(0));
 
         List<String> executionIds = criteria.getExecutionIds();
         if (executionIds != null && !executionIds.isEmpty())
@@ -464,6 +469,18 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         }
 
         return query;
+    }
+
+    @Cacheable("processDefinitionIds")
+    private Set<String> getProcessDefinitionIds(String ... keys) {
+        Set<String> keySet = Sets.newHashSet(keys);
+        Set<String> set = new HashSet<String>();
+        for (ProcessDefinition processDefinition : repositoryService.createProcessDefinitionQuery().list()) {
+            if (keySet.contains(processDefinition.getKey()))
+                set.add(processDefinition.getId());
+        }
+
+        return Collections.unmodifiableSet(set);
     }
 
     @Override

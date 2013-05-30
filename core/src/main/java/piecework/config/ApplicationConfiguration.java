@@ -16,6 +16,7 @@
 package piecework.config;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,10 +38,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.PropertySources;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
+import org.springframework.core.io.support.ResourcePropertySource;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
@@ -130,10 +135,14 @@ public class ApplicationConfiguration {
 	}
 	
 	@Bean
-	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {
+	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
 		// This is the list of places to look for configuration properties
-		List<Resource> resources = new ArrayList<Resource>();
-		resources.add(new ClassPathResource("META-INF/piecework/default.properties"));
+        MutablePropertySources propertySources = new MutablePropertySources();
+
+//        List<Resource> resources = new ArrayList<Resource>();
+//		resources.add(new ClassPathResource("META-INF/piecework/default.properties"));
+
+        propertySources.addFirst(new ResourcePropertySource(new ClassPathResource("META-INF/piecework/default.properties")));
 		
 		// Check if there is a system property pointing to another config location
 		String location = System.getProperty("piecework.config.location");
@@ -147,14 +156,14 @@ public class ApplicationConfiguration {
 		if (configDirectory.exists()) {
 			if (configDirectory.isFile()) {
 				// If the location that was passed in is a file, then go ahead and use it as the single properties file
-				resources.add(new FileSystemResource(configDirectory));
+                propertySources.addFirst(new ResourcePropertySource(new FileSystemResource(configDirectory)));
 			} else {
 				// Otherwise, read all of the properties files, and exclude ones that have a -dev, -test, etc... if those are not active profiles
 				File[] files = configDirectory.listFiles(new AcceptablePropertiesFilenameFilter(environment));
 				if (files != null && files.length > 0) {
 					for (File file : files) {
 						if (file.isFile())
-							resources.add(new FileSystemResource(file));
+                            propertySources.addFirst(new ResourcePropertySource(new FileSystemResource(file)));
 						else if (LOG.isDebugEnabled()) 
 							LOG.debug("Cannot read configuration file " + file.getAbsolutePath() + " because it's actually a directory");
 					}
@@ -165,8 +174,10 @@ public class ApplicationConfiguration {
 		}
 		
 		PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
+
+        configurer.setPropertySources(propertySources);
 		configurer.setEnvironment(environment);
-		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
+//		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
 		configurer.setIgnoreUnresolvablePlaceholders(true);
 
 		return configurer;
