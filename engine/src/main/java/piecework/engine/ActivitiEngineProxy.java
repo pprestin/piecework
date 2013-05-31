@@ -98,6 +98,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     @Override
 	public ProcessExecution findExecution(ProcessExecutionCriteria criteria) throws ProcessEngineException {
 
+        if (! criteria.getEngines().contains(getKey()))
+            return null;
+
         boolean includeVariables = false;
 
         HistoricProcessInstance instance = instanceQuery(criteria).singleResult();
@@ -123,8 +126,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
+        Assert.assertNotNull(criteria.getEngines());
+        Assert.assertFalse(criteria.getEngines().isEmpty());
         Assert.assertNotNull(criteria.getEngineProcessDefinitionKeys());
         Assert.assertFalse(criteria.getEngineProcessDefinitionKeys().isEmpty());
+
+        if (! criteria.getEngines().contains(getKey()))
+            return null;
 
         HistoricProcessInstanceQuery query = instanceQuery(criteria);
 
@@ -202,6 +210,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         return taskBuilder.build();
     }
 
+    // FIXME: Figure out the access control part of this by passing process definition keys in the criteria -- like with process instances
     public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
         TaskQuery query = taskQuery(criteria);
 

@@ -57,7 +57,10 @@ public class Task implements Serializable {
     @XmlElementWrapper(name="candidateAssignees")
     private final List<User> candidateAssignees;
 
-    @XmlElement
+    @XmlAttribute
+    private final String link;
+
+    @XmlAttribute
     private final String uri;
 
     @XmlTransient
@@ -74,7 +77,8 @@ public class Task implements Serializable {
         this.taskInstanceLabel = builder.taskInstanceLabel;
         this.assignee = builder.assignee;
         this.candidateAssignees = builder.candidateAssignees;
-        this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
+        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.isDeleted = builder.isDeleted;
     }
 
@@ -98,7 +102,11 @@ public class Task implements Serializable {
 		return candidateAssignees;
 	}
 
-	public String getUri() {
+    public String getLink() {
+        return link;
+    }
+
+    public String getUri() {
 		return uri;
 	}
 

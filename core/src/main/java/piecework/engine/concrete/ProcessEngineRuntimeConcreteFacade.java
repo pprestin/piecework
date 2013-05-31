@@ -49,14 +49,41 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
 
     @Override
     public ProcessExecution findExecution(ProcessExecutionCriteria criteria) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
-        return proxy.findExecution(criteria);
+        ProcessExecution execution = null;
+        if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
+            for (String engine : criteria.getEngines()) {
+                ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
+                execution = proxy.findExecution(criteria);
+
+                if (execution != null)
+                    break;
+            }
+
+        }
+        return execution;
     }
 
     @Override
     public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
-        return proxy.findExecutions(criteria);
+        ProcessExecutionResults.Builder builder = null;
+        if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
+            for (String engine : criteria.getEngines()) {
+                ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
+                ProcessExecutionResults localResults = proxy.findExecutions(criteria);
+                if (localResults == null)
+                    continue;
+                if (builder == null)
+                    builder = new ProcessExecutionResults.Builder(localResults);
+                else {
+                    builder.executions(localResults.getExecutions());
+                    builder.addToTotal(localResults.getTotal());
+                }
+            }
+
+        } else {
+            builder = new ProcessExecutionResults.Builder();
+        }
+        return builder.build();
     }
 
     @Override

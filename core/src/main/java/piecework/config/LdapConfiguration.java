@@ -81,79 +81,50 @@ public class LdapConfiguration {
 		CIPHER_SUITES_LIST = Arrays.asList(CIPHER_SUITES);
 	}
 
-	@Autowired 
-	Environment env;
+//	@Autowired
+//	Environment env;
+//
+//	@Autowired
+//	Bus cxf;
 	
-	@Autowired
-	Bus cxf;
-	
-	@Value("${ldap.authentication.encryption}")
-	String ldapAuthenticationEncryption;
-	
-	@Value("${ldap.authentication.type}")
-	String ldapAuthenticationType;
-	
-	@Value("${ldap.person.url}")
-	String ldapPersonUrl;
-	
-	@Value("${ldap.person.base}")
-	String ldapPersonBase;
-	
-	@Value("${ldap.person.search.base}")
-	String ldapPersonSearchBase;
-	
-	@Value("${ldap.person.search.filter}")
-	String ldapPersonSearchFilter;
-	
-	@Value("${ldap.person.dn}")
-	String ldapPersonDn;
-	
-	@Value("${ldap.group.url}")
-	String ldapGroupUrl;
-	
-	@Value("${ldap.group.base}")
-	String ldapGroupBase;
-	
-	@Value("${ldap.group.search.base}")
-	String ldapGroupSearchBase;
-	
-	@Value("${ldap.group.search.filter}")
-	String ldapGroupSearchFilter;
-	
-	@Value("${keystore.file}")
-	String keystoreFile;
-	
-	@Value("${keystore.password}")
-	String keystorePassword;
+    @Autowired
+    AuthorizationRoleMapper authorizationRoleMapper;
 		
 	@Bean
-	public UserDetailsService userDetailsService() throws Exception {		
-		LdapUserDetailsService userDetailsService = new LdapUserDetailsService(userSearch(), authoritiesPopulator());
+	public UserDetailsService userDetailsService(Environment environment) throws Exception {
+		LdapUserDetailsService userDetailsService = new LdapUserDetailsService(userSearch(environment), authoritiesPopulator(environment));
 		userDetailsService.setUserDetailsMapper(new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper()));
 		return userDetailsService;
 	}
 	
 	@Bean
-	public LdapContextSource groupLdapContextSource() throws Exception {
+	public LdapContextSource groupLdapContextSource(Environment environment) throws Exception {
+        String ldapGroupUrl = environment.getProperty("ldap.group.url");
+        String ldapGroupBase = environment.getProperty("ldap.group.base");
+
 		// TODO: Should we be using DefaultSpringSecurityContextSource? 
 		LdapContextSource context = new LdapContextSource();
 		context.setUrl(ldapGroupUrl);
 		context.setBase(ldapGroupBase);
 		context.setAuthenticationSource(authenticationSource());
-		context.setAuthenticationStrategy(authenticationStrategy());
+		context.setAuthenticationStrategy(authenticationStrategy(environment));
 		context.setAnonymousReadOnly(true);
 		return context;
 	}
 	
 	@Bean 
-	public LdapContextSource personLdapContextSource() throws Exception {
+	public LdapContextSource personLdapContextSource(Environment environment) throws Exception {
+        String ldapPersonUrl = environment.getProperty("ldap.person.url");
+        String ldapPersonBase = environment.getProperty("ldap.person.base");
+        String ldapPersonDn = environment.getProperty("ldap.person.dn");
+
 		// TODO: Should we be using DefaultSpringSecurityContextSource? 
 		LdapContextSource context = new LdapContextSource();
 		context.setUrl(ldapPersonUrl);
 		context.setBase(ldapPersonBase);
 		context.setUserDn(ldapPersonDn);
 		context.setAuthenticationSource(authenticationSource());
-		context.setAuthenticationStrategy(authenticationStrategy());
+		context.setAuthenticationStrategy(authenticationStrategy(environment));
 		context.setAnonymousReadOnly(true);
 		return context;
 	}
@@ -164,18 +135,18 @@ public class LdapConfiguration {
     }
 
 	@Bean
-	public AuthenticationProvider authenticationProvider() throws Exception {
-		LdapAuthenticationProvider provider = new LdapAuthenticationProvider(authenticator(), authoritiesPopulator());
-		provider.setAuthoritiesMapper(authorizationRoleMapper());
+	public AuthenticationProvider authenticationProvider(Environment environment) throws Exception {
+		LdapAuthenticationProvider provider = new LdapAuthenticationProvider(authenticator(environment), authoritiesPopulator(environment));
+		provider.setAuthoritiesMapper(authorizationRoleMapper);
 		return provider;
 	}
 	
-	private LdapAuthenticator authenticator() throws Exception {
-		LdapContextSource context = personLdapContextSource();
+	private LdapAuthenticator authenticator(Environment environment) throws Exception {
+		LdapContextSource context = personLdapContextSource(environment);
 		
 		AbstractLdapAuthenticator authenticator = null;
 		
-		LdapAuthenticationType type = authenticationType();
+		LdapAuthenticationType type = authenticationType(environment);
 		
 		switch (type) {
 		case PASSWORDCOMPARE:
@@ -185,12 +156,14 @@ public class LdapConfiguration {
 			authenticator = new BindAuthenticator(context);
 		}
 
-		authenticator.setUserSearch(userSearch());
+		authenticator.setUserSearch(userSearch(environment));
 		
 		return authenticator;
 	}
 	
-	private LdapAuthenticationEncryption authenticationEncryption() {
+	private LdapAuthenticationEncryption authenticationEncryption(Environment environment) {
+        String ldapAuthenticationEncryption = environment.getProperty("ldap.authentication.encryption");
+
 		LdapAuthenticationEncryption encryption = LdapAuthenticationEncryption.NONE;
 		
 		try {
@@ -211,15 +184,15 @@ public class LdapConfiguration {
 		return authenticationSource;
 	}
 	
-	private DirContextAuthenticationStrategy authenticationStrategy() throws Exception {
-		LdapAuthenticationEncryption encryption = authenticationEncryption();
+	private DirContextAuthenticationStrategy authenticationStrategy(Environment environment) throws Exception {
+		LdapAuthenticationEncryption encryption = authenticationEncryption(environment);
 		
 		DirContextAuthenticationStrategy strategy = null;
 		
 		switch (encryption) {
 		case TLS:
 			strategy = new ExternalTlsDirContextAuthenticationStrategy();
-			((ExternalTlsDirContextAuthenticationStrategy)strategy).setSslSocketFactory(sslSocketFactory());
+			((ExternalTlsDirContextAuthenticationStrategy)strategy).setSslSocketFactory(sslSocketFactory(environment));
 			break;
 		default:
 			strategy = new SimpleDirContextAuthenticationStrategy();
@@ -228,7 +201,9 @@ public class LdapConfiguration {
 		return strategy;
 	}
 	
-	private LdapAuthenticationType authenticationType() {
+	private LdapAuthenticationType authenticationType(Environment environment) {
+        String ldapAuthenticationType = environment.getProperty("ldap.authentication.type");
+
 		LdapAuthenticationType type = LdapAuthenticationType.BIND;
 		
 		try {
@@ -244,14 +219,20 @@ public class LdapConfiguration {
 		return type;
 	}
 	
-	private LdapAuthoritiesPopulator authoritiesPopulator() throws Exception {
-		DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(), ldapGroupSearchBase);
+	private LdapAuthoritiesPopulator authoritiesPopulator(Environment environment) throws Exception {
+        String ldapGroupSearchBase = environment.getProperty("ldap.group.search.base");
+        String ldapGroupSearchFilter  = environment.getProperty("ldap.group.search.filter");
+
+		DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(environment), ldapGroupSearchBase);
 		authoritiesPopulator.setGroupSearchFilter(ldapGroupSearchFilter);
 		return authoritiesPopulator;
 	}
 	
-	private SSLSocketFactory sslSocketFactory() throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
-		KeyManagerCabinet cabinet = new KeyManagerCabinet.Builder(keystoreFile, keystorePassword).build();
+	private SSLSocketFactory sslSocketFactory(Environment environment) throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
+        String keystoreFile = environment.getProperty("keystore.file");
+        String keystorePassword = environment.getProperty("keystore.password");
+
+        KeyManagerCabinet cabinet = new KeyManagerCabinet.Builder(keystoreFile, keystorePassword).build();
 		String provider = null;
         String protocol = "TLS";
 
@@ -267,8 +248,11 @@ public class LdapConfiguration {
         return new piecework.util.SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
 	}
 	
-	private LdapUserSearch userSearch() throws Exception {
-		LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapPersonSearchBase, ldapPersonSearchFilter, personLdapContextSource());
+	private LdapUserSearch userSearch(Environment environment) throws Exception {
+        String ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
+        String ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
+
+		LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapPersonSearchBase, ldapPersonSearchFilter, personLdapContextSource(environment));
 		((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
 		((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
 		((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);

@@ -60,20 +60,20 @@ public class ViewContext {
 
 	public String getApplicationUri(String ... ids) {
 
-		return buildUri(baseApplicationUri, ids);
+		return buildUri(false, baseApplicationUri, ids);
 	}
 	
 	public String getServiceUri(String ... ids) {
 
-		return buildUri(baseServiceUri, ids);
+		return buildUri(true, baseServiceUri, ids);
 	}
 	
-	protected String buildUri(String base, String ... ids) {
+	protected String buildUri(boolean includeVersion, String base, String ... ids) {
 		StringBuilder builder = new StringBuilder();
 		
 		if (path != null) {
 			builder.append(base).append("/");
-            if (version != null)
+            if (includeVersion && version != null)
                 builder.append(version).append("/");
             builder.append(path);
 			

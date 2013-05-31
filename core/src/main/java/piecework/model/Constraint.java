@@ -64,7 +64,7 @@ public class Constraint implements Serializable {
     private final int ordinal;
 	
 	@XmlElement
-    private final String uri;
+    private final String link;
 	
 	@XmlTransient
     @JsonIgnore
@@ -81,7 +81,7 @@ public class Constraint implements Serializable {
         this.value = builder.value;
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
-        this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.constraintId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.constraintId) : null;
     }
 	
 	public String getConstraintId() {
@@ -104,8 +104,8 @@ public class Constraint implements Serializable {
 		return ordinal;
 	}
 
-	public String getUri() {
-		return uri;
+	public String getLink() {
+		return link;
 	}
 
 	public boolean isDeleted() {

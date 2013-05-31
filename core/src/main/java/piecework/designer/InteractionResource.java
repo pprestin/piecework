@@ -35,7 +35,7 @@ import piecework.model.Interaction;
 /**
  * @author James Renfro
  */
-@Path("secure/v1/interaction/{processDefinitionKey}")
+@Path("interaction/{processDefinitionKey}")
 public interface InteractionResource extends Resource {
 	
 	@POST

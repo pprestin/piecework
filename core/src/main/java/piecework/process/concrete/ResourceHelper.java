@@ -53,8 +53,11 @@ public class ResourceHelper {
 			for (GrantedAuthority authority : authorities) {		
 				if (authority instanceof ResourceAuthority) {
 					ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
-					if (allowedRoleSet == null || allowedRoleSet.contains(resourceAuthority.getRole()))
-						allowedProcessDefinitionKeys.addAll(resourceAuthority.getProcessDefinitionKeys());
+					if (allowedRoleSet == null || allowedRoleSet.contains(resourceAuthority.getRole())) {
+                        Set<String> processDefinitionKeys = resourceAuthority.getProcessDefinitionKeys();
+                        if (processDefinitionKeys != null)
+						    allowedProcessDefinitionKeys.addAll(processDefinitionKeys);
+                    }
 				}
 			}
 		}

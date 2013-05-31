@@ -71,13 +71,13 @@ public class InteractionResourceVersion1ImplTest {
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
 		Interaction actual = (Interaction) response.getEntity();
-		Assert.assertEquals("/piecework/secure/v1/interaction/demo/" + actual.getId(), actual.getUri());
+		Assert.assertEquals("/piecework/secure/v1/interaction/demo/" + actual.getId(), actual.getLink());
 
 		// Read
 		response = interactionResource.read(exampleProcessDefinitionKey, actual.getId());
 		Interaction result = (Interaction) response.getEntity();
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		Assert.assertEquals("/piecework/secure/v1/interaction/demo/" + result.getId(), result.getUri());
+		Assert.assertEquals("/piecework/secure/v1/interaction/demo/" + result.getId(), result.getLink());
 		
 		// Update
 		Interaction updated = new Interaction.Builder().id(actual.getId()).label("New Label").build();

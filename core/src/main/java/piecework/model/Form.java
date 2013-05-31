@@ -19,7 +19,6 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
-import piecework.util.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import java.util.*;
@@ -48,8 +47,8 @@ public class Form {
     @XmlElementRef
     private final List<FormValue> formData;
 
-    @XmlElement
-    private final String uri;
+    @XmlAttribute
+    private final String link;
 
 
     private Form() {
@@ -82,8 +81,8 @@ public class Form {
         return map;
     }
 
-    public String getUri() {
-        return uri;
+    public String getLink() {
+        return link;
     }
 
     private Form(Form.Builder builder, ViewContext context) {
@@ -91,7 +90,7 @@ public class Form {
         this.submissionType = builder.submissionType;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
-        this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
     }
 
     public final static class Builder {

@@ -23,7 +23,6 @@ import piecework.form.FieldTag;
 import piecework.model.*;
 import piecework.util.ManyMap;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +103,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name) {
-            String formUri = form.getUri() != null ? form.getUri() : "";
+            String formUri = form.getLink() != null ? form.getLink() : "";
 
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.put("action", formUri);

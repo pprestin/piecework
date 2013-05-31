@@ -223,7 +223,8 @@ public class TaskResourceVersion1 implements TaskResource {
             }
         }
 
-        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
+                .resourceLabel("Tasks");
 //        List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
 //        for (Process process : processes) {
 //
@@ -239,7 +240,12 @@ public class TaskResourceVersion1 implements TaskResource {
     }
 
     public ViewContext getViewContext() {
-        return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "task", "Task");
+        return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "task", "Task");
+    }
+
+    @Override
+    public String getVersion() {
+        return "v1";
     }
 
 }

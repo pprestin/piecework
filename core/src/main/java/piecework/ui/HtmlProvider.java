@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -65,16 +66,10 @@ import com.github.mustachejava.MustacheFactory;
 public class HtmlProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
 
 	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
-	
-	@Value("${application.name}")
-	private String applicationName;
-	
-	@Value("${templates.directory}")
-	private String templatesDirectory;
-	
-	@Value("${ui.static.urlbase}")
-	private String urlbase;
-	
+
+    @Autowired
+    private Environment environment;
+
 	@Autowired
 	private JacksonJsonProvider jsonProvider;
 	
@@ -120,6 +115,9 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		
 		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
+            String applicationName = environment.getProperty("application.name");
+            String urlBase = environment.getProperty("ui.static.urlbase");
+
 			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), template.getInputStream());
 			try {
 				MustacheFactory mf = new DefaultMustacheFactory();
@@ -131,7 +129,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 			    
 			    String pageName = null;
 			    User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
-			    mustache.execute(new PrintWriter(entityStream), new Page(applicationName, pageName, urlbase, t, json, user)).flush();
+			    mustache.execute(new PrintWriter(entityStream), new Page(applicationName, pageName, urlBase, t, json, user)).flush();
 			} catch (IOException e) {
 				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
 			} finally {
@@ -152,6 +150,8 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 	}
 	
 	private Resource getTemplateResource(Class<?> type, Object t) {
+        String templatesDirectory = environment.getProperty("templates.directory");
+
 		StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
 		
 		if (type.equals(SearchResults.class)) {

@@ -74,8 +74,11 @@ public class Attachment implements Serializable {
 	
 	@XmlElement
 	private final Date lastModified;
-	
-	@XmlElement
+
+    @XmlAttribute
+    private final String link;
+
+	@XmlAttribute
     private final String uri;
 	
 	@XmlTransient
@@ -96,7 +99,8 @@ public class Attachment implements Serializable {
         this.ordinal = builder.ordinal;
         this.lastModified = builder.lastModified;
         this.isDeleted = builder.isDeleted;
-        this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.attachmentId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.attachmentId) : null;
+        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.attachmentId) : null;
     }
 	
 	public String getAttachmentId() {
@@ -131,7 +135,11 @@ public class Attachment implements Serializable {
 		return lastModified;
 	}
 
-	public String getUri() {
+    public String getLink() {
+        return link;
+    }
+
+    public String getUri() {
 		return uri;
 	}
 

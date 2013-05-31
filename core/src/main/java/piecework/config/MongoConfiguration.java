@@ -15,6 +15,7 @@
  */
 package piecework.config;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -92,5 +95,12 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
 		}
 		return serverAddresses;
 	}
-		
+
+//    @Bean
+//    public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
+//        CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();
+//        configurer.setCustomLocations(environment);
+//        return configurer;
+//    }
+
 }

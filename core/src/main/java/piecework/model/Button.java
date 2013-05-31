@@ -64,7 +64,7 @@ public class Button implements Serializable {
     private final String value;
 	
 	@XmlElement
-    private final String uri;
+    private final String link;
 
 	@XmlAttribute
     private final int ordinal;
@@ -85,7 +85,7 @@ public class Button implements Serializable {
         this.value = builder.value;
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
-        this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.buttonId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.buttonId) : null;
     }
     
     public String getButtonId() {
@@ -108,8 +108,8 @@ public class Button implements Serializable {
 		return value;
 	}
 
-	public String getUri() {
-		return uri;
+	public String getLink() {
+		return link;
 	}
 
 	public int getOrdinal() {

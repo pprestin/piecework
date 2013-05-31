@@ -78,7 +78,7 @@ public class Section {
 	private final boolean isDeleted;
 	
 	@XmlAttribute
-	private final String uri;
+	private final String link;
 	
 	private Section() {
 		this(new Section.Builder(), new ViewContext());
@@ -93,7 +93,7 @@ public class Section {
 		this.isDeleted = builder.isDeleted;
 		this.fields = builder.fields != null ? Collections.unmodifiableList(builder.fields) : null;
 		this.buttons = builder.buttons != null ? Collections.unmodifiableList(builder.buttons) : null;
-		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.sectionId) : null;
+		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.sectionId) : null;
 	}
 	
 	public String getSectionId() {
@@ -128,8 +128,8 @@ public class Section {
 		return isDeleted;
 	}
 
-	public String getUri() {
-		return uri;
+	public String getLink() {
+		return link;
 	}
 
 	public final static class Builder {

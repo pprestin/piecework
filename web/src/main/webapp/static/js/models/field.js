@@ -18,7 +18,7 @@ define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 			if (process == null)
 				return "";
 			var processDefinitionKey = process.get("processDefinitionKey");
-			return 'secure/v1/process/' + processDefinitionKey + '/field/' + this.id;
+			return 'process/' + processDefinitionKey + '/field/' + this.id;
 		},
 	});
 	return Field;

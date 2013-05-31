@@ -35,7 +35,7 @@ import piecework.model.Screen;
 /**
  * @author James Renfro
  */
-@Path("secure/v1/screen/{processDefinitionKey}/{interactionId}")
+@Path("screen/{processDefinitionKey}/{interactionId}")
 public interface ScreenResource extends Resource {
 	
 	@POST

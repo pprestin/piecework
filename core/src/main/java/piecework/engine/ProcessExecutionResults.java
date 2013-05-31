@@ -65,6 +65,17 @@ public class ProcessExecutionResults {
 
         }
 
+        public Builder(ProcessExecutionResults results) {
+            if (results.executions != null) {
+                this.executions = new ArrayList<ProcessExecution>();
+                this.executions.addAll(results.executions);
+            }
+            this.total = results.total;
+            this.firstResult = results.firstResult;
+            this.maxResults = results.maxResults;
+        }
+
+
         public ProcessExecutionResults build() {
             return new ProcessExecutionResults(this);
         }
@@ -97,5 +108,11 @@ public class ProcessExecutionResults {
             this.total = total;
             return this;
         }
+
+        public Builder addToTotal(long total) {
+            this.total += total;
+            return this;
+        }
+
     }
 }

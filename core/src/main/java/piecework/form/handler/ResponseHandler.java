@@ -17,6 +17,7 @@ package piecework.form.handler;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import piecework.exception.StatusCodeError;
 import piecework.form.response.StreamingPageContent;
 import piecework.model.Content;
@@ -30,6 +31,7 @@ import javax.ws.rs.core.Response;
 /**
  * @author James Renfro
  */
+@Service
 public class ResponseHandler {
 
     @Autowired

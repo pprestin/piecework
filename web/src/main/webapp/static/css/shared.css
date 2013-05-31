@@ -1,0 +1,47 @@
+h2 {
+    color: #000;
+    font-weight: normal;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+.main-content {
+    padding: 90px 50px 70px 50px;
+}
+
+.main-toolbar {
+    background-color: #EEE;
+    border-bottom: 1px solid #CCC;
+    height: 60px;
+    overflow: visible;
+    padding: 0px 20px;
+    vertical-align: middle;
+    zoom: 1;
+}
+
+.main-toolbar li.nav {
+    margin: 0 5px 0 0;
+}
+
+.main-toolbar .search-criteria {
+    padding: 15px 0px 0px 0px;
+    vertical-align: middle;
+}
+
+.search-results {
+
+}
+
+.search-results .search-result {
+
+}
+
+.user-information {
+    background-color: rgba(220, 220, 220,0.85);
+    height: 25px;
+}
+
+.user-information-name {
+    text-align: right;
+    padding: 0px 20px;
+}

@@ -37,7 +37,7 @@ public interface DesignerResource extends Resource {
 	public Response root() throws StatusCodeError;
 	
 	@GET
-	@Path("secure")
+	@Path("designer")
 	@RolesAllowed({AuthorizationRole.USER})
 	public IndexView index() throws StatusCodeError;
 		

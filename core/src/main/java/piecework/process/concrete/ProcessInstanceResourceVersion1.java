@@ -226,13 +226,16 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         }
 
 		SearchResults.Builder resultsBuilder = new SearchResults.Builder()
+            .resourceLabel("Workflows")
 			.resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
 
         if (! noResults) {
             List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
             for (Process process : processes) {
-                if (limitToProcessDefinitionKey == null || limitToProcessDefinitionKey.equals(process.getProcessDefinitionKey()))
+                if (limitToProcessDefinitionKey == null || limitToProcessDefinitionKey.equals(process.getProcessDefinitionKey())) {
+                    criteria.engine(process.getEngine());
                     criteria.engineProcessDefinitionKey(process.getEngineProcessDefinitionKey());
+                }
             }
 
             try {
@@ -268,8 +271,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 	@Override
 	public ViewContext getViewContext() {
-		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "instance", "Instance");
+		return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "instance", "Instance");
 	}
+
+    @Override
+    public String getVersion() {
+        return "v1";
+    }
 
     private Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstancePayload payload) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);

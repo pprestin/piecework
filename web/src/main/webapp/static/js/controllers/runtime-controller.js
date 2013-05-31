@@ -4,19 +4,15 @@ define([
   'models/processes',
   'models/screen',
   'models/user',
-  'views/designer-view',
-  'views/header-view',
-  'views/intro-view',
-  'views/process-detail-view',
-  'views/screen-configure-view',
-  'views/sidebar-view',
-], function(Controller, Process, Processes, Screen, User, DesignerView, HeaderView, IntroView, ProcessDetailView, ScreenConfigureView, SidebarView) {
+  'models/base/collection',
+  'views/runtime/search-results-view',
+], function(Controller, Process, Processes, Screen, User, Collection, SearchResultsView) {
   'use strict';
   
   var RuntimeController = Controller.extend({
     search: function(params) {
-//	  	var screen = new Screen({});
-//    	this.view = new ScreenConfigureView({model: screen});
+        var collection = new Collection({models:window.piecework.context.list});
+        this.view = new SearchResultsView({collection: collection});
     },
   });
 

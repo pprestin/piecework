@@ -61,7 +61,7 @@ public class Interaction implements Serializable {
 	private final String processDefinitionKey;
 	
 	@XmlAttribute
-	private final String uri;
+	private final String link;
 	
 	@XmlElement
 	private final String label;
@@ -87,7 +87,7 @@ public class Interaction implements Serializable {
 		this.id = builder.id;
 		this.processDefinitionKey = builder.processDefinitionKey;
 		this.label = builder.label;
-		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
+		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
 		this.screens = (List<Screen>) (builder.screens != null ? Collections.unmodifiableList(builder.screens) : Collections.emptyList());
         this.taskDefinitionKeys = (Set<String>) (builder.taskDefinitionKeys != null ? Collections.unmodifiableSet(builder.taskDefinitionKeys) : Collections.emptySet());
 		this.isDeleted = builder.isDeleted;
@@ -113,8 +113,8 @@ public class Interaction implements Serializable {
         return taskDefinitionKeys;
     }
 
-    public String getUri() {
-		return uri;
+    public String getLink() {
+		return link;
 	}
 
 	public boolean isDeleted() {

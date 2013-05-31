@@ -101,7 +101,7 @@ public class Field implements Serializable {
     private final int ordinal;
     
     @XmlElement
-    private final String uri;
+    private final String link;
 
     @XmlTransient
     @JsonIgnore
@@ -128,7 +128,7 @@ public class Field implements Serializable {
         this.isDeleted = builder.isDeleted;
         this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.options = builder.options != null ? Collections.unmodifiableList(builder.options) : null;
-        this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.fieldId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.fieldId) : null;
     }
 
     public String getFieldId() {
@@ -191,8 +191,8 @@ public class Field implements Serializable {
 		return constraints;
 	}
 
-	public String getUri() {
-		return uri;
+	public String getLink() {
+		return link;
 	}
 
 	public boolean isDeleted() {

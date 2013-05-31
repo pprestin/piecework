@@ -15,10 +15,7 @@
  */
 package piecework.engine;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -27,7 +24,7 @@ public class ProcessExecutionCriteria {
 
     public enum OrderBy { START_TIME_ASC, START_TIME_DESC, END_TIME_ASC, END_TIME_DESC };
 
-    private final String engine;
+    private final Set<String> engines;
     private final List<String> engineProcessDefinitionKeys;
     private final String businessKey;
     private final List<String> executionIds;
@@ -47,7 +44,7 @@ public class ProcessExecutionCriteria {
     }
 
     private ProcessExecutionCriteria(Builder builder) {
-        this.engine = builder.engine;
+        this.engines = builder.engines != null ? Collections.unmodifiableSet(builder.engines) : null;
         this.engineProcessDefinitionKeys = builder.engineProcessDefinitionKeys != null ? Collections.unmodifiableList(builder.engineProcessDefinitionKeys) : null;
         this.businessKey = builder.businessKey;
         this.executionIds = builder.executionIds;
@@ -63,8 +60,8 @@ public class ProcessExecutionCriteria {
         this.includeVariables = builder.includeVariables;
     }
 
-    public String getEngine() {
-        return engine;
+    public Set<String> getEngines() {
+        return engines;
     }
 
     public List<String> getEngineProcessDefinitionKeys() {
@@ -121,7 +118,7 @@ public class ProcessExecutionCriteria {
 
     public final static class Builder {
 
-        private String engine;
+        private Set<String> engines;
         private List<String> engineProcessDefinitionKeys;
         private String businessKey;
         private List<String> executionIds;
@@ -145,7 +142,9 @@ public class ProcessExecutionCriteria {
         }
 
         public Builder engine(String engine) {
-            this.engine = engine;
+            if (this.engines == null)
+                this.engines = new HashSet<String>();
+            this.engines.add(engine);
             return this;
         }
 

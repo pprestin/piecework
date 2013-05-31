@@ -12,13 +12,13 @@
 		<servlet-name>CXFServlet</servlet-name>
 		<servlet-class>org.apache.cxf.transport.servlet.CXFServlet</servlet-class>
 		<init-param>
-			<param-name>static-resources-list</param-name>
-			<param-value>/static/.*</param-value>
-		</init-param>
-		<init-param>
 			<param-name>redirects-servlet-name</param-name>
 			<param-value>default</param-value>
 		</init-param>
+        <init-param>
+            <param-name>static-resources-list</param-name>
+            <param-value>/static/.*</param-value>
+        </init-param>
 		<load-on-startup>1</load-on-startup>
 		<!-- If you want to leverage the Servlet3's async feature in Tomcat, please 
 			enable this feature <async-supported>true</async-supported> -->

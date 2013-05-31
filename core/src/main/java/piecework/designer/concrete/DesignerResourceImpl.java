@@ -18,6 +18,7 @@ package piecework.designer.concrete;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.common.view.ViewContext;
@@ -31,9 +32,15 @@ import piecework.exception.StatusCodeError;
 @Service
 public class DesignerResourceImpl implements DesignerResource {
 
+    @Value("${base.application.uri}")
+    String baseApplicationUri;
+
+    @Value("${base.service.uri}")
+    String baseServiceUri;
+
 	@Override
 	public Response root() throws StatusCodeError {
-		return Response.seeOther(UriBuilder.fromPath("secure").build()).build();
+		return Response.seeOther(UriBuilder.fromPath("designer").build()).build();
 	}
 	
 	@Override
@@ -43,7 +50,7 @@ public class DesignerResourceImpl implements DesignerResource {
 	
 	@Override
 	public ViewContext getViewContext() {
-		return new ViewContext("", "", "v1", "design", "Process Designer");
+		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "design", "Process Designer");
 	}
 
 }

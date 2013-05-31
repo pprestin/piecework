@@ -72,8 +72,11 @@ public class Process implements Serializable {
 	
 	@XmlElement
 	private final String engineProcessDefinitionKey;
-	
-	@XmlElement
+
+    @XmlAttribute
+    private final String link;
+
+	@XmlAttribute
 	private final String uri;
 	
 	@XmlElementWrapper(name="interactions")
@@ -97,7 +100,8 @@ public class Process implements Serializable {
 		this.participantSummary = builder.participantSummary;
 		this.engine = builder.engine;
 		this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
-		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
+		this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey) : null;
 		this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
 		this.isDeleted = builder.isDeleted;
 	}
@@ -134,6 +138,7 @@ public class Process implements Serializable {
 		return interactions;
 	}
 
+    @JsonIgnore
 	public boolean isDeleted() {
 		return isDeleted;
 	}

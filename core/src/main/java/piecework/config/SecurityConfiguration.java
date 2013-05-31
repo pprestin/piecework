@@ -29,14 +29,12 @@ import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.web.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.HttpConfiguration;
-import org.springframework.security.config.annotation.web.WebSecurityConfiguration;
-import org.springframework.security.config.annotation.web.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.*;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import piecework.authorization.AuthorizationRole;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
 import piecework.security.AuthorityMappingPreAuthenticatedProvider;
@@ -55,7 +53,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	
 	@Autowired
 	AuthenticationProvider[] authenticationProviders;
-	
+
+    @Autowired
+    AuthorizationRoleMapper authorizationRoleMapper;
+
 	@Autowired
 	UserDetailsService userDetailsService;
 	
@@ -71,19 +72,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		AccessDecisionVoter voter = new ResourceAccessVoter();
 		return new AffirmativeBased(Collections.singletonList(voter));
 	}
-		
-//	@Bean
-//	public AuthenticationBuilder authenticationBuilder() {
-//		return new AuthenticationBuilder();
-//	}
-	
+
 	@Bean
     public AuthenticationManager authenticationManager() throws Exception {
 		switch (authenticationType()) {
 		case NONE:
 		case PREAUTH:
 			AuthorityMappingPreAuthenticatedProvider provider = new AuthorityMappingPreAuthenticatedProvider();
-			provider.setAuthoritiesMapper(new AuthorizationRoleMapper());
+			provider.setAuthoritiesMapper(authorizationRoleMapper);
 			provider.setPreAuthenticatedUserDetailsService(new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(userDetailsService));
 			return new ProviderManager(Collections.singletonList(AuthenticationProvider.class.cast(provider)));
 		}
@@ -111,13 +107,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	}
 
 	@Override
-    public void configure(WebSecurityConfiguration builder) throws Exception {
+    public void configure(WebSecurityBuilder builder) throws Exception {
         builder
             .ignoring()
                 .antMatchers("/static/**");
     }
 
-	
 	@Override
 	public void configure(HttpConfiguration httpConfiguration)
 			throws Exception {
@@ -126,8 +121,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		httpConfiguration
 			.authorizeUrls()
 			.antMatchers("/static/**").permitAll()
-        	.antMatchers("/secure/**").authenticated();
-		
+        	.antMatchers("/sso/**").authenticated();
+
+        httpConfiguration
+            .authorizeUrls()
+            .antMatchers("/api/**").hasRole("SYSTEM")
+            .and()
+            .x509();
+
 		switch (type) {
 		case NORMAL:
 			httpConfiguration.formLogin().usernameParameter("j_username")

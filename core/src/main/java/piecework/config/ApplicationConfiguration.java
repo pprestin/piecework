@@ -15,14 +15,6 @@
  */
 package piecework.config;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.binding.BindingFactoryManager;
@@ -38,19 +30,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.env.PropertySources;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-
-import org.springframework.core.io.support.ResourcePropertySource;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.ui.HtmlProvider;
-import piecework.util.AcceptablePropertiesFilenameFilter;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -59,12 +51,12 @@ import piecework.util.AcceptablePropertiesFilenameFilter;
 public class ApplicationConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(ApplicationConfiguration.class);
-	
-	@Autowired 
-	Environment env;
-	
+
 	@Autowired 
 	piecework.Resource[] resources;
+
+    @Autowired
+    piecework.ApiResource[] apiResources;
 	
 	@Autowired
     HtmlProvider htmlProvider;
@@ -80,18 +72,17 @@ public class ApplicationConfiguration {
 		Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
 		extensionMappings.put("json", "application/json");
 		extensionMappings.put("xml", "application/xml");
-		extensionMappings.put("html", "text/html");
 		
 		JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
-		sf.setServiceBeanObjects((Object[])resources);
-		sf.setAddress("/api");
+		sf.setServiceBeanObjects((Object[])apiResources);
+		sf.setAddress("/api/v1");
 		sf.setExtensionMappings(extensionMappings);
 		
 		List<Object> providers = new ArrayList<Object>();
 		providers.add(new GeneralExceptionMapper());
 		providers.add(new StatusCodeErrorMapper());
 		providers.add(new AccessDeniedExceptionMapper());
-		providers.add(htmlProvider);
+//		providers.add(htmlProvider);
 		providers.add(jsonProvider());
 		sf.setProviders(providers);
 
@@ -111,7 +102,7 @@ public class ApplicationConfiguration {
 
         JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
         sf.setServiceBeanObjects((Object[])resources);
-        sf.setAddress("/");
+        sf.setAddress("/sso");
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
@@ -136,50 +127,8 @@ public class ApplicationConfiguration {
 	
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
-		// This is the list of places to look for configuration properties
-        MutablePropertySources propertySources = new MutablePropertySources();
-
-//        List<Resource> resources = new ArrayList<Resource>();
-//		resources.add(new ClassPathResource("META-INF/piecework/default.properties"));
-
-        propertySources.addFirst(new ResourcePropertySource(new ClassPathResource("META-INF/piecework/default.properties")));
-		
-		// Check if there is a system property pointing to another config location
-		String location = System.getProperty("piecework.config.location");
-		
-		if (location == null)
-			location = "/etc/piecework";
-		
-		File configDirectory = new File(location);
-		
-		// Check to make sure the location actually exists
-		if (configDirectory.exists()) {
-			if (configDirectory.isFile()) {
-				// If the location that was passed in is a file, then go ahead and use it as the single properties file
-                propertySources.addFirst(new ResourcePropertySource(new FileSystemResource(configDirectory)));
-			} else {
-				// Otherwise, read all of the properties files, and exclude ones that have a -dev, -test, etc... if those are not active profiles
-				File[] files = configDirectory.listFiles(new AcceptablePropertiesFilenameFilter(environment));
-				if (files != null && files.length > 0) {
-					for (File file : files) {
-						if (file.isFile())
-                            propertySources.addFirst(new ResourcePropertySource(new FileSystemResource(file)));
-						else if (LOG.isDebugEnabled()) 
-							LOG.debug("Cannot read configuration file " + file.getAbsolutePath() + " because it's actually a directory");
-					}
-				}
-			}
-		} else {
-			LOG.warn("No configuration properties found at " + location);
-		}
-		
-		PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-
-        configurer.setPropertySources(propertySources);
-		configurer.setEnvironment(environment);
-//		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
-		configurer.setIgnoreUnresolvablePlaceholders(true);
-
+        CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();
+        configurer.setCustomLocations(environment);
 		return configurer;
 	}
 	

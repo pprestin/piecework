@@ -15,6 +15,7 @@
  */
 package piecework.exception;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -37,6 +38,12 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
 	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
 	 */
 	public Response toResponse(RuntimeException exception) {
+
+        if (exception instanceof WebApplicationException) {
+            WebApplicationException webApplicationException = WebApplicationException.class.cast(exception);
+            return webApplicationException.getResponse();
+        }
+
 		LOG.info("Uncaught exception. Sending exception message to client with status " + Status.INTERNAL_SERVER_ERROR + " and message " + exception.getMessage(), exception);
 		exception.printStackTrace();
 		Explanation explanation = new Explanation();

@@ -31,7 +31,7 @@ define([ 'chaplin', 'models/base/model', 'models/interactions', 'models/screens'
 			
 			return response;
 		},
-		urlRoot: 'secure/v1/process',
+		urlRoot: 'process',
 		url: function() {
 			var uri = this.get("uri");
 			if (uri == null)

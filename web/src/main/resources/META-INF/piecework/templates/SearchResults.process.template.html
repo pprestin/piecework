@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><% name %></title>
+    <link href="<% static %>/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="<% static %>/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="<% static %>/css/shared.css" rel="stylesheet">
+</head>
+<body role="application">
+    <form id="main-form" method="POST">
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="user-information">
+                    <div class="pull-right span2"><% user.displayName %></div>
+                </div>
+                <div class="main-toolbar">
+                    <ul class="search-criteria">
+                        <li class="nav"><input title="Search by keyword" role="" class="searchField" name="keyword" id="keyword" type="text"></li>
+                        <li class="nav btn-group">
+                            <div class="dropdown">
+                                <a id="filter-button" class="btn dropdown-toggle" data-target="#limit-dropdown" data-toggle="dropdown" role="button" type="button">
+                                    Limit
+                                    <b class="caret"></b>
+                                </a>
+                                <ul id="limit-dropdown" class="dropdown-menu" role="menu">
+                                    <li><a tabindex="-1" href="#">Action</a></li>
+                                    <li><a tabindex="-1" href="#">Another action</a></li>
+                                    <li><a tabindex="-1" href="#">Something else here</a></li>
+                                    <li class="divider"></li>
+                                    <li><a tabindex="-1" href="#">Separated link</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="nav btn-group">
+                            <button class="btn btn-link" role="button" id="instanceSearchButton" type="submit">Search</button>
+                        </li>
+                        <li class="nav btn-group">
+                            <button class="btn btn-link" role="button" id="instanceClearButton" type="button">Clear</button>
+                        </li>
+                        <li class="nav btn-group pull-right">
+                            <button class="btn btn-link" title="Export all results" id="exportButton" type="button">Export</button>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+        <div class="main-content">
+
+
+
+        </div>
+    </form>
+
+    <script type="text/javascript">
+        window.piecework = {};
+        window.piecework.context = <%& json %>;
+
+        if (window.piecework.context == null) {
+            piecework.context = {
+                "definitions": null,
+                "firstResult": 1,
+                "list": [
+                {
+                "deleted": false,
+                "engine": "activiti",
+                "engineProcessDefinitionKey": "SupplierRegistration",
+                "interactions": [],
+                "participantSummary": "",
+                "processDefinitionKey": "Demonstration",
+                "processDefinitionLabel": "This is another test",
+                "processSummary": "",
+                "uri": "/piecework/secure/v1/process/Demonstration"
+                }
+                ],
+                "maxResults": 1,
+                "resourceLabel": "Processes",
+                "resourceName": "process",
+                "total": 1
+            };
+        }
+
+    </script>
+    <script data-main="<% static %>/js/index.js" src='<% static %>/js/vendor/require.js'></script>
+</body>

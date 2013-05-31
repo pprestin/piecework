@@ -16,10 +16,10 @@
 	<context:component-scan base-package="piecework" />
 	<mongo:repositories base-package="piecework" />
 
-	<security:global-method-security
-		secured-annotations="enabled" jsr250-annotations="enabled"
-		authentication-manager-ref="authenticationManager"
-		access-decision-manager-ref="resourceAccessDecisionManager" />
+	<!--<security:global-method-security-->
+		<!--secured-annotations="enabled" jsr250-annotations="enabled"-->
+		<!--authentication-manager-ref="authenticationManager"-->
+		<!--access-decision-manager-ref="resourceAccessDecisionManager" />-->
 
 
 <!-- 		<security:custom-filter position="PRE_AUTH_FILTER" ref="preauthenticationFilter" /> -->

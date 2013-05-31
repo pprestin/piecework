@@ -4,19 +4,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import piecework.model.Button;
 import piecework.model.Constraint;
 import piecework.model.Field;
 import piecework.model.FormValue;
 import piecework.model.Interaction;
+import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.Screen;
 import piecework.model.Section;
@@ -26,31 +23,48 @@ import piecework.model.Task;
 @XmlType(name = SearchResults.Constants.TYPE_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlSeeAlso({Button.class, Constraint.class, Field.class, FormValue.class, Interaction.class, Process.class, ProcessInstance.class, Screen.class, Section.class, Task.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchResults implements Serializable {
 
 	private static final long serialVersionUID = -7773190153155500335L;
 	
 	@XmlElement
 	private final String resourceName;
+
 	@XmlElement
 	private final String resourceLabel;
+
 	@XmlElement
 	private final Integer firstResult;
-	@XmlElement
+
+    @XmlElement
 	private final Integer maxResults;
-	@XmlElement
+
+    @XmlElement
 	private final Integer total;
-	@XmlElement
-	private final Integer page;
-	@XmlElement
+
+    @XmlTransient
+    @JsonIgnore
+    private final Integer page;
+
+    @XmlTransient
+    @JsonIgnore
 	private final Boolean moreResults;
-	@XmlElement
+
+    @XmlTransient
+    @JsonIgnore
 	private final Boolean incomplete;
-	@XmlElement
+
+    @XmlTransient
+    @JsonIgnore
 	private final String datePerspective;
-	@XmlElement
+
+    @XmlTransient
+    @JsonIgnore
 	private final String from;
-	@XmlElement
+
+    @XmlTransient
+    @JsonIgnore
 	private final String to;
 	
 	@XmlElementWrapper(name="list")
@@ -126,7 +140,15 @@ public class SearchResults implements Serializable {
 		return incomplete;
 	}
 
-	static class Attributes {
+    public Integer getFirstResult() {
+        return firstResult;
+    }
+
+    public Integer getMaxResults() {
+        return maxResults;
+    }
+
+    static class Attributes {
         final static String URI = "link";
     }
 	

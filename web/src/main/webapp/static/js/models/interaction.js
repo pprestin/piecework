@@ -21,7 +21,7 @@ define([ 'chaplin', 'models/base/model', 'models/screens' ], function(Chaplin, M
 			return response;
 		},
 		urlRoot: function() {
-			return 'secure/v1/interaction/' + this.get('processDefinitionKey');
+			return 'interaction/' + this.get('processDefinitionKey');
 		},
 		url: function() {
 			var uri = this.get("uri");

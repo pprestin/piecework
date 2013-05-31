@@ -157,20 +157,34 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	
 	@Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {	
-		SearchResults.Builder resultsBuilder = new SearchResults.Builder();
+		SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceLabel("Processes").resourceName(Process.Constants.ROOT_ELEMENT_NAME);
 		List<Process> processes = helper.findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
-		for (Process process : processes) {
-			resultsBuilder.item(new Process.Builder(process, sanitizer).build(getViewContext()));
-		}
-		
+		int counter = 0;
+        for (Process process : processes) {
+			resultsBuilder.item(new Process.Builder(process, sanitizer).interactions(null).build(getViewContext()));
+		    counter++;
+        }
+
+        int firstResult = counter > 0 ? 1 : 0;
+
+        resultsBuilder.firstResult(0);
+        resultsBuilder.maxResults(counter);
+        resultsBuilder.firstResult(firstResult);
+        resultsBuilder.total(counter);
+
 		return resultsBuilder.build();
 	}
 
 	@Override
 	public ViewContext getViewContext() {
-		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "process", "Process");
+		return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "process", "Process");
 	}
-	
+
+    @Override
+    public String getVersion() {
+        return "v1";
+    }
+
 
 	
 	private void addForm(FormPosition position, Form form) throws RecordNotFoundException {

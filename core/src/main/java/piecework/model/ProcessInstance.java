@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -95,9 +96,13 @@ public class ProcessInstance implements Serializable {
     private final List<Attachment> attachments;
 
     @XmlElement
-    private final transient ProcessExecution execution;
+    @Transient
+    private final ProcessExecution execution;
 
-    @XmlElement
+    @XmlAttribute
+    private final String link;
+
+    @XmlAttribute
     private final String uri;
 
     @XmlTransient
@@ -120,7 +125,8 @@ public class ProcessInstance implements Serializable {
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
         this.execution = builder.execution;
-        this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
+        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId) : null;
         this.isDeleted = builder.isDeleted;
     }
 
@@ -175,10 +181,19 @@ public class ProcessInstance implements Serializable {
 		return attachments;
 	}
 
-	public String getUri() {
+    public ProcessExecution getExecution() {
+        return execution;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public String getUri() {
 		return uri;
 	}
 
+    @JsonIgnore
 	public boolean isDeleted() {
 		return isDeleted;
 	}

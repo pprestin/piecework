@@ -85,7 +85,7 @@ public class Screen implements Serializable {
 	private final boolean isDeleted;
 	
 	@XmlAttribute
-	private final String uri;
+	private final String link;
 
 
 	private Screen() {
@@ -102,7 +102,7 @@ public class Screen implements Serializable {
 		this.isDeleted = builder.isDeleted;
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
 		this.sections = builder.sections != null ? Collections.unmodifiableList(builder.sections) : null;
-		this.uri = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
+		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	}
 	
 	public String getScreenId() {
@@ -113,8 +113,8 @@ public class Screen implements Serializable {
 		return processDefinitionKey;
 	}
 
-	public String getUri() {
-		return uri;
+	public String getLink() {
+		return link;
 	}
 
 	public String getTitle() {

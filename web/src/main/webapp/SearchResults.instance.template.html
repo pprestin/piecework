@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflows</title>
+    <link href="static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="static/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="static/css/shared.css" rel="stylesheet">
+</head>
+<body role="application">
+    <form id="main-form" method="POST">
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="user-information">
+                    <div class="user-information-name pull-right">
+                        <div class="dropdown">
+                            <a href="" class="btn btn-link" style="margin-top: 0px;">Test User <b class="caret"></b></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="main-toolbar">
+                    <ul class="search-criteria">
+                        <li class="nav"><input title="Search by keyword" role="" class="searchField" name="keyword" id="keyword" type="text"></li>
+                        <li class="nav btn-group">
+                            <div class="dropdown">
+                                <a id="filter-button" class="btn dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">
+                                    Limit
+                                    <b class="caret"></b>
+                                </a>
+                                <ul id="limit-dropdown" class="dropdown-menu" role="menu" aria-labelledby="filter-button">
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Another action</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Something else here</a></li>
+                                    <li class="divider"></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Separated link</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="nav btn-group">
+                            <button class="btn btn-link" role="button" id="instanceSearchButton" type="submit">Search</button>
+                        </li>
+                        <li class="nav btn-group">
+                            <button class="btn btn-link" role="button" id="instanceClearButton" type="button">Clear</button>
+                        </li>
+                        <li class="nav btn-group pull-right">
+                            <button class="btn btn-link" title="Export all results" id="exportButton" type="button">Export</button>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+        <div class="main-content">
+            <h2>Workflows</h2>
+            <table class="search-results table">
+                <thead>
+                    <tr>
+                        <th>Label</th>
+                        <th>Type</th>
+                        <th>Started</th>
+                    </tr>
+                </thead>
+
+
+            </table>
+
+
+        </div>
+    </form>
+
+    <script type="text/javascript">
+        window.piecework = {};
+        window.piecework.context = null;
+
+        if (window.piecework.context == null) {
+            piecework.context = {
+                "definitions": null,
+                "firstResult": 1,
+                "list": [
+                    {
+                        "processInstanceId": "123",
+                        "engineProcessInstanceId": "1be6fdc4-f710-468d-bb28-cb4a95598357",
+                        "alias": "73f7cadb-bffd-4e7d-b9c4-9e43b9747366",
+                        "processDefinitionKey": "Demonstration",
+                        "processDefinitionLabel": "This is another test",
+                        "processInstanceLabel": "Jack Test Employee Survey",
+                        "formData": [],
+                        "execution": {
+                            "executionId": "1be6fdc4-f710-468d-bb28-cb4a95598357",
+                            "businessKey": "73f7cadb-bffd-4e7d-b9c4-9e43b9747366",
+                            "startTime": "2013-05-31T20:30:07+00:00",
+                            "endTime": null,
+                            "duration": -1
+                        },
+                        "link": "/piecework/sso/instance/Demonstration/",
+                        "uri": "/piecework/api/v1/instance/Demonstration/"
+                    }
+                ],
+                "maxResults": 1,
+                "resourceLabel": "Workflows",
+                "resourceName": "instance",
+                "total": 1
+            };
+        }
+
+    </script>
+    <script data-main="static/js/search.js" src='static/js/vendor/require.js'></script>
+</body>

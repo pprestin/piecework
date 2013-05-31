@@ -62,6 +62,9 @@ public class Authorization {
     private final boolean isDeleted;
 
     @XmlAttribute
+    private final String link;
+
+    @XmlAttribute
     private final String uri;
 
     private Authorization() {
@@ -75,7 +78,8 @@ public class Authorization {
         this.groupNamespace = builder.groupNamespace;
         this.isDeleted = builder.isDeleted;
         this.authorities = builder.authorities != null ? Collections.unmodifiableList(builder.authorities) : null;
-        this.uri = context != null ? context.getApplicationUri(builder.groupNamespace, builder.groupId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.groupNamespace, builder.groupId) : null;
+        this.uri = context != null ? context.getServiceUri(builder.groupNamespace, builder.groupId) : null;
     }
 
     public String getAuthorizationId() {

@@ -60,6 +60,10 @@
  	<script type="text/javascript"> 
 		piecework = {};
 		piecework.context = <%& json %>;
+
+        if (piecework.context == null) {
+            piecework.context = {};
+        }
  	</script>
 	<script data-main="<% static %>/js/index.js" src='<% static %>/js/vendor/require.js'></script>
 
