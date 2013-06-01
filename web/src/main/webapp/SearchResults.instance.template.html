@@ -16,38 +16,12 @@
                 <div class="user-information">
                     <div class="user-information-name pull-right">
                         <div class="dropdown">
-                            <a href="" class="btn btn-link" style="margin-top: 0px;">Test User <b class="caret"></b></a>
+                            <a href=""  style="margin-top: 0px;">Test User <b class="caret"></b></a>
                         </div>
                     </div>
                 </div>
                 <div class="main-toolbar">
-                    <ul class="search-criteria">
-                        <li class="nav"><input title="Search by keyword" role="" class="searchField" name="keyword" id="keyword" type="text"></li>
-                        <li class="nav btn-group">
-                            <div class="dropdown">
-                                <a id="filter-button" class="btn dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">
-                                    Limit
-                                    <b class="caret"></b>
-                                </a>
-                                <ul id="limit-dropdown" class="dropdown-menu" role="menu" aria-labelledby="filter-button">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Another action</a></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Something else here</a></li>
-                                    <li class="divider"></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Separated link</a></li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="nav btn-group">
-                            <button class="btn btn-link" role="button" id="instanceSearchButton" type="submit">Search</button>
-                        </li>
-                        <li class="nav btn-group">
-                            <button class="btn btn-link" role="button" id="instanceClearButton" type="button">Clear</button>
-                        </li>
-                        <li class="nav btn-group pull-right">
-                            <button class="btn btn-link" title="Export all results" id="exportButton" type="button">Export</button>
-                        </li>
-                    </ul>
+
 
                 </div>
             </div>
@@ -62,11 +36,14 @@
                         <th>Started</th>
                     </tr>
                 </thead>
-
-
             </table>
-
-
+        </div>
+        <div class="navbar navbar-fixed-bottom">
+            <div class="navbar-inner">
+                <ul>
+                    <li class="nav pull-right">Workflow</li>
+                </ul>
+            </div>
         </div>
     </form>
 
@@ -76,7 +53,18 @@
 
         if (window.piecework.context == null) {
             piecework.context = {
-                "definitions": null,
+                "definitions": [
+                    {
+                        "engine": "activiti",
+                        "engineProcessDefinitionKey": "SupplierRegistration",
+                        "interactions": [],
+                        "participantSummary": "",
+                        "processDefinitionKey": "Demonstration",
+                        "processDefinitionLabel": "This is another test",
+                        "processSummary": "",
+                        "uri": "/piecework/secure/v1/process/Demonstration"
+                    }
+                ],
                 "firstResult": 1,
                 "list": [
                     {

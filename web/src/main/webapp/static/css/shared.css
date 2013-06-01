@@ -28,6 +28,10 @@ h2 {
     vertical-align: middle;
 }
 
+.search-criteria .nav.btn-group .dropdown a {
+    font-size: 14px;
+}
+
 .search-results {
 
 }
@@ -43,5 +47,5 @@ h2 {
 
 .user-information-name {
     text-align: right;
-    padding: 0px 20px;
+    padding: 3px 20px;
 }

@@ -74,6 +74,9 @@ public class SearchResults implements Serializable {
 	@XmlElementWrapper(name="definitions")
 	@XmlElement(name="definition")
 	protected List<Object> definitions;
+
+    @XmlAttribute
+    private final String link;
 	
 	private SearchResults() {
 		this(new SearchResults.Builder(), new ViewContext());
@@ -92,7 +95,8 @@ public class SearchResults implements Serializable {
 		this.page = firstResult != null && maxResults != null && maxResults.intValue() > 0 ? firstResult.intValue() / maxResults.intValue() + 1 : 1;
 		this.datePerspective = builder.datePerspective;
 		this.from = builder.from;
-		this.to = builder.to;	
+		this.to = builder.to;
+        this.link = builder.link;
 	}
 	
 	public List<Object> getList() {
@@ -176,6 +180,7 @@ public class SearchResults implements Serializable {
 		private String datePerspective;
 		private String from;
 		private String to;
+        private String link;
 		
 		public Builder() {
 			super();
@@ -261,8 +266,13 @@ public class SearchResults implements Serializable {
 		}
 		
 		public Builder to(String to) {
-			this.to = to;
-			return this;
-		}
+            this.to = to;
+            return this;
+        }
+
+        public Builder link(String link) {
+            this.link = link;
+            return this;
+        }
 	}
 }

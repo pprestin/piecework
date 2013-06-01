@@ -8,7 +8,22 @@ define([ 'chaplin', 'views/base/view' ],
 		container: '.search-results',
 		tagName: 'tr',
 	    render: function() {
-            this.$el.html("<td>Test</td>");
+            var html = '';
+            var processInstanceLabel = this.model.get('processInstanceLabel');
+            var processDefinitionLabel = this.model.get('processDefinitionLabel');
+	        if (processInstanceLabel != undefined)
+	            html += '<td>' + processInstanceLabel + '</td>';
+	        if (processDefinitionLabel != undefined)
+	            html += '<td>' + processDefinitionLabel + '</td>';
+            var execution = this.model.get('execution');
+            if (execution != undefined) {
+                var startTime = execution['startTime'];
+                if (startTime != undefined) {
+                    var startTimeDate = new Date(startTime);
+                    html += '<td>' + startTimeDate + '</td>';
+                }
+            }
+            this.$el.html(html);
 	    }
 	});
 

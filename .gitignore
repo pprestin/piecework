@@ -31,3 +31,7 @@ foo
 data:storage
 web/data:storage
 web/data/linux
+
+# Modules -- comment out to commit changes #
+processes
+integration
