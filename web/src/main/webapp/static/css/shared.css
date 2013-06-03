@@ -20,7 +20,7 @@ h2 {
 }
 
 .main-content {
-    padding: 90px 50px 70px 50px;
+    padding: 120px 50px 70px 50px;
 }
 
 .main-footer {
@@ -30,7 +30,7 @@ h2 {
 .main-toolbar {
     background-color: whitesmoke;
     border-bottom: 1px solid #CCC;
-    height: 60px;
+    height: 100px;
     overflow: visible;
     padding: 0px 20px;
     vertical-align: middle;
@@ -42,8 +42,18 @@ h2 {
 }
 
 .main-toolbar .search-criteria {
+    clear:  both;
     padding: 15px 0px 0px 0px;
     vertical-align: middle;
+}
+
+.main-toolbar .search-criteria-buttons {
+    clear:  both;
+    padding: 0px;
+}
+
+.main-toolbar .search-criteria-buttons .btn.active {
+    border: 1px solid #AAA;
 }
 
 .menu-item-check {

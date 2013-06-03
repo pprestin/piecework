@@ -1,9 +1,6 @@
 <div>
     <ul class="search-criteria">
         <li class="nav"><input title="Search by keyword" role="" class="searchField" name="keyword" placeholder="Search workflows" id="keyword" type="text"></li>
-        <li class="limit-dropdown-container nav btn-group">
-
-        </li>
         <li class="nav btn-group">
             <button class="btn btn-link" role="button" id="instanceSearchButton" type="submit">Search</button>
         </li>
@@ -16,14 +13,18 @@
     </ul>
 </div>
 <div>
-    <ul>
+    <ul class="search-criteria-buttons">
         <li class="nav">
-            <div class="btn-group">
-                <button class="btn btn-small" type="button">Pending</button>
-                <button class="btn btn-small" type="button">Canceled</button>
-                <button class="btn btn-small" type="button">Completed</button>
+            <div class="btn-group" data-toggle="buttons-radio">
+                <button class="btn btn-link btn-small active" type="button">Pending</button>
+                <button class="btn btn-link btn-small" type="button">Canceled</button>
+                <button class="btn btn-link btn-small" type="button">Completed</button>
             </div>
+        </li>
+        <li class="nav">
+            <div class="limit-dropdown-container btn-group">
 
+            </div>
         </li>
     </ul>
 </div>
