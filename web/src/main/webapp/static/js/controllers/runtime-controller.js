@@ -23,8 +23,14 @@ define([
     },
     search: function(params) {
         var resultsModel = this.compose('resultsModel');
-        var collection = new Collection();
-        collection.url = resultsModel.getUrl();
+        var url = resultsModel.url();
+        var ResultsCollection = Collection.extend({
+            url: url,
+            parse: function(response, options) {
+                return response.list;
+            },
+        });
+        var collection = new ResultsCollection();
         collection.add(resultsModel.get("list"));
         this.view = new SearchResultsView({collection: collection});
 

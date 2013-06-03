@@ -1,28 +1,20 @@
 package piecework.common.view;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import javax.xml.bind.annotation.*;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import piecework.model.Button;
-import piecework.model.Constraint;
-import piecework.model.Field;
-import piecework.model.FormValue;
-import piecework.model.Interaction;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
-import piecework.model.Screen;
-import piecework.model.Section;
-import piecework.model.Task;
+import piecework.util.ManyMap;
 
 @XmlRootElement(name = SearchResults.Constants.ROOT_ELEMENT_NAME)
 @XmlType(name = SearchResults.Constants.TYPE_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlSeeAlso({Button.class, Constraint.class, Field.class, FormValue.class, Interaction.class, Process.class, ProcessInstance.class, Screen.class, Section.class, Task.class})
+@XmlSeeAlso({Button.class, Constraint.class, Field.class, FormValue.class, Interaction.class, Process.class, ProcessInstance.class, QueryParameter.class, Screen.class, Section.class, Task.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchResults implements Serializable {
 
@@ -75,6 +67,10 @@ public class SearchResults implements Serializable {
 	@XmlElement(name="definition")
 	protected List<Object> definitions;
 
+    @XmlElementWrapper(name="parameters")
+    @XmlElementRef
+    private final List<QueryParameter> parameters;
+
     @XmlAttribute
     private final String link;
 	
@@ -97,6 +93,7 @@ public class SearchResults implements Serializable {
 		this.from = builder.from;
 		this.to = builder.to;
         this.link = builder.link;
+        this.parameters = Collections.unmodifiableList(builder.getParameters());
 	}
 	
 	public List<Object> getList() {
@@ -152,6 +149,14 @@ public class SearchResults implements Serializable {
         return maxResults;
     }
 
+    public String getLink() {
+        return link;
+    }
+
+    public List<QueryParameter> getParameters() {
+        return parameters;
+    }
+
     static class Attributes {
         final static String URI = "link";
     }
@@ -181,9 +186,11 @@ public class SearchResults implements Serializable {
 		private String from;
 		private String to;
         private String link;
+        private ManyMap<String, String> parameters;
 		
 		public Builder() {
 			super();
+            this.parameters = new ManyMap<String, String>();
 		}
 		
 		public SearchResults build() {
@@ -224,6 +231,14 @@ public class SearchResults implements Serializable {
 			this.list.addAll(items);
 			return this;
 		}
+
+        public Builder parameter(String name, String... values) {
+            if (values.length > 0) {
+                for (String value : values)
+                    this.parameters.putOne(name, value);
+            }
+            return this;
+        }
 		
 		public Builder firstResult(Integer firstResult) {
 			this.firstResult = firstResult;
@@ -273,6 +288,14 @@ public class SearchResults implements Serializable {
         public Builder link(String link) {
             this.link = link;
             return this;
+        }
+
+        public List<QueryParameter> getParameters() {
+            List<QueryParameter> parameters = new ArrayList<QueryParameter>();
+            for (Map.Entry<String, List<String>> entry : this.parameters.entrySet()) {
+                 parameters.add(new QueryParameter.Builder().name(entry.getKey()).values(entry.getValue()).build());
+            }
+            return parameters;
         }
 	}
 }

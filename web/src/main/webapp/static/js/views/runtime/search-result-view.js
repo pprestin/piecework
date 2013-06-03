@@ -9,10 +9,11 @@ define([ 'chaplin', 'views/base/view' ],
 		tagName: 'tr',
 	    render: function() {
             var html = '';
+            var link = this.model.get("link");
             var processInstanceLabel = this.model.get('processInstanceLabel');
             var processDefinitionLabel = this.model.get('processDefinitionLabel');
 	        if (processInstanceLabel != undefined)
-	            html += '<td>' + processInstanceLabel + '</td>';
+	            html += '<td><a href="' + link + '">' + processInstanceLabel + '</a></td>';
 	        if (processDefinitionLabel != undefined)
 	            html += '<td>' + processDefinitionLabel + '</td>';
             var execution = this.model.get('execution');
@@ -20,7 +21,7 @@ define([ 'chaplin', 'views/base/view' ],
                 var startTime = execution['startTime'];
                 if (startTime != undefined) {
                     var startTimeDate = new Date(startTime);
-                    html += '<td>' + startTimeDate + '</td>';
+                    html += '<td>' + startTimeDate.toLocaleString() + '</td>';
                 }
             }
             this.$el.html(html);

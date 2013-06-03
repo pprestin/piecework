@@ -174,6 +174,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
 
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
+                .resourceLabel("Workflows")
+                .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
+
+        ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
         for (Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
 			String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
 			List<String> rawValues = rawQueryParameterEntry.getValue();
@@ -183,6 +188,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 					queryParameters.putOne(key, value);
 
                     try {
+                        boolean isEngineParameter = true;
                         if (key.equals("processDefinitionKey"))
                             limitToProcessDefinitionKey = value;
                         else if (key.equals("processInstanceId"))
@@ -203,6 +209,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
                             criteria.maxResults(Integer.valueOf(value));
                         else if (key.equals("firstResult"))
                             criteria.firstResult(Integer.valueOf(value));
+                        {
+                            contentQueryParameters.putOne(key, value);
+                            isEngineParameter = false;
+                        }
+
+                        if (isEngineParameter)
+                            resultsBuilder.parameter(key, value);
 
                     } catch (NumberFormatException e) {
                         LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
@@ -224,10 +237,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             else
                 noResults = true;
         }
-
-		SearchResults.Builder resultsBuilder = new SearchResults.Builder()
-            .resourceLabel("Workflows")
-			.resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
 
         if (! noResults) {
             List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
@@ -254,7 +263,16 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
                         executionMap.put(execution.getBusinessKey(), execution);
                     }
 
-                    Iterable<ProcessInstance> instances = processInstanceRepository.findAll(processInstanceIds);
+                    String keyword = null;
+                    if (contentQueryParameters.containsKey("keyword"))
+                        keyword = contentQueryParameters.getOne("keyword");
+
+                    Iterable<ProcessInstance> instances;
+                    if (keyword == null)
+                        instances = processInstanceRepository.findAll(processInstanceIds);
+                    else
+                        instances = processInstanceRepository.findProcessInstanceIdInAndKeywordRegex(processInstanceIds, keyword);
+
                     PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
                     for (ProcessInstance instance : instances) {
                         resultsBuilder.item(new ProcessInstance.Builder(instance, passthroughSanitizer).build(getViewContext()));

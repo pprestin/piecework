@@ -18,6 +18,7 @@ package piecework.process;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.querydsl.QueryDslUtils;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.RequestDetails;
@@ -36,9 +37,12 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.util.ManyMap;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -60,6 +64,14 @@ public class ProcessInstanceService {
 
     @Autowired
     ValidationService validationService;
+
+    public Set<ProcessInstance> findByCriteria(List<Process> processes, ManyMap<String, String> criteria) {
+        if (criteria.containsKey("keyword")) {
+            String keyword = criteria.getOne("keyword");
+            return processInstanceRepository.findByKeywordRegex(keyword);
+        }
+        return Collections.emptySet();
+    }
 
     public ProcessInstance store(Process process, FormSubmission submission, FormValidation validation, ProcessInstance previous) throws StatusCodeError {
         ProcessInstance.Builder instanceBuilder;

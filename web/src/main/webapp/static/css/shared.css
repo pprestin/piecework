@@ -5,12 +5,30 @@ h2 {
     vertical-align: middle;
 }
 
+.dropdown-menu > li > .checkbox-menu-item {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-size; 14px;
+    font-weight: normal;
+    color: #333333;
+    white-space: nowrap;
+}
+
+.hidden-checkbox {
+    display: none !important;
+}
+
 .main-content {
     padding: 90px 50px 70px 50px;
 }
 
+.main-footer {
+    background-color: whitesmoke;
+}
+
 .main-toolbar {
-    background-color: #EEE;
+    background-color: whitesmoke;
     border-bottom: 1px solid #CCC;
     height: 60px;
     overflow: visible;
@@ -28,8 +46,16 @@ h2 {
     vertical-align: middle;
 }
 
-.search-criteria .nav.btn-group .dropdown a {
+.menu-item-check {
+    width: 20px;
+}
+
+.search-criteria .nav.btn-group .dropdown span {
     font-size: 14px;
+    line-height: 16px;
+    margin: 0px;
+    padding: 0px;
+    vertical-align: text-top;
 }
 
 .search-results {
@@ -41,11 +67,19 @@ h2 {
 }
 
 .user-information {
-    background-color: rgba(220, 220, 220,0.85);
+    background-color: black;
     height: 25px;
 }
 
 .user-information-name {
     text-align: right;
     padding: 3px 20px;
+}
+
+.user-information-name a {
+    color: white;
+}
+
+.user-information name .caret {
+    border-top: 4px solid #ffffff;
 }

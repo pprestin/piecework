@@ -10,42 +10,42 @@
     <link href="static/css/shared.css" rel="stylesheet">
 </head>
 <body role="application">
-    <form id="main-form" method="POST">
-        <div class="navbar navbar-fixed-top">
-            <div class="navbar-inner">
-                <div class="user-information">
-                    <div class="user-information-name pull-right">
-                        <div class="dropdown">
-                            <a href=""  style="margin-top: 0px;">Test User <b class="caret"></b></a>
-                        </div>
+
+    <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="user-information">
+                <div class="user-information-name pull-right">
+                    <div class="dropdown">
+                        <a href=""  style="margin-top: 0px;">Test User <b class="caret icon-white"></b></a>
                     </div>
                 </div>
-                <div class="main-toolbar">
+            </div>
+            <div class="main-toolbar">
 
 
-                </div>
             </div>
         </div>
-        <div class="main-content">
-            <h2>Workflows</h2>
-            <table class="search-results table">
-                <thead>
-                    <tr>
-                        <th>Label</th>
-                        <th>Type</th>
-                        <th>Started</th>
-                    </tr>
-                </thead>
-            </table>
+    </div>
+    <div class="main-content">
+        <h2>Workflows</h2>
+        <table class="search-results table table-hover">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Type</th>
+                    <th>Started</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    <div class="main-footer navbar navbar-fixed-bottom">
+        <div class="navbar-inner">
+            <ul>
+                <li class="nav pull-right"><h1 style="font-weight: normal">Workflow&nbsp;&nbsp;</h1></li>
+            </ul>
         </div>
-        <div class="navbar navbar-fixed-bottom">
-            <div class="navbar-inner">
-                <ul>
-                    <li class="nav pull-right">Workflow</li>
-                </ul>
-            </div>
-        </div>
-    </form>
+    </div>
+
 
     <script type="text/javascript">
         window.piecework = {};
@@ -86,10 +86,12 @@
                         "uri": "/piecework/api/v1/instance/Demonstration/"
                     }
                 ],
+                "link": "/piecework/sso/instance",
                 "maxResults": 1,
                 "resourceLabel": "Workflows",
                 "resourceName": "instance",
-                "total": 1
+                "total": 1,
+                "parameters": [ { "complete": true } ]
             };
         }
 

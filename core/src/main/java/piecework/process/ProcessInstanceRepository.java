@@ -16,11 +16,19 @@
 package piecework.process;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import piecework.model.*;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author James Renfro
  */
 public interface ProcessInstanceRepository extends MongoRepository<ProcessInstance, String> {
+
+    Set<ProcessInstance> findByKeywordRegex(String keyword);
+
+    Set<ProcessInstance> findProcessInstanceIdInAndKeywordRegex(Iterable<String> processInstanceIds, String keyword);
 
 }

@@ -3,13 +3,34 @@
         Limit to
         <b class="caret"></b>
     </a>
-    <ul id="limit-dropdown" class="dropdown-menu" role="menu" aria-labelledby="filter-button">
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="#canceled">Canceled</a></li>
-        <li role="presentation"><a role="menuitem" tabindex="-1" href="#completed">Completed</a></li>
-        <li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#pending">Pending</a></li>
+    <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">
+        <li role="presentation">
+            <a class="checkbox-menu-item" role="menuitem" tabindex="-1">
+                <i class="{{#each parameters}}{{#if pending}}icon-ok{{/if}}{{/each}} menu-item-check"></i> <span>Pending</span>
+            </a>
+            <input class="hidden-checkbox group1" name="pending" type="checkbox" value="true"/>
+        </li>
+        <li role="presentation">
+            <a class="checkbox-menu-item" role="menuitem" tabindex="-1">
+                <b class="{{#each parameters}}{{#if canceled}}icon-ok{{/if}}{{/each}} menu-item-check"></b> <span>Canceled</span>
+            </a>
+            <input class="hidden-checkbox group1" name="canceled" type="checkbox" value="true"/>
+        </li>
+        <li role="presentation">
+            <a class="checkbox-menu-item" role="menuitem" tabindex="-1">
+                <b class="{{#each parameters}}{{#if complete}}icon-ok{{/if}}{{/each}} menu-item-check"></b> <span>Completed</span>
+            </a>
+            <input class="hidden-checkbox group1" name="complete" type="checkbox" value="true"/>
+        </li>
         <li class="divider"></li>
         {{#each definitions}}
-            <li role="presentation"><a role="menuitem" tabindex="-1" href="#processDefinitionKey/{{processDefinitionKey}}">{{processDefinitionLabel}}</a></li>
+            <li role="presentation">
+                <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
+                    <label class="checkbox">
+                        <input class="checkbox-group2" type="checkbox" name="processDefinitionKey" value="{{processDefinitionKey}}"/>&nbsp;{{processDefinitionLabel}}
+                    </label>
+                </div>
+            </li>
         {{/each}}
     </ul>
 </div>

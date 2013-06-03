@@ -16,10 +16,7 @@
 package piecework.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -32,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
@@ -87,6 +85,10 @@ public class ProcessInstance implements Serializable {
 
     @XmlTransient
     @JsonIgnore
+    private final Set<String> keywords;
+
+    @XmlTransient
+    @JsonIgnore
     @DBRef
     private final List<FormSubmission> submissions;
     
@@ -122,6 +124,7 @@ public class ProcessInstance implements Serializable {
         this.processInstanceLabel = builder.processInstanceLabel;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
         this.restrictedData = builder.restrictedData != null ? Collections.unmodifiableList(builder.restrictedData) : null;
+        this.keywords = builder.keywords;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
         this.execution = builder.execution;
@@ -208,6 +211,7 @@ public class ProcessInstance implements Serializable {
         private String processInstanceLabel;
         private List<FormValue> formData;
         private List<FormValue> restrictedData;
+        private Set<String> keywords;
         private List<Attachment> attachments;
         private List<FormSubmission> submissions;
         private ProcessExecution execution;
@@ -246,6 +250,15 @@ public class ProcessInstance implements Serializable {
                     this.attachments.add(new Attachment.Builder(attachment, sanitizer).build());
                 }
             }
+            this.keywords = new HashSet<String>();
+            if (StringUtils.isNotEmpty(this.processInstanceLabel))
+                this.keywords.add(this.processInstanceLabel.toLowerCase());
+            if (StringUtils.isNotEmpty(this.alias))
+                this.keywords.add(this.alias.toLowerCase());
+            if (StringUtils.isNotEmpty(this.engineProcessInstanceId))
+                this.keywords.add(this.engineProcessInstanceId);
+            if (StringUtils.isNotEmpty(this.alias))
+                this.keywords.add(this.alias.toLowerCase());
         }
 
         public ProcessInstance build() {
@@ -258,16 +271,22 @@ public class ProcessInstance implements Serializable {
 
         public Builder processInstanceId(String processInstanceId) {
             this.processInstanceId = processInstanceId;
+            if (StringUtils.isNotEmpty(this.processInstanceId))
+                this.keywords.add(this.processInstanceId);
             return this;
         }
 
         public Builder engineProcessInstanceId(String engineProcessInstanceId) {
             this.engineProcessInstanceId = engineProcessInstanceId;
+            if (StringUtils.isNotEmpty(this.engineProcessInstanceId))
+                this.keywords.add(this.engineProcessInstanceId);
             return this;
         }
 
         public Builder alias(String alias) {
             this.alias = alias;
+            if (StringUtils.isNotEmpty(this.alias))
+                this.keywords.add(this.alias.toLowerCase());
             return this;
         }
 
@@ -283,6 +302,8 @@ public class ProcessInstance implements Serializable {
         
         public Builder processInstanceLabel(String processInstanceLabel) {
             this.processInstanceLabel = processInstanceLabel;
+            if (StringUtils.isNotEmpty(this.processInstanceLabel))
+                this.keywords.add(this.processInstanceLabel.toLowerCase());
             return this;
         }
 
@@ -290,6 +311,13 @@ public class ProcessInstance implements Serializable {
             if (this.formData == null)
                 this.formData = new ArrayList<FormValue>();
             this.formData.add(new FormValue.Builder().name(key).values(values).build());
+            if (values.length > 0) {
+                for (String value : values) {
+                    if (StringUtils.isNotEmpty(value))
+                        this.keywords.add(value.toLowerCase());
+                }
+            }
+
             return this;
         }
 
@@ -315,6 +343,12 @@ public class ProcessInstance implements Serializable {
                 for (Map.Entry<String, List<String>> entry : map.entrySet()) {
                     List<String> values = entry.getValue();
                     this.formData.add(new FormValue.Builder().name(entry.getKey()).values(values.toArray(new String[values.size()])).build());
+                    if (values.size() > 0) {
+                        for (String value : values) {
+                            if (StringUtils.isNotEmpty(value))
+                                this.keywords.add(value.toLowerCase());
+                        }
+                    }
                 }
             }
             return this;

@@ -170,8 +170,12 @@ public class TaskResourceVersion1 implements TaskResource {
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         ManyMap<String, String> queryParameters = new ManyMap<String, String>();
 
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
+                .resourceLabel("Tasks");
+
         DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
         TaskCriteria.Builder criteriaBuilder = new TaskCriteria.Builder();
+        ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
         for (Map.Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
             String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
             List<String> rawValues = rawQueryParameterEntry.getValue();
@@ -181,6 +185,7 @@ public class TaskResourceVersion1 implements TaskResource {
                     queryParameters.putOne(key, value);
 
                     try {
+                        boolean isEngineParameter = true;
                         if (key.equals("taskId"))
                             criteriaBuilder.taskId(value);
                         else if (key.equals("engine"))
@@ -213,6 +218,13 @@ public class TaskResourceVersion1 implements TaskResource {
                             criteriaBuilder.maxResults(Integer.valueOf(value));
                         else if (key.equals("firstResult"))
                             criteriaBuilder.firstResult(Integer.valueOf(value));
+                        else {
+                            contentQueryParameters.putOne(key, value);
+                            isEngineParameter = false;
+                        }
+
+                        if (isEngineParameter)
+                            resultsBuilder.parameter(key, value);
 
                     } catch (NumberFormatException e) {
                         LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
@@ -223,14 +235,16 @@ public class TaskResourceVersion1 implements TaskResource {
             }
         }
 
-        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
-                .resourceLabel("Tasks");
+
 //        List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
 //        for (Process process : processes) {
 //
 //        }
 
         try {
+
+
+
             TaskResults results = facade.findTasks(criteriaBuilder.build());
             resultsBuilder.items(results.getTasks());
         } catch (ProcessEngineException e) {
