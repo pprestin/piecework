@@ -39,7 +39,6 @@ import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -115,21 +114,27 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		
 		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
-            String applicationName = environment.getProperty("application.name");
-            String urlBase = environment.getProperty("ui.static.urlbase");
+            String applicationTitle = environment.getProperty("application.name");
+            String assetsUrl = environment.getProperty("ui.static.urlbase");
 
 			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), template.getInputStream());
 			try {
 				MustacheFactory mf = new DefaultMustacheFactory();
-			    Mustache mustache = mf.compile(new InputStreamReader(input), "page"); 
-			    
-			    OutputStream jsonStream = new ByteArrayOutputStream();
-			    jsonProvider.writeTo(t, type, genericType, annotations, mediaType, httpHeaders, jsonStream);			    
-			    String json = jsonStream.toString();
-			    
-			    String pageName = null;
+			    Mustache mustache = mf.compile(new InputStreamReader(input), "page");
+
 			    User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
-			    mustache.execute(new PrintWriter(entityStream), new Page(applicationName, pageName, urlBase, t, json, user)).flush();
+                PageContext pageContext = new PageContext.Builder()
+                        .applicationTitle(applicationTitle)
+                        .assetsUrl(assetsUrl)
+                        .resource(t)
+                        .user(user)
+                        .build();
+
+                OutputStream jsonStream = new ByteArrayOutputStream();
+                jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
+                String json = jsonStream.toString();
+
+			    mustache.execute(new PrintWriter(entityStream), new JsonContext(json)).flush();
 			} catch (IOException e) {
 				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
 			} finally {

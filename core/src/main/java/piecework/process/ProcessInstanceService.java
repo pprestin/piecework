@@ -68,7 +68,7 @@ public class ProcessInstanceService {
     public Set<ProcessInstance> findByCriteria(List<Process> processes, ManyMap<String, String> criteria) {
         if (criteria.containsKey("keyword")) {
             String keyword = criteria.getOne("keyword");
-            return processInstanceRepository.findByKeywordRegex(keyword);
+            return processInstanceRepository.findByKeywordsRegex(keyword);
         }
         return Collections.emptySet();
     }

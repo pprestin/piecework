@@ -12,7 +12,10 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/runtime/searc
 	        'submit': '_onFormSubmit',
 	    },
 	    listen: {
-
+            'addedToDOM': '_onAddedToDOM',
+	    },
+	    _onAddedToDOM: function() {
+	        $('title').text(window.piecework.context.applicationTitle);
 	    },
 	    _onFormSubmit: function(event) {
 	        event.preventDefault();

@@ -57,7 +57,7 @@ public class ProcessInstance implements Serializable {
 	@XmlAttribute
     @XmlID
     @Id
-    private final String processInstanceId;
+    private String processInstanceId;
 
     @XmlTransient
     @JsonIgnore
@@ -137,6 +137,10 @@ public class ProcessInstance implements Serializable {
 		return processInstanceId;
 	}
 
+    public void setProcessInstanceId(String processInstanceId) {
+        this.processInstanceId = processInstanceId;
+    }
+
     public String getEngineProcessInstanceId() {
         return engineProcessInstanceId;
     }
@@ -165,7 +169,11 @@ public class ProcessInstance implements Serializable {
         return restrictedData;
     }
 
-	@JsonIgnore
+    public Set<String> getKeywords() {
+        return keywords;
+    }
+
+    @JsonIgnore
 	public ManyMap<String, String> getFormValueMap() {
     	ManyMap<String, String> map = new ManyMap<String, String>();
     	if (formData != null && !formData.isEmpty()) {

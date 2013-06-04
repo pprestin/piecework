@@ -1,0 +1,25 @@
+    <a id="filter-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">
+        <span class="dropdown-toggle-text">{{selected}}</span>
+        <b class="caret"></b>
+    </a>
+    <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">
+        {{#each options}}
+            <li role="presentation">
+                <a class="checkbox-menu-item" href="#search:{{#if parameter}}{{parameter}}={{value}}{{/if}}" role="menuitem" tabindex="-1">{{label}}</a>
+            </li>
+        {{/each}}
+
+
+        <!--
+        <li class="divider"></li>
+        {{#each definitions}}
+            <li role="presentation">
+                <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
+                    <label class="checkbox">
+                        <input class="checkbox-group2" type="checkbox" name="processDefinitionKey" value="{{processDefinitionKey}}"/>&nbsp;{{processDefinitionLabel}}
+                    </label>
+                </div>
+            </li>
+        {{/each}}
+        -->
+    </ul>

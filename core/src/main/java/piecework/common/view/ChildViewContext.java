@@ -40,7 +40,7 @@ public class ChildViewContext extends ViewContext {
 	}
 		
 	@Override
-	protected String buildUri(String base, String ... ids) {
+	protected String buildUri(boolean includeVersion, String base, String ... ids) {
 		StringBuilder builder = new StringBuilder();
 		
 		if (parent != null && path != null && ids != null && ids.length > 0) {

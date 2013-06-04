@@ -13,23 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
-
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-import piecework.model.*;
-
-import java.util.List;
-import java.util.Set;
+package piecework.ui;
 
 /**
  * @author James Renfro
  */
-public interface ProcessInstanceRepository extends MongoRepository<ProcessInstance, String> {
+public class JsonContext {
 
-    Set<ProcessInstance> findByKeywordsRegex(String keyword);
+    private final String json;
 
-    @Query(value="{ 'processInstanceId' : { $in: ?0 }, 'keywords' : { $regex: ?1 } }")
-    Set<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword);
+    public JsonContext(String json) {
+        this.json = json;
+    }
 
+    public String getJson() {
+        return json;
+    }
 }

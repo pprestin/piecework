@@ -32,7 +32,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
@@ -47,12 +46,10 @@ import piecework.model.Process;
 import piecework.process.*;
 import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.Payload;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.form.handler.RequestHandler;
-import piecework.form.handler.SubmissionHandler;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
@@ -176,7 +173,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Workflows")
-                .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME);
+                .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
+                .link(getViewContext().getApplicationUri());
 
         ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
         for (Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
@@ -271,7 +269,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
                     if (keyword == null)
                         instances = processInstanceRepository.findAll(processInstanceIds);
                     else
-                        instances = processInstanceRepository.findProcessInstanceIdInAndKeywordRegex(processInstanceIds, keyword);
+                        instances = processInstanceRepository.findByProcessInstanceIdInAndKeywordsRegex(processInstanceIds, keyword);
 
                     PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
                     for (ProcessInstance instance : instances) {

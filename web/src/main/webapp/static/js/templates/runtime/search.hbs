@@ -1,30 +1,30 @@
 <div>
     <ul class="search-criteria">
-        <li class="nav"><input title="Search by keyword" role="" class="searchField" name="keyword" placeholder="Search workflows" id="keyword" type="text"></li>
-        <li class="nav btn-group">
-            <button class="btn btn-link" role="button" id="instanceSearchButton" type="submit">Search</button>
+        <li class="nav">
+            <div class="btn-group">
+                <input title="Search by keyword" role="" class="searchField" name="keyword" placeholder="Search" id="keyword" type="text">
+            </div>
         </li>
-        <li class="nav btn-group">
+        <li class="nav">
+            <div>
+                <button class="btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i class="icon-search"></i>&nbsp;&nbsp;</button>
+            </div>
+        </li>
+        <!--<li class="nav btn-group">
             <a class="btn btn-link" href="#clear" role="button" id="instanceClearButton" type="button">Clear</a>
-        </li>
-        <li class="nav btn-group pull-right">
-            <a class="btn btn-link" href="#export" title="Export all results" id="exportButton" type="button">Export</a>
+        </li>-->
+        <li class="nav pull-right">
+            <a class="btn" href="#export" title="Export all results" id="exportButton" type="button"><i class="icon-download-alt"></i> Export</a>
         </li>
     </ul>
 </div>
 <div>
     <ul class="search-criteria-buttons">
         <li class="nav">
-            <div class="btn-group" data-toggle="buttons-radio">
-                <button class="btn btn-link btn-small active" type="button">Pending</button>
-                <button class="btn btn-link btn-small" type="button">Canceled</button>
-                <button class="btn btn-link btn-small" type="button">Completed</button>
-            </div>
+            <div class="status-filter-container"></div>
         </li>
         <li class="nav">
-            <div class="limit-dropdown-container btn-group">
-
-            </div>
+            <div class="process-filter-container"></div>
         </li>
     </ul>
 </div>
