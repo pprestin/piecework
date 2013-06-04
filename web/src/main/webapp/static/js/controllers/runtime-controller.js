@@ -22,15 +22,16 @@ define([
         var statusFilter = new SearchFilter({
             selector: 'parameters',
             options: [
-                {label: "Open", key: "complete", value: 'false'},
-                {label: "Complete", key: "complete", value: 'true'},
-                {label: "Canceled", key: "canceled", value: 'true'},
-                {label: "All" }
+                {id: "statusOpen", label: "Open", key: "complete", value: 'false'},
+                {id: "statusComplete", label: "Complete", key: "complete", value: 'true'},
+                {id: "statusCanceled", label: "Canceled", key: "canceled", value: 'true'},
+                {id: "statusAny", label: "Any status" }
             ],
             results: resultsModel
         });
 
         var processFilter = new SearchFilter({
+            selector: 'parameters',
             key: 'definitions',
             results: resultsModel
         });

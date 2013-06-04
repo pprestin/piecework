@@ -3,11 +3,19 @@
         <b class="caret"></b>
     </a>
     <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">
-        {{#each options}}
-            <li role="presentation">
-                <a class="checkbox-menu-item" href="#search:{{#if parameter}}{{parameter}}={{value}}{{/if}}" role="menuitem" tabindex="-1">{{label}}</a>
-            </li>
-        {{/each}}
+        {{#if options}}
+            {{#each options}}
+                <li role="presentation" {{#if selected}}class="disabled"{{/if}}>
+                    <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
+                        <label class="checkbox">
+                            <input type="checkbox" id="{{id}}" name="{{key}}" value="{{value}}" {{#if selected}}checked{{/if}}/>&nbsp;{{label}}
+                        </label>
+                    </div>
+                    <!--<a class="checkbox-menu-item" role="menuitem" tabindex="-1">{{label}}</a>
+                    <input class="hidden-checkbox" type="checkbox" name="{{key}}" value="{{value}}"/>-->
+                </li>
+            {{/each}}
+        {{/if}}
 
 
         <!--

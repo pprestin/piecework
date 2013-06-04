@@ -1,3 +1,7 @@
+input.searchField {
+    margin-bottom: 0px;
+}
+
 h2 {
     color: #000;
     font-weight: normal;
@@ -11,12 +15,11 @@ h2 {
     clear: both;
     font-size; 14px;
     font-weight: normal;
-    color: #333333;
     white-space: nowrap;
 }
 
 .hidden-checkbox {
-    display: none !important;
+    /*display: none !important; */
 }
 
 .limit-dropdown-container {
@@ -49,8 +52,9 @@ h2 {
     margin: 0 5px 0 0;
 }
 
-.main-toolbar .search-criteria {
+.main-toolbar ul.search-criteria {
     clear:  both;
+    margin-bottom: 0px;
     padding: 5px 0px 0px 0px;
     vertical-align: middle;
 }
@@ -65,9 +69,14 @@ h2 {
 }
 
 
-.main-toolbar .search-criteria-buttons {
+.main-toolbar ul.search-criteria-buttons {
     clear:  both;
+    margin-bottom: 0px;
     padding: 0px;
+}
+
+.main-toolbar ul.search-criteria-buttons li {
+    line-height: 16px;
 }
 
 /*
