@@ -23,6 +23,7 @@ import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricProcessInstanceQuery;
 import org.activiti.engine.history.HistoricTaskInstanceQuery;
+import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import piecework.common.model.User;
 import piecework.engine.exception.ProcessEngineException;
+import piecework.engine.ProcessModelResource;
 import piecework.model.Process;
 import piecework.model.Task;
 
@@ -93,6 +95,24 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         }
 
         return false;
+    }
+
+    @Override
+    public void deploy(Process process, String name, ProcessModelResource ... resources) throws ProcessEngineException {
+        Assert.assertNotNull(process);
+        Assert.assertNotNull(process.getEngine());
+        if (! process.getEngine().equals(getKey()))
+            return;
+
+        DeploymentBuilder builder = repositoryService.createDeployment();
+
+        if (resources != null) {
+            for (ProcessModelResource resource : resources) {
+                builder.addInputStream(resource.getName(), resource.getInputStream());
+            }
+
+            builder.deploy();
+        }
     }
 
     @Override

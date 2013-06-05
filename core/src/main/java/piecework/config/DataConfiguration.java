@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.mongodb.DBCollection;
@@ -45,16 +46,14 @@ public class DataConfiguration {
 			
 	@Autowired
 	MongoTemplate mongoTemplate;
-	
-	@Value("${mongo.db}")
-	private String mongoDb;
-	
-	@Value("${mongo.filesystem}")
-	private String mongoFilesystem;
-	
+
+    @Autowired
+    Environment environment;
+
 	@PostConstruct
 	public void importDatabase() throws UnknownHostException {
-		
+        String mongoDb = environment.getProperty("mongo.db");
+        String mongoFilesystem = environment.getProperty("mongo.filesystem");
 		
 		File directory = new File(mongoFilesystem, "dbs");
 		
@@ -69,8 +68,7 @@ public class DataConfiguration {
 			LOG.debug("No startup data exists for " + mongoDb);
 			return;
 		}
-		
-		
+
 		File[] collectionFiles = dbDirectory.listFiles();
 		
 		for (File collectionFile : collectionFiles) {

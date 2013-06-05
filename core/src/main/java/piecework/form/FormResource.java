@@ -35,7 +35,7 @@ import piecework.exception.StatusCodeError;
 /**
  * @author James Renfro
  */
-@Path("secure/form")
+@Path("form")
 @Produces("text/html")
 public interface FormResource extends Resource {
 	

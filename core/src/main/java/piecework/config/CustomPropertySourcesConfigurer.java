@@ -88,7 +88,7 @@ public class CustomPropertySourcesConfigurer extends PropertySourcesPlaceholderC
             URL resourceUrl = null;
             try {
                 resourceUrl = resource.getURL();
-                configurableEnvironment.getPropertySources().addLast(new ResourcePropertySource(resource));
+                configurableEnvironment.getPropertySources().addFirst(new ResourcePropertySource(resource));
             } catch (IOException ioe) {
                 LOG.error("Failed to add the following resource to the list of property sources: " + resourceUrl.toString());
             }

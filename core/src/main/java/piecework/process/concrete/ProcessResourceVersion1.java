@@ -28,6 +28,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.designer.InteractionRepository;
+import piecework.designer.ScreenRepository;
+import piecework.model.Interaction;
+import piecework.model.Screen;
 import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
@@ -52,6 +56,12 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
 	@Autowired
 	ProcessRepository repository;
+
+    @Autowired
+    InteractionRepository interactionRepository;
+
+    @Autowired
+    ScreenRepository screenRepository;
 	
 	@Autowired
 	ResourceHelper helper;
@@ -66,8 +76,29 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	String baseServiceUri;
 	
 	@Override
-	public Response create(Process process) throws StatusCodeError {
-		Process.Builder builder = new Process.Builder(process, sanitizer);
+	public Response create(Process rawProcess) throws StatusCodeError {
+		Process.Builder builder = new Process.Builder(rawProcess, sanitizer);
+
+        Process process = builder.build();
+
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        builder = new Process.Builder(process, passthroughSanitizer);
+        builder.interactions(null);
+
+        if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
+            for (Interaction interaction : process.getInteractions()) {
+                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, passthroughSanitizer);
+                interactionBuilder.screens(null);
+                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
+                    for (Screen screen : interaction.getScreens()) {
+                        Screen persistedScreen = screenRepository.save(screen);
+                        interactionBuilder.screen(persistedScreen);
+                    }
+                }
+                builder.interaction(interactionBuilder.build());
+            }
+        }
+
 		Process result = repository.save(builder.build());
 		
 		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(getViewContext()));

@@ -26,4 +26,6 @@ public interface ProcessEngineCapabilities {
 
     boolean completeTask(Process process, String taskId) throws ProcessEngineException;
 
+    void deploy(Process process, String name, ProcessModelResource ... resources) throws ProcessEngineException;
+
 }

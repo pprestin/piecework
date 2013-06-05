@@ -104,4 +104,9 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
         return proxy.completeTask(process, taskId);
     }
 
+    @Override
+    public void deploy(Process process, String name, ProcessModelResource... resources) throws ProcessEngineException {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        proxy.deploy(process, name, resources);
+    }
 }

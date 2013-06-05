@@ -56,6 +56,9 @@ public class Field implements Serializable {
     @Id
     private final String fieldId;
 
+    @XmlElement
+    private final String label;
+
 	@XmlElement
     private final String name;
     
@@ -113,6 +116,7 @@ public class Field implements Serializable {
 
     private Field(Field.Builder builder, ViewContext context) {
         this.fieldId = builder.fieldId;
+        this.label = builder.label;
         this.name = builder.name;
         this.type = builder.type;
         this.editable = builder.editable;
@@ -135,7 +139,11 @@ public class Field implements Serializable {
 		return fieldId;
 	}
 
-	public String getName() {
+    public String getLabel() {
+        return label;
+    }
+
+    public String getName() {
 		return name;
 	}
 
@@ -203,6 +211,7 @@ public class Field implements Serializable {
 
     	private String fieldId;
     	private String processDefinitionKey;
+        private String label;
         private String name;
         private String type;
         private boolean editable;
@@ -232,6 +241,7 @@ public class Field implements Serializable {
 
         public Builder(Field field, Sanitizer sanitizer) {
             this.fieldId = sanitizer.sanitize(field.fieldId);
+            this.label = sanitizer.sanitize(field.label);
             this.name = sanitizer.sanitize(field.name);
             this.type = sanitizer.sanitize(field.type);
             this.editable = field.editable;
@@ -276,6 +286,11 @@ public class Field implements Serializable {
         
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder label(String label) {
+            this.label = label;
             return this;
         }
 

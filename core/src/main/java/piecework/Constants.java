@@ -47,6 +47,7 @@ public interface Constants {
 		public static final String IS_EMAIL_ADDRESS = "IS_EMAIL_ADDRESS";
 		public static final String IS_NUMERIC = "IS_NUMERIC";
 		public static final String IS_ONLY_REQUIRED_WHEN = "IS_ONLY_REQUIRED_WHEN";
+        public static final String IS_ONLY_VISIBLE_WHEN = "IS_ONLY_VISIBLE_WHEN";
 		public static final String IS_VALID_USER = "IS_VALID_USER";
 		public static final String IS_LIMITED_TO = "IS_LIMITED_TO";
 	}

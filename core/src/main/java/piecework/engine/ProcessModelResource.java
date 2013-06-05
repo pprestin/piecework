@@ -15,8 +15,55 @@
  */
 package piecework.engine;
 
+import java.io.InputStream;
+
 /**
  * @author James Renfro
  */
 public class ProcessModelResource {
+
+    private final String name;
+    private final InputStream inputStream;
+
+    private ProcessModelResource() {
+        this(new Builder());
+    }
+
+    private ProcessModelResource(Builder builder) {
+        this.name = builder.name;
+        this.inputStream = builder.inputStream;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public InputStream getInputStream() {
+        return inputStream;
+    }
+
+    public static final class Builder {
+        private String name;
+        private InputStream inputStream;
+
+        public Builder() {
+
+        }
+
+        public ProcessModelResource build() {
+            return new ProcessModelResource(this);
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder inputStream(InputStream inputStream) {
+            this.inputStream = inputStream;
+            return this;
+        }
+    }
+
+
 }

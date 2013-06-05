@@ -96,11 +96,4 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
 		return serverAddresses;
 	}
 
-//    @Bean
-//    public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
-//        CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();
-//        configurer.setCustomLocations(environment);
-//        return configurer;
-//    }
-
 }
