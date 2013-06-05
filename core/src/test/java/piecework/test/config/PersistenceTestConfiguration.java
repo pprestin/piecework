@@ -16,10 +16,8 @@
 package piecework.test.config;
 
 import org.springframework.context.annotation.*;
-import piecework.config.EmbeddedMongoConfiguration;
 import piecework.config.MongoConfiguration;
 import piecework.persistence.ContentRepository;
-import piecework.persistence.EmbeddedMongoInstance;
 import piecework.persistence.concrete.GridFSContentRepository;
 
 /**

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -51,7 +52,7 @@ import de.flapdoodle.embed.process.config.IRuntimeConfig;
  * 
  * @author Radu Banica
  */
-public class EmbeddedMongoInstance implements DisposableBean {
+public class EmbeddedMongoInstance {
 
 	private static final Logger LOG = Logger.getLogger(EmbeddedMongoInstance.class);
 	private MongodExecutable mongodExecutable;
@@ -67,6 +68,11 @@ public class EmbeddedMongoInstance implements DisposableBean {
 	private String replSetName = null;
 	private int oplogSize = 0;
 
+    public EmbeddedMongoInstance() {
+        this("127.0.0.1", 37017, "demo", "", "", "");
+    }
+
+
 	public EmbeddedMongoInstance(String bindIp, int port, String db, String username, String password, String storePath) {
 		this.bindIp = bindIp;
 		this.port = port;
@@ -81,14 +87,18 @@ public class EmbeddedMongoInstance implements DisposableBean {
 	 * 
 	 * @throws IOException
 	 */
-	@PostConstruct
+	//@PostConstruct
 	public void startEmbeddedMongo() throws IOException {
 		LOG.debug("Starting embedded Mongodb on port " + port + "...");
 
-		String storageDirectory = storePath + File.separator + "storage";
+		String storageDirectory = storePath + File.separator + "storage" + File.separator + UUID.randomUUID();
 
         File databaseDirectory = new File(storageDirectory);
         databaseDirectory.deleteOnExit();
+        databaseDirectory.mkdirs();
+
+        File mongodLock = new File(databaseDirectory, "mongod.lock");
+        mongodLock.deleteOnExit();
 
 		MongodConfig mongodConfig = new MongodConfig(Version.Main.PRODUCTION, new Net(bindIp, port, ipv6), new Storage(storageDirectory, replSetName, oplogSize), new Timeout());
 		IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(Command.MongoD).build();
@@ -102,13 +112,13 @@ public class EmbeddedMongoInstance implements DisposableBean {
 			mongod = mongodExecutable.start();
 			LOG.debug("Mongodb started");
 			
-			Mongo mongo = new Mongo(bindIp, port);
-		    DB db = mongo.getDB(dbName);
-		    db.addUser(username, password.toCharArray());
-		    
-//		    importData(db);
-		    
-		    mongo.close();
+//			Mongo mongo = new Mongo(bindIp, port);
+//		    DB db = mongo.getDB(dbName);
+//		    db.addUser(username, password.toCharArray());
+//
+////		    importData(db);
+//
+//		    mongo.close();
 		    
 		} catch (IOException ex) {
 			LOG.error("Failed to start embedded MongoDB on port " + port + ": " + ex.toString());
