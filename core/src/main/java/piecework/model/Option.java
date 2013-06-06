@@ -16,6 +16,7 @@
 package piecework.model;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -95,7 +96,7 @@ public class Option implements Serializable {
         }
         
         public Builder(Option option, Sanitizer sanitizer) {
-            this.optionId = sanitizer.sanitize(option.optionId);
+            this.optionId = option.optionId != null ? sanitizer.sanitize(option.optionId) : UUID.randomUUID().toString();
             this.value = sanitizer.sanitize(option.value);
             this.label = sanitizer.sanitize(option.label);
             this.selected = option.selected;

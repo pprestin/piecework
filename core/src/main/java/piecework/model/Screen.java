@@ -101,7 +101,7 @@ public class Screen implements Serializable {
 		this.ordinal = builder.ordinal;
 		this.isDeleted = builder.isDeleted;
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
-		this.sections = builder.sections != null ? Collections.unmodifiableList(builder.sections) : null;
+		this.sections = Collections.unmodifiableList(builder.sections);
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	}
 	
@@ -160,6 +160,7 @@ public class Screen implements Serializable {
 		
 		public Builder() {
 			super();
+            this.sections = new ArrayList<Section>();
 		}
 
 		public Builder(Screen screen, Sanitizer sanitizer) {
@@ -176,7 +177,9 @@ public class Screen implements Serializable {
 				for (Section section : screen.sections) {
 					this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
 				}
-			}
+			} else {
+                this.sections = new ArrayList<Section>();
+            }
 		}
 
 		public Screen build() {

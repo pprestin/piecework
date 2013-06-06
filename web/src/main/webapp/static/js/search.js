@@ -21,6 +21,6 @@ requirejs.config({
     }
 });
 
-require(['applications/runtime', 'routes/runtime-routes', 'bootstrap'], function(Runtime, routes, Bootstrap) {
-    (new Runtime).initialize();
+require(['applications/search', 'routes/search-routes', 'bootstrap'], function(Search, routes, Bootstrap) {
+    (new Search).initialize();
 });

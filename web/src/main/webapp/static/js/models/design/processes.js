@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/base/collection', 'models/process'], function(Chaplin, Collection, Process) {
+define([ 'chaplin', 'models/base/collection', 'models/design/process'], function(Chaplin, Collection, Process) {
 	'use strict';
 
 	var Processes = Collection.extend({

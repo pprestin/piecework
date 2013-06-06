@@ -25,6 +25,11 @@
 			<artifactId>piecework-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>piecework-engine</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 		
 		<!-- Other Dependencies -->
 		<dependency>

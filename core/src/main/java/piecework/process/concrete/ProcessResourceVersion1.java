@@ -95,7 +95,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
                         interactionBuilder.screen(persistedScreen);
                     }
                 }
-                builder.interaction(interactionBuilder.build());
+                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
+                builder.interaction(persistedInteraction);
             }
         }
 

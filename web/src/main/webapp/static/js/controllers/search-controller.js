@@ -1,9 +1,9 @@
 define([
   'controllers/base/controller',
-  'models/process',
-  'models/processes',
+  'models/design/process',
+  'models/design/processes',
   'models/runtime/results',
-  'models/screen',
+  'models/design/screen',
   'models/runtime/search-filter',
   'models/user',
   'models/base/collection',

@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -46,7 +47,6 @@ import piecework.common.view.ViewContext;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Field.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = Field.Constants.ROOT_ELEMENT_NAME)
 public class Field implements Serializable {
 
 	private static final long serialVersionUID = -8642937056889667692L;
@@ -237,10 +237,12 @@ public class Field implements Serializable {
             this.maxValueLength = 255;
             this.ordinal = -1;
             this.editable = true;
+            this.constraints = new ArrayList<Constraint>();
+            this.options = new ArrayList<Option>();
         }
 
         public Builder(Field field, Sanitizer sanitizer) {
-            this.fieldId = sanitizer.sanitize(field.fieldId);
+            this.fieldId = fieldId != null ? sanitizer.sanitize(field.fieldId) : UUID.randomUUID().toString();;
             this.label = sanitizer.sanitize(field.label);
             this.name = sanitizer.sanitize(field.name);
             this.type = sanitizer.sanitize(field.type);
@@ -257,17 +259,21 @@ public class Field implements Serializable {
             this.isDeleted = field.isDeleted;
             
             if (field.constraints != null && !field.constraints.isEmpty()) {
-            	this.constraints = new ArrayList<Constraint>();
+            	this.constraints = new ArrayList<Constraint>(field.constraints.size());
             	for (Constraint constraint : field.constraints) {
             		this.constraints.add(new Constraint.Builder(constraint, sanitizer).build());
             	}
+            } else {
+                this.constraints = new ArrayList<Constraint>();
             }
             
             if (field.options != null && !field.options.isEmpty()) {
-            	this.options = new ArrayList<Option>();
+            	this.options = new ArrayList<Option>(field.options.size());
             	for (Option option : field.options) {
             		this.options.add(new Option.Builder(option, sanitizer).build());
             	}
+            } else {
+                this.options = new ArrayList<Option>();
             }
         }
 

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+</head>
+
+<body>
+    <div class="main-content">
+
+    </div>
+
+
+<!--
+	<form id="main-form" method="POST">
+		<div class="screen-header">
+			<div class="userInformation"><% user.displayName %></div>
+		</div>
+		<div class="page">
+			<div class="page-toolbar">
+				<div id="attachmentToolbar" class="pull-right"></div>
+				<div id="task-toolbar" class="pull-right"></div>
+			</div>
+			<div class="page-header">
+				<%#resource.logoUrl%>
+			 	<div class="page-logo">
+					 <img src="<% resource.logoUrl %>"></img>
+				</div>
+				<%/resource.logoUrl%>
+			 	<h2><% resource.label %></h2>
+			</div>
+			<div class="go-back">Sections</div>
+			<div class="page-main">
+				<%#resource.message%>
+				<div class="alert">
+				  <button type="button" class="close" data-dismiss="alert">&times;</button>
+				  <div class="page-notification"><%resource.message%></div>
+				</div>
+				<%/resource.message%>
+				<div class="navigation">
+				 	<div id="breadcrumbs"></div>
+				</div>
+				<div class="content">
+					<%#resource.processInstanceId%>
+					<h3 class="confirmation">
+				 		Thanks for submitting your form. Your confirmation number is <%resource.processInstanceId%>.
+				 	</h3>
+					<%/resource.processInstanceId%>
+					<div class="form-content-placeholder">
+						<input type="hidden" name="_submissionId" value="<%resource.submissionId%>"></input>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+-->
+	<script type="text/javascript">
+		piecework = {};
+		piecework.context = <%& json %>;
+	</script>
+	<script data-main="/piecework/static/js/form.js" src='/piecework/static/js/vendor/require.js'></script>
+</body>
+</html>

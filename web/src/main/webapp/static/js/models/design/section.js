@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/fields', 'models/base/model' ], function(Chaplin, Fields, Model) {
+define([ 'chaplin', 'models/design/fields', 'models/base/model' ], function(Chaplin, Fields, Model) {
 	'use strict';
 
 	var Section = Model.extend({

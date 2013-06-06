@@ -88,7 +88,7 @@ public class Interaction implements Serializable {
 		this.processDefinitionKey = builder.processDefinitionKey;
 		this.label = builder.label;
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
-		this.screens = (List<Screen>) (builder.screens != null ? Collections.unmodifiableList(builder.screens) : Collections.emptyList());
+		this.screens = Collections.unmodifiableList(builder.screens);
         this.taskDefinitionKeys = (Set<String>) (builder.taskDefinitionKeys != null ? Collections.unmodifiableSet(builder.taskDefinitionKeys) : Collections.emptySet());
 		this.isDeleted = builder.isDeleted;
 	}
@@ -132,6 +132,7 @@ public class Interaction implements Serializable {
 		
 		public Builder() {
 			super();
+            this.screens = new ArrayList<Screen>();
 		}
 
 		public Builder(Interaction interaction, Sanitizer sanitizer) {
@@ -144,7 +145,9 @@ public class Interaction implements Serializable {
 				for (Screen screen : interaction.screens) {
 					this.screens.add(new Screen.Builder(screen, sanitizer).processDefinitionKey(processDefinitionKey).build());
 				}
-			}
+			}  else {
+                this.screens = new ArrayList<Screen>();
+            }
             if (interaction.taskDefinitionKeys != null && !interaction.taskDefinitionKeys.isEmpty()) {
                 this.taskDefinitionKeys = new HashSet<String>(interaction.taskDefinitionKeys.size());
                 for (String taskDefinitionKey : interaction.taskDefinitionKeys) {

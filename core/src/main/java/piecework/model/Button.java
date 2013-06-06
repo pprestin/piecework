@@ -41,7 +41,6 @@ import piecework.common.view.ViewContext;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Button.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = Button.Constants.ROOT_ELEMENT_NAME)
 public class Button implements Serializable {
 
 	private static final long serialVersionUID = 2804904972632404820L;

@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/base/collection', 'models/field'], function(Chaplin, Collection, Field) {
+define([ 'chaplin', 'models/base/collection', 'models/design/field'], function(Chaplin, Collection, Field) {
 	'use strict';
 
 	var Fields = Collection.extend({

@@ -16,6 +16,7 @@
 package piecework.model;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -127,7 +128,7 @@ public class Constraint implements Serializable {
         }
 
         public Builder(Constraint constraint, Sanitizer sanitizer) {
-            this.constraintId = sanitizer.sanitize(constraint.constraintId);
+            this.constraintId = constraint.constraintId != null ? sanitizer.sanitize(constraint.constraintId) : UUID.randomUUID().toString();
             this.name = sanitizer.sanitize(constraint.name);
             this.type = sanitizer.sanitize(constraint.type);
             this.value = sanitizer.sanitize(constraint.value);

@@ -18,6 +18,7 @@ package piecework.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -45,7 +46,6 @@ import piecework.common.view.ViewContext;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Section.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = "section")
 public class Section {
 
 	@XmlAttribute
@@ -146,15 +146,35 @@ public class Section {
 
         public Builder() {
             super();
+            this.fields = new ArrayList<Field>();
+            this.buttons = new ArrayList<Button>();
         }
 
-        public Builder(Section field, Sanitizer sanitizer) {
-            this.sectionId = sanitizer.sanitize(field.sectionId);
-            this.tagId = sanitizer.sanitize(field.tagId);
-            this.title = sanitizer.sanitize(field.title);
-            this.description = sanitizer.sanitize(field.description);
-            this.ordinal = field.ordinal;
-            this.isDeleted = field.isDeleted;
+        public Builder(Section section, Sanitizer sanitizer) {
+            this.sectionId = section.sectionId != null ? sanitizer.sanitize(section.sectionId) : UUID.randomUUID().toString();
+            this.tagId = sanitizer.sanitize(section.tagId);
+            this.title = sanitizer.sanitize(section.title);
+            this.description = sanitizer.sanitize(section.description);
+            this.ordinal = section.ordinal;
+            this.isDeleted = section.isDeleted;
+
+            if (section.fields != null && !section.fields.isEmpty()) {
+                this.fields = new ArrayList<Field>(section.fields.size());
+                for (Field field : section.fields) {
+                    this.fields.add(new Field.Builder(field, sanitizer).processDefinitionKey(processDefinitionKey).build());
+                }
+            } else {
+                this.fields = new ArrayList<Field>();
+            }
+
+            if (section.buttons != null && !section.buttons.isEmpty()) {
+                this.buttons = new ArrayList<Button>(section.buttons.size());
+                for (Button button : section.buttons) {
+                    this.buttons.add(new Button.Builder(button, sanitizer).processDefinitionKey(processDefinitionKey).build());
+                }
+            } else {
+                this.buttons = new ArrayList<Button>();
+            }
         }
 
         public Section build() {

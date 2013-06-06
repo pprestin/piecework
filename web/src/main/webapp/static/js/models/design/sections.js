@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/base/collection', 'models/section'], 
+define([ 'chaplin', 'models/base/collection', 'models/design/section'],
 		function(Chaplin, Collection, Section) {
 	'use strict';
 
