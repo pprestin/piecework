@@ -72,7 +72,10 @@ public class Screen implements Serializable {
 
     @XmlAttribute
     private final boolean isAttachmentAllowed;
-	
+
+    @XmlElementWrapper(name="stylesheets")
+    private final List<String> stylesheets;
+
 	@XmlElementWrapper(name="sections")
 	@XmlElementRef
 	private final List<Section> sections;
@@ -87,7 +90,6 @@ public class Screen implements Serializable {
 	@XmlAttribute
 	private final String link;
 
-
 	private Screen() {
 		this(new Screen.Builder(), new ViewContext());
 	}
@@ -101,6 +103,7 @@ public class Screen implements Serializable {
 		this.ordinal = builder.ordinal;
 		this.isDeleted = builder.isDeleted;
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
+        this.stylesheets = Collections.unmodifiableList(builder.stylesheets);
 		this.sections = Collections.unmodifiableList(builder.sections);
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	}
@@ -133,6 +136,10 @@ public class Screen implements Serializable {
         return isAttachmentAllowed;
     }
 
+    public List<String> getStylesheets() {
+        return stylesheets;
+    }
+
     public List<Section> getSections() {
         return sections;
     }
@@ -154,12 +161,14 @@ public class Screen implements Serializable {
 		private String type;
 		private String location;
         private boolean isAttachmentAllowed;
+        private List<String> stylesheets;
 		private List<Section> sections;
 		private int ordinal;
 		private boolean isDeleted;
 		
 		public Builder() {
 			super();
+            this.stylesheets = new ArrayList<String>();
             this.sections = new ArrayList<Section>();
 		}
 
@@ -171,7 +180,16 @@ public class Screen implements Serializable {
             this.isAttachmentAllowed = screen.isAttachmentAllowed;
 			this.location = sanitizer.sanitize(screen.location);
 			this.ordinal = screen.ordinal;
-			
+
+            if (screen.stylesheets != null && !screen.stylesheets.isEmpty()) {
+                this.stylesheets = new ArrayList<String>(screen.stylesheets.size());
+                for (String stylesheet : screen.stylesheets) {
+                    this.stylesheets.add(sanitizer.sanitize(stylesheet));
+                }
+            } else {
+                this.stylesheets = new ArrayList<String>();
+            }
+
 			if (screen.sections != null && !screen.sections.isEmpty()) {
 				this.sections = new ArrayList<Section>(screen.sections.size());
 				for (Section section : screen.sections) {

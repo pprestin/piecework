@@ -1,4 +1,4 @@
-define([ 'chaplin', 'views/base/view', 'text!templates/runtime/form.hbs' ],
+define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 		function(Chaplin, View, template) {
 	'use strict';
 
