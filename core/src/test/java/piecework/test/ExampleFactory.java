@@ -49,6 +49,7 @@ public class ExampleFactory {
     public static Field employeeNameField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.TEXT)
+                .label("Employee")
                 .name("employeeName")
                 .maxValueLength(40)
                 .editable()
@@ -58,8 +59,10 @@ public class ExampleFactory {
 
     public static Field budgetNumberField() {
         return new Field.Builder()
-                .type(Constants.FieldTypes.TEXT)
+                .type(Constants.FieldTypes.NUMBER)
+                .label("Budget number")
                 .name("budgetNumber")
+                .defaultValue("100000")
                 .constraint(new Constraint.Builder().type(Constants.ConstraintTypes.IS_NUMERIC).build())
                 .maxValueLength(20)
                 .editable()
@@ -70,7 +73,10 @@ public class ExampleFactory {
     public static Field supervisorIdField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.TEXT)
+                .label("Manager id")
                 .name("supervisorId")
+                .pattern("[a-z]{3}[0-9]{2}")
+                .customValidity("Must be three lower-case letters, followed by two digits")
                 .constraint(new Constraint.Builder().type(Constants.ConstraintTypes.IS_VALID_USER).build())
                 .maxValueLength(40)
                 .editable()
@@ -81,6 +87,7 @@ public class ExampleFactory {
     public static Field actionTypeField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.SELECT_MULTIPLE)
+                .label("Action to take")
                 .name("action")
                 .option(new Option.Builder().label("Grant bonus").value("bonus").build())
                 .option(new Option.Builder().label("Reprimand").value("reprimand").build())
@@ -94,9 +101,10 @@ public class ExampleFactory {
     public static Field locationField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.SELECT_ONE)
+                .label("Location")
                 .name("location")
                 .option(new Option.Builder().label("In-state").value("in state").build())
-                .option(new Option.Builder().label("Out-of-state").value("out of state").build())
+                .option(new Option.Builder().label("Out-of-state").value("out of state").selected().build())
                 .option(new Option.Builder().label("Waiver").value("waiver").build())
                 .editable()
                 .required()
@@ -106,6 +114,7 @@ public class ExampleFactory {
     public static Field descriptionField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.TEXTAREA)
+                .label("Description")
                 .name("Description")
                 .maxValueLength(4000)
                 .build();
@@ -123,6 +132,7 @@ public class ExampleFactory {
     public static Field allowedField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.CHECKBOX)
+                .label("Is this employee allowed to go on vacation?")
                 .name("Allowed")
                 .option(new Option.Builder().value("Yes").label("Yes").build())
                 .editable()
@@ -132,6 +142,7 @@ public class ExampleFactory {
     public static Field applicableField() {
         return new Field.Builder()
                 .type(Constants.FieldTypes.RADIO)
+                .label("Is this form applicable to them?")
                 .name("Applicable")
                 .option(new Option.Builder().value("Yes").label("Yes").build())
                 .option(new Option.Builder().value("No").label("No").build())
@@ -144,6 +155,7 @@ public class ExampleFactory {
                 .tagId("basic")
                 .field(employeeNameField())
                 .field(budgetNumberField())
+                .button(new Button.Builder().label("Next").type("button").value("next").tooltip("Go to next step").build())
                 .ordinal(1)
                 .build();
     }

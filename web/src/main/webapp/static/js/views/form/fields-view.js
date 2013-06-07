@@ -19,10 +19,10 @@ define([
 		tagName: 'div',
 		initItemView: function(field) {
 			var fieldId = field.cid;
-			var type = field.attributes.type;
+			var type = field.get("type");
 			if (type == 'checkbox')
 				return new CheckboxView({id: fieldId, model: field});
-	    	else if (type == 'listbox')
+	    	else if (type == 'select-one' || type == 'select-multiple')
 	    		return new ListboxView({id: fieldId, model: field});
 	    	else if (type == 'radio')
 	    		return new RadioView({id: fieldId, model: field});

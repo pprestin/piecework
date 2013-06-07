@@ -4,7 +4,19 @@
 {{#if options}}
     {{#each options}}
         <label class="checkbox">
-            <input type="checkbox" name="{{../name}}" value="{{value}}"> {{label}}
+            <input type="checkbox"
+                   name="{{../name}}"
+                   value="{{value}}"
+                    {{#if required}}required{{/if}}
+                    /> {{label}}
         </label>
+    {{/each}}
+{{/if}}
+{{#if messages}}
+    {{#each messages}}
+        <div class="alert fade in alert-{{type}}">
+            <button type="button" class="close" data-dismiss="alert">×</button>
+            {{text}}
+        </div>
     {{/each}}
 {{/if}}

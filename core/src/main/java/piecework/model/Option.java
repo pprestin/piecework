@@ -93,6 +93,7 @@ public class Option implements Serializable {
 
         public Builder() {
             super();
+            this.optionId = UUID.randomUUID().toString();
         }
         
         public Builder(Option option, Sanitizer sanitizer) {

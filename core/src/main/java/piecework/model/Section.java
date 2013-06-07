@@ -146,6 +146,7 @@ public class Section {
 
         public Builder() {
             super();
+            this.sectionId = UUID.randomUUID().toString();
             this.fields = new ArrayList<Field>();
             this.buttons = new ArrayList<Button>();
         }

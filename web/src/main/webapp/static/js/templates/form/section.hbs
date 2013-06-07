@@ -7,3 +7,12 @@
 <div class="section-content">
 
 </div>
+<div class="section-buttons">
+    {{#if buttons}}
+        {{#each buttons}}
+            <button class="btn" role="button" type="{{type}}" value="{{value}}">{{label}}</button>
+        {{/each}}
+    {{else}}
+        <button class="btn btn-primary" role="button" type="submit">Submit</button>
+    {{/if}}
+</div>

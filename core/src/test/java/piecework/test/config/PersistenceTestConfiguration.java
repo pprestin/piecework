@@ -25,7 +25,7 @@ import piecework.persistence.concrete.GridFSContentRepository;
  */
 @Configuration
 @Profile("test")
-@Import({EmbeddedMongoConfiguration.class, MongoConfiguration.class})
+@Import({MongoConfiguration.class})
 @PropertySource("classpath:META-INF/mongo.test.properties")
 public class PersistenceTestConfiguration {
 

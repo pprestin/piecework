@@ -64,6 +64,12 @@ public class Field implements Serializable {
     
 	@XmlElement
     private final String type;
+
+    @XmlElement
+    private final String pattern;
+
+    @XmlElement
+    private final String customValidity;
     
 	@XmlAttribute
     private final boolean editable;
@@ -91,7 +97,11 @@ public class Field implements Serializable {
 
     @XmlAttribute
     private final int minInputs;
-    
+
+    @XmlElementWrapper(name="messages")
+    @XmlElementRef
+    private final List<Message> messages;
+
     @XmlElementWrapper(name="constraints")
     @XmlElementRef
     private final List<Constraint> constraints;
@@ -122,6 +132,8 @@ public class Field implements Serializable {
         this.editable = builder.editable;
         this.required = builder.required;
         this.restricted = builder.restricted;
+        this.pattern = builder.pattern;
+        this.customValidity = builder.customValidity;
         this.defaultValue = builder.defaultValue;
         this.ordinal = builder.ordinal;
         this.displayValueLength = builder.displayValueLength;
@@ -130,6 +142,7 @@ public class Field implements Serializable {
         this.maxInputs = builder.maxInputs;
         this.minInputs = builder.minInputs;
         this.isDeleted = builder.isDeleted;
+        this.messages = Collections.unmodifiableList(builder.messages);
         this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.options = builder.options != null ? Collections.unmodifiableList(builder.options) : null;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.fieldId) : null;
@@ -163,7 +176,15 @@ public class Field implements Serializable {
 		return editable;
 	}
 
-	public List<Option> getOptions() {
+    public String getPattern() {
+        return pattern;
+    }
+
+    public String getCustomValidity() {
+        return customValidity;
+    }
+
+    public List<Option> getOptions() {
 		return options;
 	}
 
@@ -195,7 +216,11 @@ public class Field implements Serializable {
 		return minInputs;
 	}
 
-	public List<Constraint> getConstraints() {
+    public List<Message> getMessages() {
+        return messages;
+    }
+
+    public List<Constraint> getConstraints() {
 		return constraints;
 	}
 
@@ -217,12 +242,15 @@ public class Field implements Serializable {
         private boolean editable;
         private boolean required;
         private boolean restricted;
+        private String pattern;
+        private String customValidity;
         private String defaultValue;
         private int displayValueLength;
         private int maxValueLength;
         private int minValueLength;
         private int maxInputs;
         private int minInputs;
+        private List<Message> messages;
         private List<Constraint> constraints;
         private List<Option> options;
         private int ordinal;
@@ -230,25 +258,29 @@ public class Field implements Serializable {
 
         public Builder() {
             super();
-            this.displayValueLength = -1;
+            this.fieldId = UUID.randomUUID().toString();
+            this.displayValueLength = 40;
             this.maxInputs = 1;
             this.minInputs = 1;
             this.minValueLength = 0;
             this.maxValueLength = 255;
             this.ordinal = -1;
             this.editable = true;
+            this.messages = new ArrayList<Message>();
             this.constraints = new ArrayList<Constraint>();
             this.options = new ArrayList<Option>();
         }
 
         public Builder(Field field, Sanitizer sanitizer) {
-            this.fieldId = fieldId != null ? sanitizer.sanitize(field.fieldId) : UUID.randomUUID().toString();;
+            this.fieldId = field.fieldId != null ? sanitizer.sanitize(field.fieldId) : UUID.randomUUID().toString();;
             this.label = sanitizer.sanitize(field.label);
             this.name = sanitizer.sanitize(field.name);
             this.type = sanitizer.sanitize(field.type);
             this.editable = field.editable;
             this.required = field.required;
             this.restricted = field.restricted;
+            this.pattern = field.pattern;
+            this.customValidity = field.customValidity;
             this.defaultValue = sanitizer.sanitize(field.defaultValue);
             this.displayValueLength = field.displayValueLength;
             this.maxValueLength = field.maxValueLength;
@@ -257,7 +289,16 @@ public class Field implements Serializable {
             this.minInputs = field.minInputs;
             this.ordinal = field.ordinal;
             this.isDeleted = field.isDeleted;
-            
+
+            if (field.messages != null && !field.messages.isEmpty()) {
+                this.messages = new ArrayList<Message>(field.messages.size());
+                for (Message message : field.messages) {
+                    this.messages.add(new Message.Builder(message, sanitizer).build());
+                }
+            } else {
+                this.messages = new ArrayList<Message>();
+            }
+
             if (field.constraints != null && !field.constraints.isEmpty()) {
             	this.constraints = new ArrayList<Constraint>(field.constraints.size());
             	for (Constraint constraint : field.constraints) {
@@ -324,6 +365,16 @@ public class Field implements Serializable {
             this.restricted = true;
             return this;
         }
+
+        public Builder pattern(String pattern) {
+            this.pattern = pattern;
+            return this;
+        }
+
+        public Builder customValidity(String customValidity) {
+            this.customValidity = customValidity;
+            return this;
+        }
         
         public Builder defaultValue(String defaultValue) {
             this.defaultValue = defaultValue;
@@ -354,7 +405,14 @@ public class Field implements Serializable {
             this.minInputs = minInputs;
             return this;
         }
-        
+
+        public Builder message(Message message) {
+            if (this.messages == null)
+                this.messages = new ArrayList<Message>();
+            this.messages.add(message);
+            return this;
+        }
+
         public Builder constraint(Constraint constraint) {
         	if (this.constraints == null)
         		this.constraints = new ArrayList<Constraint>();

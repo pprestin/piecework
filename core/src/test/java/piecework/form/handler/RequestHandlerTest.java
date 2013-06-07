@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.common.RequestDetails;
 import piecework.form.handler.RequestHandler;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.exception.ForbiddenError;
@@ -64,11 +65,12 @@ public class RequestHandlerTest {
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester");
 
+        RequestDetails requestDetails = new RequestDetails.Builder().build();
         Interaction firstInteraction = process.getInteractions().iterator().next();
-        FormRequest formRequest = requestHandler.create(servletRequest, process.getProcessDefinitionKey(), firstInteraction);
+        FormRequest formRequest = requestHandler.create(requestDetails, process.getProcessDefinitionKey(), firstInteraction);
         assertValid(formRequest);
 
-        FormRequest handleRequest = requestHandler.handle(servletRequest, formRequest.getRequestId());
+        FormRequest handleRequest = requestHandler.handle(requestDetails, formRequest.getRequestId());
         assertEqual(formRequest, handleRequest);
     }
 
@@ -79,13 +81,14 @@ public class RequestHandlerTest {
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester").thenReturn("somebodyelse");
 
+        RequestDetails requestDetails = new RequestDetails.Builder().build();
         Interaction firstInteraction = process.getInteractions().iterator().next();
-        FormRequest formRequest = requestHandler.create(servletRequest, process.getProcessDefinitionKey(), firstInteraction);
+        FormRequest formRequest = requestHandler.create(requestDetails, process.getProcessDefinitionKey(), firstInteraction);
         assertValid(formRequest);
 
         boolean isExceptionThrown = false;
         try {
-            requestHandler.handle(servletRequest, formRequest.getRequestId());
+            requestHandler.handle(requestDetails, formRequest.getRequestId());
         } catch (ForbiddenError error) {
             isExceptionThrown = true;
         }

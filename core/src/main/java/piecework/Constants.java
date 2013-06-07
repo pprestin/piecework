@@ -67,7 +67,9 @@ public interface Constants {
 
     public static class FieldTypes {
         public static final String CHECKBOX = "checkbox";
+        public static final String EMAIL = "email";
         public static final String FILE = "file";
+        public static final String NUMBER = "number";
         public static final String RADIO = "radio";
         public static final String SELECT_ONE = "select-one";
         public static final String SELECT_MULTIPLE = "select-multiple";

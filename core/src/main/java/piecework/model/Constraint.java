@@ -125,6 +125,7 @@ public class Constraint implements Serializable {
 
         public Builder() {
             super();
+            this.constraintId = UUID.randomUUID().toString();
         }
 
         public Builder(Constraint constraint, Sanitizer sanitizer) {

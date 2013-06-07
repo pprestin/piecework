@@ -4,7 +4,7 @@ define([ 'models/base/collection', 'views/form/fields-view', 'views/base/view', 
 
 	var SectionView = View.extend({
 		autoRender: false,
-		className: 'section',
+		className: 'section span3',
 		tagName: 'li',
 		template: template,
 //        render: function(options) {

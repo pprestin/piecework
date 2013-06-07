@@ -31,7 +31,7 @@ define([
            var fields = section.fields;
            var sectionViewId = 'sectionView_' + sectionId;
 
-           this.compose(sectionViewId, SectionView, {id: sectionViewId, container: '.screen', model: new Model(section)});
+           this.compose(sectionViewId, SectionView, {id: sectionViewId, container: 'ul.sections', model: new Model(section)});
 
            var selector = '#' + sectionViewId + " > .section-content";
 

@@ -1,1 +1,21 @@
-Listbox
+{{#if label}}
+<label>{{label}}</label>
+{{/if}}
+<select name="{{name}}"
+    {{#if required}}required{{/if}}>
+    {{#if options}}
+        {{#each options}}
+            <option value="{{value}}"
+                {{#if selected}}selected{{/if}}
+            >{{label}}</option>
+        {{/each}}
+    {{/if}}
+</select>
+{{#if messages}}
+{{#each messages}}
+<div class="alert fade in alert-{{type}}">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    {{text}}
+</div>
+{{/each}}
+{{/if}}

@@ -67,7 +67,7 @@ public class SubmissionHandlerTest {
                 .build();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().processInstance(instance);
-        FormSubmission actual = submissionHandler.handle(ExampleFactory.exampleFormRequest("0b82440e-0c3c-4433-b629-c41e68049b8b"), payload);
+        FormSubmission actual = submissionHandler.handle(payload, false);
         Assert.assertNotNull(actual);
 
         List<String> values = actual.getFormValueMap().get("TestField");

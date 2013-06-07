@@ -1,1 +1,22 @@
-Radio
+{{#if label}}
+<label>{{label}}</label>
+{{/if}}
+{{#if options}}
+{{#each options}}
+<label class="radio">
+    <input type="radio"
+           name="{{../name}}"
+           value="{{value}}"
+    {{#if required}}required{{/if}}
+    /> {{label}}
+</label>
+{{/each}}
+{{/if}}
+{{#if messages}}
+{{#each messages}}
+<div class="alert fade in alert-{{type}}">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    {{text}}
+</div>
+{{/each}}
+{{/if}}
