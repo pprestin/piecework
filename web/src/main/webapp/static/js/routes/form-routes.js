@@ -3,5 +3,6 @@ define(['controllers/form-controller'], function() {
 
   return function(match) {
     match('', 'form#index');
+    match('step/:ordinal', 'form#index');
   };
 });

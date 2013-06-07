@@ -13,6 +13,7 @@
             margin: 0px;
             padding: 0px;
         }
+
     </style>
 </head>
 
@@ -31,7 +32,7 @@
                     "screenId" : null,
                     "processDefinitionKey" : null,
                     "title" : "First screen",
-                    "type" : null,
+                    "type" : "wizard",
                     "location" : "/test/example1.html",
                     "stylesheets" : [ ],
                     "sections" : [ {
@@ -93,10 +94,10 @@
                         "deleted" : false
                       } ],
                       "buttons" : [ {
-                        "buttonId" : null,
+                        "buttonId" : "button123",
                         "label" : "Next",
                         "tooltip" : "Go to next step",
-                        "type" : "button",
+                        "type" : "button-link",
                         "value" : "next",
                         "link" : null,
                         "ordinal" : 0,

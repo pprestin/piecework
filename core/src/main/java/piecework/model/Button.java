@@ -16,6 +16,7 @@
 package piecework.model;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -132,10 +133,11 @@ public class Button implements Serializable {
 
         public Builder() {
             super();
+            this.buttonId = UUID.randomUUID().toString();
         }
 
         public Builder(Button button, Sanitizer sanitizer) {
-            this.buttonId = sanitizer.sanitize(button.buttonId);
+            this.buttonId = button.buttonId != null ? sanitizer.sanitize(button.buttonId) : UUID.randomUUID().toString();
             this.label = sanitizer.sanitize(button.label);
             this.tooltip = sanitizer.sanitize(button.tooltip);
             this.type = sanitizer.sanitize(button.type);

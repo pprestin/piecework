@@ -24,8 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.Constants;
 import piecework.common.RequestDetails;
-import piecework.form.handler.RequestHandler;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.exception.ForbiddenError;
 import piecework.model.FormRequest;
@@ -108,7 +108,7 @@ public class RequestHandlerTest {
         Assert.assertEquals(expectedInteraction.getLabel(), actualInteraction.getLabel());
 
         Screen actualScreen = formRequest.getScreen();
-        Screen expectedScreen = ExampleFactory.exampleScreenWithTwoSections();
+        Screen expectedScreen = ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD);
         Assert.assertEquals(expectedScreen.getTitle(), actualScreen.getTitle());
     }
 

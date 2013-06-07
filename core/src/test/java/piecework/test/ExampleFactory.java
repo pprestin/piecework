@@ -16,12 +16,10 @@
 package piecework.test;
 
 import piecework.Constants;
-import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.UUID;
 
 /**
@@ -40,7 +38,7 @@ public class ExampleFactory {
     public static FormRequest exampleFormRequest(String formInstanceId) {
         return new FormRequest.Builder()
                 .requestId(formInstanceId)
-                .screen(exampleScreenWithTwoSections())
+                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD))
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .build();
     }
@@ -155,7 +153,7 @@ public class ExampleFactory {
                 .tagId("basic")
                 .field(employeeNameField())
                 .field(budgetNumberField())
-                .button(new Button.Builder().label("Next").type("button").value("next").tooltip("Go to next step").build())
+                .button(new Button.Builder().label("Next").type("button-link").value("next").tooltip("Go to next step").build())
                 .ordinal(1)
                 .build();
     }
@@ -181,10 +179,11 @@ public class ExampleFactory {
                 .build();
     }
 
-    public static Screen exampleScreenWithTwoSections() {
+    public static Screen exampleScreenWithTwoSections(String type) {
 
         return new Screen.Builder()
                 .title("First screen")
+                .type(type)
                 .section(exampleSectionWithTwoFields())
                 .section(exampleSectionWithOneField())
                 .attachmentAllowed(false)
@@ -203,7 +202,7 @@ public class ExampleFactory {
     public static Interaction exampleInteractionWithTwoScreens() {
         return new Interaction.Builder()
                 .label("Example Interaction")
-                .screen(exampleScreenWithTwoSections())
+                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD))
                 .screen(exampleThankYouScreen())
                 .build();
     }
@@ -215,7 +214,18 @@ public class ExampleFactory {
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .formInstanceId("12345")
                 .formValue(employeeNameField().getName(), "Joe Testington")
-                .screen(exampleScreenWithTwoSections())
+                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.STANDARD))
+                .build();
+    }
+
+    public static Form exampleFormWithWizardTemplate() {
+        Process process = exampleProcess();
+        return new Form.Builder()
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .submissionType(Constants.SubmissionTypes.INTERIM)
+                .formInstanceId("12345")
+                .formValue(employeeNameField().getName(), "Joe Testington")
+                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD_TEMPLATE))
                 .build();
     }
 

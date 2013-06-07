@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.response;
+package piecework.ui;
 
-import org.apache.commons.io.IOUtils;
 import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.SimpleHtmlSerializer;
 import org.htmlcleaner.TagNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -40,7 +38,7 @@ public class ScreenBuildingVisitorTest {
     public void testVisit() throws Exception {
         ScreenBuildingVisitor visitor = new ScreenBuildingVisitor();
 
-        ClassPathResource inputResource = new ClassPathResource("piecework/form/response/ScreenBuildingVisitorTest.input.html");
+        ClassPathResource inputResource = new ClassPathResource("piecework/ui/ScreenBuildingVisitorTest.input.html");
         TagNode node = cleaner.clean(inputResource.getInputStream());
         node.traverse(visitor);
 

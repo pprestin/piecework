@@ -19,7 +19,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.exception.StatusCodeError;
-import piecework.form.response.StreamingPageContent;
+import piecework.model.Screen;
+import piecework.ui.StreamingPageContent;
 import piecework.model.Content;
 import piecework.model.Form;
 import piecework.model.FormRequest;
@@ -46,18 +47,20 @@ public class ResponseHandler {
                 .screen(formRequest.getScreen())
                 .build();
 
-        String location = formRequest.getScreen().getLocation();
+        Screen screen = formRequest.getScreen();
 
-        if (StringUtils.isNotEmpty(location)) {
-            // If the location is not blank then delegate to the
-            Content content = contentRepository.findByLocation(location);
-            String contentType = content.getContentType();
-            return Response.ok(new StreamingPageContent(form, content), contentType).build();
+        if (screen != null) {
+            String location = screen.getLocation();
+
+            if (StringUtils.isNotEmpty(location)) {
+                // If the location is not blank then delegate to the
+                Content content = contentRepository.findByLocation(location);
+                String contentType = content.getContentType();
+                return Response.ok(new StreamingPageContent(form, content), contentType).build();
+            }
         }
 
         return Response.ok(form).build();
     }
-
-
 
 }

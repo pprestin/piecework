@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.response;
+package piecework.ui;
 
 import org.htmlcleaner.*;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import piecework.form.HiddenInputNode;
 import piecework.model.Content;
 import piecework.model.Form;
-import piecework.model.Screen;
-import piecework.util.ManyMap;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author James Renfro

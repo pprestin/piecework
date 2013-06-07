@@ -45,7 +45,7 @@ public class ValidationServiceTest {
 			.build();
 
 		ProcessInstance instance = null;
-		FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(), "basic");
+		FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "basic");
 
         List<ValidationResult> results = validation.getResults();
 		Assert.assertNull(results);
@@ -58,7 +58,7 @@ public class ValidationServiceTest {
                 .build();
 
         ProcessInstance instance = null;
-        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(), "basic");
+        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "basic");
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNotNull(results);
@@ -74,7 +74,7 @@ public class ValidationServiceTest {
                 .build();
 
         ProcessInstance instance = null;
-        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections());
+        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNull(results);
@@ -88,7 +88,7 @@ public class ValidationServiceTest {
                 .build();
 
         ProcessInstance instance = null;
-        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections());
+        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNotNull(results);

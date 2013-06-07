@@ -77,6 +77,13 @@ public interface Constants {
         public static final String TEXTAREA = "textarea";
     }
 
+    public static class ScreenTypes {
+        public static final String STANDARD = "standard";
+        public static final String TEMPLATE = "template";
+        public static final String WIZARD = "wizard";
+        public static final String WIZARD_TEMPLATE = "wizardTemplate";
+    }
+
     public static class SubmissionTypes {
         public static final String FINAL = "final";
         public static final String INTERIM = "interim";

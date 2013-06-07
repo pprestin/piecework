@@ -1,4 +1,4 @@
-package piecework.form.response;
+package piecework.ui;
 
 import org.htmlcleaner.TagNode;
 
