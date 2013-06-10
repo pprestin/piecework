@@ -1,4 +1,8 @@
-define([ 'chaplin', 'views/field-list-view', 'views/process-list-view', 'views/base/view', 'text!templates/sidebar.hbs' ], 
+define([ 'chaplin',
+         'views/design/field-list-view',
+         'views/design/process-list-view',
+         'views/base/view',
+         'text!templates/sidebar.hbs' ],
 		function(Chaplin, FieldListView, ProcessListView, View, template) {
 	'use strict';
 

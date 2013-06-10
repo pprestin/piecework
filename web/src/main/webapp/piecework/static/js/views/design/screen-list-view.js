@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/screen', 'views/base/collection-view', 'views/screen-item-view' ], 
+define([ 'chaplin', 'models/design/screen', 'views/base/collection-view', 'views/design/screen-item-view' ],
 		function(Chaplin, Screen, CollectionView, ScreenItemView) {
 	'use strict';
 

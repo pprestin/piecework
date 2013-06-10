@@ -1,4 +1,11 @@
-define([ 'chaplin', 'models/process', 'models/interaction', 'models/screen', 'models/screens', 'views/base/view', 'views/interaction-list-view', 'text!templates/process-designer.hbs' ], 
+define([ 'chaplin',
+         'models/design/process',
+         'models/design/interaction',
+         'models/design/screen',
+         'models/design/screens',
+         'views/base/view',
+         'views/design/interaction-list-view',
+         'text!templates/process-designer.hbs' ],
          function(Chaplin, Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
 	'use strict';
 

@@ -1,4 +1,4 @@
-define([ 'views/field-detail-view', 'views/base/view', 'text!templates/field-listbox-layout.hbs'], 
+define([ 'views/design/field-detail-view', 'views/base/view', 'text!templates/field-listbox-layout.hbs'],
 		function(FieldDetailView, View, template) {
 	'use strict';
 

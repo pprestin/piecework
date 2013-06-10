@@ -1,4 +1,4 @@
-define([ 'views/field-detail-view', 'views/base/view', 'text!templates/field-textarea-layout.hbs'], 
+define([ 'views/design/field-detail-view', 'views/base/view', 'text!templates/field-textarea-layout.hbs'],
 		function(FieldDetailView, View, template) {
 	'use strict';
 

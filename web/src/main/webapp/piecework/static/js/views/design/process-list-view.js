@@ -1,4 +1,8 @@
-define([ 'chaplin', 'models/process', 'views/base/collection-view', 'views/process-detail-view', 'views/process-item-view' ], 
+define([ 'chaplin',
+         'models/design/process',
+         'views/base/collection-view',
+         'views/design/process-detail-view',
+         'views/design/process-item-view' ],
 		function(Chaplin, Process, CollectionView, ProcessDetailView, ProcessItemView) {
 	'use strict';
 

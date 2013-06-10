@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/field', 'views/base/collection-view', 'views/field-item-view' ], 
+define([ 'chaplin', 'models/design/field', 'views/base/collection-view', 'views/design/field-item-view' ],
 		function(Chaplin, Field, CollectionView, FieldItemView) {
 	'use strict';
 

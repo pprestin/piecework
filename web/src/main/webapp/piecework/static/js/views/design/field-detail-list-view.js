@@ -1,5 +1,5 @@
-define([ 'chaplin', 'models/field', 'views/base/collection-view', 'views/field-detail-view', 'views/field-checkbox-layout-view', 
-         'views/field-listbox-layout-view', 'views/field-radio-layout-view', 'views/field-textarea-layout-view', 'views/field-textbox-layout-view' ], 
+define([ 'chaplin', 'models/design/field', 'views/base/collection-view', 'views/design/field-detail-view', 'views/design/field-checkbox-layout-view',
+         'views/design/field-listbox-layout-view', 'views/design/field-radio-layout-view', 'views/design/field-textarea-layout-view', 'views/design/field-textbox-layout-view' ],
 		function(Chaplin, Field, CollectionView, FieldDetailView, CheckboxLayoutView, ListboxLayoutView, RadioLayoutView, TextareaLayoutView, 
 				TextboxLayoutView) {
 	'use strict';

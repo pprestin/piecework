@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/base/model', 'models/process'], function(Chaplin, Model, Process) {
+define([ 'chaplin', 'models/base/model', 'models/design/process'], function(Chaplin, Model, Process) {
 	'use strict';
 
 	var Selection = Model.extend({

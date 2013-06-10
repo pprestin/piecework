@@ -1,11 +1,11 @@
 define([ 
          'chaplin', 
-         'models/process', 
-         'models/interaction', 
-         'models/screen', 
-         'models/screens', 
+         'models/design/process',
+         'models/design/interaction',
+         'models/design/screen',
+         'models/design/screens',
          'views/base/view', 
-         'views/interaction-list-view', 
+         'views/design/interaction-list-view',
          'text!templates/process-detail.hbs' 
         ], 
 function(Chaplin, Process, Interaction, Screen, Screens, View, InteractionListView, template ) {

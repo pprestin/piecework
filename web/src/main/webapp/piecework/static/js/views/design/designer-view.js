@@ -1,4 +1,13 @@
-define([ 'models/process', 'models/processes', 'models/sidebar', 'views/base/view', 'views/intro-view', 'views/field-list-view', 'views/process-list-view', 'views/process-detail-view', 'views/sidebar-view', 'text!templates/designer.hbs' ], 
+define([ 'models/design/process',
+         'models/design/processes',
+         'models/sidebar',
+         'views/base/view',
+         'views/intro-view',
+         'views/design/field-list-view',
+         'views/design/process-list-view',
+         'views/design/process-detail-view',
+         'views/sidebar-view',
+         'text!templates/designer.hbs' ],
 		function(Process, Processes, Sidebar, View, IntroView, FieldListView, ProcessListView, ProcessDetailView, SidebarView, template) {
 	'use strict';
 

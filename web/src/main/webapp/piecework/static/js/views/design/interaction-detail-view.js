@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/screen', 'models/screens', 'views/base/collection-view', 'views/base/view', 'views/screen-item-view', 'views/screen-list-view', 'text!templates/interaction-detail.hbs' ], 
+define([ 'chaplin', 'models/design/screen', 'models/design/screens', 'views/base/collection-view', 'views/base/view', 'views/design/screen-item-view', 'views/design/screen-list-view', 'text!templates/interaction-detail.hbs' ],
 		function(Chaplin, Screen, Screens, CollectionView, View, ScreenItemView, ScreenListView, template) {
 	'use strict';
 

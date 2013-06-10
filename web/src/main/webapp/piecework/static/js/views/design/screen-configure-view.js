@@ -1,4 +1,8 @@
-define([ 'chaplin', 'models/field', 'models/screen', 'views/base/view', 'text!templates/screen-configure.hbs'], 
+define([ 'chaplin',
+         'models/design/field',
+         'models/design/screen',
+         'views/base/view',
+         'text!templates/screen-configure.hbs'],
 		function(Chaplin, Field, Screen, View, template) {
 	'use strict';
 

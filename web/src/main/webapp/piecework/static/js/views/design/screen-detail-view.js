@@ -1,5 +1,14 @@
-define([ 'chaplin', 'models/alert', 'models/field', 'models/screen', 'models/section', 'views/alert-view', 
-         'views/base/collection-view', 'views/section-detail-view', 'views/base/view', 'text!templates/screen-detail.hbs', 'jqueryui' ], 
+define([ 'chaplin',
+         'models/alert',
+         'models/design/field',
+         'models/design/screen',
+         'models/design/section',
+         'views/alert-view',
+         'views/base/collection-view',
+         'views/design/section-detail-view',
+         'views/base/view',
+         'text!templates/screen-detail.hbs',
+         'jqueryui' ],
 		function(Chaplin, Alert, Field, Screen, Section, AlertView, CollectionView, SectionDetailView, View, template) {
 	'use strict';
 

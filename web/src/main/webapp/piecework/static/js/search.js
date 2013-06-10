@@ -1,5 +1,5 @@
 requirejs.config({
-    baseUrl: '..//static/js',
+    baseUrl: 'static/js',
     paths: {
     	backbone: 'vendor/backbone',
     	bootstrap: '../lib/bootstrap/js/bootstrap',
@@ -21,6 +21,6 @@ requirejs.config({
     }
 });
 
-require(['applications/form', 'routes/search-routes', 'bootstrap'], function(Form, routes, Bootstrap) {
-    (new Form).initialize();
+require(['applications/search', 'routes/search-routes', 'bootstrap'], function(Search, routes, Bootstrap) {
+    (new Search).initialize();
 });

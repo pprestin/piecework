@@ -1,4 +1,15 @@
-define([ 'chaplin', 'models/field', 'views/base/collection-view', 'views/field-checkbox-layout-view', 'views/field-detail-view', 'views/field-detail-list-view','views/field-listbox-layout-view', 'views/field-radio-layout-view', 'views/field-textarea-layout-view', 'views/field-textbox-layout-view', 'views/base/view', 'text!templates/section-detail.hbs' ], 
+define([ 'chaplin',
+         'models/design/field',
+         'views/base/collection-view',
+         'views/design/field-checkbox-layout-view',
+         'views/design/field-detail-view',
+         'views/design/field-detail-list-view',
+         'views/design/field-listbox-layout-view',
+         'views/design/field-radio-layout-view',
+         'views/design/field-textarea-layout-view',
+         'views/design/field-textbox-layout-view',
+         'views/base/view',
+         'text!templates/section-detail.hbs' ],
 		function(Chaplin, Field, CollectionView, CheckboxLayoutView, FieldDetailView, FieldDetailListView, ListboxLayoutView, RadioLayoutView, TextareaLayoutView, TextboxLayoutView, View, template) {
 	'use strict';
 
