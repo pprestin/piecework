@@ -179,7 +179,7 @@ public class Process implements Serializable {
 				}
 			}
 		}
-		
+
 		public Process build() {
 			return new Process(this, null);
 		}
@@ -187,7 +187,7 @@ public class Process implements Serializable {
 		public Process build(ViewContext context) {
 			return new Process(this, context);
 		}
-		
+
 		public Builder processDefinitionKey(String processDefinitionKey) {
 			this.processDefinitionKey = processDefinitionKey;
 			return this;

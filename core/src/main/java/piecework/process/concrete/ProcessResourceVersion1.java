@@ -130,8 +130,9 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	public Response update(String rawProcessDefinitionKey, Process process) throws StatusCodeError {
 		// Sanitize all user input
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-		String includedKey = sanitizer.sanitize(process.getProcessDefinitionKey());	
-		
+		String includedKey = sanitizer.sanitize(process.getProcessDefinitionKey());
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+
 		// If the path param key is not the same as the one that's included in the process, then this put is a rename
 		// of the key -- this means we delete the old one and create a new one, assuming that the new one doesn't conflict
 		// with an existing key
@@ -146,7 +147,6 @@ public class ProcessResourceVersion1 implements ProcessResource {
 			
 			record = repository.findOne(processDefinitionKey);
 			if (record != null) {
-				PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 //				if (record.isEmpty()) {
 					// Don't bother to keep old process definitions 
 					Process.Builder builder = new Process.Builder(record, passthroughSanitizer);
@@ -158,8 +158,23 @@ public class ProcessResourceVersion1 implements ProcessResource {
 //				}
 			}
 		}
-		
-		Process.Builder builder = new Process.Builder(process, sanitizer);
+
+        Process.Builder builder = new Process.Builder(process, sanitizer);
+        if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
+            for (Interaction interaction : process.getInteractions()) {
+                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, passthroughSanitizer);
+                interactionBuilder.screens(null);
+                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
+                    for (Screen screen : interaction.getScreens()) {
+                        Screen persistedScreen = screenRepository.save(screen);
+                        interactionBuilder.screen(persistedScreen);
+                    }
+                }
+                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
+                builder.interaction(persistedInteraction);
+            }
+        }
+
 		Process result = repository.save(builder.build());
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);

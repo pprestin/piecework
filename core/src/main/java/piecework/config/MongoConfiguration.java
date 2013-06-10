@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -41,6 +42,7 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import com.mongodb.Mongo;
 import com.mongodb.ServerAddress;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import piecework.model.ProcessInstance;
 import piecework.persistence.EmbeddedMongoInstance;
 
@@ -50,6 +52,7 @@ import javax.annotation.PreDestroy;
  * @author James Renfro
  */
 @Configuration
+@EnableMongoRepositories
 public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);

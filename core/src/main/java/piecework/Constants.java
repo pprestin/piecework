@@ -41,6 +41,12 @@ public interface Constants {
 	public static final String START_TASK_DEFINITION_KEY = "__startTask";
 	public static final String OVERSIGHT_DEFINITION_KEY = "__general";
 
+    public static class ButtonTypes {
+        public static final String BUTTON = "button";
+        public static final String BUTTON_LINK = "button-link";
+        public static final String SUBMIT = "submit";
+    }
+
 	public static class ConstraintTypes {
 		public static final String IS_ALL_VALUES_MATCH = "IS_ALL_VALUES_MATCH";
         public static final String IS_CONFIRMATION_NUMBER = "IS_CONFIRMATION_NUMBER";
@@ -50,6 +56,7 @@ public interface Constants {
         public static final String IS_ONLY_VISIBLE_WHEN = "IS_ONLY_VISIBLE_WHEN";
 		public static final String IS_VALID_USER = "IS_VALID_USER";
 		public static final String IS_LIMITED_TO = "IS_LIMITED_TO";
+        public static final String IS_STATE = "IS_STATE";
 	}
 	
 	public static class ExceptionCodes {

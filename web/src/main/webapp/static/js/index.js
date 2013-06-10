@@ -1,5 +1,5 @@
 requirejs.config({
-    baseUrl: 'static/js',
+    baseUrl: '../static/js',
     paths: {
     	backbone: 'vendor/backbone',
     	bootstrap: '../lib/bootstrap/js/bootstrap',
@@ -21,6 +21,6 @@ requirejs.config({
     }
 });
 
-require(['applications/search', 'routes/search-routes', 'bootstrap'], function(Search, routes, Bootstrap) {
-    (new Search).initialize();
+require(['applications/process-designer', 'routes/process-routes', 'bootstrap'], function(ProcessDesigner, routes, Bootstrap) {
+    (new ProcessDesigner).initialize();
 });

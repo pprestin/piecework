@@ -18,7 +18,6 @@ package piecework.engine;
 import java.util.*;
 
 import com.google.common.collect.Sets;
-import junit.framework.Assert;
 import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricProcessInstanceQuery;
@@ -99,8 +98,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public void deploy(Process process, String name, ProcessModelResource ... resources) throws ProcessEngineException {
-        Assert.assertNotNull(process);
-        Assert.assertNotNull(process.getEngine());
         if (! process.getEngine().equals(getKey()))
             return;
 
@@ -146,11 +143,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
-        Assert.assertNotNull(criteria.getEngines());
-        Assert.assertFalse(criteria.getEngines().isEmpty());
-        Assert.assertNotNull(criteria.getEngineProcessDefinitionKeys());
-        Assert.assertFalse(criteria.getEngineProcessDefinitionKeys().isEmpty());
-
         if (! criteria.getEngines().contains(getKey()))
             return null;
 

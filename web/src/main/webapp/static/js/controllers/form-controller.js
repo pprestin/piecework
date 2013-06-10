@@ -60,9 +60,9 @@ define([
                     var buttonId = button.buttonId;
 
                     if (button.value != undefined) {
-                        if (button.value = 'next')
+                        if (button.value == 'next')
                             button.value = '#step/' + (section.ordinal + 1);
-                        else if (buttons[b].value = 'prev')
+                        else if (buttons[b].value == 'prev')
                             button.value = '#step/' + (section.ordinal - 1);
                     }
 

@@ -102,7 +102,7 @@ public class ApplicationConfiguration {
 
         JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
         sf.setServiceBeanObjects((Object[])resources);
-        sf.setAddress("/sso");
+        sf.setAddress("/app");
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();

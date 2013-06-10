@@ -84,7 +84,6 @@ public class FormResourceVersion1 implements FormResource {
     String certificateSubjectHeader;
 
 
-
 	public Response read(final String rawProcessDefinitionKey, HttpServletRequest request) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 

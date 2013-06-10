@@ -26,6 +26,7 @@ import java.io.PrintWriter;
 import java.io.SequenceInputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -38,6 +39,7 @@ import javax.ws.rs.ext.Provider;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.htmlcleaner.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
@@ -115,36 +117,102 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
             String applicationTitle = environment.getProperty("application.name");
-            String assetsUrl = environment.getProperty("ui.static.urlbase");
+            final String assetsUrl = environment.getProperty("ui.static.urlbase");
 
-			InputStream input = new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), template.getInputStream());
-			try {
-				MustacheFactory mf = new DefaultMustacheFactory();
-			    Mustache mustache = mf.compile(new InputStreamReader(input), "page");
+            User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
+            PageContext pageContext = new PageContext.Builder()
+                    .applicationTitle(applicationTitle)
+                    .assetsUrl(assetsUrl)
+                    .resource(t)
+                    .user(user)
+                    .build();
+            OutputStream jsonStream = new ByteArrayOutputStream();
+            jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
+            final String json = jsonStream.toString();
 
-			    User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
-                PageContext pageContext = new PageContext.Builder()
-                        .applicationTitle(applicationTitle)
-                        .assetsUrl(assetsUrl)
-                        .resource(t)
-                        .user(user)
-                        .build();
+            HtmlCleaner cleaner = new HtmlCleaner();
+            TagNode node = cleaner.clean(template.getInputStream());
+            node.traverse(new TagNodeVisitor() {
+                @Override
+                public boolean visit(TagNode parentNode, HtmlNode htmlNode) {
 
-                OutputStream jsonStream = new ByteArrayOutputStream();
-                jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
-                String json = jsonStream.toString();
+                    if (htmlNode instanceof TagNode) {
+                        TagNode tagNode = TagNode.class.cast(htmlNode);
+                        String tagName = tagNode.getName();
 
-			    mustache.execute(new PrintWriter(entityStream), new JsonContext(json)).flush();
-			} catch (IOException e) {
-				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
-			} finally {
-				input.close();
-				entityStream.close();
-			}
+                        if (tagName != null) {
+                            if (tagName.equals("link") || tagName.equals("script")) {
+                                Map<String, String> attributes = tagNode.getAttributes();
+                                String href = attributes.get("href");
+                                String src = attributes.get("src");
+                                String main = attributes.get("data-main");
+                                String id = attributes.get("id");
+
+                                if (href != null && href.startsWith("static/")) {
+                                    attributes.put("href", new StringBuilder(assetsUrl).append("/").append(href).toString());
+                                    tagNode.setAttributes(attributes);
+                                }
+                                if (src != null && src.startsWith("static/")) {
+                                    attributes.put("src", new StringBuilder(assetsUrl).append("/").append(src).toString());
+                                    tagNode.setAttributes(attributes);
+                                }
+                                if (main != null && src.startsWith("static/")) {
+                                    attributes.put("data-main", new StringBuilder(assetsUrl).append("/").append(main).toString());
+                                    tagNode.setAttributes(attributes);
+                                }
+
+                                if (tagName.equals("script") && id != null && id.equals("piecework-context-script")) {
+                                    StringBuilder content = new StringBuilder("piecework = {};")
+                                        .append("piecework.context = ").append(json);
+
+                                    tagNode.removeAllChildren();
+                                    tagNode.addChild(new ContentNode(content.toString()));
+                                }
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+            });
+
+            SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
+            serializer.writeToStream(node, entityStream);
+
+
+//			InputStream input = template.getInputStream();
+//                    //new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), template.getInputStream());
+//			try {
+//				MustacheFactory mf = new DefaultMustacheFactory();
+//			    Mustache mustache = mf.compile(new InputStreamReader(input), "page");
+//
+//			    User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
+//                PageContext pageContext = new PageContext.Builder()
+//                        .applicationTitle(applicationTitle)
+//                        .assetsUrl(assetsUrl)
+//                        .resource(t)
+//                        .user(user)
+//                        .build();
+//
+//                OutputStream jsonStream = new ByteArrayOutputStream();
+//                jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
+//                String json = jsonStream.toString();
+//
+//			    mustache.execute(new PrintWriter(entityStream), new JsonContext(json)).flush();
+//			} catch (IOException e) {
+//				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
+//			} finally {
+//				input.close();
+//				entityStream.close();
+//			}
 		} else {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 	}
+
+    private String recomputeStaticPath(String current) {
+        return null;
+    }
 	
 	private boolean hasTemplateResource(Class<?> type) {
 		if (type.equals(SearchResults.class))
@@ -168,10 +236,15 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		
 		String templateName = templateNameBuilder.toString();
 		Resource resource = null;
-		if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}"))
+		if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}")) {
 			resource = new FileSystemResource(templatesDirectory + File.separator + templateName);
-		else
+
+            if (!resource.exists())
+                resource = new FileSystemResource(templatesDirectory + File.separator + "key" + File.separator + templateName);
+
+        } else
 			resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
+
 		return resource;
 	}
 

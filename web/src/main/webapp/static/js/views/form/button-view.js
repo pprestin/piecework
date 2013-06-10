@@ -4,6 +4,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/button.hbs' ],
 
 	var ButtonView = View.extend({
 		autoRender : true,
+		tagName: 'span',
 	    template: template,
 	});
 

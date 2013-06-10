@@ -17,7 +17,7 @@ import javax.ws.rs.core.UriInfo;
 /**
  * @author James Renfro
  */
-@Path("secure/v1/task")
+@Path("task")
 public interface TaskResource extends Resource, ApiResource {
 
     @GET

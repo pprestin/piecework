@@ -5,13 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
-    <link href="static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <link href="static/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../../static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="../../static/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
     <style>
         ul.sections {
             list-style: none;
             margin: 0px;
             padding: 0px;
+        }
+        div.section-buttons {
+            float:right;
         }
     </style>
 </head>
@@ -21,7 +24,7 @@
 
     </div>
 
-	<script type="text/javascript">
+	<script type="text/javascript" id="piecework-context-script">
 		piecework = {};
 		piecework.context = {
             resource : {
@@ -328,9 +331,7 @@
                   }
                 }
         };
-
-        //<%& json %>;
 	</script>
-	<script data-main="static/js/form.js" src="static/js/vendor/require.js"></script>
+	<script data-main="../../static/js/form.js" src="../../static/js/vendor/require.js"></script>
 </body>
 </html>
