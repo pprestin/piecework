@@ -89,24 +89,32 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
     @Override
     public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
+        if (proxy == null)
+            throw new ProcessEngineException("Not found");
         return proxy.findTask(criteria);
     }
 
     @Override
     public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
+        if (proxy == null)
+            throw new ProcessEngineException("Not found");
         return proxy.findTasks(criteria);
     }
 
     @Override
     public boolean completeTask(Process process, String taskId) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        if (proxy == null)
+            throw new ProcessEngineException("Not found");
         return proxy.completeTask(process, taskId);
     }
 
     @Override
     public void deploy(Process process, String name, ProcessModelResource... resources) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        if (proxy == null)
+            throw new ProcessEngineException("Not found");
         proxy.deploy(process, name, resources);
     }
 }

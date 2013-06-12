@@ -152,6 +152,10 @@ public class Section {
         }
 
         public Builder(Section section, Sanitizer sanitizer) {
+            this(section, sanitizer, true);
+        }
+
+        public Builder(Section section, Sanitizer sanitizer, boolean includeFields) {
             this.sectionId = section.sectionId != null ? sanitizer.sanitize(section.sectionId) : UUID.randomUUID().toString();
             this.tagId = sanitizer.sanitize(section.tagId);
             this.title = sanitizer.sanitize(section.title);
@@ -159,7 +163,7 @@ public class Section {
             this.ordinal = section.ordinal;
             this.isDeleted = section.isDeleted;
 
-            if (section.fields != null && !section.fields.isEmpty()) {
+            if (includeFields && section.fields != null && !section.fields.isEmpty()) {
                 this.fields = new ArrayList<Field>(section.fields.size());
                 for (Field field : section.fields) {
                     this.fields.add(new Field.Builder(field, sanitizer).processDefinitionKey(processDefinitionKey).build());

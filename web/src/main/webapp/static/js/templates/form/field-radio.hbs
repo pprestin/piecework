@@ -7,7 +7,8 @@
     <input type="radio"
            name="{{../name}}"
            value="{{value}}"
-    {{#if required}}required{{/if}}
+        {{#if ../required}}required{{/if}}
+        {{#if selected}}checked{{/if}}
     /> {{label}}
 </label>
 {{/each}}

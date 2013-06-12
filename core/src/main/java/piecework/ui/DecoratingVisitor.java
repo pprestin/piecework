@@ -244,6 +244,9 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     value = values.get(index);
             }
 
+            if (!field.isVisible())
+                attributes.put("class", cls + " hide");
+
             switch (fieldTag) {
                 case EMAIL:
                 case NUMBER:

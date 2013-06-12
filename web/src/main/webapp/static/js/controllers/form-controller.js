@@ -40,18 +40,19 @@ define([
         }
 
         for (var i=0;i<sections.length;i++) {
-           var section = sections[i];
-           var sectionId = section.sectionId;
-           var fields = section.fields;
-           var sectionViewId = sectionId;
-           var contentSelector = '#' + sectionViewId + " > .section-content";
-           var buttonSelector = '#' + sectionViewId + " > .section-buttons";
+            var section = sections[i];
+            var sectionId = section.sectionId;
+            var tagId = section.tagId;
+            var fields = section.fields;
+            var sectionViewId = tagId != null ? tagId : sectionId;
+            var contentSelector = '#' + sectionViewId + " > .section-content";
+            var buttonSelector = '#' + sectionViewId + " > .section-buttons";
 
-           if (section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal)
+            if (section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal)
                 continue;
 
-           this.compose(sectionViewId, SectionView, {id: sectionViewId, container: 'ul.sections', model: new Model(section)});
-           this.compose('fieldsView_' + sectionId, FieldsView, {collection: new Collection(fields), container: contentSelector});
+            this.compose(sectionViewId, SectionView, {id: sectionViewId, container: 'ul.sections', model: new Model(section)});
+            this.compose('fieldsView_' + sectionId, FieldsView, {collection: new Collection(fields), container: contentSelector});
 
             if (section.buttons != undefined && section.buttons.length > 0) {
                 var buttons = section.buttons;
@@ -60,10 +61,13 @@ define([
                     var buttonId = button.buttonId;
 
                     if (button.value != undefined) {
-                        if (button.value == 'next')
-                            button.value = '#step/' + (section.ordinal + 1);
-                        else if (buttons[b].value == 'prev')
-                            button.value = '#step/' + (section.ordinal - 1);
+                        if (button.value == 'next') {
+                            button.value = 'step/' + (section.ordinal + 1);
+                            button.link = '#' + button.value;
+                        } else if (buttons[b].value == 'prev') {
+                            button.value = 'step/' + (section.ordinal - 1);
+                            button.link = '#' + button.value;
+                        }
                     }
 
                     if (button.type == 'button-link')

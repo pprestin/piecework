@@ -172,7 +172,11 @@ public class Screen implements Serializable {
             this.sections = new ArrayList<Section>();
 		}
 
-		public Builder(Screen screen, Sanitizer sanitizer) {
+        public Builder(Screen screen, Sanitizer sanitizer) {
+            this(screen, sanitizer, true);
+        }
+
+		public Builder(Screen screen, Sanitizer sanitizer, boolean includeSections) {
 			this.screenId = sanitizer.sanitize(screen.screenId);
 			this.processDefinitionKey = sanitizer.sanitize(screen.processDefinitionKey);
 			this.title = sanitizer.sanitize(screen.title);
@@ -190,7 +194,7 @@ public class Screen implements Serializable {
                 this.stylesheets = new ArrayList<String>();
             }
 
-			if (screen.sections != null && !screen.sections.isEmpty()) {
+			if (includeSections && screen.sections != null && !screen.sections.isEmpty()) {
 				this.sections = new ArrayList<Section>(screen.sections.size());
 				for (Section section : screen.sections) {
 					this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());

@@ -15,6 +15,7 @@
  */
 package piecework.model;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
@@ -51,6 +52,10 @@ public class Task implements Serializable {
     @XmlElement
     private final String taskInstanceLabel;
 
+    @XmlTransient
+    @JsonIgnore
+    private final String engineProcessInstanceId;
+
     @XmlElement
     private final User assignee;
 
@@ -75,6 +80,7 @@ public class Task implements Serializable {
         this.taskInstanceId = builder.taskInstanceId;
         this.taskDefinitionKey = builder.taskDefinitionKey;
         this.taskInstanceLabel = builder.taskInstanceLabel;
+        this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.assignee = builder.assignee;
         this.candidateAssignees = builder.candidateAssignees;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
@@ -94,7 +100,12 @@ public class Task implements Serializable {
 		return taskInstanceLabel;
 	}
 
-	public User getAssignee() {
+    @JsonIgnore
+    public String getEngineProcessInstanceId() {
+        return engineProcessInstanceId;
+    }
+
+    public User getAssignee() {
 		return assignee;
 	}
 
@@ -120,6 +131,7 @@ public class Task implements Serializable {
         private String taskDefinitionKey;
         private String processDefinitionKey;
         private String taskInstanceLabel;
+        private String engineProcessInstanceId;
         private User assignee;
         private List<User> candidateAssignees;
         private boolean isDeleted;
@@ -132,6 +144,7 @@ public class Task implements Serializable {
             this.taskInstanceId = sanitizer.sanitize(task.taskInstanceId);
             this.taskDefinitionKey = sanitizer.sanitize(task.taskDefinitionKey);
             this.taskInstanceLabel = sanitizer.sanitize(task.taskInstanceLabel);
+            this.engineProcessInstanceId = sanitizer.sanitize(task.engineProcessInstanceId);
             this.assignee = task.assignee != null ? new User.Builder(task.assignee, sanitizer).build() : null;
             if (task.candidateAssignees != null && !task.candidateAssignees.isEmpty()) {
                 this.candidateAssignees = new ArrayList<User>(task.candidateAssignees.size());
@@ -167,6 +180,11 @@ public class Task implements Serializable {
 
         public Builder taskInstanceLabel(String taskInstanceLabel) {
             this.taskInstanceLabel = taskInstanceLabel;
+            return this;
+        }
+
+        public Builder engineProcessInstanceId(String engineProcessInstanceId) {
+            this.engineProcessInstanceId = engineProcessInstanceId;
             return this;
         }
 

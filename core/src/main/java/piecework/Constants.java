@@ -48,6 +48,8 @@ public interface Constants {
     }
 
 	public static class ConstraintTypes {
+        public static final String AND = "AND";
+        public static final String OR = "OR";
 		public static final String IS_ALL_VALUES_MATCH = "IS_ALL_VALUES_MATCH";
         public static final String IS_CONFIRMATION_NUMBER = "IS_CONFIRMATION_NUMBER";
 		public static final String IS_EMAIL_ADDRESS = "IS_EMAIL_ADDRESS";
@@ -61,6 +63,7 @@ public interface Constants {
 	
 	public static class ExceptionCodes {
         public static final String certificate_does_not_match = "certificate_does_not_match";
+        public static final String instance_does_not_exist = "instance_does_not_exist";
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
         public static final String process_business_key_limit = "process_business_key_limit";
@@ -69,6 +72,7 @@ public interface Constants {
         public static final String request_does_not_match = "request_does_not_match";
 		public static final String request_id_required = "request_id_required";
         public static final String screen_id_invalid = "screen_id_invalid";
+        public static final String task_does_not_exist = "task_does_not_exist";
         public static final String user_does_not_match = "user_does_not_match";
 	}
 

@@ -18,8 +18,7 @@ package piecework.form.concrete;
 import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.cxf.common.util.StringUtils;
@@ -70,7 +69,6 @@ public class FormResourceVersion1 implements FormResource {
 	@Autowired
     Sanitizer sanitizer;
 
-
     @Value("${base.application.uri}")
     String baseApplicationUri;
 
@@ -84,7 +82,7 @@ public class FormResourceVersion1 implements FormResource {
     String certificateSubjectHeader;
 
 
-	public Response read(final String rawProcessDefinitionKey, HttpServletRequest request) throws StatusCodeError {
+	public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 
         Process process = processRepository.findOne(processDefinitionKey);
@@ -103,11 +101,11 @@ public class FormResourceVersion1 implements FormResource {
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
         FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, null, null);
 
-        return responseHandler.handle(formRequest);
+        return responseHandler.handle(formRequest, null, getViewContext());
 	}
 
     @Override
-    public Response read(String rawProcessDefinitionKey, String rawTaskId, HttpServletRequest request) throws StatusCodeError {
+    public Response read(final String rawProcessDefinitionKey, final String rawTaskId, final HttpServletRequest request) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
 
@@ -124,12 +122,16 @@ public class FormResourceVersion1 implements FormResource {
 
         try {
             Task task = facade.findTask(criteria);
+            if (task == null)
+                throw new NotFoundError(Constants.ExceptionCodes.task_does_not_exist);
+
+            ProcessInstance instance = processInstanceService.findOne(process, task.getEngineProcessInstanceId());
             Interaction selectedInteraction = selectInteraction(process, task);
 
             RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
             FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, selectedInteraction, null, null);
 
-            return responseHandler.handle(formRequest);
+            return responseHandler.handle(formRequest, instance, getViewContext());
 
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to find task ", e);
@@ -138,7 +140,7 @@ public class FormResourceVersion1 implements FormResource {
     }
 
     @Override
-    public Response submit(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, String rawRequestId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
@@ -173,11 +175,11 @@ public class FormResourceVersion1 implements FormResource {
             return Response.noContent().build();
         }
 
-        return responseHandler.handle(nextFormRequest);
+        return responseHandler.handle(nextFormRequest, stored, getViewContext());
     }
 
     @Override
-    public Response validate(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("requestId") String rawRequestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String validationId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
@@ -195,8 +197,13 @@ public class FormResourceVersion1 implements FormResource {
 
         return Response.noContent().build();
     }
-	
-	@Override
+
+    @Override
+    public Response getValidation(final String processDefinitionKey, final String requestId, final String validationId, final HttpServletRequest request) throws StatusCodeError {
+        return Response.ok("Hello new world!").type(MediaType.TEXT_PLAIN_TYPE).build();
+    }
+
+    @Override
 	public ViewContext getViewContext() {
 		return new ViewContext(baseApplicationUri, baseServiceUri, null, "form", "Form");
 	}

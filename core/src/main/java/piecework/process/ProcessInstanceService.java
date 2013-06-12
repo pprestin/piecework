@@ -24,10 +24,7 @@ import piecework.Constants;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.exception.BadRequestError;
-import piecework.exception.ForbiddenError;
-import piecework.exception.InternalServerError;
-import piecework.exception.StatusCodeError;
+import piecework.exception.*;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
 import piecework.form.handler.SubmissionHandler;
@@ -64,6 +61,15 @@ public class ProcessInstanceService {
 
     @Autowired
     ValidationService validationService;
+
+    public ProcessInstance findOne(Process process, String processInstanceId) throws NotFoundError {
+        ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
+
+        if (instance == null || !instance.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
+            throw new NotFoundError(Constants.ExceptionCodes.instance_does_not_exist);
+
+        return instance;
+    }
 
     public Set<ProcessInstance> findByCriteria(List<Process> processes, ManyMap<String, String> criteria) {
         if (criteria.containsKey("keyword")) {

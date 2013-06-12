@@ -61,4 +61,11 @@ public interface FormResource extends Resource {
     @Consumes("multipart/form-data")
     Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
 
+    @GET
+    @Path("{processDefinitionKey}/{requestId}/{validationId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+//    @Consumes("multipart/form-data")
+    Response getValidation(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request) throws StatusCodeError;
+
+
 }

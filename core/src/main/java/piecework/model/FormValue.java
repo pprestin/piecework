@@ -178,12 +178,18 @@ public class FormValue implements Serializable {
 		}
 
         public Builder values(String ... values) {
-            this.values = Arrays.asList(values);
+            if (this.values == null)
+                this.values = new ArrayList<String>();
+            if (values != null)
+                this.values.addAll(Arrays.asList(values));
             return this;
         }
 
         public Builder values(List<String> values) {
-            this.values = values;
+            if (this.values == null)
+                this.values = new ArrayList<String>();
+            if (values != null)
+                this.values.addAll(values);
             return this;
         }
         

@@ -79,7 +79,10 @@ public class Field implements Serializable {
     
     @XmlAttribute
     private final boolean restricted;
-    
+
+    @XmlAttribute
+    private final boolean visible;
+
     @XmlElement
     private final String defaultValue;
         
@@ -134,6 +137,7 @@ public class Field implements Serializable {
         this.restricted = builder.restricted;
         this.pattern = builder.pattern;
         this.customValidity = builder.customValidity;
+        this.visible = builder.visible;
         this.defaultValue = builder.defaultValue;
         this.ordinal = builder.ordinal;
         this.displayValueLength = builder.displayValueLength;
@@ -232,7 +236,11 @@ public class Field implements Serializable {
 		return isDeleted;
 	}
 
-	public final static class Builder {
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public final static class Builder {
 
     	private String fieldId;
     	private String processDefinitionKey;
@@ -242,6 +250,7 @@ public class Field implements Serializable {
         private boolean editable;
         private boolean required;
         private boolean restricted;
+        private boolean visible;
         private String pattern;
         private String customValidity;
         private String defaultValue;
@@ -269,6 +278,7 @@ public class Field implements Serializable {
             this.messages = new ArrayList<Message>();
             this.constraints = new ArrayList<Constraint>();
             this.options = new ArrayList<Option>();
+            this.visible = true;
         }
 
         public Builder(Field field, Sanitizer sanitizer) {
@@ -289,6 +299,7 @@ public class Field implements Serializable {
             this.minInputs = field.minInputs;
             this.ordinal = field.ordinal;
             this.isDeleted = field.isDeleted;
+            this.visible = field.visible;
 
             if (field.messages != null && !field.messages.isEmpty()) {
                 this.messages = new ArrayList<Message>(field.messages.size());
@@ -439,6 +450,16 @@ public class Field implements Serializable {
 
         public Builder undelete() {
             this.isDeleted = false;
+            return this;
+        }
+
+        public Builder visible() {
+            this.visible = true;
+            return this;
+        }
+
+        public Builder invisible() {
+            this.visible = false;
             return this;
         }
     }

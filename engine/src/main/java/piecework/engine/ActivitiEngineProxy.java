@@ -199,9 +199,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
         org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
 
+        if (activitiTask == null)
+            throw new ProcessEngineException("Task not found");
+
         Task.Builder taskBuilder = new Task.Builder()
                 .taskInstanceId(activitiTask.getId())
-                .taskInstanceLabel(activitiTask.getDescription());
+                .taskInstanceLabel(activitiTask.getDescription())
+                .engineProcessInstanceId(activitiTask.getProcessInstanceId());
 
         List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(activitiTask.getId());
 
@@ -255,6 +259,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             for (org.activiti.engine.task.Task instance : instances) {
                 Task.Builder executionBuilder = new Task.Builder()
                         .taskInstanceId(instance.getId())
+                        .taskInstanceLabel(instance.getDescription())
+                        .engineProcessInstanceId(instance.getProcessInstanceId())
                         .assignee(new User.Builder().userId(instance.getAssignee()).build());
 
                 tasks.add(executionBuilder.build());

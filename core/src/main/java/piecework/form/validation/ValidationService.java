@@ -75,8 +75,12 @@ public class ValidationService {
                         continue;
 
                     // If a validation id is passed, then limit the validation to the section that matches
-                    if (validationId != null && !validationId.equals(section.getTagId()))
-                        continue;
+                    if (validationId != null) {
+                        if (section.getTagId() != null && !validationId.equals(section.getTagId()))
+                            continue;
+                        if (section.getTagId() == null && !validationId.equals(section.getSectionId()))
+                            continue;
+                    }
 
                     List<Field> fields = section.getFields();
                     if (fields == null || fields.isEmpty())

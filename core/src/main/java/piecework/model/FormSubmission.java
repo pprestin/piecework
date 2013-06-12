@@ -180,7 +180,8 @@ public class FormSubmission {
         public Builder formValue(String key, String ... values) {
             if (this.formData == null)
                 this.formData = new ArrayList<FormValue>();
-            this.formData.add(new FormValue.Builder().name(key).values(values).build());
+            if (key != null)
+                this.formData.add(new FormValue.Builder().name(key).values(values).build());
             return this;
         }
 

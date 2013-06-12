@@ -16,16 +16,12 @@
 package piecework.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -59,7 +55,11 @@ public class Constraint implements Serializable {
     private final String name;
 	
 	@XmlElement
-    private final String value;  
+    private final String value;
+
+    @XmlElementWrapper(name="subconstraints")
+    @XmlElementRef
+    private final List<Constraint> subconstraints;
 	
 	@XmlAttribute
     private final int ordinal;
@@ -82,6 +82,7 @@ public class Constraint implements Serializable {
         this.value = builder.value;
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
+        this.subconstraints = builder.subconstraints != null ? Collections.unmodifiableList(builder.subconstraints) : null;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.constraintId) : null;
     }
 	
@@ -119,7 +120,8 @@ public class Constraint implements Serializable {
     	private String processDefinitionKey;
     	private String type;
         private String name;
-        private String value;    
+        private String value;
+        private List<Constraint> subconstraints;
         private int ordinal;
         private boolean isDeleted;
 
@@ -135,6 +137,12 @@ public class Constraint implements Serializable {
             this.value = sanitizer.sanitize(constraint.value);
             this.ordinal = constraint.ordinal;
             this.isDeleted = constraint.isDeleted;
+            if (constraint.subconstraints != null && !constraint.subconstraints.isEmpty()) {
+                this.subconstraints = new ArrayList<Constraint>(constraint.subconstraints.size());
+                for (Constraint subconstraint : constraint.subconstraints) {
+                    this.subconstraints.add(new Constraint.Builder(subconstraint, sanitizer).build());
+                }
+            }
         }
 
         public Constraint build() {
@@ -167,6 +175,13 @@ public class Constraint implements Serializable {
         
         public Builder value(String value) {
             this.value = value;
+            return this;
+        }
+
+        public Builder subconstraint(Constraint subconstraint) {
+            if (this.subconstraints == null)
+                this.subconstraints = new ArrayList<Constraint>();
+            this.subconstraints.add(subconstraint);
             return this;
         }
         

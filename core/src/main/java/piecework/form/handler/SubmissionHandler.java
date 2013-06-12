@@ -90,12 +90,14 @@ public class SubmissionHandler {
                     continue;
 
                 String contentId = sanitizer.sanitize(attachment.getContentId());
+                String name = sanitizer.sanitize(attachment.getDataHandler().getName());
 
-                if (contentType.equals("text/plain")) {
+                if (contentType.equals(MediaType.TEXT_PLAIN_TYPE)) {
                     LOG.info("Processing multipart with content type " + contentType.toString() + " and content id " + attachment.getContentId());
                     // Treat as a String form value
+
                     String value = sanitizer.sanitize(attachment.getObject(String.class));
-                    submissionBuilder.formValue(contentId, value);
+                    submissionBuilder.formValue(name, value);
                 } else if (contentDisposition != null && isAttachmentAllowed) {
                     String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
                     LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
@@ -110,7 +112,7 @@ public class SubmissionHandler {
 
                         content = contentRepository.save(content);
 
-                        submissionBuilder.formContent(contentType.toString(), contentId, filename, content.getLocation());
+                        submissionBuilder.formContent(contentType.toString(), name, filename, content.getLocation());
 
                     } catch (IOException e) {
                         LOG.error("Unable to save this attachment with filename: " + filename);

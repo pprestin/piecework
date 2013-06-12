@@ -66,7 +66,7 @@ public class ResponseHandlerTest {
     @Test
     public void testHandle() throws Exception {
         FormRequest formRequest = ExampleFactory.exampleFormRequest("0b82440e-0c3c-4433-b629-c41e68049b8b");
-        Response response = responseHandler.handle(formRequest);
+        Response response = responseHandler.handle(formRequest, null, null);
 
         OutputStream outputStream = new ByteArrayOutputStream();
         StreamingPageContent pageContent = StreamingPageContent.class.cast(response.getEntity());

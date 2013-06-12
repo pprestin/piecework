@@ -141,6 +141,7 @@ public class ProcessInstance implements Serializable {
         this.processInstanceId = processInstanceId;
     }
 
+    @JsonIgnore
     public String getEngineProcessInstanceId() {
         return engineProcessInstanceId;
     }
@@ -165,10 +166,12 @@ public class ProcessInstance implements Serializable {
 		return formData;
 	}
 
+    @JsonIgnore
     public List<FormValue> getRestrictedData() {
         return restrictedData;
     }
 
+    @JsonIgnore
     public Set<String> getKeywords() {
         return keywords;
     }
