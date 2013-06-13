@@ -33,12 +33,7 @@ define([ 'chaplin', 'views/base/view'],
             if (visibilityConstraints == undefined || visibilityConstraints.length <= 0)
                 return this;
 
-            for (var i=0;i<visibilityConstraints.length;i++) {
-                var constraint = visibilityConstraints[i];
-                if (constraint.name != undefined) {
-                    Chaplin.mediator.subscribe('value:' + constraint.name, this._onDependencyValueChange, this);
-                }
-            }
+            this._subscribeDependencies(visibilityConstraints);
 
             if (!visible)
                 this.$el.addClass('hide');
@@ -49,32 +44,68 @@ define([ 'chaplin', 'views/base/view'],
             View.__super__.render.apply(this, options);
             return this;
         },
-        _checkConstraints: function() {
-            var visibilityConstraints = this._findVisibilityConstraints();
-            if (visibilityConstraints == undefined || visibilityConstraints.length <= 0)
-                return;
+        _isVisible: function(constraints, requireAll) {
+            if (constraints == undefined || constraints.length <= 0)
+                return true;
 
-            var allSatisfied = true;
-            for (var i=0;i<visibilityConstraints.length;i++) {
-                var selector = ':input[name="' + visibilityConstraints[i].name + '"]';
-                var $element = $(selector);
-                if ($element.is(':checkbox') || $element.is(":radio"))
-                    $element = $element.filter(':checked');
-                var value = $element.val();
-                var pattern = new RegExp(visibilityConstraints[i].value);
-                if (pattern.test(value))
-                    visibilityConstraints[i].satisfied = true;
-                else {
-                    visibilityConstraints[i].satisfied = false;
-                    allSatisfied = false;
+            var visible = requireAll;
+            for (var i=0;i<constraints.length;i++) {
+                var constraint = constraints[i];
+
+                if (constraint.type == undefined)
+                    continue;
+
+                var satisfied = false;
+                if (constraint.type == 'IS_ONLY_VISIBLE_WHEN') {
+                    var selector = ':input[name="' + constraint.name + '"]';
+                    var $element = $(selector);
+                    if ($element.is(':checkbox') || $element.is(":radio"))
+                        $element = $element.filter(':checked');
+                    var value = $element.val();
+                    var pattern = new RegExp(constraint.value);
+                    satisfied = value != null && pattern.test(value);
+                } else if (constraint.type == 'AND') {
+                    satisfied = this._isVisible(constraint.subconstraints, true);
+                } else if (constraint.type == 'OR') {
+                    satisfied = this._isVisible(constraint.subconstraints, false);
+                } else {
+                    continue;
+                }
+
+                if (requireAll && !satisfied) {
+                    visible = false;
+                    break;
+                } else if (!requireAll && satisfied) {
+                    visible = true;
                     break;
                 }
-             }
+            }
 
-             if (allSatisfied)
-                 this.$el.removeClass('hide');
-             else
-                 this.$el.addClass('hide');
+            return visible;
+        },
+        _subscribeDependencies: function(constraints) {
+            if (constraints == undefined || constraints.length <= 0)
+                return;
+
+            for (var i=0;i<constraints.length;i++) {
+                var constraint = constraints[i];
+
+                if (constraint.type == undefined)
+                    continue;
+
+                if (constraint.type == 'IS_ONLY_VISIBLE_WHEN' && constraint.name != undefined) {
+                    Chaplin.mediator.subscribe('value:' + constraint.name, this._onDependencyValueChange, this);
+                } else if (constraint.type == 'AND' || constraint.type == 'OR') {
+                    this._subscribeDependencies(constraint.subconstraints);
+                }
+            }
+        },
+        _testConstraints: function() {
+            var allSatisfied = this._isVisible(this._findVisibilityConstraints(), true);
+            if (allSatisfied)
+                this.$el.removeClass('hide');
+            else
+                this.$el.addClass('hide');
         },
         _onAddedToDOM: function() {
             var defaultValue = this.model.get("defaultValue");
@@ -93,7 +124,7 @@ define([ 'chaplin', 'views/base/view'],
             }
         },
         _onFormAddedToDOM: function(event) {
-            this._checkConstraints();
+            this._testConstraints();
         },
         _onValueChange: function(event) {
             var name = event.target.name;
@@ -101,7 +132,7 @@ define([ 'chaplin', 'views/base/view'],
             Chaplin.mediator.publish('value:' + name, name, value);
         },
         _onDependencyValueChange: function(name, value) {
-            this._checkConstraints();
+            this._testConstraints();
         },
         _findVisibilityConstraints: function(name) {
             var constraints = this.model.get('constraints');
@@ -116,9 +147,16 @@ define([ 'chaplin', 'views/base/view'],
                         if (constraint.type == 'IS_ONLY_VISIBLE_WHEN') {
                             if (name == undefined || constraint.name == name)
                                 visibilityConstraints.push(constraint);
+                        } else if (constraint.type == 'AND' || constraint.type == 'OR') {
+                            if (constraint.subconstraints != null && constraint.subconstraints.length > 0) {
+                                for (var j=0;j<constraint.subconstraints.length;j++) {
+                                    var subconstraint = constraint.subconstraints[j];
+                                    if (subconstraint.type = 'IS_ONLY_VISIBLE_WHEN') {
+                                        visibilityConstraints.push(constraint);
+                                        break;
+                                    }
+                                }
                             }
-                        } else if (constraint.type == 'AND') {
-
                         }
                     }
                 }

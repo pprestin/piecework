@@ -25,12 +25,14 @@ import piecework.model.*;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
+import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 
 /**
@@ -44,65 +46,7 @@ public class ResponseHandler {
 
     public Response handle(FormRequest formRequest, ProcessInstance instance, ViewContext viewContext) throws StatusCodeError {
 
-        Screen screen = formRequest.getScreen();
-
-        if (screen != null) {
-            ManyMap<String, String> formValueMap = instance != null ? instance.getFormValueMap() : new ManyMap<String, String>();
-
-            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
-
-            if (screen.getSections() != null) {
-                for (Section section : screen.getSections()) {
-                    Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
-
-                    if (section.getFields() == null)
-                        continue;
-
-                    Map<String, Field> fieldMap = new HashMap<String, Field>();
-
-                    for (Field field : section.getFields()) {
-                        fieldMap.put(field.getName(), field);
-                    }
-
-                    for (Field field : section.getFields()) {
-                        Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer);
-
-                        List<Constraint> constraints = field.getConstraints();
-                        if (constraints != null) {
-                            boolean visible = true;
-
-                            for (Constraint constraint : constraints) {
-                                String constraintType = constraint.getType();
-
-                                if (constraintType != null && constraintType.equals(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN)) {
-                                    String constraintName = constraint.getName();
-                                    String constraintValue = constraint.getValue();
-
-                                    Field constraintField = fieldMap.get(constraintName);
-
-                                    if (constraintField != null) {
-                                        String defaultFieldValue = constraintField.getDefaultValue();
-
-                                        if (defaultFieldValue == null || !defaultFieldValue.equals(constraintValue)) {
-                                            visible = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (!visible)
-                                fieldBuilder.invisible();
-                        }
-
-                        sectionBuilder.field(fieldBuilder.build());
-                    }
-                    screenBuilder.section(sectionBuilder.build());
-                }
-            }
-            screen = screenBuilder.build();
-        }
+        Screen screen = buildScreen(formRequest, instance);
 
         Form form = new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
@@ -124,5 +68,93 @@ public class ResponseHandler {
 
         return Response.ok(form).build();
     }
+
+    public Screen buildScreen(FormRequest formRequest, ProcessInstance instance) {
+        Screen screen = formRequest.getScreen();
+
+        if (screen != null) {
+            ManyMap<String, String> formValueMap = instance != null ? instance.getFormValueMap() : new ManyMap<String, String>();
+
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
+
+            if (screen.getSections() != null) {
+                Map<String, Field> fieldMap = new HashMap<String, Field>();
+                for (Section section : screen.getSections()) {
+                    if (section.getFields() == null)
+                        continue;
+
+                    for (Field field : section.getFields()) {
+                        if (field.getName() == null)
+                            continue;
+
+                        fieldMap.put(field.getName(), field);
+                    }
+                }
+                for (Section section : screen.getSections()) {
+                    Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
+
+                    for (Field field : section.getFields()) {
+                        Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer);
+
+                        List<Constraint> constraints = field.getConstraints();
+                        if (constraints != null) {
+                            if (!ConstraintUtil.isSatisfied(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, formValueMap, constraints, true))
+                                fieldBuilder.invisible();
+                        }
+
+                        sectionBuilder.field(fieldBuilder.build());
+                    }
+                    screenBuilder.section(sectionBuilder.build());
+                }
+            }
+            screen = screenBuilder.build();
+        }
+
+        return screen;
+    }
+
+//    private boolean isVisible(Map<String, Field> fieldMap, List<Constraint> constraints, boolean requireAll) {
+//        if (constraints == null || constraints.isEmpty())
+//            return true;
+//
+//        boolean visible = requireAll;
+//        for (Constraint constraint : constraints) {
+//            String constraintType = constraint.getType();
+//
+//            if (constraintType == null)
+//                continue;
+//
+//            boolean satisfied = false;
+//            if (constraintType.equals(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN)) {
+//                String constraintName = constraint.getName();
+//                String constraintValue = constraint.getValue();
+//                Pattern pattern = Pattern.compile(constraintValue);
+//
+//                Field constraintField = fieldMap.get(constraintName);
+//
+//                if (constraintField != null) {
+//                    String defaultFieldValue = constraintField.getDefaultValue();
+//                    satisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
+//                }
+//            } else if (constraintType.equals(Constants.ConstraintTypes.AND)) {
+//                satisfied = isVisible(fieldMap, constraint.getSubconstraints(), true);
+//            } else if (constraintType.equals(Constants.ConstraintTypes.OR)) {
+//                satisfied = isVisible(fieldMap, constraint.getSubconstraints(), false);
+//            } else {
+//                continue;
+//            }
+//
+//            if (requireAll && !satisfied) {
+//                visible = false;
+//                break;
+//            } else if (!requireAll && satisfied) {
+//                visible = true;
+//                break;
+//            }
+//        }
+//
+//        return visible;
+//    }
 
 }

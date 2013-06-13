@@ -23,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.model.Field;
+import piecework.model.Screen;
 import piecework.ui.StreamingPageContent;
 import piecework.model.Content;
 import piecework.model.FormRequest;
@@ -63,17 +65,28 @@ public class ResponseHandlerTest {
         contentRepository.save(content);
     }
 
+//    @Test
+//    public void testHandle() throws Exception {
+//        FormRequest formRequest = ExampleFactory.exampleFormRequest("0b82440e-0c3c-4433-b629-c41e68049b8b");
+//        Response response = responseHandler.handle(formRequest, null, null);
+//
+//        OutputStream outputStream = new ByteArrayOutputStream();
+//        StreamingPageContent pageContent = StreamingPageContent.class.cast(response.getEntity());
+//        pageContent.write(outputStream);
+//
+//        Assert.assertEquals(OUTPUT, outputStream.toString());
+//
+//    }
+
     @Test
-    public void testHandle() throws Exception {
+    public void testBuildScreen() throws Exception {
         FormRequest formRequest = ExampleFactory.exampleFormRequest("0b82440e-0c3c-4433-b629-c41e68049b8b");
-        Response response = responseHandler.handle(formRequest, null, null);
 
-        OutputStream outputStream = new ByteArrayOutputStream();
-        StreamingPageContent pageContent = StreamingPageContent.class.cast(response.getEntity());
-        pageContent.write(outputStream);
+        Screen screen = responseHandler.buildScreen(formRequest, null);
 
-        Assert.assertEquals(OUTPUT, outputStream.toString());
+        Field supervisorIdField = screen.getSections().get(1).getFields().get(0);
 
+        Assert.assertTrue(supervisorIdField.isVisible());
     }
 
 }

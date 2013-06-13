@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.model.*;
+import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 import piecework.util.OptionResolver;
 
@@ -70,6 +71,26 @@ public class ValidationService {
         if (screen != null) {
             List<Section> sections = screen.getSections();
             if (sections != null) {
+                Map<String, Field> fieldMap = new HashMap<String, Field>();
+                for (Section section : sections) {
+                    if (section == null)
+                        continue;
+
+                    List<Field> fields = section.getFields();
+                    if (fields == null || fields.isEmpty())
+                        continue;
+
+
+                    for (Field field : fields) {
+                        String fieldName = field.getName();
+
+                        if (fieldName == null)
+                            continue;
+
+                        fieldMap.put(field.getName(), field);
+                    }
+
+                }
                 for (Section section : sections) {
                     if (section == null)
                         continue;
@@ -96,7 +117,7 @@ public class ValidationService {
 
                         // Remove any form values from the attachment map, since this has a field already
                         unvalidatedFieldNames.remove(fieldName);
-                        validateField(validationId, field, submissionValueMap, instanceValueMap, validationBuilder);
+                        validateField(validationId, field, fieldMap, submissionValueMap, instanceValueMap, validationBuilder);
                     }
                 }
             }
@@ -131,7 +152,7 @@ public class ValidationService {
 		return validationBuilder.build();
 	}
 
-    private void validateField(String validationId, Field field, ManyMap<String, String> submissionValueMap, ManyMap<String, String> instanceValueMap, FormValidation.Builder validationBuilder) {
+    private void validateField(String validationId, Field field, Map<String, Field> fieldMap, ManyMap<String, String> submissionValueMap, ManyMap<String, String> instanceValueMap, FormValidation.Builder validationBuilder) {
         boolean hasErrorResult = false;
         String fieldName = field.getName();
 
@@ -316,6 +337,9 @@ public class ValidationService {
                     validationBuilder.error(fieldName, "Field is required");
                     return;
                 }
+            } else if (ConstraintUtil.isSatisfied(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN, fieldMap, submissionValueMap, constraints, true)) {
+                hasErrorResult = true;
+                validationBuilder.error(fieldName, "Field is required");
             }
 
             // Handle special case for checkboxes that have a single option -- they're either on or off, and when they're off nothing
@@ -331,6 +355,7 @@ public class ValidationService {
             }
 
         }
+
 
         // FIXME: Handle special constraint validation
         //					if (registry != null) {

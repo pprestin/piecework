@@ -114,7 +114,11 @@ public class Constraint implements Serializable {
 		return isDeleted;
 	}
 
-	public final static class Builder {
+    public List<Constraint> getSubconstraints() {
+        return subconstraints;
+    }
+
+    public final static class Builder {
 
     	private String constraintId;
     	private String processDefinitionKey;
