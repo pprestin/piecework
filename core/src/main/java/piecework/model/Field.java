@@ -66,6 +66,9 @@ public class Field implements Serializable {
     private final String type;
 
     @XmlElement
+    private final String mask;
+
+    @XmlElement
     private final String pattern;
 
     @XmlElement
@@ -135,6 +138,7 @@ public class Field implements Serializable {
         this.editable = builder.editable;
         this.required = builder.required;
         this.restricted = builder.restricted;
+        this.mask = builder.mask;
         this.pattern = builder.pattern;
         this.customValidity = builder.customValidity;
         this.visible = builder.visible;
@@ -179,6 +183,10 @@ public class Field implements Serializable {
 	public boolean isEditable() {
 		return editable;
 	}
+
+    public String getMask() {
+        return mask;
+    }
 
     public String getPattern() {
         return pattern;
@@ -251,6 +259,7 @@ public class Field implements Serializable {
         private boolean required;
         private boolean restricted;
         private boolean visible;
+        private String mask;
         private String pattern;
         private String customValidity;
         private String defaultValue;
@@ -289,6 +298,7 @@ public class Field implements Serializable {
             this.editable = field.editable;
             this.required = field.required;
             this.restricted = field.restricted;
+            this.mask = field.mask;
             this.pattern = field.pattern;
             this.customValidity = field.customValidity;
             this.defaultValue = sanitizer.sanitize(field.defaultValue);
@@ -374,6 +384,11 @@ public class Field implements Serializable {
 
         public Builder restricted() {
             this.restricted = true;
+            return this;
+        }
+
+        public Builder mask(String mask) {
+            this.mask = mask;
             return this;
         }
 

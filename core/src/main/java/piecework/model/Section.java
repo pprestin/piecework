@@ -52,6 +52,9 @@ public class Section {
 	@XmlID
 	@Id
 	private final String sectionId;
+
+    @XmlElement
+    private final String type;
 	
 	@XmlElement
 	private final String tagId;
@@ -61,6 +64,9 @@ public class Section {
 	
 	@XmlElement
 	private final String description;
+
+    @XmlElementWrapper(name="references")
+    private final List<String> references;
 	
 	@XmlElementWrapper(name="fields")
 	@XmlElementRef
@@ -86,11 +92,13 @@ public class Section {
 
 	private Section(Section.Builder builder, ViewContext context) {
 		this.sectionId = builder.sectionId;
+        this.type = builder.type;
 		this.tagId = builder.tagId;
 		this.title = builder.title;
 		this.description = builder.description;
 		this.ordinal = builder.ordinal;
 		this.isDeleted = builder.isDeleted;
+        this.references = builder.references != null ? Collections.unmodifiableList(builder.references) : null;
 		this.fields = builder.fields != null ? Collections.unmodifiableList(builder.fields) : null;
 		this.buttons = builder.buttons != null ? Collections.unmodifiableList(builder.buttons) : null;
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.sectionId) : null;
@@ -104,7 +112,11 @@ public class Section {
 		return tagId;
 	}
 
-	public String getTitle() {
+    public String getType() {
+        return type;
+    }
+
+    public String getTitle() {
 		return title;
 	}
 
@@ -112,7 +124,11 @@ public class Section {
 		return description;
 	}
 
-	public List<Field> getFields() {
+    public List<String> getReferences() {
+        return references;
+    }
+
+    public List<Field> getFields() {
 		return fields;
 	}
 
@@ -135,10 +151,12 @@ public class Section {
 	public final static class Builder {
 
 		private String sectionId;
+        private String type;
 		private String processDefinitionKey;
 		private String tagId;
 		private String title;
 		private String description;
+        private List<String> references;
         private List<Field> fields;
         private List<Button> buttons;
         private int ordinal;
@@ -147,6 +165,7 @@ public class Section {
         public Builder() {
             super();
             this.sectionId = UUID.randomUUID().toString();
+            this.type = piecework.Constants.SectionTypes.STANDARD;
             this.fields = new ArrayList<Field>();
             this.buttons = new ArrayList<Button>();
         }
@@ -194,7 +213,12 @@ public class Section {
             this.sectionId = sectionId;
             return this;
         }
-        
+
+        public Builder type(String type) {
+            this.type = type;
+            return this;
+        }
+
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
             return this;
@@ -214,7 +238,14 @@ public class Section {
             this.description = description;
             return this;
         }
-        
+
+        public Builder reference(String reference) {
+            if (this.references == null)
+                this.references = new ArrayList<String>();
+            this.references.add(reference);
+            return this;
+        }
+
         public Builder field(Field field) {
 			if (this.fields == null)
 				this.fields = new ArrayList<Field>();

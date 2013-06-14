@@ -56,9 +56,24 @@ define([
             },
         });
 
+        var isNotReview = true;
         for (var i=0;i<sections.length;i++) {
             var section = sections[i];
             var sectionId = section.sectionId;
+            var sectionType = section.type;
+
+            if (section.ordinal == undefined || currentScreen == undefined || section.type == null)
+                continue;
+
+            if (currentScreen == section.ordinal && sectionType != null && sectionType == 'review')
+                isNotReview = false;
+        }
+
+
+        for (var i=0;i<sections.length;i++) {
+            var section = sections[i];
+            var sectionId = section.sectionId;
+            var sectionType = section.type;
             var tagId = section.tagId;
             var fields = section.fields;
             var sectionViewId = tagId != null ? tagId : sectionId;
@@ -66,11 +81,11 @@ define([
             var buttonSelector = '#' + sectionViewId + " > .section-buttons";
 
             var className = 'section ';
-            if (section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal)
+
+            if (isNotReview && section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal)
                 className += 'hide';
             else
                 className += 'selected';
-//                continue;
 
             var doHide = section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal;
 
@@ -100,9 +115,6 @@ define([
                     show: !doHide
                 }
             });
-
-            //this.compose(sectionViewId, SectionView, {id: sectionViewId, className: className, container: 'ul.sections', model: new Model(section)});
-            //this.compose('fieldsView_' + sectionId, FieldsView, {collection: new Collection(fields), container: contentSelector});
 
             this.compose('fieldsView_' + sectionId, {
                 options: { collection: new Collection(fields), container: contentSelector },

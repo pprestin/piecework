@@ -80,6 +80,7 @@ public interface Constants {
         public static final String CHECKBOX = "checkbox";
         public static final String EMAIL = "email";
         public static final String FILE = "file";
+        public static final String HTML = "html";
         public static final String NUMBER = "number";
         public static final String RADIO = "radio";
         public static final String SELECT_ONE = "select-one";
@@ -93,6 +94,11 @@ public interface Constants {
         public static final String TEMPLATE = "template";
         public static final String WIZARD = "wizard";
         public static final String WIZARD_TEMPLATE = "wizardTemplate";
+    }
+
+    public static class SectionTypes {
+        public static final String STANDARD = "standard";
+        public static final String REVIEW = "review";
     }
 
     public static class SubmissionTypes {

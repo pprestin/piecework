@@ -16,6 +16,7 @@
 package piecework.form.validation;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.cxf.common.util.StringUtils;
@@ -262,6 +263,8 @@ public class ValidationService {
 
                 String lastValue = null;
 
+                Pattern pattern = field.getPattern() != null ? Pattern.compile(field.getPattern()) : null;
+
                 for (String value : values) {
 
                     if (value.length() > field.getMaxValueLength()) {
@@ -280,6 +283,14 @@ public class ValidationService {
                     if (isEmailAddress && !EmailValidator.getInstance().isValid(value)) {
                         hasErrorResult = true;
                         validationBuilder.error(fieldName, "Is not a valid email address");
+                    }
+
+                    if (pattern != null && !pattern.matcher(value).matches()) {
+                        hasErrorResult = true;
+                        String examplePattern = field.getMask();
+                        if (examplePattern == null)
+                            examplePattern = field.getPattern();
+                        validationBuilder.error(fieldName, "Does not match required pattern: " + examplePattern);
                     }
 
                     if (isAllValuesMatch) {
@@ -313,19 +324,24 @@ public class ValidationService {
 
             boolean isRequired = field.isRequired();
 
-            if (onlyRequiredWhenConstraints != null && !onlyRequiredWhenConstraints.isEmpty()) {
+//            if (onlyRequiredWhenConstraints != null && !onlyRequiredWhenConstraints.isEmpty()) {
+//
+//                for (Constraint constraint : onlyRequiredWhenConstraints) {
+//                    String name = constraint.getName();
+//                    String value = constraint.getValue();
+//
+//                    String testValue = submissionValueMap.getOne(name);
+//
+//                    isRequired = testValue != null && value != null && testValue.equals(value);
+//                }
+//            }
 
-                for (Constraint constraint : onlyRequiredWhenConstraints) {
-                    String name = constraint.getName();
-                    String value = constraint.getValue();
-
-                    String testValue = submissionValueMap.getOne(name);
-
-                    isRequired = testValue != null && value != null && testValue.equals(value);
+            if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN, constraints)) {
+                if (ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN, fieldMap, submissionValueMap, constraints)) {
+                    hasErrorResult = true;
+                    validationBuilder.error(fieldName, "Field is required");
                 }
-            }
-
-            if (isRequired) {
+            } else if (isRequired) {
                 if (isFieldSpecificUpdate) {
                     validationBuilder.warning(fieldName, "Field is required");
                     return;
@@ -337,9 +353,6 @@ public class ValidationService {
                     validationBuilder.error(fieldName, "Field is required");
                     return;
                 }
-            } else if (ConstraintUtil.isSatisfied(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN, fieldMap, submissionValueMap, constraints, true)) {
-                hasErrorResult = true;
-                validationBuilder.error(fieldName, "Field is required");
             }
 
             // Handle special case for checkboxes that have a single option -- they're either on or off, and when they're off nothing

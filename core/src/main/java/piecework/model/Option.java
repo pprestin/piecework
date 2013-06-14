@@ -48,6 +48,9 @@ public class Option implements Serializable {
     @Id
     private final String optionId;
 
+    @XmlElement
+    private final String name;
+
 	@XmlElement
     private final String value;
     
@@ -63,6 +66,7 @@ public class Option implements Serializable {
 
     private Option(Option.Builder builder, ViewContext context) {
         this.optionId = builder.optionId;
+        this.name = builder.name;
         this.value = builder.value;
         this.label = builder.label;
         this.selected = builder.selected;
@@ -72,7 +76,11 @@ public class Option implements Serializable {
 		return optionId;
 	}
 
-	public String getValue() {
+    public String getName() {
+        return name;
+    }
+
+    public String getValue() {
 		return value;
 	}
 
@@ -87,6 +95,7 @@ public class Option implements Serializable {
 	public final static class Builder {
 
     	private String optionId;
+        private String name;
     	private String value;
         private String label;
         private boolean selected;
@@ -98,6 +107,7 @@ public class Option implements Serializable {
         
         public Builder(Option option, Sanitizer sanitizer) {
             this.optionId = option.optionId != null ? sanitizer.sanitize(option.optionId) : UUID.randomUUID().toString();
+            this.name = sanitizer.sanitize(option.name);
             this.value = sanitizer.sanitize(option.value);
             this.label = sanitizer.sanitize(option.label);
             this.selected = option.selected;
@@ -115,7 +125,12 @@ public class Option implements Serializable {
             this.optionId = optionId;
             return this;
         }
-        
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
         public Builder value(String value) {
             this.value = value;
             return this;

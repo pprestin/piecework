@@ -99,7 +99,7 @@ public class ResponseHandler {
 
                         List<Constraint> constraints = field.getConstraints();
                         if (constraints != null) {
-                            if (!ConstraintUtil.isSatisfied(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, formValueMap, constraints, true))
+                            if (!ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, formValueMap, constraints))
                                 fieldBuilder.invisible();
                         }
 

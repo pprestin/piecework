@@ -57,9 +57,17 @@ public class Constraint implements Serializable {
 	@XmlElement
     private final String value;
 
-    @XmlElementWrapper(name="subconstraints")
+    @XmlElementWrapper(name="and")
     @XmlElementRef
-    private final List<Constraint> subconstraints;
+    private final List<Constraint> and;
+
+    @XmlElementWrapper(name="or")
+    @XmlElementRef
+    private final List<Constraint> or;
+
+//    @XmlElementWrapper(name="subconstraints")
+//    @XmlElementRef
+//    private final List<Constraint> subconstraints;
 	
 	@XmlAttribute
     private final int ordinal;
@@ -82,7 +90,9 @@ public class Constraint implements Serializable {
         this.value = builder.value;
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
-        this.subconstraints = builder.subconstraints != null ? Collections.unmodifiableList(builder.subconstraints) : null;
+        this.and = builder.and != null ? Collections.unmodifiableList(builder.and) : null;
+        this.or = builder.or != null ? Collections.unmodifiableList(builder.or) : null;
+//        this.subconstraints = builder.subconstraints != null ? Collections.unmodifiableList(builder.subconstraints) : null;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.constraintId) : null;
     }
 	
@@ -114,9 +124,16 @@ public class Constraint implements Serializable {
 		return isDeleted;
 	}
 
-    public List<Constraint> getSubconstraints() {
-        return subconstraints;
+    public List<Constraint> getAnd() {
+        return and;
     }
+
+    public List<Constraint> getOr() {
+        return or;
+    }
+//    public List<Constraint> getSubconstraints() {
+//        return subconstraints;
+//    }
 
     public final static class Builder {
 
@@ -125,7 +142,9 @@ public class Constraint implements Serializable {
     	private String type;
         private String name;
         private String value;
-        private List<Constraint> subconstraints;
+        private List<Constraint> and;
+        private List<Constraint> or;
+//        private List<Constraint> subconstraints;
         private int ordinal;
         private boolean isDeleted;
 
@@ -141,12 +160,26 @@ public class Constraint implements Serializable {
             this.value = sanitizer.sanitize(constraint.value);
             this.ordinal = constraint.ordinal;
             this.isDeleted = constraint.isDeleted;
-            if (constraint.subconstraints != null && !constraint.subconstraints.isEmpty()) {
-                this.subconstraints = new ArrayList<Constraint>(constraint.subconstraints.size());
-                for (Constraint subconstraint : constraint.subconstraints) {
-                    this.subconstraints.add(new Constraint.Builder(subconstraint, sanitizer).build());
+            if (constraint.and != null && !constraint.and.isEmpty()) {
+                this.and = new ArrayList<Constraint>(constraint.and.size());
+                for (Constraint subconstraint : constraint.and) {
+                    this.and.add(new Constraint.Builder(subconstraint, sanitizer).build());
                 }
             }
+
+            if (constraint.or != null && !constraint.or.isEmpty()) {
+                this.or = new ArrayList<Constraint>(constraint.or.size());
+                for (Constraint subconstraint : constraint.or) {
+                    this.or.add(new Constraint.Builder(subconstraint, sanitizer).build());
+                }
+            }
+
+//            if (constraint.subconstraints != null && !constraint.subconstraints.isEmpty()) {
+//                this.subconstraints = new ArrayList<Constraint>(constraint.subconstraints.size());
+//                for (Constraint subconstraint : constraint.subconstraints) {
+//                    this.subconstraints.add(new Constraint.Builder(subconstraint, sanitizer).build());
+//                }
+//            }
         }
 
         public Constraint build() {
@@ -182,12 +215,26 @@ public class Constraint implements Serializable {
             return this;
         }
 
-        public Builder subconstraint(Constraint subconstraint) {
-            if (this.subconstraints == null)
-                this.subconstraints = new ArrayList<Constraint>();
-            this.subconstraints.add(subconstraint);
+        public Builder and(Constraint constraint) {
+            if (this.and == null)
+                this.and = new ArrayList<Constraint>();
+            this.and.add(constraint);
             return this;
         }
+
+        public Builder or(Constraint constraint) {
+            if (this.or == null)
+                this.or = new ArrayList<Constraint>();
+            this.or.add(constraint);
+            return this;
+        }
+
+//        public Builder subconstraint(Constraint subconstraint) {
+//            if (this.subconstraints == null)
+//                this.subconstraints = new ArrayList<Constraint>();
+//            this.subconstraints.add(subconstraint);
+//            return this;
+//        }
         
         public Builder ordinal(int ordinal) {
             this.ordinal = ordinal;

@@ -4,11 +4,12 @@ define([
         'views/base/collection-view',
         'views/form/field-checkbox-view',
         'views/form/field-listbox-view',
+        'views/form/field-html-view',
         'views/form/field-radio-view',
         'views/form/field-textarea-view',
         'views/form/field-textbox-view'
         ],
-    function(Chaplin, Field, CollectionView, CheckboxView, ListboxView, RadioView, TextareaView,
+    function(Chaplin, Field, CollectionView, CheckboxView, ListboxView, HtmlView, RadioView, TextareaView,
 				TextboxView) {
 	'use strict';
 
@@ -28,6 +29,8 @@ define([
 	    		return new RadioView({id: fieldId, model: field});
 	    	else if (type == 'textarea')
 	    		return new TextareaView({id: fieldId, model: field});
+	        else if (type == 'html')
+	            return new HtmlView({id: fieldId, model: field});
 	    	else
 	    		return new TextboxView({id: fieldId, model: field});
 	    },

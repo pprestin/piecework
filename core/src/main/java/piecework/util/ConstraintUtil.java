@@ -28,56 +28,131 @@ import java.util.regex.Pattern;
  */
 public class ConstraintUtil {
 
-    public static boolean isSatisfied(String type, Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, List<Constraint> constraints, boolean requireAll) {
-        if (constraints == null || constraints.isEmpty())
-            return true;
+    public static boolean hasConstraint(String type, List<Constraint> constraints) {
+        if (constraints != null && !constraints.isEmpty()) {
+            for (Constraint constraint : constraints) {
+                if (constraint.getType() != null && constraint.getType().equals(type))
+                    return true;
+            }
+        }
+        return false;
+    }
 
-        boolean constraintIsSatisfied = requireAll;
-        for (Constraint constraint : constraints) {
-            String constraintType = constraint.getType();
+    public static boolean evaluate(Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, Constraint constraint) {
+        String constraintName = constraint.getName();
+        String constraintValue = constraint.getValue();
+        Pattern pattern = Pattern.compile(constraintValue);
 
-            if (constraintType == null)
-                continue;
+        boolean isSatisfied = false;
 
-            boolean satisfied = false;
-            if (constraintType.equals(type)) {
-                String constraintName = constraint.getName();
-                String constraintValue = constraint.getValue();
-                Pattern pattern = Pattern.compile(constraintValue);
+        Field constraintField = fieldMap.get(constraintName);
+        List<String> fieldValues = formValueMap != null ? formValueMap.get(constraintName) : null;
 
-                Field constraintField = fieldMap.get(constraintName);
-
-                if (constraintField != null) {
-                    List<String> fieldValues = formValueMap != null ? formValueMap.get(constraintName) : null;
-                    if (fieldValues == null || fieldValues.isEmpty()) {
-                        String defaultFieldValue = constraintField.getDefaultValue();
-                        satisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
-                    } else {
-                        for (String fieldValue : fieldValues) {
-                            satisfied = fieldValue != null && pattern.matcher(fieldValue).matches();
-                            if (!satisfied)
-                                break;
-                        }
-                    }
-                }
-            } else if (constraintType.equals(Constants.ConstraintTypes.AND)) {
-                satisfied = isSatisfied(type, fieldMap, formValueMap, constraint.getSubconstraints(), true);
-            } else if (constraintType.equals(Constants.ConstraintTypes.OR)) {
-                satisfied = isSatisfied(type, fieldMap, formValueMap, constraint.getSubconstraints(), false);
+        // Evaluate whether this particular item is satisfied
+        if (constraintField != null) {
+            if (fieldValues == null || fieldValues.isEmpty()) {
+                String defaultFieldValue = constraintField.getDefaultValue();
+                isSatisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
             } else {
-                continue;
+                for (String fieldValue : fieldValues) {
+                    isSatisfied = fieldValue != null && pattern.matcher(fieldValue).matches();
+                    if (!isSatisfied)
+                        break;
+                }
             }
 
-            if (requireAll && !satisfied) {
-                constraintIsSatisfied = false;
-                break;
-            } else if (!requireAll && satisfied) {
-                constraintIsSatisfied = true;
-                break;
+            // If it is satisfied, then evaluate each of the 'and' constraints
+            if (isSatisfied) {
+                return checkAll(null, fieldMap, formValueMap, constraint.getAnd());
+            } else {
+                if (constraint.getOr() != null && !constraint.getOr().isEmpty())
+                    return checkAny(null, fieldMap, formValueMap, constraint.getOr());
             }
         }
 
-        return constraintIsSatisfied;
+        return isSatisfied;
     }
+
+    public static boolean checkAll(String type, Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, List<Constraint> constraints) {
+        if (constraints != null && !constraints.isEmpty()) {
+            for (Constraint constraint : constraints) {
+                if (type == null || constraint.getType() == null || constraint.getType().equals(type)) {
+                    if (! evaluate(fieldMap, formValueMap, constraint))
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static boolean checkAny(String type, Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, List<Constraint> constraints) {
+        if (constraints != null && !constraints.isEmpty()) {
+            for (Constraint constraint : constraints) {
+                if (type == null || constraint.getType() == null || constraint.getType().equals(type)) {
+                    if (evaluate(fieldMap, formValueMap, constraint))
+                        return true;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+
+//    public static boolean isSatisfied(String type, Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, List<Constraint> constraints, boolean requireAll) {
+//        if (constraints == null || constraints.isEmpty())
+//            return true;
+//
+//        boolean constraintIsSatisfied = requireAll;
+//        for (Constraint constraint : constraints) {
+//            String constraintType = constraint.getType();
+//
+//            if (constraintType == null)
+//                continue;
+//
+//            boolean satisfied = false;
+//            if (constraintType.equals(type)) {
+//                List<Constraint> andConstraints =
+//
+//
+//
+//                String constraintName = constraint.getName();
+//                String constraintValue = constraint.getValue();
+//                Pattern pattern = Pattern.compile(constraintValue);
+//
+//                Field constraintField = fieldMap.get(constraintName);
+//
+//                if (constraintField != null) {
+//                    List<String> fieldValues = formValueMap != null ? formValueMap.get(constraintName) : null;
+//                    if (fieldValues == null || fieldValues.isEmpty()) {
+//                        String defaultFieldValue = constraintField.getDefaultValue();
+//                        satisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
+//                    } else {
+//                        for (String fieldValue : fieldValues) {
+//                            satisfied = fieldValue != null && pattern.matcher(fieldValue).matches();
+//                            if (!satisfied)
+//                                break;
+//                        }
+//                    }
+//                }
+//            } else if (constraintType.equals(Constants.ConstraintTypes.AND)) {
+//                satisfied = isSatisfied(type, fieldMap, formValueMap, constraint.getSubconstraints(), true);
+//            } else if (constraintType.equals(Constants.ConstraintTypes.OR)) {
+//                satisfied = isSatisfied(type, fieldMap, formValueMap, constraint.getSubconstraints(), false);
+//            } else {
+//                continue;
+//            }
+//
+//            if (requireAll && !satisfied) {
+//                constraintIsSatisfied = false;
+//                break;
+//            } else if (!requireAll && satisfied) {
+//                constraintIsSatisfied = true;
+//                break;
+//            }
+//        }
+//
+//        return constraintIsSatisfied;
+//    }
 
 }
