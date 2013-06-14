@@ -26,17 +26,30 @@ define([
         var formModel = this.compose('formModel');
         var pageModel = this.compose('pageModel');
         //        this.compose('headView', HeadView, {model: pageModel});
-//        this.compose('formView', FormView, {model: formModel});
 
         var screenModel = formModel.get("screen");
         var screenType = screenModel.type;
         var sections = screenModel.sections;
         var currentScreen;
+        var reviewSection = null;
 
-        if  (screenType == 'wizard') {
+        if (screenType == 'wizard') {
             currentScreen = params.ordinal;
             if (currentScreen == undefined)
                 currentScreen = 1;
+
+            // Check to see if there is a review section
+            for (var i=0;i<sections.length;i++) {
+                var section = sections[i];
+                var sectionId = section.sectionId;
+                var sectionType = section.type;
+
+                if (section.ordinal == undefined || currentScreen == undefined || section.type == null)
+                    continue;
+
+                if (currentScreen == section.ordinal && sectionType != null && sectionType == 'review')
+                    reviewSection = section;
+            }
         }
 
         this.compose('formView', {
@@ -56,20 +69,6 @@ define([
             },
         });
 
-        var isNotReview = true;
-        for (var i=0;i<sections.length;i++) {
-            var section = sections[i];
-            var sectionId = section.sectionId;
-            var sectionType = section.type;
-
-            if (section.ordinal == undefined || currentScreen == undefined || section.type == null)
-                continue;
-
-            if (currentScreen == section.ordinal && sectionType != null && sectionType == 'review')
-                isNotReview = false;
-        }
-
-
         for (var i=0;i<sections.length;i++) {
             var section = sections[i];
             var sectionId = section.sectionId;
@@ -79,15 +78,25 @@ define([
             var sectionViewId = tagId != null ? tagId : sectionId;
             var contentSelector = '#' + sectionViewId + " > .section-content";
             var buttonSelector = '#' + sectionViewId + " > .section-buttons";
+            var showButtons = true;
+            var className = 'section';
 
-            var className = 'section ';
+            var doHide = currentScreen != undefined && currentScreen != section.ordinal;
+            var isNotReview = true;
 
-            if (isNotReview && section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal)
-                className += 'hide';
+            if (doHide)
+                className += ' hide';
             else
-                className += 'selected';
+                className += ' selected';
 
-            var doHide = section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal;
+//            if (reviewSection != null) {
+//                if (reviewSection.ordinal == section.ordinal) {
+//                    isNotReview = false;
+//                } else {
+//                    showButtons = false;
+//                }
+//                doHide = false;
+//            }
 
             this.compose(sectionViewId, {
                 compose: function(options) {
@@ -133,29 +142,31 @@ define([
                 }
             });
 
-            if (section.buttons != undefined && section.buttons.length > 0) {
-                var buttons = section.buttons;
-                for (var b=0;b<buttons.length;b++) {
-                    var button = buttons[b];
-                    var buttonId = button.buttonId;
+            if (showButtons) {
+                if (section.buttons != undefined && section.buttons.length > 0) {
+                    var buttons = section.buttons;
+                    for (var b=0;b<buttons.length;b++) {
+                        var button = buttons[b];
+                        var buttonId = button.buttonId;
 
-                    if (button.value != undefined) {
-                        if (button.value == 'next') {
-                            button.value = 'step/' + (section.ordinal + 1);
-                            button.link = '#' + button.value;
-                        } else if (buttons[b].value == 'prev') {
-                            button.value = 'step/' + (section.ordinal - 1);
-                            button.link = '#' + button.value;
+                        if (button.value != undefined) {
+                            if (button.value == 'next') {
+                                button.value = 'step/' + (section.ordinal + 1);
+                                button.link = '#' + button.value;
+                            } else if (buttons[b].value == 'prev') {
+                                button.value = 'step/' + (section.ordinal - 1);
+                                button.link = '#' + button.value;
+                            }
                         }
-                    }
 
-                    if (button.type == 'button-link')
-                        this.compose('buttons_' + buttonId, ButtonLinkView, {model: new Model(button), container: buttonSelector});
-                    else
-                        this.compose('buttons_' + buttonId, ButtonView, {model: new Model(button), container: buttonSelector});
+                        if (button.type == 'button-link')
+                            this.compose('buttons_' + buttonId, ButtonLinkView, {model: new Model(button), container: buttonSelector});
+                        else
+                            this.compose('buttons_' + buttonId, ButtonView, {model: new Model(button), container: buttonSelector});
+                    }
+                } else {
+                    this.compose('buttons_submitButton', ButtonView, {model: new Model({label: 'Submit'}), container: buttonSelector});
                 }
-            } else {
-                this.compose('buttons_submitButton', ButtonView, {model: new Model({label: 'Submit'}), container: buttonSelector});
             }
         }
     },

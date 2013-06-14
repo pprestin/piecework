@@ -5,7 +5,7 @@
     {{#each options}}
         <label class="checkbox">
             <input type="checkbox"
-                   name="{{#if name}}{{name}}{{else}}{{../name}}{{/if}}"
+                   name="{{name}}"
                    value="{{value}}"
                     {{#if ../required}}required{{/if}}/> {{label}}
                     {{#if selected}}checked{{/if}}

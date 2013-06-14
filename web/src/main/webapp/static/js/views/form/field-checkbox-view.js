@@ -4,6 +4,23 @@ define([ 'views/form/base-field-view', 'text!templates/form/field-checkbox.hbs']
 
 	var FieldCheckboxView = View.extend({
 		template: template,
+		initialize: function(options) {
+            View.__super__.initialize.apply(this, options);
+
+            var modelName = this.model.get("name");
+            var modelOptions = this.model.get("options");
+            if (modelName != null && modelOptions != null && modelOptions.length > 0) {
+                for (var i=0;i<modelOptions.length;i++) {
+                    var option = modelOptions[i];
+                    if (option.name == null)
+                        option.name = modelName;
+                }
+
+            }
+
+            return this;
+        }
+
 	});
 
 	return FieldCheckboxView;

@@ -176,11 +176,19 @@ public class Section {
 
         public Builder(Section section, Sanitizer sanitizer, boolean includeFields) {
             this.sectionId = section.sectionId != null ? sanitizer.sanitize(section.sectionId) : UUID.randomUUID().toString();
+            this.type = sanitizer.sanitize(section.type);
             this.tagId = sanitizer.sanitize(section.tagId);
             this.title = sanitizer.sanitize(section.title);
             this.description = sanitizer.sanitize(section.description);
             this.ordinal = section.ordinal;
             this.isDeleted = section.isDeleted;
+
+            if (section.references != null && !section.references.isEmpty()) {
+                this.references = new ArrayList<String>(section.references.size());
+                for (String reference : section.references) {
+                    this.references.add(sanitizer.sanitize(reference));
+                }
+            }
 
             if (includeFields && section.fields != null && !section.fields.isEmpty()) {
                 this.fields = new ArrayList<Field>(section.fields.size());
