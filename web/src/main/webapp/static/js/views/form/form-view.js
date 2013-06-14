@@ -29,7 +29,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
             $('.control-group').removeClass('error');
             $('.control-group').removeClass('warning');
 
-            $(':input').each(function(index, element) {
+            $('.section.selected').find(':input').each(function(index, element) {
                 var name = element.name;
                 if (name == undefined || name == null || name == '')
                     return;
@@ -54,7 +54,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
                 }
             });
 
-            var sectionId = $('.sections > .section:first').attr('id');
+            var sectionId = $('.sections > .section.selected').attr('id');
             var url = this.model.get("link") + '/' + sectionId + '.json';
 
             $.ajax({
@@ -86,7 +86,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 	        return true;
 	    },
 	    _onFormValid: function(data, textStatus, jqXHR) {
-            var next = $(':button[type="submit"]').val();
+            var next = $(':button[type="submit"]:visible').val();
             Chaplin.mediator.publish('!router:route', next);
 	    },
 	    _onFormInvalid: function(jqXHR, textStatus, errorThrown) {

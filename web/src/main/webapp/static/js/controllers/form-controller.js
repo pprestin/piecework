@@ -26,7 +26,7 @@ define([
         var formModel = this.compose('formModel');
         var pageModel = this.compose('pageModel');
         //        this.compose('headView', HeadView, {model: pageModel});
-        this.compose('formView', FormView, {model: formModel});
+//        this.compose('formView', FormView, {model: formModel});
 
         var screenModel = formModel.get("screen");
         var screenType = screenModel.type;
@@ -39,6 +39,23 @@ define([
                 currentScreen = 1;
         }
 
+        this.compose('formView', {
+            compose: function(options) {
+                this.model = formModel;
+                this.view = FormView;
+                var autoRender, disabledAutoRender;
+                this.item = new FormView({model: this.model});
+                autoRender = this.item.autoRender;
+                disabledAutoRender = autoRender === void 0 || !autoRender;
+                if (disabledAutoRender && typeof this.item.render === "function") {
+                    return this.item.render();
+                }
+            },
+            check: function(options) {
+                return true;
+            },
+        });
+
         for (var i=0;i<sections.length;i++) {
             var section = sections[i];
             var sectionId = section.sectionId;
@@ -48,11 +65,61 @@ define([
             var contentSelector = '#' + sectionViewId + " > .section-content";
             var buttonSelector = '#' + sectionViewId + " > .section-buttons";
 
+            var className = 'section ';
             if (section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal)
-                continue;
+                className += 'hide';
+            else
+                className += 'selected';
+//                continue;
 
-            this.compose(sectionViewId, SectionView, {id: sectionViewId, container: 'ul.sections', model: new Model(section)});
-            this.compose('fieldsView_' + sectionId, FieldsView, {collection: new Collection(fields), container: contentSelector});
+            var doHide = section.ordinal != undefined && currentScreen != undefined && currentScreen != section.ordinal;
+
+            this.compose(sectionViewId, {
+                compose: function(options) {
+                    this.model = new Model(section);
+                    this.view = SectionView;
+                    var autoRender, disabledAutoRender;
+                    this.item = new SectionView({id: sectionViewId, className: className, container: 'ul.sections', model: this.model});
+                    autoRender = this.item.autoRender;
+                    disabledAutoRender = autoRender === void 0 || !autoRender;
+                    if (disabledAutoRender && typeof this.item.render === "function") {
+                        return this.item.render();
+                    }
+                },
+                check: function(options) {
+                    if (options.show) {
+                        this.item.$el.addClass('selected');
+                        this.item.$el.removeClass('hide');
+                    } else {
+                        this.item.$el.removeClass('selected');
+                        this.item.$el.addClass('hide');
+                    }
+                    return true;
+                },
+                options: {
+                    show: !doHide
+                }
+            });
+
+            //this.compose(sectionViewId, SectionView, {id: sectionViewId, className: className, container: 'ul.sections', model: new Model(section)});
+            //this.compose('fieldsView_' + sectionId, FieldsView, {collection: new Collection(fields), container: contentSelector});
+
+            this.compose('fieldsView_' + sectionId, {
+                options: { collection: new Collection(fields), container: contentSelector },
+                compose: function(options) {
+                   this.collection = new Collection(fields);
+                   var autoRender, disabledAutoRender;
+                   this.item = new FieldsView({collection: this.collection, container: contentSelector });
+                   autoRender = this.item.autoRender;
+                   disabledAutoRender = autoRender === void 0 || !autoRender;
+                   if (disabledAutoRender && typeof this.item.render === "function") {
+                       return this.item.render();
+                   }
+                },
+                check: function(options) {
+                    return true;
+                }
+            });
 
             if (section.buttons != undefined && section.buttons.length > 0) {
                 var buttons = section.buttons;

@@ -48,6 +48,7 @@ define([ 'chaplin', 'views/base/view'],
             if (constraints == undefined || constraints.length <= 0)
                 return true;
 
+            var hasVisibilityConstraints = false;
             var visible = requireAll;
             for (var i=0;i<constraints.length;i++) {
                 var constraint = constraints[i];
@@ -64,6 +65,7 @@ define([ 'chaplin', 'views/base/view'],
                     var value = $element.val();
                     var pattern = new RegExp(constraint.value);
                     satisfied = value != null && pattern.test(value);
+                    hasVisibilityConstraints = true;
                 } else if (constraint.type == 'AND') {
                     satisfied = this._isVisible(constraint.subconstraints, true);
                 } else if (constraint.type == 'OR') {
@@ -80,6 +82,9 @@ define([ 'chaplin', 'views/base/view'],
                     break;
                 }
             }
+
+            if (!hasVisibilityConstraints)
+                return true;
 
             return visible;
         },
@@ -100,8 +105,8 @@ define([ 'chaplin', 'views/base/view'],
                 }
             }
         },
-        _testConstraints: function() {
-            var allSatisfied = this._isVisible(this._findVisibilityConstraints(), true);
+        _testConstraints: function(name) {
+            var allSatisfied = this._isVisible(this._findVisibilityConstraints(name), true);
             if (allSatisfied)
                 this.$el.removeClass('hide');
             else
@@ -132,7 +137,7 @@ define([ 'chaplin', 'views/base/view'],
             Chaplin.mediator.publish('value:' + name, name, value);
         },
         _onDependencyValueChange: function(name, value) {
-            this._testConstraints();
+            this._testConstraints(name);
         },
         _findVisibilityConstraints: function(name) {
             var constraints = this.model.get('constraints');
@@ -144,10 +149,10 @@ define([ 'chaplin', 'views/base/view'],
 
                     if (constraint != undefined && constraint.type != undefined) {
 
-                        if (constraint.type == 'IS_ONLY_VISIBLE_WHEN') {
-                            if (name == undefined || constraint.name == name)
-                                visibilityConstraints.push(constraint);
-                        } else if (constraint.type == 'AND' || constraint.type == 'OR') {
+                        //if (constraint.type == 'IS_ONLY_VISIBLE_WHEN') {
+                        if (name == undefined || constraint.name == name)
+                            visibilityConstraints.push(constraint);
+                        else if (constraint.type == 'AND' || constraint.type == 'OR') {
                             if (constraint.subconstraints != null && constraint.subconstraints.length > 0) {
                                 for (var j=0;j<constraint.subconstraints.length;j++) {
                                     var subconstraint = constraint.subconstraints[j];
