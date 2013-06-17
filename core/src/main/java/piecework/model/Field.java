@@ -291,7 +291,7 @@ public class Field implements Serializable {
         }
 
         public Builder(Field field, Sanitizer sanitizer) {
-            this.fieldId = field.fieldId != null ? sanitizer.sanitize(field.fieldId) : UUID.randomUUID().toString();;
+            this.fieldId = field.fieldId != null ? sanitizer.sanitize(field.fieldId) : UUID.randomUUID().toString();
             this.label = sanitizer.sanitize(field.label);
             this.name = sanitizer.sanitize(field.name);
             this.type = sanitizer.sanitize(field.type);

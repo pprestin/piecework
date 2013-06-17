@@ -1,1 +1,21 @@
-File
+{{#if label}}
+<label>{{label}}</label>
+{{/if}}
+<input type="{{type}}"
+       name="{{name}}"
+       maxlength="{{maxValueLength}}"
+       size="{{displayValueLength}}"
+       data-max-inputs="{{maxInputs}}"
+       data-min-inputs="{{minInputs}}"
+{{#if required}}class="required"{{/if}}
+{{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
+{{#if pattern}}pattern="{{pattern}}"{{/if}}
+{{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}} />
+{{#if messages}}
+{{#each messages}}
+<div class="alert fade in alert-{{type}}">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    {{text}}
+</div>
+{{/each}}
+{{/if}}

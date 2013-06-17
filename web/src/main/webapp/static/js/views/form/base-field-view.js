@@ -53,7 +53,7 @@ define([ 'chaplin', 'views/base/view'],
                     var constraint = constraints[i];
 
                     if (constraint != undefined) {
-                        if (constraint.type == null || constraint.type == 'IS_ONLY_VISIBLE_WHEN') {
+                        if (constraint.type == null || constraint.type == 'IS_ONLY_VISIBLE_WHEN' || constraint.type == 'IS_ONLY_REQUIRED_WHEN') {
                             Chaplin.mediator.subscribe('value:' + constraint.name, this._onDependencyValueChange, this);
                             if (constraint.and != null)
                                 this._subscribeDependencies(constraint.and);
@@ -90,16 +90,32 @@ define([ 'chaplin', 'views/base/view'],
         },
         _onDependencyValueChange: function(name, value) {
             var constraints = this.model.get('constraints');
-            if (this._checkAll('IS_ONLY_VISIBLE_WHEN', constraints))
-                this.$el.removeClass('hide');
-            else
-                this.$el.addClass('hide');
 
+            if (this._hasConstraint('IS_ONLY_VISIBLE_WHEN', constraints)) {
+                if (this._checkAll('IS_ONLY_VISIBLE_WHEN', constraints))
+                    this.$el.removeClass('hide');
+                else
+                    this.$el.addClass('hide');
+            }
 
-//            this._testConstraints(name);
-
-
-
+            if (this._hasConstraint('IS_ONLY_REQUIRED_WHEN', constraints)) {
+                var $input = this.$el.find(':input');
+                if (this._checkAll('IS_ONLY_REQUIRED_WHEN', constraints))
+                    $input.attr('required', true);
+                else
+                    $input.removeAttr('required');
+            }
+        },
+        _hasConstraint: function(type, constraints) {
+            if (constraints != undefined && constraints.length > 0) {
+                for (var i=0;i<constraints.length;i++) {
+                    var constraint = constraints[i];
+                    if (type != null && constraint.type != null && constraint.type == type) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         },
         _evaluateConstraint: function(constraint) {
             var constraintName = constraint.name;

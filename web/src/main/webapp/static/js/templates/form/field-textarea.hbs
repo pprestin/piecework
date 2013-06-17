@@ -1,7 +1,9 @@
 {{#if label}}
 <label for="{{fieldId}}">{{label}}</label>
 {{/if}}
-<textarea id="{{fieldId}}" name="{{name}}" maxlength="{{maxValueLength}}" {{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}}>
+<textarea id="{{fieldId}}" name="{{name}}" maxlength="{{maxValueLength}}"
+{{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}}
+{{#if required}}class="required"{{/if}}
 </textarea>
 {{#if messages}}
 {{#each messages}}

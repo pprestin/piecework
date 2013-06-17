@@ -2,7 +2,7 @@
 <label>{{label}}</label>
 {{/if}}
 <select name="{{name}}"
-    {{#if required}}required{{/if}}>
+    {{#if required}}class="required"{{/if}}>
     {{#if options}}
         {{#each options}}
             <option value="{{value}}"

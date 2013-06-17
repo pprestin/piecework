@@ -14,4 +14,18 @@ define([
     var options = params.pop();
     return Chaplin.helpers.reverse(routeName, params);
   });
+
+  Handlebars.registerHelper('breadcrumb', function(items) {
+    var out = '<ul class="breadcrumb">'
+
+    for(var i=0, l=items.length; i<l; i++) {
+        var item = items[i];
+        out += '<li><a class="hide" href="#step/' + item.ordinal + '">' + item.breadcrumb + '</a><span class="inactive-text">' + item.breadcrumb + '</span>';
+        if (i<l-1)
+            out += ' <span class="divider">»</span></li>';
+    }
+
+    return out + '</li></ul>';
+  });
+
 });

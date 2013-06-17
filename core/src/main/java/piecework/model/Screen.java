@@ -76,6 +76,10 @@ public class Screen implements Serializable {
     @XmlElementWrapper(name="stylesheets")
     private final List<String> stylesheets;
 
+    @XmlElementWrapper(name="groupings")
+    @XmlElementRef
+    private final List<Grouping> groupings;
+
 	@XmlElementWrapper(name="sections")
 	@XmlElementRef
 	private final List<Section> sections;
@@ -103,6 +107,7 @@ public class Screen implements Serializable {
 		this.ordinal = builder.ordinal;
 		this.isDeleted = builder.isDeleted;
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
+        this.groupings = Collections.unmodifiableList(builder.groupings);
         this.stylesheets = Collections.unmodifiableList(builder.stylesheets);
 		this.sections = Collections.unmodifiableList(builder.sections);
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
@@ -136,6 +141,10 @@ public class Screen implements Serializable {
         return isAttachmentAllowed;
     }
 
+    public List<Grouping> getGroupings() {
+        return groupings;
+    }
+
     public List<String> getStylesheets() {
         return stylesheets;
     }
@@ -161,6 +170,7 @@ public class Screen implements Serializable {
 		private String type;
 		private String location;
         private boolean isAttachmentAllowed;
+        private List<Grouping> groupings;
         private List<String> stylesheets;
 		private List<Section> sections;
 		private int ordinal;
@@ -168,6 +178,7 @@ public class Screen implements Serializable {
 		
 		public Builder() {
 			super();
+            this.groupings = new ArrayList<Grouping>();
             this.stylesheets = new ArrayList<String>();
             this.sections = new ArrayList<Section>();
 		}
@@ -184,6 +195,15 @@ public class Screen implements Serializable {
             this.isAttachmentAllowed = screen.isAttachmentAllowed;
 			this.location = sanitizer.sanitize(screen.location);
 			this.ordinal = screen.ordinal;
+
+            if (screen.groupings != null && !screen.groupings.isEmpty()) {
+                this.groupings = new ArrayList<Grouping>(screen.groupings.size());
+                for (Grouping grouping : screen.groupings) {
+                    this.groupings.add(new Grouping.Builder(grouping, sanitizer).build());
+                }
+            } else {
+                this.groupings = new ArrayList<Grouping>();
+            }
 
             if (screen.stylesheets != null && !screen.stylesheets.isEmpty()) {
                 this.stylesheets = new ArrayList<String>(screen.stylesheets.size());
@@ -246,7 +266,14 @@ public class Screen implements Serializable {
             this.isAttachmentAllowed = isAttachmentAllowed;
             return this;
         }
-		
+
+        public Builder grouping(Grouping grouping) {
+            if (this.groupings == null)
+                this.groupings = new ArrayList<Grouping>();
+            this.groupings.add(grouping);
+            return this;
+        }
+
 		public Builder section(Section section) {
 			if (this.sections == null)
 				this.sections = new ArrayList<Section>();

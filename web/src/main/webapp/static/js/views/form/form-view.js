@@ -18,7 +18,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
         render: function(options) {
             View.__super__.render.apply(this, options);
 
-            this.$el.attr('novalidate', 'novalidate');
+//            this.$el.attr('novalidate', 'novalidate');
 
             return this;
         },
@@ -87,6 +87,11 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 	    },
 	    _onFormValid: function(data, textStatus, jqXHR) {
             var next = $(':button[type="submit"]:visible').val();
+            var breadcrumbSelector = 'a[href="#' + next + '"]';
+            var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li').prev('li');
+            $li.find('span.inactive-text').remove();
+            $li.find('a').removeClass('hide');
+
             Chaplin.mediator.publish('!router:route', next);
 	    },
 	    _onFormInvalid: function(jqXHR, textStatus, errorThrown) {

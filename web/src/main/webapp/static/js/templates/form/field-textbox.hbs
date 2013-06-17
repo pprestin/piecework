@@ -7,7 +7,7 @@
        size="{{displayValueLength}}"
        data-max-inputs="{{maxInputs}}"
        data-min-inputs="{{minInputs}}"
-       {{#if required}}required{{/if}}
+       {{#if required}}class="required"{{/if}}
        {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
        {{#if pattern}}pattern="{{pattern}}"{{/if}}
        {{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}} />
