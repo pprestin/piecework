@@ -44,6 +44,11 @@ define([ 'chaplin', 'views/base/view'],
                 var $input = this.$el.find(':input');
                 $input.mask(mask);
             }
+            var messageType = this.model.get("messageType");
+            if (messageType != null) {
+                this.$el.addClass(messageType);
+            }
+
             return this;
         },
         _subscribeDependencies: function(constraints) {

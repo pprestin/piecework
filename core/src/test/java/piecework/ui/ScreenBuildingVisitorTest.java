@@ -20,10 +20,7 @@ import org.htmlcleaner.TagNode;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
-import piecework.model.Button;
-import piecework.model.Field;
-import piecework.model.Screen;
-import piecework.model.Section;
+import piecework.model.*;
 
 import java.util.List;
 
@@ -44,6 +41,12 @@ public class ScreenBuildingVisitorTest {
 
         Screen screen = visitor.build();
 
+        List<Grouping> groupings = screen.getGroupings();
+        Assert.assertEquals(2, groupings.size());
+
+        Grouping grouping1 = groupings.get(0);
+        Grouping grouping2 = groupings.get(1);
+
         List<Section> sections = screen.getSections();
         Assert.assertEquals(2, sections.size());
 
@@ -51,10 +54,10 @@ public class ScreenBuildingVisitorTest {
         Section section2 = sections.get(1);
 
         List<Field> sections1Fields = section1.getFields();
-        List<Button> section1Buttons = section1.getButtons();
+        List<Button> grouping1Buttons = grouping1.getButtons();
 
         Assert.assertEquals(2, sections1Fields.size());
-        Assert.assertEquals(1, section1Buttons.size());
+        Assert.assertEquals(1, grouping1Buttons.size());
 
         Field employeeIdField = sections1Fields.get(0);
         Field budgetNumberField = sections1Fields.get(1);
@@ -67,7 +70,7 @@ public class ScreenBuildingVisitorTest {
 
 
         List<Field> sections2Fields = section2.getFields();
-        List<Button> section2Buttons = section2.getButtons();
+        List<Button> section2Buttons = grouping2.getButtons();
 
         Assert.assertEquals(6, sections2Fields.size());
         Assert.assertEquals(1, section2Buttons.size());

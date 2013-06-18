@@ -187,23 +187,7 @@ public class FormResourceVersion1 implements FormResource {
 
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
-            List<FormValue> formValues = new ArrayList<FormValue>();
-
-            if (validation != null && validation.getResults() != null) {
-                Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
-                for (ValidationResult result : validation.getResults()) {
-                    formValues.add(new FormValue.Builder()
-                                        .name(result.getPropertyName())
-                                        .values(validationFormValueMap.get(result.getPropertyName()))
-                                        .message(new Message.Builder()
-                                                    .text(result.getMessage())
-                                                    .type(result.getType())
-                                                    .build())
-                                        .build());
-                }
-            }
-
-            return responseHandler.handle(formRequest, formValues, getViewContext());
+            return responseHandler.handleBadRequest(formRequest, validation, getViewContext());
         }
     }
 

@@ -46,13 +46,33 @@
             margin: 10px 0px;
             padding: 0px 20px 20px;
         }
-        div.section-buttons {
+        ul.screen-buttons {
             float:right;
+            list-style: none;
         }
-        div.section-footer {
+        ul.screen-buttons li {
+            display: inline-block;
+            *display: inline;
+            padding-left: 5px;
+        }
+        div.screen-footer {
             padding: 20px 0px 0px;
             height: 30px;
         }
+
+        .control-group.error .checkbox {
+            border: 1px solid #b94a48;
+            border-radius: 4px;
+            color: black;
+            padding: 10px;
+        }
+
+        .control-group.error .checkbox input[type="checkbox"] {
+            margin-left: 0px;
+            margin-right: 10px;
+        }
+
+
     </style>
 </head>
 

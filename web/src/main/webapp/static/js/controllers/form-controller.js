@@ -34,14 +34,20 @@ define([
 
         var groupingIndex = 0;
         var currentScreen = params.ordinal;
+
+        if (formModel.get("valid") != true)
+            currentScreen = screenModel.reviewIndex;
+
         if (currentScreen != undefined)
             groupingIndex = parseInt(currentScreen, 10) - 1;
+
         var groupings = screenModel.groupings;
         var grouping = groupings != undefined && groupings.length > groupingIndex ? groupings[groupingIndex] : { sectionIds : []};
         var includeAll = grouping.length < 1;
 
         var sectionVisibleMap = {};
         var lastVisibleSection;
+
         for (var i=0;i<grouping.sectionIds.length;i++) {
             sectionVisibleMap[grouping.sectionIds[i]] = true;
             lastVisibleSection = grouping.sectionIds[i];
@@ -96,7 +102,6 @@ define([
                 var fields = section.fields;
                 var sectionViewId = tagId != null ? tagId : sectionId;
                 var contentSelector = '#' + sectionViewId + " > .section-content";
-                var buttonSelector = '#' + sectionViewId + " > .section-footer > .section-buttons";
                 var showButtons = (i+1) == sections.length;
                 var className;
 
@@ -113,13 +118,20 @@ define([
                         var formValue = formDataMap[field.name];
 
                         if (formValue != undefined) {
-//                            var values = formValue.values;
-//                            for (var j=0;j<values.length;j++) {
-//                                var value = values[j];
-//                                field.value = value;
-//                                break;
-//                            }
-                            field.messages = formValue.messages;
+                            var values = formValue.values;
+                            for (var n=0;n<values.length;n++) {
+                                var value = values[n];
+                                field.value = value;
+                                break;
+                            }
+                            var messages = formValue.messages;
+                            if (messages != undefined && messages.length > 0) {
+                                field.messages = messages;
+                                for (var m=0;m<messages.length;m++) {
+                                    field.messageType = messages[m].type;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -167,33 +179,31 @@ define([
                         return true;
                     }
                 });
+            }
 
-                if (sectionId == lastVisibleSection) {
-                    if (section.buttons != undefined && section.buttons.length > 0) {
-                        var buttons = section.buttons;
-                        for (var b=0;b<buttons.length;b++) {
-                            var button = buttons[b];
-                            var buttonId = button.buttonId;
+            if (grouping.buttons != undefined && grouping.buttons.length > 0) {
+              var buttons = grouping.buttons;
+              for (var b=0;b<buttons.length;b++) {
+                  var button = buttons[b];
+                  var buttonId = button.buttonId;
 
-                            if (button.value != undefined) {
-                                if (button.value == 'next') {
-                                    button.value = 'step/' + (section.ordinal + 1);
-                                    button.link = '#' + button.value;
-                                } else if (buttons[b].value == 'prev') {
-                                    button.value = 'step/' + (section.ordinal - 1);
-                                    button.link = '#' + button.value;
-                                }
-                            }
+                  if (button.value != undefined) {
+                      if (button.value == 'next') {
+                          button.value = 'step/' + (grouping.ordinal + 1);
+                          button.link = '#' + button.value;
+                      } else if (buttons[b].value == 'prev') {
+                          button.value = 'step/' + (grouping.ordinal - 1);
+                          button.link = '#' + button.value;
+                      }
+                  }
 
-                            if (button.type == 'button-link')
-                                this.compose('buttons_' + buttonId, ButtonLinkView, {model: new Model(button), container: buttonSelector});
-                            else
-                                this.compose('buttons_' + buttonId, ButtonView, {model: new Model(button), container: buttonSelector});
-                        }
-                    } else {
-                        this.compose('buttons_submitButton', ButtonView, {model: new Model({label: 'Submit'}), container: buttonSelector});
-                    }
-                }
+                  if (button.type == 'button-link')
+                      this.compose('buttons_' + buttonId, ButtonLinkView, {model: new Model(button)});
+                  else
+                      this.compose('buttons_' + buttonId, ButtonView, {model: new Model(button)});
+              }
+            }  else {
+                this.compose('buttons_submitButton', ButtonView, {model: new Model({label: 'Submit'})});
             }
 
             var $requiredFields = $('.section.selected').find(':input.required');

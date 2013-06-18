@@ -72,9 +72,9 @@ public class Section {
 	@XmlElementRef
     private final List<Field> fields;
 	
-	@XmlElementWrapper(name="buttons")
-	@XmlElementRef
-    private final List<Button> buttons;
+//	@XmlElementWrapper(name="buttons")
+//	@XmlElementRef
+//    private final List<Button> buttons;
     
 	@XmlAttribute
     private final int ordinal;
@@ -100,7 +100,7 @@ public class Section {
 		this.isDeleted = builder.isDeleted;
         this.references = builder.references != null ? Collections.unmodifiableList(builder.references) : null;
 		this.fields = builder.fields != null ? Collections.unmodifiableList(builder.fields) : null;
-		this.buttons = builder.buttons != null ? Collections.unmodifiableList(builder.buttons) : null;
+//		this.buttons = builder.buttons != null ? Collections.unmodifiableList(builder.buttons) : null;
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.sectionId) : null;
 	}
 	
@@ -132,10 +132,6 @@ public class Section {
 		return fields;
 	}
 
-	public List<Button> getButtons() {
-		return buttons;
-	}
-
 	public int getOrdinal() {
 		return ordinal;
 	}
@@ -158,7 +154,7 @@ public class Section {
 		private String description;
         private List<String> references;
         private List<Field> fields;
-        private List<Button> buttons;
+//        private List<Button> buttons;
         private int ordinal;
         private boolean isDeleted;
 
@@ -167,7 +163,7 @@ public class Section {
             this.sectionId = UUID.randomUUID().toString();
             this.type = piecework.Constants.SectionTypes.STANDARD;
             this.fields = new ArrayList<Field>();
-            this.buttons = new ArrayList<Button>();
+//            this.buttons = new ArrayList<Button>();
         }
 
         public Builder(Section section, Sanitizer sanitizer) {
@@ -197,15 +193,6 @@ public class Section {
                 }
             } else {
                 this.fields = new ArrayList<Field>();
-            }
-
-            if (section.buttons != null && !section.buttons.isEmpty()) {
-                this.buttons = new ArrayList<Button>(section.buttons.size());
-                for (Button button : section.buttons) {
-                    this.buttons.add(new Button.Builder(button, sanitizer).processDefinitionKey(processDefinitionKey).build());
-                }
-            } else {
-                this.buttons = new ArrayList<Button>();
             }
         }
 
@@ -261,12 +248,12 @@ public class Section {
 			return this;
 		}
         
-        public Builder button(Button button) {
-			if (this.buttons == null)
-				this.buttons = new ArrayList<Button>();
-			this.buttons.add(button);
-			return this;
-		}
+//        public Builder button(Button button) {
+//			if (this.buttons == null)
+//				this.buttons = new ArrayList<Button>();
+//			this.buttons.add(button);
+//			return this;
+//		}
         
         public Builder ordinal(int ordinal) {
             this.ordinal = ordinal;
@@ -283,9 +270,9 @@ public class Section {
 			return this;
 		}
 
-        public int numberOfButtons() {
-            return buttons != null ? buttons.size() : 0;
-        }
+//        public int numberOfButtons() {
+//            return buttons != null ? buttons.size() : 0;
+//        }
 
         public int numberOfFields() {
             return fields != null ? fields.size() : 0;

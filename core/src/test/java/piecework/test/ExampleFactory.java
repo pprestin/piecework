@@ -169,7 +169,6 @@ public class ExampleFactory {
                 .tagId("basic")
                 .field(employeeNameField())
                 .field(budgetNumberField())
-                .button(new Button.Builder().label("Next").type("button-link").value("next").tooltip("Go to next step").build())
                 .ordinal(1)
                 .build();
     }
@@ -201,6 +200,10 @@ public class ExampleFactory {
                 .title("First screen")
                 .type(type)
                 .section(exampleSectionWithTwoFields())
+                .grouping(new Grouping.Builder()
+                        .button(new Button.Builder().label("Next").type("button-link").value("next").tooltip("Go to next step").build())
+                        .sectionId(exampleSectionWithTwoFields().getSectionId())
+                        .build())
                 .section(exampleSectionWithOneField())
                 .attachmentAllowed(false)
                 .location("/test/example1.html")

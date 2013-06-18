@@ -34,6 +34,7 @@ public class ScreenBuildingVisitor implements TagNodeVisitor {
 
     private static final Set<String> INPUT_TAG_NAMES = Sets.newHashSet("input", "select", "textarea");
 
+    private List<Grouping.Builder> groupingBuilders;
     private List<Section.Builder> sectionBuilders;
 
     public ScreenBuildingVisitor() {
@@ -42,8 +43,15 @@ public class ScreenBuildingVisitor implements TagNodeVisitor {
 
     public Screen build() {
         Screen.Builder screenBuilder = new Screen.Builder();
-        for (Section.Builder sectionBuilder : sectionBuilders) {
-            screenBuilder.section(sectionBuilder.build());
+        if (groupingBuilders != null) {
+            for (Grouping.Builder groupingBuilder : groupingBuilders) {
+                screenBuilder.grouping(groupingBuilder.build());
+            }
+        }
+        if (sectionBuilders != null) {
+            for (Section.Builder sectionBuilder : sectionBuilders) {
+                screenBuilder.section(sectionBuilder.build());
+            }
         }
         return screenBuilder.build();
     }
@@ -77,9 +85,9 @@ public class ScreenBuildingVisitor implements TagNodeVisitor {
                 Button.Builder buttonBuilder = new Button.Builder()
                         .type(type);
 
-                Section.Builder sectionBuilder = getCurrentSectionBuilder();
-                buttonBuilder.ordinal(sectionBuilder.numberOfButtons() + 1);
-                sectionBuilder.button(buttonBuilder.build());
+                Grouping.Builder groupingBuilder = getCurrentGroupingBuilder();
+                buttonBuilder.ordinal(groupingBuilder.numberOfButtons() + 1);
+                groupingBuilder.button(buttonBuilder.build());
             }
         }
         return true;
@@ -172,6 +180,18 @@ public class ScreenBuildingVisitor implements TagNodeVisitor {
         Section.Builder sectionBuilder = getCurrentSectionBuilder();
         fieldBuilder.ordinal(sectionBuilder.numberOfFields() + 1);
         sectionBuilder.field(fieldBuilder.build());
+    }
+
+    private Grouping.Builder getCurrentGroupingBuilder() {
+        Grouping.Builder groupingBuilder;
+        if (groupingBuilders.isEmpty()) {
+            groupingBuilder = new Grouping.Builder();
+            groupingBuilder.ordinal(1);
+            groupingBuilders.add(groupingBuilder);
+        } else {
+            groupingBuilder = groupingBuilders.get(groupingBuilders.size() - 1);
+        }
+        return groupingBuilder;
     }
 
     private Section.Builder getCurrentSectionBuilder() {

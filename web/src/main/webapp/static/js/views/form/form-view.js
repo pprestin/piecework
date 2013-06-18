@@ -25,7 +25,6 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
                 this.$el.attr('enctype', 'multipart/form-data');
             }
 
-
             this.$el.attr('novalidate', 'novalidate');
 
             return this;
@@ -62,8 +61,8 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
                 }
             });
 
-            var sectionId = $('.sections > .section.selected').attr('id');
-            var url = this.model.get("link") + '/' + sectionId + '.json';
+            var groupingId = $('.grouping').attr('id');
+            var url = this.model.get("link") + '/' + groupingId + '.json';
 
             $.ajax({
                 url : url,
@@ -87,20 +86,24 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 
             if (type == 'wizard') {
                 this._doValidate();
-                var next = $(':button[type="submit"]:visible').val();
-                return next == 'submit';
+                return false;
             }
 
 	        return true;
 	    },
 	    _onFormValid: function(data, textStatus, jqXHR) {
             var next = $(':button[type="submit"]:visible').val();
-            var breadcrumbSelector = 'a[href="#' + next + '"]';
-            var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li').prev('li');
-            $li.find('span.inactive-text').remove();
-            $li.find('a').removeClass('hide');
 
-            Chaplin.mediator.publish('!router:route', next);
+            if (next == 'submit') {
+                $('#main-form').submit();
+            } else {
+                var breadcrumbSelector = 'a[href="#' + next + '"]';
+                var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li').prev('li');
+                $li.find('span.inactive-text').remove();
+                $li.find('a').removeClass('hide');
+
+                Chaplin.mediator.publish('!router:route', next);
+            }
 	    },
 	    _onFormInvalid: function(jqXHR, textStatus, errorThrown) {
             var errors = $.parseJSON(jqXHR.responseText);

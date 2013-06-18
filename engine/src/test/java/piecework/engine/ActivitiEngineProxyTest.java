@@ -15,12 +15,7 @@
  */
 package piecework.engine;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import junit.framework.Assert;
-
 import org.activiti.engine.RepositoryService;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +25,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
 import piecework.engine.config.TestConfiguration;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
 import piecework.util.ManyMap;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -100,8 +96,8 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithAliasAndSomeData() throws ProcessEngineException {
-		Map<String, ?> data = new ManyMap<String, String>();
-		((ManyMap<String, String>)data).putOne("EmployeeID", "testuser");
+        ManyMap<String, String> data = new ManyMap<String, String>();
+        data.putOne("EmployeeID", "testuser");
         String instanceId = engineProxy.start(process, "test1", data);
         Assert.assertNotNull(instanceId);
 
@@ -131,7 +127,8 @@ public class ActivitiEngineProxyTest {
 
         Assert.assertNotNull(execution);
         Assert.assertEquals(instanceId, execution.getExecutionId());
-        List<String> employeeIDs = (List<String>)execution.getData().get("EmployeeID");
+        @SuppressWarnings("unchecked")
+        List<String> employeeIDs = List.class.cast(execution.getData().get("EmployeeID"));
         Assert.assertEquals("testuser", employeeIDs.get(0));
 	}
 	

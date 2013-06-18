@@ -50,6 +50,10 @@ public class Grouping {
     @XmlElementWrapper(name="sectionIds")
     private final List<String> sectionIds;
 
+    @XmlElementWrapper(name="buttons")
+    @XmlElementRef
+    private final List<Button> buttons;
+
     @XmlAttribute
     private final boolean readonly;
 
@@ -71,6 +75,7 @@ public class Grouping {
         this.description = builder.description;
         this.breadcrumb = builder.breadcrumb;
         this.readonly = builder.readonly;
+        this.buttons = builder.buttons != null ? Collections.unmodifiableList(builder.buttons) : null;
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
     }
@@ -95,6 +100,10 @@ public class Grouping {
         return sectionIds;
     }
 
+    public List<Button> getButtons() {
+        return buttons;
+    }
+
     public boolean isReadonly() {
         return readonly;
     }
@@ -114,6 +123,7 @@ public class Grouping {
         private String description;
         private String breadcrumb;
         private List<String> sectionIds;
+        private List<Button> buttons;
         private boolean readonly;
         private int ordinal;
         private boolean isDeleted;
@@ -122,6 +132,7 @@ public class Grouping {
             super();
             this.groupingId = UUID.randomUUID().toString();
             this.sectionIds = new ArrayList<String>();
+            this.buttons = new ArrayList<Button>();
         }
 
         public Builder(Grouping grouping, Sanitizer sanitizer) {
@@ -136,6 +147,15 @@ public class Grouping {
                 }
             } else {
                 this.sectionIds = new ArrayList<String>();
+            }
+
+            if (grouping.buttons != null && !grouping.buttons.isEmpty()) {
+                this.buttons = new ArrayList<Button>(grouping.buttons.size());
+                for (Button button : grouping.buttons) {
+                    this.buttons.add(new Button.Builder(button, sanitizer).build());
+                }
+            } else {
+                this.buttons = new ArrayList<Button>();
             }
             this.ordinal = grouping.ordinal;
         }
@@ -164,6 +184,13 @@ public class Grouping {
             return this;
         }
 
+        public Builder button(Button button) {
+            if (this.buttons == null)
+                this.buttons = new ArrayList<Button>();
+            this.buttons.add(button);
+            return this;
+        }
+
         public Builder sectionId(String sectionId) {
             if (this.sectionIds == null)
                 this.sectionIds = new ArrayList<String>();
@@ -176,6 +203,10 @@ public class Grouping {
                 this.sectionIds = new ArrayList<String>();
             this.sectionIds.addAll(sectionIds);
             return this;
+        }
+
+        public int numberOfButtons() {
+            return buttons != null ? buttons.size() : 0;
         }
 
         public Builder readonly() {

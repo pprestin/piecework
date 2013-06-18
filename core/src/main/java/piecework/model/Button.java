@@ -85,7 +85,7 @@ public class Button implements Serializable {
         this.value = builder.value;
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.buttonId) : null;
+        this.link = builder.link;
     }
     
     public String getButtonId() {
@@ -128,6 +128,7 @@ public class Button implements Serializable {
         private String tooltip;
         private String type;
         private String value;
+        private String link;
         private int ordinal;
         private boolean isDeleted;
 
@@ -181,6 +182,11 @@ public class Button implements Serializable {
         
         public Builder value(String value) {
             this.value = value;
+            return this;
+        }
+
+        public Builder link(String link) {
+            this.link = link;
             return this;
         }
         

@@ -83,7 +83,10 @@ public class Screen implements Serializable {
 	@XmlElementWrapper(name="sections")
 	@XmlElementRef
 	private final List<Section> sections;
-	
+
+    @XmlAttribute
+    private final int reviewIndex;
+
 	@XmlAttribute
     private final int ordinal;
 	
@@ -111,7 +114,8 @@ public class Screen implements Serializable {
         this.stylesheets = Collections.unmodifiableList(builder.stylesheets);
 		this.sections = Collections.unmodifiableList(builder.sections);
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
-	}
+	    this.reviewIndex = builder.reviewIndex;
+    }
 	
 	public String getScreenId() {
 		return screenId;
@@ -153,6 +157,10 @@ public class Screen implements Serializable {
         return sections;
     }
 
+    public int getReviewIndex() {
+        return reviewIndex;
+    }
+
     public int getOrdinal() {
         return ordinal;
     }
@@ -173,6 +181,7 @@ public class Screen implements Serializable {
         private List<Grouping> groupings;
         private List<String> stylesheets;
 		private List<Section> sections;
+        private int reviewIndex;
 		private int ordinal;
 		private boolean isDeleted;
 		
@@ -194,6 +203,7 @@ public class Screen implements Serializable {
 			this.type = sanitizer.sanitize(screen.type);
             this.isAttachmentAllowed = screen.isAttachmentAllowed;
 			this.location = sanitizer.sanitize(screen.location);
+            this.reviewIndex = screen.reviewIndex;
 			this.ordinal = screen.ordinal;
 
             if (screen.groupings != null && !screen.groupings.isEmpty()) {
@@ -280,7 +290,12 @@ public class Screen implements Serializable {
 			this.sections.add(section);
 			return this;
 		}
-		
+
+        public Builder reviewIndex(int reviewIndex) {
+            this.reviewIndex = reviewIndex;
+            return this;
+        }
+
 		public Builder ordinal(int ordinal) {
             this.ordinal = ordinal;
             return this;

@@ -50,9 +50,20 @@ public class Form {
     @XmlAttribute
     private final String link;
 
+    @XmlAttribute
+    private final boolean valid;
 
     private Form() {
         this(new Form.Builder(), new ViewContext());
+    }
+
+    private Form(Form.Builder builder, ViewContext context) {
+        this.formInstanceId = builder.formInstanceId;
+        this.submissionType = builder.submissionType;
+        this.screen = builder.screen;
+        this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
+        this.valid = builder.valid;
     }
 
     public String getFormInstanceId() {
@@ -85,12 +96,8 @@ public class Form {
         return link;
     }
 
-    private Form(Form.Builder builder, ViewContext context) {
-        this.formInstanceId = builder.formInstanceId;
-        this.submissionType = builder.submissionType;
-        this.screen = builder.screen;
-        this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
+    public boolean isValid() {
+        return valid;
     }
 
     public final static class Builder {
@@ -100,9 +107,11 @@ public class Form {
         private String submissionType;
         private Screen screen;
         private List<FormValue> formData;
+        private boolean valid;
 
         public Builder() {
             super();
+            this.valid = true;
         }
 
         public Builder(Form form, Sanitizer sanitizer) {
@@ -116,6 +125,7 @@ public class Form {
                     this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
                 }
             }
+            this.valid = form.valid;
         }
 
         public Form build() {
@@ -158,6 +168,11 @@ public class Form {
                 this.formData = new ArrayList<FormValue>();
             if (formValues != null)
                 this.formData.addAll(formValues);
+            return this;
+        }
+
+        public Builder invalid() {
+            this.valid = false;
             return this;
         }
     }

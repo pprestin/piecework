@@ -45,7 +45,6 @@ public class ValidationService {
 	@Autowired(required=false)
 	Registry registry;
 
-
     public FormValidation validate(FormSubmission submission, ProcessInstance instance, Screen screen) {
         return validate(submission, instance, screen, null);
     }
@@ -71,6 +70,26 @@ public class ValidationService {
 
         if (screen != null) {
             List<Section> sections = screen.getSections();
+
+            // If a validation id is passed, then limit the validation to the grouping that matches
+            if (validationId != null) {
+                List<Grouping> groupings = screen.getGroupings();
+                if (groupings != null) {
+                    for (Grouping grouping : groupings) {
+                        String groupingId = grouping.getGroupingId();
+                        if (groupingId != null && groupingId.equals(validationId)) {
+                            Set<String> sectionIdSet = new HashSet<String>(grouping.getSectionIds());
+                            List<Section> filteredSections = new ArrayList<Section>();
+                            for (Section section : sections) {
+                                if (section.getSectionId() != null && sectionIdSet.contains(section.getSectionId()))
+                                    filteredSections.add(section);
+                            }
+                            sections = filteredSections;
+                        }
+                    }
+                }
+            }
+
             if (sections != null) {
                 Map<String, Field> fieldMap = new HashMap<String, Field>();
                 for (Section section : sections) {
@@ -96,14 +115,6 @@ public class ValidationService {
                     if (section == null)
                         continue;
 
-                    // If a validation id is passed, then limit the validation to the section that matches
-                    if (validationId != null) {
-                        if (section.getTagId() != null && !validationId.equals(section.getTagId()))
-                            continue;
-                        if (section.getTagId() == null && !validationId.equals(section.getSectionId()))
-                            continue;
-                    }
-
                     List<Field> fields = section.getFields();
                     if (fields == null || fields.isEmpty())
                         continue;
@@ -112,13 +123,26 @@ public class ValidationService {
                         String fieldName = field.getName();
 
                         if (fieldName == null) {
-                            LOG.warn("Field is missing name " + field.getFieldId());
-                            continue;
+                            if (field.getType() != null && field.getType().equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
+                                List<Option> options = field.getOptions();
+                                if (options != null) {
+                                    for (Option option : options) {
+                                        if (unvalidatedFieldNames.contains(option.getValue())) {
+                                            fieldName = option.getValue();
+                                            unvalidatedFieldNames.remove(fieldName);
+                                            validateField(validationId, field, fieldMap, submissionValueMap, instanceValueMap, validationBuilder);
+                                        }
+                                    }
+                                }
+                            } else {
+                                LOG.warn("Field is missing name " + field.getFieldId());
+                                continue;
+                            }
+                        } else {
+                            // Remove any form values from the attachment map, since this has a field already
+                            unvalidatedFieldNames.remove(fieldName);
+                            validateField(validationId, field, fieldMap, submissionValueMap, instanceValueMap, validationBuilder);
                         }
-
-                        // Remove any form values from the attachment map, since this has a field already
-                        unvalidatedFieldNames.remove(fieldName);
-                        validateField(validationId, field, fieldMap, submissionValueMap, instanceValueMap, validationBuilder);
                     }
                 }
             }
@@ -324,33 +348,25 @@ public class ValidationService {
 
             boolean isRequired = field.isRequired();
 
-//            if (onlyRequiredWhenConstraints != null && !onlyRequiredWhenConstraints.isEmpty()) {
-//
-//                for (Constraint constraint : onlyRequiredWhenConstraints) {
-//                    String name = constraint.getName();
-//                    String value = constraint.getValue();
-//
-//                    String testValue = submissionValueMap.getOne(name);
-//
-//                    isRequired = testValue != null && value != null && testValue.equals(value);
-//                }
-//            }
+            String requiredText = "Field is required";
+            if (inputType != null && inputType.equalsIgnoreCase(Constants.FieldTypes.CHECKBOX))
+                requiredText = "Please check this box if you want to proceed";
 
             if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN, constraints)) {
                 if (ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN, fieldMap, submissionValueMap, constraints)) {
                     hasErrorResult = true;
-                    validationBuilder.error(fieldName, "Field is required");
+                    validationBuilder.error(fieldName, requiredText);
                 }
             } else if (isRequired) {
                 if (isFieldSpecificUpdate) {
-                    validationBuilder.warning(fieldName, "Field is required");
+                    validationBuilder.warning(fieldName, requiredText);
                     return;
                 } else {
                     if (hasPreviousValues)
                         return;
 
                     hasErrorResult = true;
-                    validationBuilder.error(fieldName, "Field is required");
+                    validationBuilder.error(fieldName, requiredText);
                     return;
                 }
             }
@@ -358,7 +374,7 @@ public class ValidationService {
             // Handle special case for checkboxes that have a single option -- they're either on or off, and when they're off nothing
             // is passed in... this is valid generally, unless the checkbox is 'required', in which case it has to be checked and the
             // code directly above this will send back an error
-            if (inputType != null && inputType.equalsIgnoreCase("checkbox")) {
+            if (inputType != null && inputType.equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
 
                 // So basically what this means is that checkboxes that send nothing at all, not even an empty string, will be treated
                 // exactly as if they had sent an empty string, assuming they have only one option
@@ -369,28 +385,6 @@ public class ValidationService {
 
         }
 
-
-        // FIXME: Handle special constraint validation
-        //					if (registry != null) {
-        //						for (Constraint constraint : constraints) {
-        //							ConstraintValidator<Constraint> validator = registry.retrieve(Constraint.class, constraint.getType());
-        //
-        //							if (validator == null) {
-        //								LOG.info("Constraint type does not have a configured validator: " + constraint.getType());
-        //								continue;
-        //							}
-        //
-        //							AttributeValidation result = validator.validate(fieldName, constraint, mergedPropertyValueReader, isFieldSpecificUpdate, isRestricted, isText, isUnchanged);
-        //
-        //							if (result.getStatus() == Status.ERROR)
-        //								hasErrorResult = true;
-        //
-        //							if (hasAtLeastEmptyValue) {
-        //								results.add(result);
-        //							}
-        //						}
-        //					}
-
         if (!hasErrorResult && hasAtLeastEmptyValue) {
             if (isPersonLookup) {
                 String displayPropertyName = "_" + fieldName;
@@ -399,11 +393,13 @@ public class ValidationService {
                     validationBuilder.formValue(displayPropertyName, displayValues.toArray(new String[displayValues.size()]));
             }
 
-            // Ensure that we save the form value
-            if (field.isRestricted())
-                validationBuilder.restrictedValue(fieldName, values.toArray(new String[values.size()]));
-            else
-                validationBuilder.formValue(fieldName, values.toArray(new String[values.size()]));
+            if (values != null && !values.isEmpty()) {
+                // Ensure that we save the form value
+                if (field.isRestricted())
+                    validationBuilder.restrictedValue(fieldName, values.toArray(new String[values.size()]));
+                else
+                    validationBuilder.formValue(fieldName, values.toArray(new String[values.size()]));
+            }
         }
     }
 
