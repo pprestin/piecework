@@ -148,16 +148,16 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
                                 String main = attributes.get("data-main");
                                 String id = attributes.get("id");
 
-                                if (href != null && href.startsWith("static/")) {
-                                    attributes.put("href", new StringBuilder(assetsUrl).append("/").append(href).toString());
+                                if (checkForStaticPath(href)) {
+                                    attributes.put("href", recomputeStaticPath(href, assetsUrl));
                                     tagNode.setAttributes(attributes);
                                 }
-                                if (src != null && src.startsWith("static/")) {
-                                    attributes.put("src", new StringBuilder(assetsUrl).append("/").append(src).toString());
+                                if (checkForStaticPath(src)) {
+                                    attributes.put("src", recomputeStaticPath(src, assetsUrl));
                                     tagNode.setAttributes(attributes);
                                 }
-                                if (main != null && src.startsWith("static/")) {
-                                    attributes.put("data-main", new StringBuilder(assetsUrl).append("/").append(main).toString());
+                                if (checkForStaticPath(main)) {
+                                    attributes.put("data-main", recomputeStaticPath(main, assetsUrl));
                                     tagNode.setAttributes(attributes);
                                 }
 
@@ -178,40 +178,26 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
             SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
             serializer.writeToStream(node, entityStream);
-
-
-//			InputStream input = template.getInputStream();
-//                    //new SequenceInputStream(new ByteArrayInputStream("{{=<% %>=}}".getBytes()), template.getInputStream());
-//			try {
-//				MustacheFactory mf = new DefaultMustacheFactory();
-//			    Mustache mustache = mf.compile(new InputStreamReader(input), "page");
-//
-//			    User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
-//                PageContext pageContext = new PageContext.Builder()
-//                        .applicationTitle(applicationTitle)
-//                        .assetsUrl(assetsUrl)
-//                        .resource(t)
-//                        .user(user)
-//                        .build();
-//
-//                OutputStream jsonStream = new ByteArrayOutputStream();
-//                jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
-//                String json = jsonStream.toString();
-//
-//			    mustache.execute(new PrintWriter(entityStream), new JsonContext(json)).flush();
-//			} catch (IOException e) {
-//				LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
-//			} finally {
-//				input.close();
-//				entityStream.close();
-//			}
 		} else {
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 	}
 
-    private String recomputeStaticPath(String current) {
-        return null;
+    private boolean checkForStaticPath(String path) {
+        if (path == null)
+            return false;
+
+        return path.startsWith("static/") || path.startsWith("../static/") || path.startsWith(("../../static"));
+    }
+
+    private String recomputeStaticPath(final String path, String assetsUrl) {
+        int indexOf = path.indexOf("static/");
+
+        if (indexOf > path.length())
+            return path;
+
+        String adjustedPath = path.substring(indexOf);
+        return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
     }
 	
 	private boolean hasTemplateResource(Class<?> type) {

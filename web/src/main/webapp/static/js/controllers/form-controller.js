@@ -73,6 +73,16 @@ define([
             this.compose(groupingId, GroupingView, {model: new Model(grouping)});
         }
 
+        var formDataMap = {};
+        var formData = formModel.get("formData");
+
+        if (formData != undefined) {
+            for (var i=0;i<formData.length;i++) {
+                var formValue = formData[i];
+                formDataMap[formValue.name] = formValue;
+            }
+        }
+
         if (sections != null) {
             for (var i=0;i<sections.length;i++) {
                 var section = sections[i];
@@ -96,6 +106,23 @@ define([
                     className = 'section selected';
                 else
                     className = 'section hide';
+
+                if (fields != undefined) {
+                    for (var j=0;j<fields.length;j++) {
+                        var field = fields[j];
+                        var formValue = formDataMap[field.name];
+
+                        if (formValue != undefined) {
+//                            var values = formValue.values;
+//                            for (var j=0;j<values.length;j++) {
+//                                var value = values[j];
+//                                field.value = value;
+//                                break;
+//                            }
+                            field.messages = formValue.messages;
+                        }
+                    }
+                }
 
                 this.compose(sectionViewId, {
                     compose: function(options) {
@@ -125,7 +152,7 @@ define([
                 });
 
                 this.compose('fieldsView_' + sectionId, {
-                    options: { collection: new Collection(fields), container: contentSelector },
+//                    options: { collection: new Collection(fields), container: contentSelector },
                     compose: function(options) {
                        this.collection = new Collection(fields);
                        var autoRender, disabledAutoRender;
@@ -170,7 +197,7 @@ define([
             }
 
             var $requiredFields = $('.section.selected').find(':input.required');
-            var $hiddenFields = $('.section.hide').find(':input');
+            var $hiddenFields = $('.section').find(':input').not(':visible');
             $requiredFields.attr('required', true);
             $requiredFields.attr('aria-required', true);
 

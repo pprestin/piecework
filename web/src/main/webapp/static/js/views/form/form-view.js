@@ -17,8 +17,16 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 	    },
         render: function(options) {
             View.__super__.render.apply(this, options);
+            var link = this.model.get("link");
 
-//            this.$el.attr('novalidate', 'novalidate');
+            if (link != undefined) {
+                this.$el.attr('action', link + '.html');
+                this.$el.attr('method', 'POST');
+                this.$el.attr('enctype', 'multipart/form-data');
+            }
+
+
+            this.$el.attr('novalidate', 'novalidate');
 
             return this;
         },
@@ -79,8 +87,8 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 
             if (type == 'wizard') {
                 this._doValidate();
-
-                return false;
+                var next = $(':button[type="submit"]:visible').val();
+                return next == 'submit';
             }
 
 	        return true;
@@ -102,11 +110,20 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
                     var item = errors.items[i];
                     var selector = ':input[name="' + item.propertyName + '"]';
                     var $input = $(selector);
+                    var $element = $input;
+
+                    $input.closest('.control-group').addClass(item.type);
+
                     if ($input.is(':checkbox') || $input.is(':radio')) {
-                        $input.closest('.control-group').after('<div class="generated alert alert-' + item.type + '">' + item.message + '</div>');
-                    } else {
-                        $input.after('<div class="generated alert alert-' + item.type + '">' + item.message + '</div>');
+                        $element = $input.closest('.control-group').find('label');
                     }
+                    $element.after('<span class="help-inline generated">' + item.message + '</span>')
+
+//                    if ($input.is(':checkbox') || $input.is(':radio')) {
+//                        $input.closest('.control-group').after('<div class="generated alert alert-' + item.type + '">' + item.message + '</div>');
+//                    } else {
+//                        $input.after('<div class="generated alert alert-' + item.type + '">' + item.message + '</div>');
+//                    }
                     //$input.closest('.control-group').addClass(item.type);
                 }
             }

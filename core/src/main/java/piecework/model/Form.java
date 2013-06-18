@@ -152,6 +152,14 @@ public class Form {
             this.formData.add(new FormValue.Builder().name(key).values(values).build());
             return this;
         }
+
+        public Builder formValues(List<FormValue> formValues) {
+            if (this.formData == null)
+                this.formData = new ArrayList<FormValue>();
+            if (formValues != null)
+                this.formData.addAll(formValues);
+            return this;
+        }
     }
 
     public static class Constants {

@@ -106,7 +106,7 @@ public class Message implements Serializable {
             return this;
         }
 
-        public Builder name(String text) {
+        public Builder text(String text) {
             this.text = text;
             return this;
         }

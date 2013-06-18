@@ -26,6 +26,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
 import piecework.util.ConstraintUtil;
+import piecework.util.FormDataUtil;
 import piecework.util.ManyMap;
 
 import javax.ws.rs.core.Response;
@@ -44,14 +45,15 @@ public class ResponseHandler {
     @Autowired
     ContentRepository contentRepository;
 
-    public Response handle(FormRequest formRequest, ProcessInstance instance, ViewContext viewContext) throws StatusCodeError {
+    public Response handle(FormRequest formRequest, List<FormValue> formValues, ViewContext viewContext) throws StatusCodeError {
 
-        Screen screen = buildScreen(formRequest, instance);
+        Screen screen = buildScreen(formRequest, formValues);
 
         Form form = new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
                 .processDefinitionKey(formRequest.getProcessDefinitionKey())
                 .submissionType(formRequest.getSubmissionType())
+                .formValues(formValues)
                 .screen(screen)
                 .build(viewContext);
 
@@ -69,11 +71,11 @@ public class ResponseHandler {
         return Response.ok(form).build();
     }
 
-    public Screen buildScreen(FormRequest formRequest, ProcessInstance instance) {
+    public Screen buildScreen(FormRequest formRequest, List<FormValue> formValues) {
         Screen screen = formRequest.getScreen();
 
         if (screen != null) {
-            ManyMap<String, String> formValueMap = instance != null ? instance.getFormValueMap() : new ManyMap<String, String>();
+            ManyMap<String, String> formValueMap = FormDataUtil.getFormValueMap(formValues);
 
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);

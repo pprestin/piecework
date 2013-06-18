@@ -15,6 +15,7 @@
  */
 package piecework.exception;
 
+import piecework.form.validation.FormValidation;
 import piecework.model.ValidationResultList;
 
 
@@ -29,7 +30,9 @@ public class BadRequestError extends StatusCodeError {
 	private static final long serialVersionUID = -8223072822788955978L;
 	
 	public static final int BAD_REQUEST_ERROR_CODE = 400;
-	
+
+    private FormValidation validation;
+
 	public BadRequestError() {
 		super(BAD_REQUEST_ERROR_CODE);
 	}
@@ -41,15 +44,14 @@ public class BadRequestError extends StatusCodeError {
 	public BadRequestError(Throwable cause) {
 		super(cause, BAD_REQUEST_ERROR_CODE);
 	}
-	
-	public BadRequestError(Object entity) {
+
+	public BadRequestError(FormValidation validation) {
 		this();
-		setEntity(entity);
+        this.validation = validation;
+		setEntity(new ValidationResultList(validation.getResults()));
 	}
-	
-	public BadRequestError(ValidationResultList entity) {
-		this();
-		setEntity(entity);
-	}
-	
+
+    public FormValidation getValidation() {
+        return validation;
+    }
 }

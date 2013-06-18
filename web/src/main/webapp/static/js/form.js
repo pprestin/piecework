@@ -1,5 +1,4 @@
 requirejs.config({
-    baseUrl: '../../static/js',
     paths: {
     	backbone: 'vendor/backbone',
     	bootstrap: '../lib/bootstrap/js/bootstrap',

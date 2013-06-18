@@ -137,7 +137,7 @@ public class ProcessInstanceService {
         List<ValidationResult> results = validation.getResults();
         if (results != null && !results.isEmpty()) {
             // Throw an exception if the submitter needs to adjust the data
-            throw new BadRequestError(new ValidationResultList(results));
+            throw new BadRequestError(validation);
         }
 
         return validation;

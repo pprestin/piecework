@@ -34,6 +34,7 @@ import piecework.engine.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
+import piecework.form.validation.FormValidation;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
@@ -42,6 +43,8 @@ import piecework.form.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
+import piecework.security.concrete.PassthroughSanitizer;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -126,12 +129,14 @@ public class FormResourceVersion1 implements FormResource {
                 throw new NotFoundError(Constants.ExceptionCodes.task_does_not_exist);
 
             ProcessInstance instance = processInstanceService.findOne(process, task.getEngineProcessInstanceId());
+            List<FormValue> formValues = instance != null ? instance.getFormData() : new ArrayList<FormValue>();
+
             Interaction selectedInteraction = selectInteraction(process, task);
 
             RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
             FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, selectedInteraction, null, null);
 
-            return responseHandler.handle(formRequest, instance, getViewContext());
+            return responseHandler.handle(formRequest, formValues, getViewContext());
 
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to find task ", e);
@@ -153,29 +158,53 @@ public class FormResourceVersion1 implements FormResource {
         Screen screen = formRequest.getScreen();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).multipartBody(body);
-        ProcessInstance stored = processInstanceService.submit(process, screen, payload);
 
-        Interaction interaction = formRequest.getInteraction();
+        try {
+            ProcessInstance stored = processInstanceService.submit(process, screen, payload);
+            List<FormValue> formValues = stored != null ? stored.getFormData() : new ArrayList<FormValue>();
 
-        if (interaction == null)
-            throw new InternalServerError();
+            Interaction interaction = formRequest.getInteraction();
 
-        List<Screen> screens = interaction.getScreens();
+            if (interaction == null)
+                throw new InternalServerError();
 
-        if (screens == null || screens.isEmpty())
-            throw new InternalServerError();
+            List<Screen> screens = interaction.getScreens();
 
-        FormRequest nextFormRequest = null;
+            if (screens == null || screens.isEmpty())
+                throw new InternalServerError();
 
-        if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-            nextFormRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
+            FormRequest nextFormRequest = null;
 
-        // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
-        if (nextFormRequest == null) {
-            return Response.noContent().build();
+            if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
+                nextFormRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
+
+            // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
+            if (nextFormRequest == null) {
+                return Response.noContent().build();
+            }
+
+            return responseHandler.handle(nextFormRequest, formValues, getViewContext());
+
+        } catch (BadRequestError e) {
+            FormValidation validation = e.getValidation();
+            List<FormValue> formValues = new ArrayList<FormValue>();
+
+            if (validation != null && validation.getResults() != null) {
+                Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
+                for (ValidationResult result : validation.getResults()) {
+                    formValues.add(new FormValue.Builder()
+                                        .name(result.getPropertyName())
+                                        .values(validationFormValueMap.get(result.getPropertyName()))
+                                        .message(new Message.Builder()
+                                                    .text(result.getMessage())
+                                                    .type(result.getType())
+                                                    .build())
+                                        .build());
+                }
+            }
+
+            return responseHandler.handle(formRequest, formValues, getViewContext());
         }
-
-        return responseHandler.handle(nextFormRequest, stored, getViewContext());
     }
 
     @Override

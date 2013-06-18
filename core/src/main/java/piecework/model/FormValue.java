@@ -21,13 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -52,6 +46,10 @@ public class FormValue implements Serializable {
 	
 	@XmlElement
 	private final String value;
+
+    @XmlElementWrapper(name="messages")
+    @XmlElementRef
+    private final List<Message> messages;
 	
 	@XmlTransient
 	@JsonIgnore
@@ -96,7 +94,8 @@ public class FormValue implements Serializable {
 		this.restricted = builder.restricted;
         this.contentType = builder.contentType;
         this.location = builder.location;
-	}
+        this.messages = Collections.unmodifiableList(builder.messages);
+    }
 	
 	public String getName() {
 		return name;
@@ -128,6 +127,10 @@ public class FormValue implements Serializable {
         return location;
     }
 
+    public List<Message> getMessages() {
+        return messages;
+    }
+
     public List<Secret> getSecrets() {
         return secrets;
     }
@@ -140,9 +143,11 @@ public class FormValue implements Serializable {
 		private boolean restricted;
         private String contentType;
         private String location;
+        private List<Message> messages;
 		
 		public Builder() {
 			super();
+            this.messages = new ArrayList<Message>();
 		}
 
 		public Builder(FormValue formValue, Sanitizer sanitizer) {
@@ -154,6 +159,15 @@ public class FormValue implements Serializable {
 					this.values.add(sanitizer.sanitize(value));
 				}
 			}
+
+            if (formValue.messages != null && !formValue.messages.isEmpty()) {
+                this.messages = new ArrayList<Message>(formValue.messages.size());
+                for (Message message : formValue.messages) {
+                    this.messages.add(new Message.Builder(message, sanitizer).build());
+                }
+            } else {
+                this.messages = new ArrayList<Message>();
+            }
 			this.restricted = formValue.restricted;
 		}
 
@@ -169,7 +183,14 @@ public class FormValue implements Serializable {
 			this.name = name;
 			return this;
 		}
-		
+
+        public Builder message(Message message) {
+            if (this.messages == null)
+                this.messages = new ArrayList<Message>();
+            this.messages.add(message);
+            return this;
+        }
+
 		public Builder value(String value) {
 			if (this.values == null) 
 				this.values = new ArrayList<String>();
