@@ -16,6 +16,7 @@
 package piecework.process.concrete;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -205,7 +206,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	@Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {	
 		SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceLabel("Processes").resourceName(Process.Constants.ROOT_ELEMENT_NAME);
-		List<Process> processes = helper.findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
+		Set<Process> processes = helper.findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
 		int counter = 0;
         for (Process process : processes) {
 			resultsBuilder.item(new Process.Builder(process, sanitizer).interactions(null).build(getViewContext()));
@@ -217,7 +218,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
         resultsBuilder.firstResult(0);
         resultsBuilder.maxResults(counter);
         resultsBuilder.firstResult(firstResult);
-        resultsBuilder.total(counter);
+        resultsBuilder.total(Long.valueOf(counter));
 
 		return resultsBuilder.build();
 	}

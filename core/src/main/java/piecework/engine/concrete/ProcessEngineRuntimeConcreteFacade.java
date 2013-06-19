@@ -25,6 +25,7 @@ import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.process.ProcessInstanceSearchCriteria;
 
 /**
  * @author James Renfro
@@ -42,13 +43,19 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
     }
 
     @Override
-    public boolean cancel(Process process, String processInstanceId, String alias, String reason) throws ProcessEngineException {
+    public boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
-        return proxy.cancel(process, processInstanceId, alias, reason);
+        return proxy.cancel(process, instance, reason);
     }
 
     @Override
-    public ProcessExecution findExecution(ProcessExecutionCriteria criteria) throws ProcessEngineException {
+    public boolean suspend(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        return proxy.suspend(process, instance, reason);
+    }
+
+    @Override
+    public ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
         ProcessExecution execution = null;
         if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
             for (String engine : criteria.getEngines()) {
@@ -64,7 +71,7 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
     }
 
     @Override
-    public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
+    public ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
         ProcessExecutionResults.Builder builder = null;
         if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
             for (String engine : criteria.getEngines()) {

@@ -21,28 +21,29 @@ import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.querydsl.QueryDslUtils;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.common.RequestDetails;
+import piecework.authorization.AuthorizationRole;
+import piecework.common.view.SearchResults;
+import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
-import piecework.form.handler.RequestHandler;
-import piecework.form.handler.ResponseHandler;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.FormValidation;
 import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MultivaluedMap;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.*;
 
 /**
@@ -54,10 +55,25 @@ public class ProcessInstanceService {
     private static final Logger LOG = Logger.getLogger(ProcessInstanceService.class);
 
     @Autowired
+    ProcessResource processResource;
+
+    @Autowired
+    ProcessInstanceResource processInstanceResource;
+
+    @Autowired
     ProcessEngineRuntimeFacade facade;
 
     @Autowired
+    ResourceHelper helper;
+
+    @Autowired
+    MongoOperations mongoOperations;
+
+    @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
+    Sanitizer sanitizer;
 
     @Autowired
     SubmissionHandler submissionHandler;
@@ -74,12 +90,126 @@ public class ProcessInstanceService {
         return instance;
     }
 
-    public Set<ProcessInstance> findByCriteria(List<Process> processes, ManyMap<String, String> criteria) {
-        if (criteria.containsKey("keyword")) {
-            String keyword = criteria.getOne("keyword");
-            return processInstanceRepository.findByKeywordsRegex(keyword);
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
+        ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
+                new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
+
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
+                .resourceLabel("Workflows")
+                .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
+                .link(viewContext.getApplicationUri());
+
+        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
+        if (!allowedProcesses.isEmpty()) {
+            for (Process allowedProcess : allowedProcesses) {
+                executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey())
+                    .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
+                    .engine(allowedProcess.getEngine());
+
+                resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).interactions(null).build(processResource.getViewContext()));
+            }
+            ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
+
+            if (executionCriteria.getSanitizedParameters() != null) {
+                for (Map.Entry<String, List<String>> entry : executionCriteria.getSanitizedParameters().entrySet()) {
+                    resultsBuilder.parameter(entry.getKey(), entry.getValue());
+                }
+            }
+
+            if (executionCriteria.getProcessInstanceIds().size() == 1) {
+                // If the user provided an actual instance id, then we can look it up directly and ignore the other parameters
+                String processInstanceId = executionCriteria.getProcessInstanceIds().iterator().next();
+                resultsBuilder.parameter("processInstanceId", processInstanceId);
+
+                if (StringUtils.isNotEmpty(processInstanceId)) {
+                    ProcessInstance single = processInstanceRepository.findOne(processInstanceId);
+
+                    // Verify that the user is allowed to see processes like this instance
+                    if (single != null && single.getProcessDefinitionKey() != null && allowedProcesses.contains(single.getProcessDefinitionKey())) {
+                        resultsBuilder.item(single);
+                        resultsBuilder.total(Long.valueOf(1));
+                        resultsBuilder.firstResult(1);
+                        resultsBuilder.maxResults(1);
+                    }
+                }
+            } else {
+                // Otherwise, look up all instances that match the query
+                Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
+                // Don't include form data in the result
+                query.fields().exclude("formData");
+
+                List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
+                if (processInstances != null && !processInstances.isEmpty()) {
+                    for (ProcessInstance processInstance : processInstances) {
+                        resultsBuilder.item(new ProcessInstance.Builder(processInstance, new PassthroughSanitizer()).build(processInstanceResource.getViewContext()));
+                    }
+
+                    int size = processInstances.size();
+                    if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
+                        long total = mongoOperations.count(query, ProcessInstance.class);
+
+                        if (executionCriteria.getFirstResult() != null)
+                            resultsBuilder.firstResult(executionCriteria.getFirstResult());
+                        else
+                            resultsBuilder.firstResult(1);
+
+                        if (executionCriteria.getMaxResults() != null)
+                            resultsBuilder.maxResults(executionCriteria.getMaxResults());
+                        else
+                            resultsBuilder.maxResults(size);
+
+                        resultsBuilder.total(total);
+                    } else {
+                        resultsBuilder.firstResult(1);
+                        resultsBuilder.maxResults(size);
+                        resultsBuilder.total(Long.valueOf(size));
+                    }
+                }
+            }
         }
-        return Collections.emptySet();
+
+////                if (executionCriteria.isExecutionDetailsRequired()) {
+////                    List<String> processInstanceIds = new ArrayList<String>();
+////
+////                    ProcessExecutionResults results = facade.findExecutions(executionCriteria);
+////
+////                    long total = results.getTotal();
+////                    long firstResult = results.getFirstResult();
+////                    long maxResults = results.getMaxResults();
+////
+////                    if (results.getExecutions() != null) {
+////                        Map<String, ProcessExecution> executionMap = new HashMap<String, ProcessExecution>();
+////                        for (ProcessExecution execution : results.getExecutions()) {
+////                            processInstanceIds.add(execution.getBusinessKey());
+////                            executionMap.put(execution.getBusinessKey(), execution);
+////                        }
+////
+////                        String keyword = null;
+////                        if (contentQueryParameters.containsKey("keyword"))
+////                            keyword = contentQueryParameters.getOne("keyword");
+////
+////                        Iterable<ProcessInstance> instances;
+////                        if (keyword == null)
+////                            instances = processInstanceRepository.findAll(processInstanceIds);
+////                        else
+////                            instances = processInstanceRepository.findByProcessInstanceIdInAndKeywordsRegex(processInstanceIds, keyword);
+////
+////                        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+////                        for (ProcessInstance instance : instances) {
+////                            resultsBuilder.item(new ProcessInstance.Builder(instance, passthroughSanitizer).formData(new ArrayList<FormValue>()).build(viewContext));
+////                        }
+////                    }
+////                } else {
+////
+////
+////
+////                }
+//
+//            } catch (ProcessEngineException e) {
+//                LOG.error("Process engine unable to find executions ", e);
+//                throw new InternalServerError();
+//            }
+        return resultsBuilder.build();
     }
 
     public ProcessInstance store(Process process, FormSubmission submission, FormValidation validation, ProcessInstance previous) throws StatusCodeError {
@@ -91,13 +221,18 @@ public class ProcessInstanceService {
             try {
                 String processInstanceId = UUID.randomUUID().toString();
                 String engineInstanceId = facade.start(process, processInstanceId, validation.getFormValueMap());
+                String initiationStatus = process.getInitiationStatus();
 
                 instanceBuilder = new ProcessInstance.Builder()
                         .processDefinitionKey(process.getProcessDefinitionKey())
                         .processDefinitionLabel(process.getProcessDefinitionLabel())
                         .processInstanceId(processInstanceId)
                         .processInstanceLabel(validation.getTitle())
-                        .engineProcessInstanceId(engineInstanceId);
+                        .engineProcessInstanceId(engineInstanceId)
+                        .startTime(new Date())
+                        .initiatorId(helper.getAuthenticatedPrincipal())
+                        .processStatus(Constants.ProcessStatuses.OPEN)
+                        .applicationStatus(initiationStatus);
 
             } catch (ProcessEngineException e) {
                 LOG.error("Process engine unable to start instance ", e);

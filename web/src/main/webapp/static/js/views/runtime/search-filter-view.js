@@ -23,12 +23,13 @@ define([ 'chaplin', 'views/base/view', 'text!templates/runtime/search-filter.hbs
                 var definitions = results.get(key);
                 options = new Array();
                 for (var i=0;i<definitions.length;i++) {
-                    options.push({ id: 'processDefinitionKey_' + definitions[i].processDefinitionKey, key: 'processDefinitionKey', label: definitions[i].processDefinitionLabel, value: definitions[i].processDefinitionKey})
+                    options.push({ id: 'processDefinitionKey_' + definitions[i].processDefinitionKey, key: 'process', label: definitions[i].processDefinitionLabel, value: definitions[i].processDefinitionKey})
                 }
-                options.push({label: 'All processes'});
+                options.push({label: 'All processes', key: 'process'});
                 this.model.set('options', options);
             }
 
+            var isSelected = false;
             if (selector != undefined && options != undefined) {
                 var selection = results.get(selector);
                 for (var i=0;i<options.length;i++) {
@@ -38,10 +39,27 @@ define([ 'chaplin', 'views/base/view', 'text!templates/runtime/search-filter.hbs
                     if (selection[key] == value) {
                         options[i].selected = true;
                         this.model.set('selected', options[i].label);
+                        isSelected = true;
                         break;
                     }
                 }
             }
+
+            if (!isSelected) {
+                for (var i=0;i<options.length;i++) {
+                    var key = options[i].key;
+                    var value = options[i].value;
+
+                    if (options[i].default !== undefined && options[i].default) {
+                        options[i].selected = true;
+                        this.model.set('selected', options[i].label);
+                        isSelected = true;
+                        break;
+                    }
+                }
+            }
+
+            return this;
         },
 	    _onClickCheckbox: function(event) {
             var $target = $(event.target);

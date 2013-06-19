@@ -54,6 +54,9 @@ public class Interaction implements Serializable {
 	
 	@XmlElement
 	private final String label;
+
+    @XmlElement
+    private final String completionStatus;
 	
 	@XmlElementWrapper(name="screens")
 	@XmlElementRef
@@ -76,6 +79,7 @@ public class Interaction implements Serializable {
 		this.id = builder.id;
 		this.processDefinitionKey = builder.processDefinitionKey;
 		this.label = builder.label;
+        this.completionStatus = builder.completionStatus;
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
 		this.screens = Collections.unmodifiableList(builder.screens);
         this.taskDefinitionKeys = (Set<String>) (builder.taskDefinitionKeys != null ? Collections.unmodifiableSet(builder.taskDefinitionKeys) : Collections.emptySet());
@@ -117,6 +121,7 @@ public class Interaction implements Serializable {
 		private String label;
 		private List<Screen> screens;
         private Set<String> taskDefinitionKeys;
+        private String completionStatus;
 		private boolean isDeleted;
 		
 		public Builder() {
@@ -128,7 +133,7 @@ public class Interaction implements Serializable {
 			this.id = sanitizer.sanitize(interaction.id);
 			this.label = sanitizer.sanitize(interaction.label);
 			this.processDefinitionKey = sanitizer.sanitize(interaction.processDefinitionKey);
-			
+			this.completionStatus = sanitizer.sanitize(interaction.completionStatus);
 			if (interaction.screens != null && !interaction.screens.isEmpty()) {
 				this.screens = new ArrayList<Screen>(interaction.screens.size());
 				for (Screen screen : interaction.screens) {
@@ -167,6 +172,11 @@ public class Interaction implements Serializable {
 			this.label = label;
 			return this;
 		}
+
+        public Builder completionStatus(String completionStatus) {
+            this.completionStatus = completionStatus;
+            return this;
+        }
 		
 		public Builder screen(Screen screen) {
 			if (this.screens == null)

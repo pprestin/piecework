@@ -7,7 +7,8 @@ define([ 'chaplin', 'views/base/view' ],
 		className: 'search-result',
 		container: '.search-results',
 		tagName: 'tr',
-	    render: function() {
+	    render: function(options) {
+	        View.__super__.render.apply(this, options);
             var html = '';
             var link = this.model.get("link");
             var processInstanceLabel = this.model.get('processInstanceLabel');
@@ -16,15 +17,13 @@ define([ 'chaplin', 'views/base/view' ],
 	            html += '<td><a href="' + link + '.html">' + processInstanceLabel + '</a></td>';
 	        if (processDefinitionLabel != undefined)
 	            html += '<td>' + processDefinitionLabel + '</td>';
-            var execution = this.model.get('execution');
-            if (execution != undefined) {
-                var startTime = execution['startTime'];
-                if (startTime != undefined) {
-                    var startTimeDate = new Date(startTime);
-                    html += '<td>' + startTimeDate.toLocaleString() + '</td>';
-                }
+            var startTime = this.model.get('startTime');
+            if (startTime != undefined) {
+                var startTimeDate = new Date(startTime);
+                html += '<td>' + startTimeDate.toLocaleString() + '</td>';
             }
             this.$el.html(html);
+            return this;
 	    }
 	});
 

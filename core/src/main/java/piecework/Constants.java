@@ -63,6 +63,7 @@ public interface Constants {
 	
 	public static class ExceptionCodes {
         public static final String certificate_does_not_match = "certificate_does_not_match";
+        public static final String instance_cannot_be_modified = "instance_cannot_be_modified";
         public static final String instance_does_not_exist = "instance_does_not_exist";
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
@@ -87,6 +88,13 @@ public interface Constants {
         public static final String SELECT_MULTIPLE = "select-multiple";
         public static final String TEXT = "text";
         public static final String TEXTAREA = "textarea";
+    }
+
+    public static class ProcessStatuses {
+        public static final String OPEN = "open";
+        public static final String COMPLETE = "complete";
+        public static final String CANCELLED = "cancelled";
+        public static final String SUSPENDED = "suspended";
     }
 
     public static class ScreenTypes {

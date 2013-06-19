@@ -46,10 +46,16 @@ public interface ProcessInstanceResource extends Resource, ApiResource {
     @RolesAllowed({AuthorizationRole.OVERSEER})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
-    @DELETE
+    @PUT
     @Path("{processDefinitionKey}/{processInstanceId}")
-    @RolesAllowed({AuthorizationRole.OWNER})
-    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @Consumes({"application/json", "application/xml"})
+    Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, ProcessInstance instance) throws StatusCodeError;
+
+    @DELETE
+    @Path("{processDefinitionKey}/{processInstanceId}/{reason}")
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("reason") String reason) throws StatusCodeError;
 
     @GET
     @Path("")

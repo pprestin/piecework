@@ -33,7 +33,7 @@ public class SearchResults implements Serializable {
 	private final Integer maxResults;
 
     @XmlElement
-	private final Integer total;
+	private final Long total;
 
     @XmlTransient
     @JsonIgnore
@@ -101,7 +101,7 @@ public class SearchResults implements Serializable {
 	}
 
 
-	public Integer getTotal() {
+	public Long getTotal() {
 		return total;
 	}
 
@@ -178,7 +178,7 @@ public class SearchResults implements Serializable {
 		private List<Object> list;
 		private Integer firstResult;
 		private Integer maxResults;
-		private Integer total;
+		private Long total;
 		private Integer page;
 		private Boolean moreResults;
 		private Boolean incomplete;
@@ -239,6 +239,14 @@ public class SearchResults implements Serializable {
             }
             return this;
         }
+
+        public Builder parameter(String name, List<String> values) {
+            if (values.size() > 0) {
+                for (String value : values)
+                    this.parameters.putOne(name, value);
+            }
+            return this;
+        }
 		
 		public Builder firstResult(Integer firstResult) {
 			this.firstResult = firstResult;
@@ -250,7 +258,7 @@ public class SearchResults implements Serializable {
 			return this;
 		}
 		
-		public Builder total(Integer total) {
+		public Builder total(Long total) {
 			this.total = total;
 			return this;
 		}

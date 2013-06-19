@@ -37,7 +37,6 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import piecework.engine.ProcessExecution;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.util.ManyMap;
@@ -59,10 +58,6 @@ public class ProcessInstance implements Serializable {
     @Id
     private String processInstanceId;
 
-    @XmlTransient
-    @JsonIgnore
-    private final String engineProcessInstanceId;
-
     @XmlAttribute
     private final String alias;
 
@@ -75,9 +70,38 @@ public class ProcessInstance implements Serializable {
     @XmlElement
     private final String processInstanceLabel;
 
+    @XmlElement
+    private final String processStatus;
+
+    @XmlElement
+    private final String applicationStatus;
+
+    @XmlElement
+    private final String applicationStatusExplanation;
+
     @XmlElementWrapper(name="formData")
 	@XmlElementRef 
 	private final List<FormValue> formData;
+
+    @XmlElement
+    private final Date startTime;
+
+    @XmlElement
+    private final Date endTime;
+
+    @XmlElement
+    private final String initiatorId;
+
+    @XmlAttribute
+    private final String link;
+
+    @XmlAttribute
+    private final String uri;
+
+
+    @XmlTransient
+    @JsonIgnore
+    private final String engineProcessInstanceId;
 
     @XmlTransient
     @JsonIgnore
@@ -91,21 +115,11 @@ public class ProcessInstance implements Serializable {
     @JsonIgnore
     @DBRef
     private final List<FormSubmission> submissions;
-    
+
     @XmlTransient
     @JsonIgnore
     @DBRef
     private final List<Attachment> attachments;
-
-    @XmlElement
-    @Transient
-    private final ProcessExecution execution;
-
-    @XmlAttribute
-    private final String link;
-
-    @XmlAttribute
-    private final String uri;
 
     @XmlTransient
     @JsonIgnore
@@ -122,12 +136,17 @@ public class ProcessInstance implements Serializable {
         this.processDefinitionKey = builder.processDefinitionKey;
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
+        this.processStatus = builder.processStatus;
+        this.applicationStatus = builder.applicationStatus;
+        this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
         this.restrictedData = builder.restrictedData != null ? Collections.unmodifiableList(builder.restrictedData) : null;
         this.keywords = builder.keywords;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
-        this.execution = builder.execution;
+        this.startTime = builder.startTime;
+        this.endTime = builder.endTime;
+        this.initiatorId = builder.initiatorId;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
         this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId) : null;
         this.isDeleted = builder.isDeleted;
@@ -162,7 +181,31 @@ public class ProcessInstance implements Serializable {
 		return processInstanceLabel;
 	}
 
-	public List<FormValue> getFormData() {
+    public String getProcessStatus() {
+        return processStatus;
+    }
+
+    public String getApplicationStatus() {
+        return applicationStatus;
+    }
+
+    public String getApplicationStatusExplanation() {
+        return applicationStatusExplanation;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public String getInitiatorId() {
+        return initiatorId;
+    }
+
+    public List<FormValue> getFormData() {
 		return formData;
 	}
 
@@ -195,10 +238,6 @@ public class ProcessInstance implements Serializable {
 		return attachments;
 	}
 
-    public ProcessExecution getExecution() {
-        return execution;
-    }
-
     public String getLink() {
         return link;
     }
@@ -220,12 +259,17 @@ public class ProcessInstance implements Serializable {
         private String processDefinitionKey;
         private String processDefinitionLabel;
         private String processInstanceLabel;
+        private String processStatus;
+        private String applicationStatus;
+        private String applicationStatusExplanation;
         private List<FormValue> formData;
         private List<FormValue> restrictedData;
         private Set<String> keywords;
         private List<Attachment> attachments;
         private List<FormSubmission> submissions;
-        private ProcessExecution execution;
+        private Date startTime;
+        private Date endTime;
+        private String initiatorId;
         private boolean isDeleted;
 
         public Builder() {
@@ -240,6 +284,12 @@ public class ProcessInstance implements Serializable {
             this.processDefinitionKey = sanitizer.sanitize(instance.processDefinitionKey);
             this.processDefinitionLabel = sanitizer.sanitize(instance.processDefinitionLabel);
             this.processInstanceLabel = sanitizer.sanitize(instance.processInstanceLabel);
+            this.processStatus = sanitizer.sanitize(instance.processStatus);
+            this.applicationStatus = sanitizer.sanitize(instance.applicationStatus);
+            this.applicationStatusExplanation = sanitizer.sanitize(instance.applicationStatusExplanation);
+            this.startTime = instance.startTime;
+            this.endTime = instance.endTime;
+            this.initiatorId = sanitizer.sanitize(instance.initiatorId);
             this.isDeleted = instance.isDeleted;
             
             if (instance.formData != null && !instance.formData.isEmpty()) {
@@ -316,6 +366,36 @@ public class ProcessInstance implements Serializable {
             this.processInstanceLabel = processInstanceLabel;
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
                 this.keywords.add(this.processInstanceLabel.toLowerCase());
+            return this;
+        }
+
+        public Builder processStatus(String processStatus) {
+            this.processStatus = processStatus;
+            return this;
+        }
+
+        public Builder applicationStatus(String applicationStatus) {
+            this.applicationStatus = applicationStatus;
+            return this;
+        }
+
+        public Builder applicationStatusExplanation(String applicationStatusExplanation) {
+            this.applicationStatusExplanation = applicationStatusExplanation;
+            return this;
+        }
+
+        public Builder startTime(Date startTime) {
+            this.startTime = startTime;
+            return this;
+        }
+
+        public Builder endTime(Date endTime) {
+            this.endTime = endTime;
+            return this;
+        }
+
+        public Builder initiatorId(String initiatorId) {
+            this.initiatorId = initiatorId;
             return this;
         }
 
@@ -431,10 +511,6 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-        public Builder execution(ProcessExecution execution) {
-            this.execution = execution;
-            return this;
-        }
     }
 
     public static class Constants {

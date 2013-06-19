@@ -15,10 +15,8 @@
  */
 package piecework.process.concrete;
 
-import java.util.*;
-import java.util.Map.Entry;
-
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -28,30 +26,25 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.common.RequestDetails;
-import piecework.engine.ProcessExecution;
-import piecework.engine.ProcessExecutionCriteria;
-import piecework.engine.ProcessExecutionResults;
+import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.model.ProcessExecution;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
 import piecework.security.Sanitizer;
-import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.form.handler.RequestHandler;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -69,10 +62,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
-	
-	@Autowired
-	ResourceHelper helper;
-	
+
 	@Autowired
 	ProcessEngineRuntimeFacade facade;
 
@@ -120,32 +110,85 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		Process process = getProcess(processDefinitionKey);
         ProcessInstance instance = getProcessInstance(process, processInstanceId);
 
-        try {
-            ProcessExecution execution = facade.findExecution(new ProcessExecutionCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
-
-            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
                 .processDefinitionKey(processDefinitionKey)
-                .processDefinitionLabel(process.getProcessDefinitionLabel())
-                .execution(execution);
+                .processDefinitionLabel(process.getProcessDefinitionLabel());
 
-            return Response.ok(builder.build(getViewContext())).build();
+        try {
+            ProcessExecution execution = facade.findExecution(new ProcessInstanceSearchCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
+
+            if (execution != null) {
+                builder.startTime(execution.getStartTime());
+                builder.endTime(execution.getEndTime());
+                builder.initiatorId(execution.getInitiatorId());
+            }
+
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to find execution ", e);
-            throw new InternalServerError();
         }
+
+        return Response.ok(builder.build(getViewContext())).build();
 	}
 
-	@Override
-	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
+    @Override
+    public Response update(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("processInstanceId") String rawProcessInstanceId, ProcessInstance instance) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
+
+        Process process = getProcess(processDefinitionKey);
+        ProcessInstance persisted = getProcessInstance(process, processInstanceId);
+        ProcessInstance sanitized = new ProcessInstance.Builder(instance, sanitizer).build();
+
+        String applicationStatus = sanitized.getApplicationStatus();
+        String applicationStatusExplanation = sanitized.getApplicationStatusExplanation();
+
+        if (applicationStatus != null && applicationStatus.equalsIgnoreCase(Constants.ProcessStatuses.SUSPENDED)) {
+            try {
+                if (!facade.suspend(process, instance, applicationStatusExplanation))
+                    throw new ConflictError();
+
+                ProcessInstance.Builder modified = new ProcessInstance.Builder(persisted, new PassthroughSanitizer())
+                        .applicationStatus(applicationStatus)
+                        .applicationStatusExplanation(applicationStatusExplanation)
+                        .processStatus(Constants.ProcessStatuses.SUSPENDED);
+
+                processInstanceRepository.save(modified.build());
+
+                ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+                ViewContext context = getViewContext();
+                String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
+                if (location != null)
+                    responseBuilder.location(UriBuilder.fromPath(location).build());
+                return responseBuilder.build();
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to cancel execution ", e);
+                throw new InternalServerError();
+            }
+        }
+
+        throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
+    }
+
+    @Override
+	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
+        String reason = sanitizer.sanitize(rawReason);
 		
 		Process process = getProcess(processDefinitionKey);
 		ProcessInstance instance = getProcessInstance(process, processInstanceId);
 
         try {
-            if (!facade.cancel(process, processInstanceId, null, null))
+            if (!facade.cancel(process, instance, reason))
                 throw new ConflictError();
+
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+                    .applicationStatus(process.getCancellationStatus())
+                    .applicationStatusExplanation(reason)
+                    .processStatus(Constants.ProcessStatuses.CANCELLED);
+
+            processInstanceRepository.save(modified.build());
 
             ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
             ViewContext context = getViewContext();
@@ -163,126 +206,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	@Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-		ManyMap<String, String> queryParameters = new ManyMap<String, String>();
-
-        ProcessExecutionCriteria.Builder criteria = new ProcessExecutionCriteria.Builder();
-        String limitToProcessDefinitionKey = null;
-        String limitToProcessInstanceId = null;
-
-        DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
-
-        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
-                .resourceLabel("Workflows")
-                .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
-                .link(getViewContext().getApplicationUri());
-
-        ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
-        for (Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
-			String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
-			List<String> rawValues = rawQueryParameterEntry.getValue();
-			if (rawValues != null && !rawValues.isEmpty()) {
-				for (String rawValue : rawValues) {
-					String value = sanitizer.sanitize(rawValue);
-					queryParameters.putOne(key, value);
-
-                    try {
-                        boolean isEngineParameter = true;
-                        if (key.equals("processDefinitionKey"))
-                            limitToProcessDefinitionKey = value;
-                        else if (key.equals("processInstanceId"))
-                            limitToProcessInstanceId = value;
-                        else if (key.equals("complete"))
-                            criteria.complete(Boolean.valueOf(value));
-                        else if (key.equals("initiatedBy"))
-                            criteria.initiatedBy(value);
-                        else if (key.equals("completedAfter"))
-                            criteria.completedAfter(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("completedBefore"))
-                            criteria.completedBefore(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("startedAfter"))
-                            criteria.startedAfter(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("startedBefore"))
-                            criteria.startedBefore(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("maxResults"))
-                            criteria.maxResults(Integer.valueOf(value));
-                        else if (key.equals("firstResult"))
-                            criteria.firstResult(Integer.valueOf(value));
-                        {
-                            contentQueryParameters.putOne(key, value);
-                            isEngineParameter = false;
-                        }
-
-                        if (isEngineParameter)
-                            resultsBuilder.parameter(key, value);
-
-                    } catch (NumberFormatException e) {
-                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
-                    } catch (IllegalArgumentException e) {
-                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
-                    }
-				}
-			}
-		}
-
-        boolean noResults = false;
-
-        ProcessInstance single = null;
-        if (limitToProcessInstanceId != null) {
-            single = processInstanceRepository.findOne(limitToProcessInstanceId);
-
-            if (single != null)
-                criteria.executionId(single.getEngineProcessInstanceId());
-            else
-                noResults = true;
-        }
-
-        if (! noResults) {
-            List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
-            for (Process process : processes) {
-                if (limitToProcessDefinitionKey == null || limitToProcessDefinitionKey.equals(process.getProcessDefinitionKey())) {
-                    criteria.engine(process.getEngine());
-                    criteria.engineProcessDefinitionKey(process.getEngineProcessDefinitionKey());
-                }
-            }
-
-            try {
-                List<String> processInstanceIds = new ArrayList<String>();
-
-                ProcessExecutionResults results = facade.findExecutions(criteria.build());
-
-                long total = results.getTotal();
-                long firstResult = results.getFirstResult();
-                long maxResults = results.getMaxResults();
-
-                if (results.getExecutions() != null) {
-                    Map<String, ProcessExecution> executionMap = new HashMap<String, ProcessExecution>();
-                    for (ProcessExecution execution : results.getExecutions()) {
-                        processInstanceIds.add(execution.getBusinessKey());
-                        executionMap.put(execution.getBusinessKey(), execution);
-                    }
-
-                    String keyword = null;
-                    if (contentQueryParameters.containsKey("keyword"))
-                        keyword = contentQueryParameters.getOne("keyword");
-
-                    Iterable<ProcessInstance> instances;
-                    if (keyword == null)
-                        instances = processInstanceRepository.findAll(processInstanceIds);
-                    else
-                        instances = processInstanceRepository.findByProcessInstanceIdInAndKeywordsRegex(processInstanceIds, keyword);
-
-                    PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-                    for (ProcessInstance instance : instances) {
-                        resultsBuilder.item(new ProcessInstance.Builder(instance, passthroughSanitizer).formData(new ArrayList<FormValue>()).build(getViewContext()));
-                    }
-                }
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to find executions ", e);
-                throw new InternalServerError();
-            }
-        }
-		return resultsBuilder.build();
+		return processInstanceService.search(rawQueryParameters, getViewContext());
 	}
 
 	@Override

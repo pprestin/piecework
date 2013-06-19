@@ -3,6 +3,6 @@ define(['controllers/search-controller'], function() {
 
   return function(match) {
     match('', 'search#search');
-    match('search:keyword', 'search#search');
+    match('process/:process/status/:status/keyword/:keyword', 'search#search');
   };
 });

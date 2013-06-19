@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.engine;
+package piecework.engine.activiti;
 
 import java.util.*;
 
@@ -32,16 +32,26 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import piecework.common.model.User;
+import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.engine.ProcessModelResource;
 import piecework.model.Process;
+import piecework.model.ProcessExecution;
+import piecework.model.ProcessInstance;
 import piecework.model.Task;
+import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.process.concrete.ResourceHelper;
 
 /**
  * @author James Renfro
  */
 @Service
 public class ActivitiEngineProxy implements ProcessEngineProxy {
+
+    @Autowired
+    ResourceHelper helper;
+
+    @Autowired
+    IdentityService identityService;
 
     @Autowired
     HistoryService historyService;
@@ -57,6 +67,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public String start(Process process, String processBusinessKey, Map<String, ?> data) throws ProcessEngineException {
+        String principal = helper.getAuthenticatedPrincipal();
+        identityService.setAuthenticatedUserId(principal);
+
 		String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
 		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = runtimeService.startProcessInstanceByKey(engineProcessDefinitionKey, processBusinessKey, engineData);
@@ -64,9 +77,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
 	@Override
-	public boolean cancel(Process process, String engineProcessInstanceId, String processBusinessKey, String reason) throws ProcessEngineException {
+	public boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+        String principal = helper.getAuthenticatedPrincipal();
+        identityService.setAuthenticatedUserId(principal);
+
         String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
-        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, engineProcessInstanceId, processBusinessKey);
+        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 		
 		if (activitiInstance != null) {
 			runtimeService.deleteProcessInstance(activitiInstance.getProcessInstanceId(), reason);
@@ -77,7 +93,26 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
+    public boolean suspend(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+        String principal = helper.getAuthenticatedPrincipal();
+        identityService.setAuthenticatedUserId(principal);
+
+        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
+
+        if (activitiInstance != null) {
+            runtimeService.suspendProcessInstanceById(activitiInstance.getProcessInstanceId());
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
     public boolean completeTask(Process process, String taskId) throws ProcessEngineException {
+        String principal = helper.getAuthenticatedPrincipal();
+        identityService.setAuthenticatedUserId(principal);
+
         String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
 
         try {
@@ -96,7 +131,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public void deploy(Process process, String name, ProcessModelResource ... resources) throws ProcessEngineException {
+    public void deploy(Process process, String name, ProcessModelResource... resources) throws ProcessEngineException {
+        String principal = helper.getAuthenticatedPrincipal();
+        identityService.setAuthenticatedUserId(principal);
+
         if (! process.getEngine().equals(getKey()))
             return;
 
@@ -112,7 +150,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-	public ProcessExecution findExecution(ProcessExecutionCriteria criteria) throws ProcessEngineException {
+	public ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
 
         if (! criteria.getEngines().contains(getKey()))
             return null;
@@ -141,7 +179,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
 	@Override
-	public ProcessExecutionResults findExecutions(ProcessExecutionCriteria criteria) throws ProcessEngineException {
+	public ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
         if (! criteria.getEngines().contains(getKey()))
             return null;
 
@@ -309,13 +347,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         return activitiInstance;
     }
 
-    private HistoricProcessInstanceQuery instanceQuery(ProcessExecutionCriteria criteria) {
+    private HistoricProcessInstanceQuery instanceQuery(ProcessInstanceSearchCriteria criteria) {
         HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery();
 
         // Activiti only allows us to filter by a single process definition key at a time -- so if there are more than 1
         // we have to filter the result set
         if (criteria.getEngineProcessDefinitionKeys() != null && criteria.getEngineProcessDefinitionKeys().size() == 1)
-            query.processDefinitionKey(criteria.getEngineProcessDefinitionKeys().get(0));
+            query.processDefinitionKey(criteria.getEngineProcessDefinitionKeys().iterator().next());
 
         List<String> executionIds = criteria.getExecutionIds();
         if (executionIds != null && !executionIds.isEmpty())
@@ -339,7 +377,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (criteria.getInitiatedBy() != null)
             query.startedBy(criteria.getInitiatedBy());
 
-        ProcessExecutionCriteria.OrderBy orderBy = criteria.getOrderBy();
+        ProcessInstanceSearchCriteria.OrderBy orderBy = criteria.getOrderBy();
         if (orderBy != null) {
             switch (orderBy) {
                 case START_TIME_ASC:

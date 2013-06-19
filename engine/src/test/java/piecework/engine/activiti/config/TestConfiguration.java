@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.engine.config;
+package piecework.engine.activiti.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 
-import piecework.engine.ActivitiEngineProxy;
+import piecework.engine.activiti.ActivitiEngineProxy;
 import piecework.engine.ProcessEngineProxy;
 
 /**

@@ -15,6 +15,8 @@
  */
 package piecework.engine;
 
+import piecework.model.ProcessExecution;
+
 import java.util.ArrayList;
 import java.util.List;
 

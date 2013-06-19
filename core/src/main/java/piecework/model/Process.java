@@ -65,6 +65,18 @@ public class Process implements Serializable {
 	@XmlElement
 	private final String engineProcessDefinitionKey;
 
+    @XmlElement
+    private final String initiationStatus;
+
+    @XmlElement
+    private final String cancellationStatus;
+
+    @XmlElement
+    private final String completionStatus;
+
+    @XmlElement
+    private final String suspensionStatus;
+
     @XmlAttribute
     private final String link;
 
@@ -93,6 +105,10 @@ public class Process implements Serializable {
 		this.participantSummary = builder.participantSummary;
 		this.engine = builder.engine;
 		this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
+        this.initiationStatus = builder.initiationStatus;
+        this.cancellationStatus = builder.cancellationStatus;
+        this.completionStatus = builder.completionStatus;
+        this.suspensionStatus = builder.suspensionStatus;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey) : null;
 		this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
@@ -131,11 +147,27 @@ public class Process implements Serializable {
 		return engineProcessDefinitionKey;
 	}
 
-	public String getUri() {
+    public String getCancellationStatus() {
+        return cancellationStatus;
+    }
+
+    public String getSuspensionStatus() {
+        return suspensionStatus;
+    }
+
+    public String getUri() {
 		return uri;
 	}
 
-	public List<Interaction> getInteractions() {
+    public String getInitiationStatus() {
+        return initiationStatus;
+    }
+
+    public String getCompletionStatus() {
+        return completionStatus;
+    }
+
+    public List<Interaction> getInteractions() {
 		return interactions;
 	}
 
@@ -159,6 +191,10 @@ public class Process implements Serializable {
 		private String participantSummary;		
 		private String engine;		
 		private String engineProcessDefinitionKey;
+        private String initiationStatus;
+        private String cancellationStatus;
+        private String completionStatus;
+        private String suspensionStatus;
 		private List<Interaction> interactions;
 		private boolean isDeleted;
 		
@@ -174,7 +210,11 @@ public class Process implements Serializable {
 			this.participantSummary = sanitizer.sanitize(process.participantSummary);
 			this.engine = sanitizer.sanitize(process.engine);
 			this.engineProcessDefinitionKey = sanitizer.sanitize(process.engineProcessDefinitionKey);
-		
+		    this.initiationStatus = sanitizer.sanitize(process.initiationStatus);
+            this.cancellationStatus = sanitizer.sanitize(process.cancellationStatus);
+            this.completionStatus = sanitizer.sanitize(process.completionStatus);
+            this.suspensionStatus = sanitizer.sanitize(process.suspensionStatus);
+
 			if (process.interactions != null && !process.interactions.isEmpty()) {
 				this.interactions = new ArrayList<Interaction>(process.interactions.size());
 				for (Interaction interaction : process.interactions) {
@@ -225,6 +265,26 @@ public class Process implements Serializable {
 			this.engineProcessDefinitionKey = engineProcessDefinitionKey;
 			return this;
 		}
+
+        public Builder cancellationStatus(String cancellationStatus) {
+            this.cancellationStatus = cancellationStatus;
+            return this;
+        }
+
+        public Builder completionStatus(String completionStatus) {
+            this.completionStatus = completionStatus;
+            return this;
+        }
+
+        public Builder initiationStatus(String initiationStatus) {
+            this.initiationStatus = initiationStatus;
+            return this;
+        }
+
+        public Builder suspensionStatus(String suspensionStatus) {
+            this.suspensionStatus = suspensionStatus;
+            return this;
+        }
 		
 		public Builder interaction(Interaction interaction) {
 			if (this.interactions == null)

@@ -25,10 +25,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.engine.config.TestConfiguration;
+import piecework.engine.activiti.config.TestConfiguration;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
 import piecework.model.Process;
+import piecework.model.ProcessExecution;
+import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.util.ManyMap;
 
 import java.io.IOException;
@@ -64,7 +66,7 @@ public class ActivitiEngineProxyTest {
 		String instanceId = engineProxy.start(process, null, null);
 		Assert.assertNotNull(instanceId);
 
-        ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
                 .engine(process.getEngine())
                 .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -81,7 +83,7 @@ public class ActivitiEngineProxyTest {
         String instanceId = engineProxy.start(process, "test1", null);
 		Assert.assertNotNull(instanceId);
 
-        ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
                 .engine(process.getEngine())
                 .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -102,7 +104,7 @@ public class ActivitiEngineProxyTest {
         Assert.assertNotNull(instanceId);
 
         // First, retrieve without including variables
-        ProcessExecutionCriteria criteria = new ProcessExecutionCriteria.Builder()
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
                 .engine(process.getEngine())
                 .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -116,7 +118,7 @@ public class ActivitiEngineProxyTest {
 
 
         // Then include variables in criteria
-        criteria = new ProcessExecutionCriteria.Builder()
+        criteria = new ProcessInstanceSearchCriteria.Builder()
                 .engine(process.getEngine())
                 .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
                 .executionId(instanceId)

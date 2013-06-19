@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,8 +43,25 @@ public class ResourceHelper {
 
 	@Autowired
 	ProcessRepository processRepository;
-	
-	public List<piecework.model.Process> findProcesses(String ... allowedRoles) {
+
+    public String getAuthenticatedPrincipal() {
+        String principal = null;
+        SecurityContext context = SecurityContextHolder.getContext();
+        if (context != null) {
+            Authentication authentication = context.getAuthentication();
+
+            if (authentication != null) {
+                Object principalAsObject = authentication.getPrincipal();
+                if (principalAsObject instanceof String)
+                    principal = String.class.cast(principalAsObject);
+                else
+                    principal = principalAsObject.toString();
+            }
+        }
+        return principal;
+    }
+
+	public Set<piecework.model.Process> findProcesses(String ... allowedRoles) {
 		SecurityContext context = SecurityContextHolder.getContext();
 		Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
 		
@@ -61,8 +79,8 @@ public class ResourceHelper {
 				}
 			}
 		}
-		
-		List<piecework.model.Process> processes = new ArrayList<piecework.model.Process>();
+
+        Set<piecework.model.Process> processes = new HashSet<piecework.model.Process>();
 		Iterator<Process> iterator = processRepository.findAll(allowedProcessDefinitionKeys).iterator();
 		while (iterator.hasNext()) {
 			Process record = iterator.next();

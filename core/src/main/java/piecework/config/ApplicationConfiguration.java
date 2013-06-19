@@ -16,6 +16,7 @@
 package piecework.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
@@ -34,6 +35,7 @@ import org.springframework.core.io.ClassPathResource;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
+import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.HtmlProvider;
 
 import java.io.IOException;
@@ -61,13 +63,13 @@ public class ApplicationConfiguration {
     HtmlProvider htmlProvider;
 
     @Autowired
-    JacksonJsonProvider jsonProvider;
+    CustomJaxbJsonProvider jsonProvider;
 	
 	@Bean
 	public Bus cxf() {
 		return BusFactory.newInstance().createBus();
 	}
-	
+
 	@Bean 
 	public Server apiServer() {
 		Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
@@ -120,12 +122,7 @@ public class ApplicationConfiguration {
         manager.registerBindingFactory(JAXRSBindingFactory.JAXRS_BINDING_ID, factory);
         return sf.create();
     }
-	
-	@Bean
-	public JacksonJsonProvider jsonProvider() {
-		return new JacksonJsonProvider();
-	}
-	
+
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
         CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();

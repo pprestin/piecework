@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.engine.config;
+package piecework.engine.activiti.config;
 
 import java.sql.Driver;
+import java.util.Collections;
 
 import javax.sql.DataSource;
 
 import org.activiti.engine.*;
 import org.activiti.engine.impl.cfg.ProcessEngineConfigurationImpl;
+import org.activiti.engine.impl.persistence.StrongUuidGenerator;
+import org.activiti.engine.parse.BpmnParseHandler;
 import org.activiti.spring.ProcessEngineFactoryBean;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import piecework.engine.activiti.CustomBpmnParseHandler;
 
 /**
  * @author James Renfro
@@ -42,6 +46,9 @@ public class EngineConfiguration {
 
 	@Autowired 
 	Environment env;
+
+    @Autowired
+    ProcessEngine activitiEngine;
 
 	@Bean
 	public DataSource activitiDataSource() throws ClassNotFoundException {
@@ -68,7 +75,9 @@ public class EngineConfiguration {
 		engineConfiguration.setDataSource(activitiDataSource());
 		engineConfiguration.setTransactionManager(activitiDataSourceTransactionManager());
 		engineConfiguration.setDatabaseSchemaUpdate("true");
-		
+        engineConfiguration.setIdGenerator(new StrongUuidGenerator());
+//        engineConfiguration.setEnableSafeBpmnXml(true);
+        engineConfiguration.setPreBpmnParseHandlers(Collections.<BpmnParseHandler>singletonList(new CustomBpmnParseHandler()));
 		return engineConfiguration;
 	}
 	
@@ -83,27 +92,32 @@ public class EngineConfiguration {
 	
 	@Bean
 	public FormService activitiFormService(ApplicationContext applicationContext) throws Exception {
-		return activitiEngine(applicationContext).getFormService();
+		return activitiEngine.getFormService();
 	}
 
     @Bean
     public HistoryService activitiHistoryService(ApplicationContext applicationContext) throws Exception {
-        return activitiEngine(applicationContext).getHistoryService();
+        return activitiEngine.getHistoryService();
+    }
+
+    @Bean
+    public IdentityService activitiIdentityService(ApplicationContext applicationContext) throws Exception {
+        return activitiEngine.getIdentityService();
     }
 
 	@Bean
 	public RepositoryService activitiRepositoryService(ApplicationContext applicationContext) throws Exception {
-		return activitiEngine(applicationContext).getRepositoryService();
+		return activitiEngine.getRepositoryService();
 	}
 	
 	@Bean
 	public RuntimeService activitiRuntimeService(ApplicationContext applicationContext) throws Exception {
-		return activitiEngine(applicationContext).getRuntimeService();
+		return activitiEngine.getRuntimeService();
 	}
 	
 	@Bean
 	public TaskService activitiTaskService(ApplicationContext applicationContext) throws Exception {
-		return activitiEngine(applicationContext).getTaskService();
+		return activitiEngine.getTaskService();
 	}
 	
 }

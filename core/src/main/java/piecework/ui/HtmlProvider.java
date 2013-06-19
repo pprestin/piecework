@@ -15,6 +15,8 @@
  */
 package piecework.ui;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
@@ -52,7 +54,6 @@ import java.util.Map;
  */
 @Produces("text/html")
 @Provider
-@Service
 public class HtmlProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
 
 	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
@@ -60,8 +61,10 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
     @Autowired
     private Environment environment;
 
-	@Autowired
-	private JacksonJsonProvider jsonProvider;
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+//	@Autowired
+//	private JacksonJaxbJsonProvider jsonProvider;
 	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -116,8 +119,10 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
                     .user(user)
                     .build();
             OutputStream jsonStream = new ByteArrayOutputStream();
-            jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
-            final String json = jsonStream.toString();
+//            jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
+
+
+            final String json = objectMapper.writer().writeValueAsString(pageContext);
 
             HtmlCleaner cleaner = new HtmlCleaner();
             TagNode node = cleaner.clean(template.getInputStream());
