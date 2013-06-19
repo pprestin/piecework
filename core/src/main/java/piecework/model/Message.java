@@ -15,7 +15,7 @@
  */
 package piecework.model;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import piecework.common.view.ViewContext;
 import piecework.security.Sanitizer;

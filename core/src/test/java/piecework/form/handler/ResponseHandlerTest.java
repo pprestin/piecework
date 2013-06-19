@@ -82,7 +82,7 @@ public class ResponseHandlerTest {
     public void testBuildScreen() throws Exception {
         FormRequest formRequest = ExampleFactory.exampleFormRequest("0b82440e-0c3c-4433-b629-c41e68049b8b");
 
-        Screen screen = responseHandler.buildScreen(formRequest, null);
+        Screen screen = responseHandler.buildScreen(formRequest, null, null);
 
         Field supervisorIdField = screen.getSections().get(1).getFields().get(0);
 

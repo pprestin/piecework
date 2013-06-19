@@ -5,8 +5,8 @@ import java.util.*;
 
 import javax.xml.bind.annotation.*;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.util.ManyMap;

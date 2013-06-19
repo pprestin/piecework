@@ -33,18 +33,21 @@ public class Payload<T> {
     private MultipartBody multipartBody;
     private Map<String, List<String>> formData;
 
+    @SuppressWarnings("unchecked")
     public <P extends Payload<T>> P processInstance(T instance) {
         this.type = PayloadType.INSTANCE;
         this.instance = instance;
         return (P)this;
     }
 
+    @SuppressWarnings("unchecked")
     public <P extends Payload<T>> P multipartBody(MultipartBody multipartBody) {
         this.type = PayloadType.MULTIPART;
         this.multipartBody = multipartBody;
         return (P)this;
     }
 
+    @SuppressWarnings("unchecked")
     public <P extends Payload<T>> P formData(Map<String, List<String>> formData) {
         this.type = PayloadType.FORMDATA;
         this.formData = formData;

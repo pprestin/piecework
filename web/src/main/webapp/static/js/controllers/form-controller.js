@@ -202,7 +202,7 @@ define([
                   else
                       this.compose('buttons_' + buttonId, ButtonView, {model: new Model(button)});
               }
-            }  else {
+            }  else if (groupings.length > groupingIndex+1) {
                 this.compose('buttons_submitButton', ButtonView, {model: new Model({label: 'Submit'})});
             }
 

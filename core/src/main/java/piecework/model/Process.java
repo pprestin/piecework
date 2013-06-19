@@ -15,31 +15,20 @@
  */
 package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.common.view.ViewContext;
+import piecework.security.Sanitizer;
+
+import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import piecework.security.Sanitizer;
-import piecework.common.view.ViewContext;
 
 /**
  * @author James Renfro
@@ -60,6 +49,9 @@ public class Process implements Serializable {
 	
 	@XmlElement
 	private final String processDefinitionLabel;
+
+    @XmlElement
+    private final String processInstanceLabelTemplate;
 	
 	@XmlElement
 	private final String processSummary;
@@ -96,6 +88,7 @@ public class Process implements Serializable {
 	private Process(Process.Builder builder, ViewContext context) {
 		this.processDefinitionKey = builder.processDefinitionKey;
 		this.processDefinitionLabel = builder.processDefinitionLabel;
+        this.processInstanceLabelTemplate = builder.processInstanceLabelTemplate;
 		this.processSummary = builder.processSummary;
 		this.participantSummary = builder.participantSummary;
 		this.engine = builder.engine;
@@ -114,7 +107,15 @@ public class Process implements Serializable {
 		return processDefinitionLabel;
 	}
 
-	public String getProcessSummary() {
+    public String getProcessInstanceLabelTemplate() {
+        return processInstanceLabelTemplate;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public String getProcessSummary() {
 		return processSummary;
 	}
 
@@ -152,7 +153,8 @@ public class Process implements Serializable {
 	public final static class Builder {
 		
 		private String processDefinitionKey;		
-		private String processDefinitionLabel;		
+		private String processDefinitionLabel;
+        private String processInstanceLabelTemplate;
 		private String processSummary;		
 		private String participantSummary;		
 		private String engine;		
@@ -167,6 +169,7 @@ public class Process implements Serializable {
 		public Builder(piecework.model.Process process, Sanitizer sanitizer) {
 			this.processDefinitionKey = sanitizer.sanitize(process.processDefinitionKey);
 			this.processDefinitionLabel = sanitizer.sanitize(process.processDefinitionLabel);
+            this.processInstanceLabelTemplate = sanitizer.sanitize(process.processInstanceLabelTemplate);
 			this.processSummary = sanitizer.sanitize(process.processSummary);
 			this.participantSummary = sanitizer.sanitize(process.participantSummary);
 			this.engine = sanitizer.sanitize(process.engine);
@@ -197,6 +200,11 @@ public class Process implements Serializable {
 			this.processDefinitionLabel = processDefinitionLabel;
 			return this;
 		}
+
+        public Builder processInstanceLabelTemplate(String processInstanceLabelTemplate) {
+            this.processInstanceLabelTemplate = processInstanceLabelTemplate;
+            return this;
+        }
 		
 		public Builder processSummary(String processSummary) {
 			this.processSummary = processSummary;

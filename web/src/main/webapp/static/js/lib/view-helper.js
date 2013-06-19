@@ -16,14 +16,22 @@ define([
   });
 
   Handlebars.registerHelper('breadcrumb', function(items) {
+    var ignore = true;
     var out = '<ul class="breadcrumb">'
 
     for(var i=0, l=items.length; i<l; i++) {
         var item = items[i];
+
+        if (item.breadcrumb != null && item.breadcrumb != '')
+            ignore = false;
+
         out += '<li><a class="hide" href="#step/' + item.ordinal + '">' + item.breadcrumb + '</a><span class="inactive-text">' + item.breadcrumb + '</span>';
         if (i<l-1)
             out += ' <span class="divider">»</span></li>';
     }
+
+    if (ignore)
+        return '';
 
     return out + '</li></ul>';
   });

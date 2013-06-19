@@ -86,7 +86,10 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 
             if (type == 'wizard') {
                 this._doValidate();
-                return false;
+
+                var validated = $('#main-form').prop("validated");
+
+                return validated != undefined && validated;
             }
 
 	        return true;
@@ -95,6 +98,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
             var next = $(':button[type="submit"]:visible').val();
 
             if (next == 'submit') {
+                $('#main-form').prop("validated", true);
                 $('#main-form').submit();
             } else {
                 var breadcrumbSelector = 'a[href="#' + next + '"]';

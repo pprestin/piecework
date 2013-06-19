@@ -23,9 +23,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.*;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
@@ -101,6 +100,7 @@ public class FormValue implements Serializable {
 		return name;
 	}
 
+    @JsonIgnore
 	public String getValue() {
 		return value;
 	}
@@ -108,7 +108,8 @@ public class FormValue implements Serializable {
 	public List<String> getValues() {
 		return values;
 	}
-	
+
+    @JsonIgnore
 	public List<String> getAllValues() {
 		if (this.value != null)
 			return Collections.singletonList(value);
@@ -148,6 +149,7 @@ public class FormValue implements Serializable {
 		public Builder() {
 			super();
             this.messages = new ArrayList<Message>();
+            this.values = new ArrayList<String>();
 		}
 
 		public Builder(FormValue formValue, Sanitizer sanitizer) {
@@ -158,7 +160,12 @@ public class FormValue implements Serializable {
 				for (String value : formValue.values) {
 					this.values.add(sanitizer.sanitize(value));
 				}
-			}
+			} else {
+                this.values = new ArrayList<String>();
+            }
+
+            if (formValue.value != null)
+                this.values.add(formValue.value);
 
             if (formValue.messages != null && !formValue.messages.isEmpty()) {
                 this.messages = new ArrayList<Message>(formValue.messages.size());

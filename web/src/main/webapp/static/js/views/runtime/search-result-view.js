@@ -13,7 +13,7 @@ define([ 'chaplin', 'views/base/view' ],
             var processInstanceLabel = this.model.get('processInstanceLabel');
             var processDefinitionLabel = this.model.get('processDefinitionLabel');
 	        if (processInstanceLabel != undefined)
-	            html += '<td><a href="' + link + '">' + processInstanceLabel + '</a></td>';
+	            html += '<td><a href="' + link + '.html">' + processInstanceLabel + '</a></td>';
 	        if (processDefinitionLabel != undefined)
 	            html += '<td>' + processDefinitionLabel + '</td>';
             var execution = this.model.get('execution');

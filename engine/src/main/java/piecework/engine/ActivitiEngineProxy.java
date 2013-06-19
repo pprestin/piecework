@@ -55,7 +55,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     @Autowired
     TaskService taskService;
 
-
 	@Override
 	public String start(Process process, String processBusinessKey, Map<String, ?> data) throws ProcessEngineException {
 		String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();

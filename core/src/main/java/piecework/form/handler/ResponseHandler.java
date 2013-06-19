@@ -49,7 +49,7 @@ public class ResponseHandler {
 
     public Response handle(FormRequest formRequest, List<FormValue> formValues, ViewContext viewContext) throws StatusCodeError {
 
-        Screen screen = buildScreen(formRequest, formValues);
+        Screen screen = buildScreen(formRequest, formValues, formRequest.getProcessInstanceId());
 
         Form form = new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
@@ -91,7 +91,7 @@ public class ResponseHandler {
             }
         }
 
-        Screen screen = buildScreen(formRequest, formValues);
+        Screen screen = buildScreen(formRequest, formValues, null);
 
         Form form = new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
@@ -116,7 +116,7 @@ public class ResponseHandler {
         return Response.ok(form).build();
     }
 
-    public Screen buildScreen(FormRequest formRequest, List<FormValue> formValues) {
+    public Screen buildScreen(FormRequest formRequest, List<FormValue> formValues, String confirmationNumber) {
         Screen screen = formRequest.getScreen();
 
         if (screen != null) {
@@ -150,6 +150,8 @@ public class ResponseHandler {
                                 fieldBuilder.invisible();
                             if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_STATE, constraints))
                                 addStateOptions(fieldBuilder);
+                            if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_CONFIRMATION_NUMBER, constraints))
+                                addConfirmationNumber(fieldBuilder, confirmationNumber);
                         }
 
                         sectionBuilder.field(fieldBuilder.build());
@@ -163,6 +165,10 @@ public class ResponseHandler {
         return screen;
     }
 
+    private void addConfirmationNumber(Field.Builder fieldBuilder, String confirmationNumber) {
+        String defaultValue = fieldBuilder.getDefaultValue();
+        fieldBuilder.defaultValue(defaultValue.replaceAll("\\{ConfirmationNumber\\}", confirmationNumber));
+    }
 
     private void addStateOptions(Field.Builder fieldBuilder) {
         fieldBuilder.option(new Option.Builder().value("").name("").build())
@@ -218,48 +224,5 @@ public class ResponseHandler {
             .option(new Option.Builder().value("WI").name("Wisconsin").build())
             .option(new Option.Builder().value("WY").name("Wyoming").build());
     }
-
-//    private boolean isVisible(Map<String, Field> fieldMap, List<Constraint> constraints, boolean requireAll) {
-//        if (constraints == null || constraints.isEmpty())
-//            return true;
-//
-//        boolean visible = requireAll;
-//        for (Constraint constraint : constraints) {
-//            String constraintType = constraint.getType();
-//
-//            if (constraintType == null)
-//                continue;
-//
-//            boolean satisfied = false;
-//            if (constraintType.equals(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN)) {
-//                String constraintName = constraint.getName();
-//                String constraintValue = constraint.getValue();
-//                Pattern pattern = Pattern.compile(constraintValue);
-//
-//                Field constraintField = fieldMap.get(constraintName);
-//
-//                if (constraintField != null) {
-//                    String defaultFieldValue = constraintField.getDefaultValue();
-//                    satisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
-//                }
-//            } else if (constraintType.equals(Constants.ConstraintTypes.AND)) {
-//                satisfied = isVisible(fieldMap, constraint.getSubconstraints(), true);
-//            } else if (constraintType.equals(Constants.ConstraintTypes.OR)) {
-//                satisfied = isVisible(fieldMap, constraint.getSubconstraints(), false);
-//            } else {
-//                continue;
-//            }
-//
-//            if (requireAll && !satisfied) {
-//                visible = false;
-//                break;
-//            } else if (!requireAll && satisfied) {
-//                visible = true;
-//                break;
-//            }
-//        }
-//
-//        return visible;
-//    }
 
 }

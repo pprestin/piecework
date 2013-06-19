@@ -30,6 +30,7 @@ public class ProcessInstancePayload extends Payload<ProcessInstance> {
     private String requestId;
     private String validationId;
 
+    @SuppressWarnings("unchecked")
     public ProcessInstancePayload processInstance(ProcessInstance instance) {
         super.processInstance(instance);
         this.alias = instance.getAlias();

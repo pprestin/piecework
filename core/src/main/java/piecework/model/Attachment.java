@@ -15,26 +15,17 @@
  */
 package piecework.model;
 
-import java.io.Serializable;
-import java.util.Date;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import piecework.security.Sanitizer;
 import piecework.common.model.User;
 import piecework.common.view.ViewContext;
+import piecework.security.Sanitizer;
+
+import javax.xml.bind.annotation.*;
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author James Renfro

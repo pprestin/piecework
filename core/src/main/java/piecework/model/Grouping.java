@@ -15,9 +15,9 @@
  */
 package piecework.model;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import piecework.common.view.ViewContext;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;

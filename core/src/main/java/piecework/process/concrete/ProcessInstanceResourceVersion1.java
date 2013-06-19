@@ -273,7 +273,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
                     PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
                     for (ProcessInstance instance : instances) {
-                        resultsBuilder.item(new ProcessInstance.Builder(instance, passthroughSanitizer).build(getViewContext()));
+                        resultsBuilder.item(new ProcessInstance.Builder(instance, passthroughSanitizer).formData(new ArrayList<FormValue>()).build(getViewContext()));
                     }
                 }
 

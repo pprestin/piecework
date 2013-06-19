@@ -15,6 +15,8 @@
  */
 package piecework.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.binding.BindingFactoryManager;
@@ -22,8 +24,6 @@ import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.owasp.validator.html.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +36,6 @@ import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.ui.HtmlProvider;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -60,7 +59,9 @@ public class ApplicationConfiguration {
 	
 	@Autowired
     HtmlProvider htmlProvider;
-		
+
+    @Autowired
+    JacksonJsonProvider jsonProvider;
 	
 	@Bean
 	public Bus cxf() {
@@ -83,7 +84,7 @@ public class ApplicationConfiguration {
 		providers.add(new StatusCodeErrorMapper());
 		providers.add(new AccessDeniedExceptionMapper());
 //		providers.add(htmlProvider);
-		providers.add(jsonProvider());
+		providers.add(jsonProvider);
 		sf.setProviders(providers);
 
 		BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);
@@ -110,7 +111,7 @@ public class ApplicationConfiguration {
         providers.add(new StatusCodeErrorMapper());
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);
-        providers.add(jsonProvider());
+        providers.add(jsonProvider);
         sf.setProviders(providers);
 
         BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);
@@ -122,7 +123,7 @@ public class ApplicationConfiguration {
 	
 	@Bean
 	public JacksonJsonProvider jsonProvider() {
-		return new JacksonJsonProvider(new ObjectMapper());
+		return new JacksonJsonProvider();
 	}
 	
 	@Bean

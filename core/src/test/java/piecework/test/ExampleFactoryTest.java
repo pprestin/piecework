@@ -15,8 +15,8 @@
  */
 package piecework.test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -33,10 +33,8 @@ public class ExampleFactoryTest {
         String expected = IOUtils.toString(expectedResource.getInputStream());
         String actual = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ExampleFactory.exampleForm());
 
-        System.out.println(actual);
+//        System.out.println(actual);
         Assert.assertEquals(expected, actual);
-
-
     }
 
 

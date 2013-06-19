@@ -15,6 +15,9 @@
  */
 package piecework.process;
 
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +40,10 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -102,7 +105,27 @@ public class ProcessInstanceService {
             }
         }
 
-        instanceBuilder.formValueMap(validation.getFormValueMap())
+        String processInstanceLabel = process.getProcessInstanceLabelTemplate();
+
+        if (processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
+            Map<String, String> scopes = new HashMap<String, String>();
+
+            for (Map.Entry<String, List<String>> entry : validation.getFormValueMap().entrySet()) {
+                List<String> values = entry.getValue();
+                if (values != null && !values.isEmpty())
+                    scopes.put(entry.getKey(), values.iterator().next());
+            }
+
+            StringWriter writer = new StringWriter();
+            MustacheFactory mf = new DefaultMustacheFactory();
+            Mustache mustache = mf.compile(new StringReader(processInstanceLabel), "processInstanceLabel");
+            mustache.execute(writer, scopes);
+
+            processInstanceLabel = writer.toString();
+        }
+
+        instanceBuilder.processInstanceLabel(processInstanceLabel)
+                .formValueMap(validation.getFormValueMap())
                 .restrictedValueMap(validation.getRestrictedValueMap())
                 .submission(submission);
 
