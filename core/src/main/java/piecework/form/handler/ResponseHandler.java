@@ -16,11 +16,14 @@
 package piecework.form.handler;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.view.ViewContext;
+import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.form.FormResource;
 import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -31,6 +34,9 @@ import piecework.util.FormDataUtil;
 import piecework.util.ManyMap;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +49,8 @@ import java.util.regex.Pattern;
  */
 @Service
 public class ResponseHandler {
+
+    private static final Logger LOG = Logger.getLogger(ResponseHandler.class);
 
     @Autowired
     ContentRepository contentRepository;
@@ -163,6 +171,21 @@ public class ResponseHandler {
         }
 
         return screen;
+    }
+
+    public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
+
+//        Form form = new Form.Builder()
+//                .processDefinitionKey(formRequest.getProcessDefinitionKey())
+//                .formInstanceId(formRequest.getRequestId())
+//                .build(viewContext);
+//        try {
+            URI uri = UriBuilder.fromResource(FormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
+            return Response.seeOther(uri).build();
+//        } catch (URISyntaxException e) {
+//            LOG.error("Could not produce uri for " + form.getLink());
+//            throw new InternalServerError();
+//        }
     }
 
     private void addConfirmationNumber(Field.Builder fieldBuilder, String confirmationNumber) {

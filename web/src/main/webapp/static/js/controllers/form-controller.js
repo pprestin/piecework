@@ -21,6 +21,9 @@ define([
 
   var FormController = Controller.extend({
     index: function(params) {
+        this.step(params);
+    },
+    step: function(params) {
         this.compose('formModel', Form, window.piecework.context.resource);
         this.compose('pageModel', Page, window.piecework.context);
 
@@ -43,10 +46,14 @@ define([
 
         var groupings = screenModel.groupings;
         var grouping = groupings != undefined && groupings.length > groupingIndex ? groupings[groupingIndex] : { sectionIds : []};
-        var includeAll = grouping.length < 1;
+        var includeAll = groupings.length < 1;
 
         var sectionVisibleMap = {};
         var lastVisibleSection;
+
+        for (var i=0;i<groupings.length;i++) {
+            groupings[i].breadcrumbLink = '/' + params.servlet + '/app/form/' + params.processDefinitionKey + '/' + params.requestId + '/step/' + groupings[i].ordinal;
+        }
 
         for (var i=0;i<grouping.sectionIds.length;i++) {
             sectionVisibleMap[grouping.sectionIds[i]] = true;
@@ -189,11 +196,16 @@ define([
 
                   if (button.value != undefined) {
                       if (button.value == 'next') {
-                          button.value = 'step/' + (grouping.ordinal + 1);
-                          button.link = '#' + button.value;
+                          button.value = groupings.length > grouping.ordinal ? groupings[groupingIndex + 1].breadcrumbLink : '';
+                          //button.value = '/' + params.servlet + '/app/form/' + params.processDefinitionKey + '/' + params.requestId + '/step/' + (grouping.ordinal + 1);
+                          button.link = button.value;
                       } else if (buttons[b].value == 'prev') {
-                          button.value = 'step/' + (grouping.ordinal - 1);
-                          button.link = '#' + button.value;
+                          if (groupingIndex > 0)
+                            button.value = groupings[groupingIndex - 1].breadcrumbLink;
+                          else
+                            button.value = '/' + params.servlet + '/app/form/' + params.processDefinitionKey + '/' + params.requestId;
+                            //button.value += '/step/' + (grouping.ordinal - 1);
+                          button.link = button.value;
                       }
                   }
 

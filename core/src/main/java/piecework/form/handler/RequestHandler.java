@@ -112,13 +112,13 @@ public class RequestHandler {
         FormRequest formRequest = requestRepository.findOne(requestId);
 
         if (formRequest == null) {
-            LOG.warn("Request being submitted for invalid/missing requestId " + requestId);
+            LOG.warn("Request being viewed or submitted for invalid/missing requestId " + requestId);
             throw new ForbiddenError(Constants.ExceptionCodes.request_does_not_match);
         }
 
         if (request != null) {
             if (request.getRemoteUser() != null && formRequest.getRemoteUser() != null && !request.getRemoteUser().equals(formRequest.getRemoteUser())) {
-                LOG.error("Wrong user submitting form: " + request.getRemoteUser() + " not " + formRequest.getRemoteUser());
+                LOG.error("Wrong user viewing or submitting form: " + request.getRemoteUser() + " not " + formRequest.getRemoteUser());
                 throw new ForbiddenError(Constants.ExceptionCodes.user_does_not_match);
             }
 
@@ -143,6 +143,12 @@ public class RequestHandler {
 
                 }
             }
+        }
+
+        if (StringUtils.isNotEmpty(formRequest.getTaskId())) {
+
+
+
         }
 
         return formRequest;

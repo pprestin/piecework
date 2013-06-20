@@ -19,6 +19,7 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 
 import org.apache.cxf.common.util.StringUtils;
@@ -84,9 +85,9 @@ public class FormResourceVersion1 implements FormResource {
     @Value("${certificate.subject.header}")
     String certificateSubjectHeader;
 
-
-	public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+    @Override
+    public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 
         Process process = processRepository.findOne(processDefinitionKey);
 
@@ -104,10 +105,39 @@ public class FormResourceVersion1 implements FormResource {
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
         FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, null, null);
 
+        return responseHandler.redirect(formRequest, getViewContext());
+    }
+
+    @Override
+	public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final HttpServletRequest request) throws StatusCodeError {
+		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        String requestId = null;
+
+        if (pathSegments != null && !pathSegments.isEmpty()) {
+            requestId = sanitizer.sanitize(pathSegments.iterator().next().getPath());
+        }
+
+//        Process process = processRepository.findOne(processDefinitionKey);
+//
+//        if (process == null)
+//            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
+//
+//        List<Interaction> interactions = process.getInteractions();
+//
+//        if (interactions == null || interactions.isEmpty())
+//            throw new InternalServerError();
+//
+//        // Pick the first interaction and the first screen
+//        Interaction interaction = interactions.iterator().next();
+
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+//        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, null, null);
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+
         return responseHandler.handle(formRequest, null, getViewContext());
 	}
 
-    @Override
+//    @Override
     public Response read(final String rawProcessDefinitionKey, final String rawTaskId, final HttpServletRequest request) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
@@ -211,10 +241,10 @@ public class FormResourceVersion1 implements FormResource {
         return Response.noContent().build();
     }
 
-    @Override
-    public Response getValidation(final String processDefinitionKey, final String requestId, final String validationId, final HttpServletRequest request) throws StatusCodeError {
-        return Response.ok("Hello new world!").type(MediaType.TEXT_PLAIN_TYPE).build();
-    }
+//    @Override
+//    public Response getValidation(final String processDefinitionKey, final String requestId, final String validationId, final HttpServletRequest request) throws StatusCodeError {
+//        return Response.ok("Hello new world!").type(MediaType.TEXT_PLAIN_TYPE).build();
+//    }
 
     @Override
 	public ViewContext getViewContext() {

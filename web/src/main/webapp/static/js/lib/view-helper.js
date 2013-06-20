@@ -15,7 +15,7 @@ define([
     return Chaplin.helpers.reverse(routeName, params);
   });
 
-  Handlebars.registerHelper('breadcrumb', function(items) {
+  Handlebars.registerHelper('breadcrumb', function(items, options) {
     var ignore = true;
     var out = '<ul class="breadcrumb">'
 
@@ -25,7 +25,11 @@ define([
         if (item.breadcrumb != null && item.breadcrumb != '')
             ignore = false;
 
-        out += '<li><a class="hide" href="#step/' + item.ordinal + '">' + item.breadcrumb + '</a><span class="inactive-text">' + item.breadcrumb + '</span>';
+        if (i > 0)
+            out += '<li><a class="hide" href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a><span class="inactive-text">' + item.breadcrumb + '</span>';
+        else
+            out += '<li><a href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a>';
+
         if (i<l-1)
             out += ' <span class="divider">»</span></li>';
     }

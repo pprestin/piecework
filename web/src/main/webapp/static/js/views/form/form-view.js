@@ -101,8 +101,8 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
                 $('#main-form').prop("validated", true);
                 $('#main-form').submit();
             } else {
-                var breadcrumbSelector = 'a[href="#' + next + '"]';
-                var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li').prev('li');
+                var breadcrumbSelector = 'a[href="' + next + '"]';
+                var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li'); //.prev('li');
                 $li.find('span.inactive-text').remove();
                 $li.find('a').removeClass('hide');
 

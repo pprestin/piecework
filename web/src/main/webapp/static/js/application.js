@@ -1,12 +1,12 @@
 define([
   'chaplin',
-  'routes/form-routes'
+  'routes'
 ], function(Chaplin, routes) {
   'use strict';
 
   // The application object
   // Choose a meaningful name for your application
-  var Form = Chaplin.Application.extend({
+  var Piecework = Chaplin.Application.extend({
 
     // Set your application name here so the document title is set to
     // “Controller title – Site title” (see Layout#adjustTitle)
@@ -25,7 +25,7 @@ define([
       // the root per default. You might change that in the options
       // if necessary:
       // this.initRouter(routes, {pushState: false, root: '/subdir/'});
-      this.initRouter(routes,  {pushState: false, root: '/piecework/', silent: true});
+      this.initRouter(routes,  {pushState: true, hashChange: false, root: '/'});
 
       // Dispatcher listens for routing events and initialises controllers.
       this.initDispatcher({controllerSuffix: '-controller'});
@@ -59,5 +59,5 @@ define([
     }
   });
 
-  return Form;
+  return Piecework;
 });

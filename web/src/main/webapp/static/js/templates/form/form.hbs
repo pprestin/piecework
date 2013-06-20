@@ -1,6 +1,6 @@
 {{#with screen}}
     <h1>{{title}}</h1>
-    {{#breadcrumb groupings}}{{/breadcrumb}}
+    {{#breadcrumb groupings}}{{#url "step"}}{{/url}}{{/breadcrumb}}
     <div class="screen" id="{{screenId}}">
         <div class="screen-header"></div>
         <ul class="sections">

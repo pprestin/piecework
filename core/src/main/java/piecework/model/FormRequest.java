@@ -33,6 +33,8 @@ public class FormRequest {
 
     private final String processInstanceId;
 
+    private final String taskId;
+
     private final String remoteAddr;
 
     private final String remoteHost;
@@ -60,6 +62,7 @@ public class FormRequest {
         this.requestId = builder.requestId;
         this.processDefinitionKey = builder.processDefinitionKey;
         this.processInstanceId = builder.processInstanceId;
+        this.taskId = builder.taskId;
         this.remoteAddr = builder.remoteAddr;
         this.remoteHost = builder.remoteHost;
         this.remotePort = builder.remotePort;
@@ -107,6 +110,10 @@ public class FormRequest {
         return certificateIssuer;
     }
 
+    public String getTaskId() {
+        return taskId;
+    }
+
     public Interaction getInteraction() {
         return interaction;
     }
@@ -130,6 +137,7 @@ public class FormRequest {
         private String remoteUser;
         private String certificateSubject;
         private String certificateIssuer;
+        private String taskId;
         private Interaction interaction;
         private Screen screen;
         private String submissionType;
@@ -148,6 +156,7 @@ public class FormRequest {
             this.remoteUser = sanitizer.sanitize(request.remoteUser);
             this.certificateSubject = sanitizer.sanitize(request.certificateSubject);
             this.certificateIssuer = sanitizer.sanitize(request.certificateIssuer);
+            this.taskId = sanitizer.sanitize(request.taskId);
             this.interaction = request.interaction != null ? new Interaction.Builder(request.interaction, sanitizer).build() : null;
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.submissionType = sanitizer.sanitize(request.submissionType);
@@ -169,6 +178,11 @@ public class FormRequest {
 
         public Builder processInstanceId(String processInstanceId) {
             this.processInstanceId = processInstanceId;
+            return this;
+        }
+
+        public Builder taskId(String taskId) {
+            this.taskId = taskId;
             return this;
         }
 
