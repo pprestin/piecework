@@ -67,7 +67,7 @@ public class RequestHandlerTest {
 
         RequestDetails requestDetails = new RequestDetails.Builder().build();
         Interaction firstInteraction = process.getInteractions().iterator().next();
-        FormRequest formRequest = requestHandler.create(requestDetails, process.getProcessDefinitionKey());
+        FormRequest formRequest = requestHandler.create(requestDetails, process);
         assertValid(formRequest);
 
         FormRequest handleRequest = requestHandler.handle(requestDetails, formRequest.getRequestId());
@@ -83,7 +83,7 @@ public class RequestHandlerTest {
 
         RequestDetails requestDetails = new RequestDetails.Builder().build();
         Interaction firstInteraction = process.getInteractions().iterator().next();
-        FormRequest formRequest = requestHandler.create(requestDetails, process.getProcessDefinitionKey());
+        FormRequest formRequest = requestHandler.create(requestDetails, process);
         assertValid(formRequest);
 
         boolean isExceptionThrown = false;

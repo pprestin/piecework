@@ -2,7 +2,7 @@ define([
   'controllers/base/controller',
   'models/base/model',
   'models/base/collection',
-  'models/runtime/form',
+  'models/runtime/instance',
   'models/runtime/page',
   'views/form/button-view',
   'views/form/button-link-view',
@@ -15,116 +15,23 @@ define([
   'views/base/view',
   'text!templates/form/button.hbs',
   'text!templates/form/button-link.hbs'
-], function(Controller, Model, Collection, Form, Page, ButtonView, ButtonLinkView, FieldsView, FormView,
+], function(Controller, Model, Collection, Instance, Page, ButtonView, ButtonLinkView, FieldsView, FormView,
             GroupingView, HeadView, SectionView, SectionsView, View) {
   'use strict';
 
   var FormController = Controller.extend({
     index: function(params) {
-        this.step(params);
-    },
-    search: function(params) {
-        var result = window.piecework.context.resource;
-        this.compose('resultsModel', Results, result);
-        var resultsModel = this.compose('resultsModel');
-
-        var url = resultsModel.url();
-        var ResultsCollection = Collection.extend({
-            url: url,
-            parse: function(response, options) {
-                return response.list;
-            },
-        });
-        var collection = new ResultsCollection();
-        collection.add(resultsModel.get("list"));
-
-        var statusFilter = new SearchFilter({
-            selector: 'parameters',
-            options: [
-                {id: "statusOpen", label: "Open", key: "processStatus", value: 'open', default: true},
-                {id: "statusComplete", label: "Complete", key: "processStatus", value: 'complete'},
-                {id: "statusCancelled", label: "Canceled", key: "processStatus", value: 'cancelled'},
-                {id: "statusSuspended", label: "Suspended", key: "processStatus", value: 'suspended'},
-                {id: "statusAny", label: "Any status", key: "processStatus", value: 'all' }
-            ],
-            results: resultsModel
-        });
-
-        var processFilter = new SearchFilter({
-            selector: 'parameters',
-            key: 'definitions',
-            results: resultsModel
-        });
-
-        this.compose('searchView', SearchView, {model: resultsModel});
-
-        this.compose('statusFilterContainer', {
-            compose: function(options) {
-                this.model = statusFilter;
-                this.view = SearchFilterView;
-                var autoRender, disabledAutoRender;
-                this.item = new SearchFilterView({container: '.status-filter-container', model: this.model});
-                autoRender = this.item.autoRender;
-                disabledAutoRender = autoRender === void 0 || !autoRender;
-                if (disabledAutoRender && typeof this.item.render === "function") {
-                    return this.item.render();
-                }
-            },
-            check: function(options) {
-                return true;
-            },
-        });
-
-        this.compose('processFilterContainer', {
-            compose: function(options) {
-                this.model = processFilter;
-                this.view = SearchFilterView;
-                var autoRender, disabledAutoRender;
-                this.item = new SearchFilterView({container: '.process-filter-container', model: this.model});
-                autoRender = this.item.autoRender;
-                disabledAutoRender = autoRender === void 0 || !autoRender;
-                if (disabledAutoRender && typeof this.item.render === "function") {
-                    return this.item.render();
-                }
-            },
-            check: function(options) {
-                return true;
-            },
-        });
-        var resultsModel = this.compose('resultsModel');
-        var url = resultsModel.url();
-        var ResultsCollection = Collection.extend({
-            url: url,
-            parse: function(response, options) {
-                return response.list;
-            },
-        });
-        var collection = new ResultsCollection();
-        collection.add(resultsModel.get("list"));
-        this.view = new SearchResultsView({collection: collection});
-
-        var data = {};
-
-        if (params.keyword !== undefined || params.status !== undefined || params.process !== undefined) {
-            if (params.keyword !== undefined && params.keyword != 'none')
-                data['keyword'] = params.keyword;
-            if (params.status !== undefined && params.status != 'undefined')
-                data['processStatus'] = params.status;
-            if (params.process !== undefined && params.process != 'all')
-                data['processDefinitionKey'] = params.process;
-
-            collection.fetch({data: data});
-        }
+//        this.step(params);
     },
     step: function(params) {
-        this.compose('formModel', Form, window.piecework.context.resource);
+        this.compose('instanceModel', Instance, window.piecework.context.resource);
         this.compose('pageModel', Page, window.piecework.context);
 
-        var formModel = this.compose('formModel');
+        var instanceModel = this.compose('instanceModel');
         var pageModel = this.compose('pageModel');
         //        this.compose('headView', HeadView, {model: pageModel});
 
-        var screenModel = formModel.get("screen");
+        var screenModel = instanceModel.get("screen");
         var screenType = screenModel.type;
         var sections = screenModel.sections;
 
@@ -143,10 +50,9 @@ define([
 
         var sectionVisibleMap = {};
         var lastVisibleSection;
-        var pageLink = formModel.get("link");
 
         for (var i=0;i<groupings.length;i++) {
-            groupings[i].breadcrumbLink = pageLink + '/step/' + groupings[i].ordinal;
+            groupings[i].breadcrumbLink = '/' + params.servlet + '/app/instance/' + params.processDefinitionKey + '/' + params.requestId + '/step/' + groupings[i].ordinal;
         }
 
         for (var i=0;i<grouping.sectionIds.length;i++) {
@@ -291,20 +197,15 @@ define([
                   if (button.value != undefined) {
                       if (button.value == 'next') {
                           button.value = groupings.length > grouping.ordinal ? groupings[groupingIndex + 1].breadcrumbLink : '';
+                          //button.value = '/' + params.servlet + '/app/form/' + params.processDefinitionKey + '/' + params.requestId + '/step/' + (grouping.ordinal + 1);
                           button.link = button.value;
-                          button.alt = "Next";
                       } else if (buttons[b].value == 'prev') {
                           if (groupingIndex > 0)
                             button.value = groupings[groupingIndex - 1].breadcrumbLink;
-                          else {
-                            var rootLink = pageLink;
-                            var indexOfLastSlash = rootLink.lastIndexOf('/');
-                            if (indexOfLastSlash != -1 && indexOfLastSlash < rootLink.length)
-                                rootLink = rootLink.substring(0, indexOfLastSlash);
-                            button.value = rootLink;
-                          }
+                          else
+                            button.value = '/' + params.servlet + '/app/form/' + params.processDefinitionKey + '/' + params.requestId;
+                            //button.value += '/step/' + (grouping.ordinal - 1);
                           button.link = button.value;
-                          button.alt = "Previous";
                       }
                   }
 

@@ -121,11 +121,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		httpConfiguration
 			.authorizeUrls()
 			.antMatchers("/static/**").permitAll()
-        	.antMatchers("/sso/**").authenticated();
+            .antMatchers("/public/**").permitAll()
+        	.antMatchers("/secure/**").authenticated();
 
         httpConfiguration
             .authorizeUrls()
-            .antMatchers("/api/**").hasRole("SYSTEM")
+            .antMatchers("/api/**").authenticated() //.hasRole("SYSTEM")
             .and()
             .x509();
 

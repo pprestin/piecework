@@ -65,7 +65,14 @@ public class Interaction implements Serializable {
 
     @XmlElementWrapper(name="taskDefinitionKeys")
     private final Set<String> taskDefinitionKeys;
-	
+
+    @XmlElementWrapper(name="candidates")
+    @XmlElementRef
+    private final List<Candidate> candidates;
+
+    @XmlAttribute
+    private final int ordinal;
+
 	@XmlTransient
 	@JsonIgnore
 	private final boolean isDeleted;
@@ -83,7 +90,9 @@ public class Interaction implements Serializable {
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
 		this.screens = Collections.unmodifiableList(builder.screens);
         this.taskDefinitionKeys = (Set<String>) (builder.taskDefinitionKeys != null ? Collections.unmodifiableSet(builder.taskDefinitionKeys) : Collections.emptySet());
-		this.isDeleted = builder.isDeleted;
+		this.candidates = (List<Candidate>) (builder.candidates != null ? Collections.unmodifiableList(builder.candidates) : Collections.emptyList());
+        this.ordinal = builder.ordinal;
+        this.isDeleted = builder.isDeleted;
 	}
 	
 	public String getId() {
@@ -106,10 +115,23 @@ public class Interaction implements Serializable {
         return taskDefinitionKeys;
     }
 
+    public String getCompletionStatus() {
+        return completionStatus;
+    }
+
+    public List<Candidate> getCandidates() {
+        return candidates;
+    }
+
     public String getLink() {
 		return link;
 	}
 
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    @JsonIgnore
 	public boolean isDeleted() {
 		return isDeleted;
 	}
@@ -122,6 +144,8 @@ public class Interaction implements Serializable {
 		private List<Screen> screens;
         private Set<String> taskDefinitionKeys;
         private String completionStatus;
+        private List<Candidate> candidates;
+        private int ordinal;
 		private boolean isDeleted;
 		
 		public Builder() {
@@ -147,7 +171,19 @@ public class Interaction implements Serializable {
                 for (String taskDefinitionKey : interaction.taskDefinitionKeys) {
                     this.taskDefinitionKeys.add(sanitizer.sanitize(taskDefinitionKey));
                 }
+            } else {
+                this.taskDefinitionKeys = new HashSet<String>();
             }
+            if (interaction.candidates != null && !interaction.candidates.isEmpty()) {
+                this.candidates = new ArrayList<Candidate>(interaction.candidates.size());
+                for (Candidate candidate : interaction.candidates) {
+                    this.candidates.add(new Candidate.Builder(candidate, sanitizer).build());
+                }
+            } else {
+                this.candidates = new ArrayList<Candidate>();
+            }
+            this.ordinal = interaction.ordinal;
+            this.isDeleted = interaction.isDeleted;
 		}
 
 		public Interaction build() {
@@ -173,6 +209,13 @@ public class Interaction implements Serializable {
 			return this;
 		}
 
+        public Builder candidate(Candidate candidate) {
+            if (this.candidates == null)
+                this.candidates = new ArrayList<Candidate>();
+            this.candidates.add(candidate);
+            return this;
+        }
+
         public Builder completionStatus(String completionStatus) {
             this.completionStatus = completionStatus;
             return this;
@@ -194,6 +237,11 @@ public class Interaction implements Serializable {
             if (this.taskDefinitionKeys == null)
                 this.taskDefinitionKeys = new HashSet<String>();
             this.taskDefinitionKeys.add(taskDefinitionKey);
+            return this;
+        }
+
+        public Builder ordinal(int ordinal) {
+            this.ordinal = ordinal;
             return this;
         }
 		

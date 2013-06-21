@@ -16,6 +16,7 @@
 package piecework.engine.activiti.config;
 
 import java.sql.Driver;
+import java.util.Arrays;
 import java.util.Collections;
 
 import javax.sql.DataSource;
@@ -35,7 +36,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import piecework.engine.activiti.CustomBpmnParseHandler;
+import piecework.engine.activiti.CustomBpmnProcessParseHandler;
+import piecework.engine.activiti.CustomBpmnUserTaskParseHandler;
 
 /**
  * @author James Renfro
@@ -77,7 +79,7 @@ public class EngineConfiguration {
 		engineConfiguration.setDatabaseSchemaUpdate("true");
         engineConfiguration.setIdGenerator(new StrongUuidGenerator());
 //        engineConfiguration.setEnableSafeBpmnXml(true);
-        engineConfiguration.setPreBpmnParseHandlers(Collections.<BpmnParseHandler>singletonList(new CustomBpmnParseHandler()));
+        engineConfiguration.setPreBpmnParseHandlers(Arrays.<BpmnParseHandler>asList(new CustomBpmnProcessParseHandler(), new CustomBpmnUserTaskParseHandler()));
 		return engineConfiguration;
 	}
 	

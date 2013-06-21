@@ -118,13 +118,13 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
                     .resource(t)
                     .user(user)
                     .build();
-            OutputStream jsonStream = new ByteArrayOutputStream();
-//            jsonProvider.writeTo(pageContext, PageContext.class, genericType, annotations, mediaType, httpHeaders, jsonStream);
-
 
             final String json = objectMapper.writer().writeValueAsString(pageContext);
 
-            HtmlCleaner cleaner = new HtmlCleaner();
+            CleanerProperties cleanerProperties = new CleanerProperties();
+            cleanerProperties.setOmitXmlDeclaration(true);
+            HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
+
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(new TagNodeVisitor() {
                 @Override

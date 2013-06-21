@@ -47,6 +47,16 @@ public interface Constants {
         public static final String SUBMIT = "submit";
     }
 
+    public static class CandidateTypes {
+        public static final String PERSON = "PERSON";
+        public static final String GROUP = "GROUP";
+    }
+
+    public static class CandidateRoles {
+        public static final String APPROVER = "APPROVER";
+        public static final String WATCHER = "WATCHER";
+    }
+
 	public static class ConstraintTypes {
         public static final String AND = "AND";
         public static final String OR = "OR";
@@ -63,6 +73,7 @@ public interface Constants {
 	
 	public static class ExceptionCodes {
         public static final String certificate_does_not_match = "certificate_does_not_match";
+        public static final String form_access_forbidden = "form_access_forbidden";
         public static final String instance_cannot_be_modified = "instance_cannot_be_modified";
         public static final String instance_does_not_exist = "instance_does_not_exist";
 		public static final String interaction_id_invalid = "interaction_id_invalid";
@@ -122,6 +133,11 @@ public interface Constants {
         public static final String CANCEL = "CANCEL";
         public static final String COMPLETE = "FINAL";
         public static final String SAVE = "SAVE";
+    }
+
+    public static class TaskEventTypes {
+        public static final String CREATE = "CREATE";
+        public static final String COMPLETE = "COMPLETE";
     }
 
     public static class ValidationStatus {

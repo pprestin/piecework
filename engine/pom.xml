@@ -54,6 +54,10 @@
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-email</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.activiti</groupId>
             <artifactId>activiti-engine</artifactId>
             <version>${activiti.version}</version>

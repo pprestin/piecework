@@ -19,6 +19,8 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,15 +36,20 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper {
 	private final Log logger = LogFactory.getLog(CustomLdapUserDetailsMapper.class);
 	
 	private final LdapUserDetailsMapper delegate;
-	
-	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate) {
+    private final String ldapDisplayNameAttribute;
+    private final String ldapEmailAttribute;
+
+	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate, Environment environment) {
 		this.delegate = delegate;
+        this.ldapDisplayNameAttribute = environment.getProperty("ldap.displayname.attribute");
+        this.ldapEmailAttribute = environment.getProperty("ldap.email.attribute");
 	}
 	
 	public UserDetails mapUserFromContext(DirContextOperations ctx, String username, Collection<? extends GrantedAuthority> authorities) {
         UserDetails userDetails = delegate.mapUserFromContext(ctx, username, authorities);
-        String displayName = ctx.getStringAttribute("cn");
-        return new InternalUserDetails(userDetails, displayName);
+        String displayName = ctx.getStringAttribute(ldapDisplayNameAttribute);
+        String emailAddress = ctx.getStringAttribute(ldapEmailAttribute);
+        return new InternalUserDetails(userDetails, displayName, emailAddress);
     }
 	
 }

@@ -29,10 +29,12 @@ public class InternalUserDetails implements UserDetails {
 	
 	private final UserDetails delegate;
 	private final String displayName;
+    private final String emailAddress;
 	
-	public InternalUserDetails(UserDetails delegate, String displayName) {
+	public InternalUserDetails(UserDetails delegate, String displayName, String emailAddress) {
 		this.delegate = delegate;
 		this.displayName = displayName;
+        this.emailAddress = emailAddress;
 	}
 	
 	@Override
@@ -74,4 +76,7 @@ public class InternalUserDetails implements UserDetails {
 		return displayName;
 	}
 
+    public String getEmailAddress() {
+        return emailAddress;
+    }
 }

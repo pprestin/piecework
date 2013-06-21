@@ -1,4 +1,4 @@
-package piecework.process;
+package piecework.task;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.ApiResource;

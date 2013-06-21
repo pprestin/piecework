@@ -27,7 +27,7 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.form.FormResource;
+import piecework.form.AnonymousFormResource;
 import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -72,6 +72,24 @@ public class ResponseHandler {
 
     public Response handle(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
 
+        Form form = buildResponseForm(formRequest, viewContext, validation);
+
+        if (form != null && form.getScreen() != null) {
+            String location = form.getScreen().getLocation();
+
+            if (StringUtils.isNotEmpty(location)) {
+                // If the location is not blank then delegate to the
+                Content content = contentRepository.findByLocation(location);
+                String contentType = content.getContentType();
+                return Response.ok(new StreamingPageContent(form, content), contentType).build();
+            }
+        }
+
+        return Response.ok(form).build();
+    }
+
+
+    public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
         List<FormValue> formValues = findFormValues(formRequest, validation);
         Set<String> includedFieldNames = new HashSet<String>();
 
@@ -157,130 +175,17 @@ public class ResponseHandler {
             }
         }
 
-        Form form = new Form.Builder()
+        return new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
                 .processDefinitionKey(formRequest.getProcessDefinitionKey())
                 .submissionType(formRequest.getSubmissionType())
                 .formValues(includedFormValues)
                 .screen(screen)
                 .build(viewContext);
-
-        if (screen != null) {
-            String location = screen.getLocation();
-
-            if (StringUtils.isNotEmpty(location)) {
-                // If the location is not blank then delegate to the
-                Content content = contentRepository.findByLocation(location);
-                String contentType = content.getContentType();
-                return Response.ok(new StreamingPageContent(form, content), contentType).build();
-            }
-        }
-
-        return Response.ok(form).build();
     }
 
-//    public Response handleBadRequest(FormRequest formRequest, FormValidation validation, ViewContext viewContext) {
-//
-//        List<FormValue> formValues = new ArrayList<FormValue>();
-//
-//        if (validation != null && validation.getResults() != null) {
-//            Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
-//            for (ValidationResult result : validation.getResults()) {
-//                formValues.add(new FormValue.Builder()
-//                        .name(result.getPropertyName())
-//                        .values(validationFormValueMap.get(result.getPropertyName()))
-//                        .message(new Message.Builder()
-//                                .text(result.getMessage())
-//                                .type(result.getType())
-//                                .build())
-//                        .build());
-//            }
-//        }
-//
-//        Screen screen = buildScreen(formRequest, formValues, null);
-//
-//        Form form = new Form.Builder()
-//                .formInstanceId(formRequest.getRequestId())
-//                .processDefinitionKey(formRequest.getProcessDefinitionKey())
-//                .submissionType(formRequest.getSubmissionType())
-//                .formValues(formValues)
-//                .screen(screen)
-//                .invalid()
-//                .build(viewContext);
-//
-//        if (screen != null) {
-//            String location = screen.getLocation();
-//
-//            if (StringUtils.isNotEmpty(location)) {
-//                // If the location is not blank then delegate to the
-//                Content content = contentRepository.findByLocation(location);
-//                String contentType = content.getContentType();
-//                return Response.ok(new StreamingPageContent(form, content), contentType).build();
-//            }
-//        }
-//
-//        return Response.ok(form).build();
-//    }
-
-//    public Screen buildScreen(FormRequest formRequest, List<FormValue> formValues, String confirmationNumber) {
-//        Screen screen = formRequest.getScreen();
-//
-//        if (screen != null) {
-//            ManyMap<String, String> formValueMap = FormDataUtil.getFormValueMap(formValues);
-//
-//            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-//            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
-//
-//            if (screen.getSections() != null) {
-//                Map<String, Field> fieldMap = new HashMap<String, Field>();
-//                for (Section section : screen.getSections()) {
-//                    if (section.getFields() == null)
-//                        continue;
-//
-//                    for (Field field : section.getFields()) {
-//                        if (field.getName() == null)
-//                            continue;
-//
-//                        fieldMap.put(field.getName(), field);
-//                    }
-//                }
-//                for (Section section : screen.getSections()) {
-//                    Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
-//
-//                    for (Field field : section.getFields()) {
-//                        Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer);
-//
-//                        List<Constraint> constraints = field.getConstraints();
-//                        if (constraints != null) {
-//                            if (!ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, formValueMap, constraints))
-//                                fieldBuilder.invisible();
-//                            if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_STATE, constraints))
-//                                addStateOptions(fieldBuilder);
-//                            if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_CONFIRMATION_NUMBER, constraints))
-//                                addConfirmationNumber(fieldBuilder, confirmationNumber);
-//                        }
-//
-//                        sectionBuilder.field(fieldBuilder.build());
-//                    }
-//                    screenBuilder.section(sectionBuilder.build());
-//                }
-//            }
-//            screen = screenBuilder.build();
-//        }
-//
-//        Form form = new Form.Builder()
-//                .formInstanceId(formRequest.getRequestId())
-//                .processDefinitionKey(formRequest.getProcessDefinitionKey())
-//                .submissionType(formRequest.getSubmissionType())
-//                .formValues(formValues)
-//                .screen(screen)
-//                .build(viewContext);
-//
-//        return screen;
-//    }
-
     public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
-        URI uri = UriBuilder.fromResource(FormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
+        URI uri = UriBuilder.fromResource(AnonymousFormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
         return Response.seeOther(uri).build();
     }
 
@@ -348,6 +253,7 @@ public class ResponseHandler {
         List<FormValue> formValues = null;
         if (validation != null && validation.getResults() != null) {
             Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
+            formValues = new ArrayList<FormValue>();
             for (ValidationResult result : validation.getResults()) {
                 formValues.add(new FormValue.Builder()
                         .name(result.getPropertyName())

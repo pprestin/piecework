@@ -12,7 +12,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/runtime/search-filter.hbs
             'change :checkbox': '_onClickCheckbox'
 	    },
 	    initialize: function(options) {
-            View.__super__.initialize.apply(this, options);
+            View.__super__.initialize.apply(this);
 
             var selector = this.model.get('selector');
             var options = this.model.get('options');

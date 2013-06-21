@@ -234,39 +234,4 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
 
-	
-	private void addForm(FormPosition position, Form form) throws RecordNotFoundException {
-//		String processDefinitionKey = form.getProcessDefinitionKey();
-//
-//		if (processDefinitionKey == null)
-//			throw new RecordNotFoundException(null);
-//
-//		String taskDefinitionKey = form.getTaskDefinitionKey();
-//		Process record = processRepository.findOne(processDefinitionKey);
-//
-//		if (record == null)
-//			throw new RecordNotFoundException(processDefinitionKey);
-//
-//		String formId = form.getId();
-
-        Process record = null;
-		// Since the data is coming from storage, use the PassthroughSanitizer
-		Process.Builder builder = new Process.Builder(record, new PassthroughSanitizer());
-//		switch (position) {
-//		case START_REQUEST:
-//			builder.startRequestFormIdentifier(formId);
-//			break;
-//		case START_RESPONSE:
-//			builder.startResponseFormIdentifier(formId);
-//			break;
-//		case TASK_REQUEST:
-//			builder.taskRequestFormIdentifier(taskDefinitionKey, formId);
-//			break;
-//		case TASK_RESPONSE:
-//			builder.taskResponseFormIdentifier(taskDefinitionKey, formId);
-//			break;
-//		}
-		
-		repository.save(builder.build());
-	}
 }

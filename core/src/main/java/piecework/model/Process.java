@@ -87,7 +87,19 @@ public class Process implements Serializable {
 	@XmlElementRef
 	@DBRef
 	private final List<Interaction> interactions;
-	
+
+    @XmlElementWrapper(name="notifications")
+    @XmlElementRef
+    @DBRef
+    private final List<Notification> notifications;
+
+    @XmlElement
+    @DBRef
+    private final Screen defaultScreen;
+
+    @XmlAttribute
+    private final boolean isAnonymousSubmissionAllowed;
+
 	@XmlTransient
 	@JsonIgnore
 	private final boolean isDeleted;
@@ -112,7 +124,10 @@ public class Process implements Serializable {
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey) : null;
 		this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
-		this.isDeleted = builder.isDeleted;
+		this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
+        this.defaultScreen = builder.defaultScreen;
+        this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
+        this.isDeleted = builder.isDeleted;
 	}
 	
 	public String getProcessDefinitionKey() {
@@ -171,6 +186,18 @@ public class Process implements Serializable {
 		return interactions;
 	}
 
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public Screen getDefaultScreen() {
+        return defaultScreen;
+    }
+
+    public boolean isAnonymousSubmissionAllowed() {
+        return isAnonymousSubmissionAllowed;
+    }
+
     @JsonIgnore
 	public boolean isDeleted() {
 		return isDeleted;
@@ -196,6 +223,9 @@ public class Process implements Serializable {
         private String completionStatus;
         private String suspensionStatus;
 		private List<Interaction> interactions;
+        private List<Notification> notifications;
+        private Screen defaultScreen;
+        private boolean isAnonymousSubmissionAllowed;
 		private boolean isDeleted;
 		
 		public Builder() {
@@ -214,13 +244,22 @@ public class Process implements Serializable {
             this.cancellationStatus = sanitizer.sanitize(process.cancellationStatus);
             this.completionStatus = sanitizer.sanitize(process.completionStatus);
             this.suspensionStatus = sanitizer.sanitize(process.suspensionStatus);
-
+            this.defaultScreen = process.defaultScreen != null ? new Screen.Builder(process.defaultScreen, sanitizer).processDefinitionKey(processDefinitionKey).build() : null;
 			if (process.interactions != null && !process.interactions.isEmpty()) {
 				this.interactions = new ArrayList<Interaction>(process.interactions.size());
 				for (Interaction interaction : process.interactions) {
 					this.interactions.add(new Interaction.Builder(interaction, sanitizer).processDefinitionKey(processDefinitionKey).build());
 				}
 			}
+            if (process.notifications != null && !process.notifications.isEmpty()) {
+                this.notifications = new ArrayList<Notification>(process.notifications.size());
+                for (Notification notification : process.notifications) {
+                    if (notification != null)
+                        this.notifications.add(new Notification.Builder(notification, sanitizer).build());
+                }
+            }
+            this.isAnonymousSubmissionAllowed = process.isAnonymousSubmissionAllowed;
+            this.isDeleted = process.isDeleted;
 		}
 
 		public Process build() {
@@ -297,7 +336,29 @@ public class Process implements Serializable {
 			this.interactions = interactions;
 			return this;
 		}
-		
+
+        public Builder notification(Notification notification) {
+            if (this.notifications == null)
+                this.notifications = new ArrayList<Notification>();
+            this.notifications.add(notification);
+            return this;
+        }
+
+        public Builder notifications(List<Notification> notifications) {
+            this.notifications = notifications;
+            return this;
+        }
+
+        public Builder defaultScreen(Screen defaultScreen) {
+            this.defaultScreen = defaultScreen;
+            return this;
+        }
+
+        public Builder allowAnonymousSubmission() {
+            this.isAnonymousSubmissionAllowed = true;
+            return this;
+        }
+
 		public Builder delete() {
 			this.isDeleted = true;
 			return this;

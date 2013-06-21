@@ -23,11 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.model.Field;
-import piecework.model.Screen;
+import piecework.model.*;
 import piecework.ui.StreamingPageContent;
-import piecework.model.Content;
-import piecework.model.FormRequest;
 import piecework.persistence.ContentRepository;
 import piecework.test.ExampleFactory;
 import piecework.test.config.UnitTestConfiguration;
@@ -79,12 +76,12 @@ public class ResponseHandlerTest {
 //    }
 
     @Test
-    public void testBuildScreen() throws Exception {
+    public void testHandle() throws Exception {
         FormRequest formRequest = ExampleFactory.exampleFormRequest("0b82440e-0c3c-4433-b629-c41e68049b8b");
 
-        Screen screen = responseHandler.buildScreen(formRequest, null, null);
+        Form form = responseHandler.buildResponseForm(formRequest, null, null);
 
-        Field supervisorIdField = screen.getSections().get(1).getFields().get(0);
+        Field supervisorIdField = form.getScreen().getSections().get(1).getFields().get(0);
 
         Assert.assertTrue(supervisorIdField.isVisible());
     }

@@ -58,6 +58,7 @@ public class FormRequest {
     private FormRequest() {
         this(new FormRequest.Builder());
     }
+
     private FormRequest(FormRequest.Builder builder) {
         this.requestId = builder.requestId;
         this.processDefinitionKey = builder.processDefinitionKey;

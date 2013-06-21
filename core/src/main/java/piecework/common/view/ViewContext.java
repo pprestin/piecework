@@ -69,13 +69,14 @@ public class ViewContext {
 	}
 	
 	protected String buildUri(boolean includeVersion, String base, String ... ids) {
-		StringBuilder builder = new StringBuilder();
-		
-		if (path != null) {
-			builder.append(base).append("/");
+
+		if (base != null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(base);
             if (includeVersion && version != null)
-                builder.append(version).append("/");
-            builder.append(path);
+                builder.append("/").append(version);
+            if (path != null)
+                builder.append("/").append(path);
 			
 			if (ids != null && ids.length > 0) {
 				for (String id : ids) 

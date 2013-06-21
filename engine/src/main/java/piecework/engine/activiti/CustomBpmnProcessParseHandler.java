@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
-public class CustomBpmnParseHandler extends AbstractBpmnParseHandler<Process> {
+public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Process> {
 
     @Override
     protected void executeParse(BpmnParse bpmnParse, Process element) {

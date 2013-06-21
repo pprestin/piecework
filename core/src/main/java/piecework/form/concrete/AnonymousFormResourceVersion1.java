@@ -15,42 +15,37 @@
  */
 package piecework.form.concrete;
 
+import java.util.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.*;
+
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+
 import piecework.Constants;
 import piecework.common.RequestDetails;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
-import piecework.exception.BadRequestError;
-import piecework.exception.ForbiddenError;
-import piecework.exception.StatusCodeError;
-import piecework.form.FormResource;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
 import piecework.form.validation.FormValidation;
-import piecework.model.*;
 import piecework.model.Form;
-import piecework.model.Process;
-import piecework.process.ProcessInstancePayload;
-import piecework.process.ProcessInstanceService;
-import piecework.process.ProcessRepository;
-import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.*;
-import java.util.ArrayList;
-import java.util.List;
+import piecework.common.view.ViewContext;
+import piecework.exception.*;
+import piecework.form.*;
+import piecework.model.*;
+import piecework.model.Process;
+import piecework.process.*;
 
 /**
  * @author James Renfro
  */
 @Service
-public class FormResourceVersion1 implements FormResource {
+public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
 
     private static final Logger LOG = Logger.getLogger(FormResourceVersion1.class);
 
@@ -61,61 +56,53 @@ public class FormResourceVersion1 implements FormResource {
     ProcessRepository processRepository;
 
     @Autowired
-    ProcessInstanceService processInstanceService;
-
-    @Autowired
-    RequestHandler requestHandler;
-
-    @Autowired
     FormService formService;
-
-    @Autowired
-    ResourceHelper resourceHelper;
-
-    @Autowired
-    ResponseHandler responseHandler;
 
     @Autowired
     Sanitizer sanitizer;
 
     @Override
     public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
+
         return formService.redirectToNewRequestResponse(request, getViewContext(), process);
     }
 
     @Override
     public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final HttpServletRequest request) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
+
         return formService.provideFormResponse(request, getViewContext(), process, pathSegments);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
+
         return formService.submitForm(request, getViewContext(), process, rawRequestId, body);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
+
         return formService.validateForm(request, getViewContext(), process, body, rawRequestId, rawValidationId);
     }
 
     @Override
-    public SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError {
-        MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        return processInstanceService.search(rawQueryParameters, getViewContext());
+    public ViewContext getViewContext() {
+        String publicApplicationUri = environment.getProperty("base.public.uri");
+        return new ViewContext(publicApplicationUri, null, null, Form.Constants.ROOT_ELEMENT_NAME, "Form");
     }
 
-    @Override
-	public ViewContext getViewContext() {
-        String baseApplicationUri = environment.getProperty("base.application.uri");
-		return new ViewContext(baseApplicationUri, null, null, Form.Constants.ROOT_ELEMENT_NAME, "Form");
-	}
+    private Process verifyProcessAllowsAnonymousSubmission(final String rawProcessDefinitionKey) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = processRepository.findOne(processDefinitionKey);
 
+        // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
+        if (process == null || !process.isAnonymousSubmissionAllowed())
+            throw new NotFoundError();
+
+        return process;
+    }
 }

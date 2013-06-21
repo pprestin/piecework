@@ -81,22 +81,16 @@ public class LdapConfiguration {
 		CIPHER_SUITES_LIST = Arrays.asList(CIPHER_SUITES);
 	}
 
-//	@Autowired
-//	Environment env;
-//
-//	@Autowired
-//	Bus cxf;
-	
     @Autowired
     AuthorizationRoleMapper authorizationRoleMapper;
-		
+
 	@Bean
 	public UserDetailsService userDetailsService(Environment environment) throws Exception {
 		LdapUserDetailsService userDetailsService = new LdapUserDetailsService(userSearch(environment), authoritiesPopulator(environment));
-		userDetailsService.setUserDetailsMapper(new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper()));
+		userDetailsService.setUserDetailsMapper(new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), environment));
 		return userDetailsService;
 	}
-	
+
 	@Bean
 	public LdapContextSource groupLdapContextSource(Environment environment) throws Exception {
         String ldapGroupUrl = environment.getProperty("ldap.group.url");

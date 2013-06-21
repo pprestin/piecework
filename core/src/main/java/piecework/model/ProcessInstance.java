@@ -98,7 +98,6 @@ public class ProcessInstance implements Serializable {
     @XmlAttribute
     private final String uri;
 
-
     @XmlTransient
     @JsonIgnore
     private final String engineProcessInstanceId;
@@ -302,6 +301,8 @@ public class ProcessInstance implements Serializable {
             if (instance.submissions != null && !instance.submissions.isEmpty()) {
                 this.submissions = new ArrayList<FormSubmission>(instance.submissions.size());
                 for (FormSubmission submission : instance.submissions) {
+                    if (submission == null)
+                        continue;
                     this.submissions.add(new FormSubmission.Builder(submission, sanitizer).build());
                 }
             }

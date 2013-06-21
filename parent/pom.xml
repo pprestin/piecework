@@ -40,6 +40,7 @@
 		<commons-beanutils.version>1.8.3</commons-beanutils.version>
 		<commons-collections.version>3.2</commons-collections.version>
 		<commons-http-client.version>3.0.1</commons-http-client.version>
+        <commons-email.version>1.3.1</commons-email.version>
 		<commons-io.version>1.4</commons-io.version>
 		<commons-lang.version>2.3</commons-lang.version>
 		<commons-validator.version>1.4.0</commons-validator.version>
@@ -320,6 +321,11 @@
 				<version>${camel.version}</version>
 				<type>jar</type>
 			</dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-email</artifactId>
+                <version>${commons-email.version}</version>
+            </dependency>
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-transports-http-jetty</artifactId>

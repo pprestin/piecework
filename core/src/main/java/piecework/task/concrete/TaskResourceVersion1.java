@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.concrete;
+package piecework.task.concrete;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
@@ -39,8 +39,10 @@ import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.process.*;
+import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.TaskResource;
 import piecework.util.ManyMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -111,7 +113,7 @@ public class TaskResourceVersion1 implements TaskResource {
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey);
+        FormRequest formRequest = requestHandler.create(requestDetails, process);
         Screen screen = formRequest.getScreen();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestId(formRequest.getRequestId()).multipartBody(body);

@@ -85,11 +85,14 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
             var type = screen.type;
 
             if (type == 'wizard') {
-                this._doValidate();
-
                 var validated = $('#main-form').prop("validated");
 
-                return validated != undefined && validated;
+                if (validated != undefined && validated)
+                    return true;
+
+                this._doValidate();
+
+                return false;
             }
 
 	        return true;

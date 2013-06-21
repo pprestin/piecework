@@ -58,7 +58,7 @@ public class LdapAuthenticationHandlerTest {
 //		
 //		ClassResourceInfo resourceClass = Mockito.mock(ClassResourceInfo.class);
 //		Mockito.when(message.get(SecurityToken.class)).thenReturn(new UsernameToken(id, password, null, false, null, null));
-//		Mockito.when(message.get("org.apache.cxf.resource.method")).thenReturn(FormResourceVersion1.class.getMethod("read", String.class));
+//		Mockito.when(message.get("org.apache.cxf.resource.method")).thenReturn(AnonymousFormResourceVersion1.class.getMethod("read", String.class));
 //		Mockito.doAnswer(new SecurityContextStorageAnswer(map)).when(message).put(Mockito.any(Class.class), Mockito.any());
 //		Mockito.when(message.get(SecurityContext.class)).then(new SecurityContextRetrievalAnswer(map));
 //		Mockito.when(exchange.get(Mockito.any())).thenReturn(null);

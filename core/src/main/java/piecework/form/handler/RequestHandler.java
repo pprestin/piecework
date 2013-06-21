@@ -21,11 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.RequestDetails;
-import piecework.exception.ForbiddenError;
-import piecework.exception.InternalServerError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
+import piecework.exception.*;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.RequestRepository;
 
@@ -47,14 +45,17 @@ public class RequestHandler {
     @Autowired
     RequestRepository requestRepository;
 
-    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey) throws StatusCodeError {
-        return create(requestDetails, processDefinitionKey, null, null, null);
+    public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {
+        return create(requestDetails, process, null, null, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey, String processInstanceId, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, Process process, String processInstanceId, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
         Interaction interaction = null;
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
+
+        if (process == null)
+            throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
 
         if (previousFormRequest != null) {
             interaction = previousFormRequest.getInteraction();
@@ -92,11 +93,6 @@ public class RequestHandler {
                 submissionType = Constants.SubmissionTypes.INTERIM;
 
         } else {
-            piecework.model.Process process = processRepository.findOne(processDefinitionKey);
-
-            if (process == null)
-                throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
-
             List<Interaction> interactions = process.getInteractions();
 
             if (interactions == null || interactions.isEmpty())
@@ -105,8 +101,12 @@ public class RequestHandler {
             // Pick the first interaction and the first screen
             interaction = interactions.iterator().next();
 
-            if (interaction != null && !interaction.getScreens().isEmpty())
-                nextScreen = interaction.getScreens().iterator().next();
+            if (interaction != null && !interaction.getScreens().isEmpty()) {
+                Iterator<Screen> screenIterator = interaction.getScreens().iterator();
+                nextScreen = screenIterator.next();
+                if (screenIterator.hasNext())
+                    submissionType = Constants.SubmissionTypes.INTERIM;
+            }
         }
 
         // Generate a new uuid for this request
@@ -114,7 +114,7 @@ public class RequestHandler {
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .requestId(requestId)
-                .processDefinitionKey(processDefinitionKey)
+                .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(processInstanceId)
                 .taskId(taskId)
                 .interaction(interaction)

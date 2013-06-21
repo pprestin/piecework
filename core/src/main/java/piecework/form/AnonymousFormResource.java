@@ -15,20 +15,26 @@
  */
 package piecework.form;
 
+import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
-import piecework.ApplicationResource;
+
 import piecework.PublicApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
 import piecework.exception.StatusCodeError;
 
-import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.util.List;
 
 /**
@@ -36,7 +42,7 @@ import java.util.List;
  */
 @Path("form")
 @Produces("text/html")
-public interface FormResource extends ApplicationResource {
+public interface AnonymousFormResource extends PublicApplicationResource {
 
     @GET
     @Path("{processDefinitionKey}")
@@ -60,10 +66,5 @@ public interface FormResource extends ApplicationResource {
     @Produces("application/json")
     @Consumes("multipart/form-data")
     Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
-
-    @GET
-    @Path("")
-    @RolesAllowed({AuthorizationRole.OVERSEER, AuthorizationRole.USER})
-    SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
 
 }
