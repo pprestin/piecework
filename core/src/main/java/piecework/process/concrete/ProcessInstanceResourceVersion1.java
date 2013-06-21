@@ -224,7 +224,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Process process = getProcess(processDefinitionKey);
 
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, null, null, null);
+        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey);
         Screen screen = formRequest.getScreen();
 
         ProcessInstance instance = processInstanceService.submit(process, screen, payload);

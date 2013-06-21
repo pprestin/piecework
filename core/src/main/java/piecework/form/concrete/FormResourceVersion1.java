@@ -18,7 +18,6 @@ package piecework.form.concrete;
 import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 
@@ -26,13 +25,11 @@ import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.common.RequestDetails;
-import piecework.engine.TaskCriteria;
-import piecework.engine.exception.ProcessEngineException;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
 import piecework.form.validation.FormValidation;
@@ -44,8 +41,6 @@ import piecework.form.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
-import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -56,7 +51,7 @@ public class FormResourceVersion1 implements FormResource {
     private static final Logger LOG = Logger.getLogger(FormResourceVersion1.class);
 
     @Autowired
-    ProcessEngineRuntimeFacade facade;
+    Environment environment;
 
     @Autowired
     ProcessRepository processRepository;
@@ -73,37 +68,14 @@ public class FormResourceVersion1 implements FormResource {
 	@Autowired
     Sanitizer sanitizer;
 
-    @Value("${base.application.uri}")
-    String baseApplicationUri;
-
-    @Value("${base.service.uri}")
-    String baseServiceUri;
-
-    @Value("${certificate.issuer.header}")
-    String certificateIssuerHeader;
-
-    @Value("${certificate.subject.header}")
-    String certificateSubjectHeader;
-
     @Override
     public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 
-        Process process = processRepository.findOne(processDefinitionKey);
-
-        if (process == null)
-            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
-
-        List<Interaction> interactions = process.getInteractions();
-
-        if (interactions == null || interactions.isEmpty())
-            throw new InternalServerError();
-
-        // Pick the first interaction and the first screen
-        Interaction interaction = interactions.iterator().next();
-
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, null, null);
+        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey);
 
         return responseHandler.redirect(formRequest, getViewContext());
     }
@@ -117,62 +89,56 @@ public class FormResourceVersion1 implements FormResource {
             requestId = sanitizer.sanitize(pathSegments.iterator().next().getPath());
         }
 
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+
+        if (formRequest.getProcessDefinitionKey() == null || processDefinitionKey == null || !formRequest.getProcessDefinitionKey().equals(processDefinitionKey))
+            throw new BadRequestError();
+
+        return responseHandler.handle(formRequest, getViewContext());
+	}
+
+//    @Override
+//    public Response read(final String rawProcessDefinitionKey, final String rawTaskId, final HttpServletRequest request) throws StatusCodeError {
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//        String taskId = sanitizer.sanitize(rawTaskId);
+//
 //        Process process = processRepository.findOne(processDefinitionKey);
 //
 //        if (process == null)
 //            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 //
-//        List<Interaction> interactions = process.getInteractions();
+//        TaskCriteria criteria = new TaskCriteria.Builder()
+//                .engine(process.getEngine())
+//                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+//                .taskId(taskId)
+//                .build();
 //
-//        if (interactions == null || interactions.isEmpty())
+//        try {
+//            Task task = facade.findTask(criteria);
+//            if (task == null)
+//                throw new NotFoundError(Constants.ExceptionCodes.task_does_not_exist);
+//
+//            ProcessInstance instance = processInstanceService.findOne(process, task.getEngineProcessInstanceId());
+//            List<FormValue> formValues = instance != null ? instance.getFormData() : new ArrayList<FormValue>();
+//
+//            Interaction selectedInteraction = selectInteraction(process, task);
+//
+//            String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+//            String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+//            RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+//            FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, selectedInteraction, null, null);
+//
+//            return responseHandler.handle(formRequest, formValues, getViewContext());
+//
+//        } catch (ProcessEngineException e) {
+//            LOG.error("Process engine unable to find task ", e);
 //            throw new InternalServerError();
-//
-//        // Pick the first interaction and the first screen
-//        Interaction interaction = interactions.iterator().next();
-
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-//        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, null, null);
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-
-        return responseHandler.handle(formRequest, null, getViewContext());
-	}
-
-//    @Override
-    public Response read(final String rawProcessDefinitionKey, final String rawTaskId, final HttpServletRequest request) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String taskId = sanitizer.sanitize(rawTaskId);
-
-        Process process = processRepository.findOne(processDefinitionKey);
-
-        if (process == null)
-            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
-
-        TaskCriteria criteria = new TaskCriteria.Builder()
-                .engine(process.getEngine())
-                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
-                .taskId(taskId)
-                .build();
-
-        try {
-            Task task = facade.findTask(criteria);
-            if (task == null)
-                throw new NotFoundError(Constants.ExceptionCodes.task_does_not_exist);
-
-            ProcessInstance instance = processInstanceService.findOne(process, task.getEngineProcessInstanceId());
-            List<FormValue> formValues = instance != null ? instance.getFormData() : new ArrayList<FormValue>();
-
-            Interaction selectedInteraction = selectInteraction(process, task);
-
-            RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-            FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, selectedInteraction, null, null);
-
-            return responseHandler.handle(formRequest, formValues, getViewContext());
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to find task ", e);
-            throw new InternalServerError();
-        }
-    }
+//        }
+//    }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
@@ -182,6 +148,8 @@ public class FormResourceVersion1 implements FormResource {
         // Make sure that we're dealing with an existing process and that the request identifier is not empty
         piecework.model.Process process = verifyInputs(processDefinitionKey, requestId);
 
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         // This will guarantee that the request is valid
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
@@ -192,32 +160,21 @@ public class FormResourceVersion1 implements FormResource {
         try {
             ProcessInstance stored = processInstanceService.submit(process, screen, payload);
             List<FormValue> formValues = stored != null ? stored.getFormData() : new ArrayList<FormValue>();
-
-            Interaction interaction = formRequest.getInteraction();
-
-            if (interaction == null)
-                throw new InternalServerError();
-
-            List<Screen> screens = interaction.getScreens();
-
-            if (screens == null || screens.isEmpty())
-                throw new InternalServerError();
-
             FormRequest nextFormRequest = null;
 
             if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                nextFormRequest = requestHandler.create(requestDetails, processDefinitionKey, interaction, formRequest.getScreen(), stored.getProcessInstanceId());
+                nextFormRequest = requestHandler.create(requestDetails, processDefinitionKey, stored.getProcessInstanceId(), null, formRequest);
 
             // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
             if (nextFormRequest == null) {
                 return Response.noContent().build();
             }
 
-            return responseHandler.handle(nextFormRequest, formValues, getViewContext());
+            return responseHandler.handle(nextFormRequest, getViewContext());
 
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
-            return responseHandler.handleBadRequest(formRequest, validation, getViewContext());
+            return responseHandler.handle(formRequest, getViewContext(), validation);
         }
     }
 
@@ -229,6 +186,8 @@ public class FormResourceVersion1 implements FormResource {
         // Make sure that we're dealing with an existing process and that the request identifier is not empty
         piecework.model.Process process = verifyInputs(processDefinitionKey, requestId);
 
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         // This will guarantee that the request is valid
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
@@ -248,6 +207,8 @@ public class FormResourceVersion1 implements FormResource {
 
     @Override
 	public ViewContext getViewContext() {
+        String baseApplicationUri = environment.getProperty("base.application.uri");
+        String baseServiceUri = environment.getProperty("base.service.uri");
 		return new ViewContext(baseApplicationUri, baseServiceUri, null, "form", "Form");
 	}
 	
@@ -274,20 +235,6 @@ public class FormResourceVersion1 implements FormResource {
 //		}
 //		return null;
 //	}
-
-    private Interaction selectInteraction(Process process, Task task) {
-        Interaction selectedInteraction = null;
-        List<Interaction> interactions = process.getInteractions();
-        if (interactions != null && !interactions.isEmpty()) {
-            for (Interaction interaction : interactions) {
-                if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
-                    selectedInteraction = interaction;
-                    break;
-                }
-            }
-        }
-        return selectedInteraction;
-    }
 
     private Process verifyInputs(String processDefinitionKey, String requestId) throws StatusCodeError {
         piecework.model.Process process = processRepository.findOne(processDefinitionKey);

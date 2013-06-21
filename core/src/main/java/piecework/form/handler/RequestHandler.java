@@ -18,19 +18,17 @@ package piecework.form.handler;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.RequestDetails;
 import piecework.exception.ForbiddenError;
 import piecework.exception.InternalServerError;
+import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.model.FormRequest;
-import piecework.model.Interaction;
-import piecework.model.Screen;
+import piecework.model.*;
+import piecework.process.ProcessRepository;
 import piecework.process.RequestRepository;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -44,17 +42,27 @@ public class RequestHandler {
     private static final Logger LOG = Logger.getLogger(RequestHandler.class);
 
     @Autowired
+    ProcessRepository processRepository;
+
+    @Autowired
     RequestRepository requestRepository;
 
-    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey, Interaction interaction) throws StatusCodeError {
-        return create(requestDetails, processDefinitionKey, interaction, null, null);
+    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey) throws StatusCodeError {
+        return create(requestDetails, processDefinitionKey, null, null, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey, Interaction interaction, Screen currentScreen, String processInstanceId) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, String processDefinitionKey, String processInstanceId, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
+        Interaction interaction = null;
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
 
-        if (interaction != null) {
+        if (previousFormRequest != null) {
+            interaction = previousFormRequest.getInteraction();
+            Screen currentScreen = previousFormRequest.getScreen();
+
+            if (interaction == null)
+                throw new InternalServerError();
+
             List<Screen> screens = interaction.getScreens();
 
             if (screens == null || screens.isEmpty())
@@ -83,6 +91,22 @@ public class RequestHandler {
             if (screenIterator.hasNext())
                 submissionType = Constants.SubmissionTypes.INTERIM;
 
+        } else {
+            piecework.model.Process process = processRepository.findOne(processDefinitionKey);
+
+            if (process == null)
+                throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
+
+            List<Interaction> interactions = process.getInteractions();
+
+            if (interactions == null || interactions.isEmpty())
+                throw new InternalServerError();
+
+            // Pick the first interaction and the first screen
+            interaction = interactions.iterator().next();
+
+            if (interaction != null && !interaction.getScreens().isEmpty())
+                nextScreen = interaction.getScreens().iterator().next();
         }
 
         // Generate a new uuid for this request
@@ -92,6 +116,7 @@ public class RequestHandler {
                 .requestId(requestId)
                 .processDefinitionKey(processDefinitionKey)
                 .processInstanceId(processInstanceId)
+                .taskId(taskId)
                 .interaction(interaction)
                 .screen(nextScreen)
                 .submissionType(submissionType);
@@ -143,12 +168,6 @@ public class RequestHandler {
 
                 }
             }
-        }
-
-        if (StringUtils.isNotEmpty(formRequest.getTaskId())) {
-
-
-
         }
 
         return formRequest;

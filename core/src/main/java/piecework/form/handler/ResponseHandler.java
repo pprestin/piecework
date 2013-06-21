@@ -21,11 +21,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.view.ViewContext;
+import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.engine.TaskCriteria;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
+import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormResource;
 import piecework.form.validation.FormValidation;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.process.ProcessInstanceRepository;
+import piecework.process.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
@@ -36,12 +43,7 @@ import piecework.util.ManyMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.*;
 
 
 /**
@@ -55,77 +57,53 @@ public class ResponseHandler {
     @Autowired
     ContentRepository contentRepository;
 
-    public Response handle(FormRequest formRequest, List<FormValue> formValues, ViewContext viewContext) throws StatusCodeError {
+    @Autowired
+    ProcessEngineRuntimeFacade facade;
 
-        Screen screen = buildScreen(formRequest, formValues, formRequest.getProcessInstanceId());
+    @Autowired
+    ProcessRepository processRepository;
 
-        Form form = new Form.Builder()
-                .formInstanceId(formRequest.getRequestId())
-                .processDefinitionKey(formRequest.getProcessDefinitionKey())
-                .submissionType(formRequest.getSubmissionType())
-                .formValues(formValues)
-                .screen(screen)
-                .build(viewContext);
+    @Autowired
+    ProcessInstanceRepository processInstanceRepository;
 
-        if (screen != null) {
-            String location = screen.getLocation();
-
-            if (StringUtils.isNotEmpty(location)) {
-                // If the location is not blank then delegate to the
-                Content content = contentRepository.findByLocation(location);
-                String contentType = content.getContentType();
-                return Response.ok(new StreamingPageContent(form, content), contentType).build();
-            }
-        }
-
-        return Response.ok(form).build();
+    public Response handle(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
+        return handle(formRequest, viewContext, null);
     }
 
-    public Response handleBadRequest(FormRequest formRequest, FormValidation validation, ViewContext viewContext) {
+    public Response handle(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
 
-        List<FormValue> formValues = new ArrayList<FormValue>();
+        List<FormValue> formValues = findFormValues(formRequest, validation);
+        Set<String> includedFieldNames = new HashSet<String>();
 
-        if (validation != null && validation.getResults() != null) {
-            Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
-            for (ValidationResult result : validation.getResults()) {
-                formValues.add(new FormValue.Builder()
-                        .name(result.getPropertyName())
-                        .values(validationFormValueMap.get(result.getPropertyName()))
-                        .message(new Message.Builder()
-                                .text(result.getMessage())
-                                .type(result.getType())
-                                .build())
-                        .build());
-            }
-        }
-
-        Screen screen = buildScreen(formRequest, formValues, null);
-
-        Form form = new Form.Builder()
-                .formInstanceId(formRequest.getRequestId())
-                .processDefinitionKey(formRequest.getProcessDefinitionKey())
-                .submissionType(formRequest.getSubmissionType())
-                .formValues(formValues)
-                .screen(screen)
-                .invalid()
-                .build(viewContext);
-
-        if (screen != null) {
-            String location = screen.getLocation();
-
-            if (StringUtils.isNotEmpty(location)) {
-                // If the location is not blank then delegate to the
-                Content content = contentRepository.findByLocation(location);
-                String contentType = content.getContentType();
-                return Response.ok(new StreamingPageContent(form, content), contentType).build();
-            }
-        }
-
-        return Response.ok(form).build();
-    }
-
-    public Screen buildScreen(FormRequest formRequest, List<FormValue> formValues, String confirmationNumber) {
         Screen screen = formRequest.getScreen();
+
+        if (screen == null && StringUtils.isNotEmpty(formRequest.getTaskId())) {
+            Process process = processRepository.findOne(formRequest.getProcessDefinitionKey());
+
+            if (process == null)
+                throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
+
+            TaskCriteria criteria = new TaskCriteria.Builder()
+                    .engine(process.getEngine())
+                    .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                    .taskId(formRequest.getTaskId())
+                    .build();
+
+            try {
+                Task task = facade.findTask(criteria);
+                if (task == null)
+                    throw new NotFoundError(Constants.ExceptionCodes.task_does_not_exist);
+
+                Interaction selectedInteraction = selectInteraction(process, task);
+
+                if (selectedInteraction != null && !selectedInteraction.getScreens().isEmpty())
+                    screen = selectedInteraction.getScreens().iterator().next();
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to find task ", e);
+                throw new InternalServerError();
+            }
+        }
 
         if (screen != null) {
             ManyMap<String, String> formValueMap = FormDataUtil.getFormValueMap(formValues);
@@ -144,6 +122,7 @@ public class ResponseHandler {
                             continue;
 
                         fieldMap.put(field.getName(), field);
+                        includedFieldNames.add(field.getName());
                     }
                 }
                 for (Section section : screen.getSections()) {
@@ -159,7 +138,7 @@ public class ResponseHandler {
                             if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_STATE, constraints))
                                 addStateOptions(fieldBuilder);
                             if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_CONFIRMATION_NUMBER, constraints))
-                                addConfirmationNumber(fieldBuilder, confirmationNumber);
+                                addConfirmationNumber(fieldBuilder, formRequest.getProcessInstanceId());
                         }
 
                         sectionBuilder.field(fieldBuilder.build());
@@ -170,22 +149,139 @@ public class ResponseHandler {
             screen = screenBuilder.build();
         }
 
-        return screen;
+        List<FormValue> includedFormValues = new ArrayList<FormValue>();
+        if (formValues != null) {
+            for (FormValue formValue : formValues) {
+                if (includedFieldNames.contains(formValue.getName()))
+                    includedFormValues.add(formValue);
+            }
+        }
+
+        Form form = new Form.Builder()
+                .formInstanceId(formRequest.getRequestId())
+                .processDefinitionKey(formRequest.getProcessDefinitionKey())
+                .submissionType(formRequest.getSubmissionType())
+                .formValues(includedFormValues)
+                .screen(screen)
+                .build(viewContext);
+
+        if (screen != null) {
+            String location = screen.getLocation();
+
+            if (StringUtils.isNotEmpty(location)) {
+                // If the location is not blank then delegate to the
+                Content content = contentRepository.findByLocation(location);
+                String contentType = content.getContentType();
+                return Response.ok(new StreamingPageContent(form, content), contentType).build();
+            }
+        }
+
+        return Response.ok(form).build();
     }
 
-    public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
-
-//        Form form = new Form.Builder()
-//                .processDefinitionKey(formRequest.getProcessDefinitionKey())
-//                .formInstanceId(formRequest.getRequestId())
-//                .build(viewContext);
-//        try {
-            URI uri = UriBuilder.fromResource(FormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
-            return Response.seeOther(uri).build();
-//        } catch (URISyntaxException e) {
-//            LOG.error("Could not produce uri for " + form.getLink());
-//            throw new InternalServerError();
+//    public Response handleBadRequest(FormRequest formRequest, FormValidation validation, ViewContext viewContext) {
+//
+//        List<FormValue> formValues = new ArrayList<FormValue>();
+//
+//        if (validation != null && validation.getResults() != null) {
+//            Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
+//            for (ValidationResult result : validation.getResults()) {
+//                formValues.add(new FormValue.Builder()
+//                        .name(result.getPropertyName())
+//                        .values(validationFormValueMap.get(result.getPropertyName()))
+//                        .message(new Message.Builder()
+//                                .text(result.getMessage())
+//                                .type(result.getType())
+//                                .build())
+//                        .build());
+//            }
 //        }
+//
+//        Screen screen = buildScreen(formRequest, formValues, null);
+//
+//        Form form = new Form.Builder()
+//                .formInstanceId(formRequest.getRequestId())
+//                .processDefinitionKey(formRequest.getProcessDefinitionKey())
+//                .submissionType(formRequest.getSubmissionType())
+//                .formValues(formValues)
+//                .screen(screen)
+//                .invalid()
+//                .build(viewContext);
+//
+//        if (screen != null) {
+//            String location = screen.getLocation();
+//
+//            if (StringUtils.isNotEmpty(location)) {
+//                // If the location is not blank then delegate to the
+//                Content content = contentRepository.findByLocation(location);
+//                String contentType = content.getContentType();
+//                return Response.ok(new StreamingPageContent(form, content), contentType).build();
+//            }
+//        }
+//
+//        return Response.ok(form).build();
+//    }
+
+//    public Screen buildScreen(FormRequest formRequest, List<FormValue> formValues, String confirmationNumber) {
+//        Screen screen = formRequest.getScreen();
+//
+//        if (screen != null) {
+//            ManyMap<String, String> formValueMap = FormDataUtil.getFormValueMap(formValues);
+//
+//            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+//            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
+//
+//            if (screen.getSections() != null) {
+//                Map<String, Field> fieldMap = new HashMap<String, Field>();
+//                for (Section section : screen.getSections()) {
+//                    if (section.getFields() == null)
+//                        continue;
+//
+//                    for (Field field : section.getFields()) {
+//                        if (field.getName() == null)
+//                            continue;
+//
+//                        fieldMap.put(field.getName(), field);
+//                    }
+//                }
+//                for (Section section : screen.getSections()) {
+//                    Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
+//
+//                    for (Field field : section.getFields()) {
+//                        Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer);
+//
+//                        List<Constraint> constraints = field.getConstraints();
+//                        if (constraints != null) {
+//                            if (!ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, formValueMap, constraints))
+//                                fieldBuilder.invisible();
+//                            if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_STATE, constraints))
+//                                addStateOptions(fieldBuilder);
+//                            if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_CONFIRMATION_NUMBER, constraints))
+//                                addConfirmationNumber(fieldBuilder, confirmationNumber);
+//                        }
+//
+//                        sectionBuilder.field(fieldBuilder.build());
+//                    }
+//                    screenBuilder.section(sectionBuilder.build());
+//                }
+//            }
+//            screen = screenBuilder.build();
+//        }
+//
+//        Form form = new Form.Builder()
+//                .formInstanceId(formRequest.getRequestId())
+//                .processDefinitionKey(formRequest.getProcessDefinitionKey())
+//                .submissionType(formRequest.getSubmissionType())
+//                .formValues(formValues)
+//                .screen(screen)
+//                .build(viewContext);
+//
+//        return screen;
+//    }
+
+    public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
+        URI uri = UriBuilder.fromResource(FormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
+        return Response.seeOther(uri).build();
     }
 
     private void addConfirmationNumber(Field.Builder fieldBuilder, String confirmationNumber) {
@@ -246,6 +342,42 @@ public class ResponseHandler {
             .option(new Option.Builder().value("WV").name("West Virginia").build())
             .option(new Option.Builder().value("WI").name("Wisconsin").build())
             .option(new Option.Builder().value("WY").name("Wyoming").build());
+    }
+
+    private List<FormValue> findFormValues(FormRequest formRequest, FormValidation validation) {
+        List<FormValue> formValues = null;
+        if (validation != null && validation.getResults() != null) {
+            Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
+            for (ValidationResult result : validation.getResults()) {
+                formValues.add(new FormValue.Builder()
+                        .name(result.getPropertyName())
+                        .values(validationFormValueMap.get(result.getPropertyName()))
+                        .message(new Message.Builder()
+                                .text(result.getMessage())
+                                .type(result.getType())
+                                .build())
+                        .build());
+            }
+        } else if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
+            ProcessInstance processInstance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
+            formValues = processInstance.getFormData();
+        }
+
+        return formValues;
+    }
+
+    private Interaction selectInteraction(Process process, Task task) {
+        Interaction selectedInteraction = null;
+        List<Interaction> interactions = process.getInteractions();
+        if (interactions != null && !interactions.isEmpty()) {
+            for (Interaction interaction : interactions) {
+                if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
+                    selectedInteraction = interaction;
+                    break;
+                }
+            }
+        }
+        return selectedInteraction;
     }
 
 }

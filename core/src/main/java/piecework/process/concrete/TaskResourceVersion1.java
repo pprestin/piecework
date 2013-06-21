@@ -16,7 +16,6 @@
 package piecework.process.concrete;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
@@ -25,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
@@ -33,17 +31,13 @@ import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.TaskCriteria;
 import piecework.engine.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.exception.BadRequestError;
 import piecework.exception.InternalServerError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.form.handler.RequestHandler;
-import piecework.form.handler.ResponseHandler;
 import piecework.form.handler.SubmissionHandler;
-import piecework.form.validation.FormValidation;
 import piecework.form.validation.ValidationService;
 import piecework.model.*;
-import piecework.model.Process;
 import piecework.process.*;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -55,7 +49,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -118,7 +111,7 @@ public class TaskResourceVersion1 implements TaskResource {
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey, null);
+        FormRequest formRequest = requestHandler.create(requestDetails, processDefinitionKey);
         Screen screen = formRequest.getScreen();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestId(formRequest.getRequestId()).multipartBody(body);
