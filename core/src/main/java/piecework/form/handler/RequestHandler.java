@@ -21,6 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.RequestDetails;
+import piecework.engine.TaskCriteria;
+import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -38,6 +41,9 @@ import java.util.UUID;
 public class RequestHandler {
 
     private static final Logger LOG = Logger.getLogger(RequestHandler.class);
+
+    @Autowired
+    ProcessEngineRuntimeConcreteFacade facade;
 
     @Autowired
     ProcessRepository processRepository;
@@ -91,15 +97,37 @@ public class RequestHandler {
 
             if (screenIterator.hasNext())
                 submissionType = Constants.SubmissionTypes.INTERIM;
-
         } else {
             List<Interaction> interactions = process.getInteractions();
 
             if (interactions == null || interactions.isEmpty())
                 throw new InternalServerError();
 
-            // Pick the first interaction and the first screen
-            interaction = interactions.iterator().next();
+            Iterator<Interaction> interactionIterator = interactions.iterator();
+
+            if (StringUtils.isNotEmpty(taskId)) {
+                try {
+                    Task task = facade.findTask(new TaskCriteria.Builder().engineProcessDefinitionKey(process.getEngineProcessDefinitionKey()).taskId(taskId).build());
+
+                    if (task != null) {
+                        String taskDefinitionKey = task.getTaskDefinitionKey();
+                        while (interactionIterator.hasNext()) {
+                            Interaction current = interactionIterator.next();
+                            if (current.getTaskDefinitionKeys() != null && current.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
+                                interaction = current;
+                                break;
+                            }
+                        }
+                    }
+
+                } catch (ProcessEngineException e) {
+                    LOG.error("Could not find task ", e);
+                    throw new InternalServerError();
+                }
+            } else {
+                // Pick the first interaction and the first screen
+                interaction = interactionIterator.next();
+            }
 
             if (interaction != null && !interaction.getScreens().isEmpty()) {
                 Iterator<Screen> screenIterator = interaction.getScreens().iterator();
@@ -133,7 +161,7 @@ public class RequestHandler {
         return requestRepository.save(formRequestBuilder.build());
     }
 
-    public FormRequest handle(RequestDetails request, String requestId) throws StatusCodeError {
+    public FormRequest handle(RequestDetails request, String requestType, String requestId) throws StatusCodeError {
         FormRequest formRequest = requestRepository.findOne(requestId);
 
         if (formRequest == null) {

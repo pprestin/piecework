@@ -2,6 +2,7 @@ package piecework.task;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.ApiResource;
+import piecework.ApplicationResource;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
@@ -18,7 +19,7 @@ import javax.ws.rs.core.UriInfo;
  * @author James Renfro
  */
 @Path("task")
-public interface TaskResource extends Resource, ApiResource {
+public interface TaskResource extends ApiResource {
 
     @GET
     @Path("{processDefinitionKey}/{taskId}")

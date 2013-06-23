@@ -52,6 +52,12 @@ public class EngineConfiguration {
     @Autowired
     ProcessEngine activitiEngine;
 
+    @Autowired
+    CustomBpmnProcessParseHandler customBpmnProcessParseHandler;
+
+    @Autowired
+    CustomBpmnUserTaskParseHandler customBpmnUserTaskParseHandler;
+
 	@Bean
 	public DataSource activitiDataSource() throws ClassNotFoundException {
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
@@ -70,6 +76,16 @@ public class EngineConfiguration {
 		transactionManager.setDataSource(activitiDataSource());
 		return transactionManager;
 	}
+
+    @Bean
+    public CustomBpmnProcessParseHandler customBpmnProcessParseHandler() {
+        return new CustomBpmnProcessParseHandler();
+    }
+
+    @Bean
+    public CustomBpmnUserTaskParseHandler customBpmnUserTaskParseHandler() {
+        return new CustomBpmnUserTaskParseHandler();
+    }
 	
 	@Bean
 	public ProcessEngineConfigurationImpl activitiEngineConfiguration() throws ClassNotFoundException {
@@ -79,10 +95,10 @@ public class EngineConfiguration {
 		engineConfiguration.setDatabaseSchemaUpdate("true");
         engineConfiguration.setIdGenerator(new StrongUuidGenerator());
 //        engineConfiguration.setEnableSafeBpmnXml(true);
-        engineConfiguration.setPreBpmnParseHandlers(Arrays.<BpmnParseHandler>asList(new CustomBpmnProcessParseHandler(), new CustomBpmnUserTaskParseHandler()));
+        engineConfiguration.setPreBpmnParseHandlers(Arrays.<BpmnParseHandler>asList(customBpmnProcessParseHandler(), customBpmnUserTaskParseHandler()));
 		return engineConfiguration;
 	}
-	
+
 	@Bean(destroyMethod="close")
 	public ProcessEngine activitiEngine(ApplicationContext applicationContext) throws Exception {
 		ProcessEngineFactoryBean factoryBean = new ProcessEngineFactoryBean();

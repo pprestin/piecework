@@ -15,22 +15,32 @@
  */
 package piecework.engine.activiti;
 
+import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
 import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.impl.bpmn.parser.BpmnParse;
 import org.activiti.engine.impl.bpmn.parser.handler.AbstractBpmnParseHandler;
+import org.activiti.engine.impl.bpmn.parser.handler.UserTaskParseHandler;
+import org.activiti.engine.impl.task.TaskDefinition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author James Renfro
  */
+@Service
 public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<UserTask> {
 
     @Override
     protected void executeParse(BpmnParse bpmnParse, UserTask element) {
+//        TaskDefinition taskDefinition = (TaskDefinition) bpmnParse.getCurrentActivity().getProperty(UserTaskParseHandler.PROPERTY_TASK_DEFINITION);
+//        taskDefinition.addTaskListener(TaskListener.EVENTNAME_ALL_EVENTS, generalUserTaskListener);
+
         List<ActivitiListener> taskListeners = element.getTaskListeners();
         if (taskListeners == null) {
             taskListeners = new ArrayList<ActivitiListener>();
@@ -40,12 +50,13 @@ public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<Use
         ActivitiListener createTaskListener = new ActivitiListener();
         createTaskListener.setEvent(TaskListener.EVENTNAME_ALL_EVENTS);
         createTaskListener.setImplementation("generalUserTaskListener");
+        createTaskListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_DELEGATEEXPRESSION);
         taskListeners.add(createTaskListener);
     }
 
+    @Override
     protected Class<? extends BaseElement> getHandledType() {
         return UserTask.class;
     }
-
 
 }

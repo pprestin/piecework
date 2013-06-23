@@ -62,7 +62,7 @@ public class Form {
         this.submissionType = builder.submissionType;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         this.valid = builder.valid;
     }
 

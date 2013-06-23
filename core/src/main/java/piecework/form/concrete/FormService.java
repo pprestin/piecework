@@ -15,6 +15,7 @@
  */
 package piecework.form.concrete;
 
+import com.google.common.collect.Sets;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -24,8 +25,12 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.RequestDetails;
 import piecework.common.view.ViewContext;
+import piecework.engine.TaskCriteria;
+import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
+import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
@@ -34,14 +39,15 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstancePayload;
 import piecework.process.ProcessInstanceService;
-import piecework.process.ProcessRepository;
 import piecework.security.Sanitizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This "service" is really just to abstract logic that is shared between the two different form resources.
@@ -51,6 +57,7 @@ import java.util.List;
 @Service
 public class FormService {
 
+    private static final Set<String> VALID_REQUEST_TYPES = Sets.newHashSet("submission", "task");
     private static final Logger LOG = Logger.getLogger(FormService.class);
 
     @Autowired
@@ -79,17 +86,28 @@ public class FormService {
     }
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
+        String requestType = null;
         String requestId = null;
 
         if (pathSegments != null && !pathSegments.isEmpty()) {
-            requestId = sanitizer.sanitize(pathSegments.iterator().next().getPath());
+            Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
+            requestType = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+            requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
         }
+
+        if (StringUtils.isEmpty(requestType) || !VALID_REQUEST_TYPES.contains(requestType))
+            throw new BadRequestError();
 
         String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
         String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
 
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        FormRequest formRequest;
+
+        if (requestType.equals("task"))
+            formRequest = requestHandler.create(requestDetails, process, null, requestId, null);
+        else
+            formRequest = requestHandler.handle(requestDetails, requestType, requestId);
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
@@ -107,7 +125,7 @@ public class FormService {
         String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         // This will guarantee that the request is valid
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestType, requestId);
         Screen screen = formRequest.getScreen();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).multipartBody(body);
@@ -144,7 +162,7 @@ public class FormService {
         String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         // This will guarantee that the request is valid
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        FormRequest formRequest = requestHandler.handle(requestDetails, "submission", requestId);
         Screen screen = formRequest.getScreen();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).validationId(validationId).multipartBody(body);

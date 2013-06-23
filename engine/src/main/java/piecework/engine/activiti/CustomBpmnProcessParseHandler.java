@@ -20,6 +20,7 @@ import org.activiti.bpmn.model.BaseElement;
 import org.activiti.bpmn.model.Process;
 import org.activiti.engine.impl.bpmn.parser.BpmnParse;
 import org.activiti.engine.impl.bpmn.parser.handler.AbstractBpmnParseHandler;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
+@Service
 public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Process> {
 
     @Override
@@ -43,6 +45,7 @@ public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Proc
         executionListeners.add(endEventListener);
     }
 
+    @Override
     protected Class<? extends BaseElement> getHandledType() {
         return Process.class;
     }

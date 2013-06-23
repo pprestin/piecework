@@ -70,7 +70,7 @@ public class RequestHandlerTest {
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         assertValid(formRequest);
 
-        FormRequest handleRequest = requestHandler.handle(requestDetails, formRequest.getRequestId());
+        FormRequest handleRequest = requestHandler.handle(requestDetails, requestType, formRequest.getRequestId());
         assertEqual(formRequest, handleRequest);
     }
 
@@ -88,7 +88,7 @@ public class RequestHandlerTest {
 
         boolean isExceptionThrown = false;
         try {
-            requestHandler.handle(requestDetails, formRequest.getRequestId());
+            requestHandler.handle(requestDetails, requestType, formRequest.getRequestId());
         } catch (ForbiddenError error) {
             isExceptionThrown = true;
         }

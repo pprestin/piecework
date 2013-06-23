@@ -185,7 +185,7 @@ public class ResponseHandler {
     }
 
     public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
-        URI uri = UriBuilder.fromResource(AnonymousFormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
+        URI uri = UriBuilder.fromResource(AnonymousFormResource.class).path("{processDefinitionKey}/submission/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
         return Response.seeOther(uri).build();
     }
 
