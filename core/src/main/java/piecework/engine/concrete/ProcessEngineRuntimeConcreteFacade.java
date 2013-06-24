@@ -15,7 +15,9 @@
  */
 package piecework.engine.concrete;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -95,23 +97,34 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
 
     @Override
     public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
-        if (proxy == null)
-            throw new ProcessEngineException("Not found");
-        return proxy.findTask(criteria);
+        Task task = null;
+        if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
+            Set<String> engineSet = new HashSet<String>();
+            for (Process process : criteria.getProcesses()) {
+                if (process.getEngine() == null || engineSet.contains(process.getEngine()))
+                    continue;
+                engineSet.add(process.getEngine());
+                ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+                task = proxy.findTask(criteria);
+
+                if (task != null)
+                    break;
+            }
+
+        }
+        return task;
     }
 
     @Override
     public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
-//        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, criteria.getEngine());
-//        if (proxy == null)
-//            throw new ProcessEngineException("Not found");
-//        return proxy.findTasks(criteria);
-
-        ProcessExecutionResults.Builder builder = null;
-        if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
-            for (String engine : criteria.getEngines()) {
-                ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, engine);
+        TaskResults.Builder builder = null;
+        if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
+            Set<String> engineSet = new HashSet<String>();
+            for (Process process : criteria.getProcesses()) {
+                if (process.getEngine() == null || engineSet.contains(process.getEngine()))
+                    continue;
+                engineSet.add(process.getEngine());
+                ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
                 TaskResults localResults = proxy.findTasks(criteria);
                 if (localResults == null)
                     continue;
@@ -122,9 +135,8 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
                     builder.addToTotal(localResults.getTotal());
                 }
             }
-
         } else {
-            builder = new ProcessExecutionResults.Builder();
+            builder = new TaskResults.Builder();
         }
         return builder.build();
     }

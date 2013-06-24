@@ -92,7 +92,8 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 			OutputStream entityStream) throws IOException,
 			WebApplicationException {
 		
-		String userId = null;
+		String internalId = null;
+        String externalId = null;
 		String userName = null;
 		
 		SecurityContext context = SecurityContextHolder.getContext();
@@ -102,7 +103,8 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		
 		if (principal != null && principal instanceof InternalUserDetails) {
 			InternalUserDetails userDetails = InternalUserDetails.class.cast(principal);
-			userId = userDetails.getUsername();
+            internalId = userDetails.getInternalId();
+            externalId = userDetails.getExternalId();
 			userName = userDetails.getDisplayName();
 		}
 		
@@ -111,7 +113,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             String applicationTitle = environment.getProperty("application.name");
             final String assetsUrl = environment.getProperty("ui.static.urlbase");
 
-            User user = new User.Builder().visibleId(userId).displayName(userName).build(null);
+            User user = new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
             PageContext pageContext = new PageContext.Builder()
                     .applicationTitle(applicationTitle)
                     .assetsUrl(assetsUrl)

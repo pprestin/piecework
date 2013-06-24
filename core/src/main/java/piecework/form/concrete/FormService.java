@@ -147,13 +147,10 @@ public class FormService {
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
                 .link(viewContext.getApplicationUri());
 
-        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.INITIATOR);
+        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.USER);
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
-                executionCriteriaBuilder
-                        .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
-                        .engine(allowedProcess.getEngine());
-
+                executionCriteriaBuilder.process(allowedProcess);
                 resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).build(viewContext));
             }
         }
@@ -161,6 +158,22 @@ public class FormService {
 
         try {
             TaskResults results = facade.findTasks(executionCriteria);
+
+//            resultsBuilder.items(results.getTasks());
+
+            List<Task> tasks = results.getTasks();
+
+            if (tasks != null && !tasks.isEmpty()) {
+                for (Task task : tasks) {
+                    resultsBuilder.item(new Form.Builder()
+                            .formInstanceId(task.getTaskInstanceId())
+                            .formLabel(task.getTaskInstanceLabel())
+                            .processDefinitionKey(task.getProcessDefinitionKey())
+                            .processDefinitionLabel(task.getProcessDefinitionLabel())
+                            .requestType(Constants.RequestTypes.TASK)
+                            .build(viewContext));
+                }
+            }
 
             resultsBuilder.firstResult(results.getFirstResult());
             resultsBuilder.maxResults(results.getMaxResults());

@@ -15,9 +15,12 @@
  */
 package piecework.test.config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import org.mockito.Mockito;
 import org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +30,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import piecework.Registry;
+import piecework.authorization.AuthorizationRepository;
+import piecework.config.CustomPropertySourcesConfigurer;
+import piecework.engine.ProcessEngineProxy;
+import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
 import piecework.form.handler.ResponseHandler;
 import piecework.persistence.ContentRepository;
 import piecework.form.handler.RequestHandler;
@@ -36,13 +45,10 @@ import piecework.model.*;
 import piecework.designer.InteractionRepository;
 import piecework.designer.InteractionResource;
 import piecework.model.Process;
-import piecework.process.ProcessRepository;
-import piecework.process.ProcessResource;
+import piecework.process.*;
 import piecework.designer.ScreenRepository;
 import piecework.designer.ScreenResource;
 import piecework.designer.concrete.InteractionResourceVersion1Impl;
-import piecework.process.RequestRepository;
-import piecework.process.SubmissionRepository;
 import piecework.process.concrete.MongoRepositoryStub;
 import piecework.process.concrete.ProcessResourceVersion1;
 import piecework.process.concrete.ResourceHelper;
@@ -56,6 +62,21 @@ import piecework.security.Sanitizer;
 @Configuration
 @Profile("test")
 public class UnitTestConfiguration {
+
+    @Bean
+    public ProcessEngineRuntimeFacade facade() {
+        return new ProcessEngineRuntimeConcreteFacade();
+    }
+
+    @Bean
+    public ProcessEngineProxy proxy() {
+        return Mockito.mock(ProcessEngineProxy.class);
+    }
+
+    @Bean
+    public Registry registry() {
+        return new Registry();
+    }
 
 	@Bean
 	public Sanitizer sanitizer() {
@@ -101,6 +122,11 @@ public class UnitTestConfiguration {
 	}
 
     @Bean
+    public AuthorizationRepository authorizationRepository() {
+        return new AuthorizationRepositoryStub();
+    }
+
+    @Bean
     public ContentRepository contentRepository() {
         return new InMemoryContentRepository();
     }
@@ -114,6 +140,11 @@ public class UnitTestConfiguration {
 	public ProcessRepository processRepository() {
 		return new ProcessRepositoryStub();
 	}
+
+    @Bean
+    public ProcessInstanceRepository processInstanceRepository() {
+        return new ProcessInstanceRepositoryStub();
+    }
 
     @Bean
     public RequestRepositoryStub requestRepository() {
@@ -130,22 +161,45 @@ public class UnitTestConfiguration {
         return new SubmissionRepositoryStub();
     }
 	
-	@Bean
-	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {
-		// This is the list of places to look for configuration properties
-		List<Resource> resources = new ArrayList<Resource>();
-		resources.add(new ClassPathResource("META-INF/piecework/default.properties"));
-		
-		PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-		configurer.setEnvironment(environment);
-		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
-		configurer.setIgnoreUnresolvablePlaceholders(true);
-		return configurer;
-	}
+//	@Bean
+//	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {
+//		// This is the list of places to look for configuration properties
+//		List<Resource> resources = new ArrayList<Resource>();
+//		resources.add(new ClassPathResource("META-INF/piecework/default.properties"));
+//
+//		PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
+//		configurer.setEnvironment(environment);
+//		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
+//		configurer.setIgnoreUnresolvablePlaceholders(true);
+//		return configurer;
+//	}
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
+        CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();
+        configurer.setCustomLocations(environment);
+        return configurer;
+    }
+
+    public class AuthorizationRepositoryStub extends MongoRepositoryStub<Authorization> implements AuthorizationRepository {
+
+    }
 	
 	public class ProcessRepositoryStub extends MongoRepositoryStub<Process> implements ProcessRepository {
 		
 	}
+
+    public class ProcessInstanceRepositoryStub extends MongoRepositoryStub<ProcessInstance> implements ProcessInstanceRepository {
+        @Override
+        public Set<ProcessInstance> findByKeywordsRegex(String keyword) {
+            return null;
+        }
+
+        @Override
+        public Set<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword) {
+            return null;
+        }
+    }
 	
 	public class InteractionRepositoryStub extends MongoRepositoryStub<Interaction> implements InteractionRepository {
 

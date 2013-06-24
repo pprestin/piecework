@@ -16,6 +16,7 @@
 package piecework.engine;
 
 import java.util.*;
+import piecework.model.Process;
 
 /**
  * @author James Renfro
@@ -24,8 +25,7 @@ public class TaskCriteria {
 
     public enum OrderBy { CREATED_TIME_ASC, CREATED_TIME_DESC, DUE_TIME_ASC, DUE_TIME_DESC, PRIORITY_ASC, PRIORITY_DESC };
 
-    private final Set<String> engines;
-    private final Set<String> engineProcessDefinitionKeys;
+    private final Set<Process> processes;
     private final String executionId;
     private final String businessKey;
     private final List<String> taskIds;
@@ -49,8 +49,7 @@ public class TaskCriteria {
     }
 
     private TaskCriteria(Builder builder) {
-        this.engines = Collections.unmodifiableSet(builder.engines);
-        this.engineProcessDefinitionKeys = Collections.unmodifiableSet(builder.engineProcessDefinitionKeys);
+        this.processes = Collections.unmodifiableSet(builder.processes);
         this.executionId = builder.executionId;
         this.businessKey = builder.businessKey;
         this.taskIds = builder.taskIds;
@@ -70,12 +69,8 @@ public class TaskCriteria {
         this.orderBy = builder.orderBy;
     }
 
-    public Set<String> getEngines() {
-        return engines;
-    }
-
-    public Set<String> getEngineProcessDefinitionKeys() {
-        return engineProcessDefinitionKeys;
+    public Set<Process> getProcesses() {
+        return processes;
     }
 
     public String getExecutionId() {
@@ -148,8 +143,7 @@ public class TaskCriteria {
 
     public final static class Builder {
 
-        private Set<String> engines;
-        private Set<String> engineProcessDefinitionKeys;
+        private Set<Process> processes;
         private String executionId;
         private String businessKey;
         private List<String> taskIds;
@@ -170,25 +164,18 @@ public class TaskCriteria {
 
         public Builder() {
             super();
+            this.processes = new HashSet<Process>();
         }
 
         public TaskCriteria build() {
             return new TaskCriteria(this);
         }
 
-        public Builder engine(String engine) {
-            if (this.engines == null)
-                this.engines = new HashSet<String>();
-            if (engine != null)
-                this.engines.add(engine);
-            return this;
-        }
-
-        public Builder engineProcessDefinitionKey(String engineProcessDefinitionKey) {
-            if (this.engineProcessDefinitionKeys == null)
-                this.engineProcessDefinitionKeys = new HashSet<String>();
-            if (engineProcessDefinitionKey != null)
-                this.engineProcessDefinitionKeys.add(engineProcessDefinitionKey);
+        public Builder process(Process process) {
+            if (this.processes == null)
+                this.processes = new HashSet<Process>();
+            if (process != null)
+                this.processes.add(process);
             return this;
         }
 

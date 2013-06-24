@@ -15,6 +15,7 @@
  */
 package piecework.engine;
 
+import piecework.model.ProcessExecution;
 import piecework.model.Task;
 
 import java.util.ArrayList;
@@ -66,21 +67,31 @@ public class TaskResults {
 
         }
 
+        public Builder(TaskResults results) {
+            if (results.tasks != null) {
+                this.tasks = new ArrayList<Task>();
+                this.tasks.addAll(results.tasks);
+            }
+            this.total = results.total;
+            this.firstResult = results.firstResult;
+            this.maxResults = results.maxResults;
+        }
+
         public TaskResults build() {
             return new TaskResults(this);
         }
 
-        public Builder execution(Task task) {
+        public Builder task(Task task) {
             if (this.tasks == null)
                 this.tasks = new ArrayList<Task>();
             this.tasks.add(task);
             return this;
         }
 
-        public Builder executions(List<Task> executions) {
+        public Builder tasks(List<Task> tasks) {
             if (this.tasks == null)
                 this.tasks = new ArrayList<Task>();
-            this.tasks.addAll(executions);
+            this.tasks.addAll(tasks);
             return this;
         }
 
@@ -96,6 +107,11 @@ public class TaskResults {
 
         public Builder total(long total) {
             this.total = total;
+            return this;
+        }
+
+        public Builder addToTotal(long total) {
+            this.total += total;
             return this;
         }
     }

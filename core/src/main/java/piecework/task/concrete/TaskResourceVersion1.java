@@ -140,8 +140,7 @@ public class TaskResourceVersion1 implements TaskResource {
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
         TaskCriteria criteria = new TaskCriteria.Builder()
-                .engine(process.getEngine())
-                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .process(process)
                 .taskId(taskId)
                 .build();
 
@@ -183,8 +182,6 @@ public class TaskResourceVersion1 implements TaskResource {
                         boolean isEngineParameter = true;
                         if (key.equals("taskId"))
                             criteriaBuilder.taskId(value);
-                        else if (key.equals("engine"))
-                            criteriaBuilder.engine(value);
                         else if (key.equals("active"))
                             criteriaBuilder.active(Boolean.valueOf(value));
                         else if (key.equals("assignee"))

@@ -23,21 +23,21 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.cxf.Bus;
 import org.apache.cxf.configuration.jsse.SSLUtils;
 import org.apache.cxf.configuration.security.FiltersType;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
+import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
 import org.springframework.ldap.core.AuthenticationSource;
 import org.springframework.ldap.core.support.DirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
@@ -70,16 +70,11 @@ import piecework.util.KeyManagerCabinet;
 public class LdapConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(LdapConfiguration.class);
-	private static final String[] CIPHER_SUITES = { "SSL_RSA_WITH_RC4_128_MD5", "SSL_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_DSS_WITH_AES_128_CBC_SHA", "SSL_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA", "SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA", "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA", "TLS_EMPTY_RENEGOTIATION_INFO_SCSV", "TLS_KRB5_WITH_RC4_128_SHA", "TLS_KRB5_WITH_RC4_128_MD5", "TLS_KRB5_WITH_3DES_EDE_CBC_SHA", "TLS_KRB5_WITH_3DES_EDE_CBC_MD5", "TLS_KRB5_WITH_DES_CBC_SHA", "TLS_KRB5_WITH_DES_CBC_MD5", "TLS_KRB5_EXPORT_WITH_RC4_40_SHA", "TLS_KRB5_EXPORT_WITH_RC4_40_MD5", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5" };
-	private static final List<String> CIPHER_SUITES_LIST;
-	private static int sslCacheTimeout = 86400000;
+    public static final List<String> CIPHER_SUITES_LIST = Arrays.asList("SSL_RSA_WITH_RC4_128_MD5", "SSL_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_DSS_WITH_AES_128_CBC_SHA", "SSL_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA", "SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA", "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA", "TLS_EMPTY_RENEGOTIATION_INFO_SCSV", "TLS_KRB5_WITH_RC4_128_SHA", "TLS_KRB5_WITH_RC4_128_MD5", "TLS_KRB5_WITH_3DES_EDE_CBC_SHA", "TLS_KRB5_WITH_3DES_EDE_CBC_MD5", "TLS_KRB5_WITH_DES_CBC_SHA", "TLS_KRB5_WITH_DES_CBC_MD5", "TLS_KRB5_EXPORT_WITH_RC4_40_SHA", "TLS_KRB5_EXPORT_WITH_RC4_40_MD5", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5" );
+	public static int sslCacheTimeout = 86400000;
 	
 	private enum LdapAuthenticationEncryption { NONE, TLS, SSL }
 	private enum LdapAuthenticationType { PASSWORDCOMPARE, BIND }
-	
-	static {
-		CIPHER_SUITES_LIST = Arrays.asList(CIPHER_SUITES);
-	}
 
     @Autowired
     AuthorizationRoleMapper authorizationRoleMapper;
@@ -95,18 +90,20 @@ public class LdapConfiguration {
 	public LdapContextSource groupLdapContextSource(Environment environment) throws Exception {
         String ldapGroupUrl = environment.getProperty("ldap.group.url");
         String ldapGroupBase = environment.getProperty("ldap.group.base");
+        String ldapPersonDn = environment.getProperty("ldap.person.dn");
 
 		// TODO: Should we be using DefaultSpringSecurityContextSource? 
 		LdapContextSource context = new LdapContextSource();
 		context.setUrl(ldapGroupUrl);
 		context.setBase(ldapGroupBase);
-		context.setAuthenticationSource(authenticationSource());
+        context.setUserDn(ldapPersonDn);
+		context.setAuthenticationSource(authenticationSource(environment));
 		context.setAuthenticationStrategy(authenticationStrategy(environment));
-		context.setAnonymousReadOnly(true);
+//		context.setAnonymousReadOnly(true);
 		return context;
 	}
 	
-	@Bean 
+	@Bean(name="personLdapContextSource")
 	public LdapContextSource personLdapContextSource(Environment environment) throws Exception {
         String ldapPersonUrl = environment.getProperty("ldap.person.url");
         String ldapPersonBase = environment.getProperty("ldap.person.base");
@@ -117,9 +114,9 @@ public class LdapConfiguration {
 		context.setUrl(ldapPersonUrl);
 		context.setBase(ldapPersonBase);
 		context.setUserDn(ldapPersonDn);
-		context.setAuthenticationSource(authenticationSource());
+		context.setAuthenticationSource(authenticationSource(environment));
 		context.setAuthenticationStrategy(authenticationStrategy(environment));
-		context.setAnonymousReadOnly(true);
+//		context.setAnonymousReadOnly(true);
 		return context;
 	}
 
@@ -173,9 +170,12 @@ public class LdapConfiguration {
 		return encryption;
 	}
 	
-	private AuthenticationSource authenticationSource() {
+	private AuthenticationSource authenticationSource(Environment environment) {
+        String defaultUser = environment.getProperty("ldap.authentication.user");
+        String defaultPassword = environment.getProperty("ldap.authentication.password");
 		SpringSecurityAuthenticationSource authenticationSource = new SpringSecurityAuthenticationSource();
-		return authenticationSource;
+        DefaultValuesAuthenticationSourceDecorator decorator = new DefaultValuesAuthenticationSourceDecorator(authenticationSource, defaultUser, defaultPassword);
+        return decorator;
 	}
 	
 	private DirContextAuthenticationStrategy authenticationStrategy(Environment environment) throws Exception {
@@ -237,7 +237,7 @@ public class LdapConfiguration {
         ctx.init(cabinet.getKeyManagers(), cabinet.getTrustManagers(), null);
 
         FiltersType filter = new FiltersType();
-        String[] cs = SSLUtils.getCiphersuites(CIPHER_SUITES_LIST, SSLUtils.getSupportedCipherSuites(ctx), filter, null, false);
+        String[] cs = SSLUtils.getCiphersuites(CIPHER_SUITES_LIST, SSLUtils.getSupportedCipherSuites(ctx), filter, java.util.logging.Logger.getLogger(this.getClass().getCanonicalName()), false);
 
         return new piecework.util.SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
 	}

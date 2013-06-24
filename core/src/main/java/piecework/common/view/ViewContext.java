@@ -79,8 +79,11 @@ public class ViewContext {
                 builder.append("/").append(path);
 			
 			if (ids != null && ids.length > 0) {
-				for (String id : ids) 
+				for (String id : ids) {
+                    if (id == null)
+                        continue;
 					builder.append("/").append(id);
+                }
 			}
 			
 			return builder.toString();

@@ -28,11 +28,15 @@ public class InternalUserDetails implements UserDetails {
 	private static final long serialVersionUID = 1L;
 	
 	private final UserDetails delegate;
+    private final String internalId;
+    private final String externalId;
 	private final String displayName;
     private final String emailAddress;
 	
-	public InternalUserDetails(UserDetails delegate, String displayName, String emailAddress) {
+	public InternalUserDetails(UserDetails delegate, String internalId, String externalId, String displayName, String emailAddress) {
 		this.delegate = delegate;
+        this.internalId = internalId;
+        this.externalId = externalId;
 		this.displayName = displayName;
         this.emailAddress = emailAddress;
 	}
@@ -72,7 +76,15 @@ public class InternalUserDetails implements UserDetails {
 		return delegate.isEnabled();
 	}
 
-	public String getDisplayName() {
+    public String getInternalId() {
+        return internalId;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public String getDisplayName() {
 		return displayName;
 	}
 

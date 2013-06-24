@@ -46,10 +46,16 @@ public class Task implements Serializable {
     private final String taskInstanceId;
 
     @XmlAttribute
+    private final String processDefinitionKey;
+
+    @XmlAttribute
     private final String taskDefinitionKey;
 
     @XmlElement
     private final String taskInstanceLabel;
+
+    @XmlElement
+    private final String processDefinitionLabel;
 
     @XmlTransient
     @JsonIgnore
@@ -77,8 +83,10 @@ public class Task implements Serializable {
 
     private Task(Task.Builder builder, ViewContext context) {
         this.taskInstanceId = builder.taskInstanceId;
+        this.processDefinitionKey = builder.processDefinitionKey;
         this.taskDefinitionKey = builder.taskDefinitionKey;
         this.taskInstanceLabel = builder.taskInstanceLabel;
+        this.processDefinitionLabel = builder.processDefinitionLabel;
         this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.assignee = builder.assignee;
         this.candidateAssignees = builder.candidateAssignees;
@@ -91,13 +99,21 @@ public class Task implements Serializable {
 		return taskInstanceId;
 	}
 
-	public String getTaskDefinitionKey() {
+    public String getProcessDefinitionKey() {
+        return processDefinitionKey;
+    }
+
+    public String getTaskDefinitionKey() {
 		return taskDefinitionKey;
 	}
 
 	public String getTaskInstanceLabel() {
 		return taskInstanceLabel;
 	}
+
+    public String getProcessDefinitionLabel() {
+        return processDefinitionLabel;
+    }
 
     @JsonIgnore
     public String getEngineProcessInstanceId() {
@@ -129,6 +145,7 @@ public class Task implements Serializable {
         private String taskInstanceId;
         private String taskDefinitionKey;
         private String processDefinitionKey;
+        private String processDefinitionLabel;
         private String taskInstanceLabel;
         private String engineProcessInstanceId;
         private User assignee;
@@ -143,6 +160,7 @@ public class Task implements Serializable {
             this.taskInstanceId = sanitizer.sanitize(task.taskInstanceId);
             this.taskDefinitionKey = sanitizer.sanitize(task.taskDefinitionKey);
             this.taskInstanceLabel = sanitizer.sanitize(task.taskInstanceLabel);
+            this.processDefinitionLabel = sanitizer.sanitize(task.processDefinitionLabel);
             this.engineProcessInstanceId = sanitizer.sanitize(task.engineProcessInstanceId);
             this.assignee = task.assignee != null ? new User.Builder(task.assignee, sanitizer).build() : null;
             if (task.candidateAssignees != null && !task.candidateAssignees.isEmpty()) {
@@ -179,6 +197,11 @@ public class Task implements Serializable {
 
         public Builder taskInstanceLabel(String taskInstanceLabel) {
             this.taskInstanceLabel = taskInstanceLabel;
+            return this;
+        }
+
+        public Builder processDefinitionLabel(String processDefinitionLabel) {
+            this.processDefinitionLabel = processDefinitionLabel;
             return this;
         }
 

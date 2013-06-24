@@ -42,6 +42,12 @@ public class Form {
     private final String submissionType;
 
     @XmlElement
+    private final String formLabel;
+
+    @XmlElement
+    private final String processDefinitionLabel;
+
+    @XmlElement
     private final Screen screen;
 
     @XmlElementWrapper(name="formData")
@@ -61,6 +67,8 @@ public class Form {
     private Form(Form.Builder builder, ViewContext context) {
         this.formInstanceId = builder.formInstanceId;
         this.submissionType = builder.submissionType;
+        this.formLabel = builder.formLabel;
+        this.processDefinitionLabel = builder.processDefinitionLabel;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.requestType, builder.formInstanceId) : null;
@@ -73,6 +81,14 @@ public class Form {
 
     public String getSubmissionType() {
         return submissionType;
+    }
+
+    public String getFormLabel() {
+        return formLabel;
+    }
+
+    public String getProcessDefinitionLabel() {
+        return processDefinitionLabel;
     }
 
     public Screen getScreen() {
@@ -107,6 +123,8 @@ public class Form {
         private String processDefinitionKey;
         private String requestType;
         private String submissionType;
+        private String formLabel;
+        private String processDefinitionLabel;
         private Screen screen;
         private List<FormValue> formData;
         private boolean valid;
@@ -120,7 +138,8 @@ public class Form {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
             this.screen = form.screen != null ? new Screen.Builder(form.screen, sanitizer).build() : null;
-
+            this.formLabel = sanitizer.sanitize(form.formLabel);
+            this.processDefinitionLabel = sanitizer.sanitize(form.processDefinitionLabel);
             if (form.formData != null && !form.formData.isEmpty()) {
                 this.formData = new ArrayList<FormValue>(form.formData.size());
                 for (FormValue formValue : form.formData) {
@@ -146,6 +165,16 @@ public class Form {
 
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder formLabel(String formLabel) {
+            this.formLabel = formLabel;
+            return this;
+        }
+
+        public Builder processDefinitionLabel(String processDefinitionLabel) {
+            this.processDefinitionLabel = processDefinitionLabel;
             return this;
         }
 

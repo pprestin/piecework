@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.RequestDetails;
+import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.TaskCriteria;
 import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
 import piecework.engine.exception.ProcessEngineException;
@@ -43,7 +44,7 @@ public class RequestHandler {
     private static final Logger LOG = Logger.getLogger(RequestHandler.class);
 
     @Autowired
-    ProcessEngineRuntimeConcreteFacade facade;
+    ProcessEngineRuntimeFacade facade;
 
     @Autowired
     ProcessRepository processRepository;
@@ -107,7 +108,7 @@ public class RequestHandler {
 
             if (StringUtils.isNotEmpty(taskId)) {
                 try {
-                    Task task = facade.findTask(new TaskCriteria.Builder().engineProcessDefinitionKey(process.getEngineProcessDefinitionKey()).taskId(taskId).build());
+                    Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).build());
 
                     if (task != null) {
                         String taskDefinitionKey = task.getTaskDefinitionKey();

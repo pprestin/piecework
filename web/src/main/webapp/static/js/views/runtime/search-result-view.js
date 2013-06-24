@@ -11,9 +11,12 @@ define([ 'chaplin', 'views/base/view' ],
 	        View.__super__.render.apply(this, options);
             var html = '';
             var link = this.model.get("link");
+            var formLabel = this.model.get("formLabel");
             var processInstanceLabel = this.model.get('processInstanceLabel');
             var processDefinitionLabel = this.model.get('processDefinitionLabel');
-	        if (processInstanceLabel != undefined)
+            if (formLabel != undefined)
+                html += '<td><a href="' + link + '.html">' + formLabel + '</a></td>';
+	        else if (processInstanceLabel != undefined)
 	            html += '<td><a href="' + link + '.html">' + processInstanceLabel + '</a></td>';
 	        if (processDefinitionLabel != undefined)
 	            html += '<td>' + processDefinitionLabel + '</td>';

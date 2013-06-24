@@ -6,6 +6,7 @@ define([
   'models/runtime/page',
   'models/runtime/results',
   'models/runtime/search-filter',
+  'models/user',
   'views/form/button-view',
   'views/form/button-link-view',
   'views/form/fields-view',
@@ -17,16 +18,23 @@ define([
   'views/runtime/search-results-view',
   'views/form/section-view',
   'views/form/sections-view',
+  'views/user-view',
   'views/base/view',
   'text!templates/form/button.hbs',
   'text!templates/form/button-link.hbs'
-], function(Controller, Model, Collection, Form, Page, Results, SearchFilter,
+], function(Controller, Model, Collection, Form, Page, Results, SearchFilter, User,
             ButtonView, ButtonLinkView, FieldsView, FormView,
             GroupingView, HeadView, SearchFilterView, SearchView, SearchResultsView,
-            SectionView, SectionsView, View) {
+            SectionView, SectionsView, UserView, View) {
   'use strict';
 
   var FormController = Controller.extend({
+    beforeAction: function(params, route) {
+        var user = window.piecework.context.user;
+        this.compose('userModel', User, user);
+        var userModel = this.compose('userModel');
+        this.compose('userView', UserView, {model: userModel});
+    },
     index: function(params) {
         this.step(params);
     },

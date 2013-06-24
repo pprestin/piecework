@@ -102,8 +102,7 @@ public class ResponseHandler {
                 throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
             TaskCriteria criteria = new TaskCriteria.Builder()
-                    .engine(process.getEngine())
-                    .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                    .process(process)
                     .taskId(formRequest.getTaskId())
                     .build();
 
