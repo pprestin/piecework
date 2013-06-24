@@ -89,16 +89,17 @@ public class RequestDetails {
         }
 
         public Builder(HttpServletRequest request, String certificateIssuerHeader, String certificateSubjectHeader) {
-            if (StringUtils.isNotEmpty(certificateIssuerHeader))
-                this.certificateIssuer = request.getHeader(certificateIssuerHeader);
-            if (StringUtils.isNotEmpty(certificateSubjectHeader))
-                this.certificateSubject = request.getHeader(certificateSubjectHeader);
+            if (request != null) {
+                if (StringUtils.isNotEmpty(certificateIssuerHeader))
+                    this.certificateIssuer = request.getHeader(certificateIssuerHeader);
+                if (StringUtils.isNotEmpty(certificateSubjectHeader))
+                    this.certificateSubject = request.getHeader(certificateSubjectHeader);
 
-            this.remoteAddr = request.getRemoteAddr();
-            this.remoteHost = request.getRemoteHost();
-            this.remotePort = request.getRemotePort();
-            this.remoteUser = request.getRemoteUser();
-
+                this.remoteAddr = request.getRemoteAddr();
+                this.remoteHost = request.getRemoteHost();
+                this.remotePort = request.getRemotePort();
+                this.remoteUser = request.getRemoteUser();
+            }
             this.isServiceCall = StringUtils.isNotEmpty(this.certificateIssuer) && StringUtils.isNotEmpty(this.certificateSubject);
         }
 

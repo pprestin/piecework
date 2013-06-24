@@ -4,19 +4,26 @@ define([
   'models/base/collection',
   'models/runtime/form',
   'models/runtime/page',
+  'models/runtime/results',
+  'models/runtime/search-filter',
   'views/form/button-view',
   'views/form/button-link-view',
   'views/form/fields-view',
   'views/form/form-view',
   'views/form/grouping-view',
   'views/runtime/head-view',
+  'views/runtime/search-filter-view',
+  'views/runtime/search-view',
+  'views/runtime/search-results-view',
   'views/form/section-view',
   'views/form/sections-view',
   'views/base/view',
   'text!templates/form/button.hbs',
   'text!templates/form/button-link.hbs'
-], function(Controller, Model, Collection, Form, Page, ButtonView, ButtonLinkView, FieldsView, FormView,
-            GroupingView, HeadView, SectionView, SectionsView, View) {
+], function(Controller, Model, Collection, Form, Page, Results, SearchFilter,
+            ButtonView, ButtonLinkView, FieldsView, FormView,
+            GroupingView, HeadView, SearchFilterView, SearchView, SearchResultsView,
+            SectionView, SectionsView, View) {
   'use strict';
 
   var FormController = Controller.extend({

@@ -17,6 +17,7 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import piecework.Constants;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 
@@ -62,7 +63,7 @@ public class Form {
         this.submissionType = builder.submissionType;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.requestType, builder.formInstanceId) : null;
         this.valid = builder.valid;
     }
 
@@ -104,6 +105,7 @@ public class Form {
 
         private String formInstanceId;
         private String processDefinitionKey;
+        private String requestType;
         private String submissionType;
         private Screen screen;
         private List<FormValue> formData;
@@ -125,6 +127,7 @@ public class Form {
                     this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
                 }
             }
+            this.requestType = piecework.Constants.RequestTypes.SUBMISSION;
             this.valid = form.valid;
         }
 
@@ -143,6 +146,11 @@ public class Form {
 
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder requestType(String requestType) {
+            this.requestType = requestType;
             return this;
         }
 

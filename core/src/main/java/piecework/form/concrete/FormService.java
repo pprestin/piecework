@@ -21,11 +21,20 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
+import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
+import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.TaskCriteria;
+import piecework.engine.TaskResults;
 import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
@@ -38,16 +47,18 @@ import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstancePayload;
+import piecework.process.ProcessInstanceQueryBuilder;
+import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.process.ProcessInstanceService;
+import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This "service" is really just to abstract logic that is shared between the two different form resources.
@@ -62,6 +73,15 @@ public class FormService {
 
     @Autowired
     Environment environment;
+
+    @Autowired
+    ProcessEngineRuntimeFacade facade;
+
+    @Autowired
+    ResourceHelper helper;
+
+    @Autowired
+    MongoOperations mongoOperations;
 
     @Autowired
     ProcessInstanceService processInstanceService;
@@ -115,8 +135,50 @@ public class FormService {
         return responseHandler.handle(formRequest, viewContext);
     }
 
-    public Response submitForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
+
+        TaskCriteria.Builder executionCriteriaBuilder =
+                new TaskCriteria.Builder();
+
+//        executionCriteriaBuilder.participantId(helper.getAuthenticatedPrincipal());
+
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
+                .resourceLabel("Tasks")
+                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
+                .link(viewContext.getApplicationUri());
+
+        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.INITIATOR);
+        if (!allowedProcesses.isEmpty()) {
+            for (Process allowedProcess : allowedProcesses) {
+                executionCriteriaBuilder
+                        .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
+                        .engine(allowedProcess.getEngine());
+
+                resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).build(viewContext));
+            }
+        }
+        TaskCriteria executionCriteria = executionCriteriaBuilder.build();
+
+        try {
+            TaskResults results = facade.findTasks(executionCriteria);
+
+            resultsBuilder.firstResult(results.getFirstResult());
+            resultsBuilder.maxResults(results.getMaxResults());
+            resultsBuilder.total(Long.valueOf(results.getTotal()));
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not find tasks", e);
+        }
+
+        return resultsBuilder.build(viewContext);
+    }
+
+    public Response submitForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestType, String rawRequestId, MultipartBody body) throws StatusCodeError {
+        String requestType = sanitizer.sanitize(rawRequestType);
         String requestId = sanitizer.sanitize(rawRequestId);
+
+        if (StringUtils.isEmpty(requestType))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_type_required);
 
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);

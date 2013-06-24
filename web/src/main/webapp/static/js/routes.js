@@ -3,7 +3,7 @@ define(['controllers/form-controller'], function() {
 
   return function(match) {
     match(':servlet/:access/form', 'form#search');
-    match(':servlet/:access/form/:processDefinitionKey/:requestId', 'form#index');
-    match(':servlet/:access/form/:processDefinitionKey/:requestId/step/:ordinal', 'form#step');
+    match(':servlet/:access/form/:processDefinitionKey/:requestType/:requestId', 'form#index');
+    match(':servlet/:access/form/:processDefinitionKey/:requestType/:requestId/step/:ordinal', 'form#step');
   };
 });

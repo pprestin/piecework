@@ -178,6 +178,7 @@ public class ResponseHandler {
         return new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
                 .processDefinitionKey(formRequest.getProcessDefinitionKey())
+                .requestType(Constants.RequestTypes.SUBMISSION)
                 .submissionType(formRequest.getSubmissionType())
                 .formValues(includedFormValues)
                 .screen(screen)

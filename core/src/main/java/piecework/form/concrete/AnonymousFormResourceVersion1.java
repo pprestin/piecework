@@ -20,7 +20,6 @@ import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.*;
 
-import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +27,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.common.RequestDetails;
-import piecework.form.handler.RequestHandler;
-import piecework.form.handler.ResponseHandler;
-import piecework.form.validation.FormValidation;
 import piecework.model.Form;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 import piecework.exception.*;
 import piecework.form.*;
-import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
 
@@ -79,7 +73,7 @@ public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.submitForm(request, getViewContext(), process, rawRequestId, body);
+        return formService.submitForm(request, getViewContext(), process, Constants.RequestTypes.SUBMISSION, rawRequestId, body);
     }
 
     @Override

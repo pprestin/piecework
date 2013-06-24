@@ -131,7 +131,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
-    public Response update(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("processInstanceId") String rawProcessInstanceId, ProcessInstance instance) throws StatusCodeError {
+    public Response update(String rawProcessDefinitionKey, String rawProcessInstanceId, ProcessInstance instance) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 

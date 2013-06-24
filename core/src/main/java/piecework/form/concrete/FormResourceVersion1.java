@@ -15,27 +15,20 @@
  */
 package piecework.form.concrete;
 
-import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.common.RequestDetails;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
-import piecework.exception.BadRequestError;
-import piecework.exception.ForbiddenError;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormResource;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
-import piecework.form.validation.FormValidation;
-import piecework.model.*;
 import piecework.model.Form;
 import piecework.model.Process;
-import piecework.process.ProcessInstancePayload;
 import piecework.process.ProcessInstanceService;
 import piecework.process.ProcessRepository;
 import piecework.process.concrete.ResourceHelper;
@@ -43,7 +36,6 @@ import piecework.security.Sanitizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.*;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -96,7 +88,7 @@ public class FormResourceVersion1 implements FormResource {
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = resourceHelper.findProcess(processDefinitionKey, true);
-        return formService.submitForm(request, getViewContext(), process, rawRequestId, body);
+        return formService.submitForm(request, getViewContext(), process, Constants.RequestTypes.SUBMISSION, rawRequestId, body);
     }
 
     @Override
@@ -107,9 +99,9 @@ public class FormResourceVersion1 implements FormResource {
     }
 
     @Override
-    public SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError {
+    public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        return processInstanceService.search(rawQueryParameters, getViewContext());
+        return formService.search(rawQueryParameters, getViewContext());
     }
 
     @Override

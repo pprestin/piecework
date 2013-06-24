@@ -83,6 +83,7 @@ public interface Constants {
 		public static final String process_does_not_exist = "process_does_not_exist";
         public static final String request_does_not_match = "request_does_not_match";
 		public static final String request_id_required = "request_id_required";
+        public static final String request_type_required = "request_type_required";
         public static final String screen_id_invalid = "screen_id_invalid";
         public static final String task_does_not_exist = "task_does_not_exist";
         public static final String user_does_not_match = "user_does_not_match";
@@ -106,6 +107,11 @@ public interface Constants {
         public static final String COMPLETE = "complete";
         public static final String CANCELLED = "cancelled";
         public static final String SUSPENDED = "suspended";
+    }
+
+    public static class RequestTypes {
+        public static final String SUBMISSION = "submission";
+        public static final String TASK = "task";
     }
 
     public static class ScreenTypes {

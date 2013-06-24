@@ -49,7 +49,7 @@ public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<Use
 
         ActivitiListener createTaskListener = new ActivitiListener();
         createTaskListener.setEvent(TaskListener.EVENTNAME_ALL_EVENTS);
-        createTaskListener.setImplementation("generalUserTaskListener");
+        createTaskListener.setImplementation("${generalUserTaskListener}");
         createTaskListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_DELEGATEEXPRESSION);
         taskListeners.add(createTaskListener);
     }

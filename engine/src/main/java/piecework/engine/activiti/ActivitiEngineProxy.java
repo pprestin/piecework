@@ -427,6 +427,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (criteria.getCandidateAssigneeId() != null)
             query.taskCandidateUser(criteria.getCandidateAssigneeId());
 
+        if (criteria.getParticipantId() != null)
+            query.taskInvolvedUser(criteria.getParticipantId());
+
         if (criteria.getCreatedAfter() != null)
             query.taskCreatedAfter(criteria.getCreatedAfter());
 

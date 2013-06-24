@@ -37,6 +37,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import piecework.Constants;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 
@@ -290,7 +291,10 @@ public class Field implements Serializable {
             this.mask = field.mask;
             this.pattern = field.pattern;
             this.customValidity = field.customValidity;
-            this.defaultValue = sanitizer.sanitize(field.defaultValue);
+            if (this.type != null && this.type.equals(piecework.Constants.FieldTypes.HTML))
+                this.defaultValue = field.defaultValue;
+            else
+                this.defaultValue = sanitizer.sanitize(field.defaultValue);
             this.displayValueLength = field.displayValueLength;
             this.maxValueLength = field.maxValueLength;
             this.minValueLength = field.minValueLength;

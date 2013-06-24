@@ -15,9 +15,7 @@
  */
 package piecework.engine;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -26,8 +24,8 @@ public class TaskCriteria {
 
     public enum OrderBy { CREATED_TIME_ASC, CREATED_TIME_DESC, DUE_TIME_ASC, DUE_TIME_DESC, PRIORITY_ASC, PRIORITY_DESC };
 
-    private final String engine;
-    private final String engineProcessDefinitionKey;
+    private final Set<String> engines;
+    private final Set<String> engineProcessDefinitionKeys;
     private final String executionId;
     private final String businessKey;
     private final List<String> taskIds;
@@ -41,6 +39,7 @@ public class TaskCriteria {
     private final Date dueAfter;
     private final String assigneeId;
     private final String candidateAssigneeId;
+    private final String participantId;
     private final Integer firstResult;
     private final Integer maxResults;
     private final OrderBy orderBy;
@@ -50,8 +49,8 @@ public class TaskCriteria {
     }
 
     private TaskCriteria(Builder builder) {
-        this.engine = builder.engine;
-        this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
+        this.engines = Collections.unmodifiableSet(builder.engines);
+        this.engineProcessDefinitionKeys = Collections.unmodifiableSet(builder.engineProcessDefinitionKeys);
         this.executionId = builder.executionId;
         this.businessKey = builder.businessKey;
         this.taskIds = builder.taskIds;
@@ -65,17 +64,18 @@ public class TaskCriteria {
         this.dueAfter = builder.dueAfter;
         this.assigneeId = builder.assigneeId;
         this.candidateAssigneeId = builder.candidateAssigneeId;
+        this.participantId = builder.participantId;
         this.firstResult = builder.firstResult;
         this.maxResults = builder.maxResults;
         this.orderBy = builder.orderBy;
     }
 
-    public String getEngine() {
-        return engine;
+    public Set<String> getEngines() {
+        return engines;
     }
 
-    public String getEngineProcessDefinitionKey() {
-        return engineProcessDefinitionKey;
+    public Set<String> getEngineProcessDefinitionKeys() {
+        return engineProcessDefinitionKeys;
     }
 
     public String getExecutionId() {
@@ -130,6 +130,10 @@ public class TaskCriteria {
         return candidateAssigneeId;
     }
 
+    public String getParticipantId() {
+        return participantId;
+    }
+
     public Integer getFirstResult() {
         return firstResult;
     }
@@ -144,8 +148,8 @@ public class TaskCriteria {
 
     public final static class Builder {
 
-        private String engine;
-        private String engineProcessDefinitionKey;
+        private Set<String> engines;
+        private Set<String> engineProcessDefinitionKeys;
         private String executionId;
         private String businessKey;
         private List<String> taskIds;
@@ -159,6 +163,7 @@ public class TaskCriteria {
         private Date dueAfter;
         private String assigneeId;
         private String candidateAssigneeId;
+        private String participantId;
         private Integer firstResult;
         private Integer maxResults;
         private OrderBy orderBy;
@@ -172,12 +177,18 @@ public class TaskCriteria {
         }
 
         public Builder engine(String engine) {
-            this.engine = engine;
+            if (this.engines == null)
+                this.engines = new HashSet<String>();
+            if (engine != null)
+                this.engines.add(engine);
             return this;
         }
 
         public Builder engineProcessDefinitionKey(String engineProcessDefinitionKey) {
-            this.engineProcessDefinitionKey = engineProcessDefinitionKey;
+            if (this.engineProcessDefinitionKeys == null)
+                this.engineProcessDefinitionKeys = new HashSet<String>();
+            if (engineProcessDefinitionKey != null)
+                this.engineProcessDefinitionKeys.add(engineProcessDefinitionKey);
             return this;
         }
 
@@ -252,6 +263,11 @@ public class TaskCriteria {
 
         public Builder candidateAssigneeId(String candidateAssigneeId) {
             this.candidateAssigneeId = candidateAssigneeId;
+            return this;
+        }
+
+        public Builder participantId(String participantId) {
+            this.participantId = participantId;
             return this;
         }
 

@@ -102,7 +102,7 @@ public class TaskResourceVersion1 implements TaskResource {
     String certificateSubjectHeader;
 
     @Override
-    public Response complete(@PathParam("processDefinitionKey") String rawProcessDefinitionKey, @PathParam("taskId") String rawTaskId, @PathParam("action") String rawAction, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+    public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
         String action = sanitizer.sanitize(rawAction);
@@ -156,12 +156,12 @@ public class TaskResourceVersion1 implements TaskResource {
     }
 
     @Override
-    public Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+    public Response update(String processDefinitionKey, String taskId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
         throw new NotImplementedException();
     }
 
     @Override
-    public SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError {
+    public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         ManyMap<String, String> queryParameters = new ManyMap<String, String>();
 
