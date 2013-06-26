@@ -174,8 +174,13 @@ public class LdapConfiguration {
         String defaultUser = environment.getProperty("ldap.authentication.user");
         String defaultPassword = environment.getProperty("ldap.authentication.password");
 		SpringSecurityAuthenticationSource authenticationSource = new SpringSecurityAuthenticationSource();
-        DefaultValuesAuthenticationSourceDecorator decorator = new DefaultValuesAuthenticationSourceDecorator(authenticationSource, defaultUser, defaultPassword);
-        return decorator;
+
+        LdapAuthenticationEncryption encryption = authenticationEncryption(environment);
+
+        if (encryption == LdapAuthenticationEncryption.TLS)
+            return new DefaultValuesAuthenticationSourceDecorator(authenticationSource, defaultUser, defaultPassword);
+
+        return authenticationSource;
 	}
 	
 	private DirContextAuthenticationStrategy authenticationStrategy(Environment environment) throws Exception {

@@ -17,6 +17,7 @@ package piecework.ldap;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.env.Environment;
@@ -53,7 +54,7 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper {
         String internalId = ctx.getStringAttribute(ldapInternalIdAttribute);
         String externalId = ctx.getStringAttribute(ldapExternalIdAttribute);
         String displayName = ctx.getStringAttribute(ldapDisplayNameAttribute);
-        String emailAddress = ctx.getStringAttribute(ldapEmailAttribute);
+        String emailAddress = StringUtils.isNotEmpty(ldapEmailAttribute) ? ctx.getStringAttribute(ldapEmailAttribute) : "";
         return new InternalUserDetails(userDetails, internalId, externalId, displayName, emailAddress);
     }
 	
