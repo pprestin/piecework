@@ -14,7 +14,7 @@ import piecework.util.ManyMap;
 @XmlRootElement(name = SearchResults.Constants.ROOT_ELEMENT_NAME)
 @XmlType(name = SearchResults.Constants.TYPE_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlSeeAlso({Button.class, Constraint.class, Field.class, FormValue.class, Interaction.class, Process.class, ProcessInstance.class, QueryParameter.class, Screen.class, Section.class, Task.class})
+@XmlSeeAlso({Button.class, Constraint.class, Field.class, Form.class, FormValue.class, Interaction.class, Process.class, ProcessInstance.class, QueryParameter.class, Screen.class, Section.class, Task.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchResults implements Serializable {
 

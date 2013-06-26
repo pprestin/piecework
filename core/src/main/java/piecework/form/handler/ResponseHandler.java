@@ -88,7 +88,6 @@ public class ResponseHandler {
         return Response.ok(form).build();
     }
 
-
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
         List<FormValue> formValues = findFormValues(formRequest, validation);
         Set<String> includedFieldNames = new HashSet<String>();
@@ -177,7 +176,6 @@ public class ResponseHandler {
         return new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
                 .processDefinitionKey(formRequest.getProcessDefinitionKey())
-                .requestType(Constants.RequestTypes.SUBMISSION)
                 .submissionType(formRequest.getSubmissionType())
                 .formValues(includedFormValues)
                 .screen(screen)

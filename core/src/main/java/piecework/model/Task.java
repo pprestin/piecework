@@ -26,6 +26,7 @@ import piecework.security.Sanitizer;
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -46,26 +47,44 @@ public class Task implements Serializable {
     private final String taskInstanceId;
 
     @XmlAttribute
+    private final String processInstanceId;
+
+    @XmlAttribute
+    private final String processInstanceAlias;
+
+    @XmlAttribute
     private final String processDefinitionKey;
 
     @XmlAttribute
     private final String taskDefinitionKey;
 
     @XmlElement
-    private final String taskInstanceLabel;
+    private final String processInstanceLabel;
 
     @XmlElement
     private final String processDefinitionLabel;
 
-    @XmlTransient
-    @JsonIgnore
-    private final String engineProcessInstanceId;
+    @XmlElement
+    private final String taskLabel;
+
+    @XmlElement
+    private final String taskDescription;
 
     @XmlElement
     private final User assignee;
 
     @XmlElementWrapper(name="candidateAssignees")
+    @XmlElementRef(name="candidateAssignee")
     private final List<User> candidateAssignees;
+
+    @XmlElement
+    private final Date startTime;
+
+    @XmlElement
+    private final Date dueDate;
+
+    @XmlAttribute
+    private final int priority;
 
     @XmlAttribute
     private final String link;
@@ -85,11 +104,17 @@ public class Task implements Serializable {
         this.taskInstanceId = builder.taskInstanceId;
         this.processDefinitionKey = builder.processDefinitionKey;
         this.taskDefinitionKey = builder.taskDefinitionKey;
-        this.taskInstanceLabel = builder.taskInstanceLabel;
+        this.taskLabel = builder.taskLabel;
+        this.taskDescription = builder.taskDescription;
         this.processDefinitionLabel = builder.processDefinitionLabel;
-        this.engineProcessInstanceId = builder.engineProcessInstanceId;
+        this.processInstanceLabel = builder.processInstanceLabel;
+        this.processInstanceId = builder.processInstanceId;
+        this.processInstanceAlias = builder.processInstanceAlias;
         this.assignee = builder.assignee;
         this.candidateAssignees = builder.candidateAssignees;
+        this.startTime = builder.startTime;
+        this.dueDate = builder.dueDate;
+        this.priority = builder.priority;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.isDeleted = builder.isDeleted;
@@ -107,17 +132,28 @@ public class Task implements Serializable {
 		return taskDefinitionKey;
 	}
 
-	public String getTaskInstanceLabel() {
-		return taskInstanceLabel;
+	public String getTaskLabel() {
+		return taskLabel;
 	}
+
+    public String getTaskDescription() {
+        return taskDescription;
+    }
 
     public String getProcessDefinitionLabel() {
         return processDefinitionLabel;
     }
 
-    @JsonIgnore
-    public String getEngineProcessInstanceId() {
-        return engineProcessInstanceId;
+    public String getProcessInstanceLabel() {
+        return processInstanceLabel;
+    }
+
+    public String getProcessInstanceId() {
+        return processInstanceId;
+    }
+
+    public String getProcessInstanceAlias() {
+        return processInstanceAlias;
     }
 
     public User getAssignee() {
@@ -127,6 +163,18 @@ public class Task implements Serializable {
 	public List<User> getCandidateAssignees() {
 		return candidateAssignees;
 	}
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public Date getDueDate() {
+        return dueDate;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
 
     public String getLink() {
         return link;
@@ -144,12 +192,18 @@ public class Task implements Serializable {
 
         private String taskInstanceId;
         private String taskDefinitionKey;
+        private String processInstanceId;
+        private String processInstanceAlias;
         private String processDefinitionKey;
         private String processDefinitionLabel;
-        private String taskInstanceLabel;
-        private String engineProcessInstanceId;
+        private String processInstanceLabel;
+        private String taskLabel;
+        private String taskDescription;
         private User assignee;
         private List<User> candidateAssignees;
+        private Date startTime;
+        private Date dueDate;
+        private int priority;
         private boolean isDeleted;
 
         public Builder() {
@@ -159,9 +213,12 @@ public class Task implements Serializable {
         public Builder(Task task, Sanitizer sanitizer) {
             this.taskInstanceId = sanitizer.sanitize(task.taskInstanceId);
             this.taskDefinitionKey = sanitizer.sanitize(task.taskDefinitionKey);
-            this.taskInstanceLabel = sanitizer.sanitize(task.taskInstanceLabel);
+            this.taskLabel = sanitizer.sanitize(task.taskLabel);
+            this.taskDescription = sanitizer.sanitize(task.taskDescription);
             this.processDefinitionLabel = sanitizer.sanitize(task.processDefinitionLabel);
-            this.engineProcessInstanceId = sanitizer.sanitize(task.engineProcessInstanceId);
+            this.processInstanceLabel = sanitizer.sanitize(task.processInstanceLabel);
+            this.processInstanceId = sanitizer.sanitize(task.processInstanceId);
+            this.processInstanceAlias = sanitizer.sanitize(task.processInstanceAlias);
             this.assignee = task.assignee != null ? new User.Builder(task.assignee, sanitizer).build() : null;
             if (task.candidateAssignees != null && !task.candidateAssignees.isEmpty()) {
                 this.candidateAssignees = new ArrayList<User>(task.candidateAssignees.size());
@@ -169,6 +226,9 @@ public class Task implements Serializable {
                     this.candidateAssignees.add(new User.Builder(candidateAssignee, sanitizer).build());
                 }
             }
+            this.startTime = task.startTime;
+            this.dueDate = task.dueDate;
+            this.priority = task.priority;
             this.isDeleted = task.isDeleted;
         }
 
@@ -195,8 +255,13 @@ public class Task implements Serializable {
             return this;
         }
 
-        public Builder taskInstanceLabel(String taskInstanceLabel) {
-            this.taskInstanceLabel = taskInstanceLabel;
+        public Builder taskLabel(String taskLabel) {
+            this.taskLabel = taskLabel;
+            return this;
+        }
+
+        public Builder taskDescription(String taskDescription) {
+            this.taskDescription = taskDescription;
             return this;
         }
 
@@ -205,8 +270,18 @@ public class Task implements Serializable {
             return this;
         }
 
-        public Builder engineProcessInstanceId(String engineProcessInstanceId) {
-            this.engineProcessInstanceId = engineProcessInstanceId;
+        public Builder processInstanceLabel(String processInstanceLabel) {
+            this.processInstanceLabel = processInstanceLabel;
+            return this;
+        }
+
+        public Builder processInstanceId(String processInstanceId) {
+            this.processInstanceId = processInstanceId;
+            return this;
+        }
+
+        public Builder processInstanceAlias(String processInstanceAlias) {
+            this.processInstanceAlias = processInstanceAlias;
             return this;
         }
 
@@ -219,6 +294,21 @@ public class Task implements Serializable {
             if (this.candidateAssignees == null)
                 this.candidateAssignees = new ArrayList<User>();
             this.candidateAssignees.add(candidateAssignee);
+            return this;
+        }
+
+        public Builder startTime(Date startTime) {
+            this.startTime = startTime;
+            return this;
+        }
+
+        public Builder dueDate(Date dueDate) {
+            this.dueDate = dueDate;
+            return this;
+        }
+
+        public Builder priority(int priority) {
+            this.priority = priority;
             return this;
         }
 

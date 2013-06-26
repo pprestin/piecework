@@ -179,6 +179,14 @@ public class TaskCriteria {
             return this;
         }
 
+        public Builder processes(Collection<Process> processes) {
+            if (this.processes == null)
+                this.processes = new HashSet<Process>();
+            if (processes != null)
+                this.processes.addAll(processes);
+            return this;
+        }
+
         public Builder executionId(String executionId) {
             this.executionId = executionId;
             return this;

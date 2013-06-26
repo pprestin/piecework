@@ -16,16 +16,12 @@
 package piecework.form.concrete;
 
 import com.google.common.collect.Sets;
-import org.apache.cxf.common.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
@@ -35,11 +31,9 @@ import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.TaskCriteria;
 import piecework.engine.TaskResults;
-import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
-import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
@@ -47,12 +41,9 @@ import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstancePayload;
-import piecework.process.ProcessInstanceQueryBuilder;
-import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.process.ProcessInstanceService;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
-import piecework.security.concrete.PassthroughSanitizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
@@ -96,27 +87,22 @@ public class FormService {
     Sanitizer sanitizer;
 
 
-    public Response redirectToNewRequestResponse(HttpServletRequest request, ViewContext viewContext, Process process) throws StatusCodeError {
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
-
-        return responseHandler.redirect(formRequest, viewContext);
-    }
+//    public Response redirectToNewRequestResponse(HttpServletRequest request, ViewContext viewContext, Process process) throws StatusCodeError {
+//        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+//        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+//        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+//        FormRequest formRequest = requestHandler.create(requestDetails, process);
+//
+//        return responseHandler.redirect(formRequest, viewContext);
+//    }
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
-        String requestType = null;
-        String requestId = null;
+        String taskId = null;
 
         if (pathSegments != null && !pathSegments.isEmpty()) {
             Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
-            requestType = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-            requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+            taskId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
         }
-
-        if (StringUtils.isEmpty(requestType) || !VALID_REQUEST_TYPES.contains(requestType))
-            throw new BadRequestError();
 
         String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
         String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
@@ -124,10 +110,10 @@ public class FormService {
 
         FormRequest formRequest;
 
-        if (requestType.equals("task"))
-            formRequest = requestHandler.create(requestDetails, process, null, requestId, null);
+        if (StringUtils.isNotEmpty(taskId))
+            formRequest = requestHandler.create(requestDetails, process, null, taskId, null);
         else
-            formRequest = requestHandler.handle(requestDetails, requestType, requestId);
+            formRequest = requestHandler.create(requestDetails, process);
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
@@ -137,8 +123,9 @@ public class FormService {
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
 
-        TaskCriteria.Builder executionCriteriaBuilder =
-                new TaskCriteria.Builder();
+        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.USER);
+
+        TaskCriteria.Builder executionCriteriaBuilder = new TaskCriteria.Builder().processes(allowedProcesses);
 
 //        executionCriteriaBuilder.participantId(helper.getAuthenticatedPrincipal());
 
@@ -147,11 +134,14 @@ public class FormService {
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
                 .link(viewContext.getApplicationUri());
 
-        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.USER);
+        Set<String> allowedProcessDefinitionKeys = Sets.newHashSet();
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
-                executionCriteriaBuilder.process(allowedProcess);
-                resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).build(viewContext));
+                if (StringUtils.isEmpty(allowedProcess.getProcessDefinitionKey()))
+                    continue;
+
+                allowedProcessDefinitionKeys.add(allowedProcess.getProcessDefinitionKey());
+                resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionLabel(allowedProcess.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
             }
         }
         TaskCriteria executionCriteria = executionCriteriaBuilder.build();
@@ -159,18 +149,14 @@ public class FormService {
         try {
             TaskResults results = facade.findTasks(executionCriteria);
 
-//            resultsBuilder.items(results.getTasks());
-
             List<Task> tasks = results.getTasks();
-
             if (tasks != null && !tasks.isEmpty()) {
+
                 for (Task task : tasks) {
                     resultsBuilder.item(new Form.Builder()
                             .formInstanceId(task.getTaskInstanceId())
-                            .formLabel(task.getTaskInstanceLabel())
+                            .task(task)
                             .processDefinitionKey(task.getProcessDefinitionKey())
-                            .processDefinitionLabel(task.getProcessDefinitionLabel())
-                            .requestType(Constants.RequestTypes.TASK)
                             .build(viewContext));
                 }
             }
@@ -186,12 +172,8 @@ public class FormService {
         return resultsBuilder.build(viewContext);
     }
 
-    public Response submitForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestType, String rawRequestId, MultipartBody body) throws StatusCodeError {
-        String requestType = sanitizer.sanitize(rawRequestType);
+    public Response submitForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
-
-        if (StringUtils.isEmpty(requestType))
-            throw new ForbiddenError(Constants.ExceptionCodes.request_type_required);
 
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
@@ -200,7 +182,7 @@ public class FormService {
         String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         // This will guarantee that the request is valid
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestType, requestId);
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Screen screen = formRequest.getScreen();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).multipartBody(body);
@@ -211,7 +193,7 @@ public class FormService {
             FormRequest nextFormRequest = null;
 
             if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                nextFormRequest = requestHandler.create(requestDetails, process, stored.getProcessInstanceId(), null, formRequest);
+                nextFormRequest = requestHandler.create(requestDetails, process, stored, null, formRequest);
 
             // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
             if (nextFormRequest == null) {
@@ -237,7 +219,7 @@ public class FormService {
         String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         // This will guarantee that the request is valid
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.handle(requestDetails, "submission", requestId);
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Screen screen = formRequest.getScreen();
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).validationId(validationId).multipartBody(body);

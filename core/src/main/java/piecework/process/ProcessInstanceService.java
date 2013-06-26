@@ -215,31 +215,6 @@ public class ProcessInstanceService {
     public ProcessInstance store(Process process, FormSubmission submission, FormValidation validation, ProcessInstance previous) throws StatusCodeError {
         ProcessInstance.Builder instanceBuilder;
 
-        if (previous != null) {
-            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
-        } else {
-            try {
-                String processInstanceId = UUID.randomUUID().toString();
-                String engineInstanceId = facade.start(process, processInstanceId, validation.getFormValueMap());
-                String initiationStatus = process.getInitiationStatus();
-
-                instanceBuilder = new ProcessInstance.Builder()
-                        .processDefinitionKey(process.getProcessDefinitionKey())
-                        .processDefinitionLabel(process.getProcessDefinitionLabel())
-                        .processInstanceId(processInstanceId)
-                        .processInstanceLabel(validation.getTitle())
-                        .engineProcessInstanceId(engineInstanceId)
-                        .startTime(new Date())
-                        .initiatorId(helper.getAuthenticatedPrincipal())
-                        .processStatus(Constants.ProcessStatuses.OPEN)
-                        .applicationStatus(initiationStatus);
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to start instance ", e);
-                throw new InternalServerError();
-            }
-        }
-
         String processInstanceLabel = process.getProcessInstanceLabelTemplate();
 
         if (processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
@@ -257,6 +232,36 @@ public class ProcessInstanceService {
             mustache.execute(writer, scopes);
 
             processInstanceLabel = writer.toString();
+        }
+
+        if (previous != null) {
+            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
+        } else {
+            try {
+                String processInstanceId = UUID.randomUUID().toString();
+
+                ManyMap<String, String> variables = new ManyMap<String, String>(validation.getFormValueMap());
+                variables.putOne("PIECEWORK_PROCESS_INSTANCE_ID", processInstanceId);
+                variables.putOne("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstanceLabel);
+
+                String engineInstanceId = facade.start(process, processInstanceId, variables);
+                String initiationStatus = process.getInitiationStatus();
+
+                instanceBuilder = new ProcessInstance.Builder()
+                        .processDefinitionKey(process.getProcessDefinitionKey())
+                        .processDefinitionLabel(process.getProcessDefinitionLabel())
+                        .processInstanceId(processInstanceId)
+                        .processInstanceLabel(validation.getTitle())
+                        .engineProcessInstanceId(engineInstanceId)
+                        .startTime(new Date())
+                        .initiatorId(helper.getAuthenticatedPrincipal())
+                        .processStatus(Constants.ProcessStatuses.OPEN)
+                        .applicationStatus(initiationStatus);
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to start instance ", e);
+                throw new InternalServerError();
+            }
         }
 
         instanceBuilder.processInstanceLabel(processInstanceLabel)

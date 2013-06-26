@@ -27,6 +27,7 @@ import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
 import org.activiti.engine.task.TaskQuery;
+import org.apache.commons.collections.map.MultiKeyMap;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -39,6 +40,7 @@ import piecework.model.Process;
 import piecework.model.ProcessExecution;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
+import piecework.process.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.process.concrete.ResourceHelper;
 
@@ -56,6 +58,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Autowired
     HistoryService historyService;
+
+    @Autowired
+    ProcessInstanceRepository processInstanceRepository;
 
 	@Autowired
 	RuntimeService runtimeService;
@@ -167,7 +172,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .initiatorId(instance.getStartUserId())
                 .deleteReason(instance.getDeleteReason());
 
-
             if (criteria.isIncludeVariables()) {
                 Map<String, Object> variables = runtimeService.getVariables(instance.getId());
                 executionBuilder.data(variables);
@@ -238,105 +242,77 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
 
         if (activitiTask == null)
-            throw new ProcessEngineException("Task not found");
+            return null;
 
-        Task.Builder taskBuilder = new Task.Builder()
-                .taskInstanceId(activitiTask.getId())
-                .taskInstanceLabel(activitiTask.getDescription())
-                .engineProcessInstanceId(activitiTask.getProcessInstanceId());
+        Map<String, Process> processDefinitionIdMap = getProcessDefinitionIdMap(criteria.getProcesses());
+        Process process = processDefinitionIdMap.get(activitiTask.getProcessDefinitionId());
+        if (process == null)
+            throw new ProcessEngineException("Not authorized to see tasks of this process");
 
-        List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(activitiTask.getId());
+        List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Sets.newHashSet(process.getProcessDefinitionKey()), Sets.newHashSet(activitiTask.getProcessInstanceId()));
+        if (processInstances.isEmpty() || processInstances.size() > 1)
+            throw new ProcessEngineException("Unable to find a single process instance for this task");
 
-        if (identityLinks != null && !identityLinks.isEmpty()) {
-            for (IdentityLink identityLink : identityLinks) {
-                String type = identityLink.getType();
-
-                if (type == null)
-                    continue;
-
-                if (type.equals(IdentityLinkType.ASSIGNEE))
-                    taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
-                else if (type.equals(IdentityLinkType.CANDIDATE))
-                    taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
-            }
-        }
-
-        return taskBuilder.build();
+        return convert(activitiTask, process, processInstances.iterator().next(), true);
     }
 
-    // FIXME: Figure out the access control part of this by passing process definition keys in the criteria -- like with process instances
     public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
-        TaskQuery query = taskQuery(criteria);
-
         TaskResults.Builder resultsBuilder = new TaskResults.Builder();
 
-        List<org.activiti.engine.task.Task> instances;
-        if (criteria.getFirstResult() != null && criteria.getMaxResults() != null) {
-            int firstResult = criteria.getFirstResult().intValue();
-            int maxResults = criteria.getMaxResults().intValue();
+        if (criteria.getProcesses() == null || criteria.getProcesses().isEmpty())
+            return resultsBuilder.build();
 
-            resultsBuilder.firstResult(firstResult);
-            resultsBuilder.maxResults(maxResults);
-            resultsBuilder.total(query.count());
+        TaskQuery query = taskQuery(criteria);
 
-            instances = query.listPage(firstResult, maxResults);
-        } else {
-            instances = query.list();
-            int size = instances.size();
+        List<org.activiti.engine.task.Task> instances = query.list();
+        int size = instances.size();
 
-            resultsBuilder.firstResult(0);
-            resultsBuilder.maxResults(size);
-            resultsBuilder.total(size);
-        }
-
-
-//        if (instances != null && !instances.isEmpty()) {
-//            tasks = new ArrayList<Task>(instances.size());
-//
-//
-//            for (org.activiti.engine.task.Task instance : instances) {
-//                Task.Builder executionBuilder = new Task.Builder()
-//                        .taskInstanceId(instance.getId())
-//                        .taskInstanceLabel(instance.getDescription())
-//                        .engineProcessInstanceId(instance.getProcessInstanceId())
-//                        .assignee(new User.Builder().userId(instance.getAssignee()).build());
-//
-//                tasks.add(executionBuilder.build());
-//            }
-//        } else {
-//            tasks = Collections.emptyList();
-//        }
+        resultsBuilder.firstResult(0);
+        resultsBuilder.maxResults(size);
+        resultsBuilder.total(size);
 
         // Only need to worry about filtering if there are more than 1 key, since with 1 key
         // it's part of the search that Activiti performs --- see the instanceQuery() method
         Map<String, Process> processDefinitionIdMap = getProcessDefinitionIdMap(criteria.getProcesses());
+        Set<String> allowedProcessDefinitionKeys = getProcessDefinitionKeys(criteria.getProcesses());
 
         List<Task> tasks;
         if (instances != null && !instances.isEmpty()) {
             tasks = new ArrayList<Task>(instances.size());
 
+            Set<String> engineProcessInstanceIds = Sets.newHashSet();
             for (org.activiti.engine.task.Task instance : instances) {
-                Process process = processDefinitionIdMap.get(instance.getProcessDefinitionId());
-                if (process == null)
-                    continue;
+                engineProcessInstanceIds.add(instance.getProcessInstanceId());
+            }
 
-                Task.Builder executionBuilder = new Task.Builder()
-                        .taskInstanceId(instance.getId())
-                        .taskInstanceLabel(instance.getName())
-                        .processDefinitionKey(process.getProcessDefinitionKey())
-                        .processDefinitionLabel(process.getProcessDefinitionLabel());
+            List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(allowedProcessDefinitionKeys, engineProcessInstanceIds);
+            if (processInstances != null && !processInstances.isEmpty()) {
+                MultiKeyMap processInstanceMap = new MultiKeyMap();
+                for (ProcessInstance processInstance : processInstances) {
+                    if (processInstance == null)
+                        continue;
+                    if (org.apache.cxf.common.util.StringUtils.isEmpty(processInstance.getProcessDefinitionKey()))
+                        continue;
+                    if (org.apache.cxf.common.util.StringUtils.isEmpty(processInstance.getEngineProcessInstanceId()))
+                        continue;
 
-                if (StringUtils.isNotEmpty(instance.getAssignee()))
-                    executionBuilder.assignee(new User.Builder().userId(instance.getAssignee()).build());
+                    processInstanceMap.put(processInstance.getProcessDefinitionKey(), processInstance.getEngineProcessInstanceId(), processInstance);
+                }
+                for (org.activiti.engine.task.Task instance : instances) {
+                    Process process = processDefinitionIdMap.get(instance.getProcessDefinitionId());
+                    if (process == null)
+                        continue;
+                    if (instance == null)
+                        continue;
+                    if (org.apache.cxf.common.util.StringUtils.isEmpty(process.getProcessDefinitionKey()))
+                        continue;
+                    if (org.apache.cxf.common.util.StringUtils.isEmpty(instance.getProcessInstanceId()))
+                        continue;
 
-                tasks.add(executionBuilder.build());
+                    ProcessInstance processInstance = ProcessInstance.class.cast(processInstanceMap.get(process.getProcessDefinitionKey(), instance.getProcessInstanceId()));
 
-//                if (criteria.isIncludeVariables()) {
-//                    Map<String, Object> variables = runtimeService.getVariables(instance.getId());
-//                    executionBuilder.data(variables);
-//                }
-
-                tasks.add(executionBuilder.build());
+                    tasks.add(convert(instance, process, processInstance, false));
+                }
             }
         } else {
             tasks = Collections.emptyList();
@@ -345,6 +321,43 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         resultsBuilder.tasks(tasks);
 
         return resultsBuilder.build();
+    }
+
+    private Task convert(org.activiti.engine.task.Task instance, Process process, ProcessInstance processInstance, boolean includeDetails) {
+        Task.Builder taskBuilder = new Task.Builder()
+                .taskInstanceId(instance.getId())
+                .taskLabel(instance.getName())
+                .taskDescription(instance.getDescription())
+                .processInstanceId(processInstance.getProcessInstanceId())
+                .processInstanceAlias(processInstance.getAlias())
+                .processInstanceLabel(processInstance.getProcessInstanceLabel())
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .processDefinitionLabel(process.getProcessDefinitionLabel())
+                .priority(instance.getPriority())
+                .startTime(instance.getCreateTime())
+                .dueDate(instance.getDueDate());
+
+        if (includeDetails) {
+            List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(instance.getId());
+
+            if (identityLinks != null && !identityLinks.isEmpty()) {
+                for (IdentityLink identityLink : identityLinks) {
+                    String type = identityLink.getType();
+
+                    if (type == null)
+                        continue;
+
+                    if (type.equals(IdentityLinkType.ASSIGNEE))
+                        taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
+                    else if (type.equals(IdentityLinkType.CANDIDATE))
+                        taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
+                }
+            }
+        } else if (StringUtils.isNotEmpty(instance.getAssignee())) {
+            taskBuilder.assignee(new User.Builder().userId(instance.getAssignee()).build());
+        }
+
+        return taskBuilder.build();
     }
 
     private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
@@ -506,6 +519,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                    query.orderByTaskPriority().desc();
                    break;
            }
+        } else {
+            query.orderByDueDate().desc();
         }
 
         if (criteria.getActive() != null) {
@@ -584,6 +599,16 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         }
 
         return Collections.unmodifiableSet(set);
+    }
+
+    @Cacheable("processDefinitionKeys")
+    private Set<String> getProcessDefinitionKeys(Set<Process> processes) {
+        Set<String> set = Sets.newHashSet();
+        for (Process process : processes) {
+            if (process.getEngine() != null && getKey() != null && process.getEngine().equals(getKey()) && StringUtils.isNotEmpty(process.getProcessDefinitionKey()))
+                set.add(process.getProcessDefinitionKey());
+        }
+        return set;
     }
 
     @Cacheable("processDefinitionIdMap")

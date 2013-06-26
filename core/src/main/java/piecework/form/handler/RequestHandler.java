@@ -23,7 +23,6 @@ import piecework.Constants;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.TaskCriteria;
-import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
@@ -56,7 +55,7 @@ public class RequestHandler {
         return create(requestDetails, process, null, null, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, String processInstanceId, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
         Interaction interaction = null;
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
@@ -140,6 +139,7 @@ public class RequestHandler {
 
         // Generate a new uuid for this request
         String requestId = UUID.randomUUID().toString();
+        String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .requestId(requestId)
@@ -162,7 +162,7 @@ public class RequestHandler {
         return requestRepository.save(formRequestBuilder.build());
     }
 
-    public FormRequest handle(RequestDetails request, String requestType, String requestId) throws StatusCodeError {
+    public FormRequest handle(RequestDetails request, String requestId) throws StatusCodeError {
         FormRequest formRequest = requestRepository.findOne(requestId);
 
         if (formRequest == null) {

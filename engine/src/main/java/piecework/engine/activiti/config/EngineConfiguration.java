@@ -64,8 +64,8 @@ public class EngineConfiguration {
         Class<Driver> driverClass = env.getPropertyAsClass("activiti.datasource.driver.name", Driver.class);
 		dataSource.setDriverClass(driverClass);
 		dataSource.setUrl(env.getProperty("activiti.datasource.url"));
-		dataSource.setUsername("activiti.datasource.username");
-		dataSource.setPassword("activiti.datasource.password");
+		dataSource.setUsername(env.getProperty("activiti.datasource.username"));
+		dataSource.setPassword(env.getProperty("activiti.datasource.password"));
 
 		return dataSource;
 	}

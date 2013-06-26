@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import piecework.Constants;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.exception.StatusCodeError;
@@ -74,7 +73,7 @@ public class FormResourceVersion1 implements FormResource {
     public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = resourceHelper.findProcess(processDefinitionKey, true);
-        return formService.redirectToNewRequestResponse(request, getViewContext(), process);
+        return formService.provideFormResponse(request, getViewContext(), process, null);
     }
 
     @Override
@@ -88,7 +87,7 @@ public class FormResourceVersion1 implements FormResource {
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = resourceHelper.findProcess(processDefinitionKey, true);
-        return formService.submitForm(request, getViewContext(), process, Constants.RequestTypes.SUBMISSION, rawRequestId, body);
+        return formService.submitForm(request, getViewContext(), process, rawRequestId, body);
     }
 
     @Override

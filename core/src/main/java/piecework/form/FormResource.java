@@ -35,7 +35,7 @@ import java.util.List;
  * @author James Renfro
  */
 @Path("form")
-@Produces("text/html")
+//@Produces("text/html")
 public interface FormResource extends ApplicationResource {
 
     @GET
@@ -49,13 +49,13 @@ public interface FormResource extends ApplicationResource {
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context HttpServletRequest request) throws StatusCodeError;
 
     @POST
-    @Path("{processDefinitionKey}/submission/{requestId}")
+    @Path("{processDefinitionKey}/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes("multipart/form-data")
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
 
     @POST
-    @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
+    @Path("{processDefinitionKey}/{requestId}/{validationId}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Produces("application/json")
     @Consumes("multipart/form-data")

@@ -27,9 +27,12 @@ import java.util.Set;
  */
 public interface ProcessInstanceRepository extends MongoRepository<ProcessInstance, String> {
 
-    Set<ProcessInstance> findByKeywordsRegex(String keyword);
+    List<ProcessInstance> findByKeywordsRegex(String keyword);
 
     @Query(value="{ 'processInstanceId' : { $in: ?0 }, 'keywords' : { $regex: ?1 } }")
-    Set<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword);
+    List<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword);
+
+    @Query(value="{ 'processDefinitionKey' : { $in: ?0 }, 'engineProcessInstanceId' : { $in: ?1 } }")
+    List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds);
 
 }

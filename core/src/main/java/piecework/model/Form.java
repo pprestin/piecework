@@ -17,7 +17,6 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
-import piecework.Constants;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
 
@@ -42,10 +41,7 @@ public class Form {
     private final String submissionType;
 
     @XmlElement
-    private final String formLabel;
-
-    @XmlElement
-    private final String processDefinitionLabel;
+    private final Task task;
 
     @XmlElement
     private final Screen screen;
@@ -67,11 +63,10 @@ public class Form {
     private Form(Form.Builder builder, ViewContext context) {
         this.formInstanceId = builder.formInstanceId;
         this.submissionType = builder.submissionType;
-        this.formLabel = builder.formLabel;
-        this.processDefinitionLabel = builder.processDefinitionLabel;
+        this.task = builder.task;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.requestType, builder.formInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
         this.valid = builder.valid;
     }
 
@@ -83,16 +78,12 @@ public class Form {
         return submissionType;
     }
 
-    public String getFormLabel() {
-        return formLabel;
-    }
-
-    public String getProcessDefinitionLabel() {
-        return processDefinitionLabel;
-    }
-
     public Screen getScreen() {
         return screen;
+    }
+
+    public Task getTask() {
+        return task;
     }
 
     public List<FormValue> getFormData() {
@@ -121,10 +112,8 @@ public class Form {
 
         private String formInstanceId;
         private String processDefinitionKey;
-        private String requestType;
         private String submissionType;
-        private String formLabel;
-        private String processDefinitionLabel;
+        private Task task;
         private Screen screen;
         private List<FormValue> formData;
         private boolean valid;
@@ -138,15 +127,13 @@ public class Form {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
             this.screen = form.screen != null ? new Screen.Builder(form.screen, sanitizer).build() : null;
-            this.formLabel = sanitizer.sanitize(form.formLabel);
-            this.processDefinitionLabel = sanitizer.sanitize(form.processDefinitionLabel);
+            this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
             if (form.formData != null && !form.formData.isEmpty()) {
                 this.formData = new ArrayList<FormValue>(form.formData.size());
                 for (FormValue formValue : form.formData) {
                     this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
                 }
             }
-            this.requestType = piecework.Constants.RequestTypes.SUBMISSION;
             this.valid = form.valid;
         }
 
@@ -168,21 +155,6 @@ public class Form {
             return this;
         }
 
-        public Builder formLabel(String formLabel) {
-            this.formLabel = formLabel;
-            return this;
-        }
-
-        public Builder processDefinitionLabel(String processDefinitionLabel) {
-            this.processDefinitionLabel = processDefinitionLabel;
-            return this;
-        }
-
-        public Builder requestType(String requestType) {
-            this.requestType = requestType;
-            return this;
-        }
-
         public Builder submissionType(String submissionType) {
             this.submissionType = submissionType;
             return this;
@@ -190,6 +162,11 @@ public class Form {
 
         public Builder screen(Screen screen) {
             this.screen = screen;
+            return this;
+        }
+
+        public Builder task(Task task) {
+            this.task = task;
             return this;
         }
 
