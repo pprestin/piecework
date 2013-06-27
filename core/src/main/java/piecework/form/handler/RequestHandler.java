@@ -118,6 +118,8 @@ public class RequestHandler {
                                 break;
                             }
                         }
+                    } else {
+                        throw new NotFoundError();
                     }
 
                 } catch (ProcessEngineException e) {

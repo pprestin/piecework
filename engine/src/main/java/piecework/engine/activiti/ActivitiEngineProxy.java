@@ -326,6 +326,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     private Task convert(org.activiti.engine.task.Task instance, Process process, ProcessInstance processInstance, boolean includeDetails) {
         Task.Builder taskBuilder = new Task.Builder()
                 .taskInstanceId(instance.getId())
+                .taskDefinitionKey(instance.getTaskDefinitionKey())
                 .taskLabel(instance.getName())
                 .taskDescription(instance.getDescription())
                 .processInstanceId(processInstance.getProcessInstanceId())

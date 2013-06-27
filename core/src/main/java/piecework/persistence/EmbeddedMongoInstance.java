@@ -137,8 +137,11 @@ public class EmbeddedMongoInstance {
 		}
 	}
 	
-	private void importData(final DB db) {
-		
+	public void importData() throws Exception {
+
+        Mongo mongo = new Mongo(bindIp, port);
+        DB db = mongo.getDB(dbName);
+
 		File directory = new File(storePath, "dbs");
 		
 		if (!directory.exists()) {
@@ -173,6 +176,8 @@ public class EmbeddedMongoInstance {
                 }
 			}
         }
+
+        mongo.close();
 	}
 	
 	/**

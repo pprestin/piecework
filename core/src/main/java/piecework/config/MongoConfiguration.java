@@ -67,6 +67,7 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
         if (environment.acceptsProfiles("embedded-mongo")) {
             mongoInstance = embeddedMongo();
             mongoInstance.startEmbeddedMongo();
+            mongoInstance.importData();
         }
         return new Mongo(getServerAddresses());
     }

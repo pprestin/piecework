@@ -1,5 +1,5 @@
-define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
-		function(Chaplin, View, template) {
+define([ 'chaplin', 'models/base/collection', 'views/form/fields-view', 'views/form/sections-view', 'views/base/view', 'text!templates/form/form.hbs' ],
+		function(Chaplin, Collection, FieldsView, SectionsView, View, template) {
 	'use strict';
 
 	var FormView = View.extend({
@@ -10,10 +10,19 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
 	    template: template,
 	    events: {
 	        'submit': '_onFormSubmit',
-	        'load': '_onAddedToDOM',
+	        'load': '_onLoaded',
 	    },
 	    listen: {
+             'addedToDOM': '_onAddedToDOM',
+	    },
+	    initialize: function(options) {
+	        View.__super__.initialize.apply(this, options);
 
+            var screen = this.model.get("screen");
+            var collection = new Collection({collection: screen.sections});
+            this.subview('sectionsView', new SectionsView({collection: collection}));
+
+	        return this;
 	    },
         render: function(options) {
             View.__super__.render.apply(this, options);
@@ -28,6 +37,21 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
             this.$el.attr('novalidate', 'novalidate');
 
             return this;
+        },
+        _addSubviews: function() {
+            var screen = this.model.get("screen");
+
+            if (screen != undefined) {
+                var sections = screen.sections;
+                for (var i=0;i<sections.length;i++) {
+                    var section = sections[i];
+                    var fields = section.fields;
+                    var fieldsViewId = section.sectionId + "_fields";
+                    var container = '.section-content'; //'#' + section.sectionId + ' > .section-content';
+                    var collection = new Collection({collection: fields});
+                    this.subview(fieldsViewId, new FieldsView({collection: collection, container: container}));
+                }
+            }
         },
 	    _doValidate: function() {
 	        var data = new FormData();
@@ -78,7 +102,16 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/form.hbs' ],
             });
 	    },
 	    _onAddedToDOM: function(event) {
+
+	    },
+	    _onLoaded: function(event) {
             Chaplin.mediator.publish('formAddedToDOM');
+//            var sectionsView = this.subview('sections-view');
+//            if (sectionsView === undefined || sectionsView.collection.length == 0) {
+//                var screen = this.model.get("screen");
+//                var collection = new Collection({collection: screen.sections})
+//                this.subview('sections-view', new SectionsView({collection: collection}));
+//            }
 	    },
 	    _onFormSubmit: function(event) {
 	        var screen = this.model.get("screen");

@@ -1,11 +1,34 @@
 {{#with screen}}
     <h1>{{title}}</h1>
     {{#breadcrumb groupings}}{{#url "step"}}{{/url}}{{/breadcrumb}}
+    <!--{{#each groupings}}-->
+        <!--<div class="grouping" id="{{groupingId}}">-->
+            <!--{{#if title}}<h2>{{title}}</h2>{{/if}}-->
+            <!--{{#if description}}<p class="lead">{{description}}</p>{{/if}}-->
+        <!--</div>-->
+    <!--{{/each}}-->
     <div class="screen" id="{{screenId}}">
         <div class="screen-header"></div>
-        <ul class="sections">
+        <div class="screen-content">
+            <!--<ul class="sections">-->
+                <!--{{#each sections}}-->
+                    <!--<li class="section" id="{{sectionId}}">-->
+                        <!--<div class="section-header">-->
+                            <!--<h3>{{title}}</h3>-->
+                            <!--{{#if description}}-->
+                            <!--<p class="lead">{{description}}</p>-->
+                            <!--{{/if}}-->
+                        <!--</div>-->
+                        <!--<div class="section-content">-->
 
-        </ul>
+                        <!--</div>-->
+                    <!--</li>-->
+                <!--{{/each}}-->
+            <!--</ul>-->
+        </div>
+        <!--<ul class="sections">-->
+
+        <!--</ul>-->
         <div class="screen-footer">
             <ul class="screen-buttons">
 
