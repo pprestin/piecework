@@ -30,6 +30,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.*;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -107,24 +111,24 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	}
 
 	@Override
-    public void configure(WebSecurityBuilder builder) throws Exception {
-        builder
+    public void configure(WebSecurity web) throws Exception {
+        web
             .ignoring()
                 .antMatchers("/static/**");
     }
 
 	@Override
-	public void configure(HttpConfiguration httpConfiguration)
+	public void configure(HttpSecurity http)
 			throws Exception {
 		AuthenticationType type = authenticationType();
 
-		httpConfiguration
+		http
 			.authorizeUrls()
 			.antMatchers("/static/**").permitAll()
             .antMatchers("/public/**").permitAll()
         	.antMatchers("/secure/**").authenticated();
 
-        httpConfiguration
+        http
             .authorizeUrls()
             .antMatchers("/api/**").authenticated() //.hasRole("SYSTEM")
             .and()
@@ -132,7 +136,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		switch (type) {
 		case NORMAL:
-			httpConfiguration.formLogin().usernameParameter("j_username")
+			http.formLogin().usernameParameter("j_username")
 					.passwordParameter("j_password")
 					.loginProcessingUrl("/login")
 					.loginPage("/static/login.html")
@@ -140,7 +144,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 					.defaultSuccessUrl("/", false).permitAll();
 			break;
 		case NONE:
-			httpConfiguration
+			http
 					.addFilter(new RequestParameterAuthenticationFilter(authenticationManager(), testUser));
 			break;
 		}
