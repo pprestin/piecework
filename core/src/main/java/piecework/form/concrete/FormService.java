@@ -34,6 +34,7 @@ import piecework.engine.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
+import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
@@ -110,9 +111,13 @@ public class FormService {
 
         FormRequest formRequest;
 
-        if (StringUtils.isNotEmpty(taskId))
-            formRequest = requestHandler.create(requestDetails, process, null, taskId, null);
-        else
+        if (StringUtils.isNotEmpty(taskId)) {
+            try {
+                formRequest = requestHandler.create(requestDetails, process, null, taskId, null);
+            } catch (NotFoundError e) {
+                formRequest = requestHandler.handle(requestDetails, taskId);
+            }
+        } else
             formRequest = requestHandler.create(requestDetails, process);
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))

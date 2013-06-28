@@ -63,6 +63,8 @@ public class RequestHandler {
         if (process == null)
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
 
+        String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
+
         if (previousFormRequest != null) {
             interaction = previousFormRequest.getInteraction();
             Screen currentScreen = previousFormRequest.getScreen();
@@ -110,6 +112,7 @@ public class RequestHandler {
                     Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).build());
 
                     if (task != null) {
+                        processInstanceId = task.getProcessInstanceId();
                         String taskDefinitionKey = task.getTaskDefinitionKey();
                         while (interactionIterator.hasNext()) {
                             Interaction current = interactionIterator.next();
@@ -141,7 +144,6 @@ public class RequestHandler {
 
         // Generate a new uuid for this request
         String requestId = UUID.randomUUID().toString();
-        String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .requestId(requestId)

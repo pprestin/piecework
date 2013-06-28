@@ -9,6 +9,7 @@ define([
 
 	var SectionsView = CollectionView.extend({
 		autoRender: true,
+		className: 'sections',
 		container: ".screen-content",
 		tagName: 'ul',
 		itemView: SectionView,

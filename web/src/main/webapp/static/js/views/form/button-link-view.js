@@ -4,7 +4,6 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/button-link.hbs' ],
 
 	var ButtonLinkView = View.extend({
 		autoRender : true,
-		container: '.screen-buttons',
 		tagName: 'li',
 	    template: template,
 	});

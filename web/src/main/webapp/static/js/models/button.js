@@ -1,7 +1,7 @@
 define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 	'use strict';
 
-	var Form = Model.extend({
+	var Button = Model.extend({
 		url: function() {
 			var uri = this.get("link");
 			if (uri == null)
@@ -9,5 +9,5 @@ define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 			return uri;
 		},
 	});
-	return Form;
+	return Button;
 });

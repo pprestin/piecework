@@ -121,10 +121,9 @@ public class ResponseHandler {
             }
         }
 
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         if (screen != null) {
             ManyMap<String, String> formValueMap = FormDataUtil.getFormValueMap(formValues);
-
-            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
 
             if (screen.getSections() != null) {
@@ -169,7 +168,7 @@ public class ResponseHandler {
         if (formValues != null) {
             for (FormValue formValue : formValues) {
                 if (includedFieldNames.contains(formValue.getName()))
-                    includedFormValues.add(formValue);
+                    includedFormValues.add(new FormValue.Builder(formValue, passthroughSanitizer).build());
             }
         }
 

@@ -19,19 +19,21 @@ define([
     var ignore = true;
     var out = '<ul class="breadcrumb">'
 
-    for(var i=0, l=items.length; i<l; i++) {
-        var item = items[i];
+    if (items.length > 1) {
+        for(var i=0, l=items.length; i<l; i++) {
+            var item = items[i];
 
-        if (item.breadcrumb != null && item.breadcrumb != '')
-            ignore = false;
+            if (item.breadcrumb != null && item.breadcrumb != '')
+                ignore = false;
 
-        if (i > 0)
-            out += '<li><a class="hide" href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a><span class="inactive-text">' + item.breadcrumb + '</span>';
-        else
-            out += '<li><a href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a>';
+            if (i > 0)
+                out += '<li><a class="hide" href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a><span class="inactive-text">' + item.breadcrumb + '</span>';
+            else
+                out += '<li><a href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a>';
 
-        if (i<l-1)
-            out += ' <span class="divider">»</span></li>';
+            if (i<l-1)
+                out += ' <span class="divider">»</span></li>';
+        }
     }
 
     if (ignore)

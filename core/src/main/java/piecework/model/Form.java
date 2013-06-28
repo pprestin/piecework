@@ -51,6 +51,9 @@ public class Form {
     private final List<FormValue> formData;
 
     @XmlAttribute
+    private final String action;
+
+    @XmlAttribute
     private final String link;
 
     @XmlAttribute
@@ -66,7 +69,11 @@ public class Form {
         this.task = builder.task;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
+        this.action = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
+        if (task != null && task.getTaskInstanceId() != null)
+            this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, task.getTaskInstanceId()) : null;
+        else
+            this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
         this.valid = builder.valid;
     }
 
@@ -98,6 +105,10 @@ public class Form {
             }
         }
         return map;
+    }
+
+    public String getAction() {
+        return action;
     }
 
     public String getLink() {

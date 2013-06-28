@@ -191,13 +191,18 @@ public class UnitTestConfiguration {
 
     public class ProcessInstanceRepositoryStub extends MongoRepositoryStub<ProcessInstance> implements ProcessInstanceRepository {
         @Override
-        public Set<ProcessInstance> findByKeywordsRegex(String keyword) {
+        public List<ProcessInstance> findByKeywordsRegex(String keyword) {
             return null;
         }
 
         @Override
-        public Set<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword) {
+        public List<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword) {
             return null;
+        }
+
+        @Override
+        public List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 	

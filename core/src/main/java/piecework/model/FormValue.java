@@ -43,7 +43,7 @@ public class FormValue implements Serializable {
 	@XmlElement
 	private final String name;
 	
-	@XmlElement
+	@XmlTransient
 	private final String value;
 
     @XmlElementWrapper(name="messages")
@@ -63,7 +63,7 @@ public class FormValue implements Serializable {
     private final String location;
 
     @XmlElementWrapper(name="values")
-	@XmlElement
+	@XmlElementRef(name="value")
 	private final List<String> values;
 
     @XmlTransient
@@ -78,17 +78,18 @@ public class FormValue implements Serializable {
 	private FormValue(FormValue.Builder builder, ViewContext context) {
 		this.name = builder.name;
 
-		String temporarySingle = null;
-		List<String> temporaryList = null;
-		if (builder.values != null) {
-			int size = builder.values.size();
-			if (size == 1) 
-				temporarySingle = builder.values.get(0);
-			else
-				temporaryList = Collections.unmodifiableList(builder.values);
-		} 
-		this.value = temporarySingle;
-		this.values = temporaryList;
+//		String temporarySingle = null;
+//		List<String> temporaryList = null;
+//		if (builder.values != null) {
+//            temporaryList = Collections.unmodifiableList(builder.values);
+//			int size = builder.values.size();
+//			if (size == 1)
+//				temporarySingle = builder.values.get(0);
+//			else
+//				temporaryList = Collections.unmodifiableList(builder.values);
+//		}
+		this.value = null;
+		this.values = Collections.unmodifiableList(builder.values);
         this.secrets = builder.secrets;
 		this.restricted = builder.restricted;
         this.contentType = builder.contentType;

@@ -36,28 +36,63 @@ define([
         var userModel = this.compose('userModel');
         this.compose('userView', UserView, {model: userModel});
 
-        this.compose('formModel', Form, window.piecework.context.resource);
-        this.compose('pageModel', Page, window.piecework.context);
+        if (params.processDefinitionKey != undefined) {
+            this.compose('formView', {
+                compose: function(options) {
+                    var link = window.piecework.context.resource.link;
+                    var requestId = params.requestId != undefined ? params.requestId : '';
 
-        var formModel = this.compose('formModel');
-        var pageModel = this.compose('pageModel');
+                    if (/.html$/.test(requestId))
+                        requestId = requestId.substring(0, requestId.length - 5);
 
-        this.compose('formView', {
-            compose: function(options) {
-                this.model = formModel;
-                this.view = FormView;
-                var autoRender, disabledAutoRender;
-                this.item = new FormView({model: this.model});
-                autoRender = this.item.autoRender;
-                disabledAutoRender = autoRender === void 0 || !autoRender;
-                if (disabledAutoRender && typeof this.item.render === "function") {
-                    return this.item.render();
+                    if (/\/form$/.test(link))
+                        link += '/' + params.processDefinitionKey + '/' + requestId;
+
+                    this.model = new Form(window.piecework.context.resource);
+                    this.view = FormView;
+
+                    this.check(options);
+
+            //        if (this.model.get("valid") != true)
+            //            currentScreen = screen.reviewIndex;
+
+                    var screen = this.model.get("screen");
+                    if (screen !== undefined) {
+                        var autoRender, disabledAutoRender;
+                        this.item = new FormView({model: this.model}, options);
+                        autoRender = this.item.autoRender;
+                        disabledAutoRender = autoRender === void 0 || !autoRender;
+                        if (disabledAutoRender && typeof this.item.render === "function") {
+                            return this.item.render();
+                        }
+                    } else {
+                        this.model.set("link", link);
+                        this.listenToOnce(this.model, 'sync', function() {
+                            var autoRender, disabledAutoRender;
+                            this.item = new FormView({model: this.model}, options);
+                            autoRender = this.item.autoRender;
+                            disabledAutoRender = autoRender === void 0 || !autoRender;
+                            if (disabledAutoRender && typeof this.item.render === "function") {
+                              return this.item.render();
+                            }
+                        });
+                        this.model.fetch();
+                    }
+
+                },
+                check: function(options) {
+                    var groupingIndex = 0;
+                    var currentScreen = options.params.ordinal;
+                    if (currentScreen != undefined)
+                        groupingIndex = parseInt(currentScreen, 10) - 1;
+                    this.model.set("groupingIndex", groupingIndex);
+                    return true;
+                },
+                options: {
+                    params: params
                 }
-            },
-            check: function(options) {
-                return true;
-            },
-        });
+            });
+        }
     },
     index: function(params) {
         this.step(params);
@@ -156,6 +191,15 @@ define([
         }
     },
     step: function(params) {
+        var formView = this.compose('formView');
+        var groupingIndex = 0;
+        var currentScreen = params.ordinal;
+        if (currentScreen != undefined)
+            groupingIndex = parseInt(currentScreen, 10) - 1;
+
+        Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
+
+
 //        this.compose('formModel', Form, window.piecework.context.resource);
 //        this.compose('pageModel', Page, window.piecework.context);
 //
