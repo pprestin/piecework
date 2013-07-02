@@ -13,22 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.engine;
+package piecework.task;
 
 import java.util.*;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import piecework.model.Process;
+import piecework.security.Sanitizer;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
  */
 public class TaskCriteria {
 
+    private static final Logger LOG = Logger.getLogger(TaskCriteria.class);
     public enum OrderBy { CREATED_TIME_ASC, CREATED_TIME_DESC, DUE_TIME_ASC, DUE_TIME_DESC, PRIORITY_ASC, PRIORITY_DESC };
 
     private final Set<Process> processes;
     private final String executionId;
     private final String businessKey;
     private final List<String> taskIds;
+    private final String processDefinitionLabel;
+    private final String processInstanceLabel;
+    private final String applicationStatus;
+    private final String applicationStatusExplanation;
+    private final String processStatus;
     private final Integer minPriority;
     private final Integer maxPriority;
     private final Boolean active;
@@ -53,6 +66,11 @@ public class TaskCriteria {
         this.executionId = builder.executionId;
         this.businessKey = builder.businessKey;
         this.taskIds = builder.taskIds;
+        this.applicationStatus = builder.applicationStatus;
+        this.applicationStatusExplanation = builder.applicationStatusExplanation;
+        this.processStatus = builder.processStatus;
+        this.processDefinitionLabel = builder.processDefinitionLabel;
+        this.processInstanceLabel = builder.processInstanceLabel;
         this.minPriority = builder.minPriority;
         this.maxPriority = builder.maxPriority;
         this.active = builder.active;
@@ -83,6 +101,26 @@ public class TaskCriteria {
 
     public List<String> getTaskIds() {
         return taskIds;
+    }
+
+    public String getProcessDefinitionLabel() {
+        return processDefinitionLabel;
+    }
+
+    public String getProcessInstanceLabel() {
+        return processInstanceLabel;
+    }
+
+    public String getApplicationStatus() {
+        return applicationStatus;
+    }
+
+    public String getApplicationStatusExplanation() {
+        return applicationStatusExplanation;
+    }
+
+    public String getProcessStatus() {
+        return processStatus;
     }
 
     public Integer getMinPriority() {
@@ -147,6 +185,12 @@ public class TaskCriteria {
         private String executionId;
         private String businessKey;
         private List<String> taskIds;
+        private String processDefinitionLabel;
+        private String processInstanceLabel;
+        private String applicationStatus;
+        private String applicationStatusExplanation;
+        private String processStatus;
+        private List<String> keywords;
         private Integer minPriority;
         private Integer maxPriority;
         private Boolean complete;
@@ -161,10 +205,104 @@ public class TaskCriteria {
         private Integer firstResult;
         private Integer maxResults;
         private OrderBy orderBy;
+        private ManyMap<String, String> contentParameters;
+        private ManyMap<String, String> sanitizedParameters;
 
         public Builder() {
             super();
             this.processes = new HashSet<Process>();
+            this.keywords = new ArrayList<String>();
+        }
+
+        public Builder(Set<Process> allowedProcesses, Map<String, List<String>> queryParameters, Sanitizer sanitizer) {
+            // Selected processes must be a subset of allowed processes
+            Map<String, Process> processDefinitionKeyMap = new HashMap<String, Process>();
+            if (allowedProcesses == null || allowedProcesses.isEmpty()) {
+                this.processes = Collections.emptySet();
+                return;
+            }
+            for (Process allowedProcess : allowedProcesses) {
+                if (StringUtils.isNotEmpty(allowedProcess.getProcessDefinitionKey()))
+                    continue;
+                processDefinitionKeyMap.put(allowedProcess.getProcessDefinitionKey(), allowedProcess);
+            }
+            this.contentParameters = new ManyMap<String, String>();
+            this.sanitizedParameters = new ManyMap<String, String>();
+            this.keywords = new ArrayList<String>();
+            Set<Process> selectedProcesses = null;
+            if (queryParameters != null && sanitizer != null) {
+                DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
+                for (Map.Entry<String, List<String>> rawQueryParameterEntry : queryParameters.entrySet()) {
+                    String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
+                    if (StringUtils.isEmpty(key))
+                        continue;
+
+                    List<String> rawValues = rawQueryParameterEntry.getValue();
+                    if (rawValues != null && !rawValues.isEmpty()) {
+                        for (String rawValue : rawValues) {
+                            String value = sanitizer.sanitize(rawValue);
+                            if (StringUtils.isEmpty(value))
+                                continue;
+
+                            sanitizedParameters.putOne(key, value);
+
+                            try {
+                                boolean isEngineParameter = true;
+                                if (key.equals("processDefinitionKey")) {
+                                    if (selectedProcesses == null)
+                                        selectedProcesses = new HashSet<Process>();
+
+                                    Process process = processDefinitionKeyMap.get(value);
+                                    if (process != null)
+                                        selectedProcesses.add(process);
+                                } else if (key.equals("taskId")) {
+                                    if (this.taskIds == null)
+                                        this.taskIds = new ArrayList<String>();
+                                    this.taskIds.add(value);
+                                } else if (key.equals("processInstanceLabel"))
+                                    this.processInstanceLabel = value;
+                                else if (key.equals("applicationStatus"))
+                                    this.applicationStatus = value;
+                                else if (key.equals("applicationStatus"))
+                                    this.applicationStatus = value;
+                                else if (key.equals("applicationStatusExplanation"))
+                                    this.applicationStatusExplanation = value;
+                                else if (key.equals("processStatus"))
+                                    this.processStatus = value;
+                                else if (key.equals("completedAfter"))
+                                    this.dueAfter = dateTimeFormatter.parseDateTime(value).toDate();
+                                else if (key.equals("dueAfter"))
+                                    this.dueBefore = dateTimeFormatter.parseDateTime(value).toDate();
+                                else if (key.equals("createdAfter"))
+                                    this.createdAfter = dateTimeFormatter.parseDateTime(value).toDate();
+                                else if (key.equals("createdBefore"))
+                                    this.createdBefore = dateTimeFormatter.parseDateTime(value).toDate();
+                                else if (key.equals("maxResults"))
+                                    this.maxResults = Integer.valueOf(value);
+                                else if (key.equals("firstResult"))
+                                    this.firstResult = Integer.valueOf(value);
+                                else if (key.equals("keyword"))
+                                    this.keywords.add(value);
+                                else {
+                                    if (key.startsWith("__"))
+                                        this.contentParameters.putOne(key.substring(2), value);
+                                    else
+                                        this.contentParameters.putOne(key, value);
+                                }
+
+                            } catch (NumberFormatException e) {
+                                LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
+                            } catch (IllegalArgumentException e) {
+                                LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
+                            }
+                        }
+                    }
+                }
+            }
+            if (selectedProcesses == null)
+                this.processes = allowedProcesses;
+            else
+                this.processes = selectedProcesses;
         }
 
         public TaskCriteria build() {

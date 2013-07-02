@@ -4,6 +4,8 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.task.TaskCriteria;
+import piecework.task.TaskResults;
 
 import java.util.Map;
 

@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
-import piecework.engine.TaskCriteria;
+import piecework.task.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
 import piecework.exception.NotFoundError;

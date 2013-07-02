@@ -29,8 +29,8 @@ import piecework.common.RequestDetails;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
-import piecework.engine.TaskCriteria;
-import piecework.engine.TaskResults;
+import piecework.task.TaskCriteria;
+import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
@@ -88,15 +88,6 @@ public class FormService {
     Sanitizer sanitizer;
 
 
-//    public Response redirectToNewRequestResponse(HttpServletRequest request, ViewContext viewContext, Process process) throws StatusCodeError {
-//        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-//        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-//        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-//        FormRequest formRequest = requestHandler.create(requestDetails, process);
-//
-//        return responseHandler.redirect(formRequest, viewContext);
-//    }
-
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String taskId = null;
 
@@ -130,7 +121,7 @@ public class FormService {
 
         Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.USER);
 
-        TaskCriteria.Builder executionCriteriaBuilder = new TaskCriteria.Builder().processes(allowedProcesses);
+        TaskCriteria.Builder executionCriteriaBuilder = new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer);
 
 //        executionCriteriaBuilder.participantId(helper.getAuthenticatedPrincipal());
 
@@ -146,7 +137,7 @@ public class FormService {
                     continue;
 
                 allowedProcessDefinitionKeys.add(allowedProcess.getProcessDefinitionKey());
-                resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionLabel(allowedProcess.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
+                resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).processDefinitionLabel(allowedProcess.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
             }
         }
         TaskCriteria executionCriteria = executionCriteriaBuilder.build();

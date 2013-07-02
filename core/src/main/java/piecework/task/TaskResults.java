@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.engine;
+package piecework.task;
 
-import piecework.model.ProcessExecution;
 import piecework.model.Task;
 
 import java.util.ArrayList;

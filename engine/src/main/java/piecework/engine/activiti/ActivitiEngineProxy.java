@@ -22,6 +22,7 @@ import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricProcessInstanceQuery;
 import org.activiti.engine.history.HistoricTaskInstanceQuery;
+import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.IdentityLink;
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import piecework.Constants;
 import piecework.common.model.User;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
@@ -43,6 +45,8 @@ import piecework.model.Task;
 import piecework.process.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.process.concrete.ResourceHelper;
+import piecework.task.TaskCriteria;
+import piecework.task.TaskResults;
 
 /**
  * @author James Renfro
@@ -262,7 +266,14 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (criteria.getProcesses() == null || criteria.getProcesses().isEmpty())
             return resultsBuilder.build();
 
-        TaskQuery query = taskQuery(criteria);
+        Query query;
+
+        if (StringUtils.isEmpty(criteria.getProcessStatus()) || criteria.getProcessStatus().equals(Constants.ProcessStatuses.OPEN) ||
+                criteria.getProcessStatus().equals(Constants.ProcessStatuses.SUSPENDED)) {
+            query = taskQuery(criteria);
+        } else {
+            query = historicTaskQuery(criteria);
+        }
 
         List<org.activiti.engine.task.Task> instances = query.list();
         int size = instances.size();
@@ -465,19 +476,26 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (taskIds != null && taskIds.size() == 1)
             query.taskId(taskIds.iterator().next());
 
-        if (criteria.getExecutionId() != null)
+        if (StringUtils.isNotEmpty(criteria.getProcessStatus()) && !criteria.getProcessStatus().equals(Constants.ProcessStatuses.OPEN)) {
+            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.SUSPENDED))
+                query.suspended();
+        } else {
+            query.active();
+        }
+
+        if (StringUtils.isNotEmpty(criteria.getExecutionId()))
             query.processInstanceId(criteria.getExecutionId());
 
-        if (criteria.getBusinessKey() != null)
+        if (StringUtils.isNotEmpty(criteria.getBusinessKey()))
             query.processInstanceBusinessKey(criteria.getBusinessKey());
 
-        if (criteria.getAssigneeId() != null)
+        if (StringUtils.isNotEmpty(criteria.getAssigneeId()))
             query.taskAssignee(criteria.getAssigneeId());
 
-        if (criteria.getCandidateAssigneeId() != null)
+        if (StringUtils.isNotEmpty(criteria.getCandidateAssigneeId()))
             query.taskCandidateUser(criteria.getCandidateAssigneeId());
 
-        if (criteria.getParticipantId() != null)
+        if (StringUtils.isNotEmpty(criteria.getParticipantId()))
             query.taskInvolvedUser(criteria.getParticipantId());
 
         if (criteria.getCreatedAfter() != null)
@@ -521,7 +539,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                    break;
            }
         } else {
-            query.orderByDueDate().desc();
+            query.orderByDueDate().orderByTaskCreateTime().desc();
         }
 
         if (criteria.getActive() != null) {
@@ -539,6 +557,15 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
         if (criteria.getProcesses() != null && criteria.getProcesses().size() == 1)
             query.processDefinitionKey(criteria.getProcesses().iterator().next().getEngineProcessDefinitionKey());
+
+        if (StringUtils.isNotEmpty(criteria.getProcessStatus()) && !criteria.getProcessStatus().equals(Constants.ProcessStatuses.OPEN)) {
+            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE))
+                query.finished();
+//            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.CANCELLED))
+//                query.taskDeleteReason()
+        } else {
+            query.unfinished();
+        }
 
         List<String> taskIds = criteria.getTaskIds();
         if (taskIds != null && taskIds.size() == 1)

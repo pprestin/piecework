@@ -6,7 +6,21 @@ define([ 'chaplin', 'views/base/collection-view', 'views/runtime/search-result-v
 		autoRender: true,
 		container: '.search-results',
 		itemView: SearchResultView,
-		tagName: 'tbody'
+		tagName: 'tbody',
+		listen: {
+		    'search mediator': '_onSearch',
+		},
+		_onSearch: function(data) {
+		    var clean = {};
+		    if (data.keyword !== undefined && data.keyword != 'none')
+                clean['keyword'] = data.keyword;
+            if (data.status !== undefined && data.status != 'undefined')
+                clean['processStatus'] = data.status;
+            if (data.processDefinitionKey !== undefined && data.processDefinitionKey != 'all')
+                clean['processDefinitionKey'] = data.processDefinitionKey;
+
+            this.collection.fetch({data: clean});
+		}
 	});
 
 	return SearchResultsView;

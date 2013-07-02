@@ -1,0 +1,205 @@
+body {
+    font-size: 16px;
+}
+h1 {
+    margin: 20px 0px;
+    font-size: 50px;
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+h2 {
+    margin: 10px 0px;
+    font-weight: 200;
+    margin-bottom: 5px;
+}
+
+h2 {
+    color: #000;
+    font-weight: normal;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+h3 {
+    font-weight: 200;
+    margin-bottom: 5px;
+}
+
+input, textarea, .uneditable-input {
+    width: auto;
+}
+
+input.searchField {
+    margin-bottom: 0px;
+}
+
+p.lead {
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.25;
+    color: #999;
+}
+
+ul.sections {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+ul.sections li.section {
+    border: 1px solid #CCC;
+    margin: 10px 0px;
+    padding: 0px 20px 20px;
+}
+
+ul.screen-buttons {
+    float:right;
+    list-style: none;
+}
+
+ul.screen-buttons li {
+    display: inline-block;
+    *display: inline;
+    padding-left: 5px;
+}
+
+div.screen-footer {
+    padding: 20px 0px 0px;
+    height: 30px;
+}
+
+.control-group.error .checkbox {
+    border: 1px solid #b94a48;
+    border-radius: 4px;
+    color: black;
+    padding: 10px;
+}
+
+.control-group.error .checkbox input[type="checkbox"] {
+    margin-left: 0px;
+    margin-right: 10px;
+}
+
+.dropdown-menu > li > .checkbox-menu-item {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-size; 14px;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.hidden-checkbox {
+    /*display: none !important; */
+}
+
+.limit-dropdown-container {
+    line-height: 14px;
+}
+
+.limit-dropdown-container .btn {
+    margin: 0px !important;
+}
+
+.main-content {
+    padding: 110px 50px 100px 50px;
+}
+
+.main-footer {
+    background-color: whitesmoke;
+}
+
+.main-toolbar {
+    background-color: whitesmoke;
+    height: 75px;
+    overflow: visible;
+    margin: 0px;
+    padding: 0px 20px;
+    vertical-align: middle;
+    zoom: 1;
+}
+
+.main-toolbar li.nav {
+    margin: 0 5px 0 0;
+}
+
+.main-toolbar ul.search-criteria {
+    clear:  both;
+    margin-bottom: 0px;
+    padding: 5px 0px 0px 0px;
+    vertical-align: middle;
+}
+
+.main-toolbar .search-criteria .btn-group .btn i {
+    display: none;
+}
+
+.main-toolbar .search-criteria .btn-group .btn.active i {
+    display: inline-block;
+    *display: inline;
+}
+
+
+.main-toolbar ul.search-criteria-buttons {
+    clear:  both;
+    margin-bottom: 0px;
+    padding: 0px;
+}
+
+.main-toolbar ul.search-criteria-buttons li {
+    line-height: 16px;
+}
+
+.menu-item-check {
+    width: 20px;
+}
+
+.nav.navbar-thin {
+    padding: 0px 40px;
+}
+
+.nav.navbar-thin > li > a {
+    color: silver;
+    height: 25px;
+    padding: 3px 10px 3px 10px;
+    text-shadow: none;
+}
+
+.nav.navbar-thin > li > a:hover {
+    color: white;
+}
+
+.search-criteria .nav.btn-group .dropdown span {
+    font-size: 14px;
+    line-height: 16px;
+    margin: 0px;
+    padding: 0px;
+    vertical-align: text-top;
+}
+
+.search-results {
+
+}
+
+.search-results .search-result {
+
+}
+
+.user-information {
+    background-color: black;
+    height: 25px;
+}
+
+.user-information-name {
+    text-align: right;
+    padding: 3px 20px;
+}
+
+.user-information-name a {
+    color: white;
+}
+
+.user-information name .caret {
+    border-top: 4px solid #ffffff;
+}

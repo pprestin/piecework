@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -117,11 +118,16 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             PageContext pageContext = new PageContext.Builder()
                     .applicationTitle(applicationTitle)
                     .assetsUrl(assetsUrl)
-                    .resource(t)
                     .user(user)
                     .build();
+            List<?> collection = null;
+            if (type.equals(SearchResults.class)) {
+                collection = SearchResults.class.cast(t).getList();
+            }
 
-            final String json = objectMapper.writer().writeValueAsString(pageContext);
+            final String pageContextAsJson = objectMapper.writer().writeValueAsString(pageContext);
+            final String modelAsJson = objectMapper.writer().writeValueAsString(t);
+            final String collectionAsJson = collection != null ? objectMapper.writeValueAsString(collection) : null;
 
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
@@ -159,7 +165,10 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
                                 if (tagName.equals("script") && id != null && id.equals("piecework-context-script")) {
                                     StringBuilder content = new StringBuilder("piecework = {};")
-                                        .append("piecework.context = ").append(json);
+                                        .append("piecework.context = ").append(pageContextAsJson).append(";")
+                                        .append("piecework.model = ").append(modelAsJson).append(";");
+                                    if (collectionAsJson != null)
+                                        content.append("piecework.collection = ").append(collectionAsJson).append(";");
 
                                     tagNode.removeAllChildren();
                                     tagNode.addChild(new ContentNode(content.toString()));
@@ -224,8 +233,13 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             if (!resource.exists())
                 resource = new FileSystemResource(templatesDirectory + File.separator + "key" + File.separator + templateName);
 
+            if (!resource.exists())
+                resource = new FileSystemResource(templatesDirectory + File.separator + "Layout.template.html");
+
         } else
 			resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
+
+
 
 		return resource;
 	}

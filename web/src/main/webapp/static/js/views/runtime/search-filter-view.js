@@ -8,7 +8,6 @@ define([ 'chaplin', 'views/base/view', 'text!templates/runtime/search-filter.hbs
 		tagName: 'div',
 	    template: template,
 	    events: {
-//	        'click .checkbox-menu-item': '_onClickCheckbox',
             'change :checkbox': '_onClickCheckbox'
 	    },
 	    initialize: function(options) {
@@ -23,20 +22,37 @@ define([ 'chaplin', 'views/base/view', 'text!templates/runtime/search-filter.hbs
                 var definitions = results.get(key);
                 options = new Array();
                 for (var i=0;i<definitions.length;i++) {
-                    options.push({ id: 'processDefinitionKey_' + definitions[i].processDefinitionKey, key: 'process', label: definitions[i].processDefinitionLabel, value: definitions[i].processDefinitionKey})
+                    options.push({ id: 'processDefinitionKey' + i, key: 'processDefinitionKey', label: definitions[i].task.processDefinitionLabel, value: definitions[i].task.processDefinitionKey})
                 }
-                options.push({label: 'All processes', key: 'process'});
+                options.push({label: 'All processes', key: 'processDefinitionKey', default: true});
                 this.model.set('options', options);
             }
 
             var isSelected = false;
             if (selector != undefined && options != undefined) {
                 var selection = results.get(selector);
+                if (selection != undefined) {
+                    for (var i=0;i<options.length;i++) {
+                        var key = options[i].key;
+                        var value = options[i].value;
+
+                        if (selection[key] != undefined && selection[key] == value) {
+                            options[i].selected = true;
+                            this.model.set('selected', options[i].label);
+                            isSelected = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!isSelected && options != undefined) {
                 for (var i=0;i<options.length;i++) {
                     var key = options[i].key;
                     var value = options[i].value;
+                    var matches = new RegExp('[\\?&]' + key + '=([^&#]*)').exec(window.location.href);
 
-                    if (selection[key] == value) {
+                    if (matches != undefined && matches[1] == value) {
                         options[i].selected = true;
                         this.model.set('selected', options[i].label);
                         isSelected = true;
@@ -73,9 +89,9 @@ define([ 'chaplin', 'views/base/view', 'text!templates/runtime/search-filter.hbs
                 if (element.id != id)
                     element.checked = false;
             });
-            Chaplin.mediator.publish('search');
-	    }
 
+            $dropdown.closest('form').submit();
+	    }
 	});
 
 	return SearchFilterView;
