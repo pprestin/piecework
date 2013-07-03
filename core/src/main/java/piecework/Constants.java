@@ -69,6 +69,7 @@ public interface Constants {
 		public static final String IS_VALID_USER = "IS_VALID_USER";
 		public static final String IS_LIMITED_TO = "IS_LIMITED_TO";
         public static final String IS_STATE = "IS_STATE";
+        public static final String SCREEN_IS_DISPLAYED_WHEN = "SCREEN_IS_DISPLAYED_WHEN";
 	}
 	
 	public static class ExceptionCodes {

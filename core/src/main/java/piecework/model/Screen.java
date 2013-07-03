@@ -73,6 +73,10 @@ public class Screen implements Serializable {
 	@XmlElementRef
 	private final List<Section> sections;
 
+    @XmlElementWrapper(name="constraints")
+    @XmlElementRef
+    private final List<Constraint> constraints;
+
     @XmlAttribute
     private final int reviewIndex;
 
@@ -102,7 +106,8 @@ public class Screen implements Serializable {
         this.groupings = Collections.unmodifiableList(builder.groupings);
         this.stylesheets = Collections.unmodifiableList(builder.stylesheets);
 		this.sections = Collections.unmodifiableList(builder.sections);
-		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
+        this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	    this.reviewIndex = builder.reviewIndex;
     }
 	
@@ -146,6 +151,10 @@ public class Screen implements Serializable {
         return sections;
     }
 
+    public List<Constraint> getConstraints() {
+        return constraints;
+    }
+
     public int getReviewIndex() {
         return reviewIndex;
     }
@@ -170,6 +179,7 @@ public class Screen implements Serializable {
         private List<Grouping> groupings;
         private List<String> stylesheets;
 		private List<Section> sections;
+        private List<Constraint> constraints;
         private int reviewIndex;
 		private int ordinal;
 		private boolean isDeleted;
@@ -179,6 +189,7 @@ public class Screen implements Serializable {
             this.groupings = new ArrayList<Grouping>();
             this.stylesheets = new ArrayList<String>();
             this.sections = new ArrayList<Section>();
+            this.constraints = new ArrayList<Constraint>();
 		}
 
         public Builder(Screen screen, Sanitizer sanitizer) {
@@ -211,6 +222,15 @@ public class Screen implements Serializable {
                 }
             } else {
                 this.stylesheets = new ArrayList<String>();
+            }
+
+            if (screen.constraints != null && !screen.constraints.isEmpty()) {
+                this.constraints = new ArrayList<Constraint>(screen.constraints.size());
+                for (Constraint constraint : screen.constraints) {
+                    this.constraints.add(new Constraint.Builder(constraint, sanitizer).build());
+                }
+            } else {
+                this.constraints = new ArrayList<Constraint>();
             }
 
 			if (includeSections && screen.sections != null && !screen.sections.isEmpty()) {
@@ -263,6 +283,13 @@ public class Screen implements Serializable {
 
         public Builder attachmentAllowed(boolean isAttachmentAllowed) {
             this.isAttachmentAllowed = isAttachmentAllowed;
+            return this;
+        }
+
+        public Builder constraint(Constraint constraint) {
+            if (this.constraints == null)
+                this.constraints = new ArrayList<Constraint>();
+            this.constraints.add(constraint);
             return this;
         }
 

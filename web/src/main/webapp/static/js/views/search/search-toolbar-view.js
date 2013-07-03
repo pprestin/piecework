@@ -1,4 +1,4 @@
-define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/runtime/search.hbs' ],
+define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/search/search-toolbar.hbs' ],
 		function(Backbone, Chaplin, View, template) {
 	'use strict';
 

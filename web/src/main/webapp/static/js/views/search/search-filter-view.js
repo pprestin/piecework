@@ -1,4 +1,4 @@
-define([ 'chaplin', 'views/base/view', 'text!templates/runtime/search-filter.hbs' ],
+define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs' ],
 		function(Chaplin, View, template) {
 	'use strict';
 

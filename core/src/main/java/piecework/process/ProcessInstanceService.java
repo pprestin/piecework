@@ -34,6 +34,7 @@ import piecework.exception.*;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.FormValidation;
 import piecework.form.validation.ValidationService;
+import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.concrete.ResourceHelper;
@@ -235,39 +236,48 @@ public class ProcessInstanceService {
         }
 
         if (previous != null) {
-            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer());
+            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer())
+                    .formValueMap(validation.getFormValueMap())
+                    .processInstanceLabel(processInstanceLabel)
+                    .restrictedValueMap(validation.getRestrictedValueMap())
+                    .submission(submission);
         } else {
             try {
                 String processInstanceId = UUID.randomUUID().toString();
 
-                ManyMap<String, String> variables = new ManyMap<String, String>(validation.getFormValueMap());
-                variables.putOne("PIECEWORK_PROCESS_INSTANCE_ID", processInstanceId);
-                variables.putOne("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstanceLabel);
+                Map<String, String> variables = new HashMap<String, String>();
+                variables.put("PIECEWORK_PROCESS_DEFINITION_KEY", process.getProcessDefinitionKey());
+                variables.put("PIECEWORK_PROCESS_INSTANCE_ID", processInstanceId);
+                variables.put("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstanceLabel);
 
-                String engineInstanceId = facade.start(process, processInstanceId, variables);
+                InternalUserDetails user = helper.getAuthenticatedPrincipal();
+                String initiatorId = user != null ? user.getInternalId() : null;
                 String initiationStatus = process.getInitiationStatus();
-
                 instanceBuilder = new ProcessInstance.Builder()
                         .processDefinitionKey(process.getProcessDefinitionKey())
                         .processDefinitionLabel(process.getProcessDefinitionLabel())
                         .processInstanceId(processInstanceId)
-                        .processInstanceLabel(validation.getTitle())
-                        .engineProcessInstanceId(engineInstanceId)
+                        .processInstanceLabel(processInstanceLabel)
+                        .formValueMap(validation.getFormValueMap())
+                        .restrictedValueMap(validation.getRestrictedValueMap())
+                        .submission(submission)
                         .startTime(new Date())
-                        .initiatorId(helper.getAuthenticatedPrincipal())
+                        .initiatorId(initiatorId)
                         .processStatus(Constants.ProcessStatuses.OPEN)
                         .applicationStatus(initiationStatus);
+
+                // Save it before routing, then save again with the engine instance id
+                ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
+
+                String engineInstanceId = facade.start(process, stored.getProcessInstanceId(), variables);
+
+                instanceBuilder.engineProcessInstanceId(engineInstanceId);
 
             } catch (ProcessEngineException e) {
                 LOG.error("Process engine unable to start instance ", e);
                 throw new InternalServerError();
             }
         }
-
-        instanceBuilder.processInstanceLabel(processInstanceLabel)
-                .formValueMap(validation.getFormValueMap())
-                .restrictedValueMap(validation.getRestrictedValueMap())
-                .submission(submission);
 
         return processInstanceRepository.save(instanceBuilder.build());
     }

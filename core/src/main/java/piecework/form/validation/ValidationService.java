@@ -70,24 +70,46 @@ public class ValidationService {
 
         if (screen != null) {
             List<Section> sections = screen.getSections();
+            List<Grouping> groupings = screen.getGroupings();
 
-            // If a validation id is passed, then limit the validation to the grouping that matches
-            if (validationId != null) {
-                List<Grouping> groupings = screen.getGroupings();
-                if (groupings != null) {
-                    for (Grouping grouping : groupings) {
-                        String groupingId = grouping.getGroupingId();
-                        if (groupingId != null && groupingId.equals(validationId)) {
-                            Set<String> sectionIdSet = new HashSet<String>(grouping.getSectionIds());
-                            List<Section> filteredSections = new ArrayList<Section>();
-                            for (Section section : sections) {
-                                if (section.getSectionId() != null && sectionIdSet.contains(section.getSectionId()))
-                                    filteredSections.add(section);
+            if (groupings != null) {
+
+                for (Grouping grouping : groupings) {
+                    String groupingId = grouping.getGroupingId();
+
+                    List<Button> buttons = grouping.getButtons();
+                    if (buttons != null && !buttons.isEmpty()) {
+                        for (Button button : buttons) {
+                            if (StringUtils.isEmpty(button.getName()) || StringUtils.isEmpty(button.getValue()))
+                                continue;
+
+                            List<String> values = submissionValueMap.get(button.getName());
+
+                            if (values != null && !values.isEmpty()) {
+                                for (String value : values) {
+                                    if (StringUtils.isEmpty(value))
+                                        continue;
+
+                                    if (value.equals(button.getValue()))
+                                        validationBuilder.formValue(button.getName(), button.getValue());
+                                }
                             }
-                            sections = filteredSections;
                         }
                     }
+
+                    // If a validation id is passed, then limit the validation to the grouping that matches
+                    if (groupingId != null && validationId != null && groupingId.equals(validationId)) {
+                        Set<String> sectionIdSet = new HashSet<String>(grouping.getSectionIds());
+                        List<Section> filteredSections = new ArrayList<Section>();
+                        for (Section section : sections) {
+                            if (section.getSectionId() != null && sectionIdSet.contains(section.getSectionId()))
+                                filteredSections.add(section);
+                        }
+                        sections = filteredSections;
+                    }
+
                 }
+
             }
 
             if (sections != null) {

@@ -20,8 +20,11 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.identity.InternalUserDetails;
+import piecework.process.concrete.ResourceHelper;
 import piecework.task.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
@@ -29,10 +32,10 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.RequestRepository;
+import piecework.util.ConstraintUtil;
+import piecework.util.ManyMap;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -51,6 +54,9 @@ public class RequestHandler {
     @Autowired
     RequestRepository requestRepository;
 
+    @Autowired
+    ResourceHelper resourceHelper;
+
     public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {
         return create(requestDetails, process, null, null, null);
     }
@@ -64,41 +70,13 @@ public class RequestHandler {
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
 
         String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
+        ManyMap<String, String> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
+
+        Screen currentScreen = null;
 
         if (previousFormRequest != null) {
             interaction = previousFormRequest.getInteraction();
-            Screen currentScreen = previousFormRequest.getScreen();
-
-            if (interaction == null)
-                throw new InternalServerError();
-
-            List<Screen> screens = interaction.getScreens();
-
-            if (screens == null || screens.isEmpty())
-                throw new InternalServerError();
-
-            Iterator<Screen> screenIterator = screens.iterator();
-
-            while (screenIterator.hasNext()) {
-                Screen cursor = screenIterator.next();
-
-                if (currentScreen == null) {
-                    nextScreen = cursor;
-                    break;
-                } else if (cursor.getScreenId().equals(currentScreen.getScreenId())) {
-                    if (screenIterator.hasNext())
-                        nextScreen = screenIterator.next();
-                    // Either way, break out, since we found the right place in the list
-                    break;
-                }
-            }
-
-            // If there is no next screen, then we're done
-            if (nextScreen == null)
-                return null;
-
-            if (screenIterator.hasNext())
-                submissionType = Constants.SubmissionTypes.INTERIM;
+            currentScreen = previousFormRequest.getScreen();
         } else {
             List<Interaction> interactions = process.getInteractions();
 
@@ -109,7 +87,9 @@ public class RequestHandler {
 
             if (StringUtils.isNotEmpty(taskId)) {
                 try {
-                    Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).build());
+                    InternalUserDetails user = resourceHelper.getAuthenticatedPrincipal();
+                    String participantId = user != null ? user.getInternalId() : null;
+                    Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
 
                     if (task != null) {
                         processInstanceId = task.getProcessInstanceId();
@@ -122,6 +102,9 @@ public class RequestHandler {
                             }
                         }
                     } else {
+                        // Even though this may happen because the user is not authorized to view this task, don't provide
+                        // any more information than the fact that it wasn't found - so it's not possible to determine
+                        // which tasks exist by testing all possible combinations
                         throw new NotFoundError();
                     }
 
@@ -130,16 +113,37 @@ public class RequestHandler {
                     throw new InternalServerError();
                 }
             } else {
+                // Ensure that this user has the right to initiate processes of this type
+                if (!resourceHelper.hasRole(process, AuthorizationRole.INITIATOR))
+                    throw new NotFoundError();
+
                 // Pick the first interaction and the first screen
                 interaction = interactionIterator.next();
             }
+        }
 
-            if (interaction != null && !interaction.getScreens().isEmpty()) {
-                Iterator<Screen> screenIterator = interaction.getScreens().iterator();
-                nextScreen = screenIterator.next();
-                if (screenIterator.hasNext())
-                    submissionType = Constants.SubmissionTypes.INTERIM;
+        if (interaction != null && !interaction.getScreens().isEmpty()) {
+            Iterator<Screen> screenIterator = interaction.getScreens().iterator();
+
+            boolean isFound = false;
+            while (screenIterator.hasNext() && nextScreen == null) {
+                Screen cursor = screenIterator.next();
+
+                if (currentScreen == null) {
+                    currentScreen = cursor;
+                    isFound = true;
+                }
+
+                if (isFound) {
+                    // Once we've reached the current screen then we can start looking for the next screen
+                    if (satisfiesScreenConstraints(cursor, formValueMap))
+                        nextScreen = cursor;
+                } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
+                    isFound = true;
             }
+
+            if (screenIterator.hasNext())
+                submissionType = Constants.SubmissionTypes.INTERIM;
         }
 
         // Generate a new uuid for this request
@@ -166,12 +170,21 @@ public class RequestHandler {
         return requestRepository.save(formRequestBuilder.build());
     }
 
+    private boolean satisfiesScreenConstraints(Screen screen, ManyMap<String, String> formValueMap) {
+
+        if (!screen.getConstraints().isEmpty() && ConstraintUtil.hasConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, screen.getConstraints())) {
+            return ConstraintUtil.checkAll(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, null, formValueMap, screen.getConstraints());
+        }
+
+        return true;
+    }
+
     public FormRequest handle(RequestDetails request, String requestId) throws StatusCodeError {
         FormRequest formRequest = requestRepository.findOne(requestId);
 
         if (formRequest == null) {
             LOG.warn("Request being viewed or submitted for invalid/missing requestId " + requestId);
-            throw new ForbiddenError(Constants.ExceptionCodes.request_does_not_match);
+            throw new NotFoundError(Constants.ExceptionCodes.request_does_not_match);
         }
 
         if (request != null) {

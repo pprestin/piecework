@@ -33,16 +33,16 @@ public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Proc
 
     @Override
     protected void executeParse(BpmnParse bpmnParse, Process element) {
-        List<ActivitiListener> executionListeners = element.getExecutionListeners();
-        if (executionListeners == null) {
-            executionListeners = new ArrayList<ActivitiListener>();
-            element.setExecutionListeners(executionListeners);
-        }
-
-        ActivitiListener endEventListener = new ActivitiListener();
-        endEventListener.setEvent("end");
-        endEventListener.setImplementation("generalExecutionListener");
-        executionListeners.add(endEventListener);
+//        List<ActivitiListener> executionListeners = element.getExecutionListeners();
+//        if (executionListeners == null) {
+//            executionListeners = new ArrayList<ActivitiListener>();
+//            element.setExecutionListeners(executionListeners);
+//        }
+//
+//        ActivitiListener endEventListener = new ActivitiListener();
+//        endEventListener.setEvent("end");
+//        endEventListener.setImplementation("generalExecutionListener");
+//        executionListeners.add(endEventListener);
     }
 
     @Override

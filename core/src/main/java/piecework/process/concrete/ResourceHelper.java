@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,6 +36,7 @@ import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
+import piecework.identity.InternalUserDetails;
 import piecework.model.Process;
 import piecework.process.ProcessRepository;
 
@@ -49,18 +51,16 @@ public class ResourceHelper {
 	@Autowired
 	ProcessRepository processRepository;
 
-    public String getAuthenticatedPrincipal() {
-        String principal = null;
+    public InternalUserDetails getAuthenticatedPrincipal() {
+        InternalUserDetails principal = null;
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null) {
             Authentication authentication = context.getAuthentication();
 
             if (authentication != null) {
                 Object principalAsObject = authentication.getPrincipal();
-                if (principalAsObject instanceof String)
-                    principal = String.class.cast(principalAsObject);
-                else
-                    principal = principalAsObject.toString();
+                if (principalAsObject instanceof InternalUserDetails)
+                    principal = InternalUserDetails.class.cast(principalAsObject);
             }
         }
         return principal;
@@ -110,5 +110,28 @@ public class ResourceHelper {
 		
 		return processes;
 	}
+
+    public boolean hasRole(Process process, String ... allowedRoles) {
+        if (process != null && StringUtils.isNotEmpty(process.getProcessDefinitionKey())) {
+            SecurityContext context = SecurityContextHolder.getContext();
+            Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
+
+            Set<String> allowedRoleSet = allowedRoles != null && allowedRoles.length > 0 ? Sets.newHashSet(allowedRoles) : null;
+            if (authorities != null && !authorities.isEmpty()) {
+                for (GrantedAuthority authority : authorities) {
+                    if (authority instanceof ResourceAuthority) {
+                        ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
+                        if (allowedRoleSet == null || allowedRoleSet.contains(resourceAuthority.getRole())) {
+                            Set<String> processDefinitionKeys = resourceAuthority.getProcessDefinitionKeys();
+                            if (processDefinitionKeys == null || processDefinitionKeys.contains(process.getProcessDefinitionKey()))
+                                return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 	
 }

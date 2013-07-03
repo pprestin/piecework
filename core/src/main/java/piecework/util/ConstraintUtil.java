@@ -45,30 +45,29 @@ public class ConstraintUtil {
 
         boolean isSatisfied = false;
 
-        Field constraintField = fieldMap.get(constraintName);
+        Field constraintField = fieldMap != null ? fieldMap.get(constraintName) : null;
         List<String> fieldValues = formValueMap != null ? formValueMap.get(constraintName) : null;
 
         // Evaluate whether this particular item is satisfied
-        if (constraintField != null) {
-            if (fieldValues == null || fieldValues.isEmpty()) {
-                String defaultFieldValue = constraintField.getDefaultValue();
-                isSatisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
-            } else {
-                for (String fieldValue : fieldValues) {
-                    isSatisfied = fieldValue != null && pattern.matcher(fieldValue).matches();
-                    if (!isSatisfied)
-                        break;
-                }
-            }
-
-            // If it is satisfied, then evaluate each of the 'and' constraints
-            if (isSatisfied) {
-                return checkAll(null, fieldMap, formValueMap, constraint.getAnd());
-            } else {
-                if (constraint.getOr() != null && !constraint.getOr().isEmpty())
-                    return checkAny(null, fieldMap, formValueMap, constraint.getOr());
+        if (constraintField != null && (fieldValues == null || fieldValues.isEmpty())) {
+            String defaultFieldValue = constraintField.getDefaultValue();
+            isSatisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
+        } else {
+            for (String fieldValue : fieldValues) {
+                isSatisfied = fieldValue != null && pattern.matcher(fieldValue).matches();
+                if (!isSatisfied)
+                    break;
             }
         }
+
+        // If it is satisfied, then evaluate each of the 'and' constraints
+        if (isSatisfied) {
+            return checkAll(null, fieldMap, formValueMap, constraint.getAnd());
+        } else {
+            if (constraint.getOr() != null && !constraint.getOr().isEmpty())
+                return checkAny(null, fieldMap, formValueMap, constraint.getOr());
+        }
+
 
         return isSatisfied;
     }

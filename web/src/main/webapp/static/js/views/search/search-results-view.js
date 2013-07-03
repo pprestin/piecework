@@ -1,4 +1,4 @@
-define([ 'chaplin', 'views/base/collection-view', 'views/runtime/search-result-view' ],
+define([ 'chaplin', 'views/base/collection-view', 'views/search/search-result-view' ],
 		function(Chaplin, CollectionView, SearchResultView) {
 	'use strict';
 

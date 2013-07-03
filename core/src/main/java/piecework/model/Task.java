@@ -87,6 +87,9 @@ public class Task implements Serializable {
     private final int priority;
 
     @XmlAttribute
+    private final boolean active;
+
+    @XmlAttribute
     private final String link;
 
     @XmlAttribute
@@ -115,6 +118,7 @@ public class Task implements Serializable {
         this.startTime = builder.startTime;
         this.dueDate = builder.dueDate;
         this.priority = builder.priority;
+        this.active = builder.active;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.isDeleted = builder.isDeleted;
@@ -184,7 +188,11 @@ public class Task implements Serializable {
 		return uri;
 	}
 
-	public boolean isDeleted() {
+    public boolean isActive() {
+        return active;
+    }
+
+    public boolean isDeleted() {
 		return isDeleted;
 	}
 
@@ -204,6 +212,7 @@ public class Task implements Serializable {
         private Date startTime;
         private Date dueDate;
         private int priority;
+        private boolean active;
         private boolean isDeleted;
 
         public Builder() {
@@ -229,6 +238,7 @@ public class Task implements Serializable {
             this.startTime = task.startTime;
             this.dueDate = task.dueDate;
             this.priority = task.priority;
+            this.active = task.active;
             this.isDeleted = task.isDeleted;
         }
 
@@ -309,6 +319,16 @@ public class Task implements Serializable {
 
         public Builder priority(int priority) {
             this.priority = priority;
+            return this;
+        }
+
+        public Builder active() {
+            this.active = true;
+            return this;
+        }
+
+        public Builder finished() {
+            this.active = false;
             return this;
         }
 

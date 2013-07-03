@@ -120,34 +120,38 @@ div.screen-footer {
     zoom: 1;
 }
 
+.main-toolbar.narrow {
+   height: 45px;
+}
+
 .main-toolbar li.nav {
     margin: 0 5px 0 0;
 }
 
-.main-toolbar ul.search-criteria {
+.main-toolbar ul.toolbar-items {
     clear:  both;
     margin-bottom: 0px;
     padding: 5px 0px 0px 0px;
     vertical-align: middle;
 }
 
-.main-toolbar .search-criteria .btn-group .btn i {
+.main-toolbar .toolbar-items .btn-group .btn i {
     display: none;
 }
 
-.main-toolbar .search-criteria .btn-group .btn.active i {
+.main-toolbar .toolbar-items .btn-group .btn.active i {
     display: inline-block;
     *display: inline;
 }
 
 
-.main-toolbar ul.search-criteria-buttons {
+.main-toolbar ul.toolbar-items-buttons {
     clear:  both;
     margin-bottom: 0px;
     padding: 0px;
 }
 
-.main-toolbar ul.search-criteria-buttons li {
+.main-toolbar ul.toolbar-items-buttons li {
     line-height: 16px;
 }
 
@@ -170,7 +174,7 @@ div.screen-footer {
     color: white;
 }
 
-.search-criteria .nav.btn-group .dropdown span {
+.toolbar-items .nav.btn-group .dropdown span {
     font-size: 14px;
     line-height: 16px;
     margin: 0px;

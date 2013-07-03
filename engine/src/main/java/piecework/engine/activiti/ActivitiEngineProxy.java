@@ -21,6 +21,7 @@ import com.google.common.collect.Sets;
 import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricProcessInstanceQuery;
+import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricTaskInstanceQuery;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.DeploymentBuilder;
@@ -38,6 +39,7 @@ import piecework.Constants;
 import piecework.common.model.User;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
+import piecework.identity.InternalUserDetails;
 import piecework.model.Process;
 import piecework.model.ProcessExecution;
 import piecework.model.ProcessInstance;
@@ -77,8 +79,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public String start(Process process, String processBusinessKey, Map<String, ?> data) throws ProcessEngineException {
-        String principal = helper.getAuthenticatedPrincipal();
-        identityService.setAuthenticatedUserId(principal);
+        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        String userId = principal != null ? principal.getInternalId() : null;
+        identityService.setAuthenticatedUserId(userId);
 
 		String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
 		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
@@ -88,8 +91,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
-        String principal = helper.getAuthenticatedPrincipal();
-        identityService.setAuthenticatedUserId(principal);
+        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        String userId = principal != null ? principal.getInternalId() : null;
+        identityService.setAuthenticatedUserId(userId);
 
         String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
@@ -104,8 +108,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean suspend(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
-        String principal = helper.getAuthenticatedPrincipal();
-        identityService.setAuthenticatedUserId(principal);
+        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        String userId = principal != null ? principal.getInternalId() : null;
+        identityService.setAuthenticatedUserId(userId);
 
         String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
@@ -120,8 +125,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean completeTask(Process process, String taskId) throws ProcessEngineException {
-        String principal = helper.getAuthenticatedPrincipal();
-        identityService.setAuthenticatedUserId(principal);
+        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        String userId = principal != null ? principal.getInternalId() : null;
+        identityService.setAuthenticatedUserId(userId);
 
         String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
 
@@ -142,8 +148,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public void deploy(Process process, String name, ProcessModelResource... resources) throws ProcessEngineException {
-        String principal = helper.getAuthenticatedPrincipal();
-        identityService.setAuthenticatedUserId(principal);
+        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        String userId = principal != null ? principal.getInternalId() : null;
+        identityService.setAuthenticatedUserId(userId);
 
         if (! process.getEngine().equals(getKey()))
             return;
@@ -244,18 +251,33 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     @Override
     public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
         org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
+        HistoricTaskInstance historicTask = null;
 
-        if (activitiTask == null)
-            return null;
+        String processDefinitionId;
+        String processInstanceId;
+        if (activitiTask != null) {
+            processDefinitionId = activitiTask.getProcessDefinitionId();
+            processInstanceId = activitiTask.getProcessInstanceId();
+        } else {
+            historicTask = historicTaskQuery(criteria).singleResult();
+            if (historicTask == null)
+                return null;
+
+            processDefinitionId = historicTask.getProcessDefinitionId();
+            processInstanceId = historicTask.getProcessInstanceId();
+        }
 
         Map<String, Process> processDefinitionIdMap = getProcessDefinitionIdMap(criteria.getProcesses());
-        Process process = processDefinitionIdMap.get(activitiTask.getProcessDefinitionId());
+        Process process = processDefinitionIdMap.get(processDefinitionId);
         if (process == null)
             throw new ProcessEngineException("Not authorized to see tasks of this process");
 
-        List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Sets.newHashSet(process.getProcessDefinitionKey()), Sets.newHashSet(activitiTask.getProcessInstanceId()));
+        List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Sets.newHashSet(process.getProcessDefinitionKey()), Sets.newHashSet(processInstanceId));
         if (processInstances.isEmpty() || processInstances.size() > 1)
             throw new ProcessEngineException("Unable to find a single process instance for this task");
+
+        if (historicTask != null)
+            return convert(historicTask, process, processInstances.iterator().next(), true);
 
         return convert(activitiTask, process, processInstances.iterator().next(), true);
     }
@@ -347,7 +369,47 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .processDefinitionLabel(process.getProcessDefinitionLabel())
                 .priority(instance.getPriority())
                 .startTime(instance.getCreateTime())
-                .dueDate(instance.getDueDate());
+                .dueDate(instance.getDueDate())
+                .active();
+
+        if (includeDetails) {
+            List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(instance.getId());
+
+            if (identityLinks != null && !identityLinks.isEmpty()) {
+                for (IdentityLink identityLink : identityLinks) {
+                    String type = identityLink.getType();
+
+                    if (type == null)
+                        continue;
+
+                    if (type.equals(IdentityLinkType.ASSIGNEE))
+                        taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
+                    else if (type.equals(IdentityLinkType.CANDIDATE))
+                        taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
+                }
+            }
+        } else if (StringUtils.isNotEmpty(instance.getAssignee())) {
+            taskBuilder.assignee(new User.Builder().userId(instance.getAssignee()).build());
+        }
+
+        return taskBuilder.build();
+    }
+
+    private Task convert(HistoricTaskInstance instance, Process process, ProcessInstance processInstance, boolean includeDetails) {
+        Task.Builder taskBuilder = new Task.Builder()
+                .taskInstanceId(instance.getId())
+                .taskDefinitionKey(instance.getTaskDefinitionKey())
+                .taskLabel(instance.getName())
+                .taskDescription(instance.getDescription())
+                .processInstanceId(processInstance.getProcessInstanceId())
+                .processInstanceAlias(processInstance.getAlias())
+                .processInstanceLabel(processInstance.getProcessInstanceLabel())
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .processDefinitionLabel(process.getProcessDefinitionLabel())
+                .priority(instance.getPriority())
+                .startTime(instance.getStartTime())
+                .dueDate(instance.getDueDate())
+                .finished();
 
         if (includeDetails) {
             List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(instance.getId());

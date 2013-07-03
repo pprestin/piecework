@@ -68,19 +68,23 @@ public class GeneralUserTaskListener implements TaskListener {
 
     @Override
     public void notify(DelegateTask delegateTask) {
-        String processInstanceId = delegateTask.getProcessInstanceId();
-        if (StringUtils.isEmpty(processInstanceId))
+        String engineProcessInstanceId = delegateTask.getProcessInstanceId();
+        if (StringUtils.isEmpty(engineProcessInstanceId))
             return;
 
         String taskDefinitionKey = delegateTask.getTaskDefinitionKey();
         if (StringUtils.isEmpty(taskDefinitionKey))
             return;
 
-        ProcessInstance processInstance = processInstanceRepository.findOne("processInstanceId");
+        Map<String, Object> variables = delegateTask.getVariables();
+        String processDefinitionKey = String.class.cast(variables.get("PIECEWORK_PROCESS_DEFINITION_KEY"));
+        String processInstanceId = String.class.cast(variables.get("PIECEWORK_PROCESS_INSTANCE_ID"));
+
+        ProcessInstance processInstance = processInstanceRepository.findOne(processInstanceId);
         if (processInstance == null)
             return;
 
-        Process process = processRepository.findOne(processInstance.getProcessDefinitionKey());
+        Process process = processRepository.findOne(processDefinitionKey);
         if (process == null)
             return;
 
@@ -144,6 +148,9 @@ public class GeneralUserTaskListener implements TaskListener {
             }
 
             for (Notification notification : notifications) {
+                if (notification == null)
+                    continue;
+
                 if (taskEventType != null && notification.getTaskEvents() != null && notification.getTaskEvents().contains(taskEventType)) {
                     if (taskDefinitionKey != null && notification.getTaskDefinitionKeys() != null && notification.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
                         Set<Candidate> candidates = new HashSet<Candidate>();

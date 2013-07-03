@@ -120,14 +120,9 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
                     .assetsUrl(assetsUrl)
                     .user(user)
                     .build();
-            List<?> collection = null;
-            if (type.equals(SearchResults.class)) {
-                collection = SearchResults.class.cast(t).getList();
-            }
 
             final String pageContextAsJson = objectMapper.writer().writeValueAsString(pageContext);
             final String modelAsJson = objectMapper.writer().writeValueAsString(t);
-            final String collectionAsJson = collection != null ? objectMapper.writeValueAsString(collection) : null;
 
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
@@ -165,10 +160,10 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
                                 if (tagName.equals("script") && id != null && id.equals("piecework-context-script")) {
                                     StringBuilder content = new StringBuilder("piecework = {};")
-                                        .append("piecework.context = ").append(pageContextAsJson).append(";")
-                                        .append("piecework.model = ").append(modelAsJson).append(";");
-                                    if (collectionAsJson != null)
-                                        content.append("piecework.collection = ").append(collectionAsJson).append(";");
+                                        .append("piecework.context = ").append(pageContextAsJson).append(";");
+
+                                    if (modelAsJson != null)
+                                        content.append("piecework.model = ").append(modelAsJson).append(";");
 
                                     tagNode.removeAllChildren();
                                     tagNode.addChild(new ContentNode(content.toString()));

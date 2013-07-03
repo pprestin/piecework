@@ -12,12 +12,12 @@ define([
   'views/form/button-link-view',
   'views/form/fields-view',
   'views/form/form-view',
+  'views/form/form-toolbar-view',
   'views/form/grouping-view',
-  'views/runtime/head-view',
-  'views/runtime/search-filter-view',
-  'views/runtime/search-view',
-  'views/runtime/search-results-container-view',
-  'views/runtime/search-results-view',
+  'views/search/search-filter-view',
+  'views/search/search-toolbar-view',
+  'views/search/search-results-container-view',
+  'views/search/search-results-view',
   'views/form/section-view',
   'views/form/sections-view',
   'views/user-view',
@@ -25,8 +25,8 @@ define([
   'text!templates/form/button.hbs',
   'text!templates/form/button-link.hbs'
 ], function(Chaplin, Controller, Model, Collection, Form, Page, Results, SearchFilter, User,
-            ButtonView, ButtonLinkView, FieldsView, FormView,
-            GroupingView, HeadView, SearchFilterView, SearchView, SearchResultsContainerView, SearchResultsView,
+            ButtonView, ButtonLinkView, FieldsView, FormView, FormToolbarView,
+            GroupingView, SearchFilterView, SearchToolbarView, SearchResultsContainerView, SearchResultsView,
             SectionView, SectionsView, UserView, View) {
   'use strict';
 
@@ -42,10 +42,15 @@ define([
     },
     search: function(params) {
         var model = window.piecework.model;
-        var collection = window.piecework.collection;
+
+        if (model.total == undefined) {
+            // If total is not defined, then replace with the search url
+            model = { link: '/piecework/secure/form' }
+        }
 
         this.compose('resultsModel', Results, model);
         var resultsModel = this.compose('resultsModel');
+        var collection = resultsModel.get("list");
 
         var url = resultsModel.url();
         var ResultsCollection = Collection.extend({
@@ -87,7 +92,7 @@ define([
                     }
         });
 
-        this.compose('searchView', SearchView, {model: resultsModel});
+        this.compose('searchToolbarView', SearchToolbarView, {model: resultsModel});
         this.compose('searchResultsContainerView', SearchResultsContainerView, {model: resultsModel});
         this.compose('statusFilterContainer', {
             compose: function(options) {
@@ -122,14 +127,6 @@ define([
                 return true;
             },
         });
-        var resultsModel = this.compose('resultsModel');
-        var url = resultsModel.url();
-        var ResultsCollection = Collection.extend({
-            url: url,
-            parse: function(response, options) {
-                return response.list;
-            },
-        });
 
         this.view = new SearchResultsView({collection: resultsCollection});
 
@@ -147,54 +144,63 @@ define([
         }
     },
     step: function(params) {
-        var formView = this.compose('formView');
-        var groupingIndex = 0;
-        var currentScreen = params.ordinal;
-        if (currentScreen != undefined)
-            groupingIndex = parseInt(currentScreen, 10) - 1;
 
+        var link = window.piecework.model.link;
+        var requestId = params.requestId != undefined ? params.requestId : '';
+
+        if (/.html$/.test(requestId))
+            requestId = requestId.substring(0, requestId.length - 5);
+
+        var doRefresh = false;
+        if (/\/form$/.test(link)) {
+            link += '/' + params.processDefinitionKey + '/' + requestId;
+            this.compose('formModel', Form, {link:link, groupingIndex: 0});
+            doRefresh = true;
+        } else {
+            this.compose('formModel', Form, window.piecework.model);
+        }
+
+        var formModel = this.compose('formModel');
+        this.compose('formToolbarView', FormToolbarView, {model: formModel, params: params});
         this.compose('formView', {
             compose: function(options) {
-                var link = window.piecework.model.link;
-                var requestId = params.requestId != undefined ? params.requestId : '';
-
-                if (/.html$/.test(requestId))
-                    requestId = requestId.substring(0, requestId.length - 5);
-
-                if (/\/form$/.test(link))
-                    link += '/' + params.processDefinitionKey + '/' + requestId;
-
-                this.model = new Form(window.piecework.context.resource);
-                this.view = FormView;
-
-                this.check(options);
-
-        //        if (this.model.get("valid") != true)
-        //            currentScreen = screen.reviewIndex;
-
-                var screen = this.model.get("screen");
-                if (screen !== undefined) {
-                    var autoRender, disabledAutoRender;
-                    this.item = new FormView({model: this.model}, options);
-                    autoRender = this.item.autoRender;
-                    disabledAutoRender = autoRender === void 0 || !autoRender;
-                    if (disabledAutoRender && typeof this.item.render === "function") {
-                        return this.item.render();
-                    }
-                } else {
-                    this.model.set("link", link);
+                this.model = formModel;
+                if (doRefresh) {
                     this.listenToOnce(this.model, 'sync', function() {
                         var autoRender, disabledAutoRender;
                         this.item = new FormView({model: this.model}, options);
                         autoRender = this.item.autoRender;
                         disabledAutoRender = autoRender === void 0 || !autoRender;
                         if (disabledAutoRender && typeof this.item.render === "function") {
-                          return this.item.render();
+                            this.item.render();
                         }
+                        var groupingIndex = 0;
+                        var currentScreen = params.ordinal;
+                        if (currentScreen != undefined)
+                            groupingIndex = parseInt(currentScreen, 10) - 1;
+
+                        Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
                     });
                     this.model.fetch();
+                } else {
+                    this.check(options);
+                    var autoRender, disabledAutoRender;
+                    this.item = new FormView({model: this.model}, options);
+                    autoRender = this.item.autoRender;
+                    disabledAutoRender = autoRender === void 0 || !autoRender;
+                    if (disabledAutoRender && typeof this.item.render === "function") {
+                        this.item.render();
+                    }
+                    var groupingIndex = 0;
+                    var currentScreen = params.ordinal;
+                    if (currentScreen != undefined)
+                        groupingIndex = parseInt(currentScreen, 10) - 1;
+
+                    Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
                 }
 
+        //        if (this.model.get("valid") != true)
+        //            currentScreen = screen.reviewIndex;
             },
             check: function(options) {
                 var groupingIndex = 0;
@@ -208,8 +214,6 @@ define([
                 params: params
             }
         });
-
-        Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
 
 //        this.compose('formModel', Form, window.piecework.context.resource);
 //        this.compose('pageModel', Page, window.piecework.context);

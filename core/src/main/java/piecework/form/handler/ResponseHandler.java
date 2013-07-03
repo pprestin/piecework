@@ -252,9 +252,10 @@ public class ResponseHandler {
             Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
             formValues = new ArrayList<FormValue>();
             for (ValidationResult result : validation.getResults()) {
+                List<String> values = validationFormValueMap != null ? validationFormValueMap.get(result.getPropertyName()) : null;
                 formValues.add(new FormValue.Builder()
                         .name(result.getPropertyName())
-                        .values(validationFormValueMap.get(result.getPropertyName()))
+                        .values(values)
                         .message(new Message.Builder()
                                 .text(result.getMessage())
                                 .type(result.getType())

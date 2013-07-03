@@ -7,7 +7,7 @@ define([ 'chaplin', 'models/buttons', 'models/base/collection', 'models/base/mod
 	'use strict';
 
 	var FormView = View.extend({
-		autoRender : true,
+		autoRender : false,
 		container: '.main-content',
 		id: 'main-form',
 		tagName: 'form',

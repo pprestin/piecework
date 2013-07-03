@@ -29,13 +29,11 @@ import piecework.common.RequestDetails;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.exception.*;
+import piecework.identity.InternalUserDetails;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.exception.BadRequestError;
-import piecework.exception.ForbiddenError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
 import piecework.form.validation.FormValidation;
@@ -100,7 +98,7 @@ public class FormService {
         String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
 
-        FormRequest formRequest;
+        FormRequest formRequest = null;
 
         if (StringUtils.isNotEmpty(taskId)) {
             try {
@@ -123,7 +121,8 @@ public class FormService {
 
         TaskCriteria.Builder executionCriteriaBuilder = new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer);
 
-//        executionCriteriaBuilder.participantId(helper.getAuthenticatedPrincipal());
+        InternalUserDetails user = helper.getAuthenticatedPrincipal();
+        executionCriteriaBuilder.participantId(user.getInternalId());
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
@@ -184,7 +183,30 @@ public class FormService {
         ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).multipartBody(body);
 
         try {
+            String taskId = formRequest.getTaskId();
+            Task task = null;
+            if (StringUtils.isNotEmpty(taskId)) {
+                try {
+                    InternalUserDetails user = helper.getAuthenticatedPrincipal();
+                    task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
+                    if (task == null || !task.isActive())
+                        throw new ForbiddenError();
+
+                } catch (ProcessEngineException e) {
+                    throw new InternalServerError();
+                }
+            }
+
             ProcessInstance stored = processInstanceService.submit(process, screen, payload);
+
+            if (task != null) {
+                try {
+                   facade.completeTask(process, task.getTaskInstanceId());
+                } catch (ProcessEngineException e) {
+                    throw new InternalServerError();
+                }
+            }
+
             List<FormValue> formValues = stored != null ? stored.getFormData() : new ArrayList<FormValue>();
             FormRequest nextFormRequest = null;
 
