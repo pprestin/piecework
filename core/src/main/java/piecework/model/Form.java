@@ -57,6 +57,9 @@ public class Form {
     private final String link;
 
     @XmlAttribute
+    private final String attachment;
+
+    @XmlAttribute
     private final boolean valid;
 
     private Form() {
@@ -69,11 +72,12 @@ public class Form {
         this.task = builder.task;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
-        this.action = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId) : null;
+        this.action = context != null ? context.getApplicationUri(builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
+        this.attachment = context != null ? context.getApplicationUri(builder.processDefinitionKey, "attachment", builder.formInstanceId) : null;
         this.valid = builder.valid;
     }
 
@@ -113,6 +117,10 @@ public class Form {
 
     public String getLink() {
         return link;
+    }
+
+    public String getAttachment() {
+        return attachment;
     }
 
     public boolean isValid() {

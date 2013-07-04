@@ -3,9 +3,6 @@
         <a class="btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment"></i></a>
     </li>
     <li class="nav">
-        <button class="btn" id="attach-button"><i class="icon-file"></i></button>
-    </li>
-    <li class="nav">
         <a class="btn" href="#attachments" title="View notes" id="attachmentsButton" type="button"><i class="icon-folder-open"></i>&nbsp;0</a>
     </li>
     <li class="nav">
@@ -16,12 +13,14 @@
 <div id="comment-dialog" class="modal hide fade">
     <div class="modal-body">
         <textarea class="input-block-level" placeholder="Enter a comment" name="comment" id="attach-comment" rows="4"></textarea>
+        <button class="btn" id="attachment-button"><i class="icon-file"></i></button>
+        <input type="file" name="attachment" class="attach-file hide"/>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <a href="#" class="btn btn-primary">Attach</a>
+        <button type="button" id="attach-button" class="btn btn-primary">Attach</button>
     </div>
 </div>
 
-<input type="file" id="attach-file" class="input-large hide"/>
+
 

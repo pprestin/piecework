@@ -63,7 +63,7 @@ public class FormValue implements Serializable {
     private final String location;
 
     @XmlElementWrapper(name="values")
-	@XmlElementRef(name="value")
+	@XmlElement(name="value")
 	private final List<String> values;
 
     @XmlTransient

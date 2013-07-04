@@ -274,6 +274,7 @@ public class ProcessInstance implements Serializable {
         public Builder() {
             super();
             this.keywords = new HashSet<String>();
+            this.attachments = new ArrayList<Attachment>();
         }
 
         public Builder(piecework.model.ProcessInstance instance, Sanitizer sanitizer) {
@@ -312,6 +313,8 @@ public class ProcessInstance implements Serializable {
                 for (Attachment attachment : instance.attachments) {
                     this.attachments.add(new Attachment.Builder(attachment, sanitizer).build());
                 }
+            } else {
+                this.attachments = new ArrayList<Attachment>();
             }
             this.keywords = new HashSet<String>();
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
@@ -484,7 +487,8 @@ public class ProcessInstance implements Serializable {
         public Builder attachments(List<Attachment> attachments) {
         	if (this.attachments != null)
         		this.attachments = new ArrayList<Attachment>();
-        	this.attachments.addAll(attachments);
+            if (attachments != null)
+        	    this.attachments.addAll(attachments);
         	return this;
         }
 
@@ -498,7 +502,8 @@ public class ProcessInstance implements Serializable {
         public Builder submissions(List<FormSubmission> submissions) {
             if (this.submissions != null)
                 this.submissions = new ArrayList<FormSubmission>();
-            this.submissions.addAll(submissions);
+            if (submissions != null)
+                this.submissions.addAll(submissions);
             return this;
         }
         

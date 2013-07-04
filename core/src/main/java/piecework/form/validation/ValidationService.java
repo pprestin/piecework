@@ -26,7 +26,10 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Registry;
+import piecework.common.model.User;
+import piecework.identity.InternalUserDetails;
 import piecework.model.*;
+import piecework.process.concrete.ResourceHelper;
 import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 import piecework.util.OptionResolver;
@@ -44,6 +47,9 @@ public class ValidationService {
 
 	@Autowired(required=false)
 	Registry registry;
+
+    @Autowired
+    ResourceHelper helper;
 
     public FormValidation validate(FormSubmission submission, ProcessInstance instance, Screen screen) {
         return validate(submission, instance, screen, null);
@@ -82,6 +88,8 @@ public class ValidationService {
                         for (Button button : buttons) {
                             if (StringUtils.isEmpty(button.getName()) || StringUtils.isEmpty(button.getValue()))
                                 continue;
+
+                            unvalidatedFieldNames.remove(button.getName());
 
                             List<String> values = submissionValueMap.get(button.getName());
 
@@ -173,19 +181,31 @@ public class ValidationService {
         if (isAttachmentAllowed) {
             List<FormValue> formValues = submission.getFormData();
             if (formValues != null && !formValues.isEmpty()) {
+                User user = null;
+                InternalUserDetails userDetails = helper.getAuthenticatedPrincipal();
+                if (userDetails != null)
+                    user = new User.Builder(userDetails).build();
+
                 for (FormValue formValue : formValues) {
                     if (unvalidatedFieldNames.contains(formValue.getName())) {
-                        Attachment.Builder attachmentBuilder = new Attachment.Builder()
-                                .name(formValue.getName())
-                                .description(formValue.getValue())
-                                .lastModified(new Date());
+                        List<String> values = formValue.getAllValues();
 
-                        if (formValue.getContentType() != null) {
-                            attachmentBuilder
-                                .contentType(formValue.getContentType())
-                                .location(formValue.getLocation());
+                        if (values != null && !values.isEmpty()) {
+                            for (String value : values) {
+                                Attachment.Builder attachmentBuilder = new Attachment.Builder()
+                                        .name(formValue.getName())
+                                        .description(value)
+                                        .lastModified(new Date())
+                                        .user(user);
+
+                                if (formValue.getContentType() != null) {
+                                    attachmentBuilder
+                                        .contentType(formValue.getContentType())
+                                        .location(formValue.getLocation());
+                                }
+                                validationBuilder.attachment(attachmentBuilder.build());
+                            }
                         }
-                        validationBuilder.attachment(attachmentBuilder.build());
                     }
                 }
             }

@@ -148,7 +148,7 @@ define([ 'chaplin', 'models/buttons', 'models/base/collection', 'models/base/mod
                 statusCode : {
                     204 : this._onFormValid,
                     400 : this._onFormInvalid,
-                    default : this._onFailure,
+                    'default' : this._onFailure,
                 }
             });
 	    },

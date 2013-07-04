@@ -65,7 +65,7 @@ define([
         var statusFilter = new SearchFilter({
             selector: 'parameters',
             options: [
-                {id: "statusOpen", label: "Open", key: "processStatus", value: 'open', default: true},
+                { 'id': "statusOpen", 'label': "Open", 'key': "processStatus", 'value': "open", 'default': true },
                 {id: "statusComplete", label: "Complete", key: "processStatus", value: 'complete'},
                 {id: "statusCancelled", label: "Canceled", key: "processStatus", value: 'cancelled'},
                 {id: "statusSuspended", label: "Suspended", key: "processStatus", value: 'suspended'},

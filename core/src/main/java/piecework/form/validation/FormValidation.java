@@ -161,7 +161,8 @@ public class FormValidation implements Serializable {
         public Builder attachments(List<Attachment> attachments) {
             if (this.attachments == null)
                 this.attachments = new ArrayList<Attachment>();
-        	this.attachments.addAll(attachments);
+            if (attachments != null)
+        	    this.attachments.addAll(attachments);
         	return this;
         }
         
@@ -179,6 +180,8 @@ public class FormValidation implements Serializable {
 
         public Builder instance(ProcessInstance instance) {
             this.instance = instance;
+            if (instance != null)
+                attachments(instance.getAttachments());
             return this;
         }
         

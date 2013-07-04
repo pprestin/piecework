@@ -30,6 +30,7 @@ import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
+import piecework.form.handler.AttachmentHandler;
 import piecework.identity.InternalUserDetails;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
@@ -71,10 +72,10 @@ public class FormService {
     ResourceHelper helper;
 
     @Autowired
-    MongoOperations mongoOperations;
+    ProcessInstanceService processInstanceService;
 
     @Autowired
-    ProcessInstanceService processInstanceService;
+    AttachmentHandler attachmentHandler;
 
     @Autowired
     RequestHandler requestHandler;
@@ -85,13 +86,60 @@ public class FormService {
     @Autowired
     Sanitizer sanitizer;
 
+    public Response attach(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+        String requestId = sanitizer.sanitize(rawRequestId);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+        // This will guarantee that the request is valid
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        Screen screen = formRequest.getScreen();
+
+        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).processInstanceId(formRequest.getProcessInstanceId()).multipartBody(body);
+
+        try {
+            String taskId = formRequest.getTaskId();
+            Task task = null;
+            if (StringUtils.isNotEmpty(taskId)) {
+                try {
+                    InternalUserDetails user = helper.getAuthenticatedPrincipal();
+                    task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
+                    if (task == null || !task.isActive())
+                        throw new ForbiddenError();
+
+                } catch (ProcessEngineException e) {
+                    throw new InternalServerError();
+                }
+            }
+
+            ProcessInstance stored = processInstanceService.attach(process, screen, payload);
+
+            return attachmentHandler.handle(formRequest, viewContext);
+
+        } catch (BadRequestError e) {
+            FormValidation validation = e.getValidation();
+            return responseHandler.handle(formRequest, viewContext, validation);
+        }
+    }
+
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String taskId = null;
 
+        boolean isAttachmentResource = false;
+
         if (pathSegments != null && !pathSegments.isEmpty()) {
             Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
             taskId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+
+            if (pathSegmentIterator.hasNext()) {
+                String nextSegment = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+                isAttachmentResource = StringUtils.isNotEmpty(nextSegment) && nextSegment.equals("attachment");
+            }
         }
 
         String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
@@ -111,6 +159,9 @@ public class FormService {
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
+
+        if (isAttachmentResource)
+            return attachmentHandler.handle(formRequest, viewContext);
 
         return responseHandler.handle(formRequest, viewContext);
     }
@@ -180,7 +231,7 @@ public class FormService {
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Screen screen = formRequest.getScreen();
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).multipartBody(body);
+        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).processInstanceId(formRequest.getProcessInstanceId()).multipartBody(body);
 
         try {
             String taskId = formRequest.getTaskId();
@@ -242,7 +293,7 @@ public class FormService {
 
         ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).validationId(validationId).multipartBody(body);
 
-        processInstanceService.validate(process, screen, payload);
+        processInstanceService.validate(process, screen, payload, true);
 
         return Response.noContent().build();
     }

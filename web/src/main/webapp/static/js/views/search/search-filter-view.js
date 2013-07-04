@@ -24,7 +24,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
                 for (var i=0;i<definitions.length;i++) {
                     options.push({ id: 'processDefinitionKey' + i, key: 'processDefinitionKey', label: definitions[i].task.processDefinitionLabel, value: definitions[i].task.processDefinitionKey})
                 }
-                options.push({label: 'All processes', key: 'processDefinitionKey', default: true});
+                options.push({label: 'All processes', key: 'processDefinitionKey', 'default': true});
                 this.model.set('options', options);
             }
 
@@ -66,7 +66,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
                     var key = options[i].key;
                     var value = options[i].value;
 
-                    if (options[i].default !== undefined && options[i].default) {
+                    if (options[i]['default'] !== undefined && options[i]['default']) {
                         options[i].selected = true;
                         this.model.set('selected', options[i].label);
                         isSelected = true;

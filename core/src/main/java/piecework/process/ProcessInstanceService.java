@@ -40,7 +40,6 @@ import piecework.model.Process;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ManyMap;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.StringReader;
@@ -54,6 +53,9 @@ import java.util.*;
 public class ProcessInstanceService {
 
     private static final Logger LOG = Logger.getLogger(ProcessInstanceService.class);
+
+    @Autowired
+    AttachmentRepository attachmentRepository;
 
     @Autowired
     ProcessResource processResource;
@@ -168,57 +170,15 @@ public class ProcessInstanceService {
                 }
             }
         }
-
-////                if (executionCriteria.isExecutionDetailsRequired()) {
-////                    List<String> processInstanceIds = new ArrayList<String>();
-////
-////                    ProcessExecutionResults results = facade.findExecutions(executionCriteria);
-////
-////                    long total = results.getTotal();
-////                    long firstResult = results.getFirstResult();
-////                    long maxResults = results.getMaxResults();
-////
-////                    if (results.getExecutions() != null) {
-////                        Map<String, ProcessExecution> executionMap = new HashMap<String, ProcessExecution>();
-////                        for (ProcessExecution execution : results.getExecutions()) {
-////                            processInstanceIds.add(execution.getBusinessKey());
-////                            executionMap.put(execution.getBusinessKey(), execution);
-////                        }
-////
-////                        String keyword = null;
-////                        if (contentQueryParameters.containsKey("keyword"))
-////                            keyword = contentQueryParameters.getOne("keyword");
-////
-////                        Iterable<ProcessInstance> instances;
-////                        if (keyword == null)
-////                            instances = processInstanceRepository.findAll(processInstanceIds);
-////                        else
-////                            instances = processInstanceRepository.findByProcessInstanceIdInAndKeywordsRegex(processInstanceIds, keyword);
-////
-////                        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-////                        for (ProcessInstance instance : instances) {
-////                            resultsBuilder.item(new ProcessInstance.Builder(instance, passthroughSanitizer).formData(new ArrayList<FormValue>()).build(viewContext));
-////                        }
-////                    }
-////                } else {
-////
-////
-////
-////                }
-//
-//            } catch (ProcessEngineException e) {
-//                LOG.error("Process engine unable to find executions ", e);
-//                throw new InternalServerError();
-//            }
         return resultsBuilder.build();
     }
 
-    public ProcessInstance store(Process process, FormSubmission submission, FormValidation validation, ProcessInstance previous) throws StatusCodeError {
+    public ProcessInstance store(Process process, FormSubmission submission, FormValidation validation, ProcessInstance previous, boolean isAttachment) throws StatusCodeError {
         ProcessInstance.Builder instanceBuilder;
 
         String processInstanceLabel = process.getProcessInstanceLabelTemplate();
 
-        if (processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
+        if (!isAttachment && processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
             Map<String, String> scopes = new HashMap<String, String>();
 
             for (Map.Entry<String, List<String>> entry : validation.getFormValueMap().entrySet()) {
@@ -237,11 +197,18 @@ public class ProcessInstanceService {
 
         if (previous != null) {
             instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer())
-                    .formValueMap(validation.getFormValueMap())
-                    .processInstanceLabel(processInstanceLabel)
-                    .restrictedValueMap(validation.getRestrictedValueMap())
-                    .submission(submission);
+                    .submission(submission)
+                    .attachments(validation.getAttachments());
+
+            if (!isAttachment) {
+                instanceBuilder.formValueMap(validation.getFormValueMap())
+                        .processInstanceLabel(processInstanceLabel)
+                        .restrictedValueMap(validation.getRestrictedValueMap());
+            }
         } else {
+            if (isAttachment)
+                throw new ForbiddenError();
+
             try {
                 String processInstanceId = UUID.randomUUID().toString();
 
@@ -264,6 +231,7 @@ public class ProcessInstanceService {
                         .startTime(new Date())
                         .initiatorId(initiatorId)
                         .processStatus(Constants.ProcessStatuses.OPEN)
+                        .attachments(validation.getAttachments())
                         .applicationStatus(initiationStatus);
 
                 // Save it before routing, then save again with the engine instance id
@@ -279,20 +247,39 @@ public class ProcessInstanceService {
             }
         }
 
-        return processInstanceRepository.save(instanceBuilder.build());
+        ProcessInstance instance = instanceBuilder.build();
+
+        List<Attachment> attachments = instance.getAttachments();
+        if (attachments != null && !attachments.isEmpty()) {
+            for (Attachment attachment : attachments) {
+                attachmentRepository.save(attachment);
+            }
+        }
+
+        return processInstanceRepository.save(instance);
+    }
+
+    public ProcessInstance attach(Process process, Screen screen, ProcessInstancePayload payload) throws StatusCodeError {
+
+        // Validate the submission
+        FormValidation validation = validate(process, screen, payload, false);
+        FormSubmission submission = validation.getSubmission();
+        ProcessInstance previous = validation.getInstance();
+
+        return store(process, submission, validation, previous, true);
     }
 
     public ProcessInstance submit(Process process, Screen screen, ProcessInstancePayload payload) throws StatusCodeError {
 
         // Validate the submission
-        FormValidation validation = validate(process, screen, payload);
+        FormValidation validation = validate(process, screen, payload, true);
         FormSubmission submission = validation.getSubmission();
         ProcessInstance previous = validation.getInstance();
 
-        return store(process, submission, validation, previous);
+        return store(process, submission, validation, previous, false);
     }
 
-    public FormValidation validate(Process process, Screen screen, ProcessInstancePayload payload) throws StatusCodeError {
+    public FormValidation validate(Process process, Screen screen, ProcessInstancePayload payload, boolean throwException) throws StatusCodeError {
 
         boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
 
@@ -308,7 +295,7 @@ public class ProcessInstanceService {
         FormValidation validation = validationService.validate(submission, previous, screen, payload.getValidationId());
 
         List<ValidationResult> results = validation.getResults();
-        if (results != null && !results.isEmpty()) {
+        if (throwException && results != null && !results.isEmpty()) {
             // Throw an exception if the submitter needs to adjust the data
             throw new BadRequestError(validation);
         }

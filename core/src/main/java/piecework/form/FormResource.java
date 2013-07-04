@@ -49,13 +49,19 @@ public interface FormResource extends ApplicationResource {
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context HttpServletRequest request) throws StatusCodeError;
 
     @POST
-    @Path("{processDefinitionKey}/{requestId}")
+    @Path("{processDefinitionKey}/attachment/{requestId}")
+    @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+    @Consumes("multipart/form-data")
+    Response attach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/submission/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("multipart/form-data")
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
 
     @POST
-    @Path("{processDefinitionKey}/{requestId}/{validationId}")
+    @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces("application/json")
     @Consumes("multipart/form-data")

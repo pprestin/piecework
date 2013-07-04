@@ -34,6 +34,7 @@ import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import java.util.List;
 
@@ -81,6 +82,13 @@ public class FormResourceVersion1 implements FormResource {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = resourceHelper.findProcess(processDefinitionKey, true);
         return formService.provideFormResponse(request, getViewContext(), process, pathSegments);
+    }
+
+    @Override
+    public Response attach(String rawProcessDefinitionKey, String rawRequestId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        return formService.attach(request, getViewContext(), process, rawRequestId, body);
     }
 
     @Override
