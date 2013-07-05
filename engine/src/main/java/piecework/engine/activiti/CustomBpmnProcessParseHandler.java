@@ -18,8 +18,11 @@ package piecework.engine.activiti;
 import org.activiti.bpmn.model.ActivitiListener;
 import org.activiti.bpmn.model.BaseElement;
 import org.activiti.bpmn.model.Process;
+import org.activiti.engine.delegate.ExecutionListener;
 import org.activiti.engine.impl.bpmn.parser.BpmnParse;
 import org.activiti.engine.impl.bpmn.parser.handler.AbstractBpmnParseHandler;
+import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,6 +33,9 @@ import java.util.List;
  */
 @Service
 public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Process> {
+
+    @Autowired
+    GeneralExecutionListener generalExecutionListener;
 
     @Override
     protected void executeParse(BpmnParse bpmnParse, Process element) {
@@ -43,6 +49,9 @@ public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Proc
 //        endEventListener.setEvent("end");
 //        endEventListener.setImplementation("generalExecutionListener");
 //        executionListeners.add(endEventListener);
+
+        ProcessDefinitionEntity processDefinitionEntity = bpmnParse.getCurrentProcessDefinition();
+        processDefinitionEntity.addExecutionListener(ExecutionListener.EVENTNAME_END, generalExecutionListener);
     }
 
     @Override

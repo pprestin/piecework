@@ -18,6 +18,7 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.model.User;
 import piecework.common.view.ViewContext;
@@ -58,7 +59,12 @@ public class Attachment implements Serializable {
 	private final String location;
 	
 	@XmlElement
+    @Transient
 	private final User user;
+
+    @XmlTransient
+    @JsonIgnore
+    private final String userId;
 	
 	@XmlAttribute
     private final int ordinal;
@@ -87,11 +93,12 @@ public class Attachment implements Serializable {
         this.contentType = builder.contentType;
         this.location = builder.location;
         this.user = builder.user;
+        this.userId = builder.userId;
         this.ordinal = builder.ordinal;
         this.lastModified = builder.lastModified;
         this.isDeleted = builder.isDeleted;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.attachmentId) : null;
-        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.attachmentId) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, Constants.ROOT_ELEMENT_NAME, builder.requestId, builder.attachmentId) : null;
+        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.attachmentId, Constants.ROOT_ELEMENT_NAME) : null;
     }
 	
 	public String getAttachmentId() {
@@ -118,7 +125,12 @@ public class Attachment implements Serializable {
 		return user;
 	}
 
-	public int getOrdinal() {
+    @JsonIgnore
+    public String getUserId() {
+        return userId;
+    }
+
+    public int getOrdinal() {
 		return ordinal;
 	}
 
@@ -141,12 +153,14 @@ public class Attachment implements Serializable {
 	public final static class Builder {
 
     	private String attachmentId;
+        private String requestId;
     	private String processDefinitionKey;
     	private String name;
         private String description;
         private String contentType;
         private String location;
         private User user;
+        private String userId;
         private Date lastModified;
         private int ordinal;
         private boolean isDeleted;
@@ -162,6 +176,7 @@ public class Attachment implements Serializable {
             this.contentType = field.contentType;
             this.location = field.location;
             this.user = field.user != null ? new User.Builder(field.user, sanitizer).build() : null;
+            this.userId = field.user != null && field.user.getUserId() != null ? sanitizer.sanitize(field.user.getUserId()) : sanitizer.sanitize(field.userId);
             this.lastModified = field.lastModified;
             this.ordinal = field.ordinal;
             this.isDeleted = field.isDeleted;
@@ -177,6 +192,11 @@ public class Attachment implements Serializable {
 
         public Builder attachmentId(String attachmentId) {
             this.attachmentId = attachmentId;
+            return this;
+        }
+
+        public Builder requestId(String requestId) {
+            this.requestId = requestId;
             return this;
         }
         
@@ -209,6 +229,11 @@ public class Attachment implements Serializable {
             this.user = user;
             return this;
         }
+
+        public Builder userId(String userId) {
+            this.userId = userId;
+            return this;
+        }
         
         public Builder lastModified(Date lastModified) {
             this.lastModified = lastModified;
@@ -229,7 +254,11 @@ public class Attachment implements Serializable {
             this.isDeleted = false;
             return this;
         }
-	}
+
+        public String getUserId() {
+            return userId;
+        }
+    }
 	
 	public static class Constants {
         public static final String RESOURCE_LABEL = "Attachment";

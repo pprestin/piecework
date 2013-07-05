@@ -36,22 +36,30 @@ import java.util.List;
 @Service
 public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<UserTask> {
 
+    @Autowired
+    GeneralUserTaskListener generalUserTaskListener;
+
     @Override
     protected void executeParse(BpmnParse bpmnParse, UserTask element) {
-//        TaskDefinition taskDefinition = (TaskDefinition) bpmnParse.getCurrentActivity().getProperty(UserTaskParseHandler.PROPERTY_TASK_DEFINITION);
-//        taskDefinition.addTaskListener(TaskListener.EVENTNAME_ALL_EVENTS, generalUserTaskListener);
+        TaskDefinition taskDefinition = (TaskDefinition) bpmnParse.getCurrentActivity().getProperty(UserTaskParseHandler.PROPERTY_TASK_DEFINITION);
+        taskDefinition.addTaskListener(TaskListener.EVENTNAME_ALL_EVENTS, generalUserTaskListener);
 
-        List<ActivitiListener> taskListeners = element.getTaskListeners();
-        if (taskListeners == null) {
-            taskListeners = new ArrayList<ActivitiListener>();
-            element.setTaskListeners(taskListeners);
-        }
-
-        ActivitiListener createTaskListener = new ActivitiListener();
-        createTaskListener.setEvent(TaskListener.EVENTNAME_ALL_EVENTS);
-        createTaskListener.setImplementation("${generalUserTaskListener}");
-        createTaskListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_DELEGATEEXPRESSION);
-        taskListeners.add(createTaskListener);
+//        List<ActivitiListener> taskListeners = element.getTaskListeners();
+//        if (taskListeners == null) {
+//            taskListeners = new ArrayList<ActivitiListener>();
+//            element.setTaskListeners(taskListeners);
+//        }
+//
+//        ActivitiListener createTaskListener = new ActivitiListener();
+//        createTaskListener.setEvent(TaskListener.EVENTNAME_ALL_EVENTS);
+//        createTaskListener.setImplementation("${generalUserTaskListener}");
+//        createTaskListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_DELEGATEEXPRESSION);
+////        taskListeners.add(createTaskListener);
+//
+//        bpmnParse.getListenerFactory().createDelegateExpressionTaskListener(createTaskListener);
+//
+//
+//        bpmnParse.
     }
 
     @Override

@@ -210,20 +210,13 @@ public class ProcessInstanceService {
                 throw new ForbiddenError();
 
             try {
-                String processInstanceId = UUID.randomUUID().toString();
-
-                Map<String, String> variables = new HashMap<String, String>();
-                variables.put("PIECEWORK_PROCESS_DEFINITION_KEY", process.getProcessDefinitionKey());
-                variables.put("PIECEWORK_PROCESS_INSTANCE_ID", processInstanceId);
-                variables.put("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstanceLabel);
-
                 InternalUserDetails user = helper.getAuthenticatedPrincipal();
                 String initiatorId = user != null ? user.getInternalId() : null;
                 String initiationStatus = process.getInitiationStatus();
                 instanceBuilder = new ProcessInstance.Builder()
                         .processDefinitionKey(process.getProcessDefinitionKey())
                         .processDefinitionLabel(process.getProcessDefinitionLabel())
-                        .processInstanceId(processInstanceId)
+//                        .processInstanceId(processInstanceId)
                         .processInstanceLabel(processInstanceLabel)
                         .formValueMap(validation.getFormValueMap())
                         .restrictedValueMap(validation.getRestrictedValueMap())
@@ -236,6 +229,11 @@ public class ProcessInstanceService {
 
                 // Save it before routing, then save again with the engine instance id
                 ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
+
+                Map<String, String> variables = new HashMap<String, String>();
+                variables.put("PIECEWORK_PROCESS_DEFINITION_KEY", process.getProcessDefinitionKey());
+                variables.put("PIECEWORK_PROCESS_INSTANCE_ID", stored.getProcessInstanceId());
+                variables.put("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstanceLabel);
 
                 String engineInstanceId = facade.start(process, stored.getProcessInstanceId(), variables);
 

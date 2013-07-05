@@ -181,10 +181,10 @@ public class ValidationService {
         if (isAttachmentAllowed) {
             List<FormValue> formValues = submission.getFormData();
             if (formValues != null && !formValues.isEmpty()) {
-                User user = null;
+                String userId = null;
                 InternalUserDetails userDetails = helper.getAuthenticatedPrincipal();
                 if (userDetails != null)
-                    user = new User.Builder(userDetails).build();
+                    userId = userDetails.getInternalId();
 
                 for (FormValue formValue : formValues) {
                     if (unvalidatedFieldNames.contains(formValue.getName())) {
@@ -196,12 +196,14 @@ public class ValidationService {
                                         .name(formValue.getName())
                                         .description(value)
                                         .lastModified(new Date())
-                                        .user(user);
+                                        .userId(userId);
 
                                 if (formValue.getContentType() != null) {
                                     attachmentBuilder
                                         .contentType(formValue.getContentType())
                                         .location(formValue.getLocation());
+                                } else {
+                                    attachmentBuilder.contentType("text/plain");
                                 }
                                 validationBuilder.attachment(attachmentBuilder.build());
                             }

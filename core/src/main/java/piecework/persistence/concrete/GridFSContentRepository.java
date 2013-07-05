@@ -43,7 +43,14 @@ public class GridFSContentRepository implements ContentRepository {
 
     @Override
     public Content findByLocation(String location) {
+        if (location == null)
+            return null;
+
         GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
+
+        if (file == null)
+            return null;
+
         return toContent(file);
     }
 

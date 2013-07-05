@@ -16,18 +16,28 @@
 package piecework.form.handler;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import piecework.common.model.User;
 import piecework.common.view.ViewContext;
 import piecework.exception.StatusCodeError;
-import piecework.model.Attachment;
-import piecework.model.Attachments;
-import piecework.model.FormRequest;
-import piecework.model.ProcessInstance;
+import piecework.identity.InternalUserDetailsService;
+import piecework.model.*;
+import piecework.persistence.ContentRepository;
 import piecework.process.ProcessInstanceRepository;
+import piecework.security.concrete.PassthroughSanitizer;
+import piecework.ui.StreamingAttachmentContent;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -38,11 +48,42 @@ public class AttachmentHandler {
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
 
-    public Response handle(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
+    @Autowired
+    InternalUserDetailsService userDetailsService;
+
+    @Autowired
+    ContentRepository contentRepository;
+
+    public Response handle(FormRequest formRequest, ViewContext viewContext, String attachmentId) throws StatusCodeError {
         ProcessInstance processInstance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
 
-        Attachments attachments = new Attachments.Builder().attachments(processInstance.getAttachments()).build();
-        return Response.ok(attachments).build();
+        Attachments.Builder attachmentsBuilder = new Attachments.Builder();
+        Map<String, User> userMap = new HashMap<String, User>();
+        List<Attachment> storedAttachments = processInstance.getAttachments();
+        if (storedAttachments != null && !storedAttachments.isEmpty()) {
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            for (Attachment storedAttachment : storedAttachments) {
+                String userId = storedAttachment.getUserId();
+                User user = userId != null ? userMap.get(userId) : null;
+                if (user == null && userId != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByInternalId(userId);
+                    user = new User.Builder(userDetails).build();
+
+                    if (user != null)
+                        userMap.put(user.getUserId(), user);
+                }
+
+                if (attachmentId == null)
+                    attachmentsBuilder.attachment(new Attachment.Builder(storedAttachment, passthroughSanitizer).processDefinitionKey(processInstance.getProcessDefinitionKey()).requestId(formRequest.getRequestId()).user(user).build(viewContext));
+                else if (attachmentId.equals(storedAttachment.getAttachmentId())) {
+                    Content content = contentRepository.findByLocation(storedAttachment.getLocation());
+                    String contentDisposition = new StringBuilder("attachment; filename=").append(storedAttachment.getDescription()).toString();
+                    return Response.ok(new StreamingAttachmentContent(storedAttachment, content), storedAttachment.getContentType()).header("Content-Disposition", contentDisposition).build();
+                }
+            }
+        }
+
+        return Response.ok(attachmentsBuilder.build()).build();
     }
 
 }

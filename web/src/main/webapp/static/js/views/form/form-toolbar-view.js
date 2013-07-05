@@ -9,16 +9,18 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 		className: 'main-toolbar narrow',
 	    template: template,
 	    events: {
-	        'click #attachment-button': '_onAttachmentButton',
+	        'click #attachments-button': '_onAttachmentsButton',
 	        'click #attach-button': '_onAttachComment',
 	        'click #back-button': '_onBackButton',
+	        'click #file-button': '_onFileButton',
 	        'change .attach-file': '_onAttachFile',
 	    },
 	    _onAddedToDOM: function() {
 	        $('title').text(window.piecework.context.applicationTitle);
 	    },
-	    _onAttachmentButton: function(event) {
-            $('.attach-file').click();
+	    _onAttachmentsButton: function(event) {
+//            $('.attach-file').click();
+            Chaplin.mediator.publish('showAttachments');
 	    },
 	    _onAttachComment: function(event) {
             var data = new FormData();
@@ -49,8 +51,11 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	    _onBackButton: function() {
             Chaplin.mediator.publish("!router:routeByName", "form#search", this.options.params);
 	    },
+	    _onFileButton: function() {
+	        $('.attach-file').click();
+	    },
 	    _onUploadSuccess: function() {
-	        alert("okay!");
+	        $('#comment-dialog').modal('hide');
 	    },
 	    _onUploadInvalid: function() {
 	        alert("invalid!");
@@ -67,7 +72,7 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
                 contentType : false,
                 type : 'POST',
                 statusCode : {
-                    204 : this._onUploadSuccess,
+                    200 : this._onUploadSuccess,
                     400 : this._onUploadInvalid,
                     'default' : this._onUploadFailure,
                 }

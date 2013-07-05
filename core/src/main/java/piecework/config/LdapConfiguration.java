@@ -58,7 +58,9 @@ import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 
+import org.springframework.util.StringUtils;
 import piecework.authorization.AuthorizationRoleMapper;
+import piecework.identity.InternalUserDetailsService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.util.KeyManagerCabinet;
 
@@ -79,12 +81,20 @@ public class LdapConfiguration {
     @Autowired
     AuthorizationRoleMapper authorizationRoleMapper;
 
+    @Autowired
+    CustomLdapUserDetailsMapper userDetailsMapper;
+
 	@Bean
-	public UserDetailsService userDetailsService(Environment environment) throws Exception {
-		LdapUserDetailsService userDetailsService = new LdapUserDetailsService(userSearch(environment), authoritiesPopulator(environment));
-		userDetailsService.setUserDetailsMapper(new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), environment));
-		return userDetailsService;
+	public InternalUserDetailsService userDetailsService(Environment environment) throws Exception {
+        String ldapExternalIdAttribute = environment.getProperty("ldap.attribute.id.external");
+
+		return new InternalUserDetailsService(userSearch(environment), userSearchInternal(environment), authoritiesPopulator(environment), userDetailsMapper, ldapExternalIdAttribute);
 	}
+
+    @Bean
+    public CustomLdapUserDetailsMapper userDetailsMapper(Environment environment) throws Exception {
+        return new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), environment);
+    }
 
 	@Bean
 	public LdapContextSource groupLdapContextSource(Environment environment) throws Exception {
@@ -92,14 +102,13 @@ public class LdapConfiguration {
         String ldapGroupBase = environment.getProperty("ldap.group.base");
         String ldapPersonDn = environment.getProperty("ldap.person.dn");
 
-		// TODO: Should we be using DefaultSpringSecurityContextSource? 
 		LdapContextSource context = new LdapContextSource();
 		context.setUrl(ldapGroupUrl);
 		context.setBase(ldapGroupBase);
         context.setUserDn(ldapPersonDn);
 		context.setAuthenticationSource(authenticationSource(environment));
 		context.setAuthenticationStrategy(authenticationStrategy(environment));
-//		context.setAnonymousReadOnly(true);
+
 		return context;
 	}
 	
@@ -109,14 +118,13 @@ public class LdapConfiguration {
         String ldapPersonBase = environment.getProperty("ldap.person.base");
         String ldapPersonDn = environment.getProperty("ldap.person.dn");
 
-		// TODO: Should we be using DefaultSpringSecurityContextSource? 
 		LdapContextSource context = new LdapContextSource();
 		context.setUrl(ldapPersonUrl);
 		context.setBase(ldapPersonBase);
 		context.setUserDn(ldapPersonDn);
 		context.setAuthenticationSource(authenticationSource(environment));
 		context.setAuthenticationStrategy(authenticationStrategy(environment));
-//		context.setAnonymousReadOnly(true);
+
 		return context;
 	}
 
@@ -257,5 +265,20 @@ public class LdapConfiguration {
 		((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
 		return userSearch;
 	}
+
+    private LdapUserSearch userSearchInternal(Environment environment) throws Exception {
+        String ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
+        String ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter.internal");
+
+        // Fallback to original setting if an internal setting is not defined
+        if (StringUtils.isEmpty(ldapPersonSearchFilter))
+            ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
+
+        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapPersonSearchBase, ldapPersonSearchFilter, personLdapContextSource(environment));
+        ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
+        ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
+        ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
+        return userSearch;
+    }
 
 }

@@ -1,0 +1,13 @@
+<div class="attachment-header">
+    <button type="button" class="close"><i class="icon-trash"></i></button>
+</div>
+<div class="attachment-body">
+    {{#if inline}}
+        <p>{{description}}</p>
+    {{else}}
+        <p><a href="{{link}}"><i class="icon-file"></i>&nbsp;{{name}}</a></p>
+    {{/if}}
+</div>
+<div class="attachment-footer">
+    <p class="muted">{{user.displayName}}<br/>{{lastModified}}</p>
+</div>

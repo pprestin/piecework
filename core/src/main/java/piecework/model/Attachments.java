@@ -58,7 +58,7 @@ public class Attachments {
             this.attachments = new ArrayList<Attachment>();
         }
 
-        public Builder attachments(Attachment attachment) {
+        public Builder attachment(Attachment attachment) {
             if (attachment != null)
                 this.attachments.add(attachment);
             return this;

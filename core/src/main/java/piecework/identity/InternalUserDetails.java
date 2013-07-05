@@ -19,11 +19,12 @@ import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.ldap.userdetails.LdapUserDetails;
 
 /**
  * @author James Renfro
  */
-public class InternalUserDetails implements UserDetails {
+public class InternalUserDetails implements LdapUserDetails {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -90,5 +91,15 @@ public class InternalUserDetails implements UserDetails {
 
     public String getEmailAddress() {
         return emailAddress;
+    }
+
+    @Override
+    public String getDn() {
+        if (delegate instanceof LdapUserDetails) {
+            LdapUserDetails ldapUserDetails = LdapUserDetails.class.cast(delegate);
+            return ldapUserDetails.getDn();
+        }
+
+        return null;
     }
 }

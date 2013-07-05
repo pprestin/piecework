@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 
+import org.springframework.security.core.userdetails.UserDetails;
 import piecework.identity.InternalUserDetails;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
@@ -120,11 +121,17 @@ public class User implements Serializable {
             this.phoneNumber = sanitizer.sanitize(user.phoneNumber);
         }
 
-        public Builder(InternalUserDetails details) {
-            this.userId = details.getInternalId();
-            this.visibleId = details.getExternalId();
-            this.displayName = details.getDisplayName();
-            this.emailAddress = details.getEmailAddress();
+        public Builder(UserDetails details) {
+            if (details instanceof InternalUserDetails) {
+                InternalUserDetails internalUserDetails = InternalUserDetails.class.cast(details);
+                this.userId = internalUserDetails.getInternalId();
+                this.visibleId = internalUserDetails.getExternalId();
+                this.displayName = internalUserDetails.getDisplayName();
+                this.emailAddress = internalUserDetails.getEmailAddress();
+            } else {
+                this.userId = details.getUsername();
+                this.displayName = details.getUsername();
+            }
         }
 
         public User build() {

@@ -95,7 +95,7 @@ public class EngineConfiguration {
 		engineConfiguration.setDatabaseSchemaUpdate("true");
         engineConfiguration.setIdGenerator(new StrongUuidGenerator());
 //        engineConfiguration.setEnableSafeBpmnXml(true);
-        engineConfiguration.setPreBpmnParseHandlers(Arrays.<BpmnParseHandler>asList(customBpmnProcessParseHandler(), customBpmnUserTaskParseHandler()));
+        engineConfiguration.setPostBpmnParseHandlers(Arrays.<BpmnParseHandler>asList(customBpmnProcessParseHandler(), customBpmnUserTaskParseHandler()));
 		return engineConfiguration;
 	}
 

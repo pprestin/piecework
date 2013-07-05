@@ -1,13 +1,15 @@
-define([ 'chaplin', 'models/buttons', 'models/base/collection', 'models/base/model', 'models/design/sections',
-        'views/form/buttons-view', 'views/base/collection-view', 'views/form/fields-view',
+define([ 'chaplin',
+        'models/attachments', 'models/buttons', 'models/base/collection', 'models/base/model', 'models/design/sections',
+        'views/form/attachments-view', 'views/form/buttons-view', 'views/base/collection-view', 'views/form/fields-view',
         'views/form/grouping-view', 'views/form/section-view', 'views/form/sections-view',
         'views/base/view', 'text!templates/form/form.hbs' ],
-		function(Chaplin, Buttons, Collection, Model, Sections, ButtonsView, CollectionView, FieldsView,
+		function(Chaplin, Attachments, Buttons, Collection, Model, Sections, AttachmentsView, ButtonsView, CollectionView, FieldsView,
 		         GroupingView, SectionView, SectionsView, View, template) {
 	'use strict';
 
 	var FormView = View.extend({
 		autoRender : false,
+//		className: 'container-fluid',
 		container: '.main-content',
 		id: 'main-form',
 		tagName: 'form',
@@ -19,6 +21,7 @@ define([ 'chaplin', 'models/buttons', 'models/base/collection', 'models/base/mod
 	    listen: {
              'addedToDOM': '_onAddedToDOM',
              'groupingIndex:change mediator': '_onGroupingIndexChange',
+             'showAttachments mediator': '_onShowAttachments',
 	    },
 	    initialize: function(model, options) {
 	        View.__super__.initialize.apply(this, options);
@@ -303,6 +306,20 @@ define([ 'chaplin', 'models/buttons', 'models/base/collection', 'models/base/mod
 	    },
 	    _onFailure: function(jqXHR, textStatus, errorThrown) {
             alert('Failure!');
+	    },
+	    _onShowAttachments: function() {
+	        var attachmentsView = this.subview('attachmentsView');
+
+	        if (attachmentsView == undefined) {
+	            var urlRoot = this.model.get("attachment");
+	            var attachments = new Attachments({}, {url: urlRoot});
+                this.subview('attachmentsView', new AttachmentsView({collection: attachments}));
+                this.$el.addClass('span9');
+                attachments.fetch();
+            } else {
+                attachmentsView.$el.toggle();
+                this.$el.toggleClass('span9');
+            }
 	    }
 	});
 

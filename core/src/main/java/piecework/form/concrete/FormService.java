@@ -118,7 +118,7 @@ public class FormService {
 
             ProcessInstance stored = processInstanceService.attach(process, screen, payload);
 
-            return attachmentHandler.handle(formRequest, viewContext);
+            return attachmentHandler.handle(formRequest, viewContext, null);
 
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
@@ -129,6 +129,7 @@ public class FormService {
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String taskId = null;
+        String attachmentId = null;
 
         boolean isAttachmentResource = false;
 
@@ -136,9 +137,13 @@ public class FormService {
             Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
             taskId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
 
-            if (pathSegmentIterator.hasNext()) {
-                String nextSegment = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-                isAttachmentResource = StringUtils.isNotEmpty(nextSegment) && nextSegment.equals("attachment");
+            isAttachmentResource = StringUtils.isNotEmpty(taskId) && taskId.equals("attachment");
+
+            if (isAttachmentResource && pathSegmentIterator.hasNext()) {
+                taskId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+
+                if (pathSegmentIterator.hasNext())
+                    attachmentId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
             }
         }
 
@@ -161,7 +166,7 @@ public class FormService {
             throw new BadRequestError();
 
         if (isAttachmentResource)
-            return attachmentHandler.handle(formRequest, viewContext);
+            return attachmentHandler.handle(formRequest, viewContext, attachmentId);
 
         return responseHandler.handle(formRequest, viewContext);
     }

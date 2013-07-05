@@ -41,6 +41,22 @@ p.lead {
     color: #999;
 }
 
+ul.attachments {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+ul.attachments li {
+    border: 1px solid #CCCCCC;
+    padding: 15px 15px 0px 15px;
+    margin-bottom: 5px;
+}
+
+ul.attachments li .attachment-footer {
+    text-align: right;
+}
+
 ul.sections {
     list-style: none;
     margin: 0px;
@@ -48,7 +64,7 @@ ul.sections {
 }
 
 ul.sections li.section {
-    border: 1px solid #CCC;
+    border: 1px solid #CCCCCC;
     margin: 10px 0px;
     padding: 0px 20px 20px;
 }
@@ -103,7 +119,7 @@ div.screen-footer {
 }
 
 .main-content {
-    padding: 110px 50px 100px 50px;
+    padding: 110px 0px 100px 0px;
 }
 
 .main-footer {

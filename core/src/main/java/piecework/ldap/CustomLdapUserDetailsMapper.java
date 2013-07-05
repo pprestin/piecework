@@ -20,12 +20,14 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 
+import piecework.identity.DisplayNameConverter;
 import piecework.identity.InternalUserDetails;
 
 /**
@@ -41,6 +43,9 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper {
     private final String ldapDisplayNameAttribute;
     private final String ldapEmailAttribute;
 
+    @Autowired(required = false)
+    DisplayNameConverter displayNameConverter;
+
 	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate, Environment environment) {
 		this.delegate = delegate;
         this.ldapInternalIdAttribute = environment.getProperty("ldap.attribute.id.internal");
@@ -55,6 +60,10 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper {
         String externalId = ctx.getStringAttribute(ldapExternalIdAttribute);
         String displayName = ctx.getStringAttribute(ldapDisplayNameAttribute);
         String emailAddress = StringUtils.isNotEmpty(ldapEmailAttribute) ? ctx.getStringAttribute(ldapEmailAttribute) : "";
+
+        if (displayNameConverter != null)
+            displayName = displayNameConverter.convert(displayName);
+
         return new InternalUserDetails(userDetails, internalId, externalId, displayName, emailAddress);
     }
 	
