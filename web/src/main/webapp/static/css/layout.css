@@ -1,3 +1,19 @@
+@media (min-width: 1200px) {
+    .container-fluid {
+        padding-right: 50px;
+        padding-left: 50px;
+    }
+    .main-content {
+        padding-top: 100px;
+        padding-bottom: 100px;
+    }
+    ul.toolbar-items,
+    ul.toolbar-items-buttons {
+        margin-right: 10px !important;
+        margin-left: 30px !important;
+    }
+}
+
 body {
     font-size: 16px;
 }
@@ -119,7 +135,7 @@ div.screen-footer {
 }
 
 .main-content {
-    padding: 110px 0px 100px 0px;
+
 }
 
 .main-footer {
@@ -146,7 +162,7 @@ div.screen-footer {
 
 .main-toolbar ul.toolbar-items {
     clear:  both;
-    margin-bottom: 0px;
+    margin: 0px;
     padding: 5px 0px 0px 0px;
     vertical-align: middle;
 }
@@ -163,7 +179,7 @@ div.screen-footer {
 
 .main-toolbar ul.toolbar-items-buttons {
     clear:  both;
-    margin-bottom: 0px;
+    margin: 0px;
     padding: 0px;
 }
 

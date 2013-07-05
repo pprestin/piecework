@@ -23,17 +23,21 @@ import javax.sql.DataSource;
 
 import org.activiti.engine.*;
 import org.activiti.engine.impl.cfg.ProcessEngineConfigurationImpl;
+import org.activiti.engine.impl.cfg.ProcessEngineConfigurator;
 import org.activiti.engine.impl.persistence.StrongUuidGenerator;
 import org.activiti.engine.parse.BpmnParseHandler;
+import org.activiti.ldap.LDAPConfigurator;
 import org.activiti.spring.ProcessEngineFactoryBean;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import piecework.engine.activiti.CustomBpmnProcessParseHandler;
@@ -46,11 +50,17 @@ import piecework.engine.activiti.CustomBpmnUserTaskParseHandler;
 @EnableTransactionManagement
 public class EngineConfiguration {
 
-	@Autowired 
-	Environment env;
+    @Autowired
+    Environment environment;
 
     @Autowired
     ProcessEngine activitiEngine;
+
+//    @Autowired
+//    DataSource activitiDataSource;
+//
+//    @Autowired
+//    DataSourceTransactionManager platformTransactionManager;
 
     @Autowired
     CustomBpmnProcessParseHandler customBpmnProcessParseHandler;
@@ -58,24 +68,26 @@ public class EngineConfiguration {
     @Autowired
     CustomBpmnUserTaskParseHandler customBpmnUserTaskParseHandler;
 
-	@Bean
-	public DataSource activitiDataSource() throws ClassNotFoundException {
-		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-        Class<Driver> driverClass = env.getPropertyAsClass("activiti.datasource.driver.name", Driver.class);
-		dataSource.setDriverClass(driverClass);
-		dataSource.setUrl(env.getProperty("activiti.datasource.url"));
-		dataSource.setUsername(env.getProperty("activiti.datasource.username"));
-		dataSource.setPassword(env.getProperty("activiti.datasource.password"));
+    @Bean
+    public DataSource activitiDataSource() {
+        SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
+        Class<Driver> driverClass = environment.getPropertyAsClass("activiti.datasource.driver.name", Driver.class);
+        dataSource.setDriverClass(driverClass);
+        dataSource.setUrl(environment.getProperty("activiti.datasource.url"));
+        dataSource.setUsername(environment.getProperty("activiti.datasource.username"));
+        dataSource.setPassword(environment.getProperty("activiti.datasource.password"));
 
-		return dataSource;
-	}
-	
-	@Bean
-	public PlatformTransactionManager activitiDataSourceTransactionManager() throws ClassNotFoundException {
-		DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
-		transactionManager.setDataSource(activitiDataSource());
-		return transactionManager;
-	}
+        return new TransactionAwareDataSourceProxy(dataSource);
+    }
+
+    @Bean
+    public PlatformTransactionManager activitiDataSourceTransactionManager() {
+        return new DataSourceTransactionManager((activitiDataSource()));
+    }
+
+//    public PlatformTransactionManager annotationDrivenTransactionManager() {
+//        return activitiDataSourceTransactionManager();
+//    }
 
     @Bean
     public CustomBpmnProcessParseHandler customBpmnProcessParseHandler() {
@@ -86,26 +98,29 @@ public class EngineConfiguration {
     public CustomBpmnUserTaskParseHandler customBpmnUserTaskParseHandler() {
         return new CustomBpmnUserTaskParseHandler();
     }
-	
+
 	@Bean
-	public ProcessEngineConfigurationImpl activitiEngineConfiguration() throws ClassNotFoundException {
-		SpringProcessEngineConfiguration engineConfiguration = new SpringProcessEngineConfiguration();
+	public ProcessEngineConfigurationImpl activitiEngineConfiguration(Environment environment) throws ClassNotFoundException {
+        SpringProcessEngineConfiguration engineConfiguration = new SpringProcessEngineConfiguration();
 		engineConfiguration.setDataSource(activitiDataSource());
 		engineConfiguration.setTransactionManager(activitiDataSourceTransactionManager());
 		engineConfiguration.setDatabaseSchemaUpdate("true");
         engineConfiguration.setIdGenerator(new StrongUuidGenerator());
 //        engineConfiguration.setEnableSafeBpmnXml(true);
         engineConfiguration.setPostBpmnParseHandlers(Arrays.<BpmnParseHandler>asList(customBpmnProcessParseHandler(), customBpmnUserTaskParseHandler()));
+
+        engineConfiguration.setConfigurators(Collections.singletonList(ldapConfigurator(environment)));
+
 		return engineConfiguration;
 	}
 
-	@Bean(destroyMethod="close")
-	public ProcessEngine activitiEngine(ApplicationContext applicationContext) throws Exception {
+	@Bean
+	public ProcessEngineFactoryBean activitiEngineBean(ApplicationContext applicationContext, Environment environment) throws Exception {
 		ProcessEngineFactoryBean factoryBean = new ProcessEngineFactoryBean();
 		factoryBean.setApplicationContext(applicationContext);
-		factoryBean.setProcessEngineConfiguration(activitiEngineConfiguration());
-		
-		return factoryBean.getObject();
+		factoryBean.setProcessEngineConfiguration(activitiEngineConfiguration(environment));
+
+		return factoryBean;
 	}
 	
 	@Bean
@@ -137,5 +152,34 @@ public class EngineConfiguration {
 	public TaskService activitiTaskService(ApplicationContext applicationContext) throws Exception {
 		return activitiEngine.getTaskService();
 	}
-	
+
+
+    private ProcessEngineConfigurator ldapConfigurator(Environment environment) {
+        String ldapPersonUrl = environment.getProperty("ldap.person.url");
+        String defaultUser = environment.getProperty("ldap.authentication.user");
+        String defaultPassword = environment.getProperty("ldap.authentication.password");
+        String baseDn = environment.getProperty("ldap.person.db");
+        String userByUserId = environment.getProperty("ldap.person.search.filter.internal");
+
+        LDAPConfigurator ldapConfigurator = new LDAPConfigurator();
+
+        ldapConfigurator.setServer(ldapPersonUrl);
+        ldapConfigurator.setUser(defaultUser);
+        ldapConfigurator.setPassword(defaultPassword);
+
+        ldapConfigurator.setBaseDn(baseDn);
+        ldapConfigurator.setQueryUserByUserId(userByUserId);
+        ldapConfigurator.setQueryUserByFullNameLike("displayName={0}");
+        ldapConfigurator.setQueryGroupsForUser("member=uwNetID={1}");
+
+        ldapConfigurator.setUserLastNameAttribute("cn");
+        ldapConfigurator.setUserFirstNameAttribute("sn");
+        ldapConfigurator.setUserIdAttribute("uwRegID");
+
+        ldapConfigurator.setGroupIdAttribute("cn");
+        ldapConfigurator.setGroupNameAttribute("cn");
+
+        return ldapConfigurator;
+    }
+
 }
