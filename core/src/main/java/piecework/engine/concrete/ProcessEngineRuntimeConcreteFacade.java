@@ -47,6 +47,12 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
     }
 
     @Override
+    public boolean activate(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        return proxy.activate(process, instance, reason);
+    }
+
+    @Override
     public boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
         return proxy.cancel(process, instance, reason);

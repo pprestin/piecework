@@ -57,7 +57,16 @@ public class Form {
     private final String link;
 
     @XmlAttribute
+    private final String activation;
+
+    @XmlAttribute
     private final String attachment;
+
+    @XmlAttribute
+    private final String cancellation;
+
+    @XmlAttribute
+    private final String suspension;
 
     @XmlAttribute
     private final boolean valid;
@@ -77,7 +86,10 @@ public class Form {
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
+        this.activation = context != null ? context.getApplicationUri(builder.processDefinitionKey, "activation", builder.formInstanceId) : null;
         this.attachment = context != null ? context.getApplicationUri(builder.processDefinitionKey, "attachment", builder.formInstanceId) : null;
+        this.cancellation = context != null ? context.getApplicationUri(builder.processDefinitionKey, "cancellation", builder.formInstanceId) : null;
+        this.suspension = context != null ? context.getApplicationUri(builder.processDefinitionKey, "suspension", builder.formInstanceId) : null;
         this.valid = builder.valid;
     }
 
@@ -119,8 +131,20 @@ public class Form {
         return link;
     }
 
+    public String getActivation() {
+        return activation;
+    }
+
     public String getAttachment() {
         return attachment;
+    }
+
+    public String getCancellation() {
+        return cancellation;
+    }
+
+    public String getSuspension() {
+        return suspension;
     }
 
     public boolean isValid() {

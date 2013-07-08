@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
-@Service
+@Service("customBpmnProcessParseHandler")
 public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Process> {
 
     @Autowired

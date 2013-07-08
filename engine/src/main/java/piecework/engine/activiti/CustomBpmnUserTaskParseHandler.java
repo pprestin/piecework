@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
-@Service
+@Service("customBpmnUserTaskParseHandler")
 public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<UserTask> {
 
     @Autowired

@@ -1,6 +1,6 @@
 {{#if screen}}
 {{#with screen}}
-    <h1>{{title}}</h1>
+    <h1>{{title}} {{../task.taskInstanceId}}</h1>
     {{#breadcrumb groupings}}{{#url "step"}}{{/url}}{{/breadcrumb}}
     <!--{{#each groupings}}-->
         <!--<div class="grouping" id="{{groupingId}}">-->
@@ -8,6 +8,7 @@
             <!--{{#if description}}<p class="lead">{{description}}</p>{{/if}}-->
         <!--</div>-->
     <!--{{/each}}-->
+    <div class="notifications"></div>
     <div class="screen" id="{{screenId}}">
         <div class="screen-header"></div>
         <div class="screen-content">

@@ -85,6 +85,13 @@ public class FormResourceVersion1 implements FormResource {
     }
 
     @Override
+    public Response activate(String rawProcessDefinitionKey, String rawRequestId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        return formService.activate(request, getViewContext(), process, rawRequestId, body);
+    }
+
+    @Override
     public Response attach(String rawProcessDefinitionKey, String rawRequestId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = resourceHelper.findProcess(processDefinitionKey, true);
@@ -109,6 +116,20 @@ public class FormResourceVersion1 implements FormResource {
     public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         return formService.search(rawQueryParameters, getViewContext());
+    }
+
+    @Override
+    public Response delete(String rawProcessDefinitionKey, String rawRequestId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        return formService.delete(request, getViewContext(), process, rawRequestId, body);
+    }
+
+    @Override
+    public Response suspend(String rawProcessDefinitionKey, String rawRequestId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        return formService.suspend(request, getViewContext(), process, rawRequestId, body);
     }
 
     @Override

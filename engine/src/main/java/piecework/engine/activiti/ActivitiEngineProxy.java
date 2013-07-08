@@ -89,6 +89,23 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 		return activitiInstance.getId();
 	}
 
+    @Override
+    public boolean activate(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        String userId = principal != null ? principal.getInternalId() : null;
+        identityService.setAuthenticatedUserId(userId);
+
+        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
+
+        if (activitiInstance != null) {
+            runtimeService.activateProcessInstanceById(activitiInstance.getProcessInstanceId());
+            return true;
+        }
+
+        return false;
+    }
+
 	@Override
 	public boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
         InternalUserDetails principal = helper.getAuthenticatedPrincipal();
@@ -297,7 +314,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             query = historicTaskQuery(criteria);
         }
 
-        List<org.activiti.engine.task.Task> instances = query.list();
+        List<?> instances = query.list();
         int size = instances.size();
 
         resultsBuilder.firstResult(0);
@@ -314,8 +331,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             tasks = new ArrayList<Task>(instances.size());
 
             Set<String> engineProcessInstanceIds = Sets.newHashSet();
-            for (org.activiti.engine.task.Task instance : instances) {
-                engineProcessInstanceIds.add(instance.getProcessInstanceId());
+            for (Object instance : instances) {
+                if (instance instanceof org.activiti.engine.task.Task) {
+                    engineProcessInstanceIds.add(((org.activiti.engine.task.Task)instance).getProcessInstanceId());
+                } else if (instance instanceof HistoricTaskInstance) {
+                    engineProcessInstanceIds.add(((HistoricTaskInstance)instance).getProcessInstanceId());
+                }
             }
 
             List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(allowedProcessDefinitionKeys, engineProcessInstanceIds);
@@ -331,20 +352,34 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
                     processInstanceMap.put(processInstance.getProcessDefinitionKey(), processInstance.getEngineProcessInstanceId(), processInstance);
                 }
-                for (org.activiti.engine.task.Task instance : instances) {
-                    Process process = processDefinitionIdMap.get(instance.getProcessDefinitionId());
+                for (Object instance : instances) {
+                    String processDefinitionId = null;
+                    String processInstanceId = null;
+
+                    if (instance instanceof org.activiti.engine.task.Task) {
+                        processDefinitionId = ((org.activiti.engine.task.Task)instance).getProcessDefinitionId();
+                        processInstanceId = ((org.activiti.engine.task.Task)instance).getProcessInstanceId();
+                    } else if (instance instanceof HistoricTaskInstance) {
+                        processDefinitionId = ((HistoricTaskInstance)instance).getProcessDefinitionId();
+                        processInstanceId = ((HistoricTaskInstance)instance).getProcessInstanceId();
+                    }
+
+                    Process process = processDefinitionIdMap.get(processDefinitionId);
                     if (process == null)
                         continue;
                     if (instance == null)
                         continue;
                     if (org.apache.cxf.common.util.StringUtils.isEmpty(process.getProcessDefinitionKey()))
                         continue;
-                    if (org.apache.cxf.common.util.StringUtils.isEmpty(instance.getProcessInstanceId()))
+                    if (org.apache.cxf.common.util.StringUtils.isEmpty(processInstanceId))
                         continue;
 
-                    ProcessInstance processInstance = ProcessInstance.class.cast(processInstanceMap.get(process.getProcessDefinitionKey(), instance.getProcessInstanceId()));
+                    ProcessInstance processInstance = ProcessInstance.class.cast(processInstanceMap.get(process.getProcessDefinitionKey(), processInstanceId));
 
-                    tasks.add(convert(instance, process, processInstance, false));
+                    if (instance instanceof org.activiti.engine.task.Task)
+                        tasks.add(convert(((org.activiti.engine.task.Task)instance), process, processInstance, false));
+                    else if (instance instanceof HistoricTaskInstance)
+                        tasks.add(convert(((HistoricTaskInstance)instance), process, processInstance, false));
                 }
             }
         } else {
@@ -623,8 +658,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (StringUtils.isNotEmpty(criteria.getProcessStatus()) && !criteria.getProcessStatus().equals(Constants.ProcessStatuses.OPEN)) {
             if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE))
                 query.finished();
-//            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.CANCELLED))
-//                query.taskDeleteReason()
+            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.CANCELLED))
+                query.taskDeleteReason("Cancelled");
         } else {
             query.unfinished();
         }

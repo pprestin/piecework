@@ -93,10 +93,10 @@ public class ResponseHandler {
         Set<String> includedFieldNames = new HashSet<String>();
 
         Screen screen = formRequest.getScreen();
+        Task task = null;
 
-        if (screen == null && StringUtils.isNotEmpty(formRequest.getTaskId())) {
+        if (StringUtils.isNotEmpty(formRequest.getTaskId())) {
             Process process = processRepository.findOne(formRequest.getProcessDefinitionKey());
-
             if (process == null)
                 throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
@@ -106,18 +106,19 @@ public class ResponseHandler {
                     .build();
 
             try {
-                Task task = facade.findTask(criteria);
+                task = facade.findTask(criteria);
                 if (task == null)
                     throw new NotFoundError(Constants.ExceptionCodes.task_does_not_exist);
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to find task ", e);
+                throw new InternalServerError();
+            }
 
+            if (screen == null) {
                 Interaction selectedInteraction = selectInteraction(process, task);
 
                 if (selectedInteraction != null && !selectedInteraction.getScreens().isEmpty())
                     screen = selectedInteraction.getScreens().iterator().next();
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to find task ", e);
-                throw new InternalServerError();
             }
         }
 
@@ -178,11 +179,12 @@ public class ResponseHandler {
                 .submissionType(formRequest.getSubmissionType())
                 .formValues(includedFormValues)
                 .screen(screen)
+                .task(task)
                 .build(viewContext);
     }
 
     public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
-        URI uri = UriBuilder.fromResource(AnonymousFormResource.class).path("{processDefinitionKey}/submission/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
+        URI uri = UriBuilder.fromResource(AnonymousFormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
         return Response.seeOther(uri).build();
     }
 

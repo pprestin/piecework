@@ -87,6 +87,7 @@ public interface Constants {
         public static final String request_type_required = "request_type_required";
         public static final String screen_id_invalid = "screen_id_invalid";
         public static final String task_does_not_exist = "task_does_not_exist";
+        public static final String task_id_required = "task_id_required";
         public static final String user_does_not_match = "user_does_not_match";
 	}
 

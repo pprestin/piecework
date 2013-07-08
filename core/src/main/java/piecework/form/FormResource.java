@@ -41,12 +41,21 @@ public interface FormResource extends ApplicationResource {
     @GET
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+    @Produces("text/html")
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context HttpServletRequest request) throws StatusCodeError;
 
     @GET
 	@Path("{processDefinitionKey}/{segments:.*}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+    @Produces({"text/html","application/json", "application/xml"})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context HttpServletRequest request) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/activation/{requestId}")
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @Produces("application/json")
+    @Consumes("multipart/form-data")
+    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/attachment/{requestId}")
@@ -58,6 +67,7 @@ public interface FormResource extends ApplicationResource {
     @Path("{processDefinitionKey}/submission/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("multipart/form-data")
+    @Produces("text/html")
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
 
     @POST
@@ -66,6 +76,20 @@ public interface FormResource extends ApplicationResource {
     @Produces("application/json")
     @Consumes("multipart/form-data")
     Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/cancellation/{requestId}")
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @Produces("application/json")
+    @Consumes("multipart/form-data")
+    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/suspension/{requestId}")
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @Produces("application/json")
+    @Consumes("multipart/form-data")
+    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
 
     @GET
     @Path("")

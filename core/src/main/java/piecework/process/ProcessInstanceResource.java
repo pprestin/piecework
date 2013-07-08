@@ -1,6 +1,7 @@
 package piecework.process;
 
 import piecework.ApiResource;
+import piecework.ApplicationResource;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.view.SearchResults;
@@ -21,7 +22,7 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
  * @author James Renfro
  */
 @Path("instance")
-public interface ProcessInstanceResource extends Resource, ApiResource {
+public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
 
     @POST
     @Path("{processDefinitionKey}")

@@ -222,7 +222,7 @@ public class TaskCriteria {
                 return;
             }
             for (Process allowedProcess : allowedProcesses) {
-                if (StringUtils.isNotEmpty(allowedProcess.getProcessDefinitionKey()))
+                if (StringUtils.isEmpty(allowedProcess.getProcessDefinitionKey()))
                     continue;
                 processDefinitionKeyMap.put(allowedProcess.getProcessDefinitionKey(), allowedProcess);
             }

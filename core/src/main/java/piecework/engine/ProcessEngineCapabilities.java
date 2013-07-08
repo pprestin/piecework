@@ -16,6 +16,8 @@ public interface ProcessEngineCapabilities {
 
     String start(Process process, String alias, Map<String, ?> data) throws ProcessEngineException;
 
+    boolean activate(Process process, ProcessInstance instance, String reason) throws ProcessEngineException;
+
     boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException;
 
     boolean suspend(Process process, ProcessInstance instance, String reason) throws ProcessEngineException;

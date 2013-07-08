@@ -1,15 +1,14 @@
 define([ 'chaplin',
-        'models/attachments', 'models/buttons', 'models/base/collection', 'models/base/model', 'models/design/sections',
+        'models/attachments', 'models/buttons', 'models/base/collection', 'models/base/model', 'models/notification', 'models/design/sections',
         'views/form/attachments-view', 'views/form/buttons-view', 'views/base/collection-view', 'views/form/fields-view',
-        'views/form/grouping-view', 'views/form/section-view', 'views/form/sections-view',
+        'views/form/grouping-view', 'views/form/notification-view', 'views/form/section-view', 'views/form/sections-view',
         'views/base/view', 'text!templates/form/form.hbs' ],
-		function(Chaplin, Attachments, Buttons, Collection, Model, Sections, AttachmentsView, ButtonsView, CollectionView, FieldsView,
-		         GroupingView, SectionView, SectionsView, View, template) {
+		function(Chaplin, Attachments, Buttons, Collection, Model, Notification, Sections, AttachmentsView, ButtonsView, CollectionView, FieldsView,
+		         GroupingView, NotificationView, SectionView, SectionsView, View, template) {
 	'use strict';
 
 	var FormView = View.extend({
 		autoRender : false,
-//		className: 'container-fluid',
 		container: '.main-content',
 		id: 'main-form',
 		tagName: 'form',
@@ -253,6 +252,7 @@ define([ 'chaplin',
             if (screen == undefined)
                 return this;
 
+            var task = this.model.get("task");
             var pageLink = this.model.get("link");
             var groupings = screen.groupings;
             var grouping = groupings != undefined && groupings.length > groupingIndex ? groupings[groupingIndex] : { sectionIds : []};
@@ -265,6 +265,23 @@ define([ 'chaplin',
             }
 
             this.removeSubview('buttonsView');
+
+            if (task !== undefined && task != null) {
+                if (!task.active) {
+                    var inputs = this.$el.find(':input');
+                    inputs.prop('disabled', true);
+
+                    $('#comment-button').prop('disabled', true);
+                    $('#suspend-button').addClass('btn-success');
+                    $('#suspend-button').attr('title', 'Reactivate')
+
+                    var notification = new Notification({title: 'Process suspended', message: 'This process has been suspended and no other actions can be taken on it until it has been reactivated. Use the green button at the top-left of this window to reactivate.'})
+                    this.subview('notification', new NotificationView({container: '.notifications', model: notification}));
+
+                    return;
+                }
+            }
+
             var buttonsView;
             if (grouping.buttons != undefined && grouping.buttons.length > 0) {
               var buttonList = grouping.buttons;

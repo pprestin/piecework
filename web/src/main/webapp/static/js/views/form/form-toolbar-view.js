@@ -12,14 +12,18 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        'click #attachments-button': '_onAttachmentsButton',
 	        'click #attach-button': '_onAttachComment',
 	        'click #back-button': '_onBackButton',
+	        'click #delete-button': '_onDeleteButton',
 	        'click #file-button': '_onFileButton',
+	        'click #suspend-button': '_onSuspendButton',
 	        'change .attach-file': '_onAttachFile',
+	    },
+	    listen: {
+	        'backToSearch mediator': '_onBackToSearch',
 	    },
 	    _onAddedToDOM: function() {
 	        $('title').text(window.piecework.context.applicationTitle);
 	    },
 	    _onAttachmentsButton: function(event) {
-//            $('.attach-file').click();
             Chaplin.mediator.publish('showAttachments');
 	    },
 	    _onAttachComment: function(event) {
@@ -48,11 +52,55 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 
             this._uploadAttachments(data);
 	    },
+	    _onDeleteButton: function() {
+            var data = new FormData();
+            var url = this.model.get("cancellation") + ".json";
+            $.ajax({
+                url : url,
+                data : data,
+                processData : false,
+                contentType : false,
+                type : 'POST',
+                statusCode : {
+                    204 : this._onDeleteSuccess,
+                }
+            });
+	    },
 	    _onBackButton: function() {
             Chaplin.mediator.publish("!router:routeByName", "form#search", this.options.params);
 	    },
 	    _onFileButton: function() {
 	        $('.attach-file').click();
+	    },
+	    _onSuspendButton: function() {
+	        var data = new FormData();
+            var task = this.model.get("task");
+            if (task !== undefined) {
+                var url = this.model.get("suspension") + ".json";
+                if (!task.active) {
+                    url = this.model.get("activation") + ".json";
+                }
+                $.ajax({
+                    url : url,
+                    data : data,
+                    processData : false,
+                    contentType : false,
+                    type : 'POST',
+                    statusCode : {
+                        204 : this._onSuspendSuccess,
+                    }
+                });
+            }
+
+	    },
+	    _onBackToSearch: function() {
+            Chaplin.mediator.publish("!router:routeByName", "form#search", this.options.params);
+	    },
+	    _onDeleteSuccess: function() {
+	        Chaplin.mediator.publish('backToSearch');
+	    },
+	    _onSuspendSuccess: function() {
+	        Chaplin.mediator.publish('backToSearch');
 	    },
 	    _onUploadSuccess: function() {
 	        $('#comment-dialog').modal('hide');

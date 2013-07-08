@@ -86,6 +86,39 @@ public class FormService {
     @Autowired
     Sanitizer sanitizer;
 
+    public Response activate(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+        String requestId = sanitizer.sanitize(rawRequestId);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+
+        String taskId = formRequest.getTaskId();
+
+        if (StringUtils.isEmpty(taskId))
+            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
+
+        InternalUserDetails user = helper.getAuthenticatedPrincipal();
+        String participantId = user != null ? user.getInternalId() : null;
+
+        try {
+            Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
+
+            ProcessInstance processInstance = processInstanceService.findOne(process, task.getProcessInstanceId());
+
+            facade.activate(process, processInstance, "test");
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not activate task", e);
+        }
+
+        return Response.noContent().build();
+    }
+
     public Response attach(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
@@ -126,24 +159,94 @@ public class FormService {
         }
     }
 
+    public Response delete(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+        String requestId = sanitizer.sanitize(rawRequestId);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+
+        String taskId = formRequest.getTaskId();
+
+        if (StringUtils.isEmpty(taskId))
+            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
+
+        InternalUserDetails user = helper.getAuthenticatedPrincipal();
+        String participantId = user != null ? user.getInternalId() : null;
+
+        try {
+            Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
+
+            ProcessInstance processInstance = processInstanceService.findOne(process, task.getProcessInstanceId());
+
+            facade.cancel(process, processInstance, "Cancelled");
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not delete task", e);
+        }
+
+        return Response.noContent().build();
+    }
+
+    public Response suspend(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+        String requestId = sanitizer.sanitize(rawRequestId);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+
+        String taskId = formRequest.getTaskId();
+
+        if (StringUtils.isEmpty(taskId))
+            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
+
+        InternalUserDetails user = helper.getAuthenticatedPrincipal();
+        String participantId = user != null ? user.getInternalId() : null;
+
+        try {
+            Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
+
+            ProcessInstance processInstance = processInstanceService.findOne(process, task.getProcessInstanceId());
+
+            facade.suspend(process, processInstance, "test");
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not suspend task", e);
+        }
+
+        return Response.noContent().build();
+    }
+
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
-        String taskId = null;
+        String requestId = null;
         String attachmentId = null;
 
         boolean isAttachmentResource = false;
+        boolean isSubmissionResource;
 
         if (pathSegments != null && !pathSegments.isEmpty()) {
             Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
-            taskId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+            requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
 
-            isAttachmentResource = StringUtils.isNotEmpty(taskId) && taskId.equals("attachment");
+            isAttachmentResource = StringUtils.isNotEmpty(requestId) && requestId.equals("attachment");
+            isSubmissionResource = StringUtils.isNotEmpty(requestId) && requestId.equals("submission");
 
             if (isAttachmentResource && pathSegmentIterator.hasNext()) {
-                taskId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+                requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
 
                 if (pathSegmentIterator.hasNext())
                     attachmentId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+            } else if (isSubmissionResource && pathSegmentIterator.hasNext()) {
+                requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
             }
         }
 
@@ -153,11 +256,11 @@ public class FormService {
 
         FormRequest formRequest = null;
 
-        if (StringUtils.isNotEmpty(taskId)) {
+        if (StringUtils.isNotEmpty(requestId)) {
             try {
-                formRequest = requestHandler.create(requestDetails, process, null, taskId, null);
+                formRequest = requestHandler.create(requestDetails, process, null, requestId, null);
             } catch (NotFoundError e) {
-                formRequest = requestHandler.handle(requestDetails, taskId);
+                formRequest = requestHandler.handle(requestDetails, requestId);
             }
         } else
             formRequest = requestHandler.create(requestDetails, process);
@@ -274,7 +377,7 @@ public class FormService {
                 return Response.noContent().build();
             }
 
-            return responseHandler.handle(nextFormRequest, viewContext);
+            return responseHandler.redirect(nextFormRequest, viewContext);
 
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
