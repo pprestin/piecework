@@ -181,10 +181,13 @@ public class ProcessInstanceService {
         if (!isAttachment && processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
             Map<String, String> scopes = new HashMap<String, String>();
 
-            for (Map.Entry<String, List<String>> entry : validation.getFormValueMap().entrySet()) {
-                List<String> values = entry.getValue();
-                if (values != null && !values.isEmpty())
-                    scopes.put(entry.getKey(), values.iterator().next());
+            Map<String, List<String>> formValueMap = validation.getFormValueMap();
+            if (formValueMap != null) {
+                for (Map.Entry<String, List<String>> entry : formValueMap.entrySet()) {
+                    List<String> values = entry.getValue();
+                    if (values != null && !values.isEmpty())
+                        scopes.put(entry.getKey(), values.iterator().next());
+                }
             }
 
             StringWriter writer = new StringWriter();
@@ -237,6 +240,7 @@ public class ProcessInstanceService {
 
                 String engineInstanceId = facade.start(process, stored.getProcessInstanceId(), variables);
 
+                instanceBuilder.processInstanceId(stored.getProcessInstanceId());
                 instanceBuilder.engineProcessInstanceId(engineInstanceId);
 
             } catch (ProcessEngineException e) {

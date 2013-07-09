@@ -21,7 +21,6 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
@@ -360,7 +359,13 @@ public class FormService {
 
             if (task != null) {
                 try {
-                   facade.completeTask(process, task.getTaskInstanceId());
+                    String actionValue = null;
+                    if (payload.getFormData() != null) {
+                        List<String> actionValues = payload.getFormData().get("actionButton");
+                        actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
+                    }
+
+                    facade.completeTask(process, task.getTaskInstanceId(), actionValue);
                 } catch (ProcessEngineException e) {
                     throw new InternalServerError();
                 }
@@ -370,7 +375,7 @@ public class FormService {
             FormRequest nextFormRequest = null;
 
             if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                nextFormRequest = requestHandler.create(requestDetails, process, stored, null, formRequest);
+                nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
 
             // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
             if (nextFormRequest == null) {

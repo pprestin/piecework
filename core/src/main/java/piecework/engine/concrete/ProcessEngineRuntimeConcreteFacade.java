@@ -150,11 +150,11 @@ public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeF
     }
 
     @Override
-    public boolean completeTask(Process process, String taskId) throws ProcessEngineException {
+    public boolean completeTask(Process process, String taskId, String action) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
-        return proxy.completeTask(process, taskId);
+        return proxy.completeTask(process, taskId, action);
     }
 
     @Override

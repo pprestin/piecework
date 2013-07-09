@@ -20,6 +20,7 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.common.UuidGenerator;
 import piecework.model.Content;
 import piecework.persistence.ContentRepository;
 import piecework.security.Sanitizer;
@@ -34,7 +35,6 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author James Renfro
@@ -52,6 +52,9 @@ public class SubmissionHandler {
 
     @Autowired
     SubmissionRepository submissionRepository;
+
+    @Autowired
+    UuidGenerator uuidGenerator;
 
     public FormSubmission handle(ProcessInstancePayload payload, boolean isAttachmentAllowed) throws StatusCodeError {
         String requestId = payload.getRequestId();
@@ -79,7 +82,7 @@ public class SubmissionHandler {
     }
 
     private void multipart(FormSubmission.Builder submissionBuilder, MultipartBody body, boolean isAttachmentAllowed) {
-        List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body.getAllAttachments();
+        List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
         if (attachments != null && !attachments.isEmpty()) {
             for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
                 ContentDisposition contentDisposition = attachment.getContentDisposition();
@@ -102,7 +105,7 @@ public class SubmissionHandler {
                     String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
                     LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
                     try {
-                        String location = "/submissions/" + UUID.randomUUID().toString();
+                        String location = "/submissions/" + uuidGenerator.getNextId();
 
                         Content content = new Content.Builder()
                                 .contentType(contentType.toString())

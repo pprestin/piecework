@@ -27,10 +27,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.*;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
@@ -43,6 +40,7 @@ import com.mongodb.Mongo;
 import com.mongodb.ServerAddress;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import piecework.common.UuidGenerator;
 import piecework.model.ProcessInstance;
 import piecework.persistence.EmbeddedMongoInstance;
 
@@ -53,6 +51,7 @@ import javax.annotation.PreDestroy;
  */
 @Configuration
 @EnableMongoRepositories(basePackages="piecework")
+@Profile("mongo")
 public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);
@@ -60,7 +59,11 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
     @Autowired
     Environment environment;
 
-    EmbeddedMongoInstance mongoInstance;
+    @Autowired
+    UuidGenerator uuidGenerator;
+
+    private EmbeddedMongoInstance mongoInstance;
+    private String databaseName;
 
 	@Bean
     public Mongo mongo() throws Exception {

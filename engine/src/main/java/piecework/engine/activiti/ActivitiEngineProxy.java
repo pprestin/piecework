@@ -141,7 +141,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public boolean completeTask(Process process, String taskId) throws ProcessEngineException {
+    public boolean completeTask(Process process, String taskId, String action) throws ProcessEngineException {
         InternalUserDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
@@ -152,6 +152,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             org.activiti.engine.task.Task activitiTask = taskService.createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
 
             if (activitiTask != null)  {
+                if (action != null) {
+                    String variableName = activitiTask.getTaskDefinitionKey() + "_action";
+                    taskService.setVariable(taskId, variableName, action);
+                }
                 taskService.complete(taskId);
                 return true;
             }

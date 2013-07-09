@@ -224,6 +224,7 @@ public class Task implements Serializable {
             this.taskDefinitionKey = sanitizer.sanitize(task.taskDefinitionKey);
             this.taskLabel = sanitizer.sanitize(task.taskLabel);
             this.taskDescription = sanitizer.sanitize(task.taskDescription);
+            this.processDefinitionKey = sanitizer.sanitize(task.processDefinitionKey);
             this.processDefinitionLabel = sanitizer.sanitize(task.processDefinitionLabel);
             this.processInstanceLabel = sanitizer.sanitize(task.processInstanceLabel);
             this.processInstanceId = sanitizer.sanitize(task.processInstanceId);

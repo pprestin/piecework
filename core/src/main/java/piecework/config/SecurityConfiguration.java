@@ -15,14 +15,17 @@
  */
 package piecework.config;
 
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.apache.log4j.Logger;
+import org.owasp.validator.html.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.AffirmativeBased;
@@ -48,7 +51,6 @@ import piecework.security.RequestParameterAuthenticationFilter;
  * @author James Renfro
  */
 @Configuration
-//@EnableGlobalMethodSecurity(securedEnabled=true, jsr250Enabled=true)
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	
@@ -162,6 +164,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 //            .antMatchers("/static/**");
 //    }
 
+    @Bean
+    public Policy antisamyPolicy() throws Exception {
+        ClassPathResource policyResource = new ClassPathResource("META-INF/piecework/antisamy-1.4.3.xml");
+        URL policyUrl = policyResource.getURL();
 
+        return Policy.getInstance(policyUrl);
+    }
 		
 }

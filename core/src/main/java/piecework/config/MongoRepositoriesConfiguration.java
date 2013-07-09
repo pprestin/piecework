@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.Repository;
@@ -39,6 +40,7 @@ import java.io.Serializable;
  * @author James Renfro
  */
 @Configuration
+@Profile("mongo")
 public class MongoRepositoriesConfiguration {
 
     @Autowired

@@ -16,6 +16,7 @@
 package piecework.common;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import piecework.model.Attachment;
 import piecework.model.ProcessInstance;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class Payload<T> {
     private T instance;
     private MultipartBody multipartBody;
     private Map<String, List<String>> formData;
+    private List<Attachment> attachments;
 
     @SuppressWarnings("unchecked")
     public <P extends Payload<T>> P processInstance(T instance) {
@@ -51,6 +53,12 @@ public class Payload<T> {
     public <P extends Payload<T>> P formData(Map<String, List<String>> formData) {
         this.type = PayloadType.FORMDATA;
         this.formData = formData;
+        return (P)this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <P extends Payload<T>> P attachments(List<Attachment> attachments) {
+        this.attachments = attachments;
         return (P)this;
     }
 

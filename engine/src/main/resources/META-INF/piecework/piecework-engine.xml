@@ -28,6 +28,9 @@
                 <!--<ref bean="customBpmnUserTaskParseHandler" />-->
             </list>
         </property>
+        <property name="idGenerator">
+            <bean class="org.activiti.engine.impl.persistence.StrongUuidGenerator" />
+        </property>
     </bean>
 
     <bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">

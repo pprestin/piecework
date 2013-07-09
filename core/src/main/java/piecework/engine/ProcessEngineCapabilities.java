@@ -30,7 +30,7 @@ public interface ProcessEngineCapabilities {
 
     TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException;
 
-    boolean completeTask(Process process, String taskId) throws ProcessEngineException;
+    boolean completeTask(Process process, String taskId, String action) throws ProcessEngineException;
 
     void deploy(Process process, String name, ProcessModelResource ... resources) throws ProcessEngineException;
 

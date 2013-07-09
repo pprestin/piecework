@@ -26,6 +26,7 @@ import org.owasp.validator.html.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
@@ -47,6 +48,7 @@ import java.util.Map;
  * @author James Renfro
  */
 @Configuration
+@Profile({"dev","eval","prod"})
 public class ApplicationConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(ApplicationConfiguration.class);
@@ -157,12 +159,6 @@ public class ApplicationConfiguration {
 		return configurer;
 	}
 	
-	@Bean
-	public Policy antisamyPolicy() throws Exception {
-		ClassPathResource policyResource = new ClassPathResource("META-INF/piecework/antisamy-1.4.3.xml");
-		URL policyUrl = policyResource.getURL();
-				
-		return Policy.getInstance(policyUrl);
-	}
+
 		
 }

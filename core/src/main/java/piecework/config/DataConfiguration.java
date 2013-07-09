@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -40,6 +41,7 @@ import com.mongodb.util.JSON;
  * @author James Renfro
  */
 @Configuration
+@Profile("data")
 public class DataConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(DataConfiguration.class);

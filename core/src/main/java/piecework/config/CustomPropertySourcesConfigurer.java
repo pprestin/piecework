@@ -67,10 +67,11 @@ public class CustomPropertySourcesConfigurer extends PropertySourcesPlaceholderC
                 File[] files = configDirectory.listFiles(new AcceptablePropertiesFilenameFilter(environment));
                 if (files != null && files.length > 0) {
                     for (File file : files) {
-                        if (file.isFile())
+                        if (file.isFile()) {
+                            LOG.info("Reading properties from " + file.getAbsolutePath());
 //                            propertySources.addFirst(new ResourcePropertySource(new FileSystemResource(file)));
                             resources.add(new FileSystemResource(file));
-                        else if (LOG.isDebugEnabled())
+                        } else if (LOG.isDebugEnabled())
                             LOG.debug("Cannot read configuration file " + file.getAbsolutePath() + " because it's actually a directory");
                     }
                 }

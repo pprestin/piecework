@@ -191,6 +191,7 @@ public class SearchResults implements Serializable {
 		public Builder() {
 			super();
             this.parameters = new ManyMap<String, String>();
+            this.total = Long.valueOf(0);
 		}
 		
 		public SearchResults build() {
@@ -228,7 +229,8 @@ public class SearchResults implements Serializable {
 		public Builder items(List<?> items) {
 			if (this.list == null)
 				this.list = new ArrayList<Object>();
-			this.list.addAll(items);
+            if (items != null)
+			    this.list.addAll(items);
 			return this;
 		}
 

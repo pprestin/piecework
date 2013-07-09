@@ -16,27 +16,27 @@
 package piecework.task.concrete;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.common.view.SearchResults;
 import piecework.common.view.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.exception.*;
+import piecework.identity.InternalUserDetails;
+import piecework.identity.InternalUserDetailsService;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.exception.InternalServerError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
 import piecework.form.handler.RequestHandler;
-import piecework.form.handler.SubmissionHandler;
-import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.process.*;
 import piecework.process.concrete.ResourceHelper;
@@ -61,6 +61,9 @@ public class TaskResourceVersion1 implements TaskResource {
     private static final Logger LOG = Logger.getLogger(TaskResourceVersion1.class);
 
     @Autowired
+    Environment environment;
+
+    @Autowired
     ProcessEngineRuntimeFacade facade;
 
     @Autowired
@@ -70,7 +73,7 @@ public class TaskResourceVersion1 implements TaskResource {
     ProcessRepository processRepository;
 
     @Autowired
-    ProcessInstanceRepository processInstanceRepository;
+    InternalUserDetailsService userDetailsService;
 
     @Autowired
     ProcessInstanceService processInstanceService;
@@ -79,13 +82,7 @@ public class TaskResourceVersion1 implements TaskResource {
     RequestHandler requestHandler;
 
     @Autowired
-    SubmissionHandler submissionHandler;
-
-    @Autowired
     Sanitizer sanitizer;
-
-    @Autowired
-    ValidationService validationService;
 
     @Value("${base.application.uri}")
     String baseApplicationUri;
@@ -93,14 +90,8 @@ public class TaskResourceVersion1 implements TaskResource {
     @Value("${base.service.uri}")
     String baseServiceUri;
 
-    @Value("${certificate.issuer.header}")
-    String certificateIssuerHeader;
-
-    @Value("${certificate.subject.header}")
-    String certificateSubjectHeader;
-
     @Override
-    public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+    public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, HttpServletRequest request, FormSubmission submission) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
         String action = sanitizer.sanitize(rawAction);
@@ -110,16 +101,45 @@ public class TaskResourceVersion1 implements TaskResource {
         if (process == null)
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
+        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
+        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
+
         RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
+
+        Task task;
+        if (StringUtils.isNotEmpty(taskId)) {
+            try {
+                InternalUserDetails user = helper.getAuthenticatedPrincipal();
+                task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
+                if (task == null || !task.isActive())
+                    throw new ForbiddenError();
+
+            } catch (ProcessEngineException e) {
+                throw new InternalServerError();
+            }
+        } else {
+            throw new BadRequestError(Constants.ExceptionCodes.task_id_required);
+        }
+
+        FormRequest formRequest = requestHandler.create(requestDetails, process, null, task, null);
+        ProcessInstancePayload payload = new ProcessInstancePayload().requestId(formRequest.getRequestId()).formData(submission.getFormValueMap());
+
+        if (task != null)
+            payload.processInstanceId(task.getProcessInstanceId());
+
         Screen screen = formRequest.getScreen();
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().requestId(formRequest.getRequestId()).multipartBody(body);
-        ProcessInstance instance = processInstanceService.submit(process, screen, payload);
+        ProcessInstance stored = processInstanceService.submit(process, screen, payload);
 
         try {
-            if (action != null && action.equals("complete"))
-                facade.completeTask(process, taskId);
+            String actionValue = null;
+            if (payload.getFormData() != null) {
+                List<String> actionValues = payload.getFormData().get("actionButton");
+                actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
+            }
+
+            if (action != null && action.equals(Constants.ActionTypes.COMPLETE))
+                facade.completeTask(process, taskId, actionValue);
 
             return Response.noContent().build();
         } catch (ProcessEngineException e) {
@@ -153,20 +173,24 @@ public class TaskResourceVersion1 implements TaskResource {
     }
 
     @Override
-    public Response update(String processDefinitionKey, String taskId, HttpServletRequest request, MultipartBody body) throws StatusCodeError {
+    public Response update(String processDefinitionKey, String taskId, HttpServletRequest request, Task task) throws StatusCodeError {
         throw new NotImplementedException();
     }
 
     @Override
     public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        ManyMap<String, String> queryParameters = new ManyMap<String, String>();
 
+        return search(rawQueryParameters);
+    }
+
+    @Override
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
         SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
                 .resourceLabel("Tasks");
-
+        ManyMap<String, String> queryParameters = new ManyMap<String, String>();
         DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
-        TaskCriteria.Builder criteriaBuilder = new TaskCriteria.Builder();
+        TaskCriteria.Builder criteriaBuilder = new TaskCriteria.Builder().processes(helper.findProcesses(AuthorizationRole.OVERSEER, AuthorizationRole.USER));
         ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
         for (Map.Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
             String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
@@ -183,9 +207,11 @@ public class TaskResourceVersion1 implements TaskResource {
                         else if (key.equals("active"))
                             criteriaBuilder.active(Boolean.valueOf(value));
                         else if (key.equals("assignee"))
-                            criteriaBuilder.assigneeId(value);
+                            criteriaBuilder.assigneeId(toInternalId(value));
                         else if (key.equals("candidateAssignee"))
-                            criteriaBuilder.candidateAssigneeId(value);
+                            criteriaBuilder.candidateAssigneeId(toInternalId(value));
+                        else if (key.equals("participantId"))
+                            criteriaBuilder.participantId(toInternalId(value));
                         else if (key.equals("complete"))
                             criteriaBuilder.complete(Boolean.valueOf(value));
                         else if (key.equals("createdAfter"))
@@ -225,18 +251,12 @@ public class TaskResourceVersion1 implements TaskResource {
             }
         }
 
-
-//        List<Process> processes = helper.findProcesses(AuthorizationRole.OVERSEER);
-//        for (Process process : processes) {
-//
-//        }
-
         try {
-
-
-
             TaskResults results = facade.findTasks(criteriaBuilder.build());
             resultsBuilder.items(results.getTasks());
+            resultsBuilder.total(results.getTotal());
+            resultsBuilder.firstResult(results.getFirstResult());
+            resultsBuilder.maxResults(results.getMaxResults());
         } catch (ProcessEngineException e) {
             throw new InternalServerError();
         }
@@ -250,6 +270,13 @@ public class TaskResourceVersion1 implements TaskResource {
     @Override
     public String getVersion() {
         return "v1";
+    }
+
+    private String toInternalId(String userId) {
+        InternalUserDetails userDetails = userDetailsService.loadUserByAnyId(userId);
+        if (userDetails != null)
+            return userDetails.getInternalId();
+        return null;
     }
 
 }

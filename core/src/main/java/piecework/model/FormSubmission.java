@@ -17,6 +17,8 @@ package piecework.model;
 
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -24,26 +26,42 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.security.Sanitizer;
 import piecework.util.ManyMap;
 
+import javax.xml.bind.annotation.*;
+
 /**
  * @author James Renfro
  */
+@XmlRootElement(name = FormSubmission.Constants.ROOT_ELEMENT_NAME)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = FormSubmission.Constants.TYPE_NAME)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "submission")
 public class FormSubmission {
 
+    @XmlAttribute
+    @XmlID
     @Id
     private final String submissionId;
 
+    @XmlTransient
     private final String submissionType;
 
+    @XmlElement
     private final String requestId;
 
+    @XmlElementWrapper(name="formData")
+    @XmlElementRef
     private final List<FormValue> formData;
-    
+
+    @XmlElementWrapper(name="attachments")
+    @XmlElementRef
     @DBRef
     private final List<Attachment> attachments;
 
+    @XmlTransient
     private final Date submissionDate;
 
+    @XmlTransient
     private final String submitterId;
 
     private FormSubmission() {
@@ -64,6 +82,7 @@ public class FormSubmission {
         return submissionId;
     }
 
+    @JsonIgnore
     public String getSubmissionType() {
         return submissionType;
     }
@@ -90,10 +109,12 @@ public class FormSubmission {
 		return attachments;
 	}
 
+    @JsonIgnore
 	public Date getSubmissionDate() {
         return submissionDate;
     }
 
+    @JsonIgnore
     public String getSubmitterId() {
         return submitterId;
     }
@@ -207,5 +228,11 @@ public class FormSubmission {
             }
             return this;
         }
+    }
+
+    public static class Constants {
+        public static final String RESOURCE_LABEL = "Submission";
+        public static final String ROOT_ELEMENT_NAME = "submission";
+        public static final String TYPE_NAME = "SubmissionType";
     }
 }

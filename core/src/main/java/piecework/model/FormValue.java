@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import piecework.security.Sanitizer;
 import piecework.common.view.ViewContext;
@@ -52,6 +53,7 @@ public class FormValue implements Serializable {
 	
 	@XmlTransient
 	@JsonIgnore
+    @Transient
     private final boolean restricted;
 
     @XmlTransient

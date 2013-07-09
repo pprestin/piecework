@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
+import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.identity.InternalUserDetails;
 import piecework.process.concrete.ResourceHelper;
@@ -49,19 +50,16 @@ public class RequestHandler {
     ProcessEngineRuntimeFacade facade;
 
     @Autowired
-    ProcessRepository processRepository;
-
-    @Autowired
     RequestRepository requestRepository;
 
     @Autowired
     ResourceHelper resourceHelper;
 
     public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {
-        return create(requestDetails, process, null, null, null);
+        return create(requestDetails, process, null, (Task)null, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, FormRequest previousFormRequest) throws StatusCodeError {
         Interaction interaction = null;
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
@@ -73,6 +71,7 @@ public class RequestHandler {
         ManyMap<String, String> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
 
         Screen currentScreen = null;
+        String taskId = null;
 
         if (previousFormRequest != null) {
             interaction = previousFormRequest.getInteraction();
@@ -85,33 +84,18 @@ public class RequestHandler {
 
             Iterator<Interaction> interactionIterator = interactions.iterator();
 
-            if (StringUtils.isNotEmpty(taskId)) {
-                try {
-                    InternalUserDetails user = resourceHelper.getAuthenticatedPrincipal();
-                    String participantId = user != null ? user.getInternalId() : null;
-                    Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
-
-                    if (task != null) {
-                        processInstanceId = task.getProcessInstanceId();
-                        String taskDefinitionKey = task.getTaskDefinitionKey();
-                        while (interactionIterator.hasNext()) {
-                            Interaction current = interactionIterator.next();
-                            if (current.getTaskDefinitionKeys() != null && current.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
-                                interaction = current;
-                                break;
-                            }
-                        }
-                    } else {
-                        // Even though this may happen because the user is not authorized to view this task, don't provide
-                        // any more information than the fact that it wasn't found - so it's not possible to determine
-                        // which tasks exist by testing all possible combinations
-                        throw new NotFoundError();
+            if (task != null) {
+                taskId = task.getTaskInstanceId();
+                processInstanceId = task.getProcessInstanceId();
+                String taskDefinitionKey = task.getTaskDefinitionKey();
+                while (interactionIterator.hasNext()) {
+                    Interaction current = interactionIterator.next();
+                    if (current.getTaskDefinitionKeys() != null && current.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
+                        interaction = current;
+                        break;
                     }
-
-                } catch (ProcessEngineException e) {
-                    LOG.error("Could not find task ", e);
-                    throw new InternalServerError();
                 }
+
             } else {
                 // Ensure that this user has the right to initiate processes of this type
                 if (!resourceHelper.hasRole(process, AuthorizationRole.INITIATOR))
@@ -146,11 +130,8 @@ public class RequestHandler {
                 submissionType = Constants.SubmissionTypes.INTERIM;
         }
 
-        // Generate a new uuid for this request
-        String requestId = UUID.randomUUID().toString();
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
-                .requestId(requestId)
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(processInstanceId)
                 .taskId(taskId)
@@ -168,6 +149,30 @@ public class RequestHandler {
         }
 
         return requestRepository.save(formRequestBuilder.build());
+    }
+
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
+        Task task = null;
+        if (StringUtils.isNotEmpty(taskId)) {
+            try {
+                InternalUserDetails user = resourceHelper.getAuthenticatedPrincipal();
+                String participantId = user != null ? user.getInternalId() : null;
+                task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
+
+                if (task == null) {
+                    // Even though this may happen because the user is not authorized to view this task, don't provide
+                    // any more information than the fact that it wasn't found - so it's not possible to determine
+                    // which tasks exist by testing all possible combinations
+                    throw new NotFoundError();
+                }
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Could not find task ", e);
+                throw new InternalServerError();
+            }
+        }
+
+        return create(requestDetails, process, processInstance, task, previousFormRequest);
     }
 
     private boolean satisfiesScreenConstraints(Screen screen, ManyMap<String, String> formValueMap) {

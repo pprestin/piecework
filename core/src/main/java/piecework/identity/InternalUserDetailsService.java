@@ -58,4 +58,16 @@ public class InternalUserDetailsService implements UserDetailsService {
                 authoritiesPopulator.getGrantedAuthorities(userData, username));
     }
 
+    public InternalUserDetails loadUserByAnyId(String id) {
+        try {
+            return InternalUserDetails.class.cast(loadUserByInternalId(id));
+        } catch (UsernameNotFoundException e) {
+            try {
+                return InternalUserDetails.class.cast(loadUserByUsername(id));
+            } catch (UsernameNotFoundException e2) {
+                return null;
+            }
+        }
+    }
+
 }
