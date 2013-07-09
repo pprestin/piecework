@@ -52,7 +52,7 @@ import javax.annotation.PreDestroy;
  * @author James Renfro
  */
 @Configuration
-@EnableMongoRepositories
+@EnableMongoRepositories(basePackages="piecework")
 public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);

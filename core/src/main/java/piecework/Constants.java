@@ -128,6 +128,10 @@ public interface Constants {
         public static final String REVIEW = "review";
     }
 
+    public static class Settings {
+        public static final String MAIL_SERVER_HOST = "mail.server.host";
+    }
+
     public static class SubmissionTypes {
         public static final String FINAL = "final";
         public static final String INTERIM = "interim";
