@@ -51,7 +51,6 @@ import javax.annotation.PreDestroy;
  */
 @Configuration
 @EnableMongoRepositories(basePackages="piecework.persistence")
-@Profile("mongo")
 public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);

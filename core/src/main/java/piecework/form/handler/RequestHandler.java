@@ -207,8 +207,8 @@ public class RequestHandler {
             if (request.getRemoteAddr() != null && formRequest.getRemoteAddr() != null && !request.getRemoteAddr().equals(formRequest.getRemoteAddr()))
                 LOG.warn("This should not happen -- submission remote address (" + request.getRemoteAddr() + ") does not match request (" + formRequest.getRemoteAddr() + ")");
 
-            if (request.getRemotePort() != formRequest.getRemotePort())
-                LOG.warn("This should not happen -- submission remote port (" + request.getRemotePort() + ") does not match request (" + formRequest.getRemotePort() + ")");
+//            if (request.getRemotePort() != formRequest.getRemotePort())
+//                LOG.warn("This should not happen -- submission remote port (" + request.getRemotePort() + ") does not match request (" + formRequest.getRemotePort() + ")");
 
             if (formRequest.getCertificateIssuer() != null && formRequest.getCertificateSubject() != null) {
                 String certificateIssuer = request.getCertificateIssuer();

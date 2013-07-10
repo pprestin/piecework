@@ -40,6 +40,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.AttachmentRepository;
 import piecework.persistence.ProcessInstanceRepository;
+import piecework.persistence.ProcessRepository;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;

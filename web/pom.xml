@@ -17,17 +17,43 @@
 
 	</properties>
 
+    <!--<pluginRepositories>-->
+        <!--<pluginRepository>-->
+            <!--<id>Codehaus Snapshots</id>-->
+            <!--<url>https://nexus.codehaus.org/content/groups/public/</url>-->
+            <!--<snapshots>-->
+                <!--<enabled>true</enabled>-->
+            <!--</snapshots>-->
+            <!--<releases>-->
+                <!--<enabled>true</enabled>  &lt;!&ndash; Workaround for MNG-2974, see note below &ndash;&gt;-->
+            <!--</releases>-->
+        <!--</pluginRepository>-->
+    <!--</pluginRepositories>-->
+
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>tomcat-maven-plugin</artifactId>
-				<version>1.1</version>
-				<configuration>
-					<port>8000</port>
-					<path>/piecework</path>
-				</configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.1</version>
+                <configuration>
+                    <port>8000</port>
+                    <ajpPort>8009</ajpPort>
+                    <path>/piecework</path>
+                    <clientAuth>true</clientAuth>
+                </configuration>
+            </plugin>
+			<!--<plugin>-->
+				<!--<groupId>org.codehaus.mojo</groupId>-->
+				<!--<artifactId>tomcat-maven-plugin</artifactId>-->
+				<!--<version>1.2-SNAPSHOT</version>-->
+				<!--<configuration>-->
+					<!--<port>8000</port>-->
+                    <!--<ajpPort>8009</ajpPort>-->
+					<!--<path>/piecework</path>-->
+                    <!--<clientAuth>true</clientAuth>-->
+				<!--</configuration>-->
+			<!--</plugin>-->
 		</plugins>
 	</build>
 

@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
+package piecework.persistence;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-
-import piecework.model.Process;
+import piecework.model.*;
 
 /**
  * @author James Renfro
  */
-public interface ProcessRepository extends MongoRepository<Process, String> {
+public interface AuthorizationRepository extends MongoRepository<Authorization, String> {
 
 }

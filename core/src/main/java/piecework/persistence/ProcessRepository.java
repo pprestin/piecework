@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 University of Washington
+ * Copyright 2012 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.designer;
+package piecework.persistence;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import piecework.model.Screen;
+import piecework.model.Process;
 
 /**
  * @author James Renfro
  */
-public interface ScreenRepository extends MongoRepository<Screen, String> {
+public interface ProcessRepository extends MongoRepository<Process, String> {
 
 }

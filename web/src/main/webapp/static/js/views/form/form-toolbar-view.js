@@ -18,10 +18,14 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        'change .attach-file': '_onAttachFile',
 	    },
 	    listen: {
+	        'attachmentCountChanged mediator': '_onAttachmentCountChanged',
 	        'backToSearch mediator': '_onBackToSearch',
 	    },
 	    _onAddedToDOM: function() {
 	        $('title').text(window.piecework.context.applicationTitle);
+	    },
+	    _onAttachmentCountChanged: function(count) {
+	        this.$el.find('#attachment-count').text(count);
 	    },
 	    _onAttachmentsButton: function(event) {
             Chaplin.mediator.publish('showAttachments');
@@ -103,6 +107,7 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        Chaplin.mediator.publish('backToSearch');
 	    },
 	    _onUploadSuccess: function() {
+	        Chaplin.mediator.publish('showAttachments');
 	        $('#comment-dialog').modal('hide');
 	    },
 	    _onUploadInvalid: function() {

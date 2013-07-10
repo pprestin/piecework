@@ -15,11 +15,9 @@
  */
 package piecework.process.concrete;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,7 +36,7 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.InternalUserDetails;
 import piecework.model.Process;
-import piecework.process.ProcessRepository;
+import piecework.persistence.ProcessRepository;
 
 import com.google.common.collect.Sets;
 

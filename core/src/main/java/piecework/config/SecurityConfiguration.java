@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
@@ -41,6 +42,7 @@ import org.springframework.security.core.userdetails.UserDetailsByNameServiceWra
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import piecework.authorization.AuthorizationRole;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
@@ -56,12 +58,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	
 	private static final Logger LOG = Logger.getLogger(SecurityConfiguration.class);
 	private enum AuthenticationType { NONE, PREAUTH, NORMAL }
-	
+
 	@Autowired
 	AuthenticationProvider[] authenticationProviders;
 
     @Autowired
     AuthorizationRoleMapper authorizationRoleMapper;
+
+    @Autowired
+    Environment environment;
 
 	@Autowired
 	UserDetailsService userDetailsService;
@@ -120,8 +125,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
 	@Override
-	public void configure(HttpSecurity http)
-			throws Exception {
+	public void configure(HttpSecurity http) throws Exception {
 		AuthenticationType type = authenticationType();
 
 		http
@@ -130,11 +134,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .antMatchers("/public/**").permitAll()
         	.antMatchers("/secure/**").authenticated();
 
-        http
-            .authorizeUrls()
-            .antMatchers("/api/**").authenticated() //.hasRole("SYSTEM")
-            .and()
-            .x509();
+//        http
+//            .authorizeUrls()
+//            .antMatchers("/api/**").authenticated() //.hasRole("SYSTEM")
+//            .and()
+//            .x509();
 
 		switch (type) {
 		case NORMAL:
@@ -145,9 +149,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 					.failureUrl("/static/login_error.html")
 					.defaultSuccessUrl("/", false).permitAll();
 			break;
+        case PREAUTH:
+            String credentialsRequestHeader = environment.getProperty("preauthentication.user.request.header");
+            RequestHeaderAuthenticationFilter authenticationFilter = new RequestHeaderAuthenticationFilter();
+            authenticationFilter.setAuthenticationManager(authenticationManager());
+            authenticationFilter.setPrincipalRequestHeader(credentialsRequestHeader);
+            http.addFilter(authenticationFilter);
+            break;
 		case NONE:
-			http
-					.addFilter(new RequestParameterAuthenticationFilter(authenticationManager(), testUser));
+			http.addFilter(new RequestParameterAuthenticationFilter(authenticationManager(), testUser));
 			break;
 		}
 	}

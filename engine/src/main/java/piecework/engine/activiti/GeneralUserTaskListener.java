@@ -35,7 +35,7 @@ import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.process.ProcessRepository;
+import piecework.persistence.ProcessRepository;
 import piecework.util.ManyMap;
 
 import java.io.StringReader;

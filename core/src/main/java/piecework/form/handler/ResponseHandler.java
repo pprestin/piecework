@@ -32,7 +32,7 @@ import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.process.ProcessRepository;
+import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
@@ -89,7 +89,13 @@ public class ResponseHandler {
     }
 
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
+        int attachmentCount = 0;
         List<FormValue> formValues = findFormValues(formRequest, validation);
+        if (formValues == null && StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
+            ProcessInstance processInstance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
+            formValues = processInstance.getFormData();
+            attachmentCount = processInstance.getAttachments() != null ? processInstance.getAttachments().size() : 0;
+        }
         Set<String> includedFieldNames = new HashSet<String>();
 
         Screen screen = formRequest.getScreen();
@@ -180,6 +186,7 @@ public class ResponseHandler {
                 .formValues(includedFormValues)
                 .screen(screen)
                 .task(task)
+                .attachmentCount(attachmentCount)
                 .build(viewContext);
     }
 
@@ -264,9 +271,6 @@ public class ResponseHandler {
                                 .build())
                         .build());
             }
-        } else if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
-            ProcessInstance processInstance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
-            formValues = processInstance.getFormData();
         }
 
         return formValues;

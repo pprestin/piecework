@@ -50,14 +50,16 @@ define([
 
         if (model.total == undefined) {
             // If total is not defined, then replace with the search url
-            model = { link: '/piecework/secure/form' }
+            model = { link: Chaplin.helpers.reverse('form#search', params) }
         }
 
         this.compose('resultsModel', Results, model);
         var resultsModel = this.compose('resultsModel');
         var collection = resultsModel.get("list");
 
-        var url = resultsModel.url();
+        var url = resultsModel.get('link');
+        if (/.html$/.test(url))
+            url = url.substring(0, url.length - 5);
         var ResultsCollection = Collection.extend({
             url: url,
             parse: function(response, options) {

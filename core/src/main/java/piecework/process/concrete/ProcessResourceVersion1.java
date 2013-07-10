@@ -28,8 +28,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.designer.InteractionRepository;
-import piecework.designer.ScreenRepository;
+import piecework.persistence.InteractionRepository;
+import piecework.persistence.ScreenRepository;
 import piecework.model.Interaction;
 import piecework.model.Screen;
 import piecework.security.Sanitizer;
@@ -41,7 +41,7 @@ import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Process;
-import piecework.process.ProcessRepository;
+import piecework.persistence.ProcessRepository;
 import piecework.process.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
 

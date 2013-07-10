@@ -35,9 +35,9 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Interaction;
 import piecework.model.Screen;
-import piecework.designer.InteractionRepository;
-import piecework.process.ProcessRepository;
-import piecework.designer.ScreenRepository;
+import piecework.persistence.InteractionRepository;
+import piecework.persistence.ProcessRepository;
+import piecework.persistence.ScreenRepository;
 import piecework.designer.ScreenResource;
 import piecework.security.concrete.PassthroughSanitizer;
 

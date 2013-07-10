@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.model.ProcessInstance;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.process.ProcessRepository;
+import piecework.persistence.ProcessRepository;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import java.util.Date;

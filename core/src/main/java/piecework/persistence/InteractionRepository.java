@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.designer;
+package piecework.persistence;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 

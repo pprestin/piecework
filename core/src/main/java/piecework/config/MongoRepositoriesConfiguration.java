@@ -24,13 +24,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.Repository;
-import piecework.authorization.AuthorizationRepository;
-import piecework.designer.InteractionRepository;
-import piecework.designer.ScreenRepository;
+import piecework.persistence.AuthorizationRepository;
+import piecework.persistence.InteractionRepository;
+import piecework.persistence.ScreenRepository;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.process.ProcessRepository;
+import piecework.persistence.ProcessRepository;
 import piecework.persistence.RequestRepository;
 import piecework.persistence.SubmissionRepository;
 

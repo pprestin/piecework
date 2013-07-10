@@ -38,10 +38,10 @@ import piecework.exception.StatusCodeError;
 import piecework.model.Interaction;
 import piecework.model.Process;
 import piecework.model.Screen;
-import piecework.designer.InteractionRepository;
+import piecework.persistence.InteractionRepository;
 import piecework.designer.InteractionResource;
-import piecework.process.ProcessRepository;
-import piecework.designer.ScreenRepository;
+import piecework.persistence.ProcessRepository;
+import piecework.persistence.ScreenRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 
 /**

@@ -165,28 +165,12 @@ define([ 'chaplin',
                         var $element = $(selector);
                         var values = formValue.values;
                         $element.val(values);
-
-//                        $element.val(function(index, value) {
-//                            var values = formValue.values;
-//                            if (values == undefined) {
-//                                values = list();
-//                                values[0] = formValue.value;
-//                            }
-//                            var retval = values.length > index ? values[index] : '';
-//                            return retval;
-//                        });
                     }
                 }
             }
 	    },
 	    _onLoaded: function(event) {
             Chaplin.mediator.publish('formAddedToDOM');
-//            var sectionsView = this.subview('sections-view');
-//            if (sectionsView === undefined || sectionsView.collection.length == 0) {
-//                var screen = this.model.get("screen");
-//                var collection = new Collection({collection: screen.sections})
-//                this.subview('sections-view', new SectionsView({collection: collection}));
-//            }
 	    },
 	    _onFormSubmit: function(event) {
 	        var screen = this.model.get("screen");
@@ -236,13 +220,6 @@ define([ 'chaplin',
                         $element = $input.closest('.control-group').find('label');
                     }
                     $element.after('<span class="help-inline generated">' + item.message + '</span>')
-
-//                    if ($input.is(':checkbox') || $input.is(':radio')) {
-//                        $input.closest('.control-group').after('<div class="generated alert alert-' + item.type + '">' + item.message + '</div>');
-//                    } else {
-//                        $input.after('<div class="generated alert alert-' + item.type + '">' + item.message + '</div>');
-//                    }
-                    //$input.closest('.control-group').addClass(item.type);
                 }
             }
 	    },
@@ -330,13 +307,19 @@ define([ 'chaplin',
 	        if (attachmentsView == undefined) {
 	            var urlRoot = this.model.get("attachment");
 	            var attachments = new Attachments({}, {url: urlRoot});
+	            this.listenTo(attachments, 'sync', this._onSyncAttachments);
                 this.subview('attachmentsView', new AttachmentsView({collection: attachments}));
-                this.$el.addClass('span9');
+//                this.$el.addClass('span9');
                 attachments.fetch();
             } else {
-                attachmentsView.$el.toggle();
-                this.$el.toggleClass('span9');
+                attachmentsView.collection.fetch();
+                attachmentsView.$el.toggle(0);
+//                this.$el.toggleClass('span9');
             }
+	    },
+	    _onSyncAttachments: function(attachments) {
+            Chaplin.mediator.publish('attachmentCountChanged', attachments.length);
+            this.$el.toggleClass('span9');
 	    }
 	});
 

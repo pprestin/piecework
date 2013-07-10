@@ -69,6 +69,9 @@ public class Form {
     private final String suspension;
 
     @XmlAttribute
+    private final int attachmentCount;
+
+    @XmlAttribute
     private final boolean valid;
 
     private Form() {
@@ -90,6 +93,7 @@ public class Form {
         this.attachment = context != null ? context.getApplicationUri(builder.processDefinitionKey, "attachment", builder.formInstanceId) : null;
         this.cancellation = context != null ? context.getApplicationUri(builder.processDefinitionKey, "cancellation", builder.formInstanceId) : null;
         this.suspension = context != null ? context.getApplicationUri(builder.processDefinitionKey, "suspension", builder.formInstanceId) : null;
+        this.attachmentCount = builder.attachmentCount;
         this.valid = builder.valid;
     }
 
@@ -147,6 +151,10 @@ public class Form {
         return suspension;
     }
 
+    public int getAttachmentCount() {
+        return attachmentCount;
+    }
+
     public boolean isValid() {
         return valid;
     }
@@ -159,10 +167,12 @@ public class Form {
         private Task task;
         private Screen screen;
         private List<FormValue> formData;
+        private int attachmentCount;
         private boolean valid;
 
         public Builder() {
             super();
+            this.attachmentCount = 0;
             this.valid = true;
         }
 
@@ -177,6 +187,7 @@ public class Form {
                     this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
                 }
             }
+            this.attachmentCount = form.attachmentCount;
             this.valid = form.valid;
         }
 
@@ -225,6 +236,11 @@ public class Form {
                 this.formData = new ArrayList<FormValue>();
             if (formValues != null)
                 this.formData.addAll(formValues);
+            return this;
+        }
+
+        public Builder attachmentCount(int attachmentCount) {
+            this.attachmentCount = attachmentCount;
             return this;
         }
 
