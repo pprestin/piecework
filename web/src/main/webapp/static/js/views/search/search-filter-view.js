@@ -22,7 +22,8 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
                 var definitions = results.get(key);
                 options = new Array();
                 for (var i=0;i<definitions.length;i++) {
-                    options.push({ id: 'processDefinitionKey' + i, key: 'processDefinitionKey', label: definitions[i].task.processDefinitionLabel, value: definitions[i].task.processDefinitionKey})
+                    var definition = definitions[i].task !== undefined ? definitions[i].task : definitions[i];
+                    options.push({ id: 'processDefinitionKey' + i, key: 'processDefinitionKey', label: definition.processDefinitionLabel, value: definition.processDefinitionKey})
                 }
                 options.push({label: 'All processes', key: 'processDefinitionKey', 'default': true});
                 this.model.set('options', options);

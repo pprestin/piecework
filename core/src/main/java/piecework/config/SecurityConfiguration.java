@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.AccessDecisionManager;
@@ -32,12 +33,14 @@ import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.DefaultLoginPageConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -52,8 +55,9 @@ import piecework.security.RequestParameterAuthenticationFilter;
 /**
  * @author James Renfro
  */
-@Configuration
-@EnableWebSecurity
+//@Configuration
+//@EnableWebSecurity
+@Profile("disabled")
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	
 	private static final Logger LOG = Logger.getLogger(SecurityConfiguration.class);
@@ -97,7 +101,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		
 		return new ProviderManager(Arrays.asList(authenticationProviders));
     }
-	
+
 	private AuthenticationType authenticationType() {
 		AuthenticationType type = AuthenticationType.NORMAL;
 		
@@ -122,23 +126,24 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         web
             .ignoring()
                 .antMatchers("/static/**");
+
     }
 
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
 		AuthenticationType type = authenticationType();
 
-		http
-			.authorizeUrls()
-			.antMatchers("/static/**").permitAll()
-            .antMatchers("/public/**").permitAll()
-        	.antMatchers("/secure/**").authenticated();
-
 //        http
 //            .authorizeUrls()
 //            .antMatchers("/api/**").authenticated() //.hasRole("SYSTEM")
 //            .and()
 //            .x509();
+
+		http
+			.authorizeUrls()
+			.antMatchers("/static/**").permitAll()
+            .antMatchers("/public/**").permitAll()
+        	.antMatchers("/secure/**").authenticated();
 
 		switch (type) {
 		case NORMAL:
@@ -161,18 +166,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 			break;
 		}
 	}
-
-//	@Override
-//	protected void authorizeUrls(ExpressionUrlAuthorizations interceptUrls) {
-//		interceptUrls.antMatchers("/static/**").permitAll()
-//        	.antMatchers("/secure/**").authenticated();
-//	}
-	
-//	@Override
-//	protected void ignoredRequests(IgnoredRequestRegistry ignoredRequests) {
-//        ignoredRequests
-//            .antMatchers("/static/**");
-//    }
 
     @Bean
     public Policy antisamyPolicy() throws Exception {

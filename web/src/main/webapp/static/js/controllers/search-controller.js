@@ -7,10 +7,11 @@ define([
   'models/runtime/search-filter',
   'models/user',
   'models/base/collection',
-  'views/runtime/search-filter-view',
-  'views/runtime/search-view',
-  'views/runtime/search-results-view',
-], function(Controller, Process, Processes, Results, Screen, SearchFilter, User, Collection, SearchFilterView, SearchView, SearchResultsView) {
+  'views/search/search-filter-view',
+  'views/search/search-toolbar-view',
+  'views/search/search-results-view',
+], function(Controller, Process, Processes, Results, Screen, SearchFilter, User, Collection,
+    SearchFilterView, SearchToolbarView, SearchResultsView) {
   'use strict';
   
   var RuntimeController = Controller.extend({
@@ -47,7 +48,7 @@ define([
             results: resultsModel
         });
 
-        this.compose('searchView', SearchView, {model: resultsModel});
+        this.compose('searchView', SearchToolbarView, {model: resultsModel});
 
         this.compose('statusFilterContainer', {
             compose: function(options) {
