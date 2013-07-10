@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.config;
+package piecework.persistence;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import piecework.model.FormRequest;
+import piecework.model.ProcessInstance;
 
 /**
  * @author James Renfro
  */
-@Configuration
-@Profile("prod")
-public class ApplicationConfigurationForProduction {
+public interface RequestRepository extends MongoRepository<FormRequest, String> {
 
 }

@@ -50,7 +50,7 @@ import javax.annotation.PreDestroy;
  * @author James Renfro
  */
 @Configuration
-@EnableMongoRepositories(basePackages="piecework")
+@EnableMongoRepositories(basePackages="piecework.persistence")
 @Profile("mongo")
 public class MongoConfiguration extends AbstractMongoConfiguration {
 

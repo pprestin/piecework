@@ -35,11 +35,9 @@ import javax.xml.bind.annotation.XmlType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import piecework.Constants;
 import piecework.security.Sanitizer;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 
 /**
  * @author James Renfro

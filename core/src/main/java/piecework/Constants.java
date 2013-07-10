@@ -133,6 +133,8 @@ public interface Constants {
     }
 
     public static class Settings {
+        public static final String CERTIFICATE_ISSUER_HEADER = "certificate.issuer.header";
+        public static final String CERTIFICATE_SUBJECT_HEADER = "certificate.subject.header";
         public static final String MAIL_SERVER_HOST = "mail.server.host";
     }
 

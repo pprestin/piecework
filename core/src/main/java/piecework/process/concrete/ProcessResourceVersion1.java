@@ -15,7 +15,6 @@
  */
 package piecework.process.concrete;
 
-import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
@@ -35,18 +34,15 @@ import piecework.model.Interaction;
 import piecework.model.Screen;
 import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
+import piecework.model.SearchResults;
+import piecework.common.ViewContext;
 import piecework.exception.ForbiddenError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.form.FormPosition;
-import piecework.model.Form;
 import piecework.model.Process;
 import piecework.process.ProcessRepository;
 import piecework.process.ProcessResource;
-import piecework.persistence.exception.RecordNotFoundException;
 import piecework.security.concrete.PassthroughSanitizer;
 
 /**

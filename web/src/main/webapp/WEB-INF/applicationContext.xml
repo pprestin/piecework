@@ -14,32 +14,6 @@
 	 	   http://www.springframework.org/schema/security/spring-security-3.1.xsd">
 
 	<context:component-scan base-package="piecework" />
-	<mongo:repositories base-package="piecework" />
-
-	<!--<security:global-method-security-->
-		<!--secured-annotations="enabled" jsr250-annotations="enabled"-->
-		<!--authentication-manager-ref="authenticationManager"-->
-		<!--access-decision-manager-ref="resourceAccessDecisionManager" />-->
-
-
-<!-- 		<security:custom-filter position="PRE_AUTH_FILTER" ref="preauthenticationFilter" /> -->
-
-<!-- 	<security:http  -->
-<!-- 		realm="Restricted Service" use-expressions="true" -->
-<!-- 		authentication-manager-ref="authenticationManager"> -->
-<!-- 		<security:intercept-url pattern="/static/**" access="permitAll" /> -->
-<!-- 		<security:intercept-url pattern="/secure/**" access="isAuthenticated()" /> -->
-<!-- 		<security:form-login -->
-<!-- 	        login-page="/static/login.html" -->
-<!-- 	        login-processing-url="/login" -->
-<!-- 	        authentication-failure-url="/static/login_error.html" -->
-<!-- 	        default-target-url="/" -->
-<!-- 	        always-use-default-target="false"/> -->
-<!-- 	</security:http> -->
-
-<!-- 	<bean id="preauthenticationFilter" -->
-<!-- 		class="org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter"> -->
-<!-- 		<property name="principalRequestHeader" value="${preauthentication.user.request.header}"/> -->
-<!-- 	</bean> -->
+<!--	<mongo:repositories base-package="piecework" />-->
 
 </beans>

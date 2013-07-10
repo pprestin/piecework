@@ -25,10 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.form.handler.SubmissionHandler;
+import piecework.common.Payload;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.model.*;
-import piecework.process.ProcessInstancePayload;
 import piecework.test.ExampleFactory;
 
 import javax.servlet.http.HttpServletRequest;
@@ -66,7 +65,7 @@ public class SubmissionHandlerTest {
                 .formValue("TestField", "1", "2", "3")
                 .build();
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().processInstance(instance);
+        Payload payload = new Payload().processInstance(instance);
         FormSubmission actual = submissionHandler.handle(payload, false);
         Assert.assertNotNull(actual);
 

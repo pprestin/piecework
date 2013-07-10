@@ -16,7 +16,6 @@
 package piecework.process.concrete;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -27,10 +26,11 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.common.Payload;
 import piecework.common.RequestDetails;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.model.ProcessExecution;
@@ -40,8 +40,8 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
 import piecework.security.Sanitizer;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
+import piecework.model.SearchResults;
+import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.form.handler.RequestHandler;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -54,14 +54,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
 
-	@Autowired
-	ProcessRepository processRepository;
+    @Autowired
+    Environment environment;
 
     @Autowired
     ProcessInstanceService processInstanceService;
-
-    @Autowired
-    ProcessInstanceRepository processInstanceRepository;
 
 	@Autowired
 	ProcessEngineRuntimeFacade facade;
@@ -71,34 +68,22 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	
 	@Autowired
 	Sanitizer sanitizer;
-	
-	@Value("${base.application.uri}")
-	String baseApplicationUri;
-	
-	@Value("${base.service.uri}")
-	String baseServiceUri;
-
-    @Value("${certificate.issuer.header}")
-    String certificateIssuerHeader;
-
-    @Value("${certificate.subject.header}")
-    String certificateSubjectHeader;
 
 	@Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstance rawInstance) throws StatusCodeError {
-        ProcessInstancePayload payload = new ProcessInstancePayload().processInstance(rawInstance);
+        Payload payload = new Payload.Builder().processInstance(rawInstance).build();
         return create(request, rawProcessDefinitionKey, payload);
 	}
 	
 	@Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
-        ProcessInstancePayload payload = new ProcessInstancePayload().formData(formData);
+        Payload payload = new Payload.Builder().formData(formData).build();
         return create(request, rawProcessDefinitionKey, payload);
 	}
 
 	@Override
 	public Response createMultipart(HttpServletRequest request, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
-        ProcessInstancePayload payload = new ProcessInstancePayload().multipartBody(body);
+        Payload payload = new Payload.Builder().multipartBody(body).build();
         return create(request, rawProcessDefinitionKey, payload);
 	}
 
@@ -107,8 +92,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 		
-		Process process = getProcess(processDefinitionKey);
-        ProcessInstance instance = getProcessInstance(process, processInstanceId);
+		Process process = processInstanceService.getProcess(processDefinitionKey);
+        ProcessInstance instance = processInstanceService.findOne(process, processInstanceId);
 
         ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
                 .processDefinitionKey(processDefinitionKey)
@@ -135,39 +120,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 
-        Process process = getProcess(processDefinitionKey);
-        ProcessInstance persisted = getProcessInstance(process, processInstanceId);
-        ProcessInstance sanitized = new ProcessInstance.Builder(instance, sanitizer).build();
+        processInstanceService.update(processDefinitionKey, processInstanceId, instance);
 
-        String applicationStatus = sanitized.getApplicationStatus();
-        String applicationStatusExplanation = sanitized.getApplicationStatusExplanation();
-
-        if (applicationStatus != null && applicationStatus.equalsIgnoreCase(Constants.ProcessStatuses.SUSPENDED)) {
-            try {
-                if (!facade.suspend(process, instance, applicationStatusExplanation))
-                    throw new ConflictError();
-
-                ProcessInstance.Builder modified = new ProcessInstance.Builder(persisted, new PassthroughSanitizer())
-                        .applicationStatus(applicationStatus)
-                        .applicationStatusExplanation(applicationStatusExplanation)
-                        .processStatus(Constants.ProcessStatuses.SUSPENDED);
-
-                processInstanceRepository.save(modified.build());
-
-                ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-                ViewContext context = getViewContext();
-                String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
-                if (location != null)
-                    responseBuilder.location(UriBuilder.fromPath(location).build());
-                return responseBuilder.build();
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to cancel execution ", e);
-                throw new InternalServerError();
-            }
-        }
-
-        throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
+        ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        ViewContext context = getViewContext();
+        String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
+        if (location != null)
+            responseBuilder.location(UriBuilder.fromPath(location).build());
+        return responseBuilder.build();
     }
 
     @Override
@@ -175,32 +135,15 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
         String reason = sanitizer.sanitize(rawReason);
-		
-		Process process = getProcess(processDefinitionKey);
-		ProcessInstance instance = getProcessInstance(process, processInstanceId);
 
-        try {
-            if (!facade.cancel(process, instance, reason))
-                throw new ConflictError();
+        processInstanceService.delete(processDefinitionKey, processInstanceId, reason);
 
-            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
-                    .applicationStatus(process.getCancellationStatus())
-                    .applicationStatusExplanation(reason)
-                    .processStatus(Constants.ProcessStatuses.CANCELLED);
-
-            processInstanceRepository.save(modified.build());
-
-            ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-            ViewContext context = getViewContext();
-            String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
-            if (location != null)
-                responseBuilder.location(UriBuilder.fromPath(location).build());
-            return responseBuilder.build();
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to cancel execution ", e);
-            throw new InternalServerError();
-        }
+        ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        ViewContext context = getViewContext();
+        String location = context != null ? context.getApplicationUri(processDefinitionKey, processInstanceId) : null;
+        if (location != null)
+            responseBuilder.location(UriBuilder.fromPath(location).build());
+        return responseBuilder.build();
 	}
 
 	@Override
@@ -211,6 +154,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 	@Override
 	public ViewContext getViewContext() {
+        String baseApplicationUri = environment.getProperty("base.application.uri");
+        String baseServiceUri = environment.getProperty("base.service.uri");
 		return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "instance", "Instance");
 	}
 
@@ -219,11 +164,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         return "v1";
     }
 
-    private Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstancePayload payload) throws StatusCodeError {
+    private Response create(HttpServletRequest request, String rawProcessDefinitionKey, Payload payload) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = getProcess(processDefinitionKey);
+        Process process = processInstanceService.getProcess(processDefinitionKey);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         Screen screen = formRequest.getScreen();
 
@@ -232,20 +177,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
     }
 
-	private Process getProcess(String processDefinitionKey) throws BadRequestError {
-		Process record = processRepository.findOne(processDefinitionKey);
-		if (record == null)
-			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
-		return record;
-	}
+    private RequestDetails requestDetails(HttpServletRequest request) {
+        String certificateIssuerHeader = environment.getProperty(Constants.Settings.CERTIFICATE_ISSUER_HEADER);
+        String certificateSubjectHeader = environment.getProperty(Constants.Settings.CERTIFICATE_SUBJECT_HEADER);
 
-    private ProcessInstance getProcessInstance(Process process, String processInstanceId) throws NotFoundError {
-        ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
-
-        if (instance == null)
-            throw new NotFoundError();
-
-        return instance;
+        return new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
     }
 
 }

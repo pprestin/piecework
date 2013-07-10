@@ -36,7 +36,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.common.model.User;
+import piecework.model.User;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.identity.InternalUserDetails;
@@ -44,7 +44,7 @@ import piecework.model.Process;
 import piecework.model.ProcessExecution;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
-import piecework.process.ProcessInstanceRepository;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.process.concrete.ResourceHelper;
 import piecework.task.TaskCriteria;

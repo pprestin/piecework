@@ -18,7 +18,6 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
-import piecework.common.view.ViewContext;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;

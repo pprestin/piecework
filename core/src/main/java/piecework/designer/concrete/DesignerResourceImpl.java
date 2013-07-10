@@ -21,7 +21,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 import piecework.designer.DesignerResource;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;

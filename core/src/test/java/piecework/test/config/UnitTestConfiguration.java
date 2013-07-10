@@ -16,23 +16,18 @@
 package piecework.test.config;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.mockito.Mockito;
-import org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 
 import piecework.Registry;
 import piecework.authorization.AuthorizationRepository;
-import piecework.config.CustomPropertySourcesConfigurer;
+import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.engine.ProcessEngineProxy;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
@@ -40,6 +35,9 @@ import piecework.form.handler.ResponseHandler;
 import piecework.persistence.ContentRepository;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.SubmissionHandler;
+import piecework.persistence.ProcessInstanceRepository;
+import piecework.persistence.RequestRepository;
+import piecework.persistence.SubmissionRepository;
 import piecework.persistence.concrete.InMemoryContentRepository;
 import piecework.model.*;
 import piecework.designer.InteractionRepository;

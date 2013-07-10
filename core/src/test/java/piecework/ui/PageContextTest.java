@@ -20,7 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
-import piecework.common.model.User;
+import piecework.model.User;
 import piecework.model.ProcessInstance;
 
 /**

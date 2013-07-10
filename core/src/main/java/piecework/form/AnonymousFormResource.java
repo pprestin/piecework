@@ -26,13 +26,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 
 import piecework.PublicApplicationResource;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.view.SearchResults;
 import piecework.exception.StatusCodeError;
 
 import java.util.List;

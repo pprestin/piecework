@@ -17,9 +17,8 @@ package piecework.form;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.ApplicationResource;
-import piecework.PublicApplicationResource;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.view.SearchResults;
+import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 
 import javax.annotation.security.RolesAllowed;

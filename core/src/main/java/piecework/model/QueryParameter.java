@@ -16,13 +16,12 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**

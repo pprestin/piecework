@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common.view;
+package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -23,12 +26,16 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author James Renfro
  */
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Explanation {
 
 	private static final long serialVersionUID = -5144317536325535290L;
-	
+
+    @XmlElement
 	private String message;
-	private String messageDetail;
+
+    @XmlElement
+    private String messageDetail;
 
 	/**
 	 * @return the message

@@ -17,24 +17,18 @@ package piecework.form.handler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-import piecework.common.model.User;
-import piecework.common.view.ViewContext;
+import piecework.model.User;
+import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.persistence.ContentRepository;
-import piecework.process.ProcessInstanceRepository;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingAttachmentContent;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

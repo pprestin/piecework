@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.config;
+package piecework.common;
 
 import org.apache.log4j.Logger;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;

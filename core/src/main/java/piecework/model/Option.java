@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 
 import piecework.security.Sanitizer;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 
 /**
  * @author James Renfro

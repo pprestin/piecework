@@ -1,11 +1,8 @@
 package piecework.task;
 
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.ApiResource;
-import piecework.ApplicationResource;
-import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.view.SearchResults;
+import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 import piecework.model.FormSubmission;
 import piecework.model.Task;

@@ -16,19 +16,18 @@
 package piecework.task.concrete;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.Payload;
 import piecework.common.RequestDetails;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
+import piecework.model.SearchResults;
+import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
@@ -70,9 +69,6 @@ public class TaskResourceVersion1 implements TaskResource {
     ResourceHelper helper;
 
     @Autowired
-    ProcessRepository processRepository;
-
-    @Autowired
     InternalUserDetailsService userDetailsService;
 
     @Autowired
@@ -84,78 +80,36 @@ public class TaskResourceVersion1 implements TaskResource {
     @Autowired
     Sanitizer sanitizer;
 
-    @Value("${base.application.uri}")
-    String baseApplicationUri;
-
-    @Value("${base.service.uri}")
-    String baseServiceUri;
-
     @Override
     public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, HttpServletRequest request, FormSubmission submission) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
         String action = sanitizer.sanitize(rawAction);
 
-        piecework.model.Process process = processRepository.findOne(processDefinitionKey);
+        piecework.model.Process process = processInstanceService.getProcess(processDefinitionKey);
 
-        if (process == null)
-            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
+        RequestDetails requestDetails = requestDetails(request);
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
-
-        Task task;
-        if (StringUtils.isNotEmpty(taskId)) {
-            try {
-                InternalUserDetails user = helper.getAuthenticatedPrincipal();
-                task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
-                if (task == null || !task.isActive())
-                    throw new ForbiddenError();
-
-            } catch (ProcessEngineException e) {
-                throw new InternalServerError();
-            }
-        } else {
-            throw new BadRequestError(Constants.ExceptionCodes.task_id_required);
-        }
-
-        FormRequest formRequest = requestHandler.create(requestDetails, process, null, task, null);
-        ProcessInstancePayload payload = new ProcessInstancePayload().requestId(formRequest.getRequestId()).formData(submission.getFormValueMap());
-
-        if (task != null)
-            payload.processInstanceId(task.getProcessInstanceId());
+        FormRequest formRequest = requestHandler.create(requestDetails, process, null, taskId, null);
+        Payload payload = new Payload.Builder()
+                .processInstanceId(formRequest.getProcessInstanceId())
+                .requestId(formRequest.getRequestId())
+                .taskId(formRequest.getTaskId())
+                .formData(submission.getFormValueMap())
+                .build();
 
         Screen screen = formRequest.getScreen();
 
-        ProcessInstance stored = processInstanceService.submit(process, screen, payload);
+        processInstanceService.submit(process, screen, payload);
 
-        try {
-            String actionValue = null;
-            if (payload.getFormData() != null) {
-                List<String> actionValues = payload.getFormData().get("actionButton");
-                actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
-            }
-
-            if (action != null && action.equals(Constants.ActionTypes.COMPLETE))
-                facade.completeTask(process, taskId, actionValue);
-
-            return Response.noContent().build();
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to complete task ", e);
-            throw new InternalServerError();
-        }
+        return Response.noContent().build();
     }
 
     public Response read(String rawProcessDefinitionKey, String rawTaskId) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
 
-        piecework.model.Process process = processRepository.findOne(processDefinitionKey);
-
-        if (process == null)
-            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
+        piecework.model.Process process = processInstanceService.getProcess(processDefinitionKey);
 
         TaskCriteria criteria = new TaskCriteria.Builder()
                 .process(process)
@@ -264,12 +218,21 @@ public class TaskResourceVersion1 implements TaskResource {
     }
 
     public ViewContext getViewContext() {
+        String baseApplicationUri = environment.getProperty("base.application.uri");
+        String baseServiceUri = environment.getProperty("base.service.uri");
         return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "task", "Task");
     }
 
     @Override
     public String getVersion() {
         return "v1";
+    }
+
+    private RequestDetails requestDetails(HttpServletRequest request) {
+        String certificateIssuerHeader = environment.getProperty(Constants.Settings.CERTIFICATE_ISSUER_HEADER);
+        String certificateSubjectHeader = environment.getProperty(Constants.Settings.CERTIFICATE_SUBJECT_HEADER);
+
+        return new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
     }
 
     private String toInternalId(String userId) {

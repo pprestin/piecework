@@ -29,12 +29,10 @@ import piecework.designer.InteractionRepository;
 import piecework.designer.ScreenRepository;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceRepository;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessRepository;
-import piecework.process.RequestRepository;
-import piecework.process.SubmissionRepository;
-
-import java.io.Serializable;
+import piecework.persistence.RequestRepository;
+import piecework.persistence.SubmissionRepository;
 
 /**
  * @author James Renfro

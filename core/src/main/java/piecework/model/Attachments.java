@@ -17,12 +17,10 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.mongodb.core.mapping.Document;
-import piecework.common.model.User;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**

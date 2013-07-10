@@ -32,8 +32,6 @@ import org.springframework.security.core.GrantedAuthority;
  */
 public class ResourceAccessVoter extends RoleVoter {
 
-	private String processPrefix = "PROCESS_";
-	
 	@Override
 	public boolean supports(Class<?> clazz) {
 		return MethodInvocation.class.isAssignableFrom(clazz);
@@ -90,14 +88,6 @@ public class ResourceAccessVoter extends RoleVoter {
     		}
     	}
     	return null;
-	}
-
-	public String getProcessPrefix() {
-		return processPrefix;
-	}
-
-	public void setProcessPrefix(String processPrefix) {
-		this.processPrefix = processPrefix;
 	}
 
 }

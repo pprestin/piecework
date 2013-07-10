@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common.model;
+package piecework.model;
 
 import java.io.Serializable;
 
@@ -31,7 +31,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.security.core.userdetails.UserDetails;
 import piecework.identity.InternalUserDetails;
 import piecework.security.Sanitizer;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 
 /**
  * @author James Renfro

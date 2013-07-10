@@ -2,9 +2,8 @@ package piecework.process;
 
 import piecework.ApiResource;
 import piecework.ApplicationResource;
-import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.view.SearchResults;
+import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 import piecework.model.ProcessInstance;
 

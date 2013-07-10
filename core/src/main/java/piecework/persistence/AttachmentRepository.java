@@ -1,4 +1,4 @@
-package piecework.process;
+package piecework.persistence;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import piecework.model.Attachment;

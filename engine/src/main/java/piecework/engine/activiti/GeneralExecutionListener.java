@@ -15,7 +15,6 @@
  */
 package piecework.engine.activiti;
 
-import com.mongodb.WriteResult;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +24,8 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.model.ProcessInstance;
-import piecework.process.ProcessInstanceRepository;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessRepository;
-import piecework.security.concrete.PassthroughSanitizer;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import java.util.Date;

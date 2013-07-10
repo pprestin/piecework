@@ -22,7 +22,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.security.Sanitizer;
 import piecework.authorization.ResourceAuthority;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;

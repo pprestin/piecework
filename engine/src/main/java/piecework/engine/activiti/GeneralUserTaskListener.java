@@ -34,11 +34,10 @@ import piecework.Constants;
 import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceRepository;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessRepository;
 import piecework.util.ManyMap;
 
-import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;

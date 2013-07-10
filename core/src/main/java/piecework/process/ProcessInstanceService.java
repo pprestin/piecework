@@ -26,8 +26,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
+import piecework.common.Payload;
+import piecework.model.SearchResults;
+import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
@@ -37,9 +38,12 @@ import piecework.form.validation.ValidationService;
 import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.AttachmentRepository;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.TaskCriteria;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.StringReader;
@@ -73,6 +77,9 @@ public class ProcessInstanceService {
     MongoOperations mongoOperations;
 
     @Autowired
+    ProcessRepository processRepository;
+
+    @Autowired
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
@@ -84,13 +91,78 @@ public class ProcessInstanceService {
     @Autowired
     ValidationService validationService;
 
-    public ProcessInstance findOne(Process process, String processInstanceId) throws NotFoundError {
+    public void delete(String processDefinitionKey, String processInstanceId, String reason) throws StatusCodeError {
+        Process process = getProcess(processDefinitionKey);
+        ProcessInstance instance = findOne(process, processInstanceId);
+
+        try {
+            if (!facade.cancel(process, instance, reason))
+                throw new ConflictError();
+
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+                    .applicationStatus(process.getCancellationStatus())
+                    .applicationStatusExplanation(reason)
+                    .processStatus(Constants.ProcessStatuses.CANCELLED);
+
+            processInstanceRepository.save(modified.build());
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to cancel execution ", e);
+            throw new InternalServerError();
+        }
+    }
+
+    public ProcessInstance findOne(Process process, String processInstanceId) throws StatusCodeError {
         ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
 
         if (instance == null || !instance.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new NotFoundError(Constants.ExceptionCodes.instance_does_not_exist);
 
+        if (instance.isDeleted())
+            throw new GoneError(Constants.ExceptionCodes.instance_does_not_exist);
+
         return instance;
+    }
+
+    public Process getProcess(String processDefinitionKey) throws StatusCodeError {
+        Process record = processRepository.findOne(processDefinitionKey);
+        if (record == null)
+            throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
+        if (record.isDeleted())
+            throw new GoneError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
+
+        return record;
+    }
+
+    public void update(String processDefinitionKey, String processInstanceId, ProcessInstance processInstance) throws StatusCodeError {
+        Process process = getProcess(processDefinitionKey);
+        ProcessInstance persisted = findOne(process, processInstanceId);
+        ProcessInstance sanitized = new ProcessInstance.Builder(processInstance, sanitizer).build();
+
+        String applicationStatus = sanitized.getApplicationStatus();
+        String applicationStatusExplanation = sanitized.getApplicationStatusExplanation();
+
+        if (applicationStatus != null && applicationStatus.equalsIgnoreCase(Constants.ProcessStatuses.SUSPENDED)) {
+            try {
+                if (!facade.suspend(process, persisted, applicationStatusExplanation))
+                    throw new ConflictError();
+
+                ProcessInstance.Builder modified = new ProcessInstance.Builder(persisted, new PassthroughSanitizer())
+                        .applicationStatus(applicationStatus)
+                        .applicationStatusExplanation(applicationStatusExplanation)
+                        .processStatus(Constants.ProcessStatuses.SUSPENDED);
+
+                processInstanceRepository.save(modified.build());
+                return;
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to cancel execution ", e);
+                throw new InternalServerError();
+            }
+        }
+
+        throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
+
     }
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
@@ -261,7 +333,7 @@ public class ProcessInstanceService {
         return processInstanceRepository.save(instance);
     }
 
-    public ProcessInstance attach(Process process, Screen screen, ProcessInstancePayload payload) throws StatusCodeError {
+    public ProcessInstance attach(Process process, Screen screen, Payload payload) throws StatusCodeError {
 
         // Validate the submission
         FormValidation validation = validate(process, screen, payload, false);
@@ -271,17 +343,21 @@ public class ProcessInstanceService {
         return store(process, submission, validation, previous, true);
     }
 
-    public ProcessInstance submit(Process process, Screen screen, ProcessInstancePayload payload) throws StatusCodeError {
+    public ProcessInstance submit(Process process, Screen screen, Payload payload) throws StatusCodeError {
 
         // Validate the submission
         FormValidation validation = validate(process, screen, payload, true);
         FormSubmission submission = validation.getSubmission();
         ProcessInstance previous = validation.getInstance();
 
+        completeIfTaskExists(process, payload, validation);
+
         return store(process, submission, validation, previous, false);
     }
 
-    public FormValidation validate(Process process, Screen screen, ProcessInstancePayload payload, boolean throwException) throws StatusCodeError {
+    public FormValidation validate(Process process, Screen screen, Payload payload, boolean throwException) throws StatusCodeError {
+
+        checkIsActiveIfTaskExists(process, payload);
 
         boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
 
@@ -305,4 +381,46 @@ public class ProcessInstanceService {
         return validation;
     }
 
+    private void checkIsActiveIfTaskExists(Process process, Payload payload) throws StatusCodeError {
+        String taskId = payload.getTaskId();
+        if (StringUtils.isNotEmpty(taskId)) {
+            try {
+                InternalUserDetails user = helper.getAuthenticatedPrincipal();
+                Task task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
+                if (task == null || !task.isActive())
+                    throw new ForbiddenError();
+
+            } catch (ProcessEngineException e) {
+                throw new InternalServerError();
+            }
+        }
+    }
+
+    private void completeIfTaskExists(Process process, Payload payload, FormValidation validation) throws StatusCodeError {
+        String taskId = payload.getTaskId();
+        if (StringUtils.isNotEmpty(taskId)) {
+            try {
+                String actionValue = null;
+                if (validation.getFormValueMap() != null) {
+                    List<String> actionValues = validation.getFormValueMap().get("actionButton");
+                    actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
+                }
+
+                facade.completeTask(process, taskId, actionValue);
+            } catch (ProcessEngineException e) {
+                throw new InternalServerError();
+            }
+        }
+    }
+
+
+
+//    private ProcessInstance getProcessInstance(Process process, String processInstanceId) throws NotFoundError {
+//        ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
+//
+//        if (instance == null)
+//            throw new NotFoundError();
+//
+//        return instance;
+//    }
 }

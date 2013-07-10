@@ -25,12 +25,13 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
+import piecework.model.SearchResults;
+import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
 import piecework.form.handler.AttachmentHandler;
 import piecework.identity.InternalUserDetails;
+import piecework.common.Payload;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
@@ -39,7 +40,6 @@ import piecework.form.handler.ResponseHandler;
 import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstancePayload;
 import piecework.process.ProcessInstanceService;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
@@ -58,7 +58,6 @@ import java.util.*;
 @Service
 public class FormService {
 
-    private static final Set<String> VALID_REQUEST_TYPES = Sets.newHashSet("submission", "task");
     private static final Logger LOG = Logger.getLogger(FormService.class);
 
     @Autowired
@@ -91,9 +90,7 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
 
         String taskId = formRequest.getTaskId();
@@ -124,30 +121,19 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        // This will guarantee that the request is valid
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Screen screen = formRequest.getScreen();
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).processInstanceId(formRequest.getProcessInstanceId()).multipartBody(body);
+        Payload payload = new Payload.Builder()
+                .requestDetails(requestDetails)
+                .requestId(requestId)
+                .taskId(formRequest.getTaskId())
+                .processInstanceId(formRequest.getProcessInstanceId())
+                .multipartBody(body)
+                .build();
 
         try {
-            String taskId = formRequest.getTaskId();
-            Task task = null;
-            if (StringUtils.isNotEmpty(taskId)) {
-                try {
-                    InternalUserDetails user = helper.getAuthenticatedPrincipal();
-                    task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
-                    if (task == null || !task.isActive())
-                        throw new ForbiddenError();
-
-                } catch (ProcessEngineException e) {
-                    throw new InternalServerError();
-                }
-            }
-
             ProcessInstance stored = processInstanceService.attach(process, screen, payload);
 
             return attachmentHandler.handle(formRequest, viewContext, null);
@@ -164,9 +150,7 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
 
         String taskId = formRequest.getTaskId();
@@ -197,9 +181,7 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
 
         String taskId = formRequest.getTaskId();
@@ -249,9 +231,7 @@ public class FormService {
             }
         }
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
 
         FormRequest formRequest = null;
 
@@ -331,47 +311,22 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        // This will guarantee that the request is valid
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Screen screen = formRequest.getScreen();
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).processInstanceId(formRequest.getProcessInstanceId()).multipartBody(body);
+        Payload payload = new Payload.Builder()
+                .requestDetails(requestDetails)
+                .requestId(requestId)
+                .processInstanceId(formRequest.getProcessInstanceId())
+                .taskId(formRequest.getTaskId())
+                .multipartBody(body)
+                .build();
 
         try {
-            String taskId = formRequest.getTaskId();
-            Task task = null;
-            if (StringUtils.isNotEmpty(taskId)) {
-                try {
-                    InternalUserDetails user = helper.getAuthenticatedPrincipal();
-                    task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
-                    if (task == null || !task.isActive())
-                        throw new ForbiddenError();
-
-                } catch (ProcessEngineException e) {
-                    throw new InternalServerError();
-                }
-            }
 
             ProcessInstance stored = processInstanceService.submit(process, screen, payload);
 
-            if (task != null) {
-                try {
-                    String actionValue = null;
-                    if (payload.getFormData() != null) {
-                        List<String> actionValues = payload.getFormData().get("actionButton");
-                        actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
-                    }
-
-                    facade.completeTask(process, task.getTaskInstanceId(), actionValue);
-                } catch (ProcessEngineException e) {
-                    throw new InternalServerError();
-                }
-            }
-
-            List<FormValue> formValues = stored != null ? stored.getFormData() : new ArrayList<FormValue>();
             FormRequest nextFormRequest = null;
 
             if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
@@ -397,19 +352,27 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        String certificateIssuerHeader = environment.getProperty("certificate.issuer.header");
-        String certificateSubjectHeader = environment.getProperty("certificate.subject.header");
-        // This will guarantee that the request is valid
-        RequestDetails requestDetails = new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Screen screen = formRequest.getScreen();
 
-        ProcessInstancePayload payload = new ProcessInstancePayload().requestDetails(requestDetails).requestId(requestId).validationId(validationId).multipartBody(body);
+        Payload payload = new Payload.Builder()
+                .requestDetails(requestDetails)
+                .requestId(requestId)
+                .taskId(formRequest.getTaskId())
+                .validationId(validationId)
+                .multipartBody(body)
+                .build();
 
         processInstanceService.validate(process, screen, payload, true);
 
         return Response.noContent().build();
     }
 
+    private RequestDetails requestDetails(HttpServletRequest request) {
+        String certificateIssuerHeader = environment.getProperty(Constants.Settings.CERTIFICATE_ISSUER_HEADER);
+        String certificateSubjectHeader = environment.getProperty(Constants.Settings.CERTIFICATE_SUBJECT_HEADER);
 
+        return new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+    }
 }

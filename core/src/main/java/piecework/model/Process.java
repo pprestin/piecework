@@ -21,7 +21,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;

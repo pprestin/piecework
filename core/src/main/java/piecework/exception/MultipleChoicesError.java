@@ -18,7 +18,7 @@ package piecework.exception;
 import java.util.ArrayList;
 import java.util.List;
 
-import piecework.common.view.MultipleChoices;
+import piecework.common.MultipleChoices;
 
 
 /**

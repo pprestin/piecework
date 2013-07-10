@@ -1,4 +1,4 @@
-package piecework.common.view;
+package piecework.model;
 
 import java.io.Serializable;
 import java.util.*;
@@ -7,8 +7,7 @@ import javax.xml.bind.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import piecework.model.*;
-import piecework.model.Process;
+import piecework.common.ViewContext;
 import piecework.util.ManyMap;
 
 @XmlRootElement(name = SearchResults.Constants.ROOT_ELEMENT_NAME)

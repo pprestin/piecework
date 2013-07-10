@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Registry;
-import piecework.common.model.User;
 import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.process.concrete.ResourceHelper;

@@ -23,13 +23,11 @@ import org.springframework.stereotype.Service;
 import piecework.common.UuidGenerator;
 import piecework.model.Content;
 import piecework.persistence.ContentRepository;
+import piecework.common.Payload;
 import piecework.security.Sanitizer;
 import piecework.exception.StatusCodeError;
-import piecework.model.FormRequest;
 import piecework.model.FormSubmission;
-import piecework.model.Screen;
-import piecework.process.ProcessInstancePayload;
-import piecework.process.SubmissionRepository;
+import piecework.persistence.SubmissionRepository;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -56,7 +54,7 @@ public class SubmissionHandler {
     @Autowired
     UuidGenerator uuidGenerator;
 
-    public FormSubmission handle(ProcessInstancePayload payload, boolean isAttachmentAllowed) throws StatusCodeError {
+    public FormSubmission handle(Payload payload, boolean isAttachmentAllowed) throws StatusCodeError {
         String requestId = payload.getRequestId();
 
         FormSubmission.Builder submissionBuilder = new FormSubmission.Builder()

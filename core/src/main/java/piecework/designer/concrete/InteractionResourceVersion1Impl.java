@@ -29,8 +29,8 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.security.Sanitizer;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
+import piecework.model.SearchResults;
+import piecework.common.ViewContext;
 import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;

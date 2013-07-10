@@ -15,7 +15,7 @@
  */
 package piecework;
 
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 
 /**
  * Marker interface for REST resources

@@ -16,8 +16,6 @@
 package piecework.ui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.*;
@@ -29,9 +27,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import piecework.common.model.User;
-import piecework.common.view.SearchResults;
+import piecework.model.User;
+import piecework.model.SearchResults;
 import piecework.identity.InternalUserDetails;
 
 import javax.ws.rs.Produces;
@@ -41,13 +38,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Map;
 
 /**

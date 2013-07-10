@@ -22,14 +22,14 @@ import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.log4j.Logger;
-import org.owasp.validator.html.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
+import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
@@ -38,7 +38,6 @@ import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.HtmlProvider;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +48,7 @@ import java.util.Map;
  */
 @Configuration
 @Profile({"dev","eval","prod"})
+@ComponentScan(basePackages = "piecework")
 public class ApplicationConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(ApplicationConfiguration.class);

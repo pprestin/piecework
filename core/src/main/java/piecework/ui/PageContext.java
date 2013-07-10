@@ -15,7 +15,7 @@
  */
 package piecework.ui;
 
-import piecework.common.model.User;
+import piecework.model.User;
 
 /**
  * @author James Renfro

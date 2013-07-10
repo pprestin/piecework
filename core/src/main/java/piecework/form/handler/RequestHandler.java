@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
-import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.identity.InternalUserDetails;
 import piecework.process.concrete.ResourceHelper;
@@ -31,8 +30,7 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessRepository;
-import piecework.process.RequestRepository;
+import piecework.persistence.RequestRepository;
 import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 
@@ -68,10 +66,16 @@ public class RequestHandler {
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
 
         String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
+
         ManyMap<String, String> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
 
         Screen currentScreen = null;
         String taskId = null;
+
+        if (task != null) {
+            taskId = task.getTaskInstanceId();
+            processInstanceId = task.getProcessInstanceId();
+        }
 
         if (previousFormRequest != null) {
             interaction = previousFormRequest.getInteraction();
@@ -85,8 +89,7 @@ public class RequestHandler {
             Iterator<Interaction> interactionIterator = interactions.iterator();
 
             if (task != null) {
-                taskId = task.getTaskInstanceId();
-                processInstanceId = task.getProcessInstanceId();
+
                 String taskDefinitionKey = task.getTaskDefinitionKey();
                 while (interactionIterator.hasNext()) {
                     Interaction current = interactionIterator.next();

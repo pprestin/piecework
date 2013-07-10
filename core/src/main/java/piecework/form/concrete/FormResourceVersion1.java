@@ -20,21 +20,16 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import piecework.common.view.SearchResults;
-import piecework.common.view.ViewContext;
+import piecework.model.SearchResults;
+import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormResource;
-import piecework.form.handler.RequestHandler;
-import piecework.form.handler.ResponseHandler;
 import piecework.model.Form;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceService;
-import piecework.process.ProcessRepository;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import java.util.List;
 
@@ -50,22 +45,10 @@ public class FormResourceVersion1 implements FormResource {
     Environment environment;
 
     @Autowired
-    ProcessRepository processRepository;
-
-    @Autowired
-    ProcessInstanceService processInstanceService;
-
-    @Autowired
-    RequestHandler requestHandler;
-
-    @Autowired
     FormService formService;
 
     @Autowired
     ResourceHelper resourceHelper;
-
-    @Autowired
-    ResponseHandler responseHandler;
 
     @Autowired
     Sanitizer sanitizer;

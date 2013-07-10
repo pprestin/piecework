@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
 
 import piecework.model.Form;
 import piecework.security.Sanitizer;
-import piecework.common.view.ViewContext;
+import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.form.*;
 import piecework.model.Process;
