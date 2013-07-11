@@ -63,7 +63,7 @@ public class ProcessInstanceService {
     AttachmentRepository attachmentRepository;
 
     @Autowired
-    ProcessResource processResource;
+    ProcessService processService;
 
     @Autowired
     ProcessInstanceResource processInstanceResource;
@@ -182,7 +182,7 @@ public class ProcessInstanceService {
                     .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
                     .engine(allowedProcess.getEngine());
 
-                resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).interactions(null).build(processResource.getViewContext()));
+                resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).interactions(null).build(processService.getProcessViewContext()));
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
 
@@ -365,7 +365,7 @@ public class ProcessInstanceService {
         // Create a new submission to store the data submitted
         FormSubmission submission = submissionHandler.handle(payload, isAttachmentAllowed);
 
-        // If an instance already exists then get it from the repository
+        // If an instance already exists then get it from the processRepository
         ProcessInstance previous = null;
         if (StringUtils.isNotBlank(payload.getProcessInstanceId()))
             previous = processInstanceRepository.findOne(payload.getProcessInstanceId());

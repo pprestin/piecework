@@ -37,7 +37,7 @@ import piecework.model.Process;
  * @author James Renfro
  */
 @Path("process")
-public interface ProcessResource extends Resource, ApiResource {
+public interface ProcessResource extends ApiResource {
 
 	@POST
 	@Path("")

@@ -15,6 +15,7 @@
  */
 package piecework.process.concrete;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
@@ -32,6 +33,7 @@ import piecework.persistence.InteractionRepository;
 import piecework.persistence.ScreenRepository;
 import piecework.model.Interaction;
 import piecework.model.Screen;
+import piecework.process.ProcessService;
 import piecework.security.Sanitizer;
 import piecework.authorization.AuthorizationRole;
 import piecework.model.SearchResults;
@@ -52,71 +54,21 @@ import piecework.security.concrete.PassthroughSanitizer;
 public class ProcessResourceVersion1 implements ProcessResource {
 
 	@Autowired
-	ProcessRepository repository;
+    ProcessService processService;
 
-    @Autowired
-    InteractionRepository interactionRepository;
-
-    @Autowired
-    ScreenRepository screenRepository;
-	
-	@Autowired
-	ResourceHelper helper;
-	
-	@Autowired
-	Sanitizer sanitizer;
-	
-	@Value("${base.application.uri}")
-	String baseApplicationUri;
-	
-	@Value("${base.service.uri}")
-	String baseServiceUri;
-	
 	@Override
 	public Response create(Process rawProcess) throws StatusCodeError {
-		Process.Builder builder = new Process.Builder(rawProcess, sanitizer);
-
-        Process process = builder.build();
-
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        builder = new Process.Builder(process, passthroughSanitizer);
-        builder.interactions(null);
-
-        if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
-            for (Interaction interaction : process.getInteractions()) {
-                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, passthroughSanitizer);
-                interactionBuilder.screens(null);
-                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
-                    for (Screen screen : interaction.getScreens()) {
-                        Screen persistedScreen = screenRepository.save(screen);
-                        interactionBuilder.screen(persistedScreen);
-                    }
-                }
-                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
-                builder.interaction(persistedInteraction);
-            }
-        }
-
-		Process result = repository.save(builder.build());
-		
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(getViewContext()));
+		Process result = processService.create(rawProcess);
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(processService.getProcessViewContext()));
 		return responseBuilder.build();
 	}
 	
 	@Override
 	public Response delete(String rawProcessDefinitionKey) throws StatusCodeError {
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-		
-		Process record = repository.findOne(processDefinitionKey);
-		if (record == null)
-			throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
-		
-		Process.Builder builder = new Process.Builder(record, sanitizer);
-		builder.delete();
-		Process result = repository.save(builder.build());
+        Process result = processService.delete(rawProcessDefinitionKey);
 
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
-		ViewContext context = getViewContext();
+		ViewContext context = processService.getProcessViewContext();
 		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
@@ -124,58 +76,11 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	}
 
 	@Override
-	public Response update(String rawProcessDefinitionKey, Process process) throws StatusCodeError {
-		// Sanitize all user input
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-		String includedKey = sanitizer.sanitize(process.getProcessDefinitionKey());
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-
-		// If the path param key is not the same as the one that's included in the process, then this put is a rename
-		// of the key -- this means we delete the old one and create a new one, assuming that the new one doesn't conflict
-		// with an existing key
-		if (!processDefinitionKey.equals(includedKey)) {
-
-			// Check for a process with the new key
-			Process record = repository.findOne(includedKey);
-				
-			// This means that a process with that key already exists
-			if (record != null && !record.isDeleted())
-				throw new ForbiddenError(Constants.ExceptionCodes.process_change_key_duplicate, processDefinitionKey, includedKey);
-			
-			record = repository.findOne(processDefinitionKey);
-			if (record != null) {
-//				if (record.isEmpty()) {
-					// Don't bother to keep old process definitions 
-					Process.Builder builder = new Process.Builder(record, passthroughSanitizer);
-					repository.delete(builder.build());
-//				} else if (!record.isDeleted()) {
-//					Process.Builder builder = new Process.Builder(record, passthroughSanitizer);
-//					builder.delete();
-//					processRepository.save(builder.build());
-//				}
-			}
-		}
-
-        Process.Builder builder = new Process.Builder(process, sanitizer);
-        if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
-            for (Interaction interaction : process.getInteractions()) {
-                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, passthroughSanitizer);
-                interactionBuilder.screens(null);
-                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
-                    for (Screen screen : interaction.getScreens()) {
-                        Screen persistedScreen = screenRepository.save(screen);
-                        interactionBuilder.screen(persistedScreen);
-                    }
-                }
-                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
-                builder.interaction(persistedInteraction);
-            }
-        }
-
-		Process result = repository.save(builder.build());
+	public Response update(String rawProcessDefinitionKey, Process rawProcess) throws StatusCodeError {
+        Process result = processService.update(rawProcessDefinitionKey, rawProcess);
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-		ViewContext context = getViewContext();
+		ViewContext context = processService.getProcessViewContext();
 		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
@@ -185,49 +90,20 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
 	@Override
 	public Response read(String rawProcessDefinitionKey) throws StatusCodeError {
-		// Sanitize all user input
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process result = processService.read(rawProcessDefinitionKey);
 				
-		Process result = repository.findOne(processDefinitionKey);
-		
-		if (result == null)
-			throw new NotFoundError();
-		if (result.isDeleted())
-			throw new GoneError();
-				
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(getViewContext()));
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(processService.getProcessViewContext()));
 		return responseBuilder.build();
 	}
 	
 	@Override
-	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {	
-		SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceLabel("Processes").resourceName(Process.Constants.ROOT_ELEMENT_NAME);
-		Set<Process> processes = helper.findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
-		int counter = 0;
-        for (Process process : processes) {
-			resultsBuilder.item(new Process.Builder(process, sanitizer).interactions(null).build(getViewContext()));
-		    counter++;
-        }
-
-        int firstResult = counter > 0 ? 1 : 0;
-
-        resultsBuilder.firstResult(0);
-        resultsBuilder.maxResults(counter);
-        resultsBuilder.firstResult(firstResult);
-        resultsBuilder.total(Long.valueOf(counter));
-
-		return resultsBuilder.build();
-	}
-
-	@Override
-	public ViewContext getViewContext() {
-		return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "process", "Process");
+	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
+		return processService.search(uriInfo.getQueryParameters());
 	}
 
     @Override
     public String getVersion() {
-        return "v1";
+        return processService.getVersion();
     }
-
 
 }

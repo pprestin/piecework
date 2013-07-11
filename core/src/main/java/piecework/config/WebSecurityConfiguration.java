@@ -63,7 +63,7 @@ public class WebSecurityConfiguration {
     @Autowired
     UserDetailsService userDetailsService;
 
-    @Bean
+    @Bean(name="pieceworkAccessDecisionManager")
     public AccessDecisionManager resourceAccessDecisionManager() {
         @SuppressWarnings("rawtypes")
         AccessDecisionVoter voter = new ResourceAccessVoter();

@@ -7,12 +7,15 @@
    http://www.springframework.org/schema/security
    http://www.springframework.org/schema/security/spring-security-3.1.xsd">
 
-    <security:http pattern="/api/**" use-expressions="true">
+    <security:global-method-security jsr250-annotations="enabled" access-decision-manager-ref="pieceworkAccessDecisionManager"/>
+
+    <security:http pattern="/api/**" use-expressions="true" access-decision-manager-ref="pieceworkAccessDecisionManager">
         <security:intercept-url pattern="/**" access="authenticated"/>
         <security:x509/>
     </security:http>
 
-    <security:http pattern="/secure/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html" >
+    <security:http pattern="/secure/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html"
+                   access-decision-manager-ref="pieceworkAccessDecisionManager">
 
         <!--<security:intercept-url pattern="/static/*" access="permitAll"/>-->
         <!--<security:intercept-url pattern="/public/*" access="permitAll"/>-->
