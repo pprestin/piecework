@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.io.Files;
+import com.mongodb.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,15 +37,15 @@ import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
-import com.mongodb.Mongo;
-import com.mongodb.ServerAddress;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import piecework.common.UuidGenerator;
 import piecework.model.ProcessInstance;
 import piecework.persistence.EmbeddedMongoInstance;
+import piecework.util.SSLSocketFactoryWrapper;
 
 import javax.annotation.PreDestroy;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * @author James Renfro
@@ -71,7 +72,8 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
             mongoInstance.startEmbeddedMongo();
             mongoInstance.importData();
         }
-        return new Mongo(getServerAddresses());
+        MongoClientOptions options = new MongoClientOptions.Builder().socketFactory(SSLSocketFactory.getDefault()).build();
+        return new MongoClient(getServerAddresses(), options);
     }
 
     @Bean

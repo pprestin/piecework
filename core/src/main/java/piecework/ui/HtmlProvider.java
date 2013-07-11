@@ -64,7 +64,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		return hasTemplateResource(type);
+		return !type.equals(StreamingPageContent.class) && hasTemplateResource(type);
 	}
 
 	@Override
@@ -103,7 +103,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             externalId = userDetails.getExternalId();
 			userName = userDetails.getDisplayName();
 		}
-		
+
 		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
             String applicationTitle = environment.getProperty("application.name");

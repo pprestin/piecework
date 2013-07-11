@@ -35,11 +35,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
+import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
 import piecework.security.AuthorityMappingPreAuthenticatedProvider;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -75,10 +78,19 @@ public class WebSecurityConfiguration {
         switch (authenticationType()) {
             case NONE:
             case PREAUTH:
-                AuthorityMappingPreAuthenticatedProvider provider = new AuthorityMappingPreAuthenticatedProvider();
-                provider.setAuthoritiesMapper(authorizationRoleMapper);
-                provider.setPreAuthenticatedUserDetailsService(new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(userDetailsService));
-                return new ProviderManager(Collections.singletonList(AuthenticationProvider.class.cast(provider)));
+                List<AuthenticationProvider> providers = new ArrayList<AuthenticationProvider>();
+                AuthorityMappingPreAuthenticatedProvider authorityMappingPreAuthenticatedProvider = new AuthorityMappingPreAuthenticatedProvider();
+                authorityMappingPreAuthenticatedProvider.setAuthoritiesMapper(authorizationRoleMapper);
+                authorityMappingPreAuthenticatedProvider.setPreAuthenticatedUserDetailsService(new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(userDetailsService));
+
+                providers.add(authorityMappingPreAuthenticatedProvider);
+
+                AuthorityMappingAnonymousAuthenticationProvider authorityMappingAnonymousAuthenticationProvider = new AuthorityMappingAnonymousAuthenticationProvider();
+                authorityMappingAnonymousAuthenticationProvider.setAuthoritiesMapper(authorizationRoleMapper);
+
+                providers.add(authorityMappingAnonymousAuthenticationProvider);
+
+                return new ProviderManager(providers);
         }
 
         return new ProviderManager(Arrays.asList(authenticationProviders));

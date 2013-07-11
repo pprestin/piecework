@@ -128,7 +128,7 @@ public class LdapConfiguration {
 		return context;
 	}
 
-    @Bean
+    @Bean(name="pieceworkAuthorizationRoleMapper")
     public AuthorizationRoleMapper authorizationRoleMapper() {
         return new AuthorizationRoleMapper();
     }

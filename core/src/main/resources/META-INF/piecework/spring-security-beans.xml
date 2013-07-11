@@ -9,16 +9,16 @@
 
     <security:global-method-security jsr250-annotations="enabled" access-decision-manager-ref="pieceworkAccessDecisionManager"/>
 
-    <security:http pattern="/api/**" use-expressions="true" access-decision-manager-ref="pieceworkAccessDecisionManager">
+    <security:http pattern="/api/**" use-expressions="true" >
         <security:intercept-url pattern="/**" access="authenticated"/>
         <security:x509/>
     </security:http>
 
-    <security:http pattern="/secure/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html"
-                   access-decision-manager-ref="pieceworkAccessDecisionManager">
+    <security:http pattern="/public/**" auto-config="true" use-expressions="true">
+        <security:intercept-url pattern="/**" access="permitAll"/>
+    </security:http>
 
-        <!--<security:intercept-url pattern="/static/*" access="permitAll"/>-->
-        <!--<security:intercept-url pattern="/public/*" access="permitAll"/>-->
+    <security:http pattern="/secure/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html">
         <security:intercept-url pattern="/**" access="authenticated"/>
 
         <security:form-login
@@ -32,6 +32,18 @@
     <bean id="ssoHeaderFilter" class="org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter">
         <property name="principalRequestHeader" value="REMOTE_USER"/>
         <property name="authenticationManager" ref="org.springframework.security.authenticationManager"/>
+    </bean>
+
+    <bean id="anonymousAuthFilter"
+          class="org.springframework.security.web.authentication.AnonymousAuthenticationFilter">
+        <property name="key" value="foobar"/>
+        <property name="userAttribute" value="anonymousUser,ROLE_ANONYMOUS"/>
+    </bean>
+
+    <bean id="anonymousAuthenticationProvider"
+          class="piecework.security.AuthorityMappingAnonymousAuthenticationProvider">
+        <property name="key" value="foobar"/>
+        <property name="authoritiesMapper" ref="pieceworkAuthorizationRoleMapper"/>
     </bean>
 
 </beans>

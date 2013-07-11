@@ -18,6 +18,7 @@ package piecework.form.handler;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
@@ -42,6 +43,7 @@ import piecework.util.ManyMap;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
@@ -78,10 +80,19 @@ public class ResponseHandler {
             String location = form.getScreen().getLocation();
 
             if (StringUtils.isNotEmpty(location)) {
-                // If the location is not blank then delegate to the
-                Content content = contentRepository.findByLocation(location);
-                String contentType = content.getContentType();
-                return Response.ok(new StreamingPageContent(form, content), contentType).build();
+                // If the location is not blank then retrieve from that location
+                Content content;
+                if (location.startsWith("classpath:")) {
+                    ClassPathResource resource = new ClassPathResource(location.substring("classpath:".length()));
+                    try {
+                        content = new Content.Builder().inputStream(resource.getInputStream()).contentType("text/html").build();
+                    } catch (IOException e) {
+                        throw new InternalServerError();
+                    }
+                } else {
+                    content = contentRepository.findByLocation(location);
+                }
+                return Response.ok(new StreamingPageContent(form, content), content.getContentType()).build();
             }
         }
 
