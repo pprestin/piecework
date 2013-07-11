@@ -15,13 +15,17 @@
  */
 package piecework.security;
 
+import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
@@ -36,12 +40,17 @@ public class AuthorityMappingPreAuthenticatedProvider extends PreAuthenticatedAu
 	private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
 	
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        PreAuthenticatedAuthenticationToken token = PreAuthenticatedAuthenticationToken.class.cast(super.authenticate(authentication));
-        
-        Collection<? extends GrantedAuthority> authorities = authoritiesMapper.mapAuthorities(token.getAuthorities());
-        PreAuthenticatedAuthenticationToken result = new PreAuthenticatedAuthenticationToken(token.getPrincipal(), token.getCredentials(), authorities);
-        result.setDetails(token.getDetails());
-
+        PreAuthenticatedAuthenticationToken result;
+        if (authentication != null && authentication.getCredentials() != null && authentication.getCredentials() instanceof X509Certificate) {
+            GrantedAuthority authority = new SimpleGrantedAuthority("CERTIFICATE_" + authentication.getPrincipal());
+            Collection<? extends GrantedAuthority> authorities = authoritiesMapper.mapAuthorities(Collections.singletonList(authority));
+            result = new PreAuthenticatedAuthenticationToken(authentication.getPrincipal(), authentication.getCredentials(), authorities);
+        } else {
+            PreAuthenticatedAuthenticationToken token = PreAuthenticatedAuthenticationToken.class.cast(super.authenticate(authentication));
+            Collection<? extends GrantedAuthority> authorities = authoritiesMapper.mapAuthorities(token.getAuthorities());
+            result = new PreAuthenticatedAuthenticationToken(token.getPrincipal(), token.getCredentials(), authorities);
+            result.setDetails(token.getDetails());
+        }
         return result;
     }
 
