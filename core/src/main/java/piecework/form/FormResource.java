@@ -34,7 +34,6 @@ import java.util.List;
  * @author James Renfro
  */
 @Path("form")
-//@Produces("text/html")
 public interface FormResource extends ApplicationResource {
 
     @GET
