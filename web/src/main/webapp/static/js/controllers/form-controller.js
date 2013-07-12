@@ -174,19 +174,22 @@ define([
         if (model == null)
             model = {};
 
-        this.compose('formModel', Form, model);
-        formModel = this.compose('formModel');
-
-        this.compose('formToolbarView', FormToolbarView, {model: formModel, params: params});
+//        this.compose('formToolbarView', FormToolbarView, {model: formModel, params: params});
         this.compose('formView', {
             compose: function(options) {
-                this.model = options.formModel;
+                this.model = new Form(model);
                 var link = this.model.get("link");
                 var route = '/' + options.route.path;
                 if (/.html$/.test(route))
                     route = route.substring(0, route.length - 5);
 
                 var composer = this;
+
+                var groupingIndex = 0;
+                var currentScreen = params.ordinal;
+                if (currentScreen != undefined)
+                    groupingIndex = parseInt(currentScreen, 10) - 1;
+                this.model.set("groupingIndex", groupingIndex);
 
                 if (link != route) {
                     this.model.set('link', route);
@@ -198,11 +201,6 @@ define([
                         if (disabledAutoRender && typeof this.view.render === "function") {
                             this.view.render();
                         }
-                        var groupingIndex = 0;
-                        var currentScreen = params.ordinal;
-                        if (currentScreen != undefined)
-                            groupingIndex = parseInt(currentScreen, 10) - 1;
-
                         Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
                     });
                     this.model.fetch({
@@ -217,7 +215,8 @@ define([
                     });
                 } else {
                     window.piecework._isInitialLoad = false;
-                    this.check(options);
+//                    this.check(options);
+
                     var autoRender, disabledAutoRender;
                     this.view = new FormView({model: this.model}, options);
                     autoRender = this.view.autoRender;
@@ -225,10 +224,6 @@ define([
                     if (disabledAutoRender && typeof this.view.render === "function") {
                         this.view.render();
                     }
-                    var groupingIndex = 0;
-                    var currentScreen = params.ordinal;
-                    if (currentScreen != undefined)
-                        groupingIndex = parseInt(currentScreen, 10) - 1;
 
                     Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
                 }
@@ -241,7 +236,9 @@ define([
                 var currentScreen = options.params.ordinal;
                 if (currentScreen != undefined)
                     groupingIndex = parseInt(currentScreen, 10) - 1;
-                this.model.set("groupingIndex", groupingIndex);
+//                if (this.model !== undefined && !this.model.disposed)
+//                    this.model.set("groupingIndex", groupingIndex);
+                Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
                 return options.params.processDefinitionKey != undefined;
             },
             options: {

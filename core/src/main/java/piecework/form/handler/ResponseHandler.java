@@ -18,11 +18,13 @@ package piecework.form.handler;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.form.concrete.FormService;
 import piecework.task.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
@@ -41,10 +43,12 @@ import piecework.util.ConstraintUtil;
 import piecework.util.FormDataUtil;
 import piecework.util.ManyMap;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 
@@ -60,7 +64,13 @@ public class ResponseHandler {
     ContentRepository contentRepository;
 
     @Autowired
+    Environment environment;
+
+    @Autowired
     ProcessEngineRuntimeFacade facade;
+
+    @Autowired
+    FormService formService;
 
     @Autowired
     ProcessRepository processRepository;
@@ -202,8 +212,8 @@ public class ResponseHandler {
     }
 
     public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
-        URI uri = UriBuilder.fromResource(AnonymousFormResource.class).path("{processDefinitionKey}/{requestId}").build(formRequest.getProcessDefinitionKey(), formRequest.getRequestId());
-        return Response.seeOther(uri).build();
+        String hostUri = environment.getProperty("host.uri");
+        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, hostUri + formService.getFormViewContext().getApplicationUri(formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
     }
 
     private void addConfirmationNumber(Field.Builder fieldBuilder, String confirmationNumber) {

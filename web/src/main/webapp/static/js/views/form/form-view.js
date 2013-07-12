@@ -1,10 +1,10 @@
 define([ 'chaplin',
         'models/attachments', 'models/buttons', 'models/base/collection', 'models/base/model', 'models/notification', 'models/design/sections',
-        'views/form/attachments-view', 'views/form/buttons-view', 'views/base/collection-view', 'views/form/fields-view',
+        'views/form/attachments-view', 'views/form/buttons-view', 'views/base/collection-view', 'views/form/fields-view', 'views/form/form-toolbar-view',
         'views/form/grouping-view', 'views/form/notification-view', 'views/form/section-view', 'views/form/sections-view',
         'views/base/view', 'text!templates/form/form.hbs' ],
 		function(Chaplin, Attachments, Buttons, Collection, Model, Notification, Sections, AttachmentsView, ButtonsView, CollectionView, FieldsView,
-		         GroupingView, NotificationView, SectionView, SectionsView, View, template) {
+		         FormToolbarView, GroupingView, NotificationView, SectionView, SectionsView, View, template) {
 	'use strict';
 
 	var FormView = View.extend({
@@ -25,15 +25,21 @@ define([ 'chaplin',
 	    initialize: function(model, options) {
 	        View.__super__.initialize.apply(this, options);
             this.params = options.params;
+            this.subview('formToolbarView', new FormToolbarView({model: this.model}));
 
             var screen = this.model.get("screen");
             if (screen != undefined) {
-                var action = this.model.get("action");
+                var link = this.model.get("link");
+                var formInstanceId = this.model.get("formInstanceId");
+                var re = new RegExp(formInstanceId + "$");
+
+                if (! re.test(link))
+                    link += '/' + formInstanceId;
 
                 var groupings = screen.groupings;
 
                 for (var i=0;i<groupings.length;i++) {
-                    groupings[i].breadcrumbLink = action + '/step/' + groupings[i].ordinal;
+                    groupings[i].breadcrumbLink = link + '/step/' + groupings[i].ordinal;
                 }
 
             }
@@ -60,6 +66,8 @@ define([ 'chaplin',
             var pageLink = this.model.get("link");
             var groupings = screen.groupings;
             var groupingIndex = this.model.get("groupingIndex");
+            if (groupingIndex == undefined)
+                groupingIndex = 0;
             var grouping = groupings != undefined && groupings.length > groupingIndex ? groupings[groupingIndex] : { sectionIds : []};
 
             var sectionList = screen.sections;
@@ -224,6 +232,7 @@ define([ 'chaplin',
             }
 	    },
 	    _onGroupingIndexChange: function(groupingIndex) {
+	        this.model.set("groupingIndex", groupingIndex);
 	        var screen = this.model.get("screen");
 
             if (screen == undefined)
@@ -309,12 +318,10 @@ define([ 'chaplin',
 	            var attachments = new Attachments({}, {url: urlRoot});
 	            this.listenTo(attachments, 'sync', this._onSyncAttachments);
                 this.subview('attachmentsView', new AttachmentsView({collection: attachments}));
-//                this.$el.addClass('span9');
                 attachments.fetch();
             } else {
                 attachmentsView.collection.fetch();
                 attachmentsView.$el.toggle(0);
-//                this.$el.toggleClass('span9');
             }
 	    },
 	    _onSyncAttachments: function(attachments) {

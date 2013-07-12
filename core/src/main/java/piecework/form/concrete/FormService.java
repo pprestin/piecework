@@ -324,7 +324,6 @@ public class FormService {
                 .build();
 
         try {
-
             ProcessInstance stored = processInstanceService.submit(process, screen, payload);
 
             FormRequest nextFormRequest = null;
@@ -367,6 +366,11 @@ public class FormService {
         processInstanceService.validate(process, screen, payload, true);
 
         return Response.noContent().build();
+    }
+
+    public ViewContext getFormViewContext() {
+        String baseApplicationUri = environment.getProperty("base.application.uri");
+        return new ViewContext(baseApplicationUri, null, null, Form.Constants.ROOT_ELEMENT_NAME, "Form");
     }
 
     private RequestDetails requestDetails(HttpServletRequest request) {

@@ -51,6 +51,9 @@ public class Form {
     private final List<FormValue> formData;
 
     @XmlAttribute
+    private final String root;
+
+    @XmlAttribute
     private final String action;
 
     @XmlAttribute
@@ -84,6 +87,7 @@ public class Form {
         this.task = builder.task;
         this.screen = builder.screen;
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.root = context != null ? context.getApplicationUri() : null;
         this.action = context != null ? context.getApplicationUri(builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, task.getTaskInstanceId()) : null;
@@ -125,6 +129,10 @@ public class Form {
             }
         }
         return map;
+    }
+
+    public String getRoot() {
+        return root;
     }
 
     public String getAction() {

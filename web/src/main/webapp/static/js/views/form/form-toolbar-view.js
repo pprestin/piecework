@@ -71,7 +71,8 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
             });
 	    },
 	    _onBackButton: function() {
-            Chaplin.mediator.publish("!router:routeByName", "form#search", this.options.params);
+	        var root = this.model.get("root");
+            Chaplin.mediator.publish("!router:route", root);
 	    },
 	    _onFileButton: function() {
 	        $('.attach-file').click();
@@ -79,7 +80,7 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	    _onSuspendButton: function() {
 	        var data = new FormData();
             var task = this.model.get("task");
-            if (task !== undefined) {
+            if (task != null) {
                 var url = this.model.get("suspension") + ".json";
                 if (!task.active) {
                     url = this.model.get("activation") + ".json";
@@ -98,7 +99,8 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 
 	    },
 	    _onBackToSearch: function() {
-            Chaplin.mediator.publish("!router:routeByName", "form#search", this.options.params);
+            var root = this.model.get("root");
+            Chaplin.mediator.publish("!router:route", root);
 	    },
 	    _onDeleteSuccess: function() {
 	        Chaplin.mediator.publish('backToSearch');

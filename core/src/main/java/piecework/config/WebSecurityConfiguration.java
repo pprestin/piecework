@@ -32,11 +32,14 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
 import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
 import piecework.security.AuthorityMappingPreAuthenticatedProvider;
+import piecework.security.SingleSignOnAuthenticationFilter;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -122,5 +125,19 @@ public class WebSecurityConfiguration {
         URL policyUrl = policyResource.getURL();
 
         return Policy.getInstance(policyUrl);
+    }
+
+    @Bean(name="pieceworkPreAuthFilter")
+    public AbstractPreAuthenticatedProcessingFilter pieceworkPreAuthFilter() throws Exception {
+        if (environment.getProperty("preauthentication.user.request.header") != null) {
+            RequestHeaderAuthenticationFilter requestHeaderAuthenticationFilter = new RequestHeaderAuthenticationFilter();
+            requestHeaderAuthenticationFilter.setPrincipalRequestHeader(environment.getProperty("preauthentication.user.request.header"));
+            requestHeaderAuthenticationFilter.setAuthenticationManager(authenticationManager());
+            return requestHeaderAuthenticationFilter;
+        }
+
+        SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
+        singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
+        return singleSignOnAuthenticationFilter;
     }
 }

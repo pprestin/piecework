@@ -1,8 +1,9 @@
 <ul class="toolbar-items">
     <li class="nav">
-        <button class="btn" id="suspend-button" title="Suspend process"><i class="icon-off"></i></button>
-        <button class="btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process"><i class=" icon-trash"></i></button>
-
+        {{#if task}}
+            <button class="btn" id="suspend-button" title="Suspend process"><i class="icon-off"></i></button>
+            <button class="btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process"><i class=" icon-trash"></i></button>
+        {{/if}}
     </li>
     <li class="nav pull-right">
         <a class="btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment"></i></a>

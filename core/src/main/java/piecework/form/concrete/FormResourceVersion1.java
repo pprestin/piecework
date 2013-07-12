@@ -117,8 +117,7 @@ public class FormResourceVersion1 implements FormResource {
 
     @Override
 	public ViewContext getViewContext() {
-        String baseApplicationUri = environment.getProperty("base.application.uri");
-		return new ViewContext(baseApplicationUri, null, null, Form.Constants.ROOT_ELEMENT_NAME, "Form");
+        return formService.getFormViewContext();
 	}
 
 }
