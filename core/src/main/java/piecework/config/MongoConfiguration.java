@@ -72,8 +72,11 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
             mongoInstance.startEmbeddedMongo();
             mongoInstance.importData();
         }
-        MongoClientOptions options = new MongoClientOptions.Builder().socketFactory(SSLSocketFactory.getDefault()).build();
-        return new MongoClient(getServerAddresses(), options);
+        MongoClientOptions.Builder optionsBuilder = new MongoClientOptions.Builder();
+        if (environment.getProperty("mongo.use.ssl", Boolean.class, Boolean.FALSE))
+            optionsBuilder.socketFactory(SSLSocketFactory.getDefault());
+
+        return new MongoClient(getServerAddresses(), optionsBuilder.build());
     }
 
     @Bean
@@ -114,8 +117,8 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
     }
 
 	private List<ServerAddress> getServerAddresses() throws UnknownHostException {
-        String mongoServerAddresses = environment.getProperty("mongo.server.addresses");
 		List<ServerAddress> serverAddresses = new LinkedList<ServerAddress>();
+        String mongoServerAddresses = environment.getProperty("mongo.server.addresses", "127.0.0.1:37017");
 		String[] addresses = mongoServerAddresses.split(",");
 		for (String address : addresses) {
 			String ip = null;
