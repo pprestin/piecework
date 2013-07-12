@@ -226,9 +226,12 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             if (!resource.exists())
                 resource = new FileSystemResource(templatesDirectory + File.separator + "Layout.template.html");
 
-        } else
+        } else {
 			resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
 
+            if (!resource.exists())
+                resource = new ClassPathResource("META-INF/piecework/templates/" + "Layout.template.html");
+        }
 
 
 		return resource;
