@@ -152,13 +152,4 @@ public class ApplicationConfiguration {
         return sf.create();
     }
 
-	@Bean
-	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
-        CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();
-        configurer.setCustomLocations(environment);
-		return configurer;
-	}
-	
-
-		
 }

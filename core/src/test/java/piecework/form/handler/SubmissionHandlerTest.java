@@ -65,7 +65,7 @@ public class SubmissionHandlerTest {
                 .formValue("TestField", "1", "2", "3")
                 .build();
 
-        Payload payload = new Payload().processInstance(instance);
+        Payload payload = new Payload.Builder().processInstance(instance).build();
         FormSubmission actual = submissionHandler.handle(payload, false);
         Assert.assertNotNull(actual);
 

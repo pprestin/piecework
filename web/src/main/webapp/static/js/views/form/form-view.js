@@ -184,18 +184,16 @@ define([ 'chaplin',
 	        var screen = this.model.get("screen");
             var type = screen.type;
 
-            if (type == 'wizard') {
-                var validated = $('#main-form').prop("validated");
 
-                if (validated != undefined && validated)
-                    return true;
+            var validated = $('#main-form').prop("validated");
 
-                this._doValidate();
+            if (validated != undefined && validated)
+                return true;
 
-                return false;
-            }
+            this._doValidate();
 
-	        return true;
+            return false;
+
 	    },
 	    _onFormValid: function(data, textStatus, jqXHR) {
             var next = $(':button[type="submit"]:visible').val();

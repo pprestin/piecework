@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.identity.InternalUserDetails;
+import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.process.concrete.ResourceHelper;
 import piecework.util.ConstraintUtil;
@@ -49,6 +50,9 @@ public class ValidationService {
 
     @Autowired
     ResourceHelper helper;
+
+    @Autowired
+    InternalUserDetailsService userDetailsService;
 
     public FormValidation validate(FormSubmission submission, ProcessInstance instance, Screen screen) {
         return validate(submission, instance, screen, null);
@@ -370,6 +374,18 @@ public class ValidationService {
                         lastValue = value;
                     }
 
+                    if (isPersonLookup) {
+                        InternalUserDetails userDetails = userDetailsService.loadUserByAnyId(value);
+
+                        if (userDetails == null) {
+                            hasErrorResult = true;
+                            validationBuilder.error(fieldName, "This identifier is not recognized as a person in the system " + value);
+                        } else {
+                            String displayPropertyName = "__" + fieldName;
+                            validationBuilder.formValue(displayPropertyName, userDetails.getDisplayName());
+                        }
+                    }
+
                     counter++;
                 }
 
@@ -429,12 +445,12 @@ public class ValidationService {
         }
 
         if (!hasErrorResult && hasAtLeastEmptyValue) {
-            if (isPersonLookup) {
-                String displayPropertyName = "_" + fieldName;
-                List<String> displayValues = submissionValueMap.get(displayPropertyName);
-                if (displayValues != null && !displayValues.isEmpty())
-                    validationBuilder.formValue(displayPropertyName, displayValues.toArray(new String[displayValues.size()]));
-            }
+//            if (isPersonLookup) {
+//                String displayPropertyName = "_" + fieldName;
+//                List<String> displayValues = submissionValueMap.get(displayPropertyName);
+//                if (displayValues != null && !displayValues.isEmpty())
+//                    validationBuilder.formValue(displayPropertyName, displayValues.toArray(new String[displayValues.size()]));
+//            }
 
             if (values != null && !values.isEmpty()) {
                 // Ensure that we save the form value

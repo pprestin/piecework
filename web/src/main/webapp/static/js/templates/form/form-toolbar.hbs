@@ -6,9 +6,10 @@
         {{/if}}
     </li>
     <li class="nav pull-right">
-        <a class="btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment"></i></a>
-
-        <button class="btn" id="attachments-button" title="View comments and attachments"><i class="icon-folder-open"></i>&nbsp;<span id="attachment-count">{{attachmentCount}}</span></button>
+        {{#if task}}
+            <a class="btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment"></i></a>
+            <button class="btn" id="attachments-button" title="View comments and attachments"><i class="icon-folder-open"></i>&nbsp;<span id="attachment-count">{{attachmentCount}}</span></button>
+        {{/if}}
 
         <button class="btn" id="back-button" title="Return to task list"><i class="icon-arrow-left"></i></button>
     </li>

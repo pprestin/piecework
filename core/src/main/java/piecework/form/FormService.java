@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.concrete;
+package piecework.form;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
@@ -150,10 +150,14 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
+        String taskId;
         RequestDetails requestDetails = requestDetails(request);
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-
-        String taskId = formRequest.getTaskId();
+        try {
+            FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+            taskId = formRequest.getTaskId();
+        } catch (NotFoundError e) {
+            taskId = requestId;
+        }
 
         if (StringUtils.isEmpty(taskId))
             throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
@@ -181,10 +185,14 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
+        String taskId;
         RequestDetails requestDetails = requestDetails(request);
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-
-        String taskId = formRequest.getTaskId();
+        try {
+            FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+            taskId = formRequest.getTaskId();
+        } catch (NotFoundError e) {
+            taskId = requestId;
+        }
 
         if (StringUtils.isEmpty(taskId))
             throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);

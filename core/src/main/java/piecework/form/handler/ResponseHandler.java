@@ -24,13 +24,12 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineRuntimeFacade;
-import piecework.form.concrete.FormService;
+import piecework.form.FormService;
 import piecework.task.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.form.AnonymousFormResource;
 import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -45,10 +44,7 @@ import piecework.util.ManyMap;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 
 

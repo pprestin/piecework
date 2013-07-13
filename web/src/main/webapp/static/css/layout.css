@@ -1,4 +1,12 @@
-@media (min-width: 1200px) {
+@media (max-width: 979px) {
+    .main-footer {
+        display: none;
+    }
+    .hide-narrow {
+        display: none;
+    }
+}
+@media (min-width:  980px) {
     .container-fluid {
         padding-right: 50px;
         padding-left: 50px;

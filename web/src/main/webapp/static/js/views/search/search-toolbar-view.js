@@ -9,10 +9,13 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/search/search
 		className: 'main-toolbar',
 	    template: template,
 	    events: {
+	        'click #suspend-button': '_onSuspendButton',
 	        'submit form': '_onFormSubmit',
 	    },
 	    listen: {
             'addedToDOM': '_onAddedToDOM',
+            'resultSelected mediator': '_onResultSelected',
+            'resultUnselected mediator': '_onResultUnselected',
             'search mediator': '_onSearch',
 	    },
 	    _onAddedToDOM: function() {
@@ -30,6 +33,14 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/search/search
             Chaplin.mediator.publish('search', data);
             return false;
 	    },
+        _onResultSelected: function(result) {
+            this.$el.find('.selected-result-btn').removeClass('hide');
+            this.model.set("selected", result);
+        },
+        _onResultUnselected: function(result) {
+            this.$el.find('.selected-result-btn').addClass('hide');
+            this.model.unset("selected");
+        },
 	    _onSearch: function(data) {
             var queryString = '';
             if (data.status != undefined && data.status != '')
@@ -47,7 +58,34 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/search/search
 
             var pattern = window.location.pathname + '?' + queryString; //'piecework/secure/form?' + queryString;
             Chaplin.mediator.publish('!router:changeURL', pattern);
-	    }
+	    },
+	    _onSuspendButton: function() {
+	        var data = new FormData();
+	        var selected = this.model.get("selected");
+	        if (selected == null)
+	            return;
+
+            var task = selected.get('task');
+            if (task != null) {
+                var url = selected.get("suspension") + ".json";
+                if (!task.active) {
+                    url = selected.get("activation") + ".json";
+                }
+                $.ajax({
+                    url : url,
+                    data : data,
+                    processData : false,
+                    contentType : false,
+                    type : 'POST',
+                    statusCode : {
+                        204 : function() {
+                            var root = selected.get("root");
+                            Chaplin.mediator.publish("!router:route", root);
+                        }
+                    }
+                });
+            }
+	    },
 	});
 
 	return SearchView;

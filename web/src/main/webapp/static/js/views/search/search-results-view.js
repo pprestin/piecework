@@ -8,8 +8,18 @@ define([ 'chaplin', 'views/base/collection-view', 'views/search/search-result-vi
 		itemView: SearchResultView,
 		tagName: 'tbody',
 		listen: {
+		    'resultSelected mediator': '_onResultSelected',
+            'resultUnselected mediator': '_onResultUnselected',
 		    'search mediator': '_onSearch',
 		},
+		_onResultSelected: function(result) {
+            var $checkbox = this.$el.find('.result-checkbox').not(":checked");
+            $checkbox.attr('disabled', true);
+        },
+        _onResultUnselected: function(result) {
+            var $checkbox = this.$el.find('.result-checkbox');
+            $checkbox.removeAttr('disabled');
+        },
 		_onSearch: function(data) {
 		    var clean = {};
 		    if (data.keyword !== undefined && data.keyword != 'none')

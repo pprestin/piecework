@@ -49,6 +49,7 @@ import piecework.task.TaskCriteria;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.text.DateFormat;
 import java.util.*;
 
 /**
@@ -269,6 +270,12 @@ public class ProcessInstanceService {
             mustache.execute(writer, scopes);
 
             processInstanceLabel = writer.toString();
+
+            if (StringUtils.isEmpty(processInstanceLabel))
+                processInstanceLabel = "Submission " + DateFormat.getDateTimeInstance(
+                        DateFormat.SHORT,
+                        DateFormat.SHORT,
+                        Locale.getDefault());
         }
 
         if (previous != null) {

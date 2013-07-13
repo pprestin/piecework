@@ -96,7 +96,6 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
                     }
                 });
             }
-
 	    },
 	    _onBackToSearch: function() {
             var root = this.model.get("root");

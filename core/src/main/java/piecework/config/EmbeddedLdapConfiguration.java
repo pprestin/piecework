@@ -29,7 +29,7 @@ import org.springframework.security.ldap.server.ApacheDSContainer;
  * @author James Renfro
  */
 @Configuration
-@Profile({"embedded-ldap","ldap"})
+@Profile({"embedded-ldap"})
 public class EmbeddedLdapConfiguration {
 
 	private final static String ROOT = "dc=springframework,dc=org";

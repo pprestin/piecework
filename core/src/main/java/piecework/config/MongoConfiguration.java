@@ -59,11 +59,7 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
     @Autowired
     Environment environment;
 
-    @Autowired
-    UuidGenerator uuidGenerator;
-
     private EmbeddedMongoInstance mongoInstance;
-    private String databaseName;
 
 	@Bean
     public Mongo mongo() throws Exception {

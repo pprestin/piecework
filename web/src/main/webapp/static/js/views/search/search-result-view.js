@@ -7,6 +7,9 @@ define([ 'chaplin', 'views/base/view' ],
 		className: 'search-result',
 		container: '.search-results',
 		tagName: 'tr',
+		events: {
+		    'change .result-checkbox': '_onChangeResultSelection'
+		},
 	    render: function(options) {
 	        View.__super__.render.apply(this, options);
             var html = '';
@@ -30,12 +33,14 @@ define([ 'chaplin', 'views/base/view' ],
                     startTime = task.startTime;
             }
 
+            html += '<td><input type="checkbox" class="result-checkbox"/></td>';
+
             if (processInstanceLabel != undefined)
-                html += '<td><a href="' + link + '.html">' + processInstanceLabel + '</a></td>';
+                html += '<td><a href="' + link + '.html" target="_blank">' + processInstanceLabel + '</a></td>';
 	        if (taskLabel != undefined)
-	            html += '<td>' + taskLabel + '</td>';
+	            html += '<td class="hide-narrow">' + taskLabel + '</td>';
 	        if (processDefinitionLabel != undefined)
-	            html += '<td>' + processDefinitionLabel + '</td>';
+	            html += '<td class="hide-narrow">' + processDefinitionLabel + '</td>';
 
             if (startTime != undefined) {
                 var startTimeDate = new Date(startTime);
@@ -43,6 +48,13 @@ define([ 'chaplin', 'views/base/view' ],
             }
             this.$el.html(html);
             return this;
+	    },
+	    _onChangeResultSelection: function(event) {
+	        if (event.target.checked) {
+                Chaplin.mediator.publish('resultSelected', this.model);
+	        } else {
+	            Chaplin.mediator.publish('resultUnselected', this.model);
+	        }
 	    }
 	});
 
