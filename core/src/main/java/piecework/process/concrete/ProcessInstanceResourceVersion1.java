@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.Payload;
 import piecework.common.RequestDetails;
+import piecework.engine.ProcessEngineFacade;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.model.ProcessExecution;
 import piecework.engine.exception.ProcessEngineException;
@@ -42,7 +43,6 @@ import piecework.process.*;
 import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.form.handler.RequestHandler;
 import piecework.security.concrete.PassthroughSanitizer;
 
@@ -61,7 +61,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     ProcessInstanceService processInstanceService;
 
 	@Autowired
-	ProcessEngineRuntimeFacade facade;
+    ProcessEngineFacade facade;
 
     @Autowired
     RequestHandler requestHandler;

@@ -26,7 +26,7 @@ import piecework.util.ManyMap;
 /**
  * @author James Renfro
  */
-public interface ProcessEngineRuntimeFacade extends ProcessEngineCapabilities {
+public interface ProcessEngineFacade extends ProcessEngineCapabilities {
 
 
 }

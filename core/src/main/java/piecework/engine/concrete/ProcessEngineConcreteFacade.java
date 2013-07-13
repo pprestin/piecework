@@ -35,7 +35,7 @@ import piecework.task.TaskResults;
  * @author James Renfro
  */
 @Service
-public class ProcessEngineRuntimeConcreteFacade implements ProcessEngineRuntimeFacade {
+public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
 
 	@Autowired
     Registry registry;

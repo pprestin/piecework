@@ -46,6 +46,11 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.OVERSEER})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/history")
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+
     @PUT
     @Path("{processDefinitionKey}/{processInstanceId}")
     @RolesAllowed({AuthorizationRole.OVERSEER})

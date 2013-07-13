@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
-import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.engine.ProcessEngineFacade;
 import piecework.identity.InternalUserDetails;
 import piecework.process.concrete.ResourceHelper;
 import piecework.task.TaskCriteria;
@@ -45,7 +45,7 @@ public class RequestHandler {
     private static final Logger LOG = Logger.getLogger(RequestHandler.class);
 
     @Autowired
-    ProcessEngineRuntimeFacade facade;
+    ProcessEngineFacade facade;
 
     @Autowired
     RequestRepository requestRepository;

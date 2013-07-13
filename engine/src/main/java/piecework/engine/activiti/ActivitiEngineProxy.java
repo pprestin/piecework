@@ -656,6 +656,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     private HistoricTaskInstanceQuery historicTaskQuery(TaskCriteria criteria) {
+
         HistoricTaskInstanceQuery query = historyService.createHistoricTaskInstanceQuery();
 
         if (criteria.getProcesses() != null && criteria.getProcesses().size() == 1)

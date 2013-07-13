@@ -27,9 +27,9 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
+import piecework.engine.ProcessEngineFacade;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.form.handler.SubmissionHandler;
@@ -70,7 +70,7 @@ public class ProcessInstanceService {
     ProcessInstanceResource processInstanceResource;
 
     @Autowired
-    ProcessEngineRuntimeFacade facade;
+    ProcessEngineFacade facade;
 
     @Autowired
     ResourceHelper helper;

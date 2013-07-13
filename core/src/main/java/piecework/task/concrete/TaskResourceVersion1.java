@@ -26,9 +26,9 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
 import piecework.common.RequestDetails;
+import piecework.engine.ProcessEngineFacade;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.identity.InternalUserDetailsService;
@@ -63,7 +63,7 @@ public class TaskResourceVersion1 implements TaskResource {
     Environment environment;
 
     @Autowired
-    ProcessEngineRuntimeFacade facade;
+    ProcessEngineFacade facade;
 
     @Autowired
     ResourceHelper helper;

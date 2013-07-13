@@ -23,7 +23,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessEngineRuntimeFacade;
+import piecework.engine.ProcessEngineFacade;
 import piecework.form.FormService;
 import piecework.task.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
@@ -63,7 +63,7 @@ public class ResponseHandler {
     Environment environment;
 
     @Autowired
-    ProcessEngineRuntimeFacade facade;
+    ProcessEngineFacade facade;
 
     @Autowired
     FormService formService;

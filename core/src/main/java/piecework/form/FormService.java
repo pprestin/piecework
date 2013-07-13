@@ -25,9 +25,9 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
+import piecework.engine.ProcessEngineFacade;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessEngineRuntimeFacade;
 import piecework.exception.*;
 import piecework.form.handler.AttachmentHandler;
 import piecework.identity.InternalUserDetails;
@@ -64,7 +64,7 @@ public class FormService {
     Environment environment;
 
     @Autowired
-    ProcessEngineRuntimeFacade facade;
+    ProcessEngineFacade facade;
 
     @Autowired
     ResourceHelper helper;

@@ -26,11 +26,11 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 
 import piecework.Registry;
+import piecework.engine.ProcessEngineFacade;
+import piecework.engine.concrete.ProcessEngineConcreteFacade;
 import piecework.persistence.AuthorizationRepository;
 import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.engine.ProcessEngineProxy;
-import piecework.engine.ProcessEngineRuntimeFacade;
-import piecework.engine.concrete.ProcessEngineRuntimeConcreteFacade;
 import piecework.form.handler.ResponseHandler;
 import piecework.persistence.*;
 import piecework.form.handler.RequestHandler;
@@ -59,8 +59,8 @@ import piecework.security.Sanitizer;
 public class UnitTestConfiguration {
 
     @Bean
-    public ProcessEngineRuntimeFacade facade() {
-        return new ProcessEngineRuntimeConcreteFacade();
+    public ProcessEngineFacade facade() {
+        return new ProcessEngineConcreteFacade();
     }
 
     @Bean
