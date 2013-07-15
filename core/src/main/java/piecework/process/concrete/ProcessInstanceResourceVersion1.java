@@ -16,6 +16,8 @@
 package piecework.process.concrete;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -45,6 +47,11 @@ import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.form.handler.RequestHandler;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.TaskCriteria;
+import piecework.task.TaskResults;
+import piecework.ui.StreamingAttachmentContent;
+
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -69,7 +76,28 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	@Autowired
 	Sanitizer sanitizer;
 
-	@Override
+
+    @Override
+    public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws StatusCodeError {
+        SearchResults searchResults = processInstanceService.findAttachments(rawProcessDefinitionKey, rawProcessInstanceId, queryParameters);
+        return Response.ok(searchResults).build();
+    }
+
+    @Override
+    public Response attachment(String processDefinitionKey, String processInstanceId, String attachmentId) throws StatusCodeError {
+        Process process = processInstanceService.getProcess(processDefinitionKey);
+        ProcessInstance instance = processInstanceService.findOne(process, processInstanceId);
+        StreamingAttachmentContent content = processInstanceService.getAttachmentContent(process, instance, attachmentId);
+
+        if (content == null)
+            throw new NotFoundError(Constants.ExceptionCodes.attachment_does_not_exist, attachmentId);
+
+        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getAttachment().getDescription()).toString();
+        return Response.ok(content, content.getAttachment().getContentType()).header("Content-Disposition", contentDisposition).build();
+
+    }
+
+    @Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstance rawInstance) throws StatusCodeError {
         Payload payload = new Payload.Builder().processInstance(rawInstance).build();
         return create(request, rawProcessDefinitionKey, payload);
@@ -87,7 +115,32 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         return create(request, rawProcessDefinitionKey, payload);
 	}
 
-	@Override
+    @Override
+    public Response history(String processDefinitionKey, String processInstanceId) throws StatusCodeError {
+        Process process = processInstanceService.getProcess(processDefinitionKey);
+        ProcessInstance instance = processInstanceService.findOne(process, processInstanceId);
+        TaskCriteria taskCriteria = new TaskCriteria.Builder()
+                .process(process)
+                .executionId(instance.getEngineProcessInstanceId())
+                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC)
+                .build();
+        try {
+            TaskResults taskResults = facade.findTasks(taskCriteria);
+
+            History history = new History.Builder()
+                    .processDefinitionKey(process.getProcessDefinitionKey())
+                    .processInstanceId(instance.getProcessInstanceId())
+                    .tasks(taskResults.getTasks())
+                    .build(processInstanceService.getInstanceViewContext());
+
+            return Response.ok(history).build();
+        } catch (ProcessEngineException e) {
+            LOG.error(e);
+            throw new InternalServerError();
+        }
+    }
+
+    @Override
 	public Response read(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
@@ -154,14 +207,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 	@Override
 	public ViewContext getViewContext() {
-        String baseApplicationUri = environment.getProperty("base.application.uri");
-        String baseServiceUri = environment.getProperty("base.service.uri");
-		return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "instance", "Instance");
+        return processInstanceService.getInstanceViewContext();
 	}
 
     @Override
     public String getVersion() {
-        return "v1";
+        return processInstanceService.getVersion();
     }
 
     private Response create(HttpServletRequest request, String rawProcessDefinitionKey, Payload payload) throws StatusCodeError {

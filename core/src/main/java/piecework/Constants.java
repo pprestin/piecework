@@ -77,6 +77,7 @@ public interface Constants {
 	}
 	
 	public static class ExceptionCodes {
+        public static final String attachment_does_not_exist = "attachment_does_not_exist";
         public static final String certificate_does_not_match = "certificate_does_not_match";
         public static final String form_access_forbidden = "form_access_forbidden";
         public static final String instance_cannot_be_modified = "instance_cannot_be_modified";

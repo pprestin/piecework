@@ -29,7 +29,6 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
-import piecework.form.handler.AttachmentHandler;
 import piecework.identity.InternalUserDetails;
 import piecework.common.Payload;
 import piecework.task.TaskCriteria;
@@ -71,9 +70,6 @@ public class FormService {
 
     @Autowired
     ProcessInstanceService processInstanceService;
-
-    @Autowired
-    AttachmentHandler attachmentHandler;
 
     @Autowired
     RequestHandler requestHandler;
@@ -135,9 +131,7 @@ public class FormService {
 
         try {
             ProcessInstance stored = processInstanceService.attach(process, screen, payload);
-
-            return attachmentHandler.handle(formRequest, viewContext, null);
-
+            return Response.noContent().build();
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
             return responseHandler.handle(formRequest, viewContext, validation);
@@ -217,24 +211,15 @@ public class FormService {
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
-        String attachmentId = null;
-
-        boolean isAttachmentResource = false;
         boolean isSubmissionResource;
 
         if (pathSegments != null && !pathSegments.isEmpty()) {
             Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
             requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
 
-            isAttachmentResource = StringUtils.isNotEmpty(requestId) && requestId.equals("attachment");
             isSubmissionResource = StringUtils.isNotEmpty(requestId) && requestId.equals("submission");
 
-            if (isAttachmentResource && pathSegmentIterator.hasNext()) {
-                requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-
-                if (pathSegmentIterator.hasNext())
-                    attachmentId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-            } else if (isSubmissionResource && pathSegmentIterator.hasNext()) {
+            if (isSubmissionResource && pathSegmentIterator.hasNext()) {
                 requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
             }
         }
@@ -254,9 +239,6 @@ public class FormService {
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
-
-        if (isAttachmentResource)
-            return attachmentHandler.handle(formRequest, viewContext, attachmentId);
 
         return responseHandler.handle(formRequest, viewContext);
     }

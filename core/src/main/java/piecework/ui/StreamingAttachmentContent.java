@@ -47,4 +47,11 @@ public class StreamingAttachmentContent implements StreamingOutput {
         }
     }
 
+    public Attachment getAttachment() {
+        return attachment;
+    }
+
+    public Content getContent() {
+        return content;
+    }
 }

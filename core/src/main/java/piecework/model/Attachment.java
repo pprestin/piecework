@@ -96,8 +96,8 @@ public class Attachment implements Serializable {
         this.ordinal = builder.ordinal;
         this.lastModified = builder.lastModified;
         this.isDeleted = builder.isDeleted;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, Constants.ROOT_ELEMENT_NAME, builder.requestId, builder.attachmentId) : null;
-        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.attachmentId, Constants.ROOT_ELEMENT_NAME) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
+        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
     }
 	
 	public String getAttachmentId() {
@@ -152,8 +152,8 @@ public class Attachment implements Serializable {
 	public final static class Builder {
 
     	private String attachmentId;
-        private String requestId;
     	private String processDefinitionKey;
+        private String processInstanceId;
     	private String name;
         private String description;
         private String contentType;
@@ -194,13 +194,13 @@ public class Attachment implements Serializable {
             return this;
         }
 
-        public Builder requestId(String requestId) {
-            this.requestId = requestId;
-            return this;
-        }
-        
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder processInstanceId(String processInstanceId) {
+            this.processInstanceId = processInstanceId;
             return this;
         }
         

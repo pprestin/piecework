@@ -16,7 +16,9 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.common.ViewContext;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
@@ -46,15 +48,23 @@ public class History {
     @XmlElement
     private final Date endTime;
 
+    @XmlAttribute
+    private final String link;
+
+    @XmlAttribute
+    private final String uri;
+
     private History() {
-        this(new Builder());
+        this(new Builder(), new ViewContext());
     }
 
-    private History(Builder builder) {
+    private History(Builder builder, ViewContext context) {
         this.tasks = Collections.unmodifiableList(builder.tasks);
         this.initiator = builder.initiator;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
+        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
     }
 
     public List<Task> getTasks() {
@@ -75,6 +85,8 @@ public class History {
 
     public final static class Builder {
 
+        private String processDefinitionKey;
+        private String processInstanceId;
         private List<Task> tasks;
         private User initiator;
         private Date startTime;
@@ -85,7 +97,21 @@ public class History {
         }
 
         public History build() {
-            return new History(this);
+            return new History(this, null);
+        }
+
+        public History build(ViewContext viewContext) {
+            return new History(this, viewContext);
+        }
+
+        public Builder processDefinitionKey(String processDefinitionKey) {
+            this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder processInstanceId(String processInstanceId) {
+            this.processInstanceId = processInstanceId;
+            return this;
         }
 
         public Builder task(Task task) {
@@ -93,6 +119,14 @@ public class History {
                 this.tasks = new ArrayList<Task>();
             if (task != null)
                 this.tasks.add(task);
+            return this;
+        }
+
+        public Builder tasks(List<Task> tasks) {
+            if (this.tasks == null)
+                this.tasks = new ArrayList<Task>();
+            if (tasks != null)
+                this.tasks.addAll(tasks);
             return this;
         }
 

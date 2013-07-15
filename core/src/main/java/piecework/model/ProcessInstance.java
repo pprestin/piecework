@@ -140,7 +140,13 @@ public class ProcessInstance implements Serializable {
         this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
         this.restrictedData = builder.restrictedData != null ? Collections.unmodifiableList(builder.restrictedData) : null;
         this.keywords = builder.keywords;
-        this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
+        List<Attachment> attachments = builder.attachmentBuilders != null && !builder.attachmentBuilders.isEmpty() ? new ArrayList<Attachment>(builder.attachmentBuilders.size()) : Collections.<Attachment>emptyList();
+        if (builder.attachmentBuilders != null) {
+            for (Attachment.Builder attachmentBuilder : builder.attachmentBuilders) {
+                attachments.add(attachmentBuilder.build(context));
+            }
+        }
+        this.attachments = Collections.unmodifiableList(attachments);
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
@@ -263,7 +269,7 @@ public class ProcessInstance implements Serializable {
         private List<FormValue> formData;
         private List<FormValue> restrictedData;
         private Set<String> keywords;
-        private List<Attachment> attachments;
+        private List<Attachment.Builder> attachmentBuilders;
         private List<FormSubmission> submissions;
         private Date startTime;
         private Date endTime;
@@ -273,7 +279,7 @@ public class ProcessInstance implements Serializable {
         public Builder() {
             super();
             this.keywords = new HashSet<String>();
-            this.attachments = new ArrayList<Attachment>();
+            this.attachmentBuilders = new ArrayList<Attachment.Builder>();
         }
 
         public Builder(piecework.model.ProcessInstance instance, Sanitizer sanitizer) {
@@ -308,12 +314,12 @@ public class ProcessInstance implements Serializable {
             }
             
             if (instance.attachments != null && !instance.attachments.isEmpty()) {
-                this.attachments = new ArrayList<Attachment>(instance.attachments.size());
+                this.attachmentBuilders = new ArrayList<Attachment.Builder>(instance.attachments.size());
                 for (Attachment attachment : instance.attachments) {
-                    this.attachments.add(new Attachment.Builder(attachment, sanitizer).build());
+                    this.attachmentBuilders.add(new Attachment.Builder(attachment, sanitizer));
                 }
             } else {
-                this.attachments = new ArrayList<Attachment>();
+                this.attachmentBuilders = new ArrayList<Attachment.Builder>();
             }
             this.keywords = new HashSet<String>();
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
@@ -476,18 +482,21 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-        public Builder attachment(Attachment attachment) {
-            if (this.attachments == null)
-                this.attachments = new ArrayList<Attachment>();
-            this.attachments.add(attachment);
+        public Builder attachment(Attachment attachment, Sanitizer sanitizer) {
+            if (this.attachmentBuilders == null)
+                this.attachmentBuilders = new ArrayList<Attachment.Builder>();
+            this.attachmentBuilders.add(new Attachment.Builder(attachment, sanitizer));
             return this;
         }
 
-        public Builder attachments(List<Attachment> attachments) {
-        	if (this.attachments != null)
-        		this.attachments = new ArrayList<Attachment>();
-            if (attachments != null)
-        	    this.attachments.addAll(attachments);
+        public Builder attachments(List<Attachment> attachments, Sanitizer sanitizer) {
+        	if (this.attachmentBuilders != null)
+        		this.attachmentBuilders = new ArrayList<Attachment.Builder>();
+            if (attachments != null) {
+        	    for (Attachment attachment : attachments) {
+                    this.attachmentBuilders.add(new Attachment.Builder(attachment, sanitizer));
+                }
+            }
         	return this;
         }
 

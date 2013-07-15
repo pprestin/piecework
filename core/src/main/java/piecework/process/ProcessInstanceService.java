@@ -21,13 +21,16 @@ import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
 import piecework.engine.ProcessEngineFacade;
+import piecework.identity.InternalUserDetailsService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.engine.exception.ProcessEngineException;
@@ -39,14 +42,17 @@ import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.AttachmentRepository;
+import piecework.persistence.ContentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
+import piecework.ui.StreamingAttachmentContent;
 
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -62,6 +68,12 @@ public class ProcessInstanceService {
 
     @Autowired
     AttachmentRepository attachmentRepository;
+
+    @Autowired
+    ContentRepository contentRepository;
+
+    @Autowired
+    Environment environment;
 
     @Autowired
     ProcessService processService;
@@ -91,6 +103,9 @@ public class ProcessInstanceService {
     SubmissionHandler submissionHandler;
 
     @Autowired
+    InternalUserDetailsService userDetailsService;
+
+    @Autowired
     ValidationService validationService;
 
     public void delete(String processDefinitionKey, String processInstanceId, String reason) throws StatusCodeError {
@@ -114,6 +129,61 @@ public class ProcessInstanceService {
         }
     }
 
+    public SearchResults findAttachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
+        String paramName = sanitizer.sanitize(queryParameters.getName());
+        String paramContentType = sanitizer.sanitize(queryParameters.getContentType());
+        String paramUserId = sanitizer.sanitize(queryParameters.getUserId());
+
+        Process process = getProcess(processDefinitionKey);
+        ProcessInstance processInstance = findOne(process, processInstanceId);
+
+        SearchResults.Builder searchResultsBuilder = new SearchResults.Builder();
+
+        int count = 0;
+        Map<String, User> userMap = new HashMap<String, User>();
+        List<Attachment> storedAttachments = processInstance.getAttachments();
+        if (storedAttachments != null && !storedAttachments.isEmpty()) {
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            for (Attachment storedAttachment : storedAttachments) {
+                String userId = storedAttachment.getUserId();
+
+                if (StringUtils.isNotEmpty(paramName) && (StringUtils.isEmpty(storedAttachment.getName()) || !paramName.equals(storedAttachment.getName())))
+                    continue;
+
+                if (StringUtils.isNotEmpty(paramContentType) && (StringUtils.isEmpty(storedAttachment.getContentType()) || !paramContentType.equals(storedAttachment.getContentType())))
+                    continue;
+
+                if (StringUtils.isNotEmpty(paramUserId) && (StringUtils.isEmpty(userId) || !paramUserId.equals(userId)))
+                    continue;
+
+                User user = userId != null ? userMap.get(userId) : null;
+                if (user == null && userId != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByInternalId(userId);
+                    user = new User.Builder(userDetails).build();
+
+                    if (user != null)
+                        userMap.put(user.getUserId(), user);
+                }
+
+                searchResultsBuilder.item(new Attachment.Builder(storedAttachment, passthroughSanitizer)
+                            .processDefinitionKey(processInstance.getProcessDefinitionKey())
+                            .processInstanceId(processInstanceId)
+                            .user(user)
+                            .build(getInstanceViewContext()));
+
+                count++;
+            }
+        }
+
+        searchResultsBuilder.firstResult(0);
+        searchResultsBuilder.maxResults(count);
+        searchResultsBuilder.total(Long.valueOf(count));
+
+        return searchResultsBuilder.build();
+    }
+
     public ProcessInstance findOne(Process process, String processInstanceId) throws StatusCodeError {
         ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
 
@@ -124,6 +194,23 @@ public class ProcessInstanceService {
             throw new GoneError(Constants.ExceptionCodes.instance_does_not_exist);
 
         return instance;
+    }
+
+    public StreamingAttachmentContent getAttachmentContent(Process process, ProcessInstance processInstance, String attachmentId) {
+
+        List<Attachment> storedAttachments = processInstance.getAttachments();
+        if (storedAttachments != null && !storedAttachments.isEmpty()) {
+            for (Attachment storedAttachment : storedAttachments) {
+                if (StringUtils.isEmpty(attachmentId) || StringUtils.isEmpty(storedAttachment.getAttachmentId()) || !attachmentId.equals(storedAttachment.getAttachmentId()))
+                    continue;
+
+                Content content = contentRepository.findByLocation(storedAttachment.getLocation());
+                if (content != null)
+                    return new StreamingAttachmentContent(storedAttachment, content);
+            }
+        }
+
+        return null;
     }
 
     public Process getProcess(String processDefinitionKey) throws StatusCodeError {
@@ -278,10 +365,12 @@ public class ProcessInstanceService {
                         Locale.getDefault());
         }
 
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+
         if (previous != null) {
             instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer())
                     .submission(submission)
-                    .attachments(validation.getAttachments());
+                    .attachments(validation.getAttachments(), passthroughSanitizer);
 
             if (!isAttachment) {
                 instanceBuilder.formValueMap(validation.getFormValueMap())
@@ -307,7 +396,7 @@ public class ProcessInstanceService {
                         .startTime(new Date())
                         .initiatorId(initiatorId)
                         .processStatus(Constants.ProcessStatuses.OPEN)
-                        .attachments(validation.getAttachments())
+                        .attachments(validation.getAttachments(), passthroughSanitizer)
                         .applicationStatus(initiationStatus);
 
                 // Save it before routing, then save again with the engine instance id
@@ -387,6 +476,16 @@ public class ProcessInstanceService {
         }
 
         return validation;
+    }
+
+    public ViewContext getInstanceViewContext() {
+        String baseApplicationUri = environment.getProperty("base.application.uri");
+        String baseServiceUri = environment.getProperty("base.service.uri");
+        return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "instance", "Instance");
+    }
+
+    public String getVersion() {
+        return "v1";
     }
 
     private void checkIsActiveIfTaskExists(Process process, Payload payload) throws StatusCodeError {

@@ -23,6 +23,16 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 @Path("instance")
 public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
 
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response attachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @QueryParam("") AttachmentQueryParameters queryParameters) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response attachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws StatusCodeError;
+
     @POST
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
