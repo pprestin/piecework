@@ -526,19 +526,18 @@ public class ProcessInstanceService {
 
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             if (tasks != null && !tasks.isEmpty()) {
-                Map<String, InternalUserDetails> userDetailsMap = new HashMap<String, InternalUserDetails>();
                 convertedTasks = new ArrayList<Task>(tasks.size());
                 for (Task task : tasks) {
                     Task.Builder builder = new Task.Builder(task, passthroughSanitizer);
 
                     if (task.getAssignee() != null && StringUtils.isNotEmpty(task.getAssignee().getUserId())) {
-                        builder.assignee(getUser(userDetailsMap, task.getAssignee().getUserId()));
+                        builder.assignee(userDetailsService.getUser(task.getAssignee().getUserId()));
                     }
 
                     if (task.getCandidateAssignees() != null && !task.getCandidateAssignees().isEmpty()) {
                         builder.clearCandidateAssignees();
                         for (User candidateAssignee : task.getCandidateAssignees()) {
-                            builder.candidateAssignee(getUser(userDetailsMap, candidateAssignee.getUserId()));
+                            builder.candidateAssignee(userDetailsService.getUser(candidateAssignee.getUserId()));
                         }
                     }
 
@@ -663,20 +662,6 @@ public class ProcessInstanceService {
                 throw new InternalServerError();
             }
         }
-    }
-
-    private User getUser(Map<String, InternalUserDetails> userDetailsMap, String userId) {
-        InternalUserDetails userDetails = userDetailsMap.get(userId);
-
-        if (userDetails == null) {
-            userDetails = InternalUserDetails.class.cast(userDetailsService.loadUserByInternalId(userId));
-            userDetailsMap.put(userId, userDetails);
-        }
-
-        if (userDetails != null)
-            return new User.Builder(userDetails).build();
-
-        return null;
     }
 
 //    private ProcessInstance getProcessInstance(Process process, String processInstanceId) throws NotFoundError {

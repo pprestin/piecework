@@ -15,11 +15,11 @@
                 <a class="btn btn-link" href="#clear" role="button" id="instanceClearButton" type="button">Clear</a>
             </li>-->
             <li class="nav pull-right">
-                <button class="btn btn-inverse selected-result-btn hide" id="assign-button" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
+                <button class="btn btn-inverse selected-result-btn hide" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
                 <button class="btn btn-inverse selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-tasks icon-white"></i></button>
                 <button class="btn btn-inverse selected-result-btn hide" id="suspend-button" title="Suspend process" type="button"><i class="icon-off icon-white"></i></button>
                 <button class="btn btn-danger selected-result-btn hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
-
+                <button class="btn btn-inverse" id="new-form-button" type="button"><i class="icon-plus-sign icon-white"></i></button>
                 <!--<a class="btn" href="#export" title="Export all results" id="exportButton" type="button"><i class="icon-download-alt"></i> Export</a>-->
             </li>
         </ul>
@@ -35,6 +35,21 @@
         </ul>
     </div>
 </form>
+
+<div id="assign-dialog" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Assign Task</h3>
+    </div>
+    <div class="modal-body">
+        <label class="inline">Assignee</label>
+        <input type="text" data-provide="typeahead" name="assignee"/>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button type="button" id="assign-button" class="btn btn-primary">Assign</button>
+    </div>
+</div>
 
 <div id="delete-dialog" class="modal hide fade">
     <div class="modal-header">

@@ -19,10 +19,7 @@ import java.util.*;
 
 import com.google.common.collect.Sets;
 import org.activiti.engine.*;
-import org.activiti.engine.history.HistoricProcessInstance;
-import org.activiti.engine.history.HistoricProcessInstanceQuery;
-import org.activiti.engine.history.HistoricTaskInstance;
-import org.activiti.engine.history.HistoricTaskInstanceQuery;
+import org.activiti.engine.history.*;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -36,6 +33,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.identity.InternalUserDetailsService;
 import piecework.model.User;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
@@ -67,6 +65,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
+    InternalUserDetailsService userDetailsService;
 
 	@Autowired
 	RuntimeService runtimeService;
@@ -415,7 +416,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .startTime(instance.getCreateTime())
                 .dueDate(instance.getDueDate());
 
-
         if (!instance.isSuspended())
             taskBuilder.active();
 
@@ -429,14 +429,14 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                     if (type == null)
                         continue;
 
-                    if (type.equals(IdentityLinkType.ASSIGNEE))
-                        taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
-                    else if (type.equals(IdentityLinkType.CANDIDATE))
-                        taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
+                    if (type.equals(IdentityLinkType.ASSIGNEE) && identityLink.getUserId() != null)
+                        taskBuilder.assignee(userDetailsService.getUser(identityLink.getUserId()));
+                    else if (type.equals(IdentityLinkType.CANDIDATE) && identityLink.getUserId() != null)
+                        taskBuilder.candidateAssignee(userDetailsService.getUser(identityLink.getUserId()));
                 }
             }
         } else if (StringUtils.isNotEmpty(instance.getAssignee())) {
-            taskBuilder.assignee(new User.Builder().userId(instance.getAssignee()).build());
+            taskBuilder.assignee(userDetailsService.getUser(instance.getAssignee()));
         }
 
         return taskBuilder.build();
@@ -459,27 +459,28 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .finished();
 
         if (includeDetails) {
-            List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(instance.getId());
+            List<HistoricIdentityLink> identityLinks = historyService.getHistoricIdentityLinksForTask(instance.getId());
 
             if (identityLinks != null && !identityLinks.isEmpty()) {
-                for (IdentityLink identityLink : identityLinks) {
+                for (HistoricIdentityLink identityLink : identityLinks) {
                     String type = identityLink.getType();
 
                     if (type == null)
                         continue;
 
-                    if (type.equals(IdentityLinkType.ASSIGNEE))
-                        taskBuilder.assignee(new User.Builder().userId(identityLink.getUserId()).build());
-                    else if (type.equals(IdentityLinkType.CANDIDATE))
-                        taskBuilder.candidateAssignee(new User.Builder().userId(identityLink.getUserId()).build());
+                    if (type.equals(IdentityLinkType.ASSIGNEE) && identityLink.getUserId() != null)
+                        taskBuilder.assignee(userDetailsService.getUser(identityLink.getUserId()));
+                    else if (type.equals(IdentityLinkType.CANDIDATE) && identityLink.getUserId() != null)
+                        taskBuilder.candidateAssignee(userDetailsService.getUser(identityLink.getUserId()));
                 }
             }
         } else if (StringUtils.isNotEmpty(instance.getAssignee())) {
-            taskBuilder.assignee(new User.Builder().userId(instance.getAssignee()).build());
+            taskBuilder.assignee(userDetailsService.getUser(instance.getAssignee()));
         }
 
         return taskBuilder.build();
     }
+
 
     private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = null;

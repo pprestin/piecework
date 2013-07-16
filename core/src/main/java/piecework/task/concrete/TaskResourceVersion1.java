@@ -141,10 +141,23 @@ public class TaskResourceVersion1 implements TaskResource {
     @Override
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
         SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
-                .resourceLabel("Tasks");
+                .resourceLabel("Tasks")
+                .link(processInstanceService.getTaskViewContext().getApplicationUri())
+                .uri(processInstanceService.getTaskViewContext().getServiceUri());
+
         ManyMap<String, String> queryParameters = new ManyMap<String, String>();
         DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
         TaskCriteria.Builder criteriaBuilder = new TaskCriteria.Builder().processes(helper.findProcesses(AuthorizationRole.OVERSEER, AuthorizationRole.USER));
+
+        if (!helper.isAuthenticatedSystem()) {
+            InternalUserDetails user = helper.getAuthenticatedPrincipal();
+            if (user != null)
+                criteriaBuilder.participantId(user.getInternalId());
+            else {
+                return resultsBuilder.build();
+            }
+        }
+
         ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
         for (Map.Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
             String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());

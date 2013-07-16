@@ -113,7 +113,7 @@ public class ResourceHelper {
 		}
 
         Set<piecework.model.Process> processes = new HashSet<piecework.model.Process>();
-		Iterator<Process> iterator = processRepository.findAll(allowedProcessDefinitionKeys).iterator();
+		Iterator<Process> iterator = processRepository.findAllBasic(allowedProcessDefinitionKeys).iterator();
 		while (iterator.hasNext()) {
 			Process record = iterator.next();
 			if (!record.isDeleted())

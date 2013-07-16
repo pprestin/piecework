@@ -15,6 +15,7 @@
  */
 package piecework.identity;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +24,9 @@ import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
+import piecework.model.User;
+
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -68,6 +72,16 @@ public class InternalUserDetailsService implements UserDetailsService {
                 return null;
             }
         }
+    }
+
+    @Cacheable(value="userCache")
+    public User getUser(String internalId) {
+        UserDetails userDetails = loadUserByInternalId(internalId);
+
+        if (userDetails != null)
+            return new User.Builder(userDetails).build();
+
+        return null;
     }
 
 }

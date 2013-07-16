@@ -72,6 +72,9 @@ public class SearchResults implements Serializable {
 
     @XmlAttribute
     private final String link;
+
+    @XmlAttribute
+    private final String uri;
 	
 	private SearchResults() {
 		this(new SearchResults.Builder(), new ViewContext());
@@ -92,6 +95,7 @@ public class SearchResults implements Serializable {
 		this.from = builder.from;
 		this.to = builder.to;
         this.link = builder.link;
+        this.uri = builder.uri;
         this.parameters = Collections.unmodifiableList(builder.getParameters());
 	}
 	
@@ -185,6 +189,7 @@ public class SearchResults implements Serializable {
 		private String from;
 		private String to;
         private String link;
+        private String uri;
         private ManyMap<String, String> parameters;
 		
 		public Builder() {
@@ -296,6 +301,11 @@ public class SearchResults implements Serializable {
 
         public Builder link(String link) {
             this.link = link;
+            return this;
+        }
+
+        public Builder uri(String uri) {
+            this.uri = uri;
             return this;
         }
 

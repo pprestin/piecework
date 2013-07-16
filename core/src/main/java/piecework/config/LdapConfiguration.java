@@ -62,6 +62,7 @@ import org.springframework.util.StringUtils;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.identity.InternalUserDetailsService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
+import piecework.security.CustomAuthenticationSource;
 import piecework.util.KeyManagerCabinet;
 
 /**
@@ -181,7 +182,7 @@ public class LdapConfiguration {
 	private AuthenticationSource authenticationSource(Environment environment) {
         String defaultUser = environment.getProperty("ldap.authentication.user");
         String defaultPassword = environment.getProperty("ldap.authentication.password");
-		SpringSecurityAuthenticationSource authenticationSource = new SpringSecurityAuthenticationSource();
+        CustomAuthenticationSource authenticationSource = new CustomAuthenticationSource();
 
         LdapAuthenticationEncryption encryption = authenticationEncryption(environment);
 

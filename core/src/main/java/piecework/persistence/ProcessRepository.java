@@ -17,11 +17,18 @@ package piecework.persistence;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import org.springframework.data.mongodb.repository.Query;
 import piecework.model.Process;
+import piecework.model.ProcessInstance;
+
+import java.util.List;
 
 /**
  * @author James Renfro
  */
 public interface ProcessRepository extends MongoRepository<Process, String> {
+
+    @Query(value="{_id : { $in: ?0 }, isDeleted : false}", fields="{_id:1, processDefinitionLabel:1,engine:1,engineProcessDefinitionKey:1,isAnonymousSubmissionAllowed:1}")
+    List<Process> findAllBasic(Iterable<String> processDefinitionKeys);
 
 }

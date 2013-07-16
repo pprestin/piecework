@@ -184,7 +184,8 @@ public class FormService {
         TaskCriteria.Builder executionCriteriaBuilder = new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer);
 
         InternalUserDetails user = helper.getAuthenticatedPrincipal();
-        executionCriteriaBuilder.participantId(user.getInternalId());
+        if (user != null)
+            executionCriteriaBuilder.participantId(user.getInternalId());
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
