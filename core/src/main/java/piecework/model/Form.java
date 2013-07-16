@@ -16,6 +16,7 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
@@ -66,6 +67,9 @@ public class Form {
     private final String attachment;
 
     @XmlAttribute
+    private final String history;
+
+    @XmlAttribute
     private final String cancellation;
 
     @XmlAttribute
@@ -93,10 +97,11 @@ public class Form {
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
-        this.activation = context != null ? context.getApplicationUri(builder.processDefinitionKey, "activation", builder.formInstanceId) : null;
-        this.attachment = context != null ? context.getApplicationUri(builder.processDefinitionKey, "attachment", builder.formInstanceId) : null;
-        this.cancellation = context != null ? context.getApplicationUri(builder.processDefinitionKey, "cancellation", builder.formInstanceId) : null;
-        this.suspension = context != null ? context.getApplicationUri(builder.processDefinitionKey, "suspension", builder.formInstanceId) : null;
+        this.activation = builder.activation;
+        this.attachment = builder.attachment;
+        this.cancellation = builder.cancellation;
+        this.history = builder.history;
+        this.suspension = builder.suspension;
         this.attachmentCount = builder.attachmentCount;
         this.valid = builder.valid;
     }
@@ -155,6 +160,10 @@ public class Form {
         return cancellation;
     }
 
+    public String getHistory() {
+        return history;
+    }
+
     public String getSuspension() {
         return suspension;
     }
@@ -175,6 +184,11 @@ public class Form {
         private Task task;
         private Screen screen;
         private List<FormValue> formData;
+        private String activation;
+        private String attachment;
+        private String cancellation;
+        private String history;
+        private String suspension;
         private int attachmentCount;
         private boolean valid;
 
@@ -205,6 +219,15 @@ public class Form {
 
         public Form build(ViewContext context) {
             return new Form(this, context);
+        }
+
+        public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, ViewContext context) {
+            this.activation = context.getApplicationUri(processDefinitionKey, processInstanceId, "activation");
+            this.attachment = context.getApplicationUri(processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
+            this.cancellation = context.getApplicationUri(processDefinitionKey, processInstanceId, "cancellation");
+            this.history = context.getApplicationUri(processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+            this.suspension = context.getApplicationUri(processDefinitionKey, processInstanceId, "suspension");
+            return this;
         }
 
         public Builder formInstanceId(String formInstanceId) {

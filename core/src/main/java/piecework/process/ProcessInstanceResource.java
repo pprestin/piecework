@@ -23,15 +23,6 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 @Path("instance")
 public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
 
-    @GET
-    @Path("{processDefinitionKey}/{processInstanceId}/attachment")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response attachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @QueryParam("") AttachmentQueryParameters queryParameters) throws StatusCodeError;
-
-    @GET
-    @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response attachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}")
@@ -56,11 +47,6 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.OVERSEER})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
-    @GET
-    @Path("{processDefinitionKey}/{processInstanceId}/history")
-    @RolesAllowed({AuthorizationRole.OVERSEER})
-    Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
-
     @PUT
     @Path("{processDefinitionKey}/{processInstanceId}")
     @RolesAllowed({AuthorizationRole.OVERSEER})
@@ -76,5 +62,48 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Path("")
     @RolesAllowed({AuthorizationRole.OVERSEER})
     SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
+
+
+    /*
+     * SUBRESOURCES
+     */
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/activation")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("multipart/form-data")
+    Response attach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultipartBody body) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response attachments(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @QueryParam("") AttachmentQueryParameters queryParameters) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response attachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/cancellation")
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/history")
+    @RolesAllowed({AuthorizationRole.OVERSEER})
+    Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/suspension")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
 
 }

@@ -25,6 +25,7 @@ import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineFacade;
 import piecework.form.FormService;
+import piecework.process.ProcessInstanceService;
 import piecework.task.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
@@ -33,7 +34,6 @@ import piecework.exception.StatusCodeError;
 import piecework.form.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingPageContent;
@@ -72,7 +72,7 @@ public class ResponseHandler {
     ProcessRepository processRepository;
 
     @Autowired
-    ProcessInstanceRepository processInstanceRepository;
+    ProcessInstanceService processInstanceService;
 
     public Response handle(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
         return handle(formRequest, viewContext, null);
@@ -109,7 +109,7 @@ public class ResponseHandler {
         int attachmentCount = 0;
         List<FormValue> formValues = findFormValues(formRequest, validation);
         if (formValues == null && StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
-            ProcessInstance processInstance = processInstanceRepository.findOne(formRequest.getProcessInstanceId());
+            ProcessInstance processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
             formValues = processInstance.getFormData();
             attachmentCount = processInstance.getAttachments() != null ? processInstance.getAttachments().size() : 0;
         }
@@ -203,6 +203,7 @@ public class ResponseHandler {
                 .formValues(includedFormValues)
                 .screen(screen)
                 .task(task)
+                .instanceSubresources(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId(), processInstanceService.getInstanceViewContext())
                 .attachmentCount(attachmentCount)
                 .build(viewContext);
     }

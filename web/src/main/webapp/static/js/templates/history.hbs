@@ -1,0 +1,16 @@
+<p>Started by {{initiator.displayName}} on {{date startTime}}</p>
+<ul class="tasks">
+    {{#each tasks}}
+        <li>
+            <div>
+                <h4>{{taskLabel}}</h4>
+                <p class="muted">{{date startTime}} - {{#if endTime}}{{date endTime}}{{else}}Open{{/if}}</p>
+                {{#if assignee}}
+                <p class="muted">
+                    {{#if endTime}}Completed by{{else}}Assigned to{{/if}} {{assignee.displayName}}
+                </p>
+                {{/if}}
+            </div>
+        </li>
+    {{/each}}
+</ul>

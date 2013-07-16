@@ -77,11 +77,13 @@ public interface Constants {
 	}
 	
 	public static class ExceptionCodes {
+        public static final String active_task_required = "active_task_required";
         public static final String attachment_does_not_exist = "attachment_does_not_exist";
         public static final String certificate_does_not_match = "certificate_does_not_match";
         public static final String form_access_forbidden = "form_access_forbidden";
         public static final String instance_cannot_be_modified = "instance_cannot_be_modified";
         public static final String instance_does_not_exist = "instance_does_not_exist";
+        public static final String insufficient_permission = "insufficient_permission";
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
         public static final String process_business_key_limit = "process_business_key_limit";
@@ -93,6 +95,7 @@ public interface Constants {
         public static final String screen_id_invalid = "screen_id_invalid";
         public static final String task_does_not_exist = "task_does_not_exist";
         public static final String task_id_required = "task_id_required";
+        public static final String task_required = "task_required";
         public static final String user_does_not_match = "user_does_not_match";
 	}
 

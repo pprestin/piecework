@@ -12,6 +12,7 @@
     "backbone-amd": null,
     "bootstrap": null,
     "jquery": null,
+    "moment": null,
     "requirejs": null,
     "underscore": null,
     "underscore-amd": null,

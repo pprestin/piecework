@@ -15,6 +15,7 @@
  */
 package piecework.process.concrete;
 
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -63,6 +64,19 @@ public class ResourceHelper {
         }
         return principal;
     }
+
+    public boolean isAuthenticatedSystem() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        if (context != null) {
+            Authentication authentication = context.getAuthentication();
+
+            if (authentication != null && authentication.getCredentials() instanceof X509Certificate) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public Process findProcess(String processDefinitionKey, boolean isBadRequest) throws StatusCodeError {
         Process result = processRepository.findOne(processDefinitionKey);

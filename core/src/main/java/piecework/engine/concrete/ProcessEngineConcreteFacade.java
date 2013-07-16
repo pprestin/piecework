@@ -47,21 +47,21 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public boolean activate(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+    public boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
-        return proxy.activate(process, instance, reason);
+        return proxy.activate(process, instance);
     }
 
     @Override
-    public boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+    public boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
-        return proxy.cancel(process, instance, reason);
+        return proxy.cancel(process, instance);
     }
 
     @Override
-    public boolean suspend(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+    public boolean suspend(Process process, ProcessInstance instance) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
-        return proxy.suspend(process, instance, reason);
+        return proxy.suspend(process, instance);
     }
 
     @Override

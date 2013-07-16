@@ -90,7 +90,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
-    public boolean activate(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+    public boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException {
         InternalUserDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
@@ -107,7 +107,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
 	@Override
-	public boolean cancel(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+	public boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException {
         InternalUserDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
@@ -116,7 +116,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 		
 		if (activitiInstance != null) {
-			runtimeService.deleteProcessInstance(activitiInstance.getProcessInstanceId(), reason);
+			runtimeService.deleteProcessInstance(activitiInstance.getProcessInstanceId(), "Cancelled");
 			return true;
 		}
 		
@@ -124,7 +124,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
-    public boolean suspend(Process process, ProcessInstance instance, String reason) throws ProcessEngineException {
+    public boolean suspend(Process process, ProcessInstance instance) throws ProcessEngineException {
         InternalUserDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
@@ -156,6 +156,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                     String variableName = activitiTask.getTaskDefinitionKey() + "_action";
                     taskService.setVariable(taskId, variableName, action);
                 }
+                // Always assign the task to the user before completing it
+                if (StringUtils.isNotEmpty(userId))
+                    taskService.setAssignee(taskId, userId);
                 taskService.complete(taskId);
                 return true;
             }
@@ -410,8 +413,11 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .processDefinitionLabel(process.getProcessDefinitionLabel())
                 .priority(instance.getPriority())
                 .startTime(instance.getCreateTime())
-                .dueDate(instance.getDueDate())
-                .active();
+                .dueDate(instance.getDueDate());
+
+
+        if (!instance.isSuspended())
+            taskBuilder.active();
 
         if (includeDetails) {
             List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(instance.getId());

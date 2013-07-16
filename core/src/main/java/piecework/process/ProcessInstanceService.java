@@ -19,6 +19,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
+import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.SearchResults;
@@ -49,8 +51,10 @@ import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
+import piecework.task.TaskResults;
 import piecework.ui.StreamingAttachmentContent;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.StringReader;
@@ -79,9 +83,6 @@ public class ProcessInstanceService {
     ProcessService processService;
 
     @Autowired
-    ProcessInstanceResource processInstanceResource;
-
-    @Autowired
     ProcessEngineFacade facade;
 
     @Autowired
@@ -108,12 +109,38 @@ public class ProcessInstanceService {
     @Autowired
     ValidationService validationService;
 
-    public void delete(String processDefinitionKey, String processInstanceId, String reason) throws StatusCodeError {
-        Process process = getProcess(processDefinitionKey);
-        ProcessInstance instance = findOne(process, processInstanceId);
+
+    public void activate(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
 
         try {
-            if (!facade.cancel(process, instance, reason))
+            if (!facade.activate(process, instance))
+                throw new ConflictError();
+
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+                    .applicationStatus(process.getCancellationStatus())
+                    .applicationStatusExplanation(reason)
+                    .processStatus(Constants.ProcessStatuses.SUSPENDED);
+
+            processInstanceRepository.save(modified.build());
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not activate task", e);
+        }
+    }
+
+    public ProcessInstance attach(Process process, Screen screen, Payload payload) throws StatusCodeError {
+        // Validate the submission
+        FormValidation validation = validate(process, screen, payload, false);
+        FormSubmission submission = validation.getSubmission();
+        ProcessInstance previous = validation.getInstance();
+
+        return store(process, submission, validation, previous, true);
+    }
+
+    public void delete(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
+
+        try {
+            if (!facade.cancel(process, instance))
                 throw new ConflictError();
 
             ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
@@ -129,15 +156,10 @@ public class ProcessInstanceService {
         }
     }
 
-    public SearchResults findAttachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
+    public SearchResults findAttachments(Process process, ProcessInstance processInstance, AttachmentQueryParameters queryParameters) throws StatusCodeError {
         String paramName = sanitizer.sanitize(queryParameters.getName());
         String paramContentType = sanitizer.sanitize(queryParameters.getContentType());
         String paramUserId = sanitizer.sanitize(queryParameters.getUserId());
-
-        Process process = getProcess(processDefinitionKey);
-        ProcessInstance processInstance = findOne(process, processInstanceId);
 
         SearchResults.Builder searchResultsBuilder = new SearchResults.Builder();
 
@@ -169,7 +191,7 @@ public class ProcessInstanceService {
 
                 searchResultsBuilder.item(new Attachment.Builder(storedAttachment, passthroughSanitizer)
                             .processDefinitionKey(processInstance.getProcessDefinitionKey())
-                            .processInstanceId(processInstanceId)
+                            .processInstanceId(processInstance.getProcessInstanceId())
                             .user(user)
                             .build(getInstanceViewContext()));
 
@@ -184,7 +206,13 @@ public class ProcessInstanceService {
         return searchResultsBuilder.build();
     }
 
-    public ProcessInstance findOne(Process process, String processInstanceId) throws StatusCodeError {
+    public ProcessInstance read(String processDefinitionKey, String processInstanceId) throws StatusCodeError {
+        Process process = getProcess(processDefinitionKey);
+        return read(process, processInstanceId);
+    }
+
+    public ProcessInstance read(Process process, String rawProcessInstanceId) throws StatusCodeError {
+        String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
         ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
 
         if (instance == null || !instance.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
@@ -213,6 +241,28 @@ public class ProcessInstanceService {
         return null;
     }
 
+    public History getHistory(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId);
+
+        List<Task> tasks = findAllTasks(process, instance);
+
+        InternalUserDetails initiatorUserDetails = userDetailsService.loadUserByAnyId(instance.getInitiatorId());
+
+        User initiator = initiatorUserDetails != null ?  new User.Builder(initiatorUserDetails).build() : null;
+
+        History history = new History.Builder()
+            .processDefinitionKey(process.getProcessDefinitionKey())
+            .processInstanceId(instance.getProcessInstanceId())
+            .startTime(instance.getStartTime())
+            .endTime(instance.getEndTime())
+            .initiator(initiator)
+            .tasks(tasks)
+            .build(getInstanceViewContext());
+
+        return history;
+    }
+
     public Process getProcess(String processDefinitionKey) throws StatusCodeError {
         Process record = processRepository.findOne(processDefinitionKey);
         if (record == null)
@@ -225,15 +275,16 @@ public class ProcessInstanceService {
 
     public void update(String processDefinitionKey, String processInstanceId, ProcessInstance processInstance) throws StatusCodeError {
         Process process = getProcess(processDefinitionKey);
-        ProcessInstance persisted = findOne(process, processInstanceId);
+        ProcessInstance persisted = read(process, processInstanceId);
         ProcessInstance sanitized = new ProcessInstance.Builder(processInstance, sanitizer).build();
 
+        String processStatus = sanitized.getProcessStatus();
         String applicationStatus = sanitized.getApplicationStatus();
         String applicationStatusExplanation = sanitized.getApplicationStatusExplanation();
 
-        if (applicationStatus != null && applicationStatus.equalsIgnoreCase(Constants.ProcessStatuses.SUSPENDED)) {
+        if (processStatus != null && processStatus.equalsIgnoreCase(Constants.ProcessStatuses.SUSPENDED)) {
             try {
-                if (!facade.suspend(process, persisted, applicationStatusExplanation))
+                if (!facade.suspend(process, persisted))
                     throw new ConflictError();
 
                 ProcessInstance.Builder modified = new ProcessInstance.Builder(persisted, new PassthroughSanitizer())
@@ -305,7 +356,7 @@ public class ProcessInstanceService {
                 List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
                 if (processInstances != null && !processInstances.isEmpty()) {
                     for (ProcessInstance processInstance : processInstances) {
-                        resultsBuilder.item(new ProcessInstance.Builder(processInstance, new PassthroughSanitizer()).build(processInstanceResource.getViewContext()));
+                        resultsBuilder.item(new ProcessInstance.Builder(processInstance, new PassthroughSanitizer()).build(getInstanceViewContext()));
                     }
 
                     int size = processInstances.size();
@@ -430,16 +481,6 @@ public class ProcessInstanceService {
         return processInstanceRepository.save(instance);
     }
 
-    public ProcessInstance attach(Process process, Screen screen, Payload payload) throws StatusCodeError {
-
-        // Validate the submission
-        FormValidation validation = validate(process, screen, payload, false);
-        FormSubmission submission = validation.getSubmission();
-        ProcessInstance previous = validation.getInstance();
-
-        return store(process, submission, validation, previous, true);
-    }
-
     public ProcessInstance submit(Process process, Screen screen, Payload payload) throws StatusCodeError {
 
         // Validate the submission
@@ -450,6 +491,104 @@ public class ProcessInstanceService {
         completeIfTaskExists(process, payload, validation);
 
         return store(process, submission, validation, previous, false);
+    }
+
+
+    public void suspend(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
+
+        try {
+            if (!facade.suspend(process, instance))
+                throw new ConflictError();
+
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+                    .applicationStatus(process.getCancellationStatus())
+                    .applicationStatusExplanation(reason)
+                    .processStatus(Constants.ProcessStatuses.SUSPENDED);
+
+            processInstanceRepository.save(modified.build());
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not activate task", e);
+        }
+    }
+
+    public List<Task> findAllTasks(Process process, ProcessInstance instance) throws StatusCodeError {
+        TaskCriteria taskCriteria = new TaskCriteria.Builder()
+                .process(process)
+                .executionId(instance.getEngineProcessInstanceId())
+                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC)
+                .build();
+        try {
+            TaskResults taskResults = facade.findTasks(taskCriteria);
+
+            List<Task> tasks = taskResults.getTasks();
+            List<Task> convertedTasks;
+
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            if (tasks != null && !tasks.isEmpty()) {
+                Map<String, InternalUserDetails> userDetailsMap = new HashMap<String, InternalUserDetails>();
+                convertedTasks = new ArrayList<Task>(tasks.size());
+                for (Task task : tasks) {
+                    Task.Builder builder = new Task.Builder(task, passthroughSanitizer);
+
+                    if (task.getAssignee() != null && StringUtils.isNotEmpty(task.getAssignee().getUserId())) {
+                        builder.assignee(getUser(userDetailsMap, task.getAssignee().getUserId()));
+                    }
+
+                    if (task.getCandidateAssignees() != null && !task.getCandidateAssignees().isEmpty()) {
+                        builder.clearCandidateAssignees();
+                        for (User candidateAssignee : task.getCandidateAssignees()) {
+                            builder.candidateAssignee(getUser(userDetailsMap, candidateAssignee.getUserId()));
+                        }
+                    }
+
+                    convertedTasks.add(builder.build(getTaskViewContext()));
+                }
+
+            } else {
+                convertedTasks = Collections.emptyList();
+            }
+
+            return convertedTasks;
+
+        } catch (ProcessEngineException e) {
+            LOG.error(e);
+            throw new InternalServerError();
+        }
+    }
+
+    public boolean userHasTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
+
+        TaskCriteria.Builder taskCriteria = new TaskCriteria.Builder()
+                .process(process)
+                .executionId(processInstance.getEngineProcessInstanceId())
+                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC);
+
+        if (! helper.isAuthenticatedSystem()) {
+            // If the call is not being made by an authenticated system, then the principal is a user and must have an active task
+            // on this instance
+            InternalUserDetails user = helper.getAuthenticatedPrincipal();
+
+            if (user == null)
+                throw new ForbiddenError();
+
+            taskCriteria.participantId(user.getInternalId());
+
+            if (limitToActive)
+                taskCriteria.active(Boolean.TRUE);
+        }
+
+        try {
+            TaskResults taskResults = facade.findTasks(taskCriteria.build());
+
+            if (taskResults != null && taskResults.getTasks() != null && !taskResults.getTasks().isEmpty())
+                return true;
+
+            return false;
+        } catch (ProcessEngineException e) {
+            LOG.error(e);
+            throw new InternalServerError();
+        }
     }
 
     public FormValidation validate(Process process, Screen screen, Payload payload, boolean throwException) throws StatusCodeError {
@@ -482,6 +621,12 @@ public class ProcessInstanceService {
         String baseApplicationUri = environment.getProperty("base.application.uri");
         String baseServiceUri = environment.getProperty("base.service.uri");
         return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "instance", "Instance");
+    }
+
+    public ViewContext getTaskViewContext() {
+        String baseApplicationUri = environment.getProperty("base.application.uri");
+        String baseServiceUri = environment.getProperty("base.service.uri");
+        return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), Task.Constants.ROOT_ELEMENT_NAME, Task.Constants.RESOURCE_LABEL);
     }
 
     public String getVersion() {
@@ -520,10 +665,22 @@ public class ProcessInstanceService {
         }
     }
 
+    private User getUser(Map<String, InternalUserDetails> userDetailsMap, String userId) {
+        InternalUserDetails userDetails = userDetailsMap.get(userId);
 
+        if (userDetails == null) {
+            userDetails = InternalUserDetails.class.cast(userDetailsService.loadUserByInternalId(userId));
+            userDetailsMap.put(userId, userDetails);
+        }
+
+        if (userDetails != null)
+            return new User.Builder(userDetails).build();
+
+        return null;
+    }
 
 //    private ProcessInstance getProcessInstance(Process process, String processInstanceId) throws NotFoundError {
-//        ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
+//        ProcessInstance instance = processInstanceRepository.read(processInstanceId);
 //
 //        if (instance == null)
 //            throw new NotFoundError();

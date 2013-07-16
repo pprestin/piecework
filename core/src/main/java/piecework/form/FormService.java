@@ -80,63 +80,33 @@ public class FormService {
     @Autowired
     Sanitizer sanitizer;
 
-    public Response activate(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
-        String requestId = sanitizer.sanitize(rawRequestId);
 
-        if (StringUtils.isEmpty(requestId))
-            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-
-        RequestDetails requestDetails = requestDetails(request);
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-
-        String taskId = formRequest.getTaskId();
-
-        if (StringUtils.isEmpty(taskId))
-            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
-
-        InternalUserDetails user = helper.getAuthenticatedPrincipal();
-        String participantId = user != null ? user.getInternalId() : null;
-
-        try {
-            Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
-
-            ProcessInstance processInstance = processInstanceService.findOne(process, task.getProcessInstanceId());
-
-            facade.activate(process, processInstance, "test");
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Could not activate task", e);
-        }
-
-        return Response.noContent().build();
-    }
-
-    public Response attach(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
-        String requestId = sanitizer.sanitize(rawRequestId);
-
-        if (StringUtils.isEmpty(requestId))
-            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-
-        RequestDetails requestDetails = requestDetails(request);
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-        Screen screen = formRequest.getScreen();
-
-        Payload payload = new Payload.Builder()
-                .requestDetails(requestDetails)
-                .requestId(requestId)
-                .taskId(formRequest.getTaskId())
-                .processInstanceId(formRequest.getProcessInstanceId())
-                .multipartBody(body)
-                .build();
-
-        try {
-            ProcessInstance stored = processInstanceService.attach(process, screen, payload);
-            return Response.noContent().build();
-        } catch (BadRequestError e) {
-            FormValidation validation = e.getValidation();
-            return responseHandler.handle(formRequest, viewContext, validation);
-        }
-    }
+//    public Response attach(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+//        String requestId = sanitizer.sanitize(rawRequestId);
+//
+//        if (StringUtils.isEmpty(requestId))
+//            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+//
+//        RequestDetails requestDetails = requestDetails(request);
+//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//        Screen screen = formRequest.getScreen();
+//
+//        Payload payload = new Payload.Builder()
+//                .requestDetails(requestDetails)
+//                .requestId(requestId)
+//                .taskId(formRequest.getTaskId())
+//                .processInstanceId(formRequest.getProcessInstanceId())
+//                .multipartBody(body)
+//                .build();
+//
+//        try {
+//            processInstanceService.attach(process, screen, payload);
+//            return Response.noContent().build();
+//        } catch (BadRequestError e) {
+//            FormValidation validation = e.getValidation();
+//            return responseHandler.handle(formRequest, viewContext, validation);
+//        }
+//    }
 
     public Response delete(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
@@ -162,9 +132,9 @@ public class FormService {
         try {
             Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
 
-            ProcessInstance processInstance = processInstanceService.findOne(process, task.getProcessInstanceId());
+            ProcessInstance processInstance = processInstanceService.read(process, task.getProcessInstanceId());
 
-            facade.cancel(process, processInstance, "Cancelled");
+            facade.cancel(process, processInstance);
 
         } catch (ProcessEngineException e) {
             LOG.error("Could not delete task", e);
@@ -172,42 +142,6 @@ public class FormService {
 
         return Response.noContent().build();
     }
-
-    public Response suspend(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
-        String requestId = sanitizer.sanitize(rawRequestId);
-
-        if (StringUtils.isEmpty(requestId))
-            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-
-        String taskId;
-        RequestDetails requestDetails = requestDetails(request);
-        try {
-            FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-            taskId = formRequest.getTaskId();
-        } catch (NotFoundError e) {
-            taskId = requestId;
-        }
-
-        if (StringUtils.isEmpty(taskId))
-            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
-
-        InternalUserDetails user = helper.getAuthenticatedPrincipal();
-        String participantId = user != null ? user.getInternalId() : null;
-
-        try {
-            Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
-
-            ProcessInstance processInstance = processInstanceService.findOne(process, task.getProcessInstanceId());
-
-            facade.suspend(process, processInstance, "test");
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Could not suspend task", e);
-        }
-
-        return Response.noContent().build();
-    }
-
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
@@ -280,6 +214,7 @@ public class FormService {
                             .formInstanceId(task.getTaskInstanceId())
                             .task(task)
                             .processDefinitionKey(task.getProcessDefinitionKey())
+                            .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), processInstanceService.getInstanceViewContext())
                             .build(viewContext));
                 }
             }

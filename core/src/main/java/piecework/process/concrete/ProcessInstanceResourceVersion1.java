@@ -17,13 +17,9 @@ package piecework.process.concrete;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -32,6 +28,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
@@ -47,11 +44,7 @@ import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.form.handler.RequestHandler;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.TaskCriteria;
-import piecework.task.TaskResults;
 import piecework.ui.StreamingAttachmentContent;
-
-import java.util.List;
 
 /**
  * @author James Renfro
@@ -63,6 +56,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     Environment environment;
+
+    @Autowired
+    ResourceHelper helper;
+
+    @Autowired
+    ProcessService processService;
 
     @Autowired
     ProcessInstanceService processInstanceService;
@@ -78,15 +77,55 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 
     @Override
-    public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws StatusCodeError {
-        SearchResults searchResults = processInstanceService.findAttachments(rawProcessDefinitionKey, rawProcessInstanceId, queryParameters);
+    public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String reason = sanitizer.sanitize(rawReason);
+
+        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, false))
+            throw new ForbiddenError(Constants.ExceptionCodes.task_required);
+
+        processInstanceService.activate(process, instance, reason);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultipartBody body) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+
+        if (!processInstanceService.userHasTask(process, instance, true))
+            throw new ForbiddenError();
+
+        Payload payload = new Payload.Builder()
+                .processInstanceId(instance.getProcessInstanceId())
+                .multipartBody(body)
+                .build();
+
+        processInstanceService.attach(process, null, payload);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response attachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+
+        if (!processInstanceService.userHasTask(process, instance, false))
+            throw new ForbiddenError();
+
+        SearchResults searchResults = processInstanceService.findAttachments(process, instance, queryParameters);
         return Response.ok(searchResults).build();
     }
 
     @Override
-    public Response attachment(String processDefinitionKey, String processInstanceId, String attachmentId) throws StatusCodeError {
-        Process process = processInstanceService.getProcess(processDefinitionKey);
-        ProcessInstance instance = processInstanceService.findOne(process, processInstanceId);
+    public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String attachmentId) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+
+        if (!processInstanceService.userHasTask(process, instance, true))
+            throw new ForbiddenError();
+
         StreamingAttachmentContent content = processInstanceService.getAttachmentContent(process, instance, attachmentId);
 
         if (content == null)
@@ -94,7 +133,19 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         String contentDisposition = new StringBuilder("attachment; filename=").append(content.getAttachment().getDescription()).toString();
         return Response.ok(content, content.getAttachment().getContentType()).header("Content-Disposition", contentDisposition).build();
+    }
 
+    @Override
+    public Response cancel(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String reason = sanitizer.sanitize(rawReason);
+
+        if (!helper.hasRole(process, AuthorizationRole.OVERSEER))
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+        processInstanceService.delete(process, instance, reason);
+        return Response.noContent().build();
     }
 
     @Override
@@ -116,28 +167,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
-    public Response history(String processDefinitionKey, String processInstanceId) throws StatusCodeError {
-        Process process = processInstanceService.getProcess(processDefinitionKey);
-        ProcessInstance instance = processInstanceService.findOne(process, processInstanceId);
-        TaskCriteria taskCriteria = new TaskCriteria.Builder()
-                .process(process)
-                .executionId(instance.getEngineProcessInstanceId())
-                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC)
-                .build();
-        try {
-            TaskResults taskResults = facade.findTasks(taskCriteria);
-
-            History history = new History.Builder()
-                    .processDefinitionKey(process.getProcessDefinitionKey())
-                    .processInstanceId(instance.getProcessInstanceId())
-                    .tasks(taskResults.getTasks())
-                    .build(processInstanceService.getInstanceViewContext());
-
-            return Response.ok(history).build();
-        } catch (ProcessEngineException e) {
-            LOG.error(e);
-            throw new InternalServerError();
-        }
+    public Response history(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
+        History history = processInstanceService.getHistory(rawProcessDefinitionKey, rawProcessInstanceId);
+        return Response.ok(history).build();
     }
 
     @Override
@@ -146,7 +178,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 		
 		Process process = processInstanceService.getProcess(processDefinitionKey);
-        ProcessInstance instance = processInstanceService.findOne(process, processInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, processInstanceId);
 
         ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
                 .processDefinitionKey(processDefinitionKey)
@@ -169,6 +201,19 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
+    public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String reason = sanitizer.sanitize(rawReason);
+
+        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, true))
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+
+        processInstanceService.suspend(process, instance, reason);
+        return Response.noContent().build();
+    }
+
+    @Override
     public Response update(String rawProcessDefinitionKey, String rawProcessInstanceId, ProcessInstance instance) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
@@ -185,15 +230,15 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
 	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
-		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
         String reason = sanitizer.sanitize(rawReason);
 
-        processInstanceService.delete(processDefinitionKey, processInstanceId, reason);
+        processInstanceService.delete(process, instance, reason);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         ViewContext context = getViewContext();
-        String location = context != null ? context.getApplicationUri(processDefinitionKey, processInstanceId) : null;
+        String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
         if (location != null)
             responseBuilder.location(UriBuilder.fromPath(location).build());
         return responseBuilder.build();

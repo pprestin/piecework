@@ -1,8 +1,9 @@
 define([
   'handlebars',
   'chaplin',
+  'moment',
   'lib/utils'
-], function(Handlebars, Chaplin, utils) {
+], function(Handlebars, Chaplin, moment, utils) {
   'use strict';
 
   // Application-specific Handlebars helpers
@@ -41,5 +42,12 @@ define([
 
     return out + '</li></ul>';
   });
+
+  Handlebars.registerHelper('date', function(datetime) {
+      if (datetime == null)
+        return '';
+      return moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
+//      return new Date(datetime).toLocaleString();
+    });
 
 });

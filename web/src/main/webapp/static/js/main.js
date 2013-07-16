@@ -9,6 +9,7 @@ requirejs.config({
     	jqueryui: 'vendor/jquery-ui-1.10.3.custom.min',
     	jquerymask: 'vendor/jquery-mask.min',
     	less: 'vendor/less',
+    	moment: 'vendor/moment.min',
     	normalize: 'vendor/normalize',
     	text: 'vendor/require-text-2.0.3',
         underscore: 'vendor/underscore'

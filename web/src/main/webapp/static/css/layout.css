@@ -104,6 +104,17 @@ ul.screen-buttons li {
     padding-left: 5px;
 }
 
+ul.tasks {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+ul.tasks li {
+    border: 1px solid #EEE;
+    padding: 15px 15px 5px 15px;
+}
+
 div.screen-footer {
     padding: 20px 0px 0px;
     height: 30px;

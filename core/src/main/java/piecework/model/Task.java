@@ -341,6 +341,11 @@ public class Task implements Serializable {
             this.isDeleted = false;
             return this;
         }
+
+        public Builder clearCandidateAssignees() {
+            this.candidateAssignees = new ArrayList<User>();
+            return this;
+        }
     }
 
     public static class Constants {
