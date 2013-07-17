@@ -30,6 +30,7 @@ import piecework.util.ManyMap;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -282,6 +283,19 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
                 if (values.size() > index)
                     value = values.get(index);
+
+                List<Message> messages = formValue.getMessages();
+                if (messages != null && !messages.isEmpty()) {
+                    StringBuilder builder = new StringBuilder();
+                    Iterator<Message> iterator = messages.iterator();
+                    while (iterator.hasNext()) {
+                        Message message = iterator.next();
+                        builder.append(message.getText());
+                        if (iterator.hasNext())
+                            builder.append(",");
+                    }
+                    attributes.put("data-messages", builder.toString());
+                }
             }
 
             if (!field.isVisible())

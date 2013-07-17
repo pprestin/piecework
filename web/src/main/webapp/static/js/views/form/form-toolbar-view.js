@@ -57,18 +57,13 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
             this._uploadAttachments(data);
 	    },
 	    _onDeleteButton: function() {
-            var data = new FormData();
+            var data = null;
             var url = this.model.get("cancellation") + ".json";
-            $.ajax({
-                url : url,
-                data : data,
-                processData : false,
-                contentType : false,
-                type : 'POST',
-                statusCode : {
-                    204 : this._onDeleteSuccess,
+            $.post(url, data,
+                function(data, textStatus, jqXHR) {
+                    Chaplin.mediator.publish('backToSearch');
                 }
-            });
+            ).fail(function() {  });
 	    },
 	    _onBackButton: function() {
 	        var root = this.model.get("root");
@@ -78,23 +73,18 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        $('.attach-file').click();
 	    },
 	    _onSuspendButton: function() {
-	        var data = new FormData();
+	        var data = null;
             var task = this.model.get("task");
             if (task != null) {
                 var url = this.model.get("suspension") + ".json";
                 if (!task.active) {
                     url = this.model.get("activation") + ".json";
                 }
-                $.ajax({
-                    url : url,
-                    data : data,
-                    processData : false,
-                    contentType : false,
-                    type : 'POST',
-                    statusCode : {
-                        204 : this._onSuspendSuccess,
+                $.post(url, data,
+                    function(data, textStatus, jqXHR) {
+                        Chaplin.mediator.publish('backToSearch');
                     }
-                });
+                ).fail(function() {  });
             }
 	    },
 	    _onBackToSearch: function() {

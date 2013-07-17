@@ -15,6 +15,8 @@
  */
 package piecework.persistence.concrete;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +72,9 @@ public class GridFSContentRepository implements ContentRepository {
 
     @Override
     public Content save(Content content) {
-        GridFSFile file = gridFsOperations.store(content.getInputStream(), content.getLocation(), content.getContentType());
+        BasicDBObject metadata = new BasicDBObject();
+        metadata.put("originalFilename", content.getFilename());
+        GridFSFile file = gridFsOperations.store(content.getInputStream(), content.getLocation(), content.getContentType(), metadata);
         String contentId = file.getId().toString();
         return new Content.Builder(content)
                 .contentId(contentId)
@@ -79,10 +83,13 @@ public class GridFSContentRepository implements ContentRepository {
 
     private Content toContent(GridFSDBFile file) {
         String fileId = file.getId().toString();
+        DBObject metadata = file.getMetaData();
+        String originalFileName = metadata != null ? String.class.cast(metadata.get("originalFilename")) : null;
 
         return new Content.Builder()
                 .contentId(fileId)
                 .contentType(file.getContentType())
+                .filename(originalFileName)
                 .location(file.getFilename())
                 .inputStream(file.getInputStream())
                 .lastModified(file.getUploadDate())

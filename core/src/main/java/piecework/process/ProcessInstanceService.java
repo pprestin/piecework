@@ -393,9 +393,18 @@ public class ProcessInstanceService {
         if (!isAttachment && processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
             Map<String, String> scopes = new HashMap<String, String>();
 
-            Map<String, FormValue> formValueMap = validation.getFormValueMap();
-            if (formValueMap != null) {
-                for (Map.Entry<String,FormValue> entry : formValueMap.entrySet()) {
+            Map<String, FormValue> instanceFormValueMap = previous != null ? previous.getFormValueMap() : null;
+            Map<String, FormValue> validationFormValueMap = validation.getFormValueMap();
+            if (instanceFormValueMap != null) {
+                for (Map.Entry<String,FormValue> entry : instanceFormValueMap.entrySet()) {
+                    FormValue formValue = entry.getValue();
+                    List<String> values = formValue != null ? formValue.getAllValues() : null;
+                    if (values != null && !values.isEmpty())
+                        scopes.put(entry.getKey(), values.iterator().next());
+                }
+            }
+            if (validationFormValueMap != null) {
+                for (Map.Entry<String,FormValue> entry : validationFormValueMap.entrySet()) {
                     FormValue formValue = entry.getValue();
                     List<String> values = formValue != null ? formValue.getAllValues() : null;
                     if (values != null && !values.isEmpty())
@@ -661,6 +670,7 @@ public class ProcessInstanceService {
 
                 facade.completeTask(process, taskId, actionValue);
             } catch (ProcessEngineException e) {
+                LOG.error(e);
                 throw new InternalServerError();
             }
         }

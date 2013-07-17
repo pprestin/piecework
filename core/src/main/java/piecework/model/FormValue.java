@@ -73,23 +73,15 @@ public class FormValue implements Serializable {
     @DBRef
     private final List<Secret> secrets;
 
+    @XmlAttribute
+    private final String link;
+
 	private FormValue() {
 		this(new FormValue.Builder(), new ViewContext());
 	}
 
 	private FormValue(FormValue.Builder builder, ViewContext context) {
 		this.name = builder.name;
-
-//		String temporarySingle = null;
-//		List<String> temporaryList = null;
-//		if (builder.values != null) {
-//            temporaryList = Collections.unmodifiableList(builder.values);
-//			int size = builder.values.size();
-//			if (size == 1)
-//				temporarySingle = builder.values.get(0);
-//			else
-//				temporaryList = Collections.unmodifiableList(builder.values);
-//		}
 		this.value = null;
 		this.values = Collections.unmodifiableList(builder.values);
         this.secrets = builder.secrets;
@@ -97,6 +89,7 @@ public class FormValue implements Serializable {
         this.contentType = builder.contentType;
         this.location = builder.location;
         this.messages = Collections.unmodifiableList(builder.messages);
+        this.link = context != null && builder.processDefinitionKey != null && builder.formInstanceId != null && builder.name != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId, Constants.ROOT_ELEMENT_NAME, builder.name) : null;
     }
 	
 	public String getName() {
@@ -127,6 +120,7 @@ public class FormValue implements Serializable {
         return contentType;
     }
 
+    @JsonIgnore
     public String getLocation() {
         return location;
     }
@@ -135,13 +129,20 @@ public class FormValue implements Serializable {
         return messages;
     }
 
+    @JsonIgnore
     public List<Secret> getSecrets() {
         return secrets;
+    }
+
+    public String getLink() {
+        return link;
     }
 
     public final static class Builder {
 
 		private String name;
+        private String processDefinitionKey;
+        private String formInstanceId;
 		private List<String> values;
         private List<Secret> secrets;
 		private boolean restricted;
@@ -166,6 +167,8 @@ public class FormValue implements Serializable {
 			} else {
                 this.values = new ArrayList<String>();
             }
+            this.location = sanitizer.sanitize(formValue.location);
+            this.contentType = sanitizer.sanitize(formValue.contentType);
 
             if (formValue.value != null)
                 this.values.add(formValue.value);
@@ -193,6 +196,16 @@ public class FormValue implements Serializable {
 			this.name = name;
 			return this;
 		}
+
+        public Builder processDefinitionKey(String processDefinitionKey) {
+            this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder formInstanceId(String formInstanceId) {
+            this.formInstanceId = formInstanceId;
+            return this;
+        }
 
         public Builder message(Message message) {
             if (this.messages == null)

@@ -172,7 +172,13 @@ define([ 'chaplin',
                         var selector = ':input[name="' + name + '"]';
                         var $element = $(selector);
                         var values = formValue.values;
-                        $element.val(values);
+                        if (values != null && values.length > 0) {
+                            if ($element.attr('type') != 'file') {
+                                $element.val(values);
+                            } else {
+                                $element.before('<div class="file"><a href="' + formValue.link + '">' + values[0] + "</a></div>");
+                            }
+                        }
                     }
                 }
             }
@@ -184,10 +190,8 @@ define([ 'chaplin',
 	        var screen = this.model.get("screen");
             var type = screen.type;
 
-
             var validated = $('#main-form').prop("validated");
-
-            if (validated != undefined && validated)
+            if (type != 'wizard' || (validated != undefined && validated))
                 return true;
 
             this._doValidate();
@@ -198,7 +202,7 @@ define([ 'chaplin',
 	    _onFormValid: function(data, textStatus, jqXHR) {
             var next = $(':button[type="submit"]:visible').val();
 
-            if (next == 'submit') {
+            if (next == 'submit' || next == 'reject' || next == 'approve') {
                 $('#main-form').prop("validated", true);
                 $('#main-form').submit();
             } else {

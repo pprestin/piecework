@@ -337,6 +337,22 @@ public class ValidationService {
 
                 Pattern pattern = field.getPattern() != null ? Pattern.compile(field.getPattern()) : null;
 
+                if (field != null) {
+                    if (isPersonLookup) {
+                        FormValue.Builder displayNameBuilder = new FormValue.Builder().name(fieldName + "__displayName");
+                        FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(fieldName + "__visibleId");
+                        for (String value : values) {
+                            User user = userDetailsService.getUserByAnyId(value);
+                            if (user != null) {
+                                displayNameBuilder.value(user.getDisplayName());
+                                visibleIdBuilder.value(user.getVisibleId());
+                            }
+                        }
+                        validationBuilder.formValue(displayNameBuilder.build());
+                        validationBuilder.formValue(visibleIdBuilder.build());
+                    }
+                }
+
                 for (String value : values) {
 
                     if (value.length() > field.getMaxValueLength()) {
@@ -400,7 +416,7 @@ public class ValidationService {
                 }
             }
 
-        } else {
+        } else if (!hasPreviousValues) {
 
             // No value was passed and this is a property that cannot be created or edited at this time,
             // so just bail out so we don't erroneously create a SUCCESS validation for it

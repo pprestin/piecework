@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
@@ -37,6 +38,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.ui.StreamingAttachmentContent;
 import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
 import piecework.util.ConstraintUtil;
@@ -98,6 +100,13 @@ public class ResponseHandler {
                     } catch (IOException e) {
                         throw new InternalServerError();
                     }
+                } else if (location.startsWith("file:")) {
+                    FileSystemResource resource = new FileSystemResource(location.substring("file:".length()));
+                    try {
+                        content = new Content.Builder().inputStream(resource.getInputStream()).contentType("text/html").build();
+                    } catch (IOException e) {
+                        throw new InternalServerError();
+                    }
                 } else {
                     content = contentRepository.findByLocation(location);
                 }
@@ -106,6 +115,30 @@ public class ResponseHandler {
         }
 
         return Response.ok(form).build();
+    }
+
+    public Response handleFormValue(FormRequest formRequest, ViewContext viewContext, String formValueName) throws StatusCodeError {
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
+            ProcessInstance processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
+            Map<String, FormValue> processInstanceFormValueMap = processInstance.getFormValueMap();
+            formValueMap.putAll(processInstanceFormValueMap);
+        }
+
+        FormValue formValue = formValueName != null ? formValueMap.get(formValueName) : null;
+
+        if (formValue == null || StringUtils.isEmpty(formValue.getLocation())) {
+            throw new NotFoundError();
+        }
+
+        Content content = contentRepository.findByLocation(formValue.getLocation());
+        if (content != null) {
+            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+            String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
+            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
+        } else {
+            throw new NotFoundError();
+        }
     }
 
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
@@ -117,6 +150,15 @@ public class ResponseHandler {
             attachmentCount = processInstance.getAttachments() != null ? processInstance.getAttachments().size() : 0;
             combinedFormValueMap.putAll(processInstanceFormValueMap);
         }
+
+        List<ValidationResult> results = validation != null ? validation.getResults() : null;
+        Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
+        if (results != null && !results.isEmpty()) {
+            for (ValidationResult result : results) {
+                resultMap.put(result.getPropertyName(), result);
+            }
+        }
+
         Map<String, FormValue> validationFormValueMap = validation != null ? validation.getFormValueMap() : null;
         if (validationFormValueMap != null)
             combinedFormValueMap.putAll(validationFormValueMap);
@@ -202,28 +244,53 @@ public class ResponseHandler {
                     FormValue formValue = entry.getValue();
                     if (formValue == null)
                         continue;
-                    List<String> values = formValue.getAllValues();
-                    if (values == null)
-                        continue;
+//                    List<String> values = formValue.getAllValues();
+//                    if (values == null)
+//                        continue;
+//
+//                    if (field != null) {
+//                        List<Constraint> constraints = field.getConstraints();
+//                        if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, constraints)) {
+//                            FormValue.Builder displayNameBuilder = new FormValue.Builder().name(formValueName + "__displayName");
+//                            FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(formValueName + "__visibleId");
+//                            for (String value : values) {
+//                                User user = userDetailsService.getUserByAnyId(value);
+//                                if (user != null) {
+//                                    displayNameBuilder.value(user.getDisplayName());
+//                                    visibleIdBuilder.value(user.getVisibleId());
+//                                }
+//                            }
+//                            includedFormValues.add(displayNameBuilder.build());
+//                            includedFormValues.add(visibleIdBuilder.build());
+//                        }
+//                    }
 
-                    if (field != null) {
-                        List<Constraint> constraints = field.getConstraints();
-                        if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, constraints)) {
-                            FormValue.Builder displayNameBuilder = new FormValue.Builder().name(formValueName + "__displayName");
-                            FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(formValueName + "__visibleId");
-                            for (String value : values) {
-                                User user = userDetailsService.getUserByAnyId(value);
-                                if (user != null) {
-                                    displayNameBuilder.value(user.getDisplayName());
-                                    visibleIdBuilder.value(user.getVisibleId());
-                                }
-                            }
-                            includedFormValues.add(displayNameBuilder.build());
-                            includedFormValues.add(visibleIdBuilder.build());
-                        }
+
+                    FormValue.Builder formValueBuilder = new FormValue.Builder(formValue, passthroughSanitizer);
+
+                    if (field != null && field.getType() != null && field.getType().equals(Constants.FieldTypes.FILE)) {
+                        formValueBuilder.processDefinitionKey(formRequest.getProcessDefinitionKey()).formInstanceId(formRequest.getRequestId());
                     }
-                    includedFormValues.add(formValue);
+
+                    ValidationResult result = resultMap.remove(formValueName);
+                    if (result != null) {
+                        formValueBuilder.message(new Message.Builder().type(result.getType()).text(result.getMessage()).build());
+                    }
+
+                    includedFormValues.add(formValueBuilder.build(formService.getFormViewContext()));
                 }
+            }
+        }
+
+        // Add any missing form values that have validation results -- usually will be fields that are required
+        for (String includedFieldName : includedFieldNames) {
+            ValidationResult result = resultMap.remove(includedFieldName);
+            if (result != null) {
+                FormValue.Builder formValueBuilder = new FormValue.Builder().name(includedFieldName)
+                        .message(new Message.Builder().type(result.getType()).text(result.getMessage())
+                                .build());
+
+                includedFormValues.add(formValueBuilder.build());
             }
         }
 

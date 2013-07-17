@@ -29,6 +29,7 @@ public class Content implements Serializable {
 
     private final String contentId;
     private final String contentType;
+    private final String filename;
     private final String location;
     private final InputStream inputStream;
     private final String md5;
@@ -42,6 +43,7 @@ public class Content implements Serializable {
     private Content(Builder builder) {
         this.contentId = builder.contentId;
         this.contentType = builder.contentType;
+        this.filename = builder.filename;
         this.location = builder.location;
         this.inputStream = builder.inputStream;
         this.md5 = builder.md5;
@@ -55,6 +57,10 @@ public class Content implements Serializable {
 
     public String getContentType() {
         return contentType;
+    }
+
+    public String getFilename() {
+        return filename;
     }
 
     public String getLocation() {
@@ -81,6 +87,7 @@ public class Content implements Serializable {
 
         private String contentId;
         private String contentType;
+        private String filename;
         private String location;
         private InputStream inputStream;
         private String md5;
@@ -94,6 +101,7 @@ public class Content implements Serializable {
         public Builder(Content content) {
             this.contentId = content.contentId;
             this.contentType = content.contentType;
+            this.filename = content.filename;
             this.location = content.location;
             this.inputStream = content.inputStream;
             this.md5 = content.md5;
@@ -112,6 +120,11 @@ public class Content implements Serializable {
 
         public Builder contentType(String contentType) {
             this.contentType = contentType;
+            return this;
+        }
+
+        public Builder filename(String filename) {
+            this.filename = filename;
             return this;
         }
 

@@ -9,6 +9,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'views/history-view', 'views/b
 		className: 'main-toolbar',
 	    template: template,
 	    events: {
+	        'click #delete-button': '_onDeleteButton',
 	        'click #history-dialog-button': '_onHistoryButton',
 	        'click #suspend-button': '_onSuspendButton',
 	        'submit form': '_onFormSubmit',
@@ -22,6 +23,23 @@ define([ 'backbone', 'chaplin', 'models/history', 'views/history-view', 'views/b
 	    _onAddedToDOM: function() {
 	        $('title').text(window.piecework.context.applicationTitle);
 	    },
+	    _onDeleteButton: function() {
+            var data = null;
+            var selected = this.model.get("selected");
+            if (selected == null)
+                return;
+
+            var data = $('#delete-reason').serialize();
+            var task = selected.get('task');
+            if (task != null) {
+                var url = selected.get("cancellation") + ".json";
+                $.post(url, data,
+                    function(data, textStatus, jqXHR) {
+                        Chaplin.mediator.publish("search", {status:"open"});
+                    }
+                ).fail(function() {  });
+            }
+        },
 	    _onFormSubmit: function(event) {
 	        event.preventDefault();
 	        event.stopPropagation();

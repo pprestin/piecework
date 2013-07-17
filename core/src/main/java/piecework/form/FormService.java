@@ -31,6 +31,7 @@ import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.common.Payload;
+import piecework.persistence.ContentRepository;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
@@ -42,6 +43,7 @@ import piecework.model.Process;
 import piecework.process.ProcessInstanceService;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
+import piecework.ui.StreamingAttachmentContent;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
@@ -61,6 +63,9 @@ public class FormService {
 
     @Autowired
     Environment environment;
+
+    @Autowired
+    ContentRepository contentRepository;
 
     @Autowired
     ProcessEngineFacade facade;
@@ -145,6 +150,8 @@ public class FormService {
 
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
+        String formValueName = null;
+        boolean isFormValueResource = false;
         boolean isSubmissionResource;
 
         if (pathSegments != null && !pathSegments.isEmpty()) {
@@ -155,6 +162,13 @@ public class FormService {
 
             if (isSubmissionResource && pathSegmentIterator.hasNext()) {
                 requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+            }
+
+            if (pathSegmentIterator.hasNext()) {
+                String path = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+                isFormValueResource = path != null && path.equals(FormValue.Constants.ROOT_ELEMENT_NAME);
+                if (pathSegmentIterator.hasNext())
+                    formValueName = sanitizer.sanitize(pathSegmentIterator.next().getPath());
             }
         }
 
@@ -173,6 +187,9 @@ public class FormService {
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
+
+        if (isFormValueResource)
+            return responseHandler.handleFormValue(formRequest, viewContext, formValueName);
 
         return responseHandler.handle(formRequest, viewContext);
     }
@@ -294,6 +311,7 @@ public class FormService {
                 .requestDetails(requestDetails)
                 .requestId(requestId)
                 .taskId(formRequest.getTaskId())
+                .processInstanceId(formRequest.getProcessInstanceId())
                 .validationId(validationId)
                 .multipartBody(body)
                 .build();
