@@ -136,7 +136,13 @@ public class WebSecurityConfiguration {
             return requestHeaderAuthenticationFilter;
         }
 
-        SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
+        String testUser = environment.getProperty("authentication.testuser");
+        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
+
+        if (isDebugMode)
+            LOG.fatal("DISABLING AUTHENTICATION -- THIS SHOULD NOT HAPPEN IN A PRODUCTION SYSTEM");
+
+        SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter(testUser, isDebugMode);
         singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
         return singleSignOnAuthenticationFilter;
     }
