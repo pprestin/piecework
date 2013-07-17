@@ -25,6 +25,7 @@ import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineFacade;
 import piecework.form.FormService;
+import piecework.identity.InternalUserDetailsService;
 import piecework.process.ProcessInstanceService;
 import piecework.task.TaskCriteria;
 import piecework.engine.exception.ProcessEngineException;
@@ -74,6 +75,9 @@ public class ResponseHandler {
     @Autowired
     ProcessInstanceService processInstanceService;
 
+    @Autowired
+    InternalUserDetailsService userDetailsService;
+
     public Response handle(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
         return handle(formRequest, viewContext, null);
     }
@@ -107,10 +111,10 @@ public class ResponseHandler {
 
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
         int attachmentCount = 0;
-        List<FormValue> formValues = findFormValues(formRequest, validation);
-        if (formValues == null && StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
+        Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
+        if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
             ProcessInstance processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
-            formValues = processInstance.getFormData();
+            List<FormValue> formValues = processInstance.getFormData();
             attachmentCount = processInstance.getAttachments() != null ? processInstance.getAttachments().size() : 0;
         }
         Set<String> includedFieldNames = new HashSet<String>();
@@ -146,12 +150,12 @@ public class ResponseHandler {
         }
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        Map<String, Field> fieldMap = new HashMap<String, Field>();
         if (screen != null) {
             ManyMap<String, String> formValueMap = FormDataUtil.getFormValueMap(formValues);
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
 
             if (screen.getSections() != null) {
-                Map<String, Field> fieldMap = new HashMap<String, Field>();
                 for (Section section : screen.getSections()) {
                     if (section.getFields() == null)
                         continue;
@@ -169,7 +173,6 @@ public class ResponseHandler {
 
                     for (Field field : section.getFields()) {
                         Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer);
-
                         List<Constraint> constraints = field.getConstraints();
                         if (constraints != null) {
                             if (!ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, formValueMap, constraints))
@@ -191,8 +194,31 @@ public class ResponseHandler {
         List<FormValue> includedFormValues = new ArrayList<FormValue>();
         if (formValues != null) {
             for (FormValue formValue : formValues) {
-                if (includedFieldNames.contains(formValue.getName()))
+                String formValueName = formValue.getName();
+                if (includedFieldNames.contains(formValueName)) {
+                    Field field = fieldMap.get(formValueName);
+                    if (field != null) {
+                        List<Constraint> constraints = field.getConstraints();
+                        if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, constraints)) {
+                            List<String> values = formValue.getAllValues();
+                            List<User> users = new ArrayList<User>();
+                            if (values != null) {
+                                FormValue.Builder displayNameBuilder = new FormValue.Builder().name(formValueName + "__displayName");
+                                FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(formValueName + "__visibleId");
+                                for (String value : values) {
+                                    User user = userDetailsService.getUserByAnyId(value);
+                                    if (user != null) {
+                                        displayNameBuilder.value(user.getDisplayName());
+                                        visibleIdBuilder.value(user.getVisibleId());
+                                    }
+                                }
+                                includedFormValues.add(displayNameBuilder.build());
+                                includedFormValues.add(visibleIdBuilder.build());
+                            }
+                        }
+                    }
                     includedFormValues.add(new FormValue.Builder(formValue, passthroughSanitizer).build());
+                }
             }
         }
 

@@ -181,8 +181,11 @@ public class UnitTestConfiguration {
     }
 	
 	public class ProcessRepositoryStub extends MongoRepositoryStub<Process> implements ProcessRepository {
-		
-	}
+        @Override
+        public List<Process> findAllBasic(Iterable<String> processDefinitionKeys) {
+            return null;
+        }
+    }
 
     public class ProcessInstanceRepositoryStub extends MongoRepositoryStub<ProcessInstance> implements ProcessInstanceRepository {
         @Override
@@ -197,7 +200,7 @@ public class UnitTestConfiguration {
 
         @Override
         public List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
+            return null;
         }
     }
 	

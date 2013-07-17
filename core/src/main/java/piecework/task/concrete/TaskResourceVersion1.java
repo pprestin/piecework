@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -220,7 +221,15 @@ public class TaskResourceVersion1 implements TaskResource {
 
         try {
             TaskResults results = facade.findTasks(criteriaBuilder.build());
-            resultsBuilder.items(results.getTasks());
+            if (results.getTasks() != null && !results.getTasks().isEmpty()) {
+                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                List<Task> tasks = new ArrayList<Task>(results.getTasks().size());
+                for (Task task : results.getTasks()) {
+                    tasks.add(new Task.Builder(task, passthroughSanitizer).build(processInstanceService.getTaskViewContext()));
+                }
+                resultsBuilder.items(tasks);
+            }
+
             resultsBuilder.total(results.getTotal());
             resultsBuilder.firstResult(results.getFirstResult());
             resultsBuilder.maxResults(results.getMaxResults());

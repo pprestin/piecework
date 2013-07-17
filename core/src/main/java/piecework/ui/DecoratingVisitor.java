@@ -57,6 +57,8 @@ public class DecoratingVisitor implements TagNodeVisitor {
         decoratorMap.putOne("body", new BodyDecorator(form));
 
         Map<String, FormValue> formValueMap = form.getFormValueMap();
+        decoratorMap.putOne("span", new VariableDecorator(formValueMap));
+
         Screen screen = form.getScreen();
 
         if (screen != null) {
@@ -93,10 +95,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
             String id = tag.getAttributeByName("id");
             String cls = tag.getAttributeByName("class");
             String name = tag.getAttributeByName("name");
+            String variable = tag.getAttributeByName("data-variable");
 
             for (TagDecorator decorator : decorators) {
-                if (decorator != null && decorator.canDecorate(id, cls, name)) {
-                    decorator.decorate(tag, id , cls, name);
+                if (decorator != null && decorator.canDecorate(id, cls, name, variable)) {
+                    decorator.decorate(tag, id , cls, name, variable);
                 }
             }
         }
@@ -112,7 +115,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name) {
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
             Screen screen = form.getScreen();
             String screenType = screen.getType();
 
@@ -149,7 +152,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name) {
+        public boolean canDecorate(String id, String cls, String name, String variable) {
             Screen screen = form.getScreen();
             String screenType = screen.getType();
 
@@ -170,8 +173,8 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name) {
-            String formUri = form.getLink() != null ? form.getLink() : "";
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+            String formUri = form.getAction() != null ? form.getAction() : "";
 
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.put("action", formUri);
@@ -181,7 +184,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name) {
+        public boolean canDecorate(String id, String cls, String name, String variable) {
             return id == null || id.equals("main-form");
         }
 
@@ -199,12 +202,12 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name) {
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
 
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name) {
+        public boolean canDecorate(String id, String cls, String name, String variable) {
             return id == null || section.getTagId() != null && section.getTagId().equals(id);
         }
 
@@ -212,6 +215,43 @@ public class DecoratingVisitor implements TagNodeVisitor {
             return true;
         }
 
+    }
+
+    class VariableDecorator implements TagDecorator {
+
+        private Map<String, FormValue> formValueMap;
+
+        public VariableDecorator(Map<String, FormValue> formValueMap) {
+            this.formValueMap = formValueMap;
+        }
+
+        @Override
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+            tag.removeAllChildren();
+
+            FormValue formValue = formValueMap.get(variable);
+            if (formValue != null) {
+                List<String> values = formValue.getAllValues();
+
+                if (values != null) {
+                    for (String value : values) {
+                        tag.addChild(new ContentNode(value));
+                    }
+                }
+            }
+        }
+
+        @Override
+        public boolean canDecorate(String id, String cls, String name, String variable) {
+            if (variable != null && formValueMap.containsKey(variable))
+                return true;
+
+            return false;
+        }
+
+        public boolean isReusable() {
+            return true;
+        }
     }
 
     class FieldDecorator implements TagDecorator {
@@ -229,7 +269,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name) {
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.putAll(tag.getAttributes());
             attributes.putAll(fieldTag.getAttributes());
@@ -288,7 +328,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name) {
+        public boolean canDecorate(String id, String cls, String name, String variable) {
 
             if (id != null && id.equals(field.getFieldId()))
                 return true;

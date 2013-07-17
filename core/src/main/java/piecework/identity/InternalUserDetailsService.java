@@ -84,4 +84,14 @@ public class InternalUserDetailsService implements UserDetailsService {
         return null;
     }
 
+    @Cacheable(value="userAnyIdCache")
+    public User getUserByAnyId(String id) {
+        UserDetails userDetails = loadUserByAnyId(id);
+
+        if (userDetails != null)
+            return new User.Builder(userDetails).build();
+
+        return null;
+    }
+
 }

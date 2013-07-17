@@ -59,9 +59,6 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-//	@Autowired
-//	private JacksonJaxbJsonProvider jsonProvider;
-	
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
 		return !type.equals(StreamingPageContent.class) && hasTemplateResource(type);

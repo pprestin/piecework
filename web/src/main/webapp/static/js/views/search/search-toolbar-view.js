@@ -93,7 +93,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'views/history-view', 'views/b
                 }
                 $.post( url, data,
                     function(data, textStatus, jqXHR) {
-                        Chaplin.mediator.publish("search", {});
+                        Chaplin.mediator.publish("search", {status:"open"});
                     }
                 ).fail(function() {  });
             }

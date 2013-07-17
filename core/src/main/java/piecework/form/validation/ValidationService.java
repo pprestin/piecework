@@ -82,7 +82,6 @@ public class ValidationService {
             List<Grouping> groupings = screen.getGroupings();
 
             if (groupings != null) {
-
                 for (Grouping grouping : groupings) {
                     String groupingId = grouping.getGroupingId();
 

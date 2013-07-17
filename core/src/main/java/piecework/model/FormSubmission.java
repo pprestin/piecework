@@ -99,7 +99,10 @@ public class FormSubmission {
     	ManyMap<String, String> map = new ManyMap<String, String>();
     	if (formData != null && !formData.isEmpty()) {
     		for (FormValue formValue : formData) {
-    			map.put(formValue.getName(), formValue.getAllValues());
+                String name = formValue.getName();
+                List<String> values = formValue.getAllValues();
+                if (name != null && values != null)
+    			    map.put(name, values);
     		}
     	}
     	return map;
