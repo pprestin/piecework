@@ -266,6 +266,15 @@ public class FormService {
 
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
+
+            List<ValidationResult> results = validation.getResults();
+
+            if (results != null && !results.isEmpty()) {
+                for (ValidationResult result : results) {
+                    LOG.warn("Validation error " + result.getMessage() + " : " + result.getPropertyName());
+                }
+            }
+
             return responseHandler.handle(formRequest, viewContext, validation);
         }
     }

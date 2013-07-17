@@ -64,11 +64,14 @@ public class SubmissionHandler {
 
         switch (payload.getType()) {
             case INSTANCE:
-                submissionBuilder.formData(payload.getInstance().getFormValueMap());
+                submissionBuilder.formData(payload.getInstance().getFormValueContentMap());
                 submissionBuilder.attachments(payload.getInstance().getAttachments());
                 break;
             case FORMDATA:
                 submissionBuilder.formData(payload.getFormData());
+                break;
+            case FORMVALUEMAP:
+                submissionBuilder.formValueMap(payload.getFormValueMap());
                 break;
             case MULTIPART:
                 multipart(submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);

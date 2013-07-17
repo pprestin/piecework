@@ -31,9 +31,9 @@ public class FormValidation implements Serializable {
 
     private final String title;
 	
-	private final Map<String, List<String>> formValueMap;
+	private final Map<String, FormValue> formValueMap;
 
-    private final Map<String, List<String>> restrictedValueMap;
+    private final Map<String, FormValue> restrictedValueMap;
 	
 	private final List<Attachment> attachments;
 	
@@ -64,11 +64,11 @@ public class FormValidation implements Serializable {
         return title;
     }
 
-    public Map<String, List<String>> getFormValueMap() {
+    public Map<String, FormValue> getFormValueMap() {
 		return formValueMap;
 	}
 
-    public Map<String, List<String>> getRestrictedValueMap() {
+    public Map<String, FormValue> getRestrictedValueMap() {
         return restrictedValueMap;
     }
 
@@ -96,8 +96,8 @@ public class FormValidation implements Serializable {
 
         private String title;
         private List<ValidationResult> results;
-        private ManyMap<String, String> formValueMap;
-        private ManyMap<String, String> restrictedValueMap;
+        private Map<String, FormValue> formValueMap;
+        private Map<String, FormValue> restrictedValueMap;
         private List<Attachment> attachments;
         private Set<String> unchangedFields;
         private FormSubmission submission;
@@ -137,17 +137,19 @@ public class FormValidation implements Serializable {
         	return this;
         }
         
-        public Builder formValue(String key, String ... values) {
+        public Builder formValue(FormValue formValue) {
             if (this.formValueMap == null)
-                this.formValueMap = new ManyMap<String, String>();
-            this.formValueMap.put(key, Arrays.asList(values));
+                this.formValueMap = new HashMap<String, FormValue>();
+            if (formValue != null && formValue.getName() != null)
+                this.formValueMap.put(formValue.getName(), formValue);
             return this;
         }
 
-        public Builder restrictedValue(String key, String ... values) {
+        public Builder restrictedValue(FormValue formValue) {
             if (this.restrictedValueMap == null)
-                this.restrictedValueMap = new ManyMap<String, String>();
-            this.restrictedValueMap.put(key, Arrays.asList(values));
+                this.restrictedValueMap = new HashMap<String, FormValue>();
+            if (formValue != null && formValue.getName() != null)
+                this.restrictedValueMap.put(formValue.getName(), formValue);
             return this;
         }
         

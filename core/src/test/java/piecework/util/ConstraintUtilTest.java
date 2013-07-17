@@ -20,6 +20,7 @@ import org.junit.Test;
 import piecework.Constants;
 import piecework.model.Constraint;
 import piecework.model.Field;
+import piecework.model.FormValue;
 import piecework.test.ExampleFactory;
 
 import java.util.Collections;
@@ -75,8 +76,8 @@ public class ConstraintUtilTest {
                 .value("^200000$")
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "200000");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("200000").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertTrue(isSatisfied);
@@ -94,8 +95,8 @@ public class ConstraintUtilTest {
                 .value("^200000$")
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "200001");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("200001").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertFalse(isSatisfied);
@@ -122,9 +123,9 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "100001");
-        formValueMap.putOne(actionType.getName(), "demote");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("200001").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("demote").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertFalse(isSatisfied);
@@ -151,9 +152,9 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "200001$");
-        formValueMap.putOne(actionType.getName(), "promote");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("200001$").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("promote").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertFalse(isSatisfied);
@@ -180,9 +181,10 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "100001");
-        formValueMap.putOne(actionType.getName(), "reprimand");
+
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("100001").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("reprimand").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertTrue(isSatisfied);
@@ -209,9 +211,9 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "200001");
-        formValueMap.putOne(actionType.getName(), "demote");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("200001").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("demote").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertFalse(isSatisfied);
@@ -238,9 +240,9 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "100001");
-        formValueMap.putOne(actionType.getName(), "demote");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("100001").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("demote").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertTrue(isSatisfied);
@@ -267,9 +269,9 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "200001$");
-        formValueMap.putOne(actionType.getName(), "promote");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("200001$").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("promote").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertTrue(isSatisfied);
@@ -296,9 +298,9 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "100001");
-        formValueMap.putOne(actionType.getName(), "reprimand");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("100001").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("reprimand").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertTrue(isSatisfied);
@@ -325,9 +327,9 @@ public class ConstraintUtilTest {
                         .build())
                 .build();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(budgetNumber.getName(), "200001");
-        formValueMap.putOne(actionType.getName(), "demote");
+        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+        formValueMap.put(budgetNumber.getName(), new FormValue.Builder().name(budgetNumber.getName()).value("200001").build());
+        formValueMap.put(actionType.getName(), new FormValue.Builder().name(actionType.getName()).value("demote").build());
 
         boolean isSatisfied = ConstraintUtil.evaluate(fieldMap, formValueMap, constraint);
         Assert.assertFalse(isSatisfied);

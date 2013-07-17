@@ -393,10 +393,11 @@ public class ProcessInstanceService {
         if (!isAttachment && processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
             Map<String, String> scopes = new HashMap<String, String>();
 
-            Map<String, List<String>> formValueMap = validation.getFormValueMap();
+            Map<String, FormValue> formValueMap = validation.getFormValueMap();
             if (formValueMap != null) {
-                for (Map.Entry<String, List<String>> entry : formValueMap.entrySet()) {
-                    List<String> values = entry.getValue();
+                for (Map.Entry<String,FormValue> entry : formValueMap.entrySet()) {
+                    FormValue formValue = entry.getValue();
+                    List<String> values = formValue != null ? formValue.getAllValues() : null;
                     if (values != null && !values.isEmpty())
                         scopes.put(entry.getKey(), values.iterator().next());
                 }
@@ -653,7 +654,8 @@ public class ProcessInstanceService {
             try {
                 String actionValue = null;
                 if (validation.getFormValueMap() != null) {
-                    List<String> actionValues = validation.getFormValueMap().get("actionButton");
+                    FormValue formValue = validation.getFormValueMap().get("actionButton");
+                    List<String> actionValues = formValue != null ? formValue.getAllValues() : null;
                     actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
                 }
 
@@ -664,12 +666,4 @@ public class ProcessInstanceService {
         }
     }
 
-//    private ProcessInstance getProcessInstance(Process process, String processInstanceId) throws NotFoundError {
-//        ProcessInstance instance = processInstanceRepository.read(processInstanceId);
-//
-//        if (instance == null)
-//            throw new NotFoundError();
-//
-//        return instance;
-//    }
 }

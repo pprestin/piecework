@@ -17,6 +17,7 @@ package piecework.common;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.model.Attachment;
+import piecework.model.FormValue;
 import piecework.model.ProcessInstance;
 
 import java.util.List;
@@ -27,12 +28,13 @@ import java.util.Map;
  */
 public class Payload {
 
-    public enum PayloadType { INSTANCE, MULTIPART, FORMDATA };
+    public enum PayloadType { INSTANCE, MULTIPART, FORMDATA, FORMVALUEMAP };
 
     private final PayloadType type;
     private final ProcessInstance instance;
     private final MultipartBody multipartBody;
     private final Map<String, List<String>> formData;
+    private final Map<String, FormValue> formValueMap;
     private final List<Attachment> attachments;
     private final RequestDetails requestDetails;
     private final String processInstanceId;
@@ -50,6 +52,7 @@ public class Payload {
         this.instance = builder.instance;
         this.multipartBody = builder.multipartBody;
         this.formData = builder.formData;
+        this.formValueMap = builder.formValueMap;
         this.attachments = builder.attachments;
         this.requestDetails = builder.requestDetails;
         this.processInstanceId = builder.processInstanceId;
@@ -73,6 +76,10 @@ public class Payload {
 
     public Map<String, List<String>> getFormData() {
         return formData;
+    }
+
+    public Map<String, FormValue> getFormValueMap() {
+        return formValueMap;
     }
 
     public String getProcessInstanceId() {
@@ -109,6 +116,7 @@ public class Payload {
         private ProcessInstance instance;
         private MultipartBody multipartBody;
         private Map<String, List<String>> formData;
+        private Map<String, FormValue> formValueMap;
         private List<Attachment> attachments;
         private RequestDetails requestDetails;
         private String processInstanceId;
@@ -144,6 +152,13 @@ public class Payload {
         public Builder formData(Map<String, List<String>> formData) {
             this.type = PayloadType.FORMDATA;
             this.formData = formData;
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Builder formValueMap(Map<String, FormValue> formValueMap) {
+            this.type = PayloadType.FORMDATA;
+            this.formValueMap = formValueMap;
             return this;
         }
 

@@ -32,7 +32,6 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
 import piecework.util.ConstraintUtil;
-import piecework.util.ManyMap;
 
 import java.util.*;
 
@@ -67,7 +66,7 @@ public class RequestHandler {
 
         String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
 
-        ManyMap<String, String> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
+        Map<String, FormValue> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
 
         Screen currentScreen = null;
         String taskId = null;
@@ -178,7 +177,7 @@ public class RequestHandler {
         return create(requestDetails, process, processInstance, task, previousFormRequest);
     }
 
-    private boolean satisfiesScreenConstraints(Screen screen, ManyMap<String, String> formValueMap) {
+    private boolean satisfiesScreenConstraints(Screen screen, Map<String, FormValue> formValueMap) {
 
         if (!screen.getConstraints().isEmpty() && ConstraintUtil.hasConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, screen.getConstraints())) {
             return ConstraintUtil.checkAll(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, null, formValueMap, screen.getConstraints());

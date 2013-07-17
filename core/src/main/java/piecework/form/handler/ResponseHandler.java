@@ -40,7 +40,6 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
 import piecework.util.ConstraintUtil;
-import piecework.util.FormDataUtil;
 import piecework.util.ManyMap;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -111,12 +110,16 @@ public class ResponseHandler {
 
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
         int attachmentCount = 0;
-        Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
+        Map<String, FormValue> combinedFormValueMap = new HashMap<String, FormValue>();
         if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
             ProcessInstance processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
-            List<FormValue> formValues = processInstance.getFormData();
+            Map<String, FormValue> processInstanceFormValueMap = processInstance.getFormValueMap();
             attachmentCount = processInstance.getAttachments() != null ? processInstance.getAttachments().size() : 0;
+            combinedFormValueMap.putAll(processInstanceFormValueMap);
         }
+        Map<String, FormValue> validationFormValueMap = validation != null ? validation.getFormValueMap() : null;
+        if (validationFormValueMap != null)
+            combinedFormValueMap.putAll(validationFormValueMap);
         Set<String> includedFieldNames = new HashSet<String>();
 
         Screen screen = formRequest.getScreen();
@@ -152,7 +155,6 @@ public class ResponseHandler {
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         Map<String, Field> fieldMap = new HashMap<String, Field>();
         if (screen != null) {
-            ManyMap<String, String> formValueMap = FormDataUtil.getFormValueMap(formValues);
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
 
             if (screen.getSections() != null) {
@@ -175,7 +177,7 @@ public class ResponseHandler {
                         Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer);
                         List<Constraint> constraints = field.getConstraints();
                         if (constraints != null) {
-                            if (!ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, formValueMap, constraints))
+                            if (!ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, combinedFormValueMap, constraints))
                                 fieldBuilder.invisible();
                             if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_STATE, constraints))
                                 addStateOptions(fieldBuilder);
@@ -192,32 +194,35 @@ public class ResponseHandler {
         }
 
         List<FormValue> includedFormValues = new ArrayList<FormValue>();
-        if (formValues != null) {
-            for (FormValue formValue : formValues) {
-                String formValueName = formValue.getName();
+        if (combinedFormValueMap != null) {
+            for (Map.Entry<String, FormValue> entry : combinedFormValueMap.entrySet()) {
+                String formValueName = entry.getKey();
                 if (includedFieldNames.contains(formValueName)) {
                     Field field = fieldMap.get(formValueName);
+                    FormValue formValue = entry.getValue();
+                    if (formValue == null)
+                        continue;
+                    List<String> values = formValue.getAllValues();
+                    if (values == null)
+                        continue;
+
                     if (field != null) {
                         List<Constraint> constraints = field.getConstraints();
                         if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, constraints)) {
-                            List<String> values = formValue.getAllValues();
-                            List<User> users = new ArrayList<User>();
-                            if (values != null) {
-                                FormValue.Builder displayNameBuilder = new FormValue.Builder().name(formValueName + "__displayName");
-                                FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(formValueName + "__visibleId");
-                                for (String value : values) {
-                                    User user = userDetailsService.getUserByAnyId(value);
-                                    if (user != null) {
-                                        displayNameBuilder.value(user.getDisplayName());
-                                        visibleIdBuilder.value(user.getVisibleId());
-                                    }
+                            FormValue.Builder displayNameBuilder = new FormValue.Builder().name(formValueName + "__displayName");
+                            FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(formValueName + "__visibleId");
+                            for (String value : values) {
+                                User user = userDetailsService.getUserByAnyId(value);
+                                if (user != null) {
+                                    displayNameBuilder.value(user.getDisplayName());
+                                    visibleIdBuilder.value(user.getVisibleId());
                                 }
-                                includedFormValues.add(displayNameBuilder.build());
-                                includedFormValues.add(visibleIdBuilder.build());
                             }
+                            includedFormValues.add(displayNameBuilder.build());
+                            includedFormValues.add(visibleIdBuilder.build());
                         }
                     }
-                    includedFormValues.add(new FormValue.Builder(formValue, passthroughSanitizer).build());
+                    includedFormValues.add(formValue);
                 }
             }
         }
@@ -299,26 +304,26 @@ public class ResponseHandler {
             .option(new Option.Builder().value("WY").name("Wyoming").build());
     }
 
-    private List<FormValue> findFormValues(FormRequest formRequest, FormValidation validation) {
-        List<FormValue> formValues = null;
-        if (validation != null && validation.getResults() != null) {
-            Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
-            formValues = new ArrayList<FormValue>();
-            for (ValidationResult result : validation.getResults()) {
-                List<String> values = validationFormValueMap != null ? validationFormValueMap.get(result.getPropertyName()) : null;
-                formValues.add(new FormValue.Builder()
-                        .name(result.getPropertyName())
-                        .values(values)
-                        .message(new Message.Builder()
-                                .text(result.getMessage())
-                                .type(result.getType())
-                                .build())
-                        .build());
-            }
-        }
-
-        return formValues;
-    }
+//    private List<FormValue> findFormValues(FormRequest formRequest, FormValidation validation) {
+//        List<FormValue> formValues = null;
+//        if (validation != null && validation.getResults() != null) {
+//            Map<String, List<String>> validationFormValueMap = validation.getFormValueMap();
+//            formValues = new ArrayList<FormValue>();
+//            for (ValidationResult result : validation.getResults()) {
+//                List<String> values = validationFormValueMap != null ? validationFormValueMap.get(result.getPropertyName()) : null;
+//                formValues.add(new FormValue.Builder()
+//                        .name(result.getPropertyName())
+//                        .values(values)
+//                        .message(new Message.Builder()
+//                                .text(result.getMessage())
+//                                .type(result.getType())
+//                                .build())
+//                        .build());
+//            }
+//        }
+//
+//        return formValues;
+//    }
 
     private Interaction selectInteraction(Process process, Task task) {
         Interaction selectedInteraction = null;

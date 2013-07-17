@@ -94,8 +94,21 @@ public class FormSubmission {
     public List<FormValue> getFormData() {
         return formData;
     }
-    
-    public ManyMap<String, String> getFormValueMap() {
+
+    public Map<String, FormValue> getFormValueMap() {
+        Map<String, FormValue> map = new HashMap<String, FormValue>();
+    	if (formData != null && !formData.isEmpty()) {
+    		for (FormValue formValue : formData) {
+                String name = formValue.getName();
+                List<String> values = formValue.getAllValues();
+                if (name != null && values != null)
+    			    map.put(name, formValue);
+    		}
+    	}
+    	return map;
+    }
+
+    public ManyMap<String, String> getFormValueContentMap() {
     	ManyMap<String, String> map = new ManyMap<String, String>();
     	if (formData != null && !formData.isEmpty()) {
     		for (FormValue formValue : formData) {
@@ -215,7 +228,21 @@ public class FormSubmission {
             this.formData.add(new FormValue.Builder().name(key).values(values).build());
             return this;
         }
-        
+
+        public Builder formValue(FormValue formValue) {
+            if (this.formData == null)
+                this.formData = new ArrayList<FormValue>();
+            this.formData.add(formValue);
+            return this;
+        }
+
+        public Builder formValueMap(Map<String, FormValue> formValueMap) {
+            for (Map.Entry<String, FormValue> entry : formValueMap.entrySet()) {
+                formValue(entry.getValue());
+            }
+            return this;
+        }
+
         public Builder attachment(Attachment attachment) {
             if (this.attachments == null)
                 this.attachments = new ArrayList<Attachment>();

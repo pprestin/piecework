@@ -96,7 +96,7 @@ public class TaskResourceVersion1 implements TaskResource {
                 .processInstanceId(formRequest.getProcessInstanceId())
                 .requestId(formRequest.getRequestId())
                 .taskId(formRequest.getTaskId())
-                .formData(submission.getFormValueMap())
+                .formValueMap(submission.getFormValueMap())
                 .build();
 
         Screen screen = formRequest.getScreen();

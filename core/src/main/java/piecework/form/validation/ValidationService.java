@@ -70,12 +70,12 @@ public class ValidationService {
 		if (isAttachmentAllowed)
 			validationBuilder.attachments(submission.getAttachments());
 
-		ManyMap<String, String> submissionValueMap = submission.getFormValueMap();
+		Map<String, FormValue> submissionValueMap = submission.getFormValueMap();
         Set<String> unvalidatedFieldNames = new HashSet<String>(submissionValueMap.keySet());
-		ManyMap<String, String> instanceValueMap = instance != null ? instance.getFormValueMap() : new ManyMap<String, String>();
+		ManyMap<String, String> instanceValueMap = instance != null ? instance.getFormValueContentMap() : new ManyMap<String, String>();
 
-        String title = submissionValueMap.getOne("title");
-        validationBuilder.title(title);
+//        String title = submissionValueMap.get("title");
+//        validationBuilder.title(title);
 
         if (screen != null) {
             List<Section> sections = screen.getSections();
@@ -93,7 +93,8 @@ public class ValidationService {
 
                             unvalidatedFieldNames.remove(button.getName());
 
-                            List<String> values = submissionValueMap.get(button.getName());
+                            FormValue formValue = submissionValueMap.get(button.getName());
+                            List<String> values = formValue != null ? formValue.getAllValues() : null;
 
                             if (values != null && !values.isEmpty()) {
                                 for (String value : values) {
@@ -101,7 +102,7 @@ public class ValidationService {
                                         continue;
 
                                     if (value.equals(button.getValue()))
-                                        validationBuilder.formValue(button.getName(), button.getValue());
+                                        validationBuilder.formValue(formValue);
                                 }
                             }
                         }
@@ -223,11 +224,12 @@ public class ValidationService {
 		return validationBuilder.build();
 	}
 
-    private void validateField(String validationId, Field field, Map<String, Field> fieldMap, ManyMap<String, String> submissionValueMap, ManyMap<String, String> instanceValueMap, FormValidation.Builder validationBuilder) {
+    private void validateField(String validationId, Field field, Map<String, Field> fieldMap, Map<String, FormValue> submissionValueMap, ManyMap<String, String> instanceValueMap, FormValidation.Builder validationBuilder) {
         boolean hasErrorResult = false;
         String fieldName = field.getName();
 
-        List<String> values = submissionValueMap.get(fieldName);
+        FormValue formValue = submissionValueMap.get(fieldName);
+        List<String> values = formValue != null ? formValue.getAllValues() : null;
         List<String> previousValues = instanceValueMap.get(fieldName);
         String inputType = field.getType();
 
@@ -379,10 +381,11 @@ public class ValidationService {
                         if (userDetails == null) {
                             hasErrorResult = true;
                             validationBuilder.error(fieldName, "This identifier is not recognized as a person in the system " + value);
-                        } else {
-                            String displayPropertyName = "__" + fieldName;
-                            validationBuilder.formValue(displayPropertyName, userDetails.getDisplayName());
                         }
+//                        else {
+//                            String displayPropertyName = "__" + fieldName;
+//                            validationBuilder.formValue(displayPropertyName, userDetails.getDisplayName());
+//                        }
                     }
 
                     counter++;
@@ -454,9 +457,9 @@ public class ValidationService {
             if (values != null && !values.isEmpty()) {
                 // Ensure that we save the form value
                 if (field.isRestricted())
-                    validationBuilder.restrictedValue(fieldName, values.toArray(new String[values.size()]));
+                    validationBuilder.restrictedValue(formValue);
                 else
-                    validationBuilder.formValue(fieldName, values.toArray(new String[values.size()]));
+                    validationBuilder.formValue(formValue);
             }
         }
     }

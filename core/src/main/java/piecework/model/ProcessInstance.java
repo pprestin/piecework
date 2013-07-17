@@ -224,7 +224,21 @@ public class ProcessInstance implements Serializable {
     }
 
     @JsonIgnore
-	public ManyMap<String, String> getFormValueMap() {
+    public Map<String, FormValue> getFormValueMap() {
+        Map<String, FormValue> map = new HashMap<String, FormValue>();
+        if (formData != null && !formData.isEmpty()) {
+            for (FormValue formValue : formData) {
+                String name = formValue.getName();
+                List<String> values = formValue.getAllValues();
+                if (name != null && values != null)
+                    map.put(name, formValue);
+            }
+        }
+        return map;
+    }
+
+    @JsonIgnore
+	public ManyMap<String, String> getFormValueContentMap() {
     	ManyMap<String, String> map = new ManyMap<String, String>();
     	if (formData != null && !formData.isEmpty()) {
     		for (FormValue formValue : formData) {
@@ -427,24 +441,28 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-        public Builder formValueMap(Map<String, List<String>> formValueMap) {
-            ManyMap<String, String> map = new ManyMap<String, String>();
+        public Builder formValueMap(Map<String, FormValue> formValueMap) {
+            Map<String, FormValue> map = new HashMap<String, FormValue>();
             if (this.formData != null && !this.formData.isEmpty()) {
                 for (FormValue formValue : this.formData) {
-                    map.put(formValue.getName(), formValue.getAllValues());
+                    map.put(formValue.getName(), formValue);
                 }
             }
             if (formValueMap != null && !formValueMap.isEmpty()) {
-                for (Map.Entry<String, List<String>> entry : formValueMap.entrySet()) {
+                for (Map.Entry<String, FormValue> entry : formValueMap.entrySet()) {
                     map.put(entry.getKey(), entry.getValue());
                 }
             }
             this.formData = new ArrayList<FormValue>();
             if (!map.isEmpty()) {
-                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-                    List<String> values = entry.getValue();
-                    this.formData.add(new FormValue.Builder().name(entry.getKey()).values(values.toArray(new String[values.size()])).build());
-                    if (values.size() > 0) {
+                for (Map.Entry<String, FormValue> entry : map.entrySet()) {
+                    FormValue formValue = entry.getValue();
+                    if (formValue == null)
+                        continue;
+
+                    this.formData.add(formValue);
+                    List<String> values = formValue.getAllValues();
+                    if (values != null && !values.isEmpty()) {
                         for (String value : values) {
                             if (StringUtils.isNotEmpty(value))
                                 this.keywords.add(value.toLowerCase());
@@ -460,23 +478,26 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-        public Builder restrictedValueMap(Map<String, List<String>> restrictedValueMap) {
-            ManyMap<String, String> map = new ManyMap<String, String>();
-            if (this.restrictedData != null && !this.restrictedData.isEmpty()) {
-                for (FormValue formValue : this.restrictedData) {
-                    map.put(formValue.getName(), formValue.getAllValues());
+        public Builder restrictedValueMap(Map<String, FormValue> restrictedValueMap) {
+            Map<String, FormValue> map = new HashMap<String, FormValue>();
+            if (this.formData != null && !this.formData.isEmpty()) {
+                for (FormValue formValue : this.formData) {
+                    map.put(formValue.getName(), formValue);
                 }
             }
             if (restrictedValueMap != null && !restrictedValueMap.isEmpty()) {
-                for (Map.Entry<String, List<String>> entry : restrictedValueMap.entrySet()) {
+                for (Map.Entry<String, FormValue> entry : restrictedValueMap.entrySet()) {
                     map.put(entry.getKey(), entry.getValue());
                 }
             }
             this.restrictedData = new ArrayList<FormValue>();
             if (!map.isEmpty()) {
-                for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-                    List<String> values = entry.getValue();
-                    this.restrictedData.add(new FormValue.Builder().name(entry.getKey()).values(values.toArray(new String[values.size()])).build());
+                for (Map.Entry<String, FormValue> entry : map.entrySet()) {
+                    FormValue formValue = entry.getValue();
+                    if (formValue == null)
+                        continue;
+
+                    this.restrictedData.add(formValue);
                 }
             }
             return this;

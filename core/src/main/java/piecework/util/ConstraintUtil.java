@@ -18,6 +18,7 @@ package piecework.util;
 import piecework.Constants;
 import piecework.model.Constraint;
 import piecework.model.Field;
+import piecework.model.FormValue;
 
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ public class ConstraintUtil {
         return false;
     }
 
-    public static boolean evaluate(Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, Constraint constraint) {
+    public static boolean evaluate(Map<String, Field> fieldMap, Map<String, FormValue> formValueMap, Constraint constraint) {
         String constraintName = constraint.getName();
         String constraintValue = constraint.getValue();
         Pattern pattern = Pattern.compile(constraintValue);
@@ -46,7 +47,8 @@ public class ConstraintUtil {
         boolean isSatisfied = false;
 
         Field constraintField = fieldMap != null ? fieldMap.get(constraintName) : null;
-        List<String> fieldValues = formValueMap != null ? formValueMap.get(constraintName) : null;
+        FormValue formValue = formValueMap != null ? formValueMap.get(constraintName) : null;
+        List<String> fieldValues = formValue != null ? formValue.getAllValues() : null;
 
         // Evaluate whether this particular item is satisfied
         if (constraintField != null && (fieldValues == null || fieldValues.isEmpty())) {
@@ -72,7 +74,7 @@ public class ConstraintUtil {
         return isSatisfied;
     }
 
-    public static boolean checkAll(String type, Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, List<Constraint> constraints) {
+    public static boolean checkAll(String type, Map<String, Field> fieldMap, Map<String, FormValue> formValueMap, List<Constraint> constraints) {
         if (constraints != null && !constraints.isEmpty()) {
             for (Constraint constraint : constraints) {
                 if (type == null || constraint.getType() == null || constraint.getType().equals(type)) {
@@ -84,7 +86,7 @@ public class ConstraintUtil {
         return true;
     }
 
-    public static boolean checkAny(String type, Map<String, Field> fieldMap, ManyMap<String, String> formValueMap, List<Constraint> constraints) {
+    public static boolean checkAny(String type, Map<String, Field> fieldMap, Map<String, FormValue> formValueMap, List<Constraint> constraints) {
         if (constraints != null && !constraints.isEmpty()) {
             for (Constraint constraint : constraints) {
                 if (type == null || constraint.getType() == null || constraint.getType().equals(type)) {
