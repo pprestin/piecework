@@ -25,10 +25,24 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class SingleSignOnAuthenticationFilter extends AbstractPreAuthenticatedProcessingFilter {
     private boolean exceptionIfHeaderMissing = true;
+    private final String testUser;
+    private final boolean isDebugMode;
+
+    public SingleSignOnAuthenticationFilter(String testUser, boolean isDebugMode) {
+        this.testUser = testUser;
+        this.isDebugMode = isDebugMode;
+    }
 
     @Override
     protected Object getPreAuthenticatedPrincipal(HttpServletRequest request) {
         String principal = request.getRemoteUser();
+
+        if (principal == null && isDebugMode) {
+            principal = request.getParameter("userId");
+
+            if (principal == null)
+                principal = this.testUser;
+        }
 
         if (principal == null && exceptionIfHeaderMissing) {
             throw new PreAuthenticatedCredentialsNotFoundException("No remote user provided by request");
