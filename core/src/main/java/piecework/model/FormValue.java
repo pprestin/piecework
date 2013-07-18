@@ -98,6 +98,9 @@ public class FormValue implements Serializable {
 
     @JsonIgnore
 	public String getValue() {
+        if (value == null && values != null && !values.isEmpty())
+            return values.iterator().next();
+
 		return value;
 	}
 

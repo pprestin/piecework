@@ -17,15 +17,16 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 
 /**
  * This is a representation of the explanation of an exception case.
  * 
  * @author James Renfro
  */
-@XmlRootElement
+@XmlRootElement(name="explanation")
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = "ExplanationType")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Explanation {
 

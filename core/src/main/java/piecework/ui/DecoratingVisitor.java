@@ -58,7 +58,10 @@ public class DecoratingVisitor implements TagNodeVisitor {
         decoratorMap.putOne("body", new BodyDecorator(form));
 
         Map<String, FormValue> formValueMap = form.getFormValueMap();
-        decoratorMap.putOne("span", new VariableDecorator(formValueMap));
+
+        VariableDecorator variableDecorator = new VariableDecorator(formValueMap);
+        decoratorMap.putOne("span", variableDecorator);
+        decoratorMap.putOne("img", variableDecorator);
 
         Screen screen = form.getScreen();
 
@@ -228,10 +231,20 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name, String variable) {
-            tag.removeAllChildren();
-
             FormValue formValue = formValueMap.get(variable);
+
             if (formValue != null) {
+                // Image tags are a special case update src and alt attributes
+                if (tag.getName() != null && tag.getName().equals("img")) {
+                    Map<String, String> attributes = new HashMap<String, String>();
+                    attributes.putAll(tag.getAttributes());
+                    attributes.put("alt", formValue.getValue());
+                    attributes.put("src", formValue.getLink());
+                    tag.setAttributes(attributes);
+                    return;
+                }
+
+                tag.removeAllChildren();
                 List<String> values = formValue.getAllValues();
 
                 if (values != null) {

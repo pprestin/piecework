@@ -76,8 +76,6 @@ public class ResponseHandler {
     @Autowired
     ProcessInstanceService processInstanceService;
 
-    @Autowired
-    InternalUserDetailsService userDetailsService;
 
     public Response handle(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
         return handle(formRequest, viewContext, null);
@@ -225,6 +223,10 @@ public class ResponseHandler {
                                 addStateOptions(fieldBuilder);
                             if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_CONFIRMATION_NUMBER, constraints))
                                 addConfirmationNumber(fieldBuilder, formRequest.getProcessInstanceId());
+                            if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, constraints)) {
+                                includedFieldNames.add(field.getName() + "__displayName");
+                                includedFieldNames.add(field.getName() + "__visibleId");
+                            }
                         }
 
                         sectionBuilder.field(fieldBuilder.build());
@@ -244,27 +246,6 @@ public class ResponseHandler {
                     FormValue formValue = entry.getValue();
                     if (formValue == null)
                         continue;
-//                    List<String> values = formValue.getAllValues();
-//                    if (values == null)
-//                        continue;
-//
-//                    if (field != null) {
-//                        List<Constraint> constraints = field.getConstraints();
-//                        if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, constraints)) {
-//                            FormValue.Builder displayNameBuilder = new FormValue.Builder().name(formValueName + "__displayName");
-//                            FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(formValueName + "__visibleId");
-//                            for (String value : values) {
-//                                User user = userDetailsService.getUserByAnyId(value);
-//                                if (user != null) {
-//                                    displayNameBuilder.value(user.getDisplayName());
-//                                    visibleIdBuilder.value(user.getVisibleId());
-//                                }
-//                            }
-//                            includedFormValues.add(displayNameBuilder.build());
-//                            includedFormValues.add(visibleIdBuilder.build());
-//                        }
-//                    }
-
 
                     FormValue.Builder formValueBuilder = new FormValue.Builder(formValue, passthroughSanitizer);
 

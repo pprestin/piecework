@@ -72,7 +72,7 @@ public class ValidationService {
 
 		Map<String, FormValue> submissionValueMap = submission.getFormValueMap();
         Set<String> unvalidatedFieldNames = new HashSet<String>(submissionValueMap.keySet());
-		ManyMap<String, String> instanceValueMap = instance != null ? instance.getFormValueContentMap() : new ManyMap<String, String>();
+        Map<String, FormValue> instanceValueMap = instance != null ? instance.getFormValueMap() : new HashMap<String, FormValue>();
 
 //        String title = submissionValueMap.get("title");
 //        validationBuilder.title(title);
@@ -224,13 +224,14 @@ public class ValidationService {
 		return validationBuilder.build();
 	}
 
-    private void validateField(String validationId, Field field, Map<String, Field> fieldMap, Map<String, FormValue> submissionValueMap, ManyMap<String, String> instanceValueMap, FormValidation.Builder validationBuilder) {
+    private void validateField(String validationId, Field field, Map<String, Field> fieldMap, Map<String, FormValue> submissionValueMap, Map<String, FormValue> instanceValueMap, FormValidation.Builder validationBuilder) {
         boolean hasErrorResult = false;
         String fieldName = field.getName();
 
         FormValue formValue = submissionValueMap.get(fieldName);
         List<String> values = formValue != null ? formValue.getAllValues() : null;
-        List<String> previousValues = instanceValueMap.get(fieldName);
+        FormValue previousFormValue = instanceValueMap != null ? instanceValueMap.get(fieldName) : null;
+        List<String> previousValues = previousFormValue != null ? previousFormValue.getAllValues() : null;
         String inputType = field.getType();
 
         boolean isEmailAddress = false;
@@ -239,6 +240,7 @@ public class ValidationService {
         boolean isAllValuesMatch = false;
         boolean isOnlyRequiredWhen = false;
         boolean isText = inputType == null || FREEFORM_INPUT_TYPES.contains(inputType);
+        boolean isFile = inputType != null && inputType.equals(Constants.FieldTypes.FILE);
         boolean isFieldSpecificUpdate = validationId != null && validationId.equals(fieldName);
         boolean hasValues = !isFullyEmpty(values);
         boolean hasPreviousValues = !isFullyEmpty(previousValues);
@@ -398,10 +400,6 @@ public class ValidationService {
                             hasErrorResult = true;
                             validationBuilder.error(fieldName, "This identifier is not recognized as a person in the system " + value);
                         }
-//                        else {
-//                            String displayPropertyName = "__" + fieldName;
-//                            validationBuilder.formValue(displayPropertyName, userDetails.getDisplayName());
-//                        }
                     }
 
                     counter++;
@@ -416,7 +414,12 @@ public class ValidationService {
                 }
             }
 
-        } else if (!hasPreviousValues) {
+        } else if (hasPreviousValues) {
+            // File submission is a special case, since we don't want to overwrite an existing file
+            if (isFile && previousFormValue != null) {
+                validationBuilder.formValue(previousFormValue);
+            }
+        } else {
 
             // No value was passed and this is a property that cannot be created or edited at this time,
             // so just bail out so we don't erroneously create a SUCCESS validation for it
@@ -463,13 +466,6 @@ public class ValidationService {
         }
 
         if (!hasErrorResult && hasAtLeastEmptyValue) {
-//            if (isPersonLookup) {
-//                String displayPropertyName = "_" + fieldName;
-//                List<String> displayValues = submissionValueMap.get(displayPropertyName);
-//                if (displayValues != null && !displayValues.isEmpty())
-//                    validationBuilder.formValue(displayPropertyName, displayValues.toArray(new String[displayValues.size()]));
-//            }
-
             if (values != null && !values.isEmpty()) {
                 // Ensure that we save the form value
                 if (field.isRestricted())

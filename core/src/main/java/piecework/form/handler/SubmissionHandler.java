@@ -15,6 +15,7 @@
  */
 package piecework.form.handler;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -105,23 +106,25 @@ public class SubmissionHandler {
                 } else if (contentDisposition != null && isAttachmentAllowed) {
                     String variableName = contentDisposition.getParameter("name");
                     String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
-                    LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
-                    try {
-                        String location = "/submissions/" + uuidGenerator.getNextId();
+                    if (StringUtils.isNotEmpty(filename)) {
+                        LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
+                        try {
+                            String location = "/submissions/" + uuidGenerator.getNextId();
 
-                        Content content = new Content.Builder()
-                                .contentType(contentType.toString())
-                                .filename(filename)
-                                .location(location)
-                                .inputStream(attachment.getDataHandler().getInputStream())
-                                .build();
+                            Content content = new Content.Builder()
+                                    .contentType(contentType.toString())
+                                    .filename(filename)
+                                    .location(location)
+                                    .inputStream(attachment.getDataHandler().getInputStream())
+                                    .build();
 
-                        content = contentRepository.save(content);
+                            content = contentRepository.save(content);
 
-                        submissionBuilder.formContent(contentType.toString(), variableName, filename, content.getLocation());
+                            submissionBuilder.formContent(contentType.toString(), variableName, filename, content.getLocation());
 
-                    } catch (IOException e) {
-                        LOG.error("Unable to save this attachment with filename: " + filename);
+                        } catch (IOException e) {
+                            LOG.error("Unable to save this attachment with filename: " + filename);
+                        }
                     }
                 }
             }
