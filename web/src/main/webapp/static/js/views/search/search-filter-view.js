@@ -3,7 +3,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
 	'use strict';
 
 	var SearchFilterView = View.extend({
-		autoRender : true,
+		autoRender : false,
 		className: 'dropdown',
 		tagName: 'div',
 	    template: template,

@@ -69,7 +69,7 @@ define([
         var resultsCollection = new ResultsCollection();
         resultsCollection.add(collection);
 
-        var statusFilter = new SearchFilter({
+/*        var statusFilter = new SearchFilter({
             selector: 'parameters',
             options: [
                 { 'id': "statusOpen", 'label': "Open", 'key': "processStatus", 'value': "open", 'default': true },
@@ -85,7 +85,7 @@ define([
             selector: 'parameters',
             key: 'definitions',
             results: resultsModel
-        });
+        });*/
 
         this.compose('formView', {
                     compose: function(options) {
@@ -101,7 +101,7 @@ define([
 
         this.compose('searchToolbarView', SearchToolbarView, {model: resultsModel});
         this.compose('searchResultsContainerView', SearchResultsContainerView, {model: resultsModel});
-        this.compose('statusFilterContainer', {
+/*        this.compose('statusFilterContainer', {
             compose: function(options) {
                 this.model = statusFilter;
                 this.view = SearchFilterView;
@@ -133,7 +133,7 @@ define([
             check: function(options) {
                 return true;
             },
-        });
+        });*/
 
         this.view = new SearchResultsView({collection: resultsCollection});
 
@@ -151,30 +151,17 @@ define([
         }
     },
     step: function(params, route) {
-
-//        var link = window.piecework.model.link;
         var requestId = params.requestId != undefined ? params.requestId : '';
         var formModel = this.compose('formModel');
 
         if (/.html$/.test(requestId))
             requestId = requestId.substring(0, requestId.length - 5);
 
-//        var doRefresh = false;
-//        if (/\/form$/.test(link)) {
-//        if (link !== window.piecework.model.link)
-//            link += '/' + params.processDefinitionKey + '/' + requestId;
-//            this.compose('formModel', Form, {link:link, groupingIndex: 0});
-//            doRefresh = true;
-//        } else if (formModel == undefined) {
-//            this.compose('formModel', Form, window.piecework.model);
-//        }
-
         var model = window.piecework.model;
         window.piecework.model = null;
         if (model == null)
             model = {};
 
-//        this.compose('formToolbarView', FormToolbarView, {model: formModel, params: params});
         this.compose('formView', {
             compose: function(options) {
                 this.model = new Form(model);
@@ -215,8 +202,6 @@ define([
                     });
                 } else {
                     window.piecework._isInitialLoad = false;
-//                    this.check(options);
-
                     var autoRender, disabledAutoRender;
                     this.view = new FormView({model: this.model}, options);
                     autoRender = this.view.autoRender;
@@ -236,8 +221,6 @@ define([
                 var currentScreen = options.params.ordinal;
                 if (currentScreen != undefined)
                     groupingIndex = parseInt(currentScreen, 10) - 1;
-//                if (this.model !== undefined && !this.model.disposed)
-//                    this.model.set("groupingIndex", groupingIndex);
                 Chaplin.mediator.publish('groupingIndex:change', groupingIndex);
                 return options.params.processDefinitionKey != undefined;
             },

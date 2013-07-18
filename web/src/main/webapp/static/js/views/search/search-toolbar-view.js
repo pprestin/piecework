@@ -1,5 +1,5 @@
-define([ 'backbone', 'chaplin', 'models/history', 'views/history-view', 'views/base/view', 'text!templates/search/search-toolbar.hbs' ],
-		function(Backbone, Chaplin, History, HistoryView, View, template) {
+define([ 'backbone', 'chaplin', 'models/history', 'models/runtime/search-filter', 'views/history-view', 'views/search/search-filter-view', 'views/base/view', 'text!templates/search/search-toolbar.hbs' ],
+		function(Backbone, Chaplin, History, SearchFilter, HistoryView, SearchFilterView, View, template) {
 	'use strict';
 
 	var SearchView = View.extend({
@@ -20,6 +20,41 @@ define([ 'backbone', 'chaplin', 'models/history', 'views/history-view', 'views/b
             'resultUnselected mediator': '_onResultUnselected',
             'search mediator': '_onSearch',
 	    },
+	    render: function() {
+            View.__super__.render.apply(this);
+
+            var statusFilter = new SearchFilter({
+                selector: 'parameters',
+                options: [
+                    { 'id': "statusOpen", 'label': "Open", 'key': "processStatus", 'value': "open", 'default': true },
+                    {id: "statusComplete", label: "Complete", key: "processStatus", value: 'complete'},
+                    {id: "statusCancelled", label: "Deleted", key: "processStatus", value: 'cancelled'},
+                    {id: "statusSuspended", label: "Suspended", key: "processStatus", value: 'suspended'},
+                    {id: "statusAny", label: "Any status", key: "processStatus", value: 'all' }
+                ],
+                results: this.model
+            });
+
+            var processFilter = new SearchFilter({
+                selector: 'parameters',
+                key: 'definitions',
+                results: this.model
+            });
+
+            var statusFilterView = this.subview('statusFilterContainer', new SearchFilterView({container: '.status-filter-container', model: statusFilter}))
+            var processFilterView = this.subview('processFilterContainer', new SearchFilterView({container: '.process-filter-container', model: processFilter}))
+
+            statusFilterView.render();
+            processFilterView.render();
+
+            var $statusFilterContainer = this.$el.find('.status-filter-container');
+            var $processFilterContainer = this.$el.find('.process-filter-container');
+
+            $statusFilterContainer.append(statusFilterView.$el);
+            $processFilterContainer.append(processFilterView.$el);
+
+            return this;
+        },
 	    _onAddedToDOM: function() {
 	        $('title').text(window.piecework.context.applicationTitle);
 	    },

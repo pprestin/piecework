@@ -117,6 +117,7 @@ public interface Constants {
         public static final String COMPLETE = "complete";
         public static final String CANCELLED = "cancelled";
         public static final String SUSPENDED = "suspended";
+        public static final String ALL = "all";
     }
 
     public static class RequestTypes {

@@ -4,6 +4,7 @@
         <li>
             <div>
                 <h4>{{taskLabel}}</h4>
+                <p class="muted">{{datediff endTime startTime}}</p>
                 <p class="muted">{{date startTime}} - {{#if endTime}}{{date endTime}}{{else}}Open{{/if}}</p>
                 {{#if assignee}}
                 <p class="muted">

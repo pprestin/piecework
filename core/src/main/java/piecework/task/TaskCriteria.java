@@ -404,6 +404,11 @@ public class TaskCriteria {
             return this;
         }
 
+        public Builder processStatus(String processStatus) {
+            this.processStatus = processStatus;
+            return this;
+        }
+
         public Builder firstResult(Integer firstResult) {
             this.firstResult = firstResult;
             return this;

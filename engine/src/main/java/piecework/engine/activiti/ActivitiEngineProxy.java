@@ -455,6 +455,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .processDefinitionLabel(process.getProcessDefinitionLabel())
                 .priority(instance.getPriority())
                 .startTime(instance.getStartTime())
+                .endTime(instance.getEndTime())
+                .claimTime(instance.getClaimTime())
                 .dueDate(instance.getDueDate())
                 .finished();
 

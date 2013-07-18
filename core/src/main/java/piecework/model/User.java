@@ -16,15 +16,12 @@
 package piecework.model;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 
@@ -32,6 +29,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import piecework.identity.InternalUserDetails;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -64,6 +62,9 @@ public class User implements Serializable {
     @XmlElement
     private final String uri;
 
+    @XmlTransient
+    private final ManyMap<String, String> attributes;
+
     private User() {
         this(new User.Builder(), new ViewContext());
     }
@@ -74,6 +75,7 @@ public class User implements Serializable {
         this.displayName = builder.displayName;
         this.emailAddress = builder.emailAddress;
         this.phoneNumber = builder.phoneNumber;
+        this.attributes = builder.attributes;
         this.uri = context != null ? context.getApplicationUri(builder.userId) : null;
     }
 
@@ -97,7 +99,12 @@ public class User implements Serializable {
 		return phoneNumber;
 	}
 
-	public String getUri() {
+    @JsonIgnore
+    public ManyMap<String, String> getAttributes() {
+        return attributes;
+    }
+
+    public String getUri() {
 		return uri;
 	}
 
@@ -108,6 +115,7 @@ public class User implements Serializable {
         private String displayName;
         private String emailAddress;
         private String phoneNumber;
+        private ManyMap<String, String> attributes;
 
         public Builder() {
             super();
@@ -119,6 +127,18 @@ public class User implements Serializable {
             this.displayName = sanitizer.sanitize(user.displayName);
             this.emailAddress = sanitizer.sanitize(user.emailAddress);
             this.phoneNumber = sanitizer.sanitize(user.phoneNumber);
+            this.attributes = new ManyMap<String, String>();
+            if (user.attributes != null) {
+                for (Map.Entry<String, List<String>> entry : user.attributes.entrySet()) {
+                    String key = entry.getKey();
+                    List<String> values = entry.getValue();
+                    if (key == null || values == null)
+                        continue;
+                    for (String value : values) {
+                        this.attributes.putOne(key, value);
+                    }
+                }
+            }
         }
 
         public Builder(UserDetails details) {
@@ -164,6 +184,14 @@ public class User implements Serializable {
 
         public Builder phoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder attribute(String name, String value) {
+            if (this.attributes == null)
+                this.attributes = new ManyMap<String, String>();
+            if (name != null && value != null)
+                this.attributes.putOne(name, value);
             return this;
         }
     }

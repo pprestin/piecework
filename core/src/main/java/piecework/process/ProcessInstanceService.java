@@ -526,6 +526,7 @@ public class ProcessInstanceService {
         TaskCriteria taskCriteria = new TaskCriteria.Builder()
                 .process(process)
                 .executionId(instance.getEngineProcessInstanceId())
+                .processStatus(Constants.ProcessStatuses.ALL)
                 .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC)
                 .build();
         try {

@@ -80,6 +80,12 @@ public class Task implements Serializable {
     private final Date startTime;
 
     @XmlElement
+    private final Date endTime;
+
+    @XmlElement
+    private final Date claimTime;
+
+    @XmlElement
     private final Date dueDate;
 
     @XmlAttribute
@@ -115,6 +121,8 @@ public class Task implements Serializable {
         this.assignee = builder.assignee;
         this.candidateAssignees = builder.candidateAssignees;
         this.startTime = builder.startTime;
+        this.endTime = builder.endTime;
+        this.claimTime = builder.claimTime;
         this.dueDate = builder.dueDate;
         this.priority = builder.priority;
         this.active = builder.active;
@@ -171,6 +179,14 @@ public class Task implements Serializable {
         return startTime;
     }
 
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public Date getClaimTime() {
+        return claimTime;
+    }
+
     public Date getDueDate() {
         return dueDate;
     }
@@ -209,6 +225,8 @@ public class Task implements Serializable {
         private User assignee;
         private List<User> candidateAssignees;
         private Date startTime;
+        private Date endTime;
+        private Date claimTime;
         private Date dueDate;
         private int priority;
         private boolean active;
@@ -237,6 +255,8 @@ public class Task implements Serializable {
             }
             this.startTime = task.startTime;
             this.dueDate = task.dueDate;
+            this.endTime = task.endTime;
+            this.claimTime = task.claimTime;
             this.priority = task.priority;
             this.active = task.active;
             this.isDeleted = task.isDeleted;
@@ -309,6 +329,16 @@ public class Task implements Serializable {
 
         public Builder startTime(Date startTime) {
             this.startTime = startTime;
+            return this;
+        }
+
+        public Builder endTime(Date endTime) {
+            this.endTime = endTime;
+            return this;
+        }
+
+        public Builder claimTime(Date claimTime) {
+            this.claimTime = claimTime;
             return this;
         }
 
