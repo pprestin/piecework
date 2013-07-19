@@ -11,7 +11,8 @@
        {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
        {{#if pattern}}pattern="{{pattern}}"{{/if}}
        {{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}}
-       {{#if value}}value="{{value}}"{{/if}}/>
+       {{#if value}}value="{{value}}"{{/if}}
+       {{#unless editable}}disabled{{/unless}}/>
 {{#if messages}}
 {{#each messages}}
     <span class="help-inline generated">{{text}}</span>

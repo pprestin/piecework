@@ -20,27 +20,38 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedCredentialsNotFoundException;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
+import org.springframework.util.StringUtils;
 
 /**
  * @author James Renfro
  */
-public class RequestParameterAuthenticationFilter extends RequestHeaderAuthenticationFilter {
+public class DebugAuthenticationFilter extends RequestHeaderAuthenticationFilter {
 
 	private final String testUser;
 	
-	public RequestParameterAuthenticationFilter(AuthenticationManager authenticationManager, String testUser) {
+	public DebugAuthenticationFilter(AuthenticationManager authenticationManager, String testUser) {
 		setAuthenticationManager(authenticationManager);
 		this.testUser = testUser;
+        this.setCheckForPrincipalChanges(true);
+        this.setInvalidateSessionOnPrincipalChange(true);
 	}
 	
 	protected Object getPreAuthenticatedPrincipal(HttpServletRequest request) {
         String principal = request.getParameter("userId");
 
         if (principal == null)
+            principal = String.class.cast(request.getSession(true).getAttribute("backdoorDebugUserId"));
+        else
+            request.getSession(true).setAttribute("backdoorDebugUserId", principal);
+
+        if (StringUtils.isEmpty(principal))
+            principal = request.getRemoteUser();
+
+        if (principal == null)
         	principal = this.testUser;
         
         if (principal == null) 
-            throw new PreAuthenticatedCredentialsNotFoundException("userId parameter not found in request.");
+            return super.getPreAuthenticatedPrincipal(request);
 
         return principal;
     }

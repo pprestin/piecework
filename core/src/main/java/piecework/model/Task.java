@@ -25,6 +25,7 @@ import piecework.security.Sanitizer;
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -119,7 +120,7 @@ public class Task implements Serializable {
         this.processInstanceId = builder.processInstanceId;
         this.processInstanceAlias = builder.processInstanceAlias;
         this.assignee = builder.assignee;
-        this.candidateAssignees = builder.candidateAssignees;
+        this.candidateAssignees = Collections.unmodifiableList(builder.candidateAssignees);
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.claimTime = builder.claimTime;
@@ -234,6 +235,7 @@ public class Task implements Serializable {
 
         public Builder() {
             super();
+            this.candidateAssignees = new ArrayList<User>();
         }
 
         public Builder(Task task, Sanitizer sanitizer) {
@@ -249,9 +251,11 @@ public class Task implements Serializable {
             this.assignee = task.assignee != null ? new User.Builder(task.assignee, sanitizer).build() : null;
             if (task.candidateAssignees != null && !task.candidateAssignees.isEmpty()) {
                 this.candidateAssignees = new ArrayList<User>(task.candidateAssignees.size());
-                for (User candidateAssignee : candidateAssignees) {
+                for (User candidateAssignee : task.candidateAssignees) {
                     this.candidateAssignees.add(new User.Builder(candidateAssignee, sanitizer).build());
                 }
+            } else {
+                this.candidateAssignees = Collections.emptyList();
             }
             this.startTime = task.startTime;
             this.dueDate = task.dueDate;
@@ -323,7 +327,8 @@ public class Task implements Serializable {
         public Builder candidateAssignee(User candidateAssignee) {
             if (this.candidateAssignees == null)
                 this.candidateAssignees = new ArrayList<User>();
-            this.candidateAssignees.add(candidateAssignee);
+            if (candidateAssignee != null)
+                this.candidateAssignees.add(candidateAssignee);
             return this;
         }
 

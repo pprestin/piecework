@@ -49,6 +49,15 @@ define([ 'chaplin', 'views/base/view'],
                 this.$el.addClass(messageType);
             }
 
+            var editable = this.model.get("editable");
+            if (editable) {
+                var maxInputs = this.model.get("maxInputs");
+                if (maxInputs != null && maxInputs > 1) {
+                    this.$el.addClass('input-append');
+                    this.$el.find(':input').after('<div class="btn-group"><button class="btn add-input-button" type="button" role="button"><i class="icon-plus-sign"></i></button></div>');
+                }
+            }
+
             return this;
         },
         _subscribeDependencies: function(constraints) {

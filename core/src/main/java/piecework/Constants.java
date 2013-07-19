@@ -138,11 +138,13 @@ public interface Constants {
     }
 
     public static class Settings {
-        public static final String BASE_APPLICATION_URI = "base.application.uri";
-        public static final String BASE_SERVICE_URI = "base.service.uri";
-        public static final String CERTIFICATE_ISSUER_HEADER = "certificate.issuer.header";
-        public static final String CERTIFICATE_SUBJECT_HEADER = "certificate.subject.header";
-        public static final String MAIL_SERVER_HOST = "mail.server.host";
+        public static final String BASE_APPLICATION_URI = "base.application.uri",
+                                   BASE_SERVICE_URI = "base.service.uri",
+                                   KEYSTORE_FILE = "keystore.file",
+                                   KEYSTORE_PASSWORD = "keystore.password",
+                                   CERTIFICATE_ISSUER_HEADER = "certificate.issuer.header",
+                                   CERTIFICATE_SUBJECT_HEADER = "certificate.subject.header",
+                                   MAIL_SERVER_HOST = "mail.server.host";
     }
 
     public static class SubmissionTypes {

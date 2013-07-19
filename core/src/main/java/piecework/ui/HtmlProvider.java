@@ -27,6 +27,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import piecework.model.Explanation;
 import piecework.model.User;
 import piecework.model.SearchResults;
 import piecework.identity.InternalUserDetails;
@@ -115,6 +116,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
             final String pageContextAsJson = objectMapper.writer().writeValueAsString(pageContext);
             final String modelAsJson = objectMapper.writer().writeValueAsString(t);
+            final boolean isExplanation = type != null && type.equals(Explanation.class);
 
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
@@ -154,9 +156,12 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
                                     StringBuilder content = new StringBuilder("piecework = {};")
                                         .append("piecework.context = ").append(pageContextAsJson).append(";");
 
-                                    if (modelAsJson != null)
-                                        content.append("piecework.model = ").append(modelAsJson).append(";");
-
+                                    if (modelAsJson != null) {
+                                        if (isExplanation)
+                                            content.append("piecework.explanation = ").append(modelAsJson).append(";");
+                                        else
+                                            content.append("piecework.model = ").append(modelAsJson).append(";");
+                                    }
                                     tagNode.removeAllChildren();
                                     tagNode.addChild(new ContentNode(content.toString()));
                                 }

@@ -43,6 +43,14 @@ define([
         this.step(params, route);
     },
     search: function(params) {
+        var explanation = window.piecework.explanation;
+
+        if (explanation != undefined) {
+            var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+            this.view = new NotificationView({container: '.main-content', model: notification});
+            return;
+        }
+
         var model = window.piecework.model;
         window.piecework.model = null;
         if (model == null)
@@ -69,24 +77,6 @@ define([
         var resultsCollection = new ResultsCollection();
         resultsCollection.add(collection);
 
-/*        var statusFilter = new SearchFilter({
-            selector: 'parameters',
-            options: [
-                { 'id': "statusOpen", 'label': "Open", 'key': "processStatus", 'value': "open", 'default': true },
-                {id: "statusComplete", label: "Complete", key: "processStatus", value: 'complete'},
-                {id: "statusCancelled", label: "Deleted", key: "processStatus", value: 'cancelled'},
-                {id: "statusSuspended", label: "Suspended", key: "processStatus", value: 'suspended'},
-                {id: "statusAny", label: "Any status", key: "processStatus", value: 'all' }
-            ],
-            results: resultsModel
-        });
-
-        var processFilter = new SearchFilter({
-            selector: 'parameters',
-            key: 'definitions',
-            results: resultsModel
-        });*/
-
         this.compose('formView', {
                     compose: function(options) {
 
@@ -101,39 +91,6 @@ define([
 
         this.compose('searchToolbarView', SearchToolbarView, {model: resultsModel});
         this.compose('searchResultsContainerView', SearchResultsContainerView, {model: resultsModel});
-/*        this.compose('statusFilterContainer', {
-            compose: function(options) {
-                this.model = statusFilter;
-                this.view = SearchFilterView;
-                var autoRender, disabledAutoRender;
-                this.item = new SearchFilterView({container: '.status-filter-container', model: this.model});
-                autoRender = this.item.autoRender;
-                disabledAutoRender = autoRender === void 0 || !autoRender;
-                if (disabledAutoRender && typeof this.item.render === "function") {
-                    return this.item.render();
-                }
-            },
-            check: function(options) {
-                return true;
-            },
-        });
-
-        this.compose('processFilterContainer', {
-            compose: function(options) {
-                this.model = processFilter;
-                this.view = SearchFilterView;
-                var autoRender, disabledAutoRender;
-                this.item = new SearchFilterView({container: '.process-filter-container', model: this.model});
-                autoRender = this.item.autoRender;
-                disabledAutoRender = autoRender === void 0 || !autoRender;
-                if (disabledAutoRender && typeof this.item.render === "function") {
-                    return this.item.render();
-                }
-            },
-            check: function(options) {
-                return true;
-            },
-        });*/
 
         this.view = new SearchResultsView({collection: resultsCollection});
 
@@ -151,6 +108,14 @@ define([
         }
     },
     step: function(params, route) {
+        var explanation = window.piecework.explanation;
+
+        if (explanation != undefined) {
+            var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+            this.view = new NotificationView({container: '.main-content', model: notification});
+            return;
+        }
+
         var requestId = params.requestId != undefined ? params.requestId : '';
         var formModel = this.compose('formModel');
 

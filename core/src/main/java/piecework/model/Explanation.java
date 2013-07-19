@@ -32,13 +32,25 @@ public class Explanation {
 
 	private static final long serialVersionUID = -5144317536325535290L;
 
+    @XmlAttribute
+    private int status;
+
     @XmlElement
 	private String message;
 
     @XmlElement
     private String messageDetail;
 
-	/**
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    /**
 	 * @return the message
 	 */
 	public String getMessage() {

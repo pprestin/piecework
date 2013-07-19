@@ -29,7 +29,6 @@ import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
@@ -39,6 +38,7 @@ import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
 import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
 import piecework.security.AuthorityMappingPreAuthenticatedProvider;
+import piecework.security.DebugAuthenticationFilter;
 import piecework.security.SingleSignOnAuthenticationFilter;
 
 import java.net.URL;
@@ -129,21 +129,28 @@ public class WebSecurityConfiguration {
 
     @Bean(name="pieceworkPreAuthFilter")
     public AbstractPreAuthenticatedProcessingFilter pieceworkPreAuthFilter() throws Exception {
-        if (environment.getProperty("preauthentication.user.request.header") != null) {
+        String preauthenticationUserRequestHeader = environment.getProperty("preauthentication.user.request.header");
+        String testUser = environment.getProperty("authentication.testuser");
+        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
+
+        if (isDebugMode) {
+            LOG.fatal("DISABLING AUTHENTICATION -- THIS SHOULD NOT HAPPEN IN A PRODUCTION SYSTEM");
+
+            DebugAuthenticationFilter debugAuthenticationFilter = new DebugAuthenticationFilter(authenticationManager(), testUser);
+            debugAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
+            return debugAuthenticationFilter;
+        }
+
+        if (preauthenticationUserRequestHeader != null) {
             RequestHeaderAuthenticationFilter requestHeaderAuthenticationFilter = new RequestHeaderAuthenticationFilter();
-            requestHeaderAuthenticationFilter.setPrincipalRequestHeader(environment.getProperty("preauthentication.user.request.header"));
+            requestHeaderAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
             requestHeaderAuthenticationFilter.setAuthenticationManager(authenticationManager());
             return requestHeaderAuthenticationFilter;
         }
 
-        String testUser = environment.getProperty("authentication.testuser");
-        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
-
-        if (isDebugMode)
-            LOG.fatal("DISABLING AUTHENTICATION -- THIS SHOULD NOT HAPPEN IN A PRODUCTION SYSTEM");
-
-        SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter(testUser, isDebugMode);
+        SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
         singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
         return singleSignOnAuthenticationFilter;
     }
+
 }

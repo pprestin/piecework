@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.springframework.security.access.AccessDeniedException;
 import piecework.model.Explanation;
 
 
@@ -41,14 +42,24 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
 
         if (exception instanceof WebApplicationException) {
             WebApplicationException webApplicationException = WebApplicationException.class.cast(exception);
-            return webApplicationException.getResponse();
+            Response response = webApplicationException.getResponse();
+            Explanation explanation = new Explanation();
+            explanation.setMessage(exception.getMessage());
+            int status = response != null ? response.getStatus() : Status.INTERNAL_SERVER_ERROR.getStatusCode();
+            return Response.status(status).entity(explanation).build();
+        } else if (exception instanceof AccessDeniedException) {
+            AccessDeniedException accessDeniedException = AccessDeniedException.class.cast(exception);
+            Explanation explanation = new Explanation();
+            explanation.setMessage("Not authorized");
+            explanation.setMessageDetail("You have not been granted the necessary permission to take this action.");
+            return Response.status(Status.UNAUTHORIZED).entity(explanation).build();
         }
 
 		LOG.info("Uncaught exception. Sending exception message to client with status " + Status.INTERNAL_SERVER_ERROR + " and message " + exception.getMessage(), exception);
 		exception.printStackTrace();
 		Explanation explanation = new Explanation();
 		explanation.setMessage(exception.getMessage());
-		return Response.status(Status.INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+		return Response.status(Status.INTERNAL_SERVER_ERROR).entity(explanation).build();
 	}
 
 }

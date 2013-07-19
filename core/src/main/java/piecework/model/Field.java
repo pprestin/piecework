@@ -368,6 +368,11 @@ public class Field implements Serializable {
             this.editable = true;
             return this;
         }
+
+        public Builder uneditable() {
+            this.editable = false;
+            return this;
+        }
         
         public Builder required() {
             this.required = true;

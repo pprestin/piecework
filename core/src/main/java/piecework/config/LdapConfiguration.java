@@ -140,6 +140,14 @@ public class LdapConfiguration {
 		provider.setAuthoritiesMapper(authorizationRoleMapper);
 		return provider;
 	}
+
+    @Bean
+    public KeyManagerCabinet keyManagerCabinet(Environment environment) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        String keystoreFile = environment.getProperty("keystore.file");
+        String keystorePassword = environment.getProperty("keystore.password");
+
+        return new KeyManagerCabinet.Builder(keystoreFile, keystorePassword).build();
+    }
 	
 	private LdapAuthenticator authenticator(Environment environment) throws Exception {
 		LdapContextSource context = personLdapContextSource(environment);
@@ -237,10 +245,7 @@ public class LdapConfiguration {
 	}
 	
 	private SSLSocketFactory sslSocketFactory(Environment environment) throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
-        String keystoreFile = environment.getProperty("keystore.file");
-        String keystorePassword = environment.getProperty("keystore.password");
-
-        KeyManagerCabinet cabinet = new KeyManagerCabinet.Builder(keystoreFile, keystorePassword).build();
+        KeyManagerCabinet cabinet = keyManagerCabinet(environment);
 		String provider = null;
         String protocol = "TLS";
 

@@ -110,7 +110,7 @@ define([ 'chaplin',
 
             return this;
         },
-	    _doValidate: function() {
+	    _doValidate: function($button) {
 	        var data = new FormData();
 
             $('.generated').remove();
@@ -155,6 +155,9 @@ define([ 'chaplin',
                 processData : false,
                 contentType : false,
                 type : 'POST',
+                success: function() {
+                    $button.attr('data-validated', true);
+                },
                 statusCode : {
                     204 : this._onFormValid,
                     400 : this._onFormInvalid,
@@ -173,6 +176,15 @@ define([ 'chaplin',
                         var $element = $(selector);
                         var values = formValue.values;
                         if (values != null && values.length > 0) {
+                            if (values.length > 1) {
+                                var $controlGroup = $element.closest('.control-group');
+                                var $input = $controlGroup.find(':input[type="text"]:last');
+                                var $clone = $input.clone();
+                                $clone.val();
+                                $controlGroup.append("<br/>");
+                                $controlGroup.append($clone);
+                            }
+
                             if ($element.attr('type') != 'file') {
                                 $element.val(values);
                             } else {
@@ -195,16 +207,22 @@ define([ 'chaplin',
 	        var screen = this.model.get("screen");
             var type = screen.type;
 
-            var validated = $('#main-form').prop("validated");
-            if (type != 'wizard' || (validated != undefined && validated))
+            var $button = $(event.target);
+            var validated = $button.attr('data-validated');
+            if (validated)
                 return true;
 
-            this._doValidate();
+//            var validated = $('#main-form').prop("validated");
+//            if (type != 'wizard' || (validated != undefined && validated))
+//                return true;
+
+            this._doValidate($button);
 
             return false;
 
 	    },
 	    _onFormValid: function(data, textStatus, jqXHR) {
+
             var next = $(':button[type="submit"]:visible').val();
 
             if (next == 'submit' || next == 'reject' || next == 'approve') {

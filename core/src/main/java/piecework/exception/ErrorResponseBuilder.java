@@ -48,6 +48,7 @@ public class ErrorResponseBuilder {
 			return Response.status(statusCode).entity(entity).build();
 		
 		Explanation explanation = new Explanation();
+        explanation.setStatus(statusCode);
 		explanation.setMessage(message);
 		explanation.setMessageDetail(messageDetail);
 		return Response.status(statusCode).entity(explanation).build();

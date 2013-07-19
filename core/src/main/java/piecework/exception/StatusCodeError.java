@@ -15,6 +15,7 @@
  */
 package piecework.exception;
 
+import javax.ws.rs.core.Response;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -62,11 +63,13 @@ public class StatusCodeError extends Exception {
 	}
 	
 	public String getLocalizedMessage() {
-		
-        return new StringBuilder().append(statusCode).toString();
+        String message = "Error";
+        Response.Status status = Response.Status.fromStatusCode(statusCode);
+        if (status != null)
+            message = status.getReasonPhrase();
+        return new StringBuilder().append(message).toString();
     }
-	
-	
+
 	public String getMessageDetail() {
 		String exceptionText = null;
 		

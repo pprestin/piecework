@@ -15,42 +15,8 @@
  */
 package piecework.config;
 
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.apache.log4j.Logger;
-import org.owasp.validator.html.Policy;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.access.AccessDecisionManager;
-import org.springframework.security.access.AccessDecisionVoter;
-import org.springframework.security.access.vote.AffirmativeBased;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.web.*;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.configurers.DefaultLoginPageConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-
-import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
-import piecework.authorization.AuthorizationRole;
-import piecework.authorization.AuthorizationRoleMapper;
-import piecework.authorization.ResourceAccessVoter;
-import piecework.security.AuthorityMappingPreAuthenticatedProvider;
-import piecework.security.RequestParameterAuthenticationFilter;
 
 /**
  * @author James Renfro
@@ -162,7 +128,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 //            http.addFilter(authenticationFilter);
 //            break;
 //		case NONE:
-//			http.addFilter(new RequestParameterAuthenticationFilter(authenticationManager(), testUser));
+//			http.addFilter(new DebugAuthenticationFilter(authenticationManager(), testUser));
 //			break;
 //		}
 //	}
