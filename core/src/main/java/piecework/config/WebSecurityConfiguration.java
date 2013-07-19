@@ -15,6 +15,7 @@
  */
 package piecework.config;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.owasp.validator.html.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,7 +138,8 @@ public class WebSecurityConfiguration {
             LOG.fatal("DISABLING AUTHENTICATION -- THIS SHOULD NOT HAPPEN IN A PRODUCTION SYSTEM");
 
             DebugAuthenticationFilter debugAuthenticationFilter = new DebugAuthenticationFilter(authenticationManager(), testUser);
-            debugAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
+            if (StringUtils.isNotEmpty(preauthenticationUserRequestHeader))
+                debugAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
             return debugAuthenticationFilter;
         }
 
