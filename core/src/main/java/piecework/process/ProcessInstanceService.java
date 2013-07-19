@@ -491,6 +491,16 @@ public class ProcessInstanceService {
         return processInstanceRepository.save(instance);
     }
 
+    public ProcessInstance save(Process process, Screen screen, Payload payload) throws StatusCodeError {
+
+        // Validate the submission
+        FormValidation validation = validate(process, screen, payload, false);
+        FormSubmission submission = validation.getSubmission();
+        ProcessInstance previous = validation.getInstance();
+
+        return store(process, submission, validation, previous, false);
+    }
+
     public ProcessInstance submit(Process process, Screen screen, Payload payload) throws StatusCodeError {
 
         // Validate the submission

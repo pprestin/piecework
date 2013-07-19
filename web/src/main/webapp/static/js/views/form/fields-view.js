@@ -3,13 +3,14 @@ define([
         'models/design/field',
         'views/base/collection-view',
         'views/form/field-checkbox-view',
+        'views/form/field-file-view',
         'views/form/field-listbox-view',
         'views/form/field-html-view',
         'views/form/field-radio-view',
         'views/form/field-textarea-view',
         'views/form/field-textbox-view'
         ],
-    function(Chaplin, Field, CollectionView, CheckboxView, ListboxView, HtmlView, RadioView, TextareaView,
+    function(Chaplin, Field, CollectionView, CheckboxView, FileView, ListboxView, HtmlView, RadioView, TextareaView,
 				TextboxView) {
 	'use strict';
 
@@ -31,6 +32,8 @@ define([
 	    		return new TextareaView({id: fieldId, model: field});
 	        else if (type == 'html')
 	            return new HtmlView({id: fieldId, model: field});
+	        else if (type == 'file')
+	            return new FileView({id: fieldId, model: field});
 	    	else
 	    		return new TextboxView({id: fieldId, model: field});
 	    },

@@ -67,6 +67,9 @@ public class Field implements Serializable {
     @XmlElement
     private final String mask;
 
+    @XmlAttribute
+    private final String accept;
+
     @XmlElement
     private final String pattern;
 
@@ -113,8 +116,8 @@ public class Field implements Serializable {
     
     @XmlAttribute
     private final int ordinal;
-    
-    @XmlElement
+
+    @XmlAttribute
     private final String link;
 
     @XmlTransient
@@ -134,6 +137,7 @@ public class Field implements Serializable {
         this.required = builder.required;
         this.restricted = builder.restricted;
         this.mask = builder.mask;
+        this.accept = builder.accept;
         this.pattern = builder.pattern;
         this.customValidity = builder.customValidity;
         this.visible = builder.visible;
@@ -177,6 +181,10 @@ public class Field implements Serializable {
 	public boolean isEditable() {
 		return editable;
 	}
+
+    public String getAccept() {
+        return accept;
+    }
 
     public String getMask() {
         return mask;
@@ -249,6 +257,7 @@ public class Field implements Serializable {
         private boolean required;
         private boolean restricted;
         private boolean visible;
+        private String accept;
         private String mask;
         private String pattern;
         private String customValidity;
@@ -286,6 +295,7 @@ public class Field implements Serializable {
             this.editable = field.editable;
             this.required = field.required;
             this.restricted = field.restricted;
+            this.accept = sanitizer.sanitize(field.accept);
             this.mask = field.mask;
             this.pattern = field.pattern;
             this.customValidity = field.customValidity;
@@ -366,6 +376,11 @@ public class Field implements Serializable {
 
         public Builder restricted() {
             this.restricted = true;
+            return this;
+        }
+
+        public Builder accept(String accept) {
+            this.accept = accept;
             return this;
         }
 

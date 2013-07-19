@@ -176,7 +176,12 @@ define([ 'chaplin',
                             if ($element.attr('type') != 'file') {
                                 $element.val(values);
                             } else {
-                                $element.before('<div class="file"><a href="' + formValue.link + '">' + values[0] + "</a></div>");
+                                var re = RegExp("image/");
+                                if (formValue.accept != null && re.test(formValue.accept)) {
+                                    $element.before('<image src="' + formValue.link + '" alt="' + values[0] + '"/>');
+                                } else {
+                                    $element.before('<div class="file"><a href="' + formValue.link + '">' + values[0] + "</a></div>");
+                                }
                             }
                         }
                     }

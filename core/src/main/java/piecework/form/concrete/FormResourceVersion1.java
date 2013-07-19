@@ -68,6 +68,13 @@ public class FormResourceVersion1 implements FormResource {
     }
 
     @Override
+    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        return formService.saveForm(request, getViewContext(), process, rawRequestId, body);
+    }
+
+    @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = resourceHelper.findProcess(processDefinitionKey, true);

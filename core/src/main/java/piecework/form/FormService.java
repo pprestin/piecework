@@ -248,6 +248,29 @@ public class FormService {
         return resultsBuilder.build(viewContext);
     }
 
+    public Response saveForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+        String requestId = sanitizer.sanitize(rawRequestId);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        RequestDetails requestDetails = requestDetails(request);
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        Screen screen = formRequest.getScreen();
+
+        Payload payload = new Payload.Builder()
+                .requestDetails(requestDetails)
+                .requestId(requestId)
+                .processInstanceId(formRequest.getProcessInstanceId())
+                .taskId(formRequest.getTaskId())
+                .multipartBody(body)
+                .build();
+
+        ProcessInstance save = processInstanceService.submit(process, screen, payload);
+
+        return responseHandler.redirect(formRequest, viewContext);
+    }
+
     public Response submitForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 

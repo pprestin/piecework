@@ -18,6 +18,7 @@ package piecework.ui;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.HtmlNode;
@@ -236,11 +237,13 @@ public class DecoratingVisitor implements TagNodeVisitor {
             if (formValue != null) {
                 // Image tags are a special case update src and alt attributes
                 if (tag.getName() != null && tag.getName().equals("img")) {
-                    Map<String, String> attributes = new HashMap<String, String>();
-                    attributes.putAll(tag.getAttributes());
-                    attributes.put("alt", formValue.getValue());
-                    attributes.put("src", formValue.getLink());
-                    tag.setAttributes(attributes);
+                    if (StringUtils.isNotEmpty(formValue.getValue())) {
+                        Map<String, String> attributes = new HashMap<String, String>();
+                        attributes.putAll(tag.getAttributes());
+                        attributes.put("alt", formValue.getValue());
+                        attributes.put("src", formValue.getLink());
+                        tag.setAttributes(attributes);
+                    }
                     return;
                 }
 
