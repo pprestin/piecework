@@ -141,9 +141,10 @@ public class ResponseHandler {
 
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
         int attachmentCount = 0;
+        ProcessInstance processInstance = null;
         Map<String, FormValue> combinedFormValueMap = new HashMap<String, FormValue>();
         if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
-            ProcessInstance processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
+            processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
             Map<String, FormValue> processInstanceFormValueMap = processInstance.getFormValueMap();
             attachmentCount = processInstance.getAttachments() != null ? processInstance.getAttachments().size() : 0;
             combinedFormValueMap.putAll(processInstanceFormValueMap);
@@ -275,6 +276,8 @@ public class ResponseHandler {
             }
         }
 
+        List<Attachment> attachments = processInstance != null ? processInstance.getAttachments() : null;
+
         return new Form.Builder()
                 .formInstanceId(formRequest.getRequestId())
                 .processDefinitionKey(formRequest.getProcessDefinitionKey())
@@ -282,7 +285,7 @@ public class ResponseHandler {
                 .formValues(includedFormValues)
                 .screen(screen)
                 .task(task)
-                .instanceSubresources(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId(), processInstanceService.getInstanceViewContext())
+                .instanceSubresources(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId(), attachments, processInstanceService.getInstanceViewContext())
                 .attachmentCount(attachmentCount)
                 .build(viewContext);
     }

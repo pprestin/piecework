@@ -76,6 +76,12 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response attach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultivaluedMap<String, String> parameters) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("multipart/form-data")
     Response attach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultipartBody body) throws StatusCodeError;
 

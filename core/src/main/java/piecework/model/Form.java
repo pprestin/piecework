@@ -15,11 +15,13 @@
  */
 package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
+import piecework.security.concrete.PassthroughSanitizer;
 
 import javax.xml.bind.annotation.*;
 import java.util.*;
@@ -81,6 +83,11 @@ public class Form {
     @XmlAttribute
     private final boolean valid;
 
+    @XmlTransient
+    @JsonIgnore
+    private final List<Attachment> attachments;
+
+
     private Form() {
         this(new Form.Builder(), new ViewContext());
     }
@@ -103,6 +110,7 @@ public class Form {
         this.history = builder.history;
         this.suspension = builder.suspension;
         this.attachmentCount = builder.attachmentCount;
+        this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : Collections.<Attachment>emptyList();
         this.valid = builder.valid;
     }
 
@@ -124,6 +132,11 @@ public class Form {
 
     public List<FormValue> getFormData() {
         return formData;
+    }
+
+    @JsonIgnore
+    public List<Attachment> getAttachments() {
+        return attachments;
     }
 
     public Map<String, FormValue> getFormValueMap() {
@@ -190,6 +203,7 @@ public class Form {
         private String history;
         private String suspension;
         private int attachmentCount;
+        private List<Attachment> attachments;
         private boolean valid;
 
         public Builder() {
@@ -210,6 +224,7 @@ public class Form {
                 }
             }
             this.attachmentCount = form.attachmentCount;
+            this.attachments = form.getAttachments();
             this.valid = form.valid;
         }
 
@@ -221,12 +236,19 @@ public class Form {
             return new Form(this, context);
         }
 
-        public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, ViewContext context) {
+        public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, List<Attachment> attachments, ViewContext context) {
             this.activation = context.getApplicationUri(processDefinitionKey, processInstanceId, "activation");
             this.attachment = context.getApplicationUri(processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
             this.cancellation = context.getApplicationUri(processDefinitionKey, processInstanceId, "cancellation");
             this.history = context.getApplicationUri(processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
             this.suspension = context.getApplicationUri(processDefinitionKey, processInstanceId, "suspension");
+            if (attachments != null && !attachments.isEmpty()) {
+                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                this.attachments = new ArrayList<Attachment>(attachments.size());
+                for (Attachment attachment : attachments) {
+                    this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).build(context));
+                }
+            }
             return this;
         }
 

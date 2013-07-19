@@ -232,7 +232,7 @@ public class FormService {
                             .formInstanceId(task.getTaskInstanceId())
                             .task(task)
                             .processDefinitionKey(task.getProcessDefinitionKey())
-                            .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), processInstanceService.getInstanceViewContext())
+                            .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, processInstanceService.getInstanceViewContext())
                             .build(viewContext));
                 }
             }

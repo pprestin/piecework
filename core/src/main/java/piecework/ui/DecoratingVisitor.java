@@ -18,6 +18,7 @@ package piecework.ui;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.ContentNode;
@@ -30,10 +31,7 @@ import piecework.model.*;
 import piecework.util.ManyMap;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Decorates HTML based on
@@ -57,6 +55,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
     public void initialize() {
         decoratorMap.putOne("form", new FormDecorator(form));
         decoratorMap.putOne("body", new BodyDecorator(form));
+        decoratorMap.putOne("div", new AttachmentsDecorator(form));
 
         Map<String, FormValue> formValueMap = form.getFormValueMap();
 
@@ -100,10 +99,10 @@ public class DecoratingVisitor implements TagNodeVisitor {
             String id = tag.getAttributeByName("id");
             String cls = tag.getAttributeByName("class");
             String name = tag.getAttributeByName("name");
-            String variable = tag.getAttributeByName("data-variable");
+            String variable = tag.getAttributeByName("data-process-variable");
 
             for (TagDecorator decorator : decorators) {
-                if (decorator != null && decorator.canDecorate(id, cls, name, variable)) {
+                if (decorator != null && decorator.canDecorate(tag, id, cls, name, variable)) {
                     decorator.decorate(tag, id , cls, name, variable);
                 }
             }
@@ -157,11 +156,55 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name, String variable) {
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
             Screen screen = form.getScreen();
             String screenType = screen.getType();
 
             return screenType != null && screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE);
+        }
+
+        public boolean isReusable() {
+            return false;
+        }
+    }
+
+
+    class AttachmentsDecorator implements TagDecorator {
+
+        private final Form form;
+
+        public AttachmentsDecorator(Form form) {
+            this.form = form;
+        }
+
+        @Override
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+            String contentType = tag.getAttributeByName("data-process-content-type");
+            String[] contentTypes = contentType != null ? contentType.split("\\s*,\\s*") : new String[0];
+            Set<String> contentTypeSet = Sets.newHashSet(contentTypes);
+
+            if (form != null && form.getAttachments() != null && !form.getAttachments().isEmpty()) {
+                tag.removeAllChildren();
+
+                TagNode ulNode = new TagNode("ul");
+                ulNode.addAttribute("class", "attachments");
+
+                for (Attachment attachment : form.getAttachments()) {
+                    if (contentTypeSet.isEmpty() || (attachment.getContentType() != null && contentTypeSet.contains(attachment.getContentType()))) {
+                        TagNode liNode = new TagNode("li");
+                        TagNode anchorNode = new TagNode("a");
+                        anchorNode.addAttribute("href", attachment.getLink());
+                        anchorNode.addChild(new ContentNode(attachment.getName()));
+                        ulNode.addChild(liNode);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
+            String container = tag.getAttributeByName("data-process-container");
+            return container != null && container.equalsIgnoreCase("attachments");
         }
 
         public boolean isReusable() {
@@ -179,18 +222,29 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name, String variable) {
-            String formUri = form.getAction() != null ? form.getAction() : "";
-
+            String type = tag.getAttributeByName("data-process-form");
             Map<String, String> attributes = new HashMap<String, String>();
-            attributes.put("action", formUri);
-            attributes.put("method", "POST");
-            attributes.put("enctype", "multipart/form-data");
-            tag.setAttributes(attributes);
+            attributes.putAll(tag.getAttributes());
+
+            if (type == null || type.equals("main")) {
+                String formUri = form.getAction() != null ? form.getAction() : "";
+                attributes.put("action", formUri);
+                attributes.put("method", "POST");
+                attributes.put("enctype", "multipart/form-data");
+                tag.setAttributes(attributes);
+
+            } else if (type.equals("attachments")) {
+                String attachmentUri = form.getAttachment() != null ? form.getAttachment() : "";
+                attributes.put("action", attachmentUri);
+                attributes.put("method", "POST");
+                tag.setAttributes(attributes);
+            }
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name, String variable) {
-            return id == null || id.equals("main-form");
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
+            String exclude = tag.getAttributeByName("data-process-exclude");
+            return exclude == null || !exclude.equals("true");
         }
 
         public boolean isReusable() {
@@ -212,7 +266,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name, String variable) {
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
             return id == null || section.getTagId() != null && section.getTagId().equals(id);
         }
 
@@ -259,7 +313,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name, String variable) {
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
             if (variable != null && formValueMap.containsKey(variable))
                 return true;
 
@@ -290,6 +344,10 @@ public class DecoratingVisitor implements TagNodeVisitor {
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.putAll(tag.getAttributes());
             attributes.putAll(fieldTag.getAttributes());
+
+            if (StringUtils.isNotEmpty(field.getAccept()))
+                attributes.put("accept", field.getAccept());
+
             tag.setAttributes(attributes);
 
             String value = null;
@@ -310,7 +368,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         if (iterator.hasNext())
                             builder.append(",");
                     }
-                    attributes.put("data-messages", builder.toString());
+                    attributes.put("data-process-messages", builder.toString());
                 }
             }
 
@@ -358,7 +416,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public boolean canDecorate(String id, String cls, String name, String variable) {
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
 
             if (id != null && id.equals(field.getFieldId()))
                 return true;

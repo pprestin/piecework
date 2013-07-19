@@ -75,7 +75,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	@Autowired
 	Sanitizer sanitizer;
 
-
     @Override
     public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
@@ -86,6 +85,23 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
         processInstanceService.activate(process, instance, reason);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultivaluedMap<String, String> formData) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+
+        if (!processInstanceService.userHasTask(process, instance, true))
+            throw new ForbiddenError();
+
+        Payload payload = new Payload.Builder()
+                .processInstanceId(instance.getProcessInstanceId())
+                .formData(formData)
+                .build();
+
+        processInstanceService.attach(process, null, payload);
         return Response.noContent().build();
     }
 
