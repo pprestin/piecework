@@ -168,6 +168,7 @@ public class ProcessService {
         }
 
         Process.Builder builder = new Process.Builder(rawProcess, sanitizer);
+        builder.clearInteractions();
         if (rawProcess.getInteractions() != null && !rawProcess.getInteractions().isEmpty()) {
             for (Interaction interaction : rawProcess.getInteractions()) {
                 Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);

@@ -39,6 +39,8 @@ define([ 'chaplin', 'views/base/view'],
         },
         render: function(options) {
             View.__super__.render.apply(this, options);
+
+            this.$el.attr('data-rendered', true);
             var mask = this.model.get("mask");
             if (mask != null) {
                 var $input = this.$el.find(':input');

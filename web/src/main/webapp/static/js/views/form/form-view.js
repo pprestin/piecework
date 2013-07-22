@@ -14,7 +14,7 @@ define([ 'chaplin',
 		tagName: 'form',
 	    template: template,
 	    events: {
-	        'submit': '_onFormSubmit',
+	        'click button': '_onFormSubmit',
 	        'load': '_onLoaded',
 	    },
 	    listen: {
@@ -54,6 +54,7 @@ define([ 'chaplin',
                 this.$el.attr('action', action + '.html');
                 this.$el.attr('method', 'POST');
                 this.$el.attr('enctype', 'multipart/form-data');
+                this.$el.attr('data-validated', false);
             }
 
             this.$el.attr('novalidate', 'novalidate');
@@ -110,7 +111,7 @@ define([ 'chaplin',
 
             return this;
         },
-	    _doValidate: function($button) {
+	    _doValidate: function($form, $button) {
 	        var data = new FormData();
 
             $('.generated').remove();
@@ -156,7 +157,22 @@ define([ 'chaplin',
                 contentType : false,
                 type : 'POST',
                 success: function() {
-                    $button.attr('data-validated', true);
+
+                    if ($button.attr('data-wizard') == 'next') {
+                        var next = $button.val();
+
+                        if (next != null) {
+                            var breadcrumbSelector = 'a[href="' + next + '"]';
+                            var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li'); //.prev('li');
+                            $li.find('span.inactive-text').remove();
+                            $li.find('a').removeClass('hide');
+
+                            Chaplin.mediator.publish('!router:route', next);
+                        }
+                    } else {
+                        $form.attr('data-validated', true);
+                        $button.click();
+                    }
                 },
                 statusCode : {
                     204 : this._onFormValid,
@@ -208,35 +224,36 @@ define([ 'chaplin',
             var type = screen.type;
 
             var $button = $(event.target);
-            var validated = $button.attr('data-validated');
-            if (validated)
+            var $form = $button.closest('form');
+            var validated = $form.attr('data-validated');
+            if (validated != undefined && validated != 'false')
                 return true;
 
 //            var validated = $('#main-form').prop("validated");
 //            if (type != 'wizard' || (validated != undefined && validated))
 //                return true;
 
-            this._doValidate($button);
+            this._doValidate($form, $button);
 
             return false;
 
 	    },
-	    _onFormValid: function(data, textStatus, jqXHR) {
-
-            var next = $(':button[type="submit"]:visible').val();
-
-            if (next == 'submit' || next == 'reject' || next == 'approve') {
-                $('#main-form').prop("validated", true);
-                $('#main-form').submit();
-            } else {
-                var breadcrumbSelector = 'a[href="' + next + '"]';
-                var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li'); //.prev('li');
-                $li.find('span.inactive-text').remove();
-                $li.find('a').removeClass('hide');
-
-                Chaplin.mediator.publish('!router:route', next);
-            }
-	    },
+//	    _onFormValid: function(data, textStatus, jqXHR) {
+//
+//            var next = $(':button[type="submit"]:visible').val();
+//
+//            if (next != 'submit' && next != 'reject' && next != 'approve') {
+////                $('#main-form').prop("validated", true);
+////                $('#main-form').submit();
+////            } else {
+//                var breadcrumbSelector = 'a[href="' + next + '"]';
+//                var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li'); //.prev('li');
+//                $li.find('span.inactive-text').remove();
+//                $li.find('a').removeClass('hide');
+//
+//                Chaplin.mediator.publish('!router:route', next);
+//            }
+//	    },
 	    _onFormInvalid: function(jqXHR, textStatus, errorThrown) {
             var errors = $.parseJSON(jqXHR.responseText);
 
@@ -305,6 +322,7 @@ define([ 'chaplin',
                           button.value = groupings.length > grouping.ordinal ? groupings[groupingIndex + 1].breadcrumbLink : '';
                           button.link = button.value;
                           button.alt = "Next";
+                          button.wizard = 'next';
                       } else if (buttonList[b].value == 'prev') {
                           if (groupingIndex > 0)
                             button.value = groupings[groupingIndex - 1].breadcrumbLink;
@@ -317,6 +335,7 @@ define([ 'chaplin',
                           }
                           button.link = button.value;
                           button.alt = "Previous";
+                          button.wizard = 'prev';
                       }
                   }
 

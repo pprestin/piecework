@@ -371,6 +371,11 @@ public class Process implements Serializable {
 			this.isDeleted = false;
 			return this;
 		}
+
+        public Builder clearInteractions() {
+            this.interactions = new ArrayList<Interaction>();
+            return this;
+        }
 	}
 	
 	public static class Constants {

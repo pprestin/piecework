@@ -682,7 +682,7 @@ public class ProcessInstanceService {
                 facade.completeTask(process, taskId, actionValue);
             } catch (ProcessEngineException e) {
                 LOG.error(e);
-                throw new InternalServerError();
+                throw new InternalServerError(e);
             }
         }
     }

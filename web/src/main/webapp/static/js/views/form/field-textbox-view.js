@@ -7,11 +7,11 @@ define([ 'views/form/base-field-view', 'text!templates/form/field-textbox.hbs'],
 		events: {
 		    'click button.add-input-button': '_onAddInputButtonClick',
 		},
-		render: function(options) {
-            View.__super__.render.apply(this, options);
-
-            return this;
-        },
+//		render: function(options) {
+//            View.__super__.render.apply(this, options);
+//
+//            return this;
+//        },
 		_onAddInputButtonClick: function(event) {
             var $controlGroup = this.$(event.target).closest('.control-group');
             var $input = $controlGroup.find(':input[type="text"]:last');
