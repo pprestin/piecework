@@ -1,4 +1,4 @@
-define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
+define([ 'chaplin', 'models/base/collection', 'models/base/model' ], function(Chaplin, Collection, Model) {
 	'use strict';
 
 	var Results = Model.extend({
@@ -11,6 +11,12 @@ define([ 'chaplin', 'models/base/model' ], function(Chaplin, Model) {
 				total: 0,
 			};
 		},
+//		parse: function(response, options) {
+//            var resultsCollection = new Collection();
+//            resultsCollection.add(response['list']);
+//            response['collection'] = resultsCollection;
+//            return response;
+//        },
 		url: function() {
             var uri = this.get("link");
             if (uri == null)

@@ -7,6 +7,12 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/attachment.hbs' ],
 		className: 'well',
 		tagName: 'li',
 	    template: template,
+	    events: {
+	        'click .delete-attachment-btn': '_onDeleteAttachment',
+	    },
+	    _onDeleteAttachment: function(event) {
+	        Backbone.sync('delete', this.model);
+	    }
 	});
 
 	return AttachmentView;

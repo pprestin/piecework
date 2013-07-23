@@ -13,11 +13,17 @@ define([
         fallbackSelector: '.attachment-fallback',
 		tagName: 'ul',
         itemView: AttachmentView,
-        render: function() {
-            this.$el.append('<div class="attachment-fallback hide">No items</div>');
-            CollectionView.__super__.render.apply(this);
-            return this;
-        }
+        listen: {
+            'refreshAttachments mediator': '_onRefreshAttachments',
+        },
+//        render: function() {
+////            this.$el.append('<div class="attachment-fallback hide">No items</div>');
+//            CollectionView.__super__.render.apply(this);
+//            return this;
+//        }
+        _onRefreshAttachments: function() {
+            this.collection.fetch();
+        },
 	});
 
 	return AttachmentsView;

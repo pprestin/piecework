@@ -97,16 +97,6 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	    _onSuspendSuccess: function() {
 	        Chaplin.mediator.publish('backToSearch');
 	    },
-	    _onUploadSuccess: function() {
-	        Chaplin.mediator.publish('showAttachments');
-	        $('#comment-dialog').modal('hide');
-	    },
-	    _onUploadInvalid: function() {
-	        alert("invalid!");
-	    },
-	    _onUploadFailure: function() {
-	        alert("failure!");
-	    },
 	    _uploadAttachments: function(data) {
 	        var url = this.model.get("attachment") + ".json";
             $.ajax({
@@ -115,11 +105,12 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
                 processData : false,
                 contentType : false,
                 type : 'POST',
-                statusCode : {
-                    200 : this._onUploadSuccess,
-                    400 : this._onUploadInvalid,
-                    'default' : this._onUploadFailure,
+                success : function() {
+                    Chaplin.mediator.publish('refreshAttachments');
+                    $('#comment-dialog').modal('hide');
                 }
+            }).fail(function() {
+
             });
 	    }
 	});

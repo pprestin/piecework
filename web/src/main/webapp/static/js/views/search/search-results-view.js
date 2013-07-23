@@ -22,11 +22,11 @@ define([ 'chaplin', 'views/base/collection-view', 'views/search/search-result-vi
         },
 		_onSearch: function(data) {
 		    var clean = {};
-		    if (data.keyword !== undefined && data.keyword != 'none')
+		    if (data.keyword !== undefined && data.keyword != 'none' && data.keyword != '')
                 clean['keyword'] = data.keyword;
-            if (data.status !== undefined && data.status != 'undefined')
-                clean['processStatus'] = data.status;
-            if (data.processDefinitionKey !== undefined && data.processDefinitionKey != 'all')
+            if (data.processStatus !== undefined && data.processStatus != 'undefined' && data.processStatus != '')
+                clean['processStatus'] = data.processStatus;
+            if (data.processDefinitionKey !== undefined && data.processDefinitionKey != 'all' && data.processDefinitionKey != '')
                 clean['processDefinitionKey'] = data.processDefinitionKey;
 
             this.collection.fetch({data: clean});

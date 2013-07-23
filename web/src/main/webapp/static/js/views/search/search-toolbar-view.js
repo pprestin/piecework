@@ -82,7 +82,13 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/runtime/search-filter'
             var keyword = this.$('#keyword').val();
             var processDefinitionKey = $(':checkbox[name="processDefinitionKey"]:checked').val();
 
-            var data = { status : status, keyword : keyword, processDefinitionKey : processDefinitionKey };
+            var data = {};
+            if (keyword !== undefined && keyword != '')
+                data['keyword'] = keyword;
+            if (status !== undefined && status != '')
+                data['processStatus'] = status;
+            if (processDefinitionKey !== undefined && processDefinitionKey != '')
+                data['processDefinitionKey'] = processDefinitionKey;
 
             Chaplin.mediator.publish('search', data);
             return false;
@@ -113,24 +119,24 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/runtime/search-filter'
             this.model.unset("selected");
         },
 	    _onSearch: function(data) {
-            var queryString = '';
-            if (data != undefined) {
-                if (data.status != undefined && data.status != '')
-                    queryString += 'processStatus=' + data.status;
-                if (data.processDefinitionKey != undefined && data.processDefinitionKey != '') {
-                    if (queryString.length > 0)
-                        queryString += '&';
-                    queryString += 'processDefinitionKey=' + data.processDefinitionKey;
-                }
-                if (data.keyword != undefined && data.keyword != '') {
-                    if (queryString.length > 0)
-                        queryString += '&';
-                    queryString += 'keyword=' + data.keyword;
-                }
-            }
-
-            var pattern = window.location.pathname + '?' + queryString; //'piecework/secure/form?' + queryString;
-            Chaplin.mediator.publish('!router:changeURL', pattern);
+//            var queryString = '';
+//            if (data != undefined) {
+//                if (data.status != undefined && data.status != '')
+//                    queryString += 'processStatus=' + data.status;
+//                if (data.processDefinitionKey != undefined && data.processDefinitionKey != '') {
+//                    if (queryString.length > 0)
+//                        queryString += '&';
+//                    queryString += 'processDefinitionKey=' + data.processDefinitionKey;
+//                }
+//                if (data.keyword != undefined && data.keyword != '') {
+//                    if (queryString.length > 0)
+//                        queryString += '&';
+//                    queryString += 'keyword=' + data.keyword;
+//                }
+//            }
+//
+//            var pattern = window.location.pathname + '?' + queryString; //'piecework/secure/form?' + queryString;
+//            Chaplin.mediator.publish('!router:changeURL', pattern);
 	    },
 	    _onSuspendButton: function() {
 	        var selected = this.model.get("selected");

@@ -13,7 +13,6 @@ define([
   'views/form/button-link-view',
   'views/form/fields-view',
   'views/form/form-view',
-  'views/form/form-toolbar-view',
   'views/form/grouping-view',
   'views/form/notification-view',
   'views/search/search-filter-view',
@@ -27,7 +26,7 @@ define([
   'text!templates/form/button.hbs',
   'text!templates/form/button-link.hbs'
 ], function(Chaplin, Controller, Model, Collection, Form, Notification, Page, Results, SearchFilter, User,
-            ButtonView, ButtonLinkView, FieldsView, FormView, FormToolbarView, GroupingView, NotificationView,
+            ButtonView, ButtonLinkView, FieldsView, FormView, GroupingView, NotificationView,
             SearchFilterView, SearchToolbarView, SearchResultsContainerView, SearchResultsView,
             SectionView, SectionsView, UserView, View) {
   'use strict';
@@ -63,6 +62,8 @@ define([
 
         this.compose('resultsModel', Results, model);
         var resultsModel = this.compose('resultsModel');
+//        resultsModel.parse(model);
+
         var collection = resultsModel.get("list");
 
         var url = resultsModel.get('link');
@@ -89,23 +90,22 @@ define([
                     }
         });
 
-        this.compose('searchToolbarView', SearchToolbarView, {model: resultsModel});
         this.compose('searchResultsContainerView', SearchResultsContainerView, {model: resultsModel});
 
         this.view = new SearchResultsView({collection: resultsCollection});
 
-        var data = {};
-
-        if (resultsCollection.length == 0) {
-            if (params.keyword !== undefined && params.keyword != '')
-                data['keyword'] = params.keyword;
-            if (params.processStatus !== undefined && params.processStatus != '')
-                data['processStatus'] = params.processStatus;
-            if (params.processDefinitionKey !== undefined && params.processDefinitionKey != '')
-                data['processDefinitionKey'] = params.processDefinitionKey;
-
-            resultsCollection.fetch({data: data});
-        }
+//        var data = {};
+//
+//        if (resultsCollection.length == 0) {
+//            if (params.keyword !== undefined && params.keyword != '')
+//                data['keyword'] = params.keyword;
+//            if (params.processStatus !== undefined && params.processStatus != '')
+//                data['processStatus'] = params.processStatus;
+//            if (params.processDefinitionKey !== undefined && params.processDefinitionKey != '')
+//                data['processDefinitionKey'] = params.processDefinitionKey;
+//
+//            resultsCollection.fetch({data: data});
+//        }
     },
     step: function(params, route) {
         var explanation = window.piecework.explanation;

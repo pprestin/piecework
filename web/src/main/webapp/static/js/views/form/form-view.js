@@ -361,16 +361,20 @@ define([ 'chaplin',
 	            var urlRoot = this.model.get("attachment");
 	            var attachments = new Attachments({}, {url: urlRoot});
 	            this.listenTo(attachments, 'sync', this._onSyncAttachments);
-                this.subview('attachmentsView', new AttachmentsView({collection: attachments}));
+                attachmentsView = this.subview('attachmentsView', new AttachmentsView({collection: attachments}));
                 attachments.fetch();
-            } else {
-                attachmentsView.collection.fetch();
-                attachmentsView.$el.toggle(0);
             }
+
+            this.$el.toggleClass('span9');
+//            attachmentsView.$el.toggle(0);
+
+//            else {
+//                attachmentsView.collection.fetch();
+//                attachmentsView.$el.toggle(0);
+//            }
 	    },
 	    _onSyncAttachments: function(attachments) {
             Chaplin.mediator.publish('attachmentCountChanged', attachments.length);
-            this.$el.toggleClass('span9');
 	    }
 	});
 

@@ -1,5 +1,5 @@
 <div class="attachment-header">
-    <button type="button" class="close"><i class="icon-trash"></i></button>
+    <button type="button" class="close delete-attachment-btn"><i class="icon-trash"></i></button>
 </div>
 <div class="attachment-body">
     {{#if inline}}
@@ -9,5 +9,5 @@
     {{/if}}
 </div>
 <div class="attachment-footer">
-    <p class="muted">{{user.displayName}}<br/>{{lastModified}}</p>
+    <p class="muted">{{user.displayName}}<br/>{{date lastModified}}</p>
 </div>
