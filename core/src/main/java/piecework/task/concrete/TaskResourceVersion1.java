@@ -32,6 +32,7 @@ import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.identity.InternalUserDetailsService;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
@@ -71,6 +72,9 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Autowired
     InternalUserDetailsService userDetailsService;
+
+    @Autowired
+    ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
     ProcessInstanceService processInstanceService;
@@ -192,9 +196,11 @@ public class TaskResourceVersion1 implements TaskResource {
                             criteriaBuilder.dueAfter(dateTimeFormatter.parseDateTime(value).toDate());
                         else if (key.equals("alias"))
                             criteriaBuilder.businessKey(value);
-                        else if (key.equals("processInstanceId"))
-                            criteriaBuilder.executionId(value);
-                        else if (key.equals("maxPriority"))
+                        else if (key.equals("processInstanceId")) {
+                            ProcessInstance processInstance = processInstanceRepository.findOne(value);
+                            if (processInstance != null)
+                                criteriaBuilder.executionId(processInstance.getEngineProcessInstanceId());
+                        } else if (key.equals("maxPriority"))
                             criteriaBuilder.maxPriority(Integer.valueOf(value));
                         else if (key.equals("minPriority"))
                             criteriaBuilder.minPriority(Integer.valueOf(value));
