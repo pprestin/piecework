@@ -2,9 +2,10 @@
 {{#if task}}
     {{#with task}}
     <td><a href="{{../link}}.html" rel="external">{{processInstanceLabel}}</a></td>
+    <td class="hide-narrow">{{taskStatus}}</td>
     <td class="hide-narrow">{{taskLabel}}</td>
     <td class="hide-narrow">{{processDefinitionLabel}}</td>
-    <td>{{date startTime}}</td>
+    <td>{{date startTime}}{{#if endTime}} - {{date endTime}}{{/if}}</td>
     {{/with}}
 {{/if}}
 

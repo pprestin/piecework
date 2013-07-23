@@ -103,7 +103,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/history")
-    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
     @POST

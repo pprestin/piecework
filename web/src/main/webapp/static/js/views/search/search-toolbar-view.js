@@ -1,5 +1,5 @@
-define([ 'backbone', 'chaplin', 'models/history', 'models/runtime/search-filter', 'views/history-view', 'views/search/search-filter-view', 'views/base/view', 'text!templates/search/search-toolbar.hbs' ],
-		function(Backbone, Chaplin, History, SearchFilter, HistoryView, SearchFilterView, View, template) {
+define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models/runtime/search-filter', 'views/history-view', 'views/form/notification-view', 'views/search/search-filter-view', 'views/base/view', 'text!templates/search/search-toolbar.hbs' ],
+		function(Backbone, Chaplin, History, Notification, SearchFilter, HistoryView, NotificationView, SearchFilterView, View, template) {
 	'use strict';
 
 	var SearchView = View.extend({
@@ -19,6 +19,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/runtime/search-filter'
             'resultSelected mediator': '_onResultSelected',
             'resultUnselected mediator': '_onResultUnselected',
             'search mediator': '_onSearch',
+            'searched mediator': '_onSearched',
 	    },
 	    render: function() {
             View.__super__.render.apply(this);
@@ -108,6 +109,10 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/runtime/search-filter'
                     var history = new History(data);
                     toolbar.subview('historyView', new HistoryView({model: history}));
                 }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                var explanation = $.parseJSON(jqXHR.responseText);
+                var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                toolbar.subview('historyView', new NotificationView({container: '#history-dialog > .modal-body', model: notification}));
             });
 	    },
         _onResultSelected: function(result) {
@@ -119,24 +124,10 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/runtime/search-filter'
             this.model.unset("selected");
         },
 	    _onSearch: function(data) {
-//            var queryString = '';
-//            if (data != undefined) {
-//                if (data.status != undefined && data.status != '')
-//                    queryString += 'processStatus=' + data.status;
-//                if (data.processDefinitionKey != undefined && data.processDefinitionKey != '') {
-//                    if (queryString.length > 0)
-//                        queryString += '&';
-//                    queryString += 'processDefinitionKey=' + data.processDefinitionKey;
-//                }
-//                if (data.keyword != undefined && data.keyword != '') {
-//                    if (queryString.length > 0)
-//                        queryString += '&';
-//                    queryString += 'keyword=' + data.keyword;
-//                }
-//            }
-//
-//            var pattern = window.location.pathname + '?' + queryString; //'piecework/secure/form?' + queryString;
-//            Chaplin.mediator.publish('!router:changeURL', pattern);
+	        $('#instanceSearchButton').button('loading');
+	    },
+	    _onSearched: function(data) {
+	        $('#instanceSearchButton').button('reset');
 	    },
 	    _onSuspendButton: function() {
 	        var selected = this.model.get("selected");

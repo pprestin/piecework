@@ -62,6 +62,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         VariableDecorator variableDecorator = new VariableDecorator(formValueMap);
         decoratorMap.putOne("span", variableDecorator);
         decoratorMap.putOne("img", variableDecorator);
+        decoratorMap.putOne("ul", variableDecorator);
 
         Screen screen = form.getScreen();
 
@@ -298,15 +299,28 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         attributes.put("src", formValue.getLink());
                         tag.setAttributes(attributes);
                     }
-                    return;
-                }
+                } else if (tag.getName() != null && tag.getName().equals("ul")) {
+                    TagNode exampleTag = new TagNode("li");
+                    // Check to see if there is an example tag of how to format things
+                    TagNode[] childTags = tag.getChildTags();
+                    if (childTags != null && childTags.length > 0) {
+                        exampleTag = childTags[0];
+                    } else {
+                        TagNode anchorTag = new TagNode("a");
+                        exampleTag.addChild(anchorTag);
+                    }
 
-                tag.removeAllChildren();
-                List<String> values = formValue.getAllValues();
 
-                if (values != null) {
-                    for (String value : values) {
-                        tag.addChild(new ContentNode(value));
+
+
+                } else {
+                    tag.removeAllChildren();
+                    List<String> values = formValue.getAllValues();
+
+                    if (values != null) {
+                        for (String value : values) {
+                            tag.addChild(new ContentNode(value));
+                        }
                     }
                 }
             }

@@ -75,6 +75,10 @@ public interface Constants {
         public static final String IS_STATE = "IS_STATE";
         public static final String SCREEN_IS_DISPLAYED_WHEN = "SCREEN_IS_DISPLAYED_WHEN";
 	}
+
+    public static class DeleteReasons {
+        public static final String CANCELLED = "Cancelled";
+    }
 	
 	public static class ExceptionCodes {
         public static final String active_task_required = "active_task_required";
@@ -165,6 +169,13 @@ public interface Constants {
     public static class TaskEventTypes {
         public static final String CREATE = "CREATE";
         public static final String COMPLETE = "COMPLETE";
+    }
+
+    public static class TaskStatuses {
+        public static final String OPEN = "Open";
+        public static final String COMPLETE = "Complete";
+        public static final String CANCELLED = "Cancelled";
+        public static final String SUSPENDED = "Suspended";
     }
 
     public static class ValidationStatus {

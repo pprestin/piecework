@@ -1,17 +1,49 @@
-<p>Started by {{initiator.displayName}} on {{date startTime}}</p>
-<ul class="tasks">
+<strong>{{processInstanceLabel}}</strong>
+<p class="muted">{{processDefinitionLabel}}</p>
+<table class="table table-condensed">
+    <tr>
+        <td><i class="icon-play"></i></td>
+        <td>Started</td>
+        <td></td>
+        <td>{{initiator.displayName}}<br/>
+            {{date startTime}}</td>
+    </tr>
     {{#each tasks}}
-        <li>
-            <div>
-                <h4>{{taskLabel}}</h4>
-                <p class="muted">{{datediff endTime startTime}}</p>
-                <p class="muted">{{date startTime}} - {{#if endTime}}{{date endTime}}{{else}}Open{{/if}}</p>
-                {{#if assignee}}
-                <p class="muted">
-                    {{#if endTime}}Completed by{{else}}Assigned to{{/if}} {{assignee.displayName}}
-                </p>
-                {{/if}}
-            </div>
+        <tr>
+            <td><i class="icon-code-fork"></i></td>
+            <td>{{taskLabel}}</td>
+            <td>{{datediff endTime startTime}}</td>
+            <td>
+                {{assignee.displayName}}<br/>
+                {{#if endTime}}{{date endTime}}{{/if}}
+            </td>
+        </tr>
+    {{/each}}
+    {{#if endTime}}
+        <tr>
+            <td><i class="icon-stop"></i></td>
+            <td>Ended</td>
+            <td></td>
+            <td>{{date endTime}}</td>
+        </tr>
+    {{/if}}
+</table>
+
+<!--
+<ul class="tasks">
+    <li>
+        Process started
+        <p class="muted">Initiator: {{initiator.displayName}}</p>
+        <p class="muted">Start date: {{date startTime}}</p>
+    </li>
+    {{#each tasks}}
+        <li><i class="icon-code-fork"></i>
+            Task {{taskLabel}} created on {{date startTime}}<p/>
+            <p>{{#if endTime}}Completed by{{else}}Assigned to{{/if}} {{assignee.displayName}} {{#if endTime}}{{date endTime}}{{/if}}</p>
+            <p class="muted">{{datediff endTime startTime}}</p>
+
+
         </li>
     {{/each}}
 </ul>
+-->

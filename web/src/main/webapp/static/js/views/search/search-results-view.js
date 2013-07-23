@@ -1,5 +1,5 @@
-define([ 'chaplin', 'views/base/collection-view', 'views/search/search-result-view' ],
-		function(Chaplin, CollectionView, SearchResultView) {
+define([ 'chaplin', 'views/base/collection-view', 'views/form/notification-view', 'views/search/search-result-view' ],
+		function(Chaplin, CollectionView, NotificationView, SearchResultView) {
 	'use strict';
 
 	var SearchResultsView = CollectionView.extend({
@@ -29,7 +29,16 @@ define([ 'chaplin', 'views/base/collection-view', 'views/search/search-result-vi
             if (data.processDefinitionKey !== undefined && data.processDefinitionKey != 'all' && data.processDefinitionKey != '')
                 clean['processDefinitionKey'] = data.processDefinitionKey;
 
-            this.collection.fetch({data: clean});
+            this.collection.fetch({data: clean,
+                success: function(model, response, options) {
+                    Chaplin.mediator.publish('searched', response);
+                },
+                error: function(model, response, options) {
+                    var explanation = response;
+                    var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                    new NotificationView({container: '.main-content', model: notification});
+                }
+            });
 		}
 	});
 

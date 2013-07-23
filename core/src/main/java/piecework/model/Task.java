@@ -71,6 +71,9 @@ public class Task implements Serializable {
     private final String taskDescription;
 
     @XmlElement
+    private final String taskStatus;
+
+    @XmlElement
     private final User assignee;
 
     @XmlElementWrapper(name="candidateAssignees")
@@ -115,6 +118,7 @@ public class Task implements Serializable {
         this.taskDefinitionKey = builder.taskDefinitionKey;
         this.taskLabel = builder.taskLabel;
         this.taskDescription = builder.taskDescription;
+        this.taskStatus = builder.taskStatus;
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.processInstanceId = builder.processInstanceId;
@@ -150,6 +154,10 @@ public class Task implements Serializable {
 
     public String getTaskDescription() {
         return taskDescription;
+    }
+
+    public String getTaskStatus() {
+        return taskStatus;
     }
 
     public String getProcessDefinitionLabel() {
@@ -223,6 +231,7 @@ public class Task implements Serializable {
         private String processInstanceLabel;
         private String taskLabel;
         private String taskDescription;
+        private String taskStatus;
         private User assignee;
         private List<User> candidateAssignees;
         private Date startTime;
@@ -243,6 +252,7 @@ public class Task implements Serializable {
             this.taskDefinitionKey = sanitizer.sanitize(task.taskDefinitionKey);
             this.taskLabel = sanitizer.sanitize(task.taskLabel);
             this.taskDescription = sanitizer.sanitize(task.taskDescription);
+            this.taskStatus = sanitizer.sanitize(task.taskStatus);
             this.processDefinitionKey = sanitizer.sanitize(task.processDefinitionKey);
             this.processDefinitionLabel = sanitizer.sanitize(task.processDefinitionLabel);
             this.processInstanceLabel = sanitizer.sanitize(task.processInstanceLabel);
@@ -296,6 +306,11 @@ public class Task implements Serializable {
 
         public Builder taskDescription(String taskDescription) {
             this.taskDescription = taskDescription;
+            return this;
+        }
+
+        public Builder taskStatus(String taskStatus) {
+            this.taskStatus = taskStatus;
             return this;
         }
 

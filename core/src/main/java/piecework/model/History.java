@@ -35,6 +35,12 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class History {
 
+    @XmlElement
+    private final String processDefinitionLabel;
+
+    @XmlElement
+    private final String processInstanceLabel;
+
     @XmlElementWrapper(name="tasks")
     @XmlElementRef
     private final List<Task> tasks;
@@ -59,12 +65,30 @@ public class History {
     }
 
     private History(Builder builder, ViewContext context) {
+        this.processDefinitionLabel = builder.processDefinitionLabel;
+        this.processInstanceLabel = builder.processInstanceLabel;
         this.tasks = Collections.unmodifiableList(builder.tasks);
         this.initiator = builder.initiator;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
         this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
+    }
+
+    public String getProcessDefinitionLabel() {
+        return processDefinitionLabel;
+    }
+
+    public String getProcessInstanceLabel() {
+        return processInstanceLabel;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public String getUri() {
+        return uri;
     }
 
     public List<Task> getTasks() {
@@ -86,7 +110,9 @@ public class History {
     public final static class Builder {
 
         private String processDefinitionKey;
+        private String processDefinitionLabel;
         private String processInstanceId;
+        private String processInstanceLabel;
         private List<Task> tasks;
         private User initiator;
         private Date startTime;
@@ -109,8 +135,18 @@ public class History {
             return this;
         }
 
+        public Builder processDefinitionLabel(String processDefinitionLabel) {
+            this.processDefinitionLabel = processDefinitionLabel;
+            return this;
+        }
+
         public Builder processInstanceId(String processInstanceId) {
             this.processInstanceId = processInstanceId;
+            return this;
+        }
+
+        public Builder processInstanceLabel(String processInstanceLabel) {
+            this.processInstanceLabel = processInstanceLabel;
             return this;
         }
 

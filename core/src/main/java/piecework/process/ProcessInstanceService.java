@@ -253,7 +253,9 @@ public class ProcessInstanceService {
 
         History history = new History.Builder()
             .processDefinitionKey(process.getProcessDefinitionKey())
+            .processDefinitionLabel(process.getProcessDefinitionLabel())
             .processInstanceId(instance.getProcessInstanceId())
+            .processInstanceLabel(instance.getProcessInstanceLabel())
             .startTime(instance.getStartTime())
             .endTime(instance.getEndTime())
             .initiator(initiator)
