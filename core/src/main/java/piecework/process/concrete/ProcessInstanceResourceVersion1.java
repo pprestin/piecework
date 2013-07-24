@@ -97,6 +97,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             throw new ForbiddenError();
 
         Payload payload = new Payload.Builder()
+                .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(instance.getProcessInstanceId())
                 .formData(formData)
                 .build();
@@ -114,6 +115,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             throw new ForbiddenError();
 
         Payload payload = new Payload.Builder()
+                .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(instance.getProcessInstanceId())
                 .multipartBody(body)
                 .build();
@@ -166,19 +168,22 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstance rawInstance) throws StatusCodeError {
-        Payload payload = new Payload.Builder().processInstance(rawInstance).build();
+        Process process = processService.read(rawProcessDefinitionKey);
+        Payload payload = new Payload.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstance(rawInstance).build();
         return create(request, rawProcessDefinitionKey, payload);
 	}
 	
 	@Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
-        Payload payload = new Payload.Builder().formData(formData).build();
+        Process process = processService.read(rawProcessDefinitionKey);
+        Payload payload = new Payload.Builder().processDefinitionKey(process.getProcessDefinitionKey()).formData(formData).build();
         return create(request, rawProcessDefinitionKey, payload);
 	}
 
 	@Override
 	public Response createMultipart(HttpServletRequest request, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
-        Payload payload = new Payload.Builder().multipartBody(body).build();
+        Process process = processService.read(rawProcessDefinitionKey);
+        Payload payload = new Payload.Builder().processDefinitionKey(process.getProcessDefinitionKey()).multipartBody(body).build();
         return create(request, rawProcessDefinitionKey, payload);
 	}
 

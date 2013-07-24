@@ -224,6 +224,17 @@ public class ProcessInstance implements Serializable {
     }
 
     @JsonIgnore
+    public ManyMap<String, Attachment> getAttachmentMap() {
+        ManyMap<String, Attachment> map = new ManyMap<String, Attachment>();
+        if (attachments != null && !attachments.isEmpty()) {
+            for (Attachment attachment : attachments) {
+                map.putOne(attachment.getName(), attachment);
+            }
+        }
+        return map;
+    }
+
+    @JsonIgnore
     public Map<String, FormValue> getFormValueMap() {
         Map<String, FormValue> map = new HashMap<String, FormValue>();
         if (formData != null && !formData.isEmpty()) {

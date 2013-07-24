@@ -169,6 +169,9 @@ public class ProcessInstanceService {
         if (storedAttachments != null && !storedAttachments.isEmpty()) {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             for (Attachment storedAttachment : storedAttachments) {
+                if (storedAttachment.isFieldAttachment())
+                    continue;
+
                 String userId = storedAttachment.getUserId();
 
                 if (StringUtils.isNotEmpty(paramName) && (StringUtils.isEmpty(storedAttachment.getName()) || !paramName.equals(storedAttachment.getName())))

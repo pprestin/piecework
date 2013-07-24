@@ -76,7 +76,11 @@ public class Attachment implements Serializable {
 
 	@XmlAttribute
     private final String uri;
-	
+
+    @XmlTransient
+    @JsonIgnore
+    private final boolean isFieldAttachment;
+
 	@XmlTransient
     @JsonIgnore
     private final boolean isDeleted;
@@ -95,9 +99,10 @@ public class Attachment implements Serializable {
         this.userId = builder.userId;
         this.ordinal = builder.ordinal;
         this.lastModified = builder.lastModified;
+        this.isFieldAttachment = builder.isFieldAttachment;
         this.isDeleted = builder.isDeleted;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
-        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME) : null;
+        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME, builder.attachmentId) : null;
+        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME, builder.attachmentId) : null;
     }
 	
 	public String getAttachmentId() {
@@ -145,6 +150,12 @@ public class Attachment implements Serializable {
 		return uri;
 	}
 
+    @JsonIgnore
+    public boolean isFieldAttachment() {
+        return isFieldAttachment;
+    }
+
+    @JsonIgnore
 	public boolean isDeleted() {
 		return isDeleted;
 	}
@@ -162,23 +173,25 @@ public class Attachment implements Serializable {
         private String userId;
         private Date lastModified;
         private int ordinal;
+        private boolean isFieldAttachment;
         private boolean isDeleted;
 
         public Builder() {
             super();
         }
 
-        public Builder(Attachment field, Sanitizer sanitizer) {
-            this.attachmentId = sanitizer.sanitize(field.attachmentId);
-            this.name = sanitizer.sanitize(field.name);
-            this.description = sanitizer.sanitize(field.description);
-            this.contentType = field.contentType;
-            this.location = field.location;
-            this.user = field.user != null ? new User.Builder(field.user, sanitizer).build() : null;
-            this.userId = field.user != null && field.user.getUserId() != null ? sanitizer.sanitize(field.user.getUserId()) : sanitizer.sanitize(field.userId);
-            this.lastModified = field.lastModified;
-            this.ordinal = field.ordinal;
-            this.isDeleted = field.isDeleted;
+        public Builder(Attachment attachment, Sanitizer sanitizer) {
+            this.attachmentId = sanitizer.sanitize(attachment.attachmentId);
+            this.name = sanitizer.sanitize(attachment.name);
+            this.description = sanitizer.sanitize(attachment.description);
+            this.contentType = attachment.contentType;
+            this.location = attachment.location;
+            this.user = attachment.user != null ? new User.Builder(attachment.user, sanitizer).build() : null;
+            this.userId = attachment.user != null && attachment.user.getUserId() != null ? sanitizer.sanitize(attachment.user.getUserId()) : sanitizer.sanitize(attachment.userId);
+            this.lastModified = attachment.lastModified;
+            this.ordinal = attachment.ordinal;
+            this.isFieldAttachment = attachment.isFieldAttachment;
+            this.isDeleted = attachment.isDeleted;
         }
 
         public Attachment build() {
@@ -243,7 +256,12 @@ public class Attachment implements Serializable {
             this.ordinal = ordinal;
             return this;
         }
-        
+
+        public Builder fieldAttachment() {
+            this.isFieldAttachment = true;
+            return this;
+        }
+
         public Builder delete() {
             this.isDeleted = true;
             return this;

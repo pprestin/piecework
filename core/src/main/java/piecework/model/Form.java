@@ -22,6 +22,7 @@ import org.springframework.data.annotation.Id;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.util.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import java.util.*;
@@ -139,6 +140,18 @@ public class Form {
         return attachments;
     }
 
+    @JsonIgnore
+    public ManyMap<String, Attachment> getAttachmentMap() {
+        ManyMap<String, Attachment> map = new ManyMap<String, Attachment>();
+        if (attachments != null && !attachments.isEmpty()) {
+            for (Attachment attachment : attachments) {
+                map.putOne(attachment.getName(), attachment);
+            }
+        }
+        return map;
+    }
+
+    @JsonIgnore
     public Map<String, FormValue> getFormValueMap() {
         Map<String, FormValue> map = new HashMap<String, FormValue>();
         if (formData != null && !formData.isEmpty()) {
@@ -246,7 +259,7 @@ public class Form {
                 PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
                 this.attachments = new ArrayList<Attachment>(attachments.size());
                 for (Attachment attachment : attachments) {
-                    this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).build(context));
+                    this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
                 }
             }
             return this;

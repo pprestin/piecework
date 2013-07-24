@@ -57,15 +57,13 @@ public class DecoratingVisitor implements TagNodeVisitor {
         decoratorMap.putOne("body", new BodyDecorator(form));
         decoratorMap.putOne("div", new AttachmentsDecorator(form));
 
-        Map<String, FormValue> formValueMap = form.getFormValueMap();
-
-        VariableDecorator variableDecorator = new VariableDecorator(formValueMap);
+        VariableDecorator variableDecorator = new VariableDecorator(form);
         decoratorMap.putOne("span", variableDecorator);
         decoratorMap.putOne("img", variableDecorator);
         decoratorMap.putOne("ul", variableDecorator);
 
         Screen screen = form.getScreen();
-
+        Map<String, FormValue> formValueMap = variableDecorator.getFormValueMap();
         if (screen != null) {
             List<Section> sections = screen.getSections();
             if (sections != null && !sections.isEmpty()) {
@@ -280,40 +278,60 @@ public class DecoratingVisitor implements TagNodeVisitor {
     class VariableDecorator implements TagDecorator {
 
         private Map<String, FormValue> formValueMap;
+        private ManyMap<String, Attachment> attachmentManyMap;
 
-        public VariableDecorator(Map<String, FormValue> formValueMap) {
-            this.formValueMap = formValueMap;
+        public VariableDecorator(Form form) {
+            this.formValueMap = form.getFormValueMap();
+            this.attachmentManyMap = form.getAttachmentMap();
         }
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name, String variable) {
-            FormValue formValue = formValueMap.get(variable);
+            List<Attachment> attachments = attachmentManyMap.get(variable);
 
-            if (formValue != null) {
-                // Image tags are a special case update src and alt attributes
-                if (tag.getName() != null && tag.getName().equals("img")) {
-                    if (StringUtils.isNotEmpty(formValue.getValue())) {
-                        Map<String, String> attributes = new HashMap<String, String>();
-                        attributes.putAll(tag.getAttributes());
-                        attributes.put("alt", formValue.getValue());
-                        attributes.put("src", formValue.getLink());
-                        tag.setAttributes(attributes);
-                    }
-                } else if (tag.getName() != null && tag.getName().equals("ul")) {
-                    TagNode exampleTag = new TagNode("li");
-                    // Check to see if there is an example tag of how to format things
-                    TagNode[] childTags = tag.getChildTags();
-                    if (childTags != null && childTags.length > 0) {
-                        exampleTag = childTags[0];
-                    } else {
-                        TagNode anchorTag = new TagNode("a");
-                        exampleTag.addChild(anchorTag);
-                    }
+            if (tag.getName() != null && tag.getName().equals("img")) {
+                // Just grab the first attachment if it's an image tag
+                Attachment attachment = attachments != null ? attachments.iterator().next() : null;
 
-
-
-
+                if (attachment != null) {
+                    Map<String, String> attributes = new HashMap<String, String>();
+                    attributes.putAll(tag.getAttributes());
+                    attributes.put("alt", attachment.getDescription());
+                    attributes.put("src", attachment.getLink());
+                    tag.setAttributes(attributes);
+                }
+            } else if (tag.getName() != null && tag.getName().equals("ul")) {
+                TagNode exampleTag = new TagNode("li");
+                // Check to see if there is an example tag of how to format things
+                TagNode[] childTags = tag.getChildTags();
+                if (childTags != null && childTags.length > 0) {
+                    exampleTag = childTags[0];
                 } else {
+                    TagNode anchorTag = new TagNode("a");
+                    exampleTag.addChild(anchorTag);
+                }
+                tag.removeAllChildren();
+                for (Attachment attachment : attachments) {
+                    TagNode liTag = exampleTag.makeCopy();
+                    TagNode[] exampleChildren = exampleTag.getChildTags();
+                    if (exampleChildren != null) {
+                        for (TagNode exampleChild : exampleChildren) {
+                            TagNode liChild = exampleChild.makeCopy();
+
+                            if (liChild.getName() != null && liChild.getName().equalsIgnoreCase("a")) {
+                                liChild.addAttribute("href", attachment.getLink());
+                            }
+
+                            liTag.addChild(liChild);
+                        }
+                    }
+
+                    tag.addChild(liTag);
+                }
+            } else {
+
+                FormValue formValue = formValueMap.get(variable);
+                if (formValue != null) {
                     tag.removeAllChildren();
                     List<String> values = formValue.getAllValues();
 
@@ -326,9 +344,13 @@ public class DecoratingVisitor implements TagNodeVisitor {
             }
         }
 
+        public Map<String, FormValue> getFormValueMap() {
+            return formValueMap;
+        }
+
         @Override
         public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            if (variable != null && formValueMap.containsKey(variable))
+            if (variable != null && (formValueMap.containsKey(variable) || attachmentManyMap.containsKey(variable)))
                 return true;
 
             return false;

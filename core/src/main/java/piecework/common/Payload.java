@@ -37,6 +37,7 @@ public class Payload {
     private final Map<String, FormValue> formValueMap;
     private final List<Attachment> attachments;
     private final RequestDetails requestDetails;
+    private final String processDefinitionKey;
     private final String processInstanceId;
     private final String alias;
     private final String requestId;
@@ -55,6 +56,7 @@ public class Payload {
         this.formValueMap = builder.formValueMap;
         this.attachments = builder.attachments;
         this.requestDetails = builder.requestDetails;
+        this.processDefinitionKey = builder.processDefinitionKey;
         this.processInstanceId = builder.processInstanceId;
         this.alias = builder.alias;
         this.requestId = builder.requestId;
@@ -80,6 +82,10 @@ public class Payload {
 
     public Map<String, FormValue> getFormValueMap() {
         return formValueMap;
+    }
+
+    public String getProcessDefinitionKey() {
+        return processDefinitionKey;
     }
 
     public String getProcessInstanceId() {
@@ -119,6 +125,7 @@ public class Payload {
         private Map<String, FormValue> formValueMap;
         private List<Attachment> attachments;
         private RequestDetails requestDetails;
+        private String processDefinitionKey;
         private String processInstanceId;
         private String alias;
         private String requestId;
@@ -164,6 +171,11 @@ public class Payload {
 
         public Builder requestDetails(RequestDetails requestDetails) {
             this.requestDetails = requestDetails;
+            return this;
+        }
+
+        public Builder processDefinitionKey(String processDefinitionKey) {
+            this.processDefinitionKey = processDefinitionKey;
             return this;
         }
 

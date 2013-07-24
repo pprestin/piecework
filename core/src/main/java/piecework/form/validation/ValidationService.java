@@ -30,6 +30,7 @@ import piecework.identity.InternalUserDetails;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.process.concrete.ResourceHelper;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 import piecework.util.OptionResolver;
@@ -67,11 +68,13 @@ public class ValidationService {
         boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
 
 		// Only include attachments in the validation result if attachments are allowed
-		if (isAttachmentAllowed)
-			validationBuilder.attachments(submission.getAttachments());
+//		if (isAttachmentAllowed)
+//			validationBuilder.attachments(submission.getAttachments());
 
 		Map<String, FormValue> submissionValueMap = submission.getFormValueMap();
+        ManyMap<String, Attachment> submissionAttachmentMap = submission.getAttachmentMap();
         Set<String> unvalidatedFieldNames = new HashSet<String>(submissionValueMap.keySet());
+        ManyMap<String, Attachment> instanceAttachmentMap = instance != null ? instance.getAttachmentMap() : new ManyMap<String, Attachment>();
         Map<String, FormValue> instanceValueMap = instance != null ? instance.getFormValueMap() : new HashMap<String, FormValue>();
 
 //        String title = submissionValueMap.get("title");
@@ -163,7 +166,7 @@ public class ValidationService {
                                         if (unvalidatedFieldNames.contains(option.getValue())) {
                                             fieldName = option.getValue();
                                             unvalidatedFieldNames.remove(fieldName);
-                                            validateField(validationId, field, fieldMap, submissionValueMap, instanceValueMap, validationBuilder);
+                                            validateField(validationId, field, fieldMap, submissionValueMap, submissionAttachmentMap, instanceValueMap, instanceAttachmentMap, validationBuilder);
                                         }
                                     }
                                 }
@@ -174,7 +177,7 @@ public class ValidationService {
                         } else {
                             // Remove any form values from the attachment map, since this has a field already
                             unvalidatedFieldNames.remove(fieldName);
-                            validateField(validationId, field, fieldMap, submissionValueMap, instanceValueMap, validationBuilder);
+                            validateField(validationId, field, fieldMap, submissionValueMap, submissionAttachmentMap, instanceValueMap, instanceAttachmentMap, validationBuilder);
                         }
                     }
                 }
@@ -182,38 +185,49 @@ public class ValidationService {
         }
 
         if (isAttachmentAllowed) {
-            List<FormValue> formValues = submission.getFormData();
-            if (formValues != null && !formValues.isEmpty()) {
-                String userId = null;
-                InternalUserDetails userDetails = helper.getAuthenticatedPrincipal();
-                if (userDetails != null)
-                    userId = userDetails.getInternalId();
 
-                for (FormValue formValue : formValues) {
-                    if (unvalidatedFieldNames.contains(formValue.getName())) {
-                        List<String> values = formValue.getAllValues();
-
-                        if (values != null && !values.isEmpty()) {
-                            for (String value : values) {
-                                Attachment.Builder attachmentBuilder = new Attachment.Builder()
-                                        .name(formValue.getName())
-                                        .description(value)
-                                        .lastModified(new Date())
-                                        .userId(userId);
-
-                                if (formValue.getContentType() != null) {
-                                    attachmentBuilder
-                                        .contentType(formValue.getContentType())
-                                        .location(formValue.getLocation());
-                                } else {
-                                    attachmentBuilder.contentType("text/plain");
-                                }
-                                validationBuilder.attachment(attachmentBuilder.build());
-                            }
-                        }
+            if (submissionAttachmentMap != null && !submissionAttachmentMap.isEmpty()) {
+                for (List<Attachment> attachments : submissionAttachmentMap.values()) {
+                    if (attachments == null || attachments.isEmpty())
+                        continue;
+                    for (Attachment attachment : attachments) {
+                        validationBuilder.attachment(attachment);
                     }
                 }
             }
+
+//            List<FormValue> formValues = submission.getFormData();
+//            if (formValues != null && !formValues.isEmpty()) {
+//                String userId = null;
+//                InternalUserDetails userDetails = helper.getAuthenticatedPrincipal();
+//                if (userDetails != null)
+//                    userId = userDetails.getInternalId();
+//
+//                for (FormValue formValue : formValues) {
+//                    if (unvalidatedFieldNames.contains(formValue.getName())) {
+//                        List<String> values = formValue.getAllValues();
+//
+//                        if (values != null && !values.isEmpty()) {
+//                            for (String value : values) {
+//                                Attachment.Builder attachmentBuilder = new Attachment.Builder()
+//                                        .name(formValue.getName())
+//                                        .description(value)
+//                                        .lastModified(new Date())
+//                                        .userId(userId);
+//
+//                                if (formValue.getContentType() != null) {
+//                                    attachmentBuilder
+//                                        .contentType(formValue.getContentType())
+//                                        .location(formValue.getLocation());
+//                                } else {
+//                                    attachmentBuilder.contentType("text/plain");
+//                                }
+//                                validationBuilder.attachment(attachmentBuilder.build());
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
 		
 		if (LOG.isDebugEnabled()) {
@@ -224,7 +238,9 @@ public class ValidationService {
 		return validationBuilder.build();
 	}
 
-    private void validateField(String validationId, Field field, Map<String, Field> fieldMap, Map<String, FormValue> submissionValueMap, Map<String, FormValue> instanceValueMap, FormValidation.Builder validationBuilder) {
+
+    private void validateField(String validationId, Field field, Map<String, Field> fieldMap, Map<String, FormValue> submissionValueMap, ManyMap<String, Attachment> submissionAttachmentMap,
+                               Map<String, FormValue> instanceValueMap, ManyMap<String, Attachment> instanceAttachmentMap, FormValidation.Builder validationBuilder) {
         boolean hasErrorResult = false;
         String fieldName = field.getName();
 
@@ -411,6 +427,21 @@ public class ValidationService {
                 } else if (field.getMinInputs() > counter) {
                     hasErrorResult = true;
                     validationBuilder.error(fieldName, "At least " + field.getMinInputs() + " values are required");
+                }
+            }
+        } else if (isFile) {
+            List<Attachment> attachments = submissionAttachmentMap.remove(fieldName);
+            List<Attachment> previousAttachments = instanceAttachmentMap.get(fieldName);
+
+            boolean hasAttachments = attachments != null && !attachments.isEmpty();
+            boolean hasPreviousAttachments = previousAttachments != null && !previousAttachments.isEmpty();
+
+            if (!hasAttachments && !hasPreviousAttachments && field.isRequired()) {
+                validationBuilder.error(fieldName, "Field is required");
+            } else if (hasAttachments) {
+                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                for (Attachment attachment : attachments) {
+                    validationBuilder.attachment(new Attachment.Builder(attachment, passthroughSanitizer).fieldAttachment().build());
                 }
             }
 

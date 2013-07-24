@@ -72,7 +72,14 @@ public class FormSubmission {
         this.submissionId = builder.submissionId;
         this.submissionType = builder.submissionType;
         this.requestId = builder.requestId;
-        this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+
+        List<FormValue> formValues = new ArrayList<FormValue>();
+        if (builder.formValueBuilderMap != null) {
+            for (FormValue.Builder formValueBuilder : builder.formValueBuilderMap.values()) {
+                formValues.add(formValueBuilder.build());
+            }
+        }
+        this.formData = Collections.unmodifiableList(formValues);
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissionDate = builder.submissionDate;
         this.submitterId = builder.submitterId;
@@ -95,6 +102,18 @@ public class FormSubmission {
         return formData;
     }
 
+    @JsonIgnore
+    public ManyMap<String, Attachment> getAttachmentMap() {
+        ManyMap<String, Attachment> map = new ManyMap<String, Attachment>();
+        if (attachments != null && !attachments.isEmpty()) {
+            for (Attachment attachment : attachments) {
+                map.putOne(attachment.getName(), attachment);
+            }
+        }
+        return map;
+    }
+
+    @JsonIgnore
     public Map<String, FormValue> getFormValueMap() {
         Map<String, FormValue> map = new HashMap<String, FormValue>();
     	if (formData != null && !formData.isEmpty()) {
@@ -140,7 +159,7 @@ public class FormSubmission {
         private String submissionId;
         private String submissionType;
         private String requestId;
-        private List<FormValue> formData;
+        private Map<String, FormValue.Builder> formValueBuilderMap = new HashMap<String, FormValue.Builder>();
         private List<Attachment> attachments;
         private Date submissionDate;
         private String submitterId;
@@ -157,9 +176,8 @@ public class FormSubmission {
             this.submissionId = sanitizer.sanitize(submissionId);
 
             if (submission.formData != null && !submission.formData.isEmpty()) {
-                this.formData = new ArrayList<FormValue>(submission.formData.size());
                 for (FormValue formValue : submission.formData) {
-                    this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
+                    formValueBuilderMap.put(formValue.getName(), new FormValue.Builder(formValue, sanitizer));
                 }
             }
             
@@ -200,12 +218,12 @@ public class FormSubmission {
             return this;
         }
 
-        public Builder formContent(String contentType, String key, String value, String location) {
-            if (this.formData == null)
-                this.formData = new ArrayList<FormValue>();
-            this.formData.add(new FormValue.Builder().contentType(contentType).name(key).value(value).location(location).build());
-            return this;
-        }
+//        public Builder formContent(String contentType, String key, String value, String location) {
+//            if (this.formData == null)
+//                this.formData = new ArrayList<FormValue>();
+//            this.formData.add(new FormValue.Builder().contentType(contentType).name(key).value(value).location(location).build());
+//            return this;
+//        }
 
         public Builder formData(Map<String, List<String>> formData) {
             for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
@@ -215,25 +233,28 @@ public class FormSubmission {
         }
 
         public Builder formValue(String key, String ... values) {
-            if (this.formData == null)
-                this.formData = new ArrayList<FormValue>();
-            if (key != null)
-                this.formData.add(new FormValue.Builder().name(key).values(values).build());
+            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
+            if (formValueBuilder == null)
+                formValueBuilder = new FormValue.Builder();
+
+            if (values != null) {
+                for (String value : values) {
+                    formValueBuilder.value(value);
+                }
+            }
+
             return this;
         }
 
         public Builder formValue(String key, List<String> values) {
-            if (this.formData == null)
-                this.formData = new ArrayList<FormValue>();
-            this.formData.add(new FormValue.Builder().name(key).values(values).build());
-            return this;
+            if (values == null)
+                formValue(key);
+
+            return formValue(key, values.toArray(new String[values.size()]));
         }
 
         public Builder formValue(FormValue formValue) {
-            if (this.formData == null)
-                this.formData = new ArrayList<FormValue>();
-            this.formData.add(formValue);
-            return this;
+            return formValue(formValue.getName(), formValue.getAllValues());
         }
 
         public Builder formValueMap(Map<String, FormValue> formValueMap) {
