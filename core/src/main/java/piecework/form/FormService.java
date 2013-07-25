@@ -26,12 +26,16 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
+import piecework.form.handler.SubmissionHandler;
+import piecework.form.validation.SubmissionTemplate;
+import piecework.form.validation.SubmissionTemplateFactory;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.common.Payload;
 import piecework.persistence.ContentRepository;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
@@ -81,6 +85,12 @@ public class FormService {
 
     @Autowired
     ResponseHandler responseHandler;
+
+    @Autowired
+    SubmissionHandler submissionHandler;
+
+    @Autowired
+    SubmissionTemplateFactory submissionTemplateFactory;
 
     @Autowired
     Sanitizer sanitizer;
@@ -256,17 +266,16 @@ public class FormService {
 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-        Screen screen = formRequest.getScreen();
+        Task task = formRequest.getTaskId() != null ? processInstanceService.userTask(process, formRequest.getTaskId()) : null;
+        ProcessInstance instance = null;
 
-        Payload payload = new Payload.Builder()
-                .requestDetails(requestDetails)
-                .requestId(requestId)
-                .processInstanceId(formRequest.getProcessInstanceId())
-                .taskId(formRequest.getTaskId())
-                .multipartBody(body)
-                .build();
+        if (task != null && task.getProcessInstanceId() != null)
+            instance = processInstanceService.read(process, task.getProcessInstanceId());
 
-        ProcessInstance save = processInstanceService.submit(process, screen, payload);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        Submission submission = submissionHandler.handle(process, template, body);
+
+        processInstanceService.save(process, instance, task, template, submission);
 
         return responseHandler.redirect(formRequest, viewContext);
     }
@@ -279,18 +288,18 @@ public class FormService {
 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-        Screen screen = formRequest.getScreen();
 
-        Payload payload = new Payload.Builder()
-                .requestDetails(requestDetails)
-                .requestId(requestId)
-                .processInstanceId(formRequest.getProcessInstanceId())
-                .taskId(formRequest.getTaskId())
-                .multipartBody(body)
-                .build();
+        Task task = formRequest.getTaskId() != null ? processInstanceService.userTask(process, formRequest.getTaskId()) : null;
+        ProcessInstance instance = null;
+
+        if (task != null && task.getProcessInstanceId() != null)
+            instance = processInstanceService.read(process, task.getProcessInstanceId());
+
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        Submission submission = submissionHandler.handle(process, template, body);
 
         try {
-            ProcessInstance stored = processInstanceService.submit(process, screen, payload);
+            ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
 
             FormRequest nextFormRequest = null;
 
@@ -328,19 +337,16 @@ public class FormService {
 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-        Screen screen = formRequest.getScreen();
+        Task task = formRequest.getTaskId() != null ? processInstanceService.userTask(process, formRequest.getTaskId()) : null;
+        ProcessInstance instance = null;
 
-        Payload payload = new Payload.Builder()
-                .requestDetails(requestDetails)
-                .requestId(requestId)
-                .taskId(formRequest.getTaskId())
+        if (task != null && task.getProcessInstanceId() != null)
+            instance = processInstanceService.read(process, task.getProcessInstanceId());
 
-                .processInstanceId(formRequest.getProcessInstanceId())
-                .validationId(validationId)
-                .multipartBody(body)
-                .build();
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        Submission submission = submissionHandler.handle(process, template, body);
 
-        processInstanceService.validate(process, screen, payload, true);
+        processInstanceService.validate(process, instance, task, template, submission, true);
 
         return Response.noContent().build();
     }

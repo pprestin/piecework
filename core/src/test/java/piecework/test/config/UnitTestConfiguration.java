@@ -216,7 +216,7 @@ public class UnitTestConfiguration {
 
 	}
 
-    public class SubmissionRepositoryStub extends MongoRepositoryStub<FormSubmission> implements SubmissionRepository {
+    public class SubmissionRepositoryStub extends MongoRepositoryStub<Submission> implements SubmissionRepository {
 
     }
 

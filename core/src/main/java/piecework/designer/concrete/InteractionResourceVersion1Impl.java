@@ -102,7 +102,7 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 				.build(getViewContext());
 		
 		// Ensure that a reference to the interaction is added on the process
-		Process.Builder processBuilder = new Process.Builder(process, passthroughSanitizer);
+		Process.Builder processBuilder = new Process.Builder(process, passthroughSanitizer, true);
 		processBuilder.interaction(result);
 		processRespository.save(processBuilder.build());
 		

@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.persistence;
-
-import org.springframework.data.mongodb.repository.MongoRepository;
-import piecework.model.Submission;
+package piecework.exception;
 
 /**
  * @author James Renfro
  */
-public interface SubmissionRepository extends MongoRepository<Submission, String> {
+public class ValidationRuleException extends Exception {
+
+    public ValidationRuleException() {
+        super();
+    }
+
+    public ValidationRuleException(String message) {
+        super(message);
+    }
 
 }

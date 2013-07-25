@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import piecework.model.Submission;
 
 /**
  * @author James Renfro
@@ -23,12 +24,11 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 @Path("instance")
 public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
 
-
     @POST
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes({"application/xml","application/json"})
-    Response create(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, ProcessInstance instance) throws StatusCodeError;
+    Response create(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, Submission submission) throws StatusCodeError;
 
     @POST
 	@Path("{processDefinitionKey}")
@@ -62,7 +62,6 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Path("")
     @RolesAllowed({AuthorizationRole.OVERSEER})
     SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
-
 
     /*
      * SUBRESOURCES

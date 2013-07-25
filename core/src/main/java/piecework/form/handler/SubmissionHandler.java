@@ -22,22 +22,23 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.common.UuidGenerator;
+import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetails;
-import piecework.model.Attachment;
-import piecework.model.Content;
+import piecework.model.*;
+import piecework.model.Process;
 import piecework.persistence.AttachmentRepository;
 import piecework.persistence.ContentRepository;
-import piecework.common.Payload;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.exception.StatusCodeError;
-import piecework.model.FormSubmission;
 import piecework.persistence.SubmissionRepository;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -46,9 +47,6 @@ import java.util.List;
 public class SubmissionHandler {
 
     private static final Logger LOG = Logger.getLogger(SubmissionHandler.class);
-
-    @Autowired
-    AttachmentRepository attachmentRepository;
 
     @Autowired
     ContentRepository contentRepository;
@@ -65,95 +63,180 @@ public class SubmissionHandler {
     @Autowired
     UuidGenerator uuidGenerator;
 
-    public FormSubmission handle(Payload payload, boolean isAttachmentAllowed) throws StatusCodeError {
-        String requestId = payload.getRequestId();
+    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission) {
+        Submission.Builder submissionBuilder = new Submission.Builder(rawSubmission, sanitizer)
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .submissionDate(new Date())
+                .submitterId(helper.getAuthenticatedSystemOrUserId());
 
-        FormSubmission.Builder submissionBuilder = new FormSubmission.Builder()
-                .requestId(requestId)
-                .submissionDate(new Date());
-//                .submissionType(submissionType);
-
-        switch (payload.getType()) {
-            case INSTANCE:
-                submissionBuilder.formData(payload.getInstance().getFormValueContentMap());
-                submissionBuilder.attachments(payload.getInstance().getAttachments());
-                break;
-            case FORMDATA:
-                submissionBuilder.formData(payload.getFormData());
-                break;
-            case FORMVALUEMAP:
-                submissionBuilder.formValueMap(payload.getFormValueMap());
-                break;
-            case MULTIPART:
-                multipart(payload.getProcessDefinitionKey(), submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
-                break;
-        }
-
-        FormSubmission result = submissionBuilder.build();
-        return submissionRepository.save(result);
+        return submissionRepository.save(submissionBuilder.build());
     }
 
-    private void multipart(String processDefinitionKey, FormSubmission.Builder submissionBuilder, MultipartBody body, boolean isAttachmentAllowed) {
-        InternalUserDetails userDetails = helper.getAuthenticatedPrincipal();
-        String userId = userDetails != null ? userDetails.getInternalId() : null;
-        List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
-        if (attachments != null && !attachments.isEmpty()) {
-            for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
-                ContentDisposition contentDisposition = attachment.getContentDisposition();
-                MediaType contentType = attachment.getContentType();
+    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap) {
+        return handle(process, template, formValueContentMap, null);
+    }
 
-                // Don't process if there's no content type
-                if (contentType == null)
-                    continue;
+    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap, FormRequest formRequest) {
+        Submission.Builder submissionBuilder = new Submission.Builder()
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .requestId(formRequest != null ? formRequest.getRequestId() : null)
+                .submissionDate(new Date())
+                .submitterId(helper.getAuthenticatedSystemOrUserId());
 
-                String contentId = sanitizer.sanitize(attachment.getContentId());
-                String name = sanitizer.sanitize(attachment.getDataHandler().getName());
-
-                if (contentType.equals(MediaType.TEXT_PLAIN_TYPE)) {
-                    LOG.info("Processing multipart with content type " + contentType.toString() + " and content id " + attachment.getContentId());
-                    // Treat as a String form value
-
-                    String value = sanitizer.sanitize(attachment.getObject(String.class));
-                    submissionBuilder.formValue(name, value);
-                } else if (contentDisposition != null && isAttachmentAllowed) {
-                    String variableName = contentDisposition.getParameter("name");
-                    String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
-                    if (StringUtils.isNotEmpty(filename)) {
-                        LOG.info("Processing multipart with content type " + contentType.toString() + " content id " + attachment.getContentId() + " and filename " + filename);
-                        try {
-                            String directory = StringUtils.isNotEmpty(processDefinitionKey) ? processDefinitionKey : "submissions";
-                            String location = "/" + directory + "/" + uuidGenerator.getNextId();
-
-                            Content content = new Content.Builder()
-                                    .contentType(contentType.toString())
-                                    .filename(filename)
-                                    .location(location)
-                                    .inputStream(attachment.getDataHandler().getInputStream())
-                                    .build();
-
-                            content = contentRepository.save(content);
-
-                            Attachment attachmentDetails = new Attachment.Builder()
-                                    .contentType(contentType.toString())
-                                    .processDefinitionKey(processDefinitionKey)
-                                    .description(filename)
-                                    .location(content.getLocation())
-                                    .userId(userId)
-                                    .name(variableName)
-                                    .build();
-                            attachmentRepository.save(attachmentDetails);
-
-                            submissionBuilder.attachment(attachmentDetails);
-
-                            //submissionBuilder.formContent(contentType.toString(), variableName, filename, content.getLocation());
-
-                        } catch (IOException e) {
-                            LOG.error("Unable to save this attachment with filename: " + filename);
-                        }
+        if (formValueContentMap != null && !formValueContentMap.isEmpty()) {
+            for (Map.Entry<String, List<String>> entry : formValueContentMap.entrySet()) {
+                String key = sanitizer.sanitize(entry.getKey());
+                List<String> rawValues = entry.getValue();
+                if (rawValues != null) {
+                    for (String rawValue : rawValues) {
+                        submissionBuilder.formValue(key, sanitizer.sanitize(rawValue));
                     }
                 }
             }
         }
+
+        return submissionRepository.save(submissionBuilder.build());
     }
+
+    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body) {
+        return handle(process, template, body, null);
+    }
+
+    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body, FormRequest formRequest) {
+        Submission.Builder submissionBuilder = new Submission.Builder()
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .requestId(formRequest != null ? formRequest.getRequestId() : null)
+                .submissionDate(new Date())
+                .submitterId(helper.getAuthenticatedSystemOrUserId());
+
+        String userId = helper.getAuthenticatedSystemOrUserId();
+        List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
+        if (attachments != null && !attachments.isEmpty()) {
+            for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
+                MediaType mediaType = attachment.getContentType();
+
+                // Don't process if there's no content type
+                if (mediaType == null)
+                    continue;
+
+                if (mediaType.equals(MediaType.TEXT_PLAIN_TYPE))
+                    handlePlaintext(template, submissionBuilder, attachment, userId);
+                else
+                    handleOtherContentTypes(template, submissionBuilder, attachment, userId);
+            }
+        }
+        return submissionRepository.save(submissionBuilder.build());
+    }
+
+    private void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) {
+        Set<String> acceptableFieldNames = template.getAcceptable();
+        boolean isAttachedAllowed = template.isAttachmentAllowed();
+
+        String contentType = MediaType.TEXT_PLAIN;
+        if (LOG.isDebugEnabled())
+            LOG.debug("Processing multipart with content type " + contentType + " and content id " + attachment.getContentId());
+
+        String name = sanitizer.sanitize(attachment.getDataHandler().getName());
+        String value = sanitizer.sanitize(attachment.getObject(String.class));
+
+        if (acceptableFieldNames.contains(name)) {
+            submissionBuilder.formValue(name, value);
+        } else if (isAttachedAllowed) {
+            Attachment attachmentDetails = new Attachment.Builder()
+                    .contentType(contentType)
+                    .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
+                    .description(value)
+                    .userId(userId)
+                    .name(name)
+                    .build();
+            submissionBuilder.attachment(attachmentDetails);
+        } else {
+            LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
+        }
+    }
+
+    private void handleOtherContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) {
+        ContentDisposition contentDisposition = attachment.getContentDisposition();
+        if (contentDisposition != null) {
+            MediaType mediaType = attachment.getContentType();
+            String contentType = mediaType.toString();
+            String name = sanitizer.sanitize(contentDisposition.getParameter("name"));
+            String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
+            if (StringUtils.isNotEmpty(filename)) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Processing multipart with content type " + contentType + " content id " + attachment.getContentId() + " and filename " + filename);
+                try {
+                    Set<String> acceptableFieldNames = template.getAcceptable();
+                    boolean isAttachedAllowed = template.isAttachmentAllowed();
+
+                    if (acceptableFieldNames.contains(name) || isAttachedAllowed) {
+                        String directory = StringUtils.isNotEmpty(submissionBuilder.getProcessDefinitionKey()) ? submissionBuilder.getProcessDefinitionKey() : "submissions";
+                        String location = "/" + directory + "/" + uuidGenerator.getNextId();
+
+                        Content content = new Content.Builder()
+                                .contentType(contentType)
+                                .filename(filename)
+                                .location(location)
+                                .inputStream(attachment.getDataHandler().getInputStream())
+                                .build();
+
+                        content = contentRepository.save(content);
+
+                        if (acceptableFieldNames.contains(name)) {
+                            FormValueDetail detail = new FormValueDetail.Builder()
+                                    .location(content.getLocation())
+                                    .contentType(contentType)
+                                    .build();
+
+                            submissionBuilder.formValueAndDetail(name, filename, detail);
+                        } else if (isAttachedAllowed) {
+                            Attachment attachmentDetails = new Attachment.Builder()
+                                    .contentType(contentType)
+                                    .location(content.getLocation())
+                                    .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
+                                    .description(filename)
+                                    .userId(userId)
+                                    .name(name)
+                                    .build();
+                            submissionBuilder.attachment(attachmentDetails);
+                        }
+                    } else {
+                       LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
+                    }
+                } catch (IOException e) {
+                    LOG.error("Unable to save this attachment with filename: " + filename, e);
+                }
+            }
+        }
+    }
+
+//    public Submission handle(Payload payload, boolean isAttachmentAllowed) throws StatusCodeError {
+//        String requestId = payload.getRequestId();
+//
+//        Submission.Builder submissionBuilder = new Submission.Builder()
+//                .requestId(requestId)
+//                .submissionDate(new Date())
+//                .submitterId(helper.getAuthenticatedSystemOrUserId());
+////                .submissionType(submissionType);
+//
+//        switch (payload.getType()) {
+//            case INSTANCE:
+//                submissionBuilder.formData(payload.getInstance().getFormValueContentMap());
+//                submissionBuilder.attachments(payload.getInstance().getAttachments());
+//                break;
+//            case FORMDATA:
+//                submissionBuilder.formData(payload.getFormData());
+//                break;
+//            case FORMVALUEMAP:
+//                submissionBuilder.formValueMap(payload.getFormValueMap());
+//                break;
+//            case MULTIPART:
+//                multipart(payload.getProcessDefinitionKey(), submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
+//                break;
+//        }
+//
+//        Submission result = submissionBuilder.build();
+//        return submissionRepository.save(result);
+//    }
 
 }

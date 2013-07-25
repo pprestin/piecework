@@ -32,6 +32,10 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
+import piecework.form.handler.ScreenHandler;
+import piecework.form.handler.SubmissionHandler;
+import piecework.form.validation.SubmissionTemplate;
+import piecework.form.validation.SubmissionTemplateFactory;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.model.ProcessExecution;
 import piecework.engine.exception.ProcessEngineException;
@@ -71,7 +75,16 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     RequestHandler requestHandler;
-	
+
+    @Autowired
+    ScreenHandler screenHandler;
+
+    @Autowired
+    SubmissionHandler submissionHandler;
+
+    @Autowired
+    SubmissionTemplateFactory submissionTemplateFactory;
+
 	@Autowired
 	Sanitizer sanitizer;
 
@@ -93,16 +106,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
 
-        if (!processInstanceService.userHasTask(process, instance, true))
+        Task task = processInstanceService.userTask(process, instance, true);
+        if (task == null)
             throw new ForbiddenError();
 
-        Payload payload = new Payload.Builder()
-                .processDefinitionKey(process.getProcessDefinitionKey())
-                .processInstanceId(instance.getProcessInstanceId())
-                .formData(formData)
-                .build();
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
+        Submission submission = submissionHandler.handle(process, template, formData);
 
-        processInstanceService.attach(process, null, payload);
+        processInstanceService.attach(process, instance, task, template, submission);
         return Response.noContent().build();
     }
 
@@ -111,16 +122,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
 
-        if (!processInstanceService.userHasTask(process, instance, true))
+        Task task = processInstanceService.userTask(process, instance, true);
+        if (task == null)
             throw new ForbiddenError();
 
-        Payload payload = new Payload.Builder()
-                .processDefinitionKey(process.getProcessDefinitionKey())
-                .processInstanceId(instance.getProcessInstanceId())
-                .multipartBody(body)
-                .build();
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
+        Submission submission = submissionHandler.handle(process, template, body);
 
-        processInstanceService.attach(process, null, payload);
+        processInstanceService.attach(process, instance, task, template, submission);
         return Response.noContent().build();
     }
 
@@ -167,24 +176,42 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, ProcessInstance rawInstance) throws StatusCodeError {
+	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, Submission rawSubmission) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        Payload payload = new Payload.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstance(rawInstance).build();
-        return create(request, rawProcessDefinitionKey, payload);
+
+        RequestDetails requestDetails = requestDetails(request);
+        FormRequest formRequest = requestHandler.create(requestDetails, process);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        Submission submission = submissionHandler.handle(process, template, rawSubmission);
+        ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
+
+        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
 	}
 	
 	@Override
 	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        Payload payload = new Payload.Builder().processDefinitionKey(process.getProcessDefinitionKey()).formData(formData).build();
-        return create(request, rawProcessDefinitionKey, payload);
+
+        RequestDetails requestDetails = requestDetails(request);
+        FormRequest formRequest = requestHandler.create(requestDetails, process);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        Submission submission = submissionHandler.handle(process, template, formData);
+        ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
+
+        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
 	}
 
 	@Override
 	public Response createMultipart(HttpServletRequest request, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        Payload payload = new Payload.Builder().processDefinitionKey(process.getProcessDefinitionKey()).multipartBody(body).build();
-        return create(request, rawProcessDefinitionKey, payload);
+
+        RequestDetails requestDetails = requestDetails(request);
+        FormRequest formRequest = requestHandler.create(requestDetails, process);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        Submission submission = submissionHandler.handle(process, template, body);
+        ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
+
+        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
 	}
 
     @Override
@@ -279,19 +306,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public String getVersion() {
         return processInstanceService.getVersion();
-    }
-
-    private Response create(HttpServletRequest request, String rawProcessDefinitionKey, Payload payload) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = processInstanceService.getProcess(processDefinitionKey);
-
-        RequestDetails requestDetails = requestDetails(request);
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
-        Screen screen = formRequest.getScreen();
-
-        ProcessInstance instance = processInstanceService.submit(process, screen, payload);
-
-        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
     }
 
     private RequestDetails requestDetails(HttpServletRequest request) {

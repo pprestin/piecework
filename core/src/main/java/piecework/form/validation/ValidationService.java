@@ -16,24 +16,17 @@
 package piecework.form.validation;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
-import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import piecework.Constants;
 import piecework.Registry;
-import piecework.identity.InternalUserDetails;
+import piecework.exception.ValidationRuleException;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.process.concrete.ResourceHelper;
-import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ConstraintUtil;
-import piecework.util.ManyMap;
-import piecework.util.OptionResolver;
 
 import com.google.common.collect.Sets;
 
@@ -55,11 +48,39 @@ public class ValidationService {
     @Autowired
     InternalUserDetailsService userDetailsService;
 
-    public FormValidation validate(FormSubmission submission, ProcessInstance instance, Screen screen) {
+
+    public FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission) {
+        FormValidation.Builder validationBuilder = new FormValidation.Builder().instance(instance).submission(submission);
+
+        List<ValidationRule> rules = template.getRules();
+
+        if (rules != null) {
+            Set<String> acceptableFieldNames = new HashSet<String>(template.getAcceptable());
+            Map<String, FormValue> formValueMap = submission.getFormValueMap();
+            for (ValidationRule rule : rules) {
+                try {
+                    rule.evaluate(formValueMap);
+                } catch (ValidationRuleException e) {
+                    validationBuilder.error(rule.getName(), e.getMessage());
+                    acceptableFieldNames.remove(rule.getName());
+                }
+            }
+            for (String acceptable : acceptableFieldNames) {
+                FormValue formValue = formValueMap.get(acceptable);
+                if (formValue != null)
+                    validationBuilder.formValue(formValue);
+            }
+        }
+
+        return validationBuilder.build();
+    }
+
+
+    /*public FormValidation validate(Submission submission, ProcessInstance instance, Screen screen) {
         return validate(submission, instance, screen, null);
     }
 	
-	public FormValidation validate(FormSubmission submission, ProcessInstance instance, Screen screen, String validationId) {
+	public FormValidation validate(Submission submission, ProcessInstance instance, Screen screen, String validationId) {
 		
 		long start = System.currentTimeMillis();
 		
@@ -72,7 +93,7 @@ public class ValidationService {
 //			validationBuilder.attachments(submission.getAttachments());
 
 		Map<String, FormValue> submissionValueMap = submission.getFormValueMap();
-        ManyMap<String, Attachment> submissionAttachmentMap = submission.getAttachmentMap();
+//        ManyMap<String, Attachment> submissionAttachmentMap = submission.getAttachmentMap();
         Set<String> unvalidatedFieldNames = new HashSet<String>(submissionValueMap.keySet());
         ManyMap<String, Attachment> instanceAttachmentMap = instance != null ? instance.getAttachmentMap() : new ManyMap<String, Attachment>();
         Map<String, FormValue> instanceValueMap = instance != null ? instance.getFormValueMap() : new HashMap<String, FormValue>();
@@ -245,9 +266,9 @@ public class ValidationService {
         String fieldName = field.getName();
 
         FormValue formValue = submissionValueMap.get(fieldName);
-        List<String> values = formValue != null ? formValue.getAllValues() : null;
+        List<String> values = formValue != null ? formValue.getValues() : null;
         FormValue previousFormValue = instanceValueMap != null ? instanceValueMap.get(fieldName) : null;
-        List<String> previousValues = previousFormValue != null ? previousFormValue.getAllValues() : null;
+        List<String> previousValues = previousFormValue != null ? previousFormValue.getValues() : null;
         String inputType = field.getType();
 
         boolean isEmailAddress = false;
@@ -505,7 +526,7 @@ public class ValidationService {
                     validationBuilder.formValue(formValue);
             }
         }
-    }
+    }   */
 
 	private static boolean isFullyEmpty(List<String> list) {
         if (list == null || list.size() == 0) {

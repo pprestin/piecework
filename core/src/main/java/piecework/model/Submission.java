@@ -31,22 +31,27 @@ import javax.xml.bind.annotation.*;
 /**
  * @author James Renfro
  */
-@XmlRootElement(name = FormSubmission.Constants.ROOT_ELEMENT_NAME)
+@XmlRootElement(name = Submission.Constants.ROOT_ELEMENT_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = FormSubmission.Constants.TYPE_NAME)
+@XmlType(name = Submission.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "submission")
-public class FormSubmission {
+public class Submission {
 
-    @XmlAttribute
-    @XmlID
+    @XmlTransient
     @Id
     private final String submissionId;
 
-    @XmlTransient
-    private final String submissionType;
+    @XmlAttribute
+    private final String alias;
+
+    @XmlAttribute
+    private final String processDefinitionKey;
 
     @XmlElement
+    private final String processInstanceLabel;
+
+    @XmlTransient
     private final String requestId;
 
     @XmlElementWrapper(name="formData")
@@ -55,7 +60,6 @@ public class FormSubmission {
 
     @XmlElementWrapper(name="attachments")
     @XmlElementRef
-    @DBRef
     private final List<Attachment> attachments;
 
     @XmlTransient
@@ -64,14 +68,16 @@ public class FormSubmission {
     @XmlTransient
     private final String submitterId;
 
-    private FormSubmission() {
-        this(new FormSubmission.Builder());
+    private Submission() {
+        this(new Submission.Builder());
     }
 
-    private FormSubmission(FormSubmission.Builder builder) {
+    private Submission(Submission.Builder builder) {
         this.submissionId = builder.submissionId;
-        this.submissionType = builder.submissionType;
+        this.processDefinitionKey = builder.processDefinitionKey;
+        this.alias = builder.alias;
         this.requestId = builder.requestId;
+        this.processInstanceLabel = builder.processInstanceLabel;
 
         List<FormValue> formValues = new ArrayList<FormValue>();
         if (builder.formValueBuilderMap != null) {
@@ -79,38 +85,40 @@ public class FormSubmission {
                 formValues.add(formValueBuilder.build());
             }
         }
+        this.attachments = Collections.unmodifiableList(builder.attachments);
         this.formData = Collections.unmodifiableList(formValues);
-        this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
         this.submissionDate = builder.submissionDate;
         this.submitterId = builder.submitterId;
     }
 
+    @JsonIgnore
     public String getSubmissionId() {
         return submissionId;
     }
 
     @JsonIgnore
-    public String getSubmissionType() {
-        return submissionType;
-    }
-
     public String getRequestId() {
         return requestId;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public String getProcessDefinitionKey() {
+        return processDefinitionKey;
+    }
+
+    public String getProcessInstanceLabel() {
+        return processInstanceLabel;
     }
 
     public List<FormValue> getFormData() {
         return formData;
     }
 
-    @JsonIgnore
-    public ManyMap<String, Attachment> getAttachmentMap() {
-        ManyMap<String, Attachment> map = new ManyMap<String, Attachment>();
-        if (attachments != null && !attachments.isEmpty()) {
-            for (Attachment attachment : attachments) {
-                map.putOne(attachment.getName(), attachment);
-            }
-        }
-        return map;
+    public List<Attachment> getAttachments() {
+        return attachments;
     }
 
     @JsonIgnore
@@ -119,30 +127,13 @@ public class FormSubmission {
     	if (formData != null && !formData.isEmpty()) {
     		for (FormValue formValue : formData) {
                 String name = formValue.getName();
-                List<String> values = formValue.getAllValues();
+                List<String> values = formValue.getValues();
                 if (name != null && values != null)
     			    map.put(name, formValue);
     		}
     	}
     	return map;
     }
-
-//    public ManyMap<String, String> getFormValueContentMap() {
-//    	ManyMap<String, String> map = new ManyMap<String, String>();
-//    	if (formData != null && !formData.isEmpty()) {
-//    		for (FormValue formValue : formData) {
-//                String name = formValue.getName();
-//                List<String> values = formValue.getAllValues();
-//                if (name != null && values != null)
-//    			    map.put(name, values);
-//    		}
-//    	}
-//    	return map;
-//    }
-
-    public List<Attachment> getAttachments() {
-		return attachments;
-	}
 
     @JsonIgnore
 	public Date getSubmissionDate() {
@@ -157,8 +148,10 @@ public class FormSubmission {
     public final static class Builder {
 
         private String submissionId;
-        private String submissionType;
         private String requestId;
+        private String processDefinitionKey;
+        private String processInstanceLabel;
+        private String alias;
         private Map<String, FormValue.Builder> formValueBuilderMap = new HashMap<String, FormValue.Builder>();
         private List<Attachment> attachments;
         private Date submissionDate;
@@ -166,31 +159,36 @@ public class FormSubmission {
 
         public Builder() {
             super();
+            this.attachments = new ArrayList<Attachment>();
         }
 
-        public Builder(FormSubmission submission, Sanitizer sanitizer) {
+        public Builder(Submission submission, Sanitizer sanitizer) {
             this.submissionId = sanitizer.sanitize(submission.submissionId);
-            this.submissionType = sanitizer.sanitize(submission.submissionType);
+            this.processDefinitionKey = sanitizer.sanitize(submission.processDefinitionKey);
+            this.processInstanceLabel = sanitizer.sanitize(submission.processInstanceLabel);
+            this.alias = sanitizer.sanitize(submission.alias);
             this.requestId = sanitizer.sanitize(submission.requestId);
             this.submissionDate = submission.submissionDate;
             this.submissionId = sanitizer.sanitize(submissionId);
 
             if (submission.formData != null && !submission.formData.isEmpty()) {
                 for (FormValue formValue : submission.formData) {
-                    formValueBuilderMap.put(formValue.getName(), new FormValue.Builder(formValue, sanitizer));
+                    this.formValueBuilderMap.put(formValue.getName(), new FormValue.Builder(formValue, sanitizer));
                 }
             }
-            
+
             if (submission.attachments != null && !submission.attachments.isEmpty()) {
-                this.attachments = new ArrayList<Attachment>(submission.attachments.size());
+                this.attachments = new ArrayList<Attachment>();
                 for (Attachment attachment : submission.attachments) {
                     this.attachments.add(new Attachment.Builder(attachment, sanitizer).build());
                 }
+            } else {
+                this.attachments = new ArrayList<Attachment>();
             }
         }
 
-        public FormSubmission build() {
-            return new FormSubmission(this);
+        public Submission build() {
+            return new Submission(this);
         }
 
         public Builder submissionId(String submissionId) {
@@ -198,13 +196,23 @@ public class FormSubmission {
             return this;
         }
 
-        public Builder submissionType(String submissionType) {
-            this.submissionType = submissionType;
+        public Builder processDefinitionKey(String processDefinitionKey) {
+            this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder alias(String alias) {
+            this.alias = alias;
             return this;
         }
 
         public Builder requestId(String requestId) {
             this.requestId = requestId;
+            return this;
+        }
+
+        public Builder processInstanceLabel(String processInstanceLabel) {
+            this.processInstanceLabel = processInstanceLabel;
             return this;
         }
 
@@ -218,6 +226,11 @@ public class FormSubmission {
             return this;
         }
 
+        public Builder attachment(Attachment attachment) {
+            this.attachments.add(attachment);
+            return this;
+        }
+
 //        public Builder formContent(String contentType, String key, String value, String location) {
 //            if (this.formData == null)
 //                this.formData = new ArrayList<FormValue>();
@@ -225,12 +238,12 @@ public class FormSubmission {
 //            return this;
 //        }
 
-        public Builder formData(Map<String, List<String>> formData) {
-            for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
-                formValue(entry.getKey(), entry.getValue());
-            }
-            return this;
-        }
+//        public Builder formData(Map<String, List<String>> formData) {
+//            for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
+//                formValue(entry.getKey(), entry.getValue());
+//            }
+//            return this;
+//        }
 
         public Builder formValue(String key, String ... values) {
             FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
@@ -246,44 +259,54 @@ public class FormSubmission {
             return this;
         }
 
-        public Builder formValue(String key, List<String> values) {
-            if (values == null)
-                formValue(key);
 
-            return formValue(key, values.toArray(new String[values.size()]));
-        }
+        public Builder formValueAndDetail(String key, String value, FormValueDetail detail) {
+            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
+            if (formValueBuilder == null)
+                formValueBuilder = new FormValue.Builder();
 
-        public Builder formValue(FormValue formValue) {
-            return formValue(formValue.getName(), formValue.getAllValues());
-        }
-
-        public Builder formValueMap(Map<String, FormValue> formValueMap) {
-            for (Map.Entry<String, FormValue> entry : formValueMap.entrySet()) {
-                formValue(entry.getValue());
+            if (value != null && detail != null) {
+                formValueBuilder.value(value);
+                formValueBuilder.detail(detail);
             }
+
             return this;
         }
 
-        public Builder attachment(Attachment attachment) {
-            if (this.attachments == null)
-                this.attachments = new ArrayList<Attachment>();
-            this.attachments.add(attachment);
-            return this;
-        }
+//        public Builder formValue(String key, List<String> values) {
+//            if (values == null)
+//                formValue(key);
+//
+//            return formValue(key, values.toArray(new String[values.size()]));
+//        }
 
-        public Builder attachments(List<Attachment> attachments) {
-            if (attachments != null) {
-                if (this.attachments == null)
-                    this.attachments = new ArrayList<Attachment>();
-                this.attachments.addAll(attachments);
-            }
-            return this;
+//        public Builder formValue(FormValue formValue, Sanitizer sanitizer) {
+//            if (formValue != null && formValue.getName() != null) {
+//                formValueBuilderMap.put(formValue.getName(), new FormValue.Builder(formValue, sanitizer));
+//            }
+//            return this;
+//        }
+//
+//        public Builder formValueBuilder(String name, FormValue.Builder formValueBuilder) {
+//            formValueBuilderMap.put(name, formValueBuilder);
+//            return this;
+//        }
+
+//        public Builder formValueMap(Map<String, FormValue> formValueMap) {
+//            for (Map.Entry<String, FormValue> entry : formValueMap.entrySet()) {
+//                formValue(entry.getValue());
+//            }
+//            return this;
+//        }
+
+        public String getProcessDefinitionKey() {
+            return processDefinitionKey;
         }
     }
 
     public static class Constants {
         public static final String RESOURCE_LABEL = "Submission";
-        public static final String ROOT_ELEMENT_NAME = "submission";
+        public static final String ROOT_ELEMENT_NAME = "processInstance";
         public static final String TYPE_NAME = "SubmissionType";
     }
 }

@@ -22,10 +22,7 @@ import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -119,6 +116,20 @@ public class Section {
     public List<Field> getFields() {
 		return fields;
 	}
+
+//    @JsonIgnore
+//    public Map<String, Field> getFieldMap() {
+//        Map<String, Field> fieldMap = new HashMap<String, Field>();
+//        if (fields != null) {
+//            for (Field field : fields) {
+//                if (field.getName() == null)
+//                    continue;
+//
+//                fieldMap.put(field.getName(), field);
+//            }
+//        }
+//        return fieldMap;
+//    }
 
 	public int getOrdinal() {
 		return ordinal;

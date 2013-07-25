@@ -39,7 +39,7 @@ public class ValidationServiceTest {
 
 	@Test
 	public void testValidateFirstOfTwoSections() {
-		FormSubmission submission = new FormSubmission.Builder()
+		Submission submission = new Submission.Builder()
 			.formValue("employeeName", "John Test")
 			.formValue("budgetNumber", "123456")
 			.build();
@@ -53,7 +53,7 @@ public class ValidationServiceTest {
 
     @Test
     public void testValidateFirstOfTwoSectionsFailed() {
-        FormSubmission submission = new FormSubmission.Builder()
+        Submission submission = new Submission.Builder()
                 .formValue("employeeName", "John Test")
                 .build();
 
@@ -67,7 +67,7 @@ public class ValidationServiceTest {
 
     @Test
     public void testValidateBothOfTwoSections() {
-        FormSubmission submission = new FormSubmission.Builder()
+        Submission submission = new Submission.Builder()
                 .formValue("employeeName", "John Test")
                 .formValue("budgetNumber", "123456")
                 .formValue("supervisorId", "sup1234")
@@ -82,7 +82,7 @@ public class ValidationServiceTest {
 
     @Test
     public void testValidateBothOfTwoSectionsFailed() {
-        FormSubmission submission = new FormSubmission.Builder()
+        Submission submission = new Submission.Builder()
                 .formValue("budgetNumber", "123456")
                 .formValue("supervisorId", "sup1234")
                 .build();

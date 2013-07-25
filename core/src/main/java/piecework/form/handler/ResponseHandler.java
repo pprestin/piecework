@@ -45,6 +45,7 @@ import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
@@ -125,18 +126,33 @@ public class ResponseHandler {
 
         FormValue formValue = formValueName != null ? formValueMap.get(formValueName) : null;
 
-        if (formValue == null || StringUtils.isEmpty(formValue.getLocation())) {
+        if (formValue == null || formValue.getMetadata() == null) {
             throw new NotFoundError();
         }
 
-        Content content = contentRepository.findByLocation(formValue.getLocation());
-        if (content != null) {
-            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
-            String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
-            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
-        } else {
-            throw new NotFoundError();
+        List<String> values = formValue.getValues();
+        List<FormValueDetail> details = formValue.getMetadata();
+
+        if (values != null && !values.isEmpty()) {
+            for (int i=0;i<values.size();i++) {
+                String value = values.get(i);
+                FormValueDetail detail = details != null && details.size() > i ? details.get(i) : null;
+
+                if (detail != null && detail.getLocation() != null) {
+                    Content content = contentRepository.findByLocation(detail.getLocation());
+                    if (content != null) {
+                        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+                        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
+                        return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
+                    }
+                } else {
+                    String contentDisposition = new StringBuilder("attachment; filename=").append(formValueName).append(".txt").toString();
+                    return Response.ok(value, MediaType.TEXT_PLAIN_TYPE).header("Content-Disposition", contentDisposition).build();
+                }
+            }
         }
+
+        throw new NotFoundError();
     }
 
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
@@ -166,10 +182,11 @@ public class ResponseHandler {
         Screen screen = formRequest.getScreen();
         Task task = null;
 
+        Process process = processRepository.findOne(formRequest.getProcessDefinitionKey());
+        if (process == null)
+            throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
+
         if (StringUtils.isNotEmpty(formRequest.getTaskId())) {
-            Process process = processRepository.findOne(formRequest.getProcessDefinitionKey());
-            if (process == null)
-                throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
 
             TaskCriteria criteria = new TaskCriteria.Builder()
                     .process(process)
@@ -198,8 +215,8 @@ public class ResponseHandler {
         if (screen != null) {
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
 
-            if (screen.getSections() != null) {
-                for (Section section : screen.getSections()) {
+            if (process.getSections() != null) {
+                for (Section section : process.getSections()) {
                     if (section.getFields() == null)
                         continue;
 
@@ -211,7 +228,7 @@ public class ResponseHandler {
                         includedFieldNames.add(field.getName());
                     }
                 }
-                for (Section section : screen.getSections()) {
+                for (Section section : process.getSections()) {
                     Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
 
                     for (Field field : section.getFields()) {

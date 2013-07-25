@@ -25,9 +25,7 @@ import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -69,13 +67,14 @@ public class Screen implements Serializable {
     @XmlElementRef
     private final List<Grouping> groupings;
 
-	@XmlElementWrapper(name="sections")
-	@XmlElementRef
-	private final List<Section> sections;
-
     @XmlElementWrapper(name="constraints")
     @XmlElementRef
     private final List<Constraint> constraints;
+
+    @XmlElementWrapper(name="sections")
+    @XmlElementRef
+    @Transient
+    private List<Section> sections;
 
     @XmlAttribute
     private final int reviewIndex;
@@ -105,8 +104,8 @@ public class Screen implements Serializable {
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.groupings = Collections.unmodifiableList(builder.groupings);
         this.stylesheets = Collections.unmodifiableList(builder.stylesheets);
-		this.sections = Collections.unmodifiableList(builder.sections);
-        this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
+		this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
+        this.sections = Collections.unmodifiableList(builder.sections);
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	    this.reviewIndex = builder.reviewIndex;
     }
@@ -178,8 +177,8 @@ public class Screen implements Serializable {
         private boolean isAttachmentAllowed;
         private List<Grouping> groupings;
         private List<String> stylesheets;
-		private List<Section> sections;
         private List<Constraint> constraints;
+        private List<Section> sections;
         private int reviewIndex;
 		private int ordinal;
 		private boolean isDeleted;
@@ -187,8 +186,8 @@ public class Screen implements Serializable {
 		public Builder() {
 			super();
             this.groupings = new ArrayList<Grouping>();
-            this.stylesheets = new ArrayList<String>();
             this.sections = new ArrayList<Section>();
+            this.stylesheets = new ArrayList<String>();
             this.constraints = new ArrayList<Constraint>();
 		}
 
@@ -233,12 +232,12 @@ public class Screen implements Serializable {
                 this.constraints = new ArrayList<Constraint>();
             }
 
-			if (includeSections && screen.sections != null && !screen.sections.isEmpty()) {
-				this.sections = new ArrayList<Section>(screen.sections.size());
-				for (Section section : screen.sections) {
-					this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
-				}
-			} else {
+            if (screen.sections != null && !screen.sections.isEmpty()) {
+                this.sections = new ArrayList<Section>(screen.sections.size());
+                for (Section section : screen.sections) {
+                    this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
+                }
+            } else {
                 this.sections = new ArrayList<Section>();
             }
 		}
@@ -300,12 +299,12 @@ public class Screen implements Serializable {
             return this;
         }
 
-		public Builder section(Section section) {
-			if (this.sections == null)
-				this.sections = new ArrayList<Section>();
-			this.sections.add(section);
-			return this;
-		}
+        public Builder section(Section section) {
+            if (this.sections == null)
+                this.sections = new ArrayList<Section>();
+            this.sections.add(section);
+            return this;
+        }
 
         public Builder reviewIndex(int reviewIndex) {
             this.reviewIndex = reviewIndex;

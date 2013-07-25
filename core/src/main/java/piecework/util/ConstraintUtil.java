@@ -48,7 +48,7 @@ public class ConstraintUtil {
 
         Field constraintField = fieldMap != null ? fieldMap.get(constraintName) : null;
         FormValue formValue = formValueMap != null ? formValueMap.get(constraintName) : null;
-        List<String> fieldValues = formValue != null ? formValue.getAllValues() : null;
+        List<String> fieldValues = formValue != null ? formValue.getValues() : null;
 
         // Evaluate whether this particular item is satisfied
         if (constraintField != null && (fieldValues == null || fieldValues.isEmpty())) {

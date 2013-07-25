@@ -76,8 +76,12 @@ public class GridFSContentRepository implements ContentRepository {
         metadata.put("originalFilename", content.getFilename());
         GridFSFile file = gridFsOperations.store(content.getInputStream(), content.getLocation(), content.getContentType(), metadata);
         String contentId = file.getId().toString();
+
         return new Content.Builder(content)
                 .contentId(contentId)
+                .length(file.getLength())
+                .lastModified(file.getUploadDate())
+                .md5(file.getMD5())
                 .build();
     }
 

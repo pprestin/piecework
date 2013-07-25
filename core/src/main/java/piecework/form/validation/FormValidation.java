@@ -20,7 +20,6 @@ import java.util.*;
 
 import piecework.Constants;
 import piecework.model.*;
-import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -41,7 +40,7 @@ public class FormValidation implements Serializable {
 	
 	private final Set<String> unchangedFields;
 
-    private final FormSubmission submission;
+    private final Submission submission;
 
     private final ProcessInstance instance;
 	
@@ -84,7 +83,7 @@ public class FormValidation implements Serializable {
 		return unchangedFields;
 	}
 
-    public FormSubmission getSubmission() {
+    public Submission getSubmission() {
         return submission;
     }
 
@@ -100,7 +99,7 @@ public class FormValidation implements Serializable {
         private Map<String, FormValue> restrictedValueMap;
         private List<Attachment> attachments;
         private Set<String> unchangedFields;
-        private FormSubmission submission;
+        private Submission submission;
         private ProcessInstance instance;
 
         public Builder() {
@@ -175,8 +174,10 @@ public class FormValidation implements Serializable {
         	return this;
         }
 
-        public Builder submission(FormSubmission submission) {
+        public Builder submission(Submission submission) {
             this.submission = submission;
+            if (submission != null)
+                attachments(submission.getAttachments());
             return this;
         }
 

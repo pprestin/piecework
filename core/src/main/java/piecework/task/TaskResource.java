@@ -4,7 +4,7 @@ import piecework.ApiResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
-import piecework.model.FormSubmission;
+import piecework.model.Submission;
 import piecework.model.Task;
 
 import javax.annotation.security.RolesAllowed;
@@ -37,7 +37,7 @@ public interface TaskResource extends ApiResource {
     @POST
     @Path("{processDefinitionKey}/{taskId}/{action}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.SYSTEM})
-    Response complete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @PathParam("action") String action, @Context HttpServletRequest request, FormSubmission submission) throws StatusCodeError;
+    Response complete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @PathParam("action") String action, @Context HttpServletRequest request, Submission submission) throws StatusCodeError;
 
     @GET
     @Path("")

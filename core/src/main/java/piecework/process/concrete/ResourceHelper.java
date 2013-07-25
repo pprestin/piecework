@@ -50,6 +50,26 @@ public class ResourceHelper {
 	@Autowired
 	ProcessRepository processRepository;
 
+    public String getAuthenticatedSystemOrUserId() {
+        String userId = null;
+        SecurityContext context = SecurityContextHolder.getContext();
+        if (context != null) {
+            Authentication authentication = context.getAuthentication();
+
+            if (authentication != null) {
+                Object principalAsObject = authentication.getPrincipal();
+
+                if (authentication.getCredentials() != null && authentication.getCredentials() instanceof X509Certificate) {
+                    userId = principalAsObject.toString();
+                } else if (principalAsObject instanceof InternalUserDetails) {
+                    InternalUserDetails principal = InternalUserDetails.class.cast(principalAsObject);
+                    userId = principal.getInternalId();
+                }
+            }
+        }
+        return userId;
+    }
+
     public InternalUserDetails getAuthenticatedPrincipal() {
         InternalUserDetails principal = null;
         SecurityContext context = SecurityContextHolder.getContext();

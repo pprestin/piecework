@@ -16,6 +16,7 @@
 
 package piecework.form.handler;
 
+import org.apache.cxf.jaxrs.impl.MetadataMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,11 +27,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.common.Payload;
+import piecework.form.validation.SubmissionTemplate;
+import piecework.form.validation.SubmissionTemplateFactory;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.model.*;
 import piecework.test.ExampleFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MultivaluedMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +49,9 @@ public class SubmissionHandlerTest {
     @Autowired
     SubmissionHandler submissionHandler;
 
+    @Autowired
+    SubmissionTemplateFactory submissionTemplateFactory;
+
     HttpServletRequest servletRequest;
     piecework.model.Process process;
     String processInstanceId;
@@ -58,19 +65,18 @@ public class SubmissionHandlerTest {
 
     @Test
     public void testHandleProcessInstanceObject() throws Exception {
-        ProcessInstance instance =  new ProcessInstance.Builder()
-                .processDefinitionKey(process.getProcessDefinitionKey())
-                .processDefinitionLabel(process.getProcessDefinitionLabel())
-                .engineProcessInstanceId(UUID.randomUUID().toString())
-                .formValue("TestField", "1", "2", "3")
-                .build();
+        MultivaluedMap<String, String> map = new MetadataMap<String, String>();
 
-        Payload payload = new Payload.Builder().processInstance(instance).build();
-        FormSubmission actual = submissionHandler.handle(payload, false);
+        map.putSingle("TestField", "1");
+        map.putSingle("TestField", "2");
+        map.putSingle("TestField", "3");
+
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
+        Submission actual = submissionHandler.handle(process, template, map);
         Assert.assertNotNull(actual);
 
         FormValue formValue = actual.getFormValueMap().get("TestField");
-        List<String> values = formValue.getAllValues();
+        List<String> values = formValue.getValues();
         Assert.assertEquals("1", values.get(0));
         Assert.assertEquals("2", values.get(1));
         Assert.assertEquals("3", values.get(2));

@@ -112,7 +112,7 @@ public class ProcessInstance implements Serializable {
     @XmlTransient
     @JsonIgnore
     @DBRef
-    private final List<FormSubmission> submissions;
+    private final List<Submission> submissions;
 
     @XmlTransient
     @JsonIgnore
@@ -240,7 +240,7 @@ public class ProcessInstance implements Serializable {
         if (formData != null && !formData.isEmpty()) {
             for (FormValue formValue : formData) {
                 String name = formValue.getName();
-                List<String> values = formValue.getAllValues();
+                List<String> values = formValue.getValues();
                 if (name != null && values != null)
                     map.put(name, formValue);
             }
@@ -253,13 +253,13 @@ public class ProcessInstance implements Serializable {
     	ManyMap<String, String> map = new ManyMap<String, String>();
     	if (formData != null && !formData.isEmpty()) {
     		for (FormValue formValue : formData) {
-    			map.put(formValue.getName(), formValue.getAllValues());
+    			map.put(formValue.getName(), formValue.getValues());
     		}
     	}
     	return map;
     }
 
-    public List<FormSubmission> getSubmissions() {
+    public List<Submission> getSubmissions() {
         return submissions;
     }
 	
@@ -295,7 +295,7 @@ public class ProcessInstance implements Serializable {
         private List<FormValue> restrictedData;
         private Set<String> keywords;
         private List<Attachment.Builder> attachmentBuilders;
-        private List<FormSubmission> submissions;
+        private List<Submission> submissions;
         private Date startTime;
         private Date endTime;
         private String initiatorId;
@@ -330,11 +330,11 @@ public class ProcessInstance implements Serializable {
 			}
 
             if (instance.submissions != null && !instance.submissions.isEmpty()) {
-                this.submissions = new ArrayList<FormSubmission>(instance.submissions.size());
-                for (FormSubmission submission : instance.submissions) {
+                this.submissions = new ArrayList<Submission>(instance.submissions.size());
+                for (Submission submission : instance.submissions) {
                     if (submission == null)
                         continue;
-                    this.submissions.add(new FormSubmission.Builder(submission, sanitizer).build());
+                    this.submissions.add(new Submission.Builder(submission, sanitizer).build());
                 }
             }
             
@@ -472,7 +472,7 @@ public class ProcessInstance implements Serializable {
                         continue;
 
                     this.formData.add(formValue);
-                    List<String> values = formValue.getAllValues();
+                    List<String> values = formValue.getValues();
                     if (values != null && !values.isEmpty()) {
                         for (String value : values) {
                             if (StringUtils.isNotEmpty(value))
@@ -532,16 +532,16 @@ public class ProcessInstance implements Serializable {
         	return this;
         }
 
-        public Builder submission(FormSubmission submission) {
+        public Builder submission(Submission submission) {
             if (this.submissions == null)
-                this.submissions = new ArrayList<FormSubmission>();
+                this.submissions = new ArrayList<Submission>();
             this.submissions.add(submission);
             return this;
         }
 
-        public Builder submissions(List<FormSubmission> submissions) {
+        public Builder submissions(List<Submission> submissions) {
             if (this.submissions != null)
-                this.submissions = new ArrayList<FormSubmission>();
+                this.submissions = new ArrayList<Submission>();
             if (submissions != null)
                 this.submissions.addAll(submissions);
             return this;

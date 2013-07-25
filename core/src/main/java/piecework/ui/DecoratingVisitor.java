@@ -333,7 +333,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
                 FormValue formValue = formValueMap.get(variable);
                 if (formValue != null) {
                     tag.removeAllChildren();
-                    List<String> values = formValue.getAllValues();
+                    List<String> values = formValue.getValues();
 
                     if (values != null) {
                         for (String value : values) {
@@ -389,7 +389,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
             String value = null;
 
             if (formValue != null) {
-                List<String> values = formValue.getAllValues();
+                List<String> values = formValue.getValues();
 
                 if (values.size() > index)
                     value = values.get(index);

@@ -27,9 +27,7 @@ import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -91,6 +89,10 @@ public class Process implements Serializable {
 	@DBRef
 	private final List<Interaction> interactions;
 
+    @XmlElementWrapper(name="sections")
+    @XmlElementRef
+    private final List<Section> sections;
+
     @XmlElementWrapper(name="notifications")
     @XmlElementRef
     @DBRef
@@ -127,7 +129,8 @@ public class Process implements Serializable {
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey) : null;
 		this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
-		this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
+        this.sections = Collections.unmodifiableList(builder.sections);
+        this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
         this.defaultScreen = builder.defaultScreen;
         this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
         this.isDeleted = builder.isDeleted;
@@ -189,6 +192,43 @@ public class Process implements Serializable {
 		return interactions;
 	}
 
+    public List<Section> getSections() {
+        return sections;
+    }
+
+    @JsonIgnore
+    public Map<String, Section> getSectionMap() {
+        Map<String, Section> sectionMap = new HashMap<String, Section>();
+        if (sections != null) {
+            for (Section section : sections) {
+                if (section == null)
+                    continue;
+
+                sectionMap.put(section.getSectionId(), section);
+            }
+        }
+        return sectionMap;
+    }
+
+//    @JsonIgnore
+//    public Map<String, Field> getFieldMap() {
+//        Map<String, Field> fieldMap = new HashMap<String, Field>();
+//        if (sections != null) {
+//            for (Section section : sections) {
+//                if (section.getFields() == null)
+//                    continue;
+//
+//                for (Field field : section.getFields()) {
+//                    if (field.getName() == null)
+//                        continue;
+//
+//                    fieldMap.put(field.getName(), field);
+//                }
+//            }
+//        }
+//        return fieldMap;
+//    }
+
     public List<Notification> getNotifications() {
         return notifications;
     }
@@ -226,6 +266,7 @@ public class Process implements Serializable {
         private String completionStatus;
         private String suspensionStatus;
 		private List<Interaction> interactions;
+        private List<Section> sections;
         private List<Notification> notifications;
         private Screen defaultScreen;
         private boolean isAnonymousSubmissionAllowed;
@@ -233,9 +274,12 @@ public class Process implements Serializable {
 		
 		public Builder() {
 			super();
+            this.interactions = new ArrayList<Interaction>();
+            this.sections = new ArrayList<Section>();
+            this.notifications = new ArrayList<Notification>();
 		}
 				
-		public Builder(piecework.model.Process process, Sanitizer sanitizer) {
+		public Builder(piecework.model.Process process, Sanitizer sanitizer, boolean includeDetails) {
 			this.processDefinitionKey = sanitizer.sanitize(process.processDefinitionKey);
 			this.processDefinitionLabel = sanitizer.sanitize(process.processDefinitionLabel);
             this.processInstanceLabelTemplate = sanitizer.sanitize(process.processInstanceLabelTemplate);
@@ -248,18 +292,30 @@ public class Process implements Serializable {
             this.completionStatus = sanitizer.sanitize(process.completionStatus);
             this.suspensionStatus = sanitizer.sanitize(process.suspensionStatus);
             this.defaultScreen = process.defaultScreen != null ? new Screen.Builder(process.defaultScreen, sanitizer).processDefinitionKey(processDefinitionKey).build() : null;
-			if (process.interactions != null && !process.interactions.isEmpty()) {
+			if (includeDetails && process.interactions != null && !process.interactions.isEmpty()) {
 				this.interactions = new ArrayList<Interaction>(process.interactions.size());
 				for (Interaction interaction : process.interactions) {
 					this.interactions.add(new Interaction.Builder(interaction, sanitizer).processDefinitionKey(processDefinitionKey).build());
 				}
-			}
-            if (process.notifications != null && !process.notifications.isEmpty()) {
+			} else {
+                this.interactions = new ArrayList<Interaction>();
+            }
+            if (includeDetails && process.notifications != null && !process.notifications.isEmpty()) {
                 this.notifications = new ArrayList<Notification>(process.notifications.size());
                 for (Notification notification : process.notifications) {
                     if (notification != null)
                         this.notifications.add(new Notification.Builder(notification, sanitizer).build());
                 }
+            } else {
+                this.notifications = new ArrayList<Notification>();
+            }
+            if (includeDetails && process.sections != null && !process.sections.isEmpty()) {
+                this.sections = new ArrayList<Section>(process.sections.size());
+                for (Section section : process.sections) {
+                    this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
+                }
+            } else {
+                this.sections = new ArrayList<Section>();
             }
             this.isAnonymousSubmissionAllowed = process.isAnonymousSubmissionAllowed;
             this.isDeleted = process.isDeleted;
@@ -339,6 +395,13 @@ public class Process implements Serializable {
 			this.interactions = interactions;
 			return this;
 		}
+
+        public Builder section(Section section) {
+            if (this.sections == null)
+                this.sections = new ArrayList<Section>();
+            this.sections.add(section);
+            return this;
+        }
 
         public Builder notification(Notification notification) {
             if (this.notifications == null)

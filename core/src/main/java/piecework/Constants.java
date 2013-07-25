@@ -93,10 +93,12 @@ public interface Constants {
         public static final String process_business_key_limit = "process_business_key_limit";
 		public static final String process_change_key_duplicate = "process_change_key_duplicate";
 		public static final String process_does_not_exist = "process_does_not_exist";
+        public static final String process_is_misconfigured = "process_is_misconfigured";
         public static final String request_does_not_match = "request_does_not_match";
 		public static final String request_id_required = "request_id_required";
         public static final String request_type_required = "request_type_required";
         public static final String screen_id_invalid = "screen_id_invalid";
+        public static final String system_action_only = "system_action_only";
         public static final String task_does_not_exist = "task_does_not_exist";
         public static final String task_id_required = "task_id_required";
         public static final String task_required = "task_required";
@@ -142,13 +144,14 @@ public interface Constants {
     }
 
     public static class Settings {
-        public static final String BASE_APPLICATION_URI = "base.application.uri",
-                                   BASE_SERVICE_URI = "base.service.uri",
-                                   KEYSTORE_FILE = "keystore.file",
-                                   KEYSTORE_PASSWORD = "keystore.password",
-                                   CERTIFICATE_ISSUER_HEADER = "certificate.issuer.header",
-                                   CERTIFICATE_SUBJECT_HEADER = "certificate.subject.header",
-                                   MAIL_SERVER_HOST = "mail.server.host";
+        public static final String
+            BASE_APPLICATION_URI = "base.application.uri",
+            BASE_SERVICE_URI = "base.service.uri",
+            KEYSTORE_FILE = "keystore.file",
+            KEYSTORE_PASSWORD = "keystore.password",
+            CERTIFICATE_ISSUER_HEADER = "certificate.issuer.header",
+            CERTIFICATE_SUBJECT_HEADER = "certificate.subject.header",
+            MAIL_SERVER_HOST = "mail.server.host";
     }
 
     public static class SubmissionTypes {

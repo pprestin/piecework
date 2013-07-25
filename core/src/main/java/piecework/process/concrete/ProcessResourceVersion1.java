@@ -59,7 +59,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	@Override
 	public Response create(Process rawProcess) throws StatusCodeError {
 		Process result = processService.create(rawProcess);
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(processService.getProcessViewContext()));
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(processService.getProcessViewContext()));
 		return responseBuilder.build();
 	}
 	
@@ -92,7 +92,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	public Response read(String rawProcessDefinitionKey) throws StatusCodeError {
         Process result = processService.read(rawProcessDefinitionKey);
 				
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(processService.getProcessViewContext()));
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(processService.getProcessViewContext()));
 		return responseBuilder.build();
 	}
 	

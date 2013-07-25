@@ -79,7 +79,7 @@ public class MongoRepositoriesConfiguration {
 
     @Bean
     public SubmissionRepository submissionRepository() {
-        return factoryBean(SubmissionRepository.class, FormSubmission.class);
+        return factoryBean(SubmissionRepository.class, Submission.class);
     }
 
     private <T extends Repository<S, String>, S> T factoryBean(Class<T> repositoryInterface, Class<S> type) {

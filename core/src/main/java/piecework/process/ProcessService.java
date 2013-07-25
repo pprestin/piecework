@@ -65,13 +65,13 @@ public class ProcessService {
     Sanitizer sanitizer;
 
     public Process create(Process rawProcess) {
-        piecework.model.Process.Builder builder = new Process.Builder(rawProcess, sanitizer);
+        piecework.model.Process.Builder builder = new Process.Builder(rawProcess, sanitizer, true);
 
         Process process = builder.build();
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        builder = new Process.Builder(process, passthroughSanitizer);
-        builder.interactions(null);
+        builder = new Process.Builder(process, passthroughSanitizer, false);
+        builder.clearInteractions();
 
         if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
             for (Interaction interaction : process.getInteractions()) {
@@ -98,7 +98,7 @@ public class ProcessService {
         if (record == null)
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 
-        Process.Builder builder = new Process.Builder(record, sanitizer);
+        Process.Builder builder = new Process.Builder(record, sanitizer, true);
         builder.delete();
         return processRepository.save(builder.build());
     }
@@ -123,7 +123,7 @@ public class ProcessService {
         if (processes != null && !processes.isEmpty()) {
             results = new ArrayList<Process>(processes.size());
             for (Process process : processes) {
-                results.add(new Process.Builder(process, sanitizer).interactions(null).build(getProcessViewContext()));
+                results.add(new Process.Builder(process, sanitizer, false).build(getProcessViewContext()));
             }
         } else {
             results = Collections.emptyList();
@@ -162,12 +162,12 @@ public class ProcessService {
 
             record = processRepository.findOne(processDefinitionKey);
             if (record != null) {
-                Process.Builder builder = new Process.Builder(record, passthroughSanitizer);
+                Process.Builder builder = new Process.Builder(record, passthroughSanitizer, true);
                 processRepository.delete(builder.build());
             }
         }
 
-        Process.Builder builder = new Process.Builder(rawProcess, sanitizer);
+        Process.Builder builder = new Process.Builder(rawProcess, sanitizer, false);
         builder.clearInteractions();
         if (rawProcess.getInteractions() != null && !rawProcess.getInteractions().isEmpty()) {
             for (Interaction interaction : rawProcess.getInteractions()) {

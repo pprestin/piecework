@@ -216,6 +216,7 @@ public class Task implements Serializable {
         return active;
     }
 
+    @JsonIgnore
     public boolean isDeleted() {
 		return isDeleted;
 	}

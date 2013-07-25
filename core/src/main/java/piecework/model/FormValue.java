@@ -25,8 +25,6 @@ import javax.xml.bind.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
 
@@ -43,26 +41,10 @@ public class FormValue implements Serializable {
 
 	@XmlElement
 	private final String name;
-	
-	@XmlTransient
-	private final String value;
 
     @XmlElementWrapper(name="messages")
     @XmlElementRef
     private final List<Message> messages;
-	
-	@XmlTransient
-	@JsonIgnore
-    @Transient
-    private final boolean restricted;
-
-    @XmlTransient
-    @JsonIgnore
-    private final String contentType;
-
-    @XmlTransient
-    @JsonIgnore
-    private final String location;
 
     @XmlElementWrapper(name="values")
 	@XmlElement(name="value")
@@ -70,8 +52,7 @@ public class FormValue implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-    @DBRef
-    private final List<Secret> secrets;
+    private final List<FormValueDetail> metadata;
 
     @XmlAttribute
     private final String link;
@@ -82,12 +63,8 @@ public class FormValue implements Serializable {
 
 	private FormValue(FormValue.Builder builder, ViewContext context) {
 		this.name = builder.name;
-		this.value = null;
 		this.values = Collections.unmodifiableList(builder.values);
-        this.secrets = builder.secrets;
-		this.restricted = builder.restricted;
-        this.contentType = builder.contentType;
-        this.location = builder.location;
+        this.metadata = builder.metadata;
         this.messages = Collections.unmodifiableList(builder.messages);
         this.link = context != null && builder.processDefinitionKey != null && builder.formInstanceId != null && builder.name != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId, Constants.ROOT_ELEMENT_NAME, builder.name) : null;
     }
@@ -96,45 +73,17 @@ public class FormValue implements Serializable {
 		return name;
 	}
 
-    @JsonIgnore
-	public String getValue() {
-        if (value == null && values != null && !values.isEmpty())
-            return values.iterator().next();
-
-		return value;
-	}
-
 	public List<String> getValues() {
 		return values;
 	}
-
-    @JsonIgnore
-	public List<String> getAllValues() {
-		if (this.value != null)
-			return Collections.singletonList(value);
-		return this.values;
-	}
-
-	public boolean isRestricted() {
-		return restricted;
-	}
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    @JsonIgnore
-    public String getLocation() {
-        return location;
-    }
 
     public List<Message> getMessages() {
         return messages;
     }
 
     @JsonIgnore
-    public List<Secret> getSecrets() {
-        return secrets;
+    public List<FormValueDetail> getMetadata() {
+        return metadata;
     }
 
     public String getLink() {
@@ -147,12 +96,9 @@ public class FormValue implements Serializable {
         private String processDefinitionKey;
         private String formInstanceId;
 		private List<String> values;
-        private List<Secret> secrets;
-		private boolean restricted;
-        private String contentType;
-        private String location;
         private List<Message> messages;
-		
+		private List<FormValueDetail> metadata;
+
 		public Builder() {
 			super();
             this.messages = new ArrayList<Message>();
@@ -170,11 +116,6 @@ public class FormValue implements Serializable {
 			} else {
                 this.values = new ArrayList<String>();
             }
-            this.location = sanitizer.sanitize(formValue.location);
-            this.contentType = sanitizer.sanitize(formValue.contentType);
-
-            if (formValue.value != null)
-                this.values.add(formValue.value);
 
             if (formValue.messages != null && !formValue.messages.isEmpty()) {
                 this.messages = new ArrayList<Message>(formValue.messages.size());
@@ -184,7 +125,13 @@ public class FormValue implements Serializable {
             } else {
                 this.messages = new ArrayList<Message>();
             }
-			this.restricted = formValue.restricted;
+
+            if (formValue.metadata != null && !formValue.metadata.isEmpty()) {
+                this.metadata = new ArrayList<FormValueDetail>(formValue.metadata.size());
+                for (FormValueDetail detail : formValue.metadata) {
+                    this.metadata.add(new FormValueDetail.Builder(detail, sanitizer).build());
+                }
+            }
 		}
 
 		public FormValue build() {
@@ -239,26 +186,11 @@ public class FormValue implements Serializable {
                 this.values.addAll(values);
             return this;
         }
-        
-        public Builder restricted() {
-        	this.restricted = true;
-        	return this;
-        }
 
-        public Builder contentType(String contentType) {
-            this.contentType = contentType;
-            return this;
-        }
-
-        public Builder location(String location) {
-            this.location = location;
-            return this;
-        }
-
-        public Builder secret(Secret secret) {
-            if (this.secrets == null)
-                this.secrets = new ArrayList<Secret>();
-            this.secrets.add(secret);
+        public Builder detail(FormValueDetail detail) {
+            if (this.metadata == null)
+                this.metadata = new ArrayList<FormValueDetail>();
+            this.metadata.add(detail);
             return this;
         }
 	}

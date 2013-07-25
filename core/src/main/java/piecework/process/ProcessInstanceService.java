@@ -19,7 +19,6 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -30,8 +29,8 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
-import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
+import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
@@ -54,9 +53,7 @@ import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.ui.StreamingAttachmentContent;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -128,13 +125,9 @@ public class ProcessInstanceService {
         }
     }
 
-    public ProcessInstance attach(Process process, Screen screen, Payload payload) throws StatusCodeError {
-        // Validate the submission
-        FormValidation validation = validate(process, screen, payload, false);
-        FormSubmission submission = validation.getSubmission();
-        ProcessInstance previous = validation.getInstance();
-
-        return store(process, submission, validation, previous, true);
+    public ProcessInstance attach(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
+        FormValidation validation = validate(process, instance, task, template, submission, false);
+        return store(process, submission, validation, instance, true);
     }
 
     public void delete(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
@@ -326,7 +319,8 @@ public class ProcessInstanceService {
                     .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
                     .engine(allowedProcess.getEngine());
 
-                resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).interactions(null).build(processService.getProcessViewContext()));
+                resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer(), false)
+                        .interactions(null).build(processService.getProcessViewContext()));
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
 
@@ -390,7 +384,7 @@ public class ProcessInstanceService {
         return resultsBuilder.build();
     }
 
-    public ProcessInstance store(Process process, FormSubmission submission, FormValidation validation, ProcessInstance previous, boolean isAttachment) throws StatusCodeError {
+    public ProcessInstance store(Process process, Submission submission, FormValidation validation, ProcessInstance previous, boolean isAttachment) throws StatusCodeError {
         ProcessInstance.Builder instanceBuilder;
 
         String processInstanceLabel = process.getProcessInstanceLabelTemplate();
@@ -403,7 +397,7 @@ public class ProcessInstanceService {
             if (instanceFormValueMap != null) {
                 for (Map.Entry<String,FormValue> entry : instanceFormValueMap.entrySet()) {
                     FormValue formValue = entry.getValue();
-                    List<String> values = formValue != null ? formValue.getAllValues() : null;
+                    List<String> values = formValue != null ? formValue.getValues() : null;
                     if (values != null && !values.isEmpty())
                         scopes.put(entry.getKey(), values.iterator().next());
                 }
@@ -411,7 +405,7 @@ public class ProcessInstanceService {
             if (validationFormValueMap != null) {
                 for (Map.Entry<String,FormValue> entry : validationFormValueMap.entrySet()) {
                     FormValue formValue = entry.getValue();
-                    List<String> values = formValue != null ? formValue.getAllValues() : null;
+                    List<String> values = formValue != null ? formValue.getValues() : null;
                     if (values != null && !values.isEmpty())
                         scopes.put(entry.getKey(), values.iterator().next());
                 }
@@ -496,26 +490,19 @@ public class ProcessInstanceService {
         return processInstanceRepository.save(instance);
     }
 
-    public ProcessInstance save(Process process, Screen screen, Payload payload) throws StatusCodeError {
+    public ProcessInstance save(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
 
-        // Validate the submission
-        FormValidation validation = validate(process, screen, payload, false);
-        FormSubmission submission = validation.getSubmission();
-        ProcessInstance previous = validation.getInstance();
-
-        return store(process, submission, validation, previous, false);
+        FormValidation validation = validate(process, instance, task, template, submission, false);
+        return store(process, submission, validation, instance, false);
     }
 
-    public ProcessInstance submit(Process process, Screen screen, Payload payload) throws StatusCodeError {
+    public ProcessInstance submit(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
 
-        // Validate the submission
-        FormValidation validation = validate(process, screen, payload, true);
-        FormSubmission submission = validation.getSubmission();
-        ProcessInstance previous = validation.getInstance();
+        FormValidation validation = validate(process, instance, task, template, submission, true);
 
-        completeIfTaskExists(process, payload, validation);
+        completeIfTaskExists(process, task, validation);
 
-        return store(process, submission, validation, previous, false);
+        return store(process, submission, validation, instance, false);
     }
 
 
@@ -582,8 +569,32 @@ public class ProcessInstanceService {
         }
     }
 
-    public boolean userHasTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
+    public Task userTask(Process process, String taskId) throws StatusCodeError {
+        TaskCriteria.Builder taskCriteria = new TaskCriteria.Builder()
+                .process(process)
+                .taskId(taskId)
+                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC);
 
+        if (! helper.isAuthenticatedSystem()) {
+            // If the call is not being made by an authenticated system, then the principal is a user and must have an active task
+            // on this instance
+            InternalUserDetails user = helper.getAuthenticatedPrincipal();
+
+            if (user == null)
+                throw new ForbiddenError();
+
+            taskCriteria.participantId(user.getInternalId());
+        }
+
+        try {
+            return facade.findTask(taskCriteria.build());
+        } catch (ProcessEngineException e) {
+            LOG.error(e);
+            throw new InternalServerError();
+        }
+    }
+
+    public Task userTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
         TaskCriteria.Builder taskCriteria = new TaskCriteria.Builder()
                 .process(process)
                 .executionId(processInstance.getEngineProcessInstanceId())
@@ -607,31 +618,29 @@ public class ProcessInstanceService {
             TaskResults taskResults = facade.findTasks(taskCriteria.build());
 
             if (taskResults != null && taskResults.getTasks() != null && !taskResults.getTasks().isEmpty())
-                return true;
+                return taskResults.getTasks().iterator().next();
 
-            return false;
+            return null;
         } catch (ProcessEngineException e) {
             LOG.error(e);
             throw new InternalServerError();
         }
     }
 
-    public FormValidation validate(Process process, Screen screen, Payload payload, boolean throwException) throws StatusCodeError {
+    public boolean userHasTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
 
-        checkIsActiveIfTaskExists(process, payload);
+        if (userTask(process, processInstance, limitToActive) != null)
+            return true;
 
-        boolean isAttachmentAllowed = screen == null || screen.isAttachmentAllowed();
+        return false;
+    }
 
-        // Create a new submission to store the data submitted
-        FormSubmission submission = submissionHandler.handle(payload, isAttachmentAllowed);
+    public FormValidation validate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
 
-        // If an instance already exists then get it from the processRepository
-        ProcessInstance previous = null;
-        if (StringUtils.isNotBlank(payload.getProcessInstanceId()))
-            previous = processInstanceRepository.findOne(payload.getProcessInstanceId());
+        checkIsActiveIfTaskExists(process, task);
 
         // Validate the submission
-        FormValidation validation = validationService.validate(submission, previous, screen, payload.getValidationId());
+        FormValidation validation = validationService.validate(instance, template, submission);
 
         List<ValidationResult> results = validation.getResults();
         if (throwException && results != null && !results.isEmpty()) {
@@ -658,12 +667,12 @@ public class ProcessInstanceService {
         return "v1";
     }
 
-    private void checkIsActiveIfTaskExists(Process process, Payload payload) throws StatusCodeError {
-        String taskId = payload.getTaskId();
+    private void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
+        String taskId = task.getTaskInstanceId();
         if (StringUtils.isNotEmpty(taskId)) {
             try {
                 InternalUserDetails user = helper.getAuthenticatedPrincipal();
-                Task task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
+                task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
                 if (task == null || !task.isActive())
                     throw new ForbiddenError();
 
@@ -673,14 +682,14 @@ public class ProcessInstanceService {
         }
     }
 
-    private void completeIfTaskExists(Process process, Payload payload, FormValidation validation) throws StatusCodeError {
-        String taskId = payload.getTaskId();
+    private void completeIfTaskExists(Process process, Task task, FormValidation validation) throws StatusCodeError {
+        String taskId = task.getTaskInstanceId();
         if (StringUtils.isNotEmpty(taskId)) {
             try {
                 String actionValue = null;
                 if (validation.getFormValueMap() != null) {
                     FormValue formValue = validation.getFormValueMap().get("actionButton");
-                    List<String> actionValues = formValue != null ? formValue.getAllValues() : null;
+                    List<String> actionValues = formValue != null ? formValue.getValues() : null;
                     actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
                 }
 
