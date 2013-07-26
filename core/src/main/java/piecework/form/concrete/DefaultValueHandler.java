@@ -13,20 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.handler;
+package piecework.form.concrete;
 
+import org.springframework.stereotype.Service;
+import piecework.form.handler.ValueHandler;
 import piecework.model.FormValue;
 import piecework.model.FormValueDetail;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author James Renfro
  */
-public interface ValueHandler {
+@Service
+public class DefaultValueHandler implements ValueHandler {
 
-    List<FormValue> handle(String name, String value, FormValueDetail detail);
+    @Override
+    public List<FormValue> handle(String name, String value, FormValueDetail detail) {
+        return Arrays.asList(new FormValue.Builder().name(name).value(value).detail(detail).build());
+    }
 
-    List<String> getAcceptableFieldNames(String name);
+    @Override
+    public List<String> getAcceptableFieldNames(String name) {
+        return Arrays.asList(name);
+    }
 
 }

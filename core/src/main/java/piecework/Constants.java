@@ -18,6 +18,10 @@ package piecework;
 import piecework.form.FieldAttributeDefinition;
 import piecework.form.FieldTagDefinition;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * This interface contains constant values for resource parameters - path, query, etc.
  * 
@@ -44,6 +48,13 @@ public interface Constants {
     public static class ActionTypes {
         public static final String COMPLETE = "complete";
     }
+
+//    public static class ButtonActions {
+//        public static final String COMPLETE = "complete";
+//        public static final String REJECT = "reject";
+//        public static final String SAVE = "save";
+//        public static final String VALIDATE = "validate";
+//    }
 
     public static class ButtonTypes {
         public static final String BUTTON = "button";
@@ -99,6 +110,7 @@ public interface Constants {
         public static final String request_type_required = "request_type_required";
         public static final String screen_id_invalid = "screen_id_invalid";
         public static final String system_action_only = "system_action_only";
+        public static final String task_action_invalid = "task_action_invalid";
         public static final String task_does_not_exist = "task_does_not_exist";
         public static final String task_id_required = "task_id_required";
         public static final String task_required = "task_required";

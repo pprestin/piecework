@@ -28,7 +28,8 @@ import java.util.*;
 public class SubmissionTemplate {
 
     private final Set<String> acceptable;
-    private final Map<String, Button> buttonMap;
+    private final Set<String> buttonNames;
+    private final Map<String, Button> buttonValueMap;
     private final Map<String, ValueHandler> handlerMap;
     private final Set<String> restricted;
     private final List<ValidationRule> rules;
@@ -40,7 +41,8 @@ public class SubmissionTemplate {
 
     private SubmissionTemplate(Builder builder) {
         this.acceptable = Collections.unmodifiableSet(builder.acceptable);
-        this.buttonMap = Collections.unmodifiableMap(builder.buttonMap);
+        this.buttonNames = Collections.unmodifiableSet(builder.buttonNames);
+        this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
         this.handlerMap = Collections.unmodifiableMap(builder.handlerMap);
         this.restricted = Collections.unmodifiableSet(builder.restricted);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
@@ -51,8 +53,8 @@ public class SubmissionTemplate {
         return acceptable;
     }
 
-    public Collection<Button> getButtons() {
-        return buttonMap.values();
+    public Button getButton(String value) {
+        return buttonValueMap.get(value);
     }
 
     public Map<String, ValueHandler> getHandlerMap() {
@@ -67,12 +69,16 @@ public class SubmissionTemplate {
         return rules;
     }
 
+    public ValueHandler handler(String name) {
+        return handlerMap.get(name);
+    }
+
     public boolean isAcceptable(String name) {
         return acceptable.contains(name);
     }
 
     public boolean isButton(String name) {
-        return buttonMap.containsKey(name);
+        return buttonNames.contains(name);
     }
 
     public boolean isAttachmentAllowed() {
@@ -86,14 +92,16 @@ public class SubmissionTemplate {
     public final static class Builder {
         private Set<String> acceptable;
         private Set<String> restricted;
-        private Map<String, Button> buttonMap;
+        private Set<String> buttonNames;
+        private Map<String, Button> buttonValueMap;
         private Map<String, ValueHandler> handlerMap;
         private List<ValidationRule> rules;
         private boolean isAttachmentAllowed;
 
         public Builder() {
             this.acceptable = new HashSet<String>();
-            this.buttonMap = new HashMap<String, Button>();
+            this.buttonNames = new HashSet<String>();
+            this.buttonValueMap = new HashMap<String, Button>();
             this.handlerMap = new HashMap<String, ValueHandler>();
             this.restricted = new HashSet<String>();
             this.rules = new ArrayList<ValidationRule>();
@@ -114,7 +122,8 @@ public class SubmissionTemplate {
         }
 
         public Builder button(Button button) {
-            this.buttonMap.put(button.getName(), button);
+            this.buttonNames.add(button.getName());
+            this.buttonValueMap.put(button.getValue(), button);
             return this;
         }
 

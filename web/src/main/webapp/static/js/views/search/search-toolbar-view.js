@@ -71,9 +71,14 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 var url = selected.get("cancellation") + ".json";
                 $.post(url, data,
                     function(data, textStatus, jqXHR) {
+                        $('#delete-dialog').modal('hide');
                         Chaplin.mediator.publish("search", {status:"open"});
                     }
-                ).fail(function() {  });
+                ).fail(function(jqXHR, textStatus, errorThrown) {
+                      var explanation = $.parseJSON(jqXHR.responseText);
+                      var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                      toolbar.subview('notificationView', new NotificationView({container: '#delete-dialog > .modal-body', model: notification}));
+                });
             }
         },
 	    _onFormSubmit: function(event) {
@@ -143,6 +148,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 }
                 $.post( url, data,
                     function(data, textStatus, jqXHR) {
+                        $('#suspend-dialog').modal('hide');
                         Chaplin.mediator.publish("search", {status:"open"});
                     }
                 ).fail(function(jqXHR, textStatus, errorThrown) {

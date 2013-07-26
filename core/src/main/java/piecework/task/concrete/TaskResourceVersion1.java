@@ -16,6 +16,7 @@
 package piecework.task.concrete;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -24,9 +25,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.Payload;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
+import piecework.enumeration.ActionType;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.form.validation.SubmissionTemplateFactory;
@@ -114,8 +115,28 @@ public class TaskResourceVersion1 implements TaskResource {
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, rawSubmission);
 
-        processInstanceService.submit(process, instance, task, template, submission);
-
+        ActionType validatedAction = ActionType.COMPLETE;
+        if (StringUtils.isNotEmpty(action)) {
+            try {
+                validatedAction = ActionType.valueOf(action);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestError(Constants.ExceptionCodes.task_action_invalid);
+            }
+        }
+        switch (validatedAction) {
+            case COMPLETE:
+                processInstanceService.submit(process, instance, task, template, submission);
+                break;
+            case SAVE:
+                processInstanceService.save(process, instance, task, template, submission);
+                break;
+            case REJECT:
+                processInstanceService.reject(process, instance, task, template, submission);
+                break;
+            case VALIDATE:
+                processInstanceService.validate(process, instance, task, template, submission, true);
+                break;
+        }
         return Response.noContent().build();
     }
 

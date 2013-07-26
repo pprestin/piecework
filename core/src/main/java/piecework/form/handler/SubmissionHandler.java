@@ -21,7 +21,9 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.common.UuidGenerator;
+import piecework.exception.InternalServerError;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetails;
 import piecework.model.*;
@@ -64,7 +66,7 @@ public class SubmissionHandler {
     @Autowired
     UuidGenerator uuidGenerator;
 
-    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission) {
+    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission) throws InternalServerError {
         Submission.Builder submissionBuilder = new Submission.Builder(rawSubmission, sanitizer)
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .submissionDate(new Date())
@@ -73,11 +75,11 @@ public class SubmissionHandler {
         return submissionRepository.save(submissionBuilder.build());
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap) {
+    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap) throws InternalServerError {
         return handle(process, template, formValueContentMap, null);
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap, FormRequest formRequest) {
+    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap, FormRequest formRequest) throws InternalServerError {
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
@@ -105,11 +107,11 @@ public class SubmissionHandler {
         return submissionRepository.save(submissionBuilder.build());
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body) {
+    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body) throws InternalServerError {
         return handle(process, template, body, null);
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body, FormRequest formRequest) {
+    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body, FormRequest formRequest) throws InternalServerError {
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
@@ -135,7 +137,7 @@ public class SubmissionHandler {
         return submissionRepository.save(submissionBuilder.build());
     }
 
-    private void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) {
+    private void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws InternalServerError {
         String contentType = MediaType.TEXT_PLAIN;
         if (LOG.isDebugEnabled())
             LOG.debug("Processing multipart with content type " + contentType + " and content id " + attachment.getContentId());
@@ -148,7 +150,7 @@ public class SubmissionHandler {
         }
     }
 
-    private void handleOtherContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) {
+    private void handleOtherContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws InternalServerError {
         ContentDisposition contentDisposition = attachment.getContentDisposition();
         if (contentDisposition != null) {
             MediaType mediaType = attachment.getContentType();
@@ -169,18 +171,24 @@ public class SubmissionHandler {
         }
     }
 
-    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId) {
+    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId) throws InternalServerError {
         return handleStorage(template, submissionBuilder, name, value, userId, null, MediaType.TEXT_PLAIN);
     }
 
-    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId, InputStream inputStream, String contentType) {
+    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId, InputStream inputStream, String contentType) throws InternalServerError {
         boolean isAcceptable = template.isAcceptable(name);
         boolean isButton = template.isButton(name);
         boolean isRestricted = !isAcceptable && template.isRestricted(name);
         boolean isAttachment = !isAcceptable && !isRestricted && template.isAttachmentAllowed();
 
         if (isButton) {
-            submissionBuilder.buttonValue(value);
+            // Note that submitting multiple button values on a form will result in unpredictable behavior
+            Button button = template.getButton(value);
+            if (button == null) {
+                LOG.error("Button of this name (" + name + ") exists, but the button value (" + value + ") has not been configured");
+                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+            }
+            submissionBuilder.action(button.getAction());
             return true;
         } else if (isAcceptable || isRestricted || isAttachment) {
             String location = null;
@@ -205,20 +213,32 @@ public class SubmissionHandler {
                         .build();
             }
 
-            if (isAcceptable) {
-                submissionBuilder.formValueAndDetail(name, value, detail);
-            } else if (isRestricted) {
-                submissionBuilder.restrictedValueAndDetail(name, value, detail);
-            } else if (isAttachment) {
-                Attachment attachmentDetails = new Attachment.Builder()
-                        .contentType(contentType)
-                        .location(location)
-                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
-                        .description(value)
-                        .userId(userId)
-                        .name(name)
-                        .build();
-                submissionBuilder.attachment(attachmentDetails);
+            ValueHandler handler = template.handler(name);
+            List<FormValue> formValues = handler.handle(name, value, detail);
+
+            for (FormValue formValue : formValues) {
+                if (isAcceptable) {
+                    submissionBuilder.formValue(formValue);
+                } else if (isRestricted) {
+                    submissionBuilder.restrictedValue(formValue);
+                } else if (isAttachment) {
+                    if (detail != null) {
+                        contentType = detail.getContentType();
+                        location = detail.getLocation();
+                    } else {
+                        contentType = MediaType.TEXT_PLAIN;
+                        location = null;
+                    }
+                    Attachment attachmentDetails = new Attachment.Builder()
+                            .contentType(contentType)
+                            .location(location)
+                            .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
+                            .description(value)
+                            .userId(userId)
+                            .name(name)
+                            .build();
+                    submissionBuilder.attachment(attachmentDetails);
+                }
             }
             return true;
         }

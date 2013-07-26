@@ -26,6 +26,7 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
+import piecework.enumeration.ActionType;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.form.validation.SubmissionTemplateFactory;
@@ -33,9 +34,7 @@ import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
-import piecework.common.Payload;
 import piecework.persistence.ContentRepository;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
@@ -47,7 +46,6 @@ import piecework.model.Process;
 import piecework.process.ProcessInstanceService;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
-import piecework.ui.StreamingAttachmentContent;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
@@ -299,35 +297,48 @@ public class FormService {
         Submission submission = submissionHandler.handle(process, template, body);
 
         try {
-            boolean isSave = false;
-            Set<String> buttonValues = submission.getButtonValues();
-            if (buttonValues != null && !template.getButtons().isEmpty()) {
-                for (Button button : template.getButtons()) {
-                    if (button.getValue() != null && buttonValues.contains(button.getValue()) && button.getValue().equalsIgnoreCase("save")) {
-                        isSave = true;
-                        break;
+            ActionType action = submission.getAction();
+            if (action == null)
+                action = ActionType.COMPLETE;
+
+            switch (action) {
+                case COMPLETE:
+                    ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
+
+                    FormRequest nextFormRequest = null;
+
+                    if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
+                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
+
+                    // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
+                    if (nextFormRequest == null) {
+                        return Response.noContent().build();
                     }
-                }
-            }
 
-            if (isSave) {
-                processInstanceService.save(process, instance, task, template, submission);
+                    return responseHandler.redirect(nextFormRequest, viewContext);
 
-                return responseHandler.redirect(formRequest, viewContext);
-            } else {
-                ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
+                case REJECT:
+                    stored = processInstanceService.reject(process, instance, task, template, submission);
 
-                FormRequest nextFormRequest = null;
+                    nextFormRequest = null;
 
-                if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                    nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
+                    if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
+                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
 
-                // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
-                if (nextFormRequest == null) {
-                    return Response.noContent().build();
-                }
+                    // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
+                    if (nextFormRequest == null) {
+                        return Response.noContent().build();
+                    }
 
-                return responseHandler.redirect(nextFormRequest, viewContext);
+                    return responseHandler.redirect(nextFormRequest, viewContext);
+
+                case SAVE:
+                    processInstanceService.save(process, instance, task, template, submission);
+                    return responseHandler.redirect(formRequest, viewContext);
+
+                case VALIDATE:
+                    processInstanceService.validate(process, instance, task, template, submission, true);
+                    return responseHandler.redirect(formRequest, viewContext);
             }
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
@@ -342,6 +353,8 @@ public class FormService {
 
             return responseHandler.handle(formRequest, viewContext, validation);
         }
+
+        return Response.noContent().build();
     }
 
     public Response validateForm(HttpServletRequest request, ViewContext viewContext, Process process, MultipartBody body, String rawRequestId, String rawValidationId) throws StatusCodeError {

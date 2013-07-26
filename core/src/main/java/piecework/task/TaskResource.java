@@ -1,6 +1,7 @@
 package piecework.task;
 
 import piecework.ApiResource;
+import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
@@ -21,7 +22,7 @@ import javax.ws.rs.core.UriInfo;
 @Path("task")
 @Produces({"application/json", "application/xml"})
 @Consumes({"application/json", "application/xml"})
-public interface TaskResource extends ApiResource {
+public interface TaskResource extends ApplicationResource, ApiResource {
 
     @GET
     @Path("{processDefinitionKey}/{taskId}")

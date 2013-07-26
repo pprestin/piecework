@@ -491,21 +491,22 @@ public class ProcessInstanceService {
         return processInstanceRepository.save(instance);
     }
 
-    public ProcessInstance save(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
+    public ProcessInstance reject(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
+        FormValidation validation = validate(process, instance, task, template, submission, false);
+        completeIfTaskExists(process, task, validation);
+        return store(process, submission, validation, instance, false);
+    }
 
+    public ProcessInstance save(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validate(process, instance, task, template, submission, false);
         return store(process, submission, validation, instance, false);
     }
 
     public ProcessInstance submit(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
-
         FormValidation validation = validate(process, instance, task, template, submission, true);
-
         completeIfTaskExists(process, task, validation);
-
         return store(process, submission, validation, instance, false);
     }
-
 
     public void suspend(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
 

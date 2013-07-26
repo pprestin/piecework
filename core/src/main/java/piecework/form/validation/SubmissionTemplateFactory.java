@@ -20,7 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
-import piecework.form.handler.ValidUserHandler;
+import piecework.form.concrete.DefaultValueHandler;
+import piecework.form.concrete.ValidUserHandler;
 import piecework.form.handler.ValueHandler;
 import piecework.model.*;
 import piecework.model.Process;
@@ -40,6 +41,9 @@ public class SubmissionTemplateFactory {
 
     @Autowired(required=false)
     Registry registry;
+
+    @Autowired
+    DefaultValueHandler defaultValueHandler;
 
     @Autowired
     ValidUserHandler validUserHandler;
@@ -82,7 +86,7 @@ public class SubmissionTemplateFactory {
                     for (Button button : buttons) {
                         if (button == null)
                             continue;
-                        builder.button(button.getName());
+                        builder.button(button);
                     }
                 }
 
@@ -128,7 +132,7 @@ public class SubmissionTemplateFactory {
     private ValueHandler valueHandler(Field field) {
         if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
             return validUserHandler;
-        return null;
+        return defaultValueHandler;
     }
 
     private Set<ValidationRule> validationRules(Field field) {

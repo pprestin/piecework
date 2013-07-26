@@ -59,7 +59,10 @@ public class Button implements Serializable {
 	
 	@XmlElement
     private final String tooltip;
-	
+
+    @XmlElement
+    private final String action;
+
 	@XmlElement
     private final String type;
 	
@@ -83,6 +86,7 @@ public class Button implements Serializable {
     private Button(Button.Builder builder, ViewContext context) {
         this.buttonId = builder.buttonId;
         this.name = builder.name;
+        this.action = builder.action;
         this.label = builder.label;
         this.tooltip = builder.tooltip;
         this.type = builder.type;
@@ -108,7 +112,11 @@ public class Button implements Serializable {
 		return tooltip;
 	}
 
-	public String getType() {
+    public String getAction() {
+        return action;
+    }
+
+    public String getType() {
 		return type;
 	}
 
@@ -133,6 +141,7 @@ public class Button implements Serializable {
     	private String buttonId;
     	private String processDefinitionKey;
         private String name;
+        private String action;
         private String label;
         private String tooltip;
         private String type;
@@ -149,6 +158,7 @@ public class Button implements Serializable {
         public Builder(Button button, Sanitizer sanitizer) {
             this.buttonId = button.buttonId != null ? sanitizer.sanitize(button.buttonId) : UUID.randomUUID().toString();
             this.name = sanitizer.sanitize(button.name);
+            this.action = sanitizer.sanitize(button.action);
             this.label = sanitizer.sanitize(button.label);
             this.tooltip = sanitizer.sanitize(button.tooltip);
             this.type = sanitizer.sanitize(button.type);
@@ -177,6 +187,11 @@ public class Button implements Serializable {
 
         public Builder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        public Builder action(String action) {
+            this.action = action;
             return this;
         }
 

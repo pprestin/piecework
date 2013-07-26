@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.handler;
+package piecework.form.concrete;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.form.handler.ValueHandler;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.FormValue;
+import piecework.model.FormValueDetail;
 import piecework.model.User;
 
 import java.util.Arrays;
@@ -34,7 +36,7 @@ public class ValidUserHandler implements ValueHandler {
     InternalUserDetailsService userDetailsService;
 
     @Override
-    public List<FormValue> handle(String name, String value) {
+    public List<FormValue> handle(String name, String value, FormValueDetail detail) {
         User user = userDetailsService.getUserByAnyId(value);
 
         if (user != null) {

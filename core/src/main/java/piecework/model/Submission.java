@@ -21,11 +21,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import piecework.enumeration.ActionType;
 import piecework.security.Sanitizer;
-import piecework.util.ManyMap;
 
 import javax.xml.bind.annotation.*;
 
@@ -56,7 +55,7 @@ public class Submission {
     private final String requestId;
 
     @XmlTransient
-    private final Set<String> buttonValues;
+    private final ActionType action;
 
     @XmlElementWrapper(name="formData")
     @XmlElementRef
@@ -87,7 +86,7 @@ public class Submission {
         this.requestId = builder.requestId;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.attachments = Collections.unmodifiableList(builder.attachments);
-        this.buttonValues = Collections.unmodifiableSet(builder.buttonValues);
+        this.action = builder.action;
         List<FormValue> formValues = new ArrayList<FormValue>();
         if (builder.formValueBuilderMap != null) {
             for (FormValue.Builder formValueBuilder : builder.formValueBuilderMap.values()) {
@@ -131,8 +130,8 @@ public class Submission {
     }
 
     @JsonIgnore
-    public Set<String> getButtonValues() {
-        return buttonValues;
+    public ActionType getAction() {
+        return action;
     }
 
     @JsonIgnore
@@ -179,7 +178,7 @@ public class Submission {
         private String processDefinitionKey;
         private String processInstanceLabel;
         private String alias;
-        private Set<String> buttonValues;
+        private ActionType action;
         private Map<String, FormValue.Builder> formValueBuilderMap = new HashMap<String, FormValue.Builder>();
         private Map<String, FormValue.Builder> restrictedValueBuilderMap = new HashMap<String, FormValue.Builder>();
         private List<Attachment> attachments;
@@ -189,7 +188,7 @@ public class Submission {
         public Builder() {
             super();
             this.attachments = new ArrayList<Attachment>();
-            this.buttonValues = new HashSet<String>();
+            this.action = ActionType.COMPLETE;
         }
 
         public Builder(Submission submission, Sanitizer sanitizer) {
@@ -200,12 +199,7 @@ public class Submission {
             this.requestId = sanitizer.sanitize(submission.requestId);
             this.submissionDate = submission.submissionDate;
             this.submissionId = sanitizer.sanitize(submissionId);
-
-            if (submission.buttonValues != null && !submission.buttonValues.isEmpty()) {
-                for (String buttonValue : submission.buttonValues) {
-                    this.buttonValues.add(sanitizer.sanitize(buttonValue));
-                }
-            }
+            this.action = submission.getAction();
 
             if (submission.formData != null && !submission.formData.isEmpty()) {
                 for (FormValue formValue : submission.formData) {
@@ -287,8 +281,67 @@ public class Submission {
 //            return this;
 //        }
 
-        public Builder buttonValue(String buttonValue) {
-            this.buttonValues.add(buttonValue);
+        public Builder action(String action) {
+            if (action != null)
+                this.action = ActionType.valueOf(action);
+            return this;
+        }
+
+        public Builder formValue(FormValue formValue) {
+            String key = formValue.getName();
+
+            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
+            if (formValueBuilder == null) {
+                formValueBuilder = new FormValue.Builder().name(key);
+                formValueBuilderMap.put(key, formValueBuilder);
+            }
+
+            List<String> values = formValue.getValues();
+            List<FormValueDetail> details = formValue.getMetadata();
+
+            if (values != null) {
+                Iterator<FormValueDetail> iterator = null;
+                if (details != null)
+                    iterator = details.iterator();
+
+                for (String value : values) {
+                    if (value != null) {
+                        formValueBuilder.value(value);
+                        FormValueDetail detail = iterator != null ? iterator.next() : null;
+                        if (detail != null)
+                            formValueBuilder.detail(detail);
+                    }
+                }
+            }
+            return this;
+        }
+
+        public Builder restrictedValue(FormValue formValue) {
+            String key = formValue.getName();
+
+            FormValue.Builder formValueBuilder = restrictedValueBuilderMap.get(key);
+            if (formValueBuilder == null) {
+                formValueBuilder = new FormValue.Builder().name(key);
+                restrictedValueBuilderMap.put(key, formValueBuilder);
+            }
+
+            List<String> values = formValue.getValues();
+            List<FormValueDetail> details = formValue.getMetadata();
+
+            if (values != null) {
+                Iterator<FormValueDetail> iterator = null;
+                if (details != null)
+                    iterator = details.iterator();
+
+                for (String value : values) {
+                    if (value != null) {
+                        formValueBuilder.value(value);
+                        FormValueDetail detail = iterator != null ? iterator.next() : null;
+                        if (detail != null)
+                            formValueBuilder.detail(detail);
+                    }
+                }
+            }
             return this;
         }
 
@@ -307,38 +360,37 @@ public class Submission {
             return this;
         }
 
+//        public Builder formValueAndDetail(String key, String value, FormValueDetail detail) {
+//            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
+//            if (formValueBuilder == null) {
+//                formValueBuilder = new FormValue.Builder().name(key);
+//                formValueBuilderMap.put(key, formValueBuilder);
+//            }
+//
+//            if (value != null) {
+//                formValueBuilder.value(value);
+//                if (detail != null)
+//                    formValueBuilder.detail(detail);
+//            }
+//
+//            return this;
+//        }
 
-        public Builder formValueAndDetail(String key, String value, FormValueDetail detail) {
-            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
-            if (formValueBuilder == null) {
-                formValueBuilder = new FormValue.Builder().name(key);
-                formValueBuilderMap.put(key, formValueBuilder);
-            }
 
-            if (value != null) {
-                formValueBuilder.value(value);
-                if (detail != null)
-                    formValueBuilder.detail(detail);
-            }
-
-            return this;
-        }
-
-
-        public Builder restrictedValue(String key, String ... values) {
-            FormValue.Builder formValueBuilder = restrictedValueBuilderMap.get(key);
-            if (formValueBuilder == null) {
-                formValueBuilder = new FormValue.Builder().name(key);
-                restrictedValueBuilderMap.put(key, formValueBuilder);
-            }
-            if (values != null) {
-                for (String value : values) {
-                    formValueBuilder.value(value);
-                }
-            }
-
-            return this;
-        }
+//        public Builder restrictedValue(String key, String ... values) {
+//            FormValue.Builder formValueBuilder = restrictedValueBuilderMap.get(key);
+//            if (formValueBuilder == null) {
+//                formValueBuilder = new FormValue.Builder().name(key);
+//                restrictedValueBuilderMap.put(key, formValueBuilder);
+//            }
+//            if (values != null) {
+//                for (String value : values) {
+//                    formValueBuilder.value(value);
+//                }
+//            }
+//
+//            return this;
+//        }
 
 
         public Builder restrictedValueAndDetail(String key, String value, FormValueDetail detail) {
