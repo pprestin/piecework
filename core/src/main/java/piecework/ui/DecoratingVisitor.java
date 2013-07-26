@@ -214,9 +214,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
     class FormDecorator implements TagDecorator {
 
         private final Form form;
+//        private final Map<String, FormValue> formValueMap;
 
         public FormDecorator(Form form) {
             this.form = form;
+//            this.formValueMap = form.
         }
 
         @Override
@@ -237,6 +239,9 @@ public class DecoratingVisitor implements TagNodeVisitor {
                 attributes.put("action", attachmentUri);
                 attributes.put("method", "POST");
                 tag.setAttributes(attributes);
+            } else {
+//                FormValue formValue =
+
             }
         }
 
@@ -277,8 +282,8 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
     class VariableDecorator implements TagDecorator {
 
-        private Map<String, FormValue> formValueMap;
-        private ManyMap<String, Attachment> attachmentManyMap;
+        private final Map<String, FormValue> formValueMap;
+        private final ManyMap<String, Attachment> attachmentManyMap;
 
         public VariableDecorator(Form form) {
             this.formValueMap = form.getFormValueMap();
@@ -289,15 +294,22 @@ public class DecoratingVisitor implements TagNodeVisitor {
         public void decorate(TagNode tag, String id, String cls, String name, String variable) {
             List<Attachment> attachments = attachmentManyMap.get(variable);
 
-            if (tag.getName() != null && tag.getName().equals("img")) {
-                // Just grab the first attachment if it's an image tag
-                Attachment attachment = attachments != null ? attachments.iterator().next() : null;
+            FormValue formValue = formValueMap.get(variable);
+            List<String> values = formValue != null ? formValue.getValues() : null;
+            List<FormValueDetail> formValueDetails = formValue != null ? formValue.getMetadata() : null;
 
-                if (attachment != null) {
+            if (tag.getName() != null && tag.getName().equals("img")) {
+                // Just grab the first value if it's an image tag
+                String filename = values != null && !values.isEmpty() ? values.iterator().next() : "";
+
+
+                if (formValueDetails != null && !formValueDetails.isEmpty()) {
+                    FormValueDetail detail = formValueDetails.get(0);
+
                     Map<String, String> attributes = new HashMap<String, String>();
                     attributes.putAll(tag.getAttributes());
-                    attributes.put("alt", attachment.getDescription());
-                    attributes.put("src", attachment.getLink());
+                    attributes.put("alt", filename);
+                    attributes.put("src", formValue.getLink());
                     tag.setAttributes(attributes);
                 }
             } else if (tag.getName() != null && tag.getName().equals("ul")) {
@@ -311,37 +323,40 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     exampleTag.addChild(anchorTag);
                 }
                 tag.removeAllChildren();
-                for (Attachment attachment : attachments) {
-                    TagNode liTag = exampleTag.makeCopy();
-                    TagNode[] exampleChildren = exampleTag.getChildTags();
-                    if (exampleChildren != null) {
-                        for (TagNode exampleChild : exampleChildren) {
-                            TagNode liChild = exampleChild.makeCopy();
 
-                            if (liChild.getName() != null && liChild.getName().equalsIgnoreCase("a")) {
-                                liChild.addAttribute("href", attachment.getLink());
+                if (formValue != null) {
+                    if (values != null && formValueDetails.size() == values.size()) {
+                        int i=0;
+                        for (String value : values) {
+                            TagNode liTag = exampleTag.makeCopy();
+                            TagNode[] exampleChildren = exampleTag.getChildTags();
+                            if (exampleChildren != null) {
+                                for (TagNode exampleChild : exampleChildren) {
+                                    TagNode liChild = exampleChild.makeCopy();
+
+                                    if (liChild.getName() != null && liChild.getName().equalsIgnoreCase("a")) {
+                                        liChild.addAttribute("href", formValue.getLink() + "/" + value);
+                                        liChild.addChild(new ContentNode(value));
+                                    }
+
+                                    liTag.addChild(liChild);
+                                }
                             }
 
-                            liTag.addChild(liChild);
+                            tag.addChild(liTag);
+                            i++;
                         }
                     }
-
-                    tag.addChild(liTag);
                 }
             } else {
-
-                FormValue formValue = formValueMap.get(variable);
-                if (formValue != null) {
-                    tag.removeAllChildren();
-                    List<String> values = formValue.getValues();
-
-                    if (values != null) {
-                        for (String value : values) {
-                            tag.addChild(new ContentNode(value));
-                        }
+                tag.removeAllChildren();
+                if (values != null) {
+                    for (String value : values) {
+                        tag.addChild(new ContentNode(value));
                     }
                 }
             }
+
         }
 
         public Map<String, FormValue> getFormValueMap() {
@@ -350,7 +365,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            if (variable != null && (formValueMap.containsKey(variable) || attachmentManyMap.containsKey(variable)))
+            if (StringUtils.isNotEmpty(variable))
                 return true;
 
             return false;

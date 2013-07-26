@@ -299,20 +299,36 @@ public class FormService {
         Submission submission = submissionHandler.handle(process, template, body);
 
         try {
-            ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
-
-            FormRequest nextFormRequest = null;
-
-            if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
-
-            // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
-            if (nextFormRequest == null) {
-                return Response.noContent().build();
+            boolean isSave = false;
+            Set<String> buttonValues = submission.getButtonValues();
+            if (buttonValues != null && !template.getButtons().isEmpty()) {
+                for (Button button : template.getButtons()) {
+                    if (button.getValue() != null && buttonValues.contains(button.getValue()) && button.getValue().equalsIgnoreCase("save")) {
+                        isSave = true;
+                        break;
+                    }
+                }
             }
 
-            return responseHandler.redirect(nextFormRequest, viewContext);
+            if (isSave) {
+                processInstanceService.save(process, instance, task, template, submission);
 
+                return responseHandler.redirect(formRequest, viewContext);
+            } else {
+                ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
+
+                FormRequest nextFormRequest = null;
+
+                if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
+                    nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
+
+                // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
+                if (nextFormRequest == null) {
+                    return Response.noContent().build();
+                }
+
+                return responseHandler.redirect(nextFormRequest, viewContext);
+            }
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
 

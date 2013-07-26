@@ -214,21 +214,20 @@ public class ResponseHandler {
         Map<String, Field> fieldMap = new HashMap<String, Field>();
         if (screen != null) {
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
+            Map<String, Section> sectionMap = process.getSectionMap();
+            List<Grouping> groupings = screen.getGroupings();
 
-            if (process.getSections() != null) {
-                for (Section section : process.getSections()) {
-                    if (section.getFields() == null)
+            for (Grouping grouping : groupings) {
+                if (grouping == null)
+                    continue;
+                List<String> sectionsIds = grouping.getSectionIds();
+                if (sectionsIds == null)
+                    continue;
+
+                for (String sectionId : sectionsIds) {
+                    Section section = sectionMap.get(sectionId);
+                    if (section == null)
                         continue;
-
-                    for (Field field : section.getFields()) {
-                        if (field.getName() == null)
-                            continue;
-
-                        fieldMap.put(field.getName(), field);
-                        includedFieldNames.add(field.getName());
-                    }
-                }
-                for (Section section : process.getSections()) {
                     Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
 
                     for (Field field : section.getFields()) {
@@ -246,12 +245,18 @@ public class ResponseHandler {
                                 includedFieldNames.add(field.getName() + "__visibleId");
                             }
                         }
+                        String fieldName = field.getName();
 
+                        if (StringUtils.isNotEmpty(fieldName)) {
+                            includedFieldNames.add(fieldName);
+                            fieldMap.put(fieldName, field);
+                        }
                         sectionBuilder.field(fieldBuilder.build());
                     }
                     screenBuilder.section(sectionBuilder.build());
                 }
             }
+
             screen = screenBuilder.build();
         }
 

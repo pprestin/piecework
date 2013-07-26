@@ -91,6 +91,7 @@ public class Process implements Serializable {
 
     @XmlElementWrapper(name="sections")
     @XmlElementRef
+    @DBRef
     private final List<Section> sections;
 
     @XmlElementWrapper(name="notifications")
@@ -437,6 +438,16 @@ public class Process implements Serializable {
 
         public Builder clearInteractions() {
             this.interactions = new ArrayList<Interaction>();
+            return this;
+        }
+
+        public Builder clearNotifications() {
+            this.notifications = new ArrayList<Notification>();
+            return this;
+        }
+
+        public Builder clearSections() {
+            this.sections = new ArrayList<Section>();
             return this;
         }
 	}

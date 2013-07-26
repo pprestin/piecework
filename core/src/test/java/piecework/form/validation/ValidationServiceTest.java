@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import piecework.Constants;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.test.ExampleFactory;
 
 import java.util.List;
@@ -30,22 +31,26 @@ import java.util.List;
  */
 public class ValidationServiceTest {
 
+    SubmissionTemplateFactory submissionTemplateFactory;
 	ValidationService validationService;
 
 	@Before
 	public void setUp() {
 		this.validationService = new ValidationService();
+        this.submissionTemplateFactory = new SubmissionTemplateFactory();
 	}
 
 	@Test
 	public void testValidateFirstOfTwoSections() {
+        Process process = ExampleFactory.exampleProcess();
+        ProcessInstance instance = null;
 		Submission submission = new Submission.Builder()
 			.formValue("employeeName", "John Test")
 			.formValue("budgetNumber", "123456")
 			.build();
 
-		ProcessInstance instance = null;
-		FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "basic");
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
+		FormValidation validation = validationService.validate(instance, template, submission);
 
         List<ValidationResult> results = validation.getResults();
 		Assert.assertNull(results);
@@ -53,12 +58,14 @@ public class ValidationServiceTest {
 
     @Test
     public void testValidateFirstOfTwoSectionsFailed() {
+        Process process = ExampleFactory.exampleProcess();
+        ProcessInstance instance = null;
         Submission submission = new Submission.Builder()
                 .formValue("employeeName", "John Test")
                 .build();
 
-        ProcessInstance instance = null;
-        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "basic");
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
+        FormValidation validation = validationService.validate(instance, template, submission);
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNotNull(results);
@@ -67,14 +74,16 @@ public class ValidationServiceTest {
 
     @Test
     public void testValidateBothOfTwoSections() {
+        Process process = ExampleFactory.exampleProcess();
+        ProcessInstance instance = null;
         Submission submission = new Submission.Builder()
                 .formValue("employeeName", "John Test")
                 .formValue("budgetNumber", "123456")
                 .formValue("supervisorId", "sup1234")
                 .build();
 
-        ProcessInstance instance = null;
-        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
+        FormValidation validation = validationService.validate(instance, template, submission);
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNull(results);
@@ -82,13 +91,15 @@ public class ValidationServiceTest {
 
     @Test
     public void testValidateBothOfTwoSectionsFailed() {
+        Process process = ExampleFactory.exampleProcess();
+        ProcessInstance instance = null;
         Submission submission = new Submission.Builder()
                 .formValue("budgetNumber", "123456")
                 .formValue("supervisorId", "sup1234")
                 .build();
 
-        ProcessInstance instance = null;
-        FormValidation validation = validationService.validate(submission, instance, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
+        FormValidation validation = validationService.validate(instance, template, submission);
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNotNull(results);

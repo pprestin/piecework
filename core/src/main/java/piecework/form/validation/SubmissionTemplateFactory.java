@@ -20,8 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
+import piecework.form.handler.ValidUserHandler;
+import piecework.form.handler.ValueHandler;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.util.ConstraintUtil;
 import piecework.util.OptionResolver;
 
 import java.util.*;
@@ -37,6 +40,9 @@ public class SubmissionTemplateFactory {
 
     @Autowired(required=false)
     Registry registry;
+
+    @Autowired
+    ValidUserHandler validUserHandler;
 
     /*
      * Generated an "attachments only submission template", where all fields will be stored as attachments
@@ -76,7 +82,7 @@ public class SubmissionTemplateFactory {
                     for (Button button : buttons) {
                         if (button == null)
                             continue;
-                        builder.acceptable(button.getName());
+                        builder.button(button.getName());
                     }
                 }
 
@@ -100,7 +106,13 @@ public class SubmissionTemplateFactory {
                             if (fieldName == null)
                                 continue;
 
-                            builder.acceptable(fieldName);
+                            ValueHandler valueHandler = valueHandler(field);
+                            if (valueHandler != null)  {
+                                builder.handler(fieldName, valueHandler);
+                                builder.acceptables(valueHandler.getAcceptableFieldNames(fieldName));
+                            } else {
+                                builder.acceptable(fieldName);
+                            }
 
                             if (field.isRestricted())
                                 builder.restricted(fieldName);
@@ -111,6 +123,12 @@ public class SubmissionTemplateFactory {
         }
 
         return builder.build();
+    }
+
+    private ValueHandler valueHandler(Field field) {
+        if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
+            return validUserHandler;
+        return null;
     }
 
     private Set<ValidationRule> validationRules(Field field) {
@@ -165,11 +183,11 @@ public class SubmissionTemplateFactory {
             if (pattern != null)
                 rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.PATTERN).name(fieldName).pattern(pattern).build());
 
-            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALUE_LENGTH).valueLength(field.getMaxValueLength(), field.getMinValueLength()).build());
+            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALUE_LENGTH).name(fieldName).valueLength(field.getMaxValueLength(), field.getMinValueLength()).build());
         }
 
-        rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMBER_OF_INPUTS).valueLength(field.getMaxInputs(), field.getMinInputs()).build());
-
+        if (field.getMaxInputs() > 1 || field.getMinInputs() > 1)
+            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMBER_OF_INPUTS).name(fieldName).numberOfInputs(field.getMaxInputs(), field.getMinInputs()).build());
 
         return rules;
     }

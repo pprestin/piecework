@@ -145,7 +145,11 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                     function(data, textStatus, jqXHR) {
                         Chaplin.mediator.publish("search", {status:"open"});
                     }
-                ).fail(function() {  });
+                ).fail(function(jqXHR, textStatus, errorThrown) {
+                     var explanation = $.parseJSON(jqXHR.responseText);
+                     var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                     toolbar.subview('historyView', new NotificationView({container: '#suspend-dialog > .modal-body', model: notification}));
+                 });
             }
 	    },
 	});

@@ -25,9 +25,15 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 
+import org.springframework.data.mongodb.core.MongoOperations;
 import piecework.Registry;
+import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.concrete.ProcessEngineConcreteFacade;
+import piecework.form.FormService;
+import piecework.form.validation.SubmissionTemplateFactory;
+import piecework.form.validation.ValidationService;
+import piecework.identity.InternalUserDetailsService;
 import piecework.persistence.AuthorizationRepository;
 import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.engine.ProcessEngineProxy;
@@ -79,6 +85,11 @@ public class UnitTestConfiguration {
 	}
 
     @Bean
+    public SubmissionTemplateFactory submissionTemplateFactory() {
+        return new SubmissionTemplateFactory();
+    }
+
+    @Bean
     public RequestHandler requestHandler() {
         return new RequestHandler();
     }
@@ -115,6 +126,31 @@ public class UnitTestConfiguration {
 		ScreenResourceVersion1Impl resource = new ScreenResourceVersion1Impl();
 		return resource;
 	}
+
+    @Bean
+    public FormService formService() {
+        return new FormService();
+    }
+
+    @Bean
+    public ProcessService processService() {
+        return new ProcessService();
+    }
+
+    @Bean
+    public ProcessInstanceService processInstanceService() {
+        return new ProcessInstanceService();
+    }
+
+    @Bean
+    public ValidationService validationService() {
+        return new ValidationService();
+    }
+
+    @Bean
+    public AttachmentRepository attachmentRepository() {
+        return new AttachmentRepositoryStub();
+    }
 
     @Bean
     public AuthorizationRepository authorizationRepository() {
@@ -176,6 +212,25 @@ public class UnitTestConfiguration {
         return configurer;
     }
 
+    @Bean
+    public InternalUserDetailsService internalUserDetailsService() {
+        return Mockito.mock(InternalUserDetailsService.class);
+    }
+
+    @Bean
+    public MongoOperations mongoOperations() {
+        return Mockito.mock(MongoOperations.class);
+    }
+
+    @Bean
+    public UuidGenerator uuidGenerator() {
+        return new UuidGenerator();
+    }
+
+    public class AttachmentRepositoryStub extends MongoRepositoryStub<Attachment> implements AttachmentRepository {
+
+    }
+
     public class AuthorizationRepositoryStub extends MongoRepositoryStub<Authorization> implements AuthorizationRepository {
 
     }
@@ -196,6 +251,16 @@ public class UnitTestConfiguration {
         @Override
         public List<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword) {
             return null;
+        }
+
+        @Override
+        public ProcessInstance findByProcessDefinitionKeyAndEngineProcessInstanceId(String processDefinitionKey, String engineProcessInstanceId) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public List<ProcessInstance> findByProcessInstanceIdIn(Iterable<String> processInstanceIds) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
 
         @Override

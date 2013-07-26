@@ -18,6 +18,7 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
@@ -31,6 +32,7 @@ import java.util.*;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Notification.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Document(collection = "notification")
 public class Notification implements Serializable {
 
     @XmlAttribute

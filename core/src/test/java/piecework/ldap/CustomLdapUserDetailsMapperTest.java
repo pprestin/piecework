@@ -19,6 +19,7 @@ import org.apache.cxf.configuration.jsse.SSLUtils;
 import org.apache.cxf.configuration.security.FiltersType;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,7 @@ import java.util.Set;
 /**
  * @author James Renfro
  */
+@Ignore
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes={LdapConfiguration.class, EmbeddedLdapConfiguration.class, UnitTestConfiguration.class})
 @ActiveProfiles({"ldap", "embedded-ldap", "test"})

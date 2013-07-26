@@ -18,6 +18,7 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
@@ -31,6 +32,7 @@ import java.util.*;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Section.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Document(collection = "section")
 public class Section {
 
 	@XmlAttribute

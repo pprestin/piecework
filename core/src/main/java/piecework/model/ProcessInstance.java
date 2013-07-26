@@ -491,8 +491,8 @@ public class ProcessInstance implements Serializable {
 
         public Builder restrictedValueMap(Map<String, FormValue> restrictedValueMap) {
             Map<String, FormValue> map = new HashMap<String, FormValue>();
-            if (this.formData != null && !this.formData.isEmpty()) {
-                for (FormValue formValue : this.formData) {
+            if (this.restrictedData != null && !this.restrictedData.isEmpty()) {
+                for (FormValue formValue : this.restrictedData) {
                     map.put(formValue.getName(), formValue);
                 }
             }

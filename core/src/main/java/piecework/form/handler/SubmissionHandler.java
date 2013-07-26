@@ -35,6 +35,7 @@ import piecework.persistence.SubmissionRepository;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -84,12 +85,18 @@ public class SubmissionHandler {
                 .submitterId(helper.getAuthenticatedSystemOrUserId());
 
         if (formValueContentMap != null && !formValueContentMap.isEmpty()) {
+            String userId = helper.getAuthenticatedSystemOrUserId();
+
             for (Map.Entry<String, List<String>> entry : formValueContentMap.entrySet()) {
-                String key = sanitizer.sanitize(entry.getKey());
+                String name = sanitizer.sanitize(entry.getKey());
                 List<String> rawValues = entry.getValue();
+
                 if (rawValues != null) {
                     for (String rawValue : rawValues) {
-                        submissionBuilder.formValue(key, sanitizer.sanitize(rawValue));
+                        String value = sanitizer.sanitize(rawValue);
+                        if (!handleStorage(template, submissionBuilder, name, value, userId)) {
+                            LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
+                        }
                     }
                 }
             }
@@ -129,9 +136,6 @@ public class SubmissionHandler {
     }
 
     private void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) {
-        Set<String> acceptableFieldNames = template.getAcceptable();
-        boolean isAttachedAllowed = template.isAttachmentAllowed();
-
         String contentType = MediaType.TEXT_PLAIN;
         if (LOG.isDebugEnabled())
             LOG.debug("Processing multipart with content type " + contentType + " and content id " + attachment.getContentId());
@@ -139,18 +143,7 @@ public class SubmissionHandler {
         String name = sanitizer.sanitize(attachment.getDataHandler().getName());
         String value = sanitizer.sanitize(attachment.getObject(String.class));
 
-        if (acceptableFieldNames.contains(name)) {
-            submissionBuilder.formValue(name, value);
-        } else if (isAttachedAllowed) {
-            Attachment attachmentDetails = new Attachment.Builder()
-                    .contentType(contentType)
-                    .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
-                    .description(value)
-                    .userId(userId)
-                    .name(name)
-                    .build();
-            submissionBuilder.attachment(attachmentDetails);
-        } else {
+        if (!handleStorage(template, submissionBuilder, name, value, userId)) {
             LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
         }
     }
@@ -165,78 +158,72 @@ public class SubmissionHandler {
             if (StringUtils.isNotEmpty(filename)) {
                 if (LOG.isDebugEnabled())
                     LOG.debug("Processing multipart with content type " + contentType + " content id " + attachment.getContentId() + " and filename " + filename);
-                try {
-                    Set<String> acceptableFieldNames = template.getAcceptable();
-                    boolean isAttachedAllowed = template.isAttachmentAllowed();
-
-                    if (acceptableFieldNames.contains(name) || isAttachedAllowed) {
-                        String directory = StringUtils.isNotEmpty(submissionBuilder.getProcessDefinitionKey()) ? submissionBuilder.getProcessDefinitionKey() : "submissions";
-                        String location = "/" + directory + "/" + uuidGenerator.getNextId();
-
-                        Content content = new Content.Builder()
-                                .contentType(contentType)
-                                .filename(filename)
-                                .location(location)
-                                .inputStream(attachment.getDataHandler().getInputStream())
-                                .build();
-
-                        content = contentRepository.save(content);
-
-                        if (acceptableFieldNames.contains(name)) {
-                            FormValueDetail detail = new FormValueDetail.Builder()
-                                    .location(content.getLocation())
-                                    .contentType(contentType)
-                                    .build();
-
-                            submissionBuilder.formValueAndDetail(name, filename, detail);
-                        } else if (isAttachedAllowed) {
-                            Attachment attachmentDetails = new Attachment.Builder()
-                                    .contentType(contentType)
-                                    .location(content.getLocation())
-                                    .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
-                                    .description(filename)
-                                    .userId(userId)
-                                    .name(name)
-                                    .build();
-                            submissionBuilder.attachment(attachmentDetails);
+                    try {
+                        if (!handleStorage(template, submissionBuilder, name, filename, userId, attachment.getDataHandler().getInputStream(), contentType)) {
+                           LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                         }
-                    } else {
-                       LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
+                    } catch (IOException e) {
+                        LOG.warn("Unable to store file with content type " + contentType + " and filename " + filename);
                     }
-                } catch (IOException e) {
-                    LOG.error("Unable to save this attachment with filename: " + filename, e);
-                }
             }
         }
     }
 
-//    public Submission handle(Payload payload, boolean isAttachmentAllowed) throws StatusCodeError {
-//        String requestId = payload.getRequestId();
-//
-//        Submission.Builder submissionBuilder = new Submission.Builder()
-//                .requestId(requestId)
-//                .submissionDate(new Date())
-//                .submitterId(helper.getAuthenticatedSystemOrUserId());
-////                .submissionType(submissionType);
-//
-//        switch (payload.getType()) {
-//            case INSTANCE:
-//                submissionBuilder.formData(payload.getInstance().getFormValueContentMap());
-//                submissionBuilder.attachments(payload.getInstance().getAttachments());
-//                break;
-//            case FORMDATA:
-//                submissionBuilder.formData(payload.getFormData());
-//                break;
-//            case FORMVALUEMAP:
-//                submissionBuilder.formValueMap(payload.getFormValueMap());
-//                break;
-//            case MULTIPART:
-//                multipart(payload.getProcessDefinitionKey(), submissionBuilder, payload.getMultipartBody(), isAttachmentAllowed);
-//                break;
-//        }
-//
-//        Submission result = submissionBuilder.build();
-//        return submissionRepository.save(result);
-//    }
+    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId) {
+        return handleStorage(template, submissionBuilder, name, value, userId, null, MediaType.TEXT_PLAIN);
+    }
+
+    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId, InputStream inputStream, String contentType) {
+        boolean isAcceptable = template.isAcceptable(name);
+        boolean isButton = template.isButton(name);
+        boolean isRestricted = !isAcceptable && template.isRestricted(name);
+        boolean isAttachment = !isAcceptable && !isRestricted && template.isAttachmentAllowed();
+
+        if (isButton) {
+            submissionBuilder.buttonValue(value);
+            return true;
+        } else if (isAcceptable || isRestricted || isAttachment) {
+            String location = null;
+            FormValueDetail detail = null;
+
+            if (inputStream != null) {
+                String directory = StringUtils.isNotEmpty(submissionBuilder.getProcessDefinitionKey()) ? submissionBuilder.getProcessDefinitionKey() : "submissions";
+                location = "/" + directory + "/" + uuidGenerator.getNextId();
+
+                Content content = new Content.Builder()
+                        .contentType(contentType)
+                        .filename(value)
+                        .location(location)
+                        .inputStream(inputStream)
+                        .build();
+
+                content = contentRepository.save(content);
+                location = content.getLocation();
+                detail = new FormValueDetail.Builder()
+                        .location(location)
+                        .contentType(contentType)
+                        .build();
+            }
+
+            if (isAcceptable) {
+                submissionBuilder.formValueAndDetail(name, value, detail);
+            } else if (isRestricted) {
+                submissionBuilder.restrictedValueAndDetail(name, value, detail);
+            } else if (isAttachment) {
+                Attachment attachmentDetails = new Attachment.Builder()
+                        .contentType(contentType)
+                        .location(location)
+                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
+                        .description(value)
+                        .userId(userId)
+                        .name(name)
+                        .build();
+                submissionBuilder.attachment(attachmentDetails);
+            }
+            return true;
+        }
+
+        return false;
+    }
 
 }

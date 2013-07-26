@@ -387,9 +387,10 @@ public class ProcessInstanceService {
     public ProcessInstance store(Process process, Submission submission, FormValidation validation, ProcessInstance previous, boolean isAttachment) throws StatusCodeError {
         ProcessInstance.Builder instanceBuilder;
 
-        String processInstanceLabel = process.getProcessInstanceLabelTemplate();
+        String processInstanceLabel = submission.getProcessInstanceLabel();
+        String processInstanceLabelTemplate = process.getProcessInstanceLabelTemplate();
 
-        if (!isAttachment && processInstanceLabel != null && processInstanceLabel.indexOf('{') != -1) {
+        if (StringUtils.isEmpty(processInstanceLabel) && !isAttachment && processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
             Map<String, String> scopes = new HashMap<String, String>();
 
             Map<String, FormValue> instanceFormValueMap = previous != null ? previous.getFormValueMap() : null;
@@ -413,7 +414,7 @@ public class ProcessInstanceService {
 
             StringWriter writer = new StringWriter();
             MustacheFactory mf = new DefaultMustacheFactory();
-            Mustache mustache = mf.compile(new StringReader(processInstanceLabel), "processInstanceLabel");
+            Mustache mustache = mf.compile(new StringReader(processInstanceLabelTemplate), "processInstanceLabel");
             mustache.execute(writer, scopes);
 
             processInstanceLabel = writer.toString();
@@ -668,7 +669,7 @@ public class ProcessInstanceService {
     }
 
     private void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
-        String taskId = task.getTaskInstanceId();
+        String taskId = task != null ? task.getTaskInstanceId() : null;
         if (StringUtils.isNotEmpty(taskId)) {
             try {
                 InternalUserDetails user = helper.getAuthenticatedPrincipal();
@@ -683,7 +684,7 @@ public class ProcessInstanceService {
     }
 
     private void completeIfTaskExists(Process process, Task task, FormValidation validation) throws StatusCodeError {
-        String taskId = task.getTaskInstanceId();
+        String taskId = task != null ? task.getTaskInstanceId() : null;
         if (StringUtils.isNotEmpty(taskId)) {
             try {
                 String actionValue = null;

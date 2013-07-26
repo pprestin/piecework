@@ -47,7 +47,7 @@ import java.util.Map;
  * @author James Renfro
  */
 @Configuration
-@Profile({"dev","eval","prod"})
+@Profile({"dev","intg","eval","prod"})
 @ComponentScan(basePackages = "piecework")
 public class ApplicationConfiguration {
 

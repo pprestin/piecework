@@ -54,9 +54,9 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, ProcessInstance instance) throws StatusCodeError;
 
     @DELETE
-    @Path("{processDefinitionKey}/{processInstanceId}/{reason}")
+    @Path("{processDefinitionKey}/{processInstanceId}")
     @RolesAllowed({AuthorizationRole.OVERSEER})
-    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("reason") String reason) throws StatusCodeError;
+    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
 
     @GET
     @Path("")

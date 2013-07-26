@@ -16,6 +16,7 @@
 package piecework.form.validation;
 
 import com.google.common.collect.Sets;
+import piecework.form.handler.ValueHandler;
 import piecework.model.Button;
 import piecework.model.Field;
 
@@ -27,6 +28,8 @@ import java.util.*;
 public class SubmissionTemplate {
 
     private final Set<String> acceptable;
+    private final Map<String, Button> buttonMap;
+    private final Map<String, ValueHandler> handlerMap;
     private final Set<String> restricted;
     private final List<ValidationRule> rules;
     private final boolean isAttachmentAllowed;
@@ -37,6 +40,8 @@ public class SubmissionTemplate {
 
     private SubmissionTemplate(Builder builder) {
         this.acceptable = Collections.unmodifiableSet(builder.acceptable);
+        this.buttonMap = Collections.unmodifiableMap(builder.buttonMap);
+        this.handlerMap = Collections.unmodifiableMap(builder.handlerMap);
         this.restricted = Collections.unmodifiableSet(builder.restricted);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.rules = Collections.unmodifiableList(builder.rules);
@@ -44,6 +49,14 @@ public class SubmissionTemplate {
 
     public Set<String> getAcceptable() {
         return acceptable;
+    }
+
+    public Collection<Button> getButtons() {
+        return buttonMap.values();
+    }
+
+    public Map<String, ValueHandler> getHandlerMap() {
+        return handlerMap;
     }
 
     public Set<String> getRestricted() {
@@ -54,18 +67,34 @@ public class SubmissionTemplate {
         return rules;
     }
 
+    public boolean isAcceptable(String name) {
+        return acceptable.contains(name);
+    }
+
+    public boolean isButton(String name) {
+        return buttonMap.containsKey(name);
+    }
+
     public boolean isAttachmentAllowed() {
         return isAttachmentAllowed;
+    }
+
+    public boolean isRestricted(String name) {
+        return restricted.contains(name);
     }
 
     public final static class Builder {
         private Set<String> acceptable;
         private Set<String> restricted;
+        private Map<String, Button> buttonMap;
+        private Map<String, ValueHandler> handlerMap;
         private List<ValidationRule> rules;
         private boolean isAttachmentAllowed;
 
         public Builder() {
             this.acceptable = new HashSet<String>();
+            this.buttonMap = new HashMap<String, Button>();
+            this.handlerMap = new HashMap<String, ValueHandler>();
             this.restricted = new HashSet<String>();
             this.rules = new ArrayList<ValidationRule>();
         }
@@ -76,6 +105,21 @@ public class SubmissionTemplate {
 
         public Builder acceptable(String key) {
             this.acceptable.add(key);
+            return this;
+        }
+
+        public Builder acceptables(Collection<String> keys) {
+            this.acceptable.addAll(keys);
+            return this;
+        }
+
+        public Builder button(Button button) {
+            this.buttonMap.put(button.getName(), button);
+            return this;
+        }
+
+        public Builder handler(String key, ValueHandler handler) {
+            this.handlerMap.put(key, handler);
             return this;
         }
 

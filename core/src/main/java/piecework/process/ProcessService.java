@@ -27,9 +27,7 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.InteractionRepository;
-import piecework.persistence.ProcessRepository;
-import piecework.persistence.ScreenRepository;
+import piecework.persistence.*;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -59,7 +57,13 @@ public class ProcessService {
     InteractionRepository interactionRepository;
 
     @Autowired
+    NotificationRepository notificationRepository;
+
+    @Autowired
     ScreenRepository screenRepository;
+
+    @Autowired
+    SectionRepository sectionRepository;
 
     @Autowired
     Sanitizer sanitizer;
@@ -85,6 +89,20 @@ public class ProcessService {
                 }
                 Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
                 builder.interaction(persistedInteraction);
+            }
+        }
+        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
+            for (Notification notification : rawProcess.getNotifications()) {
+                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
+                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
+                builder.notification(persistedNotification);
+            }
+        }
+        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
+            for (Section section : rawProcess.getSections()) {
+                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
+                Section persistedSection = sectionRepository.save(sectionBuilder.build());
+                builder.section(persistedSection);
             }
         }
 
@@ -172,7 +190,7 @@ public class ProcessService {
         if (rawProcess.getInteractions() != null && !rawProcess.getInteractions().isEmpty()) {
             for (Interaction interaction : rawProcess.getInteractions()) {
                 Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
-                interactionBuilder.screens(null);
+                interactionBuilder.clearScreens();
                 if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
                     for (Screen screen : interaction.getScreens()) {
                         Screen persistedScreen = screenRepository.save(screen);
@@ -181,6 +199,20 @@ public class ProcessService {
                 }
                 Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
                 builder.interaction(persistedInteraction);
+            }
+        }
+        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
+            for (Notification notification : rawProcess.getNotifications()) {
+                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
+                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
+                builder.notification(persistedNotification);
+            }
+        }
+        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
+            for (Section section : rawProcess.getSections()) {
+                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
+                Section persistedSection = sectionRepository.save(sectionBuilder.build());
+                builder.section(persistedSection);
             }
         }
 

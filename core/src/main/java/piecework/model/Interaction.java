@@ -262,6 +262,11 @@ public class Interaction implements Serializable {
 		public String getId() {
 			return id;
 		}
+
+        public Builder clearScreens() {
+            this.screens = new ArrayList<Screen>();
+            return this;
+        }
 	}
 	
 	public static class Constants {

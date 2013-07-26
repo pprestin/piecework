@@ -18,6 +18,7 @@ package piecework.ui;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import piecework.model.*;
@@ -27,6 +28,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
+@Ignore
 public class ScreenBuildingVisitorTest {
 
     private HtmlCleaner cleaner = new HtmlCleaner();

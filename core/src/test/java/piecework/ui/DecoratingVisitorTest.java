@@ -20,6 +20,7 @@ import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.SimpleHtmlSerializer;
 import org.htmlcleaner.TagNode;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import piecework.model.Form;
@@ -28,6 +29,7 @@ import piecework.test.ExampleFactory;
 /**
  * @author James Renfro
  */
+@Ignore
 public class DecoratingVisitorTest {
 
     private HtmlCleaner cleaner = new HtmlCleaner();
