@@ -26,7 +26,7 @@ import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
 import piecework.Constants;
-import piecework.form.FieldTag;
+import piecework.enumeration.FieldTag;
 import piecework.model.*;
 import piecework.util.ManyMap;
 
@@ -61,6 +61,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         decoratorMap.putOne("span", variableDecorator);
         decoratorMap.putOne("img", variableDecorator);
         decoratorMap.putOne("ul", variableDecorator);
+        decoratorMap.putOne("input", variableDecorator);
 
         Screen screen = form.getScreen();
         Map<String, FormValue> formValueMap = variableDecorator.getFormValueMap();
@@ -214,11 +215,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
     class FormDecorator implements TagDecorator {
 
         private final Form form;
-//        private final Map<String, FormValue> formValueMap;
+        private final Map<String, FormValue> formValueMap;
 
         public FormDecorator(Form form) {
             this.form = form;
-//            this.formValueMap = form.
+            this.formValueMap = form.getFormValueMap();
         }
 
         @Override
@@ -240,8 +241,12 @@ public class DecoratingVisitor implements TagNodeVisitor {
                 attributes.put("method", "POST");
                 tag.setAttributes(attributes);
             } else {
-//                FormValue formValue =
-
+                FormValue formValue = formValueMap.get(type);
+                if (formValue != null) {
+                    attributes.put("action", formValue.getLink());
+                    attributes.put("method", "POST");
+                    tag.setAttributes(attributes);
+                }
             }
         }
 
@@ -298,10 +303,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
             List<String> values = formValue != null ? formValue.getValues() : null;
             List<FormValueDetail> formValueDetails = formValue != null ? formValue.getMetadata() : null;
 
-            if (tag.getName() != null && tag.getName().equals("img")) {
+            String tagName = tag.getName() != null ? tag.getName() : "";
+
+            if (tagName.equals("img")) {
                 // Just grab the first value if it's an image tag
                 String filename = values != null && !values.isEmpty() ? values.iterator().next() : "";
-
 
                 if (formValueDetails != null && !formValueDetails.isEmpty()) {
                     FormValueDetail detail = formValueDetails.get(0);
@@ -309,10 +315,10 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     Map<String, String> attributes = new HashMap<String, String>();
                     attributes.putAll(tag.getAttributes());
                     attributes.put("alt", filename);
-                    attributes.put("src", formValue.getLink());
+                    attributes.put("src", formValue.getLink() + "/" + filename);
                     tag.setAttributes(attributes);
                 }
-            } else if (tag.getName() != null && tag.getName().equals("ul")) {
+            } else if (tagName.equals("ul")) {
                 TagNode exampleTag = new TagNode("li");
                 // Check to see if there is an example tag of how to format things
                 TagNode[] childTags = tag.getChildTags();
@@ -348,6 +354,19 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         }
                     }
                 }
+            } else if (tagName.equalsIgnoreCase("input")) {
+                // Only modify the value if the input tag is disabled and it's a text input
+                String type = tag.getAttributeByName("type");
+                String disabled = tag.getAttributeByName("disabled");
+
+                if (type != null && disabled != null && type.equals("text")) {
+                    if (values != null) {
+                        for (String value : values) {
+                            tag.addAttribute("value", value);
+                            break;
+                        }
+                    }
+                }
             } else {
                 tag.removeAllChildren();
                 if (values != null) {
@@ -356,7 +375,6 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     }
                 }
             }
-
         }
 
         public Map<String, FormValue> getFormValueMap() {
@@ -440,6 +458,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         attributes.put("value", value);
                     break;
                 case TEXTAREA:
+                    tag.removeAllChildren();
                     if (value != null)
                         tag.addChild(new ContentNode(value));
                     break;

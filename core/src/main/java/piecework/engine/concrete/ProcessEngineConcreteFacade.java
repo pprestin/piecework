@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import piecework.Registry;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
+import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstanceSearchCriteria;
@@ -150,7 +151,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public boolean completeTask(Process process, String taskId, String action) throws ProcessEngineException {
+    public boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");

@@ -23,6 +23,7 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
+import piecework.enumeration.ActionType;
 import piecework.identity.InternalUserDetails;
 import piecework.process.concrete.ResourceHelper;
 import piecework.task.TaskCriteria;
@@ -53,10 +54,10 @@ public class RequestHandler {
     ResourceHelper resourceHelper;
 
     public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {
-        return create(requestDetails, process, null, (Task)null, null);
+        return create(requestDetails, process, null, (Task)null, null, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, FormRequest previousFormRequest) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, FormRequest previousFormRequest, ActionType action) throws StatusCodeError {
         Interaction interaction = null;
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
@@ -122,7 +123,7 @@ public class RequestHandler {
 
                 if (isFound) {
                     // Once we've reached the current screen then we can start looking for the next screen
-                    if (satisfiesScreenConstraints(cursor, formValueMap))
+                    if (satisfiesScreenConstraints(cursor, formValueMap, action))
                         nextScreen = cursor;
                 } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
                     isFound = true;
@@ -162,10 +163,12 @@ public class RequestHandler {
                 task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
 
                 if (task == null) {
-                    // Even though this may happen because the user is not authorized to view this task, don't provide
-                    // any more information than the fact that it wasn't found - so it's not possible to determine
-                    // which tasks exist by testing all possible combinations
-                    throw new NotFoundError();
+                    if (resourceHelper.hasRole(process, AuthorizationRole.OVERSEER)) {
+                        task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).processStatus(Constants.ProcessStatuses.ALL).build());
+                    }
+                    if (task == null) {
+                        throw new NotFoundError();
+                    }
                 }
 
             } catch (ProcessEngineException e) {
@@ -174,15 +177,15 @@ public class RequestHandler {
             }
         }
 
-        return create(requestDetails, process, processInstance, task, previousFormRequest);
+        return create(requestDetails, process, processInstance, task, previousFormRequest, null);
     }
 
-    private boolean satisfiesScreenConstraints(Screen screen, Map<String, FormValue> formValueMap) {
-
-        if (!screen.getConstraints().isEmpty() && ConstraintUtil.hasConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, screen.getConstraints())) {
-            return ConstraintUtil.checkAll(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, null, formValueMap, screen.getConstraints());
+    private boolean satisfiesScreenConstraints(Screen screen, Map<String, FormValue> formValueMap, ActionType action) {
+        Constraint constraint = ConstraintUtil.getConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE, screen.getConstraints());
+        if (constraint != null && action != null) {
+            ActionType expected = ActionType.valueOf(constraint.getValue());
+            return expected == action;
         }
-
         return true;
     }
 
@@ -191,7 +194,8 @@ public class RequestHandler {
 
         if (formRequest == null) {
             LOG.warn("Request being viewed or submitted for invalid/missing requestId " + requestId);
-            throw new NotFoundError(Constants.ExceptionCodes.request_does_not_match);
+//            throw new NotFoundError(Constants.ExceptionCodes.request_does_not_match);
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
         if (request != null) {

@@ -94,18 +94,18 @@ define([
 
         this.view = new SearchResultsView({collection: resultsCollection});
 
-//        var data = {};
-//
-//        if (resultsCollection.length == 0) {
-//            if (params.keyword !== undefined && params.keyword != '')
-//                data['keyword'] = params.keyword;
-//            if (params.processStatus !== undefined && params.processStatus != '')
-//                data['processStatus'] = params.processStatus;
-//            if (params.processDefinitionKey !== undefined && params.processDefinitionKey != '')
-//                data['processDefinitionKey'] = params.processDefinitionKey;
-//
-//            resultsCollection.fetch({data: data});
-//        }
+        var data = {};
+
+        if (resultsCollection.length == 0) {
+            if (params.keyword !== undefined && params.keyword != '')
+                data['keyword'] = params.keyword;
+            if (params.processStatus !== undefined && params.processStatus != '')
+                data['processStatus'] = params.processStatus;
+            if (params.processDefinitionKey !== undefined && params.processDefinitionKey != '')
+                data['processDefinitionKey'] = params.processDefinitionKey;
+
+            resultsCollection.fetch({data: data});
+        }
     },
     step: function(params, route) {
         var explanation = window.piecework.explanation;

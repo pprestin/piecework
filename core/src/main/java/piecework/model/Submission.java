@@ -55,6 +55,9 @@ public class Submission {
     private final String requestId;
 
     @XmlTransient
+    private final String taskId;
+
+    @XmlTransient
     private final ActionType action;
 
     @XmlElementWrapper(name="formData")
@@ -84,6 +87,7 @@ public class Submission {
         this.processDefinitionKey = builder.processDefinitionKey;
         this.alias = builder.alias;
         this.requestId = builder.requestId;
+        this.taskId = builder.taskId;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.attachments = Collections.unmodifiableList(builder.attachments);
         this.action = builder.action;
@@ -115,6 +119,11 @@ public class Submission {
     @JsonIgnore
     public String getRequestId() {
         return requestId;
+    }
+
+    @JsonIgnore
+    public String getTaskId() {
+        return taskId;
     }
 
     public String getAlias() {
@@ -175,6 +184,7 @@ public class Submission {
 
         private String submissionId;
         private String requestId;
+        private String taskId;
         private String processDefinitionKey;
         private String processInstanceLabel;
         private String alias;
@@ -197,6 +207,7 @@ public class Submission {
             this.processInstanceLabel = sanitizer.sanitize(submission.processInstanceLabel);
             this.alias = sanitizer.sanitize(submission.alias);
             this.requestId = sanitizer.sanitize(submission.requestId);
+            this.taskId = sanitizer.sanitize(submission.taskId);
             this.submissionDate = submission.submissionDate;
             this.submissionId = sanitizer.sanitize(submissionId);
             this.action = submission.getAction();
@@ -244,6 +255,11 @@ public class Submission {
 
         public Builder requestId(String requestId) {
             this.requestId = requestId;
+            return this;
+        }
+
+        public Builder taskId(String taskId) {
+            this.taskId = taskId;
             return this;
         }
 

@@ -1,6 +1,7 @@
 package piecework.engine;
 
 import piecework.engine.exception.ProcessEngineException;
+import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstanceSearchCriteria;
@@ -30,7 +31,7 @@ public interface ProcessEngineCapabilities {
 
     TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException;
 
-    boolean completeTask(Process process, String taskId, String action) throws ProcessEngineException;
+    boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException;
 
     void deploy(Process process, String name, ProcessModelResource ... resources) throws ProcessEngineException;
 

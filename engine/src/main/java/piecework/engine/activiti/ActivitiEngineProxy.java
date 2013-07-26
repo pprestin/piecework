@@ -33,6 +33,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.engine.exception.TaskAlreadyClaimedException;
+import piecework.enumeration.ActionType;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.User;
 import piecework.engine.*;
@@ -143,7 +145,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public boolean completeTask(Process process, String taskId, String action) throws ProcessEngineException {
+    public boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException {
         InternalUserDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
@@ -156,15 +158,17 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             if (activitiTask != null)  {
                 if (action != null) {
                     String variableName = activitiTask.getTaskDefinitionKey() + "_action";
-                    taskService.setVariable(taskId, variableName, action);
+                    taskService.setVariable(taskId, variableName, action.name());
                 }
                 // Always assign the task to the user before completing it
                 if (StringUtils.isNotEmpty(userId))
-                    taskService.setAssignee(taskId, userId);
+                    taskService.claim(taskId, userId);
+
                 taskService.complete(taskId);
                 return true;
             }
-
+        } catch (ActivitiTaskAlreadyClaimedException e) {
+            throw new TaskAlreadyClaimedException();
         } catch (ActivitiException exception) {
             throw new ProcessEngineException("Activiti unable to complete task ", exception);
         }

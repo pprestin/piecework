@@ -57,9 +57,10 @@ public class ValidationService {
         if (rules != null) {
             Set<String> acceptableFieldNames = new HashSet<String>(template.getAcceptable());
             Map<String, FormValue> formValueMap = submission.getFormValueMap();
+            Map<String, FormValue> instanceValueMap = instance != null ? instance.getFormValueMap() : Collections.<String, FormValue>emptyMap();
             for (ValidationRule rule : rules) {
                 try {
-                    rule.evaluate(formValueMap);
+                    rule.evaluate(formValueMap, instanceValueMap);
                 } catch (ValidationRuleException e) {
                     validationBuilder.error(rule.getName(), e.getMessage());
                     acceptableFieldNames.remove(rule.getName());

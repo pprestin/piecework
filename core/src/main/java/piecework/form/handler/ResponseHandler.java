@@ -116,7 +116,7 @@ public class ResponseHandler {
         return Response.ok(form).build();
     }
 
-    public Response handleFormValue(FormRequest formRequest, ViewContext viewContext, String formValueName) throws StatusCodeError {
+    public Response handleFormValue(FormRequest formRequest, ViewContext viewContext, String formValueName, String formValueItem) throws StatusCodeError {
         Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
         if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
             ProcessInstance processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
@@ -133,23 +133,34 @@ public class ResponseHandler {
         List<String> values = formValue.getValues();
         List<FormValueDetail> details = formValue.getMetadata();
 
+        boolean isItem = StringUtils.isNotEmpty(formValueItem);
+        List<File> files = new ArrayList<File>();
         if (values != null && !values.isEmpty()) {
             for (int i=0;i<values.size();i++) {
                 String value = values.get(i);
+
                 FormValueDetail detail = details != null && details.size() > i ? details.get(i) : null;
 
-                if (detail != null && detail.getLocation() != null) {
-                    Content content = contentRepository.findByLocation(detail.getLocation());
-                    if (content != null) {
-                        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
-                        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
-                        return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
+                if (isItem && formValueItem.equals(value)) {
+                    if (detail != null && detail.getLocation() != null) {
+                        Content content = contentRepository.findByLocation(detail.getLocation());
+                        if (content != null) {
+                            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+                            String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
+                            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
+                        }
+                    } else {
+                        String contentDisposition = new StringBuilder("attachment; filename=").append(formValueName).append(".txt").toString();
+                        return Response.ok(value, MediaType.TEXT_PLAIN_TYPE).header("Content-Disposition", contentDisposition).build();
                     }
-                } else {
-                    String contentDisposition = new StringBuilder("attachment; filename=").append(formValueName).append(".txt").toString();
-                    return Response.ok(value, MediaType.TEXT_PLAIN_TYPE).header("Content-Disposition", contentDisposition).build();
+                } else if (detail != null) {
+                    files.add(new File.Builder().processDefinitionKey(formRequest.getProcessDefinitionKey()).name(value).variableName(formValueName).contentType(detail.getContentType()).build(formService.getFormViewContext()));
                 }
             }
+        }
+
+        if (!isItem) {
+            return Response.ok(files).build();
         }
 
         throw new NotFoundError();
@@ -255,6 +266,11 @@ public class ResponseHandler {
                     }
                     screenBuilder.section(sectionBuilder.build());
                 }
+            }
+
+            if (task != null && (task.isDeleted() || !task.isActive())) {
+                screenBuilder.location(null);
+                screenBuilder.readonly();
             }
 
             screen = screenBuilder.build();

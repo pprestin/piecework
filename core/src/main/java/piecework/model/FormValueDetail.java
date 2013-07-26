@@ -26,14 +26,22 @@ import java.io.Serializable;
 /**
  * @author James Renfro
  */
+@XmlRootElement(name = FormValueDetail.Constants.ROOT_ELEMENT_NAME)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = FormValueDetail.Constants.TYPE_NAME)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FormValueDetail implements Serializable {
 
+    @XmlElement
     private final String contentType;
 
+    @XmlElement
     private final String location;
 
+    @XmlTransient
     private final boolean restricted;
 
+    @XmlTransient
     private final byte[] iv;
 
     private FormValueDetail() {
@@ -55,10 +63,12 @@ public class FormValueDetail implements Serializable {
         return location;
     }
 
+    @JsonIgnore
     public boolean isRestricted() {
         return restricted;
     }
 
+    @JsonIgnore
     public byte[] getIv() {
         return iv;
     }
@@ -105,4 +115,9 @@ public class FormValueDetail implements Serializable {
         }
     }
 
+    public static class Constants {
+        public static final String RESOURCE_LABEL = "FormValueDetail";
+        public static final String ROOT_ELEMENT_NAME = "formValueDetail";
+        public static final String TYPE_NAME = "FormValueDetailType";
+    }
 }

@@ -74,14 +74,17 @@ public class Screen implements Serializable {
     @XmlElementWrapper(name="sections")
     @XmlElementRef
     @Transient
-    private List<Section> sections;
+    private final List<Section> sections;
 
     @XmlAttribute
     private final int reviewIndex;
 
 	@XmlAttribute
     private final int ordinal;
-	
+
+    @XmlAttribute
+    private final boolean readonly;
+
 	@XmlTransient
 	@JsonIgnore
 	private final boolean isDeleted;
@@ -108,6 +111,7 @@ public class Screen implements Serializable {
         this.sections = Collections.unmodifiableList(builder.sections);
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	    this.reviewIndex = builder.reviewIndex;
+        this.readonly = builder.readonly;
     }
 	
 	public String getScreenId() {
@@ -162,6 +166,10 @@ public class Screen implements Serializable {
         return ordinal;
     }
 
+    public boolean isReadonly() {
+        return readonly;
+    }
+
     public boolean isDeleted() {
 		return isDeleted;
 	}
@@ -181,6 +189,7 @@ public class Screen implements Serializable {
         private List<Section> sections;
         private int reviewIndex;
 		private int ordinal;
+        private boolean readonly;
 		private boolean isDeleted;
 		
 		public Builder() {
@@ -240,6 +249,7 @@ public class Screen implements Serializable {
             } else {
                 this.sections = new ArrayList<Section>();
             }
+            this.readonly = screen.readonly;
 		}
 
 		public Screen build() {
@@ -315,7 +325,12 @@ public class Screen implements Serializable {
             this.ordinal = ordinal;
             return this;
         }
-		
+
+        public Builder readonly() {
+            this.readonly = true;
+            return this;
+        }
+
 		public Builder delete() {
 			this.isDeleted = true;
 			return this;

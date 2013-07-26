@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
+import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
@@ -73,7 +74,7 @@ public class ScreenHandler {
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
 
-    public Screen nextScreen(Interaction interaction, Screen currentScreen, ProcessInstance processInstance) throws StatusCodeError {
+    public Screen nextScreen(Interaction interaction, Screen currentScreen, ProcessInstance processInstance, ActionType action) throws StatusCodeError {
         if (interaction == null ||  interaction.getScreens() == null || interaction.getScreens().isEmpty())
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
@@ -93,7 +94,7 @@ public class ScreenHandler {
 
             if (isFound) {
                 // Once we've reached the current screen then we can start looking for the next screen
-                if (satisfiesScreenConstraints(cursor, formValueMap))
+                if (satisfiesScreenConstraints(cursor, formValueMap, action))
                     nextScreen = cursor;
             } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
                 isFound = true;
@@ -112,12 +113,12 @@ public class ScreenHandler {
         return interaction.getScreens().iterator().next();
     }
 
-    private boolean satisfiesScreenConstraints(Screen screen, Map<String, FormValue> formValueMap) {
-
-        if (!screen.getConstraints().isEmpty() && ConstraintUtil.hasConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, screen.getConstraints())) {
-            return ConstraintUtil.checkAll(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN, null, formValueMap, screen.getConstraints());
+    private boolean satisfiesScreenConstraints(Screen screen, Map<String, FormValue> formValueMap, ActionType action) {
+        Constraint constraint = ConstraintUtil.getConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE, screen.getConstraints());
+        if (constraint != null) {
+            ActionType expected = ActionType.valueOf(constraint.getValue());
+            return expected == action;
         }
-
         return true;
     }
 }

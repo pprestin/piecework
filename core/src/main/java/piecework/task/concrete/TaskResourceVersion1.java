@@ -113,7 +113,7 @@ public class TaskResourceVersion1 implements TaskResource {
             instance = processInstanceService.read(process, task.getProcessInstanceId());
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, rawSubmission);
+        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest);
 
         ActionType validatedAction = ActionType.COMPLETE;
         if (StringUtils.isNotEmpty(action)) {

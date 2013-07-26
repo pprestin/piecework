@@ -28,8 +28,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.Payload;
 import piecework.engine.ProcessEngineFacade;
+import piecework.enumeration.ActionType;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.SearchResults;
@@ -493,7 +493,7 @@ public class ProcessInstanceService {
 
     public ProcessInstance reject(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validate(process, instance, task, template, submission, false);
-        completeIfTaskExists(process, task, validation);
+        completeIfTaskExists(process, task, submission.getAction());
         return store(process, submission, validation, instance, false);
     }
 
@@ -504,7 +504,7 @@ public class ProcessInstanceService {
 
     public ProcessInstance submit(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validate(process, instance, task, template, submission, true);
-        completeIfTaskExists(process, task, validation);
+        completeIfTaskExists(process, task, submission.getAction());
         return store(process, submission, validation, instance, false);
     }
 
@@ -684,18 +684,11 @@ public class ProcessInstanceService {
         }
     }
 
-    private void completeIfTaskExists(Process process, Task task, FormValidation validation) throws StatusCodeError {
+    private void completeIfTaskExists(Process process, Task task, ActionType action) throws StatusCodeError {
         String taskId = task != null ? task.getTaskInstanceId() : null;
         if (StringUtils.isNotEmpty(taskId)) {
             try {
-                String actionValue = null;
-                if (validation.getFormValueMap() != null) {
-                    FormValue formValue = validation.getFormValueMap().get("actionButton");
-                    List<String> actionValues = formValue != null ? formValue.getValues() : null;
-                    actionValue = actionValues != null && !actionValues.isEmpty() ? actionValues.get(0) : null;
-                }
-
-                facade.completeTask(process, taskId, actionValue);
+                facade.completeTask(process, taskId, action);
             } catch (ProcessEngineException e) {
                 LOG.error(e);
                 throw new InternalServerError(e);

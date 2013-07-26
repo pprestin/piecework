@@ -1,4 +1,7 @@
-package piecework.form;
+package piecework.enumeration;
+
+import piecework.form.FieldAttributeDefinition;
+import piecework.form.FieldTagDefinition;
 
 import java.util.Map;
 
@@ -31,6 +34,9 @@ public enum FieldTag {
     }
 
     public static FieldTag getInstance(String type) {
+        if (type == null)
+            return TEXT;
+
         String uppercase = type.toUpperCase();
         uppercase = uppercase.replace('-', '_');
         return FieldTag.valueOf(uppercase);

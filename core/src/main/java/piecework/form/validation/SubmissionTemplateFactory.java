@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
+import piecework.enumeration.FieldTag;
 import piecework.form.concrete.DefaultValueHandler;
 import piecework.form.concrete.ValidUserHandler;
 import piecework.form.handler.ValueHandler;
@@ -37,13 +38,10 @@ import java.util.regex.Pattern;
 @Service
 public class SubmissionTemplateFactory {
 
-    private static final Set<String> FREEFORM_INPUT_TYPES = Sets.newHashSet(Constants.FieldTypes.TEXT, Constants.FieldTypes.TEXTAREA);
+    private static final Set<FieldTag> FREEFORM_INPUT_TYPES = Sets.newHashSet(FieldTag.TEXT, FieldTag.TEXTAREA);
 
     @Autowired(required=false)
     Registry registry;
-
-    @Autowired
-    DefaultValueHandler defaultValueHandler;
 
     @Autowired
     ValidUserHandler validUserHandler;
@@ -132,14 +130,20 @@ public class SubmissionTemplateFactory {
     private ValueHandler valueHandler(Field field) {
         if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
             return validUserHandler;
-        return defaultValueHandler;
+        return null;
     }
 
     private Set<ValidationRule> validationRules(Field field) {
+        FieldTag fieldTag = FieldTag.getInstance(field.getType());
+
         String fieldName = field.getName();
         Set<ValidationRule> rules = new HashSet<ValidationRule>();
-        if (field.isRequired())
-            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
+        if (field.isRequired()) {
+            if (fieldTag == FieldTag.FILE)
+                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());
+            else
+                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
+        }
 
         OptionResolver optionResolver = null;
         List<Constraint> constraints = field.getConstraints();
@@ -168,9 +172,7 @@ public class SubmissionTemplateFactory {
             }
         }
 
-        String fieldType = field.getType();
-
-        if (fieldType != null && !FREEFORM_INPUT_TYPES.contains(fieldType)) {
+        if (!FREEFORM_INPUT_TYPES.contains(fieldTag)) {
             List<Option> options = field.getOptions();
 
             if (optionResolver != null)

@@ -159,6 +159,7 @@ public class FormService {
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
         String formValueName = null;
+        String formValueItem = null;
         boolean isFormValueResource = false;
         boolean isSubmissionResource;
 
@@ -175,8 +176,12 @@ public class FormService {
             if (pathSegmentIterator.hasNext()) {
                 String path = sanitizer.sanitize(pathSegmentIterator.next().getPath());
                 isFormValueResource = path != null && path.equals(FormValue.Constants.ROOT_ELEMENT_NAME);
-                if (pathSegmentIterator.hasNext())
+                if (pathSegmentIterator.hasNext()) {
                     formValueName = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+
+                    if (pathSegmentIterator.hasNext())
+                        formValueItem = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+                }
             }
         }
 
@@ -197,7 +202,7 @@ public class FormService {
             throw new BadRequestError();
 
         if (isFormValueResource)
-            return responseHandler.handleFormValue(formRequest, viewContext, formValueName);
+            return responseHandler.handleFormValue(formRequest, viewContext, formValueName, formValueItem);
 
         return responseHandler.handle(formRequest, viewContext);
     }
@@ -271,7 +276,7 @@ public class FormService {
             instance = processInstanceService.read(process, task.getProcessInstanceId());
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, body);
+        Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
         processInstanceService.save(process, instance, task, template, submission);
 
@@ -294,7 +299,7 @@ public class FormService {
             instance = processInstanceService.read(process, task.getProcessInstanceId());
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, body);
+        Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
         try {
             ActionType action = submission.getAction();
@@ -308,7 +313,7 @@ public class FormService {
                     FormRequest nextFormRequest = null;
 
                     if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
+                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest, action);
 
                     // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
                     if (nextFormRequest == null) {
@@ -323,7 +328,7 @@ public class FormService {
                     nextFormRequest = null;
 
                     if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest);
+                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest, action);
 
                     // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
                     if (nextFormRequest == null) {
@@ -373,7 +378,7 @@ public class FormService {
             instance = processInstanceService.read(process, task.getProcessInstanceId());
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, body);
+        Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
         processInstanceService.validate(process, instance, task, template, submission, true);
 

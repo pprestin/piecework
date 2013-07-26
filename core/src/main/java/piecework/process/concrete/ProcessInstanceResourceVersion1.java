@@ -32,7 +32,6 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.Payload;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
-import piecework.form.handler.ScreenHandler;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.form.validation.SubmissionTemplateFactory;
@@ -75,9 +74,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     RequestHandler requestHandler;
-
-    @Autowired
-    ScreenHandler screenHandler;
 
     @Autowired
     SubmissionHandler submissionHandler;
@@ -182,7 +178,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, rawSubmission);
+        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
         return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
@@ -208,7 +204,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, body);
+        Submission submission = submissionHandler.handle(process, template, body, formRequest);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
         return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();

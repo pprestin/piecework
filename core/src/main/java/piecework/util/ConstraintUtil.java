@@ -30,13 +30,17 @@ import java.util.regex.Pattern;
 public class ConstraintUtil {
 
     public static boolean hasConstraint(String type, List<Constraint> constraints) {
+        return getConstraint(type, constraints) != null;
+    }
+
+    public static Constraint getConstraint(String type, List<Constraint> constraints) {
         if (constraints != null && !constraints.isEmpty()) {
             for (Constraint constraint : constraints) {
                 if (constraint.getType() != null && constraint.getType().equals(type))
-                    return true;
+                    return constraint;
             }
         }
-        return false;
+        return null;
     }
 
     public static boolean evaluate(Map<String, Field> fieldMap, Map<String, FormValue> formValueMap, Constraint constraint) {
@@ -55,10 +59,12 @@ public class ConstraintUtil {
             String defaultFieldValue = constraintField.getDefaultValue();
             isSatisfied = defaultFieldValue != null && pattern.matcher(defaultFieldValue).matches();
         } else {
-            for (String fieldValue : fieldValues) {
-                isSatisfied = fieldValue != null && pattern.matcher(fieldValue).matches();
-                if (!isSatisfied)
-                    break;
+            if (fieldValues != null) {
+                for (String fieldValue : fieldValues) {
+                    isSatisfied = fieldValue != null && pattern.matcher(fieldValue).matches();
+                    if (!isSatisfied)
+                        break;
+                }
             }
         }
 

@@ -38,6 +38,7 @@ public class ValidationRule {
         NUMERIC,
         PATTERN,
         REQUIRED,
+        REQUIRED_IF_NO_PREVIOUS,
         VALID_USER,
         VALUE_LENGTH,
         VALUES_MATCH
@@ -71,7 +72,7 @@ public class ValidationRule {
         this.minValueLength = builder.minValueLength;
     }
 
-    public void evaluate(Map<String, FormValue> formValueMap) throws ValidationRuleException {
+    public void evaluate(Map<String, FormValue> formValueMap, Map<String, FormValue> instanceValueMap) throws ValidationRuleException {
         switch(type) {
         case CONSTRAINED:
             evaluateConstraint(formValueMap);
@@ -93,6 +94,9 @@ public class ValidationRule {
             break;
         case REQUIRED:
             evaluateRequired(formValueMap);
+            break;
+        case REQUIRED_IF_NO_PREVIOUS:
+            evaluateRequiredIfNoPrevious(formValueMap, instanceValueMap);
             break;
         case VALID_USER:
             evaluateValidUser(formValueMap);
@@ -198,6 +202,34 @@ public class ValidationRule {
             }
         }
 
+        if (!hasAtLeastOneValue)
+            throw new ValidationRuleException("Field is required");
+    }
+
+    private void evaluateRequiredIfNoPrevious(Map<String, FormValue> formValueMap, Map<String, FormValue> instanceValueMap) throws ValidationRuleException {
+        boolean hasAtLeastOneValue = false;
+        FormValue formValue = safeFormValue(name, formValueMap);
+        if (formValue != null) {
+            List<String> values = formValue.getValues();
+            if (values != null && !values.isEmpty()) {
+                for (String value : values) {
+                    if (StringUtils.isNotEmpty(value))
+                        hasAtLeastOneValue = true;
+                }
+            }
+        }
+        if (!hasAtLeastOneValue) {
+            FormValue previousValue = safeFormValue(name, instanceValueMap);
+            if (previousValue != null) {
+                List<String> values = previousValue.getValues();
+                if (values != null && !values.isEmpty()) {
+                    for (String value : values) {
+                        if (StringUtils.isNotEmpty(value))
+                            hasAtLeastOneValue = true;
+                    }
+                }
+            }
+        }
         if (!hasAtLeastOneValue)
             throw new ValidationRuleException("Field is required");
     }

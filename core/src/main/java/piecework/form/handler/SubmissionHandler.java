@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
 import piecework.exception.InternalServerError;
+import piecework.form.concrete.DefaultValueHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetails;
 import piecework.model.*;
@@ -55,6 +56,9 @@ public class SubmissionHandler {
     ContentRepository contentRepository;
 
     @Autowired
+    DefaultValueHandler defaultValueHandler;
+
+    @Autowired
     ResourceHelper helper;
 
     @Autowired
@@ -66,9 +70,16 @@ public class SubmissionHandler {
     @Autowired
     UuidGenerator uuidGenerator;
 
+
     public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission) throws InternalServerError {
+        return handle(process, template, rawSubmission);
+    }
+
+    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest) throws InternalServerError {
         Submission.Builder submissionBuilder = new Submission.Builder(rawSubmission, sanitizer)
                 .processDefinitionKey(process.getProcessDefinitionKey())
+                .requestId(formRequest != null ? formRequest.getRequestId() : null)
+                .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
                 .submitterId(helper.getAuthenticatedSystemOrUserId());
 
@@ -83,6 +94,7 @@ public class SubmissionHandler {
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
+                .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
                 .submitterId(helper.getAuthenticatedSystemOrUserId());
 
@@ -115,6 +127,7 @@ public class SubmissionHandler {
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
+                .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
                 .submitterId(helper.getAuthenticatedSystemOrUserId());
 
@@ -214,6 +227,9 @@ public class SubmissionHandler {
             }
 
             ValueHandler handler = template.handler(name);
+            if (handler == null)
+                handler = defaultValueHandler;
+
             List<FormValue> formValues = handler.handle(name, value, detail);
 
             for (FormValue formValue : formValues) {
