@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 
 import piecework.security.Sanitizer;
@@ -151,7 +152,7 @@ public class Field implements Serializable {
         this.isDeleted = builder.isDeleted;
         this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.options = builder.options != null ? Collections.unmodifiableList(builder.options) : null;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.fieldId) : null;
+        this.link = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.name) : null;
     }
 
     public String getFieldId() {
@@ -250,6 +251,7 @@ public class Field implements Serializable {
 
     	private String fieldId;
     	private String processDefinitionKey;
+        private String processInstanceId;
         private String label;
         private String name;
         private String type;
@@ -281,7 +283,7 @@ public class Field implements Serializable {
             this.minValueLength = 0;
             this.maxValueLength = 255;
             this.ordinal = -1;
-            this.editable = true;
+            this.editable = false;
             this.constraints = new ArrayList<Constraint>();
             this.options = new ArrayList<Option>();
             this.visible = true;
@@ -346,6 +348,11 @@ public class Field implements Serializable {
         
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
+            return this;
+        }
+
+        public Builder processInstanceId(String processInstanceId) {
+            this.processInstanceId = processInstanceId;
             return this;
         }
 

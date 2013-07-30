@@ -50,7 +50,7 @@ public class ValidationServiceTest {
 			.build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
-		FormValidation validation = validationService.validate(instance, template, submission);
+		FormValidation validation = validationService.validate(instance, template, submission, true);
 
         List<ValidationResult> results = validation.getResults();
 		Assert.assertNull(results);
@@ -65,7 +65,7 @@ public class ValidationServiceTest {
                 .build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
-        FormValidation validation = validationService.validate(instance, template, submission);
+        FormValidation validation = validationService.validate(instance, template, submission, true);
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNotNull(results);
@@ -83,7 +83,7 @@ public class ValidationServiceTest {
                 .build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
-        FormValidation validation = validationService.validate(instance, template, submission);
+        FormValidation validation = validationService.validate(instance, template, submission, true);
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNull(results);
@@ -99,7 +99,7 @@ public class ValidationServiceTest {
                 .build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
-        FormValidation validation = validationService.validate(instance, template, submission);
+        FormValidation validation = validationService.validate(instance, template, submission, true);
 
         List<ValidationResult> results = validation.getResults();
         Assert.assertNotNull(results);

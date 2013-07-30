@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.enumeration.FieldTag;
-import piecework.form.concrete.DefaultValueHandler;
 import piecework.form.concrete.ValidUserHandler;
 import piecework.form.handler.ValueHandler;
 import piecework.model.*;
@@ -51,6 +50,12 @@ public class SubmissionTemplateFactory {
      */
     public SubmissionTemplate submissionTemplate(Process process) {
         return new SubmissionTemplate.Builder().allowAttachments().build();
+    }
+
+    public SubmissionTemplate submissionTemplate(Field field) {
+        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+        addField(builder, field);
+        return builder.build();
     }
 
     /*
@@ -102,23 +107,24 @@ public class SubmissionTemplateFactory {
                         continue;
 
                     for (Field field : fields) {
-                        builder.rules(validationRules(field));
-                        if (!field.isDeleted() && field.isEditable()) {
-                            String fieldName = field.getName();
-                            if (fieldName == null)
-                                continue;
-
-                            ValueHandler valueHandler = valueHandler(field);
-                            if (valueHandler != null)  {
-                                builder.handler(fieldName, valueHandler);
-                                builder.acceptables(valueHandler.getAcceptableFieldNames(fieldName));
-                            } else {
-                                builder.acceptable(fieldName);
-                            }
-
-                            if (field.isRestricted())
-                                builder.restricted(fieldName);
-                        }
+                        addField(builder, field);
+//                        builder.rules(validationRules(field));
+//                        if (!field.isDeleted() && field.isEditable()) {
+//                            String fieldName = field.getName();
+//                            if (fieldName == null)
+//                                continue;
+//
+//                            ValueHandler valueHandler = valueHandler(field);
+//                            if (valueHandler != null)  {
+//                                builder.handler(fieldName, valueHandler);
+//                                builder.acceptables(valueHandler.getAcceptableFieldNames(fieldName));
+//                            } else {
+//                                builder.acceptable(fieldName);
+//                            }
+//
+//                            if (field.isRestricted())
+//                                builder.restricted(fieldName);
+//                        }
                     }
                 }
             }
@@ -127,9 +133,29 @@ public class SubmissionTemplateFactory {
         return builder.build();
     }
 
+    private void addField(SubmissionTemplate.Builder builder, Field field) {
+        builder.rules(field, new ArrayList<ValidationRule>(validationRules(field)));
+        if (!field.isDeleted() && field.isEditable()) {
+            String fieldName = field.getName();
+            if (fieldName != null) {
+                ValueHandler valueHandler = valueHandler(field);
+                if (valueHandler != null)  {
+                    builder.handler(fieldName, valueHandler);
+                    builder.acceptables(valueHandler.getAcceptableFieldNames(fieldName));
+                } else {
+                    builder.acceptable(fieldName);
+                }
+
+                if (field.isRestricted())
+                    builder.restricted(fieldName);
+            }
+        }
+    }
+
     private ValueHandler valueHandler(Field field) {
         if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
             return validUserHandler;
+
         return null;
     }
 

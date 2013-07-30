@@ -18,6 +18,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.model.Submission;
 
+import java.io.InputStream;
+
 /**
  * @author James Renfro
  */
@@ -110,5 +112,21 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("application/x-www-form-urlencoded")
     Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response value(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("multipart/form-data")
+    Response value(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, MultipartBody body) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldId}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response values(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldId") String fieldId) throws StatusCodeError;
 
 }

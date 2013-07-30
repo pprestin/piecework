@@ -15,6 +15,7 @@
  */
 package piecework.model;
 
+import org.apache.commons.lang.StringUtils;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
@@ -38,7 +39,6 @@ public class File {
     @XmlAttribute
     private final String link;
 
-
     private File() {
         this(new Builder(), null);
     }
@@ -47,7 +47,7 @@ public class File {
         this.contentType = builder.contentType;
         this.location = builder.location;
         this.name = builder.name;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.requestId, builder.variableName, builder.name) : null;
+        this.link = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.name) : null;
     }
 
     public String getName() {
@@ -72,8 +72,8 @@ public class File {
         private String contentType;
         private String location;
         private String processDefinitionKey;
-        private String requestId;
-        private String variableName;
+        private String processInstanceId;
+        private String fieldName;
 
         public Builder() {
             super();
@@ -83,6 +83,10 @@ public class File {
             this.location = sanitizer.sanitize(file.location);
             this.contentType = sanitizer.sanitize(file.contentType);
             this.name = sanitizer.sanitize(file.name);
+        }
+
+        public File build() {
+            return new File(this, null);
         }
 
         public File build(ViewContext context) {
@@ -109,13 +113,13 @@ public class File {
             return this;
         }
 
-        public Builder requestId(String requestId) {
-            this.requestId = requestId;
+        public Builder processInstanceId(String processInstanceId) {
+            this.processInstanceId = processInstanceId;
             return this;
         }
 
-        public Builder variableName(String variableName) {
-            this.variableName = variableName;
+        public Builder fieldName(String fieldName) {
+            this.fieldName = fieldName;
             return this;
         }
 

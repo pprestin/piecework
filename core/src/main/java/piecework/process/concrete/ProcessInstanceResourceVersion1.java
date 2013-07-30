@@ -48,6 +48,10 @@ import piecework.common.ViewContext;
 import piecework.form.handler.RequestHandler;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingAttachmentContent;
+import piecework.util.FieldUtil;
+
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -294,7 +298,61 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		return processInstanceService.search(rawQueryParameters, getViewContext());
 	}
 
-	@Override
+    @Override
+    public Response value(String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldId, String valueId) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+
+        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, true))
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+
+        return processInstanceService.readValue(process, instance, fieldId, valueId);
+    }
+
+    @Override
+    public Response value(HttpServletRequest request, String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldName, MultipartBody body) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+
+        Task task = processInstanceService.userTask(process, instance, true);
+        if (task == null && !helper.isAuthenticatedSystem())
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+
+        RequestDetails requestDetails = requestDetails(request);
+        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
+
+        Screen screen = formRequest.getScreen();
+
+        if (screen == null)
+            throw new ConflictError();
+
+        Field field = FieldUtil.getField(process, screen, fieldName);
+        if (field == null)
+            throw new NotFoundError();
+
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(field);
+        Submission submission = submissionHandler.handle(process, template, body);
+        processInstanceService.save(process, instance, task, template, submission);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response values(String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldId) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+
+        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, true))
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+
+        List<File> files = processInstanceService.searchValues(process, instance, fieldId);
+        SearchResults searchResults = new SearchResults.Builder()
+                .items(files)
+                .build();
+
+        return Response.ok(searchResults).build();
+    }
+
+    @Override
 	public ViewContext getViewContext() {
         return processInstanceService.getInstanceViewContext();
 	}

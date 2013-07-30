@@ -81,6 +81,12 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         FieldDecorator fieldDecorator = new FieldDecorator(field, formValue);
                         FieldTag fieldTag = fieldDecorator.getFieldTag();
                         decoratorMap.putOne(fieldTag.getTagName(), fieldDecorator);
+
+                        switch (fieldTag) {
+                            case FILE:
+                                decoratorMap.putOne("form", new FileFieldFormDecorator(field));
+                                break;
+                        }
                     }
                 }
             }
@@ -240,13 +246,6 @@ public class DecoratingVisitor implements TagNodeVisitor {
                 attributes.put("action", attachmentUri);
                 attributes.put("method", "POST");
                 tag.setAttributes(attributes);
-            } else {
-                FormValue formValue = formValueMap.get(type);
-                if (formValue != null) {
-                    attributes.put("action", formValue.getLink());
-                    attributes.put("method", "POST");
-                    tag.setAttributes(attributes);
-                }
             }
         }
 
@@ -505,5 +504,38 @@ public class DecoratingVisitor implements TagNodeVisitor {
             return true;
         }
 
+    }
+
+    class FileFieldFormDecorator implements TagDecorator {
+
+        private final Field field;
+
+        public FileFieldFormDecorator(Field field) {
+            this.field = field;
+        }
+
+        @Override
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+            Map<String, String> attributes = new HashMap<String, String>();
+            attributes.putAll(tag.getAttributes());
+            attributes.put("action", field.getLink());
+            attributes.put("method", "POST");
+            attributes.put("enctype", "multipart/form-data");
+            tag.setAttributes(attributes);
+        }
+
+        @Override
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
+            String exclude = tag.getAttributeByName("data-process-exclude");
+            if (exclude == null || !exclude.equals("true")) {
+                String type = tag.getAttributeByName("data-process-form");
+                return type != null && type.equals(field.getName());
+            }
+            return false;
+        }
+
+        public boolean isReusable() {
+            return false;
+        }
     }
 }

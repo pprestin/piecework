@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import piecework.form.handler.ValueHandler;
 import piecework.model.Button;
 import piecework.model.Field;
+import piecework.util.ManyMap;
 
 import java.util.*;
 
@@ -32,7 +33,7 @@ public class SubmissionTemplate {
     private final Map<String, Button> buttonValueMap;
     private final Map<String, ValueHandler> handlerMap;
     private final Set<String> restricted;
-    private final List<ValidationRule> rules;
+    private final Map<Field, List<ValidationRule>> fieldRuleMap;
     private final boolean isAttachmentAllowed;
 
     private SubmissionTemplate() {
@@ -46,7 +47,7 @@ public class SubmissionTemplate {
         this.handlerMap = Collections.unmodifiableMap(builder.handlerMap);
         this.restricted = Collections.unmodifiableSet(builder.restricted);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
-        this.rules = Collections.unmodifiableList(builder.rules);
+        this.fieldRuleMap = Collections.unmodifiableMap(builder.fieldRuleMap);
     }
 
     public Set<String> getAcceptable() {
@@ -65,8 +66,16 @@ public class SubmissionTemplate {
         return restricted;
     }
 
-    public List<ValidationRule> getRules() {
-        return rules;
+    public Set<String> getButtonNames() {
+        return buttonNames;
+    }
+
+    public Map<String, Button> getButtonValueMap() {
+        return buttonValueMap;
+    }
+
+    public Map<Field, List<ValidationRule>> getFieldRuleMap() {
+        return fieldRuleMap;
     }
 
     public ValueHandler handler(String name) {
@@ -95,7 +104,7 @@ public class SubmissionTemplate {
         private Set<String> buttonNames;
         private Map<String, Button> buttonValueMap;
         private Map<String, ValueHandler> handlerMap;
-        private List<ValidationRule> rules;
+        private ManyMap<Field, ValidationRule> fieldRuleMap;
         private boolean isAttachmentAllowed;
 
         public Builder() {
@@ -104,7 +113,7 @@ public class SubmissionTemplate {
             this.buttonValueMap = new HashMap<String, Button>();
             this.handlerMap = new HashMap<String, ValueHandler>();
             this.restricted = new HashSet<String>();
-            this.rules = new ArrayList<ValidationRule>();
+            this.fieldRuleMap = new ManyMap<Field, ValidationRule>();
         }
 
         public SubmissionTemplate build() {
@@ -137,14 +146,15 @@ public class SubmissionTemplate {
             return this;
         }
 
-        public Builder rule(ValidationRule rule) {
-            this.rules.add(rule);
+        public Builder rule(Field field, ValidationRule rule) {
+            if (rule != null)
+                this.fieldRuleMap.putOne(field, rule);
             return this;
         }
 
-        public Builder rules(Collection<ValidationRule> rules) {
+        public Builder rules(Field field, List<ValidationRule> rules) {
             if (rules != null && !rules.isEmpty())
-                this.rules.addAll(rules);
+                this.fieldRuleMap.put(field, rules);
             return this;
         }
 

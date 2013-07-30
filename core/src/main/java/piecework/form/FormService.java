@@ -94,33 +94,6 @@ public class FormService {
     Sanitizer sanitizer;
 
 
-//    public Response attach(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
-//        String requestId = sanitizer.sanitize(rawRequestId);
-//
-//        if (StringUtils.isEmpty(requestId))
-//            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-//
-//        RequestDetails requestDetails = requestDetails(request);
-//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-//        Screen screen = formRequest.getScreen();
-//
-//        Payload payload = new Payload.Builder()
-//                .requestDetails(requestDetails)
-//                .requestId(requestId)
-//                .taskId(formRequest.getTaskId())
-//                .processInstanceId(formRequest.getProcessInstanceId())
-//                .multipartBody(body)
-//                .build();
-//
-//        try {
-//            processInstanceService.attach(process, screen, payload);
-//            return Response.noContent().build();
-//        } catch (BadRequestError e) {
-//            FormValidation validation = e.getValidation();
-//            return responseHandler.handle(formRequest, viewContext, validation);
-//        }
-//    }
-
     public Response delete(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
@@ -201,8 +174,13 @@ public class FormService {
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
 
-        if (isFormValueResource)
-            return responseHandler.handleFormValue(formRequest, viewContext, formValueName, formValueItem);
+        if (isFormValueResource) {
+            if (StringUtils.isEmpty(formRequest.getProcessInstanceId()))
+                throw new NotFoundError();
+
+            ProcessInstance instance = processInstanceService.read(process, formRequest.getProcessInstanceId());
+            return processInstanceService.readValue(process, instance, formValueName, formValueItem);
+        }
 
         return responseHandler.handle(formRequest, viewContext);
     }

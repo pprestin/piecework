@@ -17,13 +17,16 @@ package piecework.form.validation;
 
 import java.util.*;
 
-import org.apache.cxf.common.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import piecework.Constants;
 import piecework.Registry;
 import piecework.exception.ValidationRuleException;
+import piecework.form.concrete.DefaultValueHandler;
+import piecework.form.handler.ValueHandler;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.process.concrete.ResourceHelper;
@@ -43,37 +46,124 @@ public class ValidationService {
 	Registry registry;
 
     @Autowired
+    DefaultValueHandler defaultValueHandler;
+
+    @Autowired
     ResourceHelper helper;
 
     @Autowired
     InternalUserDetailsService userDetailsService;
 
 
-    public FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission) {
+    public FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
         FormValidation.Builder validationBuilder = new FormValidation.Builder().instance(instance).submission(submission);
 
-        List<ValidationRule> rules = template.getRules();
+        Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
 
-        if (rules != null) {
+        if (fieldRuleMap != null) {
             Set<String> acceptableFieldNames = new HashSet<String>(template.getAcceptable());
             Map<String, FormValue> formValueMap = submission.getFormValueMap();
             Map<String, FormValue> instanceValueMap = instance != null ? instance.getFormValueMap() : Collections.<String, FormValue>emptyMap();
-            for (ValidationRule rule : rules) {
-                try {
-                    rule.evaluate(formValueMap, instanceValueMap);
-                } catch (ValidationRuleException e) {
-                    validationBuilder.error(rule.getName(), e.getMessage());
-                    acceptableFieldNames.remove(rule.getName());
+
+            for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
+                Field field = entry.getKey();
+                List<ValidationRule> rules = entry.getValue();
+                if (rules != null) {
+                    for (ValidationRule rule : rules) {
+                        try {
+                            rule.evaluate(formValueMap, instanceValueMap);
+                        } catch (ValidationRuleException e) {
+                            validationBuilder.error(rule.getName(), e.getMessage());
+                            if (onlyAcceptValidInputs)
+                                acceptableFieldNames.remove(rule.getName());
+                        }
+                    }
                 }
-            }
-            for (String acceptable : acceptableFieldNames) {
-                FormValue formValue = formValueMap.get(acceptable);
-                if (formValue != null)
-                    validationBuilder.formValue(formValue);
+                String fieldName = field.getName();
+
+                if (fieldName == null) {
+                    if (field.getType() != null && field.getType().equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
+                        List<Option> options = field.getOptions();
+                        if (options != null) {
+                            for (Option option : options) {
+                                if (StringUtils.isNotEmpty(option.getName()) && formValueMap.containsKey(option.getName()))
+                                    fieldName = option.getValue();
+                            }
+                        }
+                    }
+                }
+
+                if (fieldName == null) {
+                    LOG.warn("Field is missing name " + field.getFieldId());
+                    continue;
+                }
+
+                if (acceptableFieldNames.contains(fieldName)) {
+                    FormValue formValue = formValueMap.get(fieldName);
+                    FormValue previous = instanceValueMap.get(fieldName);
+
+                    boolean isFileField = field.getType() != null && field.getType().equals(Constants.FieldTypes.FILE);
+                    if (formValue == null) {
+                        // Files are a special case, in that we don't want to wipe them out if they aren't resubmitted
+                        // on every request
+                        if (isFileField)
+                            formValue = previous;
+                        else
+                            formValue = new FormValue.Builder().name(fieldName).build();
+                    } else if (isFileField && field.getMaxInputs() > 1) {
+                        // With file fields that accept multiple files, we want to append each submission
+                        formValue = append(formValue, previous);
+                    }
+
+                    ValueHandler handler = template.handler(fieldName);
+                    if (handler == null)
+                        handler = defaultValueHandler;
+
+                    List<FormValue> formValues = handler.handle(formValue);
+                    for (FormValue storageFormValue : formValues) {
+                        validationBuilder.formValue(storageFormValue);
+                    }
+                }
+
             }
         }
 
         return validationBuilder.build();
+    }
+
+
+    public static FormValue append(FormValue current, FormValue previous) {
+        if (current == null)
+            return previous;
+
+        Map<String, File> fileMap = new LinkedHashMap<String, File>();
+        addValues(fileMap, previous);
+        addValues(fileMap, current);
+
+        FormValue.Builder builder = new FormValue.Builder().name(current.getName());
+
+        for (File file : fileMap.values()) {
+            builder.value(file.getName());
+            builder.detail(new FormValueDetail.Builder().contentType(file.getContentType()).location(file.getLocation()).build());
+        }
+
+        return builder.build();
+    }
+
+    private static void addValues(Map<String, File> fileMap, FormValue source) {
+        if (source == null)
+            return;
+
+        List<String> values = source.getValues();
+        Iterator<FormValueDetail> detailIterator = source.getMetadata() != null ? source.getMetadata().iterator() : null;
+
+        for (String value : values) {
+            FormValueDetail detail = detailIterator != null ? detailIterator.next() : null;
+
+            if (detail != null) {
+                fileMap.put(value, new File.Builder().name(value).contentType(detail.getContentType()).location(detail.getLocation()).build());
+            }
+        }
     }
 
 

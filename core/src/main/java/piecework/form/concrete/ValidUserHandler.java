@@ -36,15 +36,19 @@ public class ValidUserHandler implements ValueHandler {
     InternalUserDetailsService userDetailsService;
 
     @Override
-    public List<FormValue> handle(String name, String value, FormValueDetail detail) {
-        User user = userDetailsService.getUserByAnyId(value);
+    public List<FormValue> handle(FormValue formValue) {
+        if (formValue.getValues() != null) {
+            String name = formValue.getName();
+            String value = formValue.getValues().iterator().next();
+            User user = userDetailsService.getUserByAnyId(value);
 
-        if (user != null) {
-            FormValue internalId = new FormValue.Builder().name(name).value(user.getUserId()).build();
-            FormValue displayName = new FormValue.Builder().name(name + "__displayName").value(user.getDisplayName()).build();
-            FormValue visibleId = new FormValue.Builder().name(name + "__visibleId").value(user.getVisibleId()).build();
+            if (user != null) {
+                FormValue internalId = new FormValue.Builder().name(name).value(user.getUserId()).build();
+                FormValue displayName = new FormValue.Builder().name(name + "__displayName").value(user.getDisplayName()).build();
+                FormValue visibleId = new FormValue.Builder().name(name + "__visibleId").value(user.getVisibleId()).build();
 
-            return Arrays.asList(internalId, displayName, visibleId);
+                return Arrays.asList(internalId, displayName, visibleId);
+            }
         }
 
         return null;

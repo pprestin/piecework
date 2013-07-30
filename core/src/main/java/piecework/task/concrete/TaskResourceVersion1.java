@@ -105,12 +105,13 @@ public class TaskResourceVersion1 implements TaskResource {
 
         RequestDetails requestDetails = requestDetails(request);
 
-        FormRequest formRequest = requestHandler.create(requestDetails, process, null, taskId, null);
-        Task task = formRequest.getTaskId() != null ? processInstanceService.userTask(process, formRequest.getTaskId()) : null;
+        Task task = taskId != null ? processInstanceService.userTask(process, taskId) : null;
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
             instance = processInstanceService.read(process, task.getProcessInstanceId());
+
+        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest);

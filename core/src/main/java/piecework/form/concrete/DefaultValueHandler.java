@@ -30,8 +30,8 @@ import java.util.List;
 public class DefaultValueHandler implements ValueHandler {
 
     @Override
-    public List<FormValue> handle(String name, String value, FormValueDetail detail) {
-        return Arrays.asList(new FormValue.Builder().name(name).value(value).detail(detail).build());
+    public List<FormValue> handle(FormValue formValue) {
+        return Arrays.asList(formValue);
     }
 
     @Override

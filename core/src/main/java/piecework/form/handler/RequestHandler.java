@@ -57,6 +57,10 @@ public class RequestHandler {
         return create(requestDetails, process, null, (Task)null, null, null);
     }
 
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task) throws StatusCodeError {
+        return create(requestDetails, process, processInstance, task, null, null);
+    }
+
     public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, FormRequest previousFormRequest, ActionType action) throws StatusCodeError {
         Interaction interaction = null;
         Screen nextScreen = null;

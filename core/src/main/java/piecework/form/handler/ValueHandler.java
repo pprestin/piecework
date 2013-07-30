@@ -25,7 +25,7 @@ import java.util.List;
  */
 public interface ValueHandler {
 
-    List<FormValue> handle(String name, String value, FormValueDetail detail);
+    List<FormValue> handle(FormValue formValue);
 
     List<String> getAcceptableFieldNames(String name);
 

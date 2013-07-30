@@ -116,56 +116,6 @@ public class ResponseHandler {
         return Response.ok(form).build();
     }
 
-    public Response handleFormValue(FormRequest formRequest, ViewContext viewContext, String formValueName, String formValueItem) throws StatusCodeError {
-        Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
-        if (StringUtils.isNotBlank(formRequest.getProcessInstanceId())) {
-            ProcessInstance processInstance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId());
-            Map<String, FormValue> processInstanceFormValueMap = processInstance.getFormValueMap();
-            formValueMap.putAll(processInstanceFormValueMap);
-        }
-
-        FormValue formValue = formValueName != null ? formValueMap.get(formValueName) : null;
-
-        if (formValue == null || formValue.getMetadata() == null) {
-            throw new NotFoundError();
-        }
-
-        List<String> values = formValue.getValues();
-        List<FormValueDetail> details = formValue.getMetadata();
-
-        boolean isItem = StringUtils.isNotEmpty(formValueItem);
-        List<File> files = new ArrayList<File>();
-        if (values != null && !values.isEmpty()) {
-            for (int i=0;i<values.size();i++) {
-                String value = values.get(i);
-
-                FormValueDetail detail = details != null && details.size() > i ? details.get(i) : null;
-
-                if (isItem && formValueItem.equals(value)) {
-                    if (detail != null && detail.getLocation() != null) {
-                        Content content = contentRepository.findByLocation(detail.getLocation());
-                        if (content != null) {
-                            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
-                            String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
-                            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
-                        }
-                    } else {
-                        String contentDisposition = new StringBuilder("attachment; filename=").append(formValueName).append(".txt").toString();
-                        return Response.ok(value, MediaType.TEXT_PLAIN_TYPE).header("Content-Disposition", contentDisposition).build();
-                    }
-                } else if (detail != null) {
-                    files.add(new File.Builder().processDefinitionKey(formRequest.getProcessDefinitionKey()).name(value).variableName(formValueName).contentType(detail.getContentType()).build(formService.getFormViewContext()));
-                }
-            }
-        }
-
-        if (!isItem) {
-            return Response.ok(files).build();
-        }
-
-        throw new NotFoundError();
-    }
-
     public Form buildResponseForm(FormRequest formRequest, ViewContext viewContext, FormValidation validation) throws StatusCodeError {
         int attachmentCount = 0;
         ProcessInstance processInstance = null;
@@ -242,7 +192,10 @@ public class ResponseHandler {
                     Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
 
                     for (Field field : section.getFields()) {
-                        Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer);
+                        Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer)
+                                .processDefinitionKey(formRequest.getProcessDefinitionKey())
+                                .processInstanceId(formRequest.getProcessInstanceId());
+
                         List<Constraint> constraints = field.getConstraints();
                         if (constraints != null) {
                             if (!ConstraintUtil.checkAll(Constants.ConstraintTypes.IS_ONLY_VISIBLE_WHEN, fieldMap, combinedFormValueMap, constraints))
@@ -262,7 +215,7 @@ public class ResponseHandler {
                             includedFieldNames.add(fieldName);
                             fieldMap.put(fieldName, field);
                         }
-                        sectionBuilder.field(fieldBuilder.build());
+                        sectionBuilder.field(fieldBuilder.build(processInstanceService.getInstanceViewContext()));
                     }
                     screenBuilder.section(sectionBuilder.build());
                 }

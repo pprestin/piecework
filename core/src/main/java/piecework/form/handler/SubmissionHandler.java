@@ -26,14 +26,11 @@ import piecework.common.UuidGenerator;
 import piecework.exception.InternalServerError;
 import piecework.form.concrete.DefaultValueHandler;
 import piecework.form.validation.SubmissionTemplate;
-import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.AttachmentRepository;
 import piecework.persistence.ContentRepository;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
-import piecework.exception.StatusCodeError;
 import piecework.persistence.SubmissionRepository;
 
 import javax.ws.rs.core.MediaType;
@@ -42,7 +39,6 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author James Renfro
@@ -119,6 +115,10 @@ public class SubmissionHandler {
         return submissionRepository.save(submissionBuilder.build());
     }
 
+//    public Submission handle(Process process, SubmissionTemplate template, String fieldName, InputStream inputStream) throws InternalServerError {
+//
+//    }
+
     public Submission handle(Process process, SubmissionTemplate template, MultipartBody body) throws InternalServerError {
         return handle(process, template, body, null);
     }
@@ -141,10 +141,7 @@ public class SubmissionHandler {
                 if (mediaType == null)
                     continue;
 
-                if (mediaType.equals(MediaType.TEXT_PLAIN_TYPE))
-                    handlePlaintext(template, submissionBuilder, attachment, userId);
-                else
-                    handleOtherContentTypes(template, submissionBuilder, attachment, userId);
+                handleAllContentTypes(template, submissionBuilder, attachment, userId);
             }
         }
         return submissionRepository.save(submissionBuilder.build());
@@ -163,10 +160,11 @@ public class SubmissionHandler {
         }
     }
 
-    private void handleOtherContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws InternalServerError {
+    private void handleAllContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws InternalServerError {
         ContentDisposition contentDisposition = attachment.getContentDisposition();
+        MediaType mediaType = attachment.getContentType();
+
         if (contentDisposition != null) {
-            MediaType mediaType = attachment.getContentType();
             String contentType = mediaType.toString();
             String name = sanitizer.sanitize(contentDisposition.getParameter("name"));
             String filename = sanitizer.sanitize(contentDisposition.getParameter("filename"));
@@ -180,6 +178,8 @@ public class SubmissionHandler {
                     } catch (IOException e) {
                         LOG.warn("Unable to store file with content type " + contentType + " and filename " + filename);
                     }
+            } else if (mediaType.equals(MediaType.TEXT_PLAIN_TYPE)) {
+                handlePlaintext(template, submissionBuilder, attachment, userId);
             }
         }
     }
@@ -226,36 +226,29 @@ public class SubmissionHandler {
                         .build();
             }
 
-            ValueHandler handler = template.handler(name);
-            if (handler == null)
-                handler = defaultValueHandler;
-
-            List<FormValue> formValues = handler.handle(name, value, detail);
-
-            for (FormValue formValue : formValues) {
-                if (isAcceptable) {
-                    submissionBuilder.formValue(formValue);
-                } else if (isRestricted) {
-                    submissionBuilder.restrictedValue(formValue);
-                } else if (isAttachment) {
-                    if (detail != null) {
-                        contentType = detail.getContentType();
-                        location = detail.getLocation();
-                    } else {
-                        contentType = MediaType.TEXT_PLAIN;
-                        location = null;
-                    }
-                    Attachment attachmentDetails = new Attachment.Builder()
-                            .contentType(contentType)
-                            .location(location)
-                            .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
-                            .description(value)
-                            .userId(userId)
-                            .name(name)
-                            .build();
-                    submissionBuilder.attachment(attachmentDetails);
+            if (isAcceptable) {
+                submissionBuilder.formValue(new FormValue.Builder().name(name).value(value).detail(detail).build());
+            } else if (isRestricted) {
+                submissionBuilder.restrictedValue(new FormValue.Builder().name(name).value(value).detail(detail).build());
+            } else if (isAttachment) {
+                if (detail != null) {
+                    contentType = detail.getContentType();
+                    location = detail.getLocation();
+                } else {
+                    contentType = MediaType.TEXT_PLAIN;
+                    location = null;
                 }
+                Attachment attachmentDetails = new Attachment.Builder()
+                        .contentType(contentType)
+                        .location(location)
+                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
+                        .description(value)
+                        .userId(userId)
+                        .name(name)
+                        .build();
+                submissionBuilder.attachment(attachmentDetails);
             }
+
             return true;
         }
 

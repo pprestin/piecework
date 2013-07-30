@@ -53,7 +53,9 @@ import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.ui.StreamingAttachmentContent;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -96,9 +98,6 @@ public class ProcessInstanceService {
 
     @Autowired
     Sanitizer sanitizer;
-
-    @Autowired
-    SubmissionHandler submissionHandler;
 
     @Autowired
     InternalUserDetailsService userDetailsService;
@@ -218,6 +217,67 @@ public class ProcessInstanceService {
             throw new GoneError(Constants.ExceptionCodes.instance_does_not_exist);
 
         return instance;
+    }
+
+    public Response readValue(Process process, ProcessInstance instance, String fieldName, String fileName) throws StatusCodeError {
+        Map<String, FormValue> formValueMap = instance.getFormValueMap();
+        FormValue formValue = fieldName != null ? formValueMap.get(fieldName) : null;
+
+        if (formValue == null || formValue.getMetadata() == null || StringUtils.isEmpty(fileName)) {
+            throw new NotFoundError();
+        }
+
+        List<String> values = formValue.getValues();
+        List<FormValueDetail> details = formValue.getMetadata();
+
+        if (values != null && !values.isEmpty()) {
+            for (int i=0;i<values.size();i++) {
+                String value = values.get(i);
+
+                if (StringUtils.isEmpty(value))
+                    continue;
+
+                FormValueDetail detail = details != null && details.size() > i ? details.get(i) : null;
+
+                if (fileName.equals(value)) {
+                    if (detail != null && detail.getLocation() != null) {
+                        Content content = contentRepository.findByLocation(detail.getLocation());
+                        if (content != null) {
+                            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+                            String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
+                            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
+                        }
+                    } else {
+                        String contentDisposition = new StringBuilder("attachment; filename=").append(fieldName).append(".txt").toString();
+                        return Response.ok(value, MediaType.TEXT_PLAIN_TYPE).header("Content-Disposition", contentDisposition).build();
+                    }
+                }
+            }
+        }
+
+        throw new NotFoundError();
+    }
+
+    public List<File> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {
+        Map<String, FormValue> formValueMap = instance.getFormValueMap();
+        FormValue formValue = fieldName != null ? formValueMap.get(fieldName) : null;
+
+        List<File> files = new ArrayList<File>();
+
+        if (formValue != null && formValue.getMetadata() != null) {
+            List<String> values = formValue.getValues();
+            List<FormValueDetail> details = formValue.getMetadata();
+
+            if (values != null && !values.isEmpty()) {
+                for (int i=0;i<values.size();i++) {
+                    String value = values.get(i);
+                    FormValueDetail detail = details != null && details.size() > i ? details.get(i) : null;
+                    files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(value).contentType(detail.getContentType()).build(getInstanceViewContext()));
+                }
+            }
+        }
+
+        return files;
     }
 
     public StreamingAttachmentContent getAttachmentContent(Process process, ProcessInstance processInstance, String attachmentId) {
@@ -642,7 +702,7 @@ public class ProcessInstanceService {
         checkIsActiveIfTaskExists(process, task);
 
         // Validate the submission
-        FormValidation validation = validationService.validate(instance, template, submission);
+        FormValidation validation = validationService.validate(instance, template, submission, throwException);
 
         List<ValidationResult> results = validation.getResults();
         if (throwException && results != null && !results.isEmpty()) {
