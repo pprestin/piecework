@@ -15,9 +15,6 @@
  */
 package piecework.process;
 
-import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
-import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +33,6 @@ import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
-import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.FormValidation;
 import piecework.form.validation.ValidationService;
 import piecework.identity.InternalUserDetails;
@@ -52,13 +48,11 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.ui.StreamingAttachmentContent;
+import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.text.DateFormat;
 import java.util.*;
 
 /**
@@ -258,6 +252,35 @@ public class ProcessInstanceService {
         throw new NotFoundError();
     }
 
+    public void removeValue(Process process, ProcessInstance instance, String fieldName, String fileName) throws StatusCodeError {
+        Map<String, FormValue> instanceFormValueMap = instance.getFormValueMap();
+        FormValue formValue = instanceFormValueMap.get(fieldName);
+
+        if (formValue != null && StringUtils.isNotEmpty(fileName) && StringUtils.isNotEmpty(fieldName)) {
+            FormValue.Builder builder = new FormValue.Builder()
+                    .name(formValue.getName());
+
+            List<String> values = formValue.getValues();
+            Iterator<FormValueDetail> detailIterator = formValue.getMetadata() != null ? formValue.getMetadata().iterator() : null;
+
+            if (detailIterator != null) {
+                for (String value : values) {
+                    FormValueDetail detail = detailIterator.next();
+
+                    if (value != null && detail != null) {
+                        if (!value.equals(fileName))
+                            builder.value(value).detail(detail);
+                    }
+                }
+            }
+
+            Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
+            formValueMap.put(fieldName, builder.build());
+
+            updateProcessInstance(formValueMap, null, null, null, null, instance);
+        }
+    }
+
     public List<File> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {
         Map<String, FormValue> formValueMap = instance.getFormValueMap();
         FormValue formValue = fieldName != null ? formValueMap.get(fieldName) : null;
@@ -445,110 +468,28 @@ public class ProcessInstanceService {
     }
 
     public ProcessInstance store(Process process, Submission submission, FormValidation validation, ProcessInstance previous, boolean isAttachment) throws StatusCodeError {
-        ProcessInstance.Builder instanceBuilder;
+        long time = 0;
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
 
-        String processInstanceLabel = submission.getProcessInstanceLabel();
-        String processInstanceLabelTemplate = process.getProcessInstanceLabelTemplate();
+        String processInstanceLabel = ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel());
+        List<Attachment> attachments = validation.getAttachments();
+        if (attachments != null && !attachments.isEmpty())
+            attachments = attachmentRepository.save(attachments);
 
-        if (StringUtils.isEmpty(processInstanceLabel) && !isAttachment && processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
-            Map<String, String> scopes = new HashMap<String, String>();
+        Map<String, FormValue> formValueMap = isAttachment ? null : validation.getFormValueMap();
+        Map<String, FormValue> restrictedValueMap = isAttachment ? null : validation.getRestrictedValueMap();
 
-            Map<String, FormValue> instanceFormValueMap = previous != null ? previous.getFormValueMap() : null;
-            Map<String, FormValue> validationFormValueMap = validation.getFormValueMap();
-            if (instanceFormValueMap != null) {
-                for (Map.Entry<String,FormValue> entry : instanceFormValueMap.entrySet()) {
-                    FormValue formValue = entry.getValue();
-                    List<String> values = formValue != null ? formValue.getValues() : null;
-                    if (values != null && !values.isEmpty())
-                        scopes.put(entry.getKey(), values.iterator().next());
-                }
-            }
-            if (validationFormValueMap != null) {
-                for (Map.Entry<String,FormValue> entry : validationFormValueMap.entrySet()) {
-                    FormValue formValue = entry.getValue();
-                    List<String> values = formValue != null ? formValue.getValues() : null;
-                    if (values != null && !values.isEmpty())
-                        scopes.put(entry.getKey(), values.iterator().next());
-                }
-            }
+        ProcessInstance instance;
+        if (previous != null)
+            instance = updateProcessInstance(formValueMap, restrictedValueMap, attachments, submission, processInstanceLabel, previous);
+        else
+            instance = startProcessInstance(formValueMap, restrictedValueMap, attachments, submission, processInstanceLabel, process);
 
-            StringWriter writer = new StringWriter();
-            MustacheFactory mf = new DefaultMustacheFactory();
-            Mustache mustache = mf.compile(new StringReader(processInstanceLabelTemplate), "processInstanceLabel");
-            mustache.execute(writer, scopes);
+        if (LOG.isDebugEnabled())
+            LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");
 
-            processInstanceLabel = writer.toString();
-
-            if (StringUtils.isEmpty(processInstanceLabel))
-                processInstanceLabel = "Submission " + DateFormat.getDateTimeInstance(
-                        DateFormat.SHORT,
-                        DateFormat.SHORT,
-                        Locale.getDefault());
-        }
-
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-
-        if (previous != null) {
-            instanceBuilder = new ProcessInstance.Builder(previous, new PassthroughSanitizer())
-                    .submission(submission)
-                    .attachments(validation.getAttachments(), passthroughSanitizer);
-
-            if (!isAttachment) {
-                instanceBuilder.formValueMap(validation.getFormValueMap())
-                        .processInstanceLabel(processInstanceLabel)
-                        .restrictedValueMap(validation.getRestrictedValueMap());
-            }
-        } else {
-            if (isAttachment)
-                throw new ForbiddenError();
-
-            try {
-                InternalUserDetails user = helper.getAuthenticatedPrincipal();
-                String initiatorId = user != null ? user.getInternalId() : null;
-                String initiationStatus = process.getInitiationStatus();
-                instanceBuilder = new ProcessInstance.Builder()
-                        .processDefinitionKey(process.getProcessDefinitionKey())
-                        .processDefinitionLabel(process.getProcessDefinitionLabel())
-//                        .processInstanceId(processInstanceId)
-                        .processInstanceLabel(processInstanceLabel)
-                        .formValueMap(validation.getFormValueMap())
-                        .restrictedValueMap(validation.getRestrictedValueMap())
-                        .submission(submission)
-                        .startTime(new Date())
-                        .initiatorId(initiatorId)
-                        .processStatus(Constants.ProcessStatuses.OPEN)
-                        .attachments(validation.getAttachments(), passthroughSanitizer)
-                        .applicationStatus(initiationStatus);
-
-                // Save it before routing, then save again with the engine instance id
-                ProcessInstance stored = processInstanceRepository.save(instanceBuilder.build());
-
-                Map<String, String> variables = new HashMap<String, String>();
-                variables.put("PIECEWORK_PROCESS_DEFINITION_KEY", process.getProcessDefinitionKey());
-                variables.put("PIECEWORK_PROCESS_INSTANCE_ID", stored.getProcessInstanceId());
-                variables.put("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstanceLabel);
-
-                String engineInstanceId = facade.start(process, stored.getProcessInstanceId(), variables);
-
-                instanceBuilder.processInstanceId(stored.getProcessInstanceId());
-                instanceBuilder.engineProcessInstanceId(engineInstanceId);
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to start instance ", e);
-                throw new InternalServerError();
-            }
-        }
-
-        ProcessInstance instance = instanceBuilder.build();
-
-        List<Attachment> attachments = instance.getAttachments();
-        if (attachments != null && !attachments.isEmpty()) {
-            for (Attachment attachment : attachments) {
-                attachmentRepository.save(attachment);
-            }
-        }
-
-        return processInstanceRepository.save(instance);
+        return instance;
     }
 
     public ProcessInstance reject(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
@@ -698,11 +639,18 @@ public class ProcessInstanceService {
     }
 
     public FormValidation validate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
+        long time = 0;
+
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
 
         checkIsActiveIfTaskExists(process, task);
 
         // Validate the submission
         FormValidation validation = validationService.validate(instance, template, submission, throwException);
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
 
         List<ValidationResult> results = validation.getResults();
         if (throwException && results != null && !results.isEmpty()) {
@@ -756,4 +704,62 @@ public class ProcessInstanceService {
         }
     }
 
+    private ProcessInstance startProcessInstance(Map<String, FormValue> formValueMap, Map<String, FormValue> restrictedValueMap, List<Attachment> attachments, Submission submission, String processInstanceLabel, Process process) throws StatusCodeError {
+        ProcessInstance.Builder builder;
+        try {
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+
+            InternalUserDetails user = helper.getAuthenticatedPrincipal();
+            String initiatorId = user != null ? user.getInternalId() : null;
+            String initiationStatus = process.getInitiationStatus();
+            builder = new ProcessInstance.Builder()
+                    .processDefinitionKey(process.getProcessDefinitionKey())
+                    .processDefinitionLabel(process.getProcessDefinitionLabel())
+                    .processInstanceLabel(processInstanceLabel)
+                    .formValueMap(formValueMap)
+                    .restrictedValueMap(restrictedValueMap)
+                    .submission(submission)
+                    .startTime(new Date())
+                    .initiatorId(initiatorId)
+                    .processStatus(Constants.ProcessStatuses.OPEN)
+                    .attachments(attachments, passthroughSanitizer)
+                    .applicationStatus(initiationStatus);
+
+            // Save it before routing, then save again with the engine instance id
+            ProcessInstance stored = processInstanceRepository.save(builder.build());
+
+            Map<String, String> variables = new HashMap<String, String>();
+            variables.put("PIECEWORK_PROCESS_DEFINITION_KEY", process.getProcessDefinitionKey());
+            variables.put("PIECEWORK_PROCESS_INSTANCE_ID", stored.getProcessInstanceId());
+            variables.put("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstanceLabel);
+
+            String engineInstanceId = facade.start(process, stored.getProcessInstanceId(), variables);
+
+            builder.processInstanceId(stored.getProcessInstanceId());
+            builder.engineProcessInstanceId(engineInstanceId);
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to start instance ", e);
+            throw new InternalServerError();
+        }
+
+        return processInstanceRepository.save(builder.build());
+    }
+
+    private ProcessInstance updateProcessInstance(Map<String, FormValue> formValueMap, Map<String, FormValue> restrictedValueMap, List<Attachment> attachments, Submission submission, String processInstanceLabel, ProcessInstance instance) throws StatusCodeError {
+        if (instance == null)
+            throw new InternalServerError();
+
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, passthroughSanitizer)
+                .attachments(attachments, passthroughSanitizer)
+                .formValueMap(formValueMap)
+                .restrictedValueMap(restrictedValueMap)
+                .submission(submission);
+
+        if (StringUtils.isNotEmpty(processInstanceLabel))
+            builder.processInstanceLabel(processInstanceLabel);
+
+        return processInstanceRepository.save(builder.build());
+    }
 }

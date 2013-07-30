@@ -522,7 +522,7 @@ public class ProcessInstance implements Serializable {
         }
 
         public Builder attachments(List<Attachment> attachments, Sanitizer sanitizer) {
-        	if (this.attachmentBuilders != null)
+        	if (this.attachmentBuilders == null)
         		this.attachmentBuilders = new ArrayList<Attachment.Builder>();
             if (attachments != null) {
         	    for (Attachment attachment : attachments) {
@@ -535,7 +535,8 @@ public class ProcessInstance implements Serializable {
         public Builder submission(Submission submission) {
             if (this.submissions == null)
                 this.submissions = new ArrayList<Submission>();
-            this.submissions.add(submission);
+            if (submission != null)
+                this.submissions.add(submission);
             return this;
         }
 

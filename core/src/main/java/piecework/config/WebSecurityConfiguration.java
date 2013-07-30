@@ -132,12 +132,13 @@ public class WebSecurityConfiguration {
     public AbstractPreAuthenticatedProcessingFilter pieceworkPreAuthFilter() throws Exception {
         String preauthenticationUserRequestHeader = environment.getProperty("preauthentication.user.request.header");
         String testUser = environment.getProperty("authentication.testuser");
+        String testCredentials = environment.getProperty("authentication.testcredentials");
         Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
 
         if (isDebugMode) {
             LOG.fatal("DISABLING AUTHENTICATION -- THIS SHOULD NOT HAPPEN IN A PRODUCTION SYSTEM");
 
-            DebugAuthenticationFilter debugAuthenticationFilter = new DebugAuthenticationFilter(authenticationManager(), testUser);
+            DebugAuthenticationFilter debugAuthenticationFilter = new DebugAuthenticationFilter(authenticationManager(), testUser, testCredentials);
             if (StringUtils.isNotEmpty(preauthenticationUserRequestHeader))
                 debugAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
             return debugAuthenticationFilter;

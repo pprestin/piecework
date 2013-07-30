@@ -299,20 +299,37 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
-    public Response value(String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldId, String valueId) throws StatusCodeError {
+    public Response remove(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String fieldName = sanitizer.sanitize(rawFieldName);
+        String valueId = sanitizer.sanitize(rawValueId);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        return processInstanceService.readValue(process, instance, fieldId, valueId);
+        processInstanceService.removeValue(process, instance, fieldName, valueId);
+        return Response.noContent().build();
     }
 
     @Override
-    public Response value(HttpServletRequest request, String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldName, MultipartBody body) throws StatusCodeError {
+    public Response value(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String fieldName = sanitizer.sanitize(rawFieldName);
+        String valueId = sanitizer.sanitize(rawValueId);
+
+        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, true))
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+
+        return processInstanceService.readValue(process, instance, fieldName, valueId);
+    }
+
+    @Override
+    public Response value(HttpServletRequest request, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String fieldName = sanitizer.sanitize(rawFieldName);
 
         Task task = processInstanceService.userTask(process, instance, true);
         if (task == null && !helper.isAuthenticatedSystem())
@@ -337,14 +354,15 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-    public Response values(String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldId) throws StatusCodeError {
+    public Response values(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String fieldName = sanitizer.sanitize(rawFieldName);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        List<File> files = processInstanceService.searchValues(process, instance, fieldId);
+        List<File> files = processInstanceService.searchValues(process, instance, fieldName);
         SearchResults searchResults = new SearchResults.Builder()
                 .items(files)
                 .build();

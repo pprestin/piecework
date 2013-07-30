@@ -28,10 +28,12 @@ import org.springframework.util.StringUtils;
 public class DebugAuthenticationFilter extends RequestHeaderAuthenticationFilter {
 
 	private final String testUser;
+    private final String testCredentials;
 	
-	public DebugAuthenticationFilter(AuthenticationManager authenticationManager, String testUser) {
+	public DebugAuthenticationFilter(AuthenticationManager authenticationManager, String testUser, String testCredentials) {
 		setAuthenticationManager(authenticationManager);
 		this.testUser = testUser;
+        this.testCredentials = testCredentials;
         this.setCheckForPrincipalChanges(true);
         this.setInvalidateSessionOnPrincipalChange(true);
 	}
@@ -54,6 +56,14 @@ public class DebugAuthenticationFilter extends RequestHeaderAuthenticationFilter
             return super.getPreAuthenticatedPrincipal(request);
 
         return principal;
+    }
+
+    protected Object getPreAuthenticatedCredentials(HttpServletRequest request) {
+        if (this.testCredentials != null) {
+            return this.testCredentials;
+        }
+
+        return "N/A";
     }
 	
 }

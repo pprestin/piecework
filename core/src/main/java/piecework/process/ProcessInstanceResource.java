@@ -107,6 +107,11 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
+    @DELETE
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response remove(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws StatusCodeError;
+
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})

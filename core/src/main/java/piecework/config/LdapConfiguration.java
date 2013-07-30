@@ -15,6 +15,7 @@
  */
 package piecework.config;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -146,7 +147,13 @@ public class LdapConfiguration {
         String keystoreFile = environment.getProperty("keystore.file");
         String keystorePassword = environment.getProperty("keystore.password");
 
-        return new KeyManagerCabinet.Builder(keystoreFile, keystorePassword).build();
+        try {
+            return new KeyManagerCabinet.Builder(keystoreFile, keystorePassword).build();
+        } catch (FileNotFoundException e) {
+            LOG.error("Could not create key manager cabinet because keystore file not found");
+        }
+
+        return null;
     }
 	
 	private LdapAuthenticator authenticator(Environment environment) throws Exception {
