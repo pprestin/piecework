@@ -115,10 +115,6 @@ public class SubmissionHandler {
         return submissionRepository.save(submissionBuilder.build());
     }
 
-//    public Submission handle(Process process, SubmissionTemplate template, String fieldName, InputStream inputStream) throws InternalServerError {
-//
-//    }
-
     public Submission handle(Process process, SubmissionTemplate template, MultipartBody body) throws InternalServerError {
         return handle(process, template, body, null);
     }

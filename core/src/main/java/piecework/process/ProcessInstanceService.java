@@ -252,6 +252,17 @@ public class ProcessInstanceService {
         throw new NotFoundError();
     }
 
+    public void removeAttachment(Process process, ProcessInstance instance, String attachmentId) throws StatusCodeError {
+        if (instance == null)
+            throw new InternalServerError();
+
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, passthroughSanitizer);
+        builder.removeAttachment(attachmentId);
+
+        processInstanceRepository.save(builder.build());
+    }
+
     public void removeValue(Process process, ProcessInstance instance, String fieldName, String fileName) throws StatusCodeError {
         Map<String, FormValue> instanceFormValueMap = instance.getFormValueMap();
         FormValue formValue = instanceFormValueMap.get(fieldName);

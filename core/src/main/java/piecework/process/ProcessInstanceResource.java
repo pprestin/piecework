@@ -102,6 +102,11 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Consumes("application/x-www-form-urlencoded")
     Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
 
+    @DELETE
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    Response detach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws StatusCodeError;
+
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/history")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})

@@ -484,6 +484,18 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
+        public Builder removeAttachment(String attachmentId) {
+            if (this.attachmentBuilders != null && attachmentId != null) {
+                List<Attachment.Builder> all = this.attachmentBuilders;
+                this.attachmentBuilders = new ArrayList<Attachment.Builder>();
+                for (Attachment.Builder attachmentBuilder : all) {
+                    if (attachmentBuilder.getAttachmentId() == null || !attachmentId.equals(attachmentBuilder.getAttachmentId()))
+                        this.attachmentBuilders.add(attachmentBuilder);
+                }
+            }
+            return this;
+        }
+
         public Builder restrictedData(List<FormValue> restrictedData) {
             this.restrictedData = restrictedData;
             return this;

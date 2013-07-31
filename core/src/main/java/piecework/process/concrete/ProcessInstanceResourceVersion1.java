@@ -146,9 +146,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-    public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String attachmentId) throws StatusCodeError {
+    public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
         if (!processInstanceService.userHasTask(process, instance, true))
             throw new ForbiddenError();
@@ -213,6 +214,20 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
 	}
+
+    @Override
+    public Response detach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        String attachmentId = sanitizer.sanitize(rawAttachmentId);
+
+        Task task = processInstanceService.userTask(process, instance, true);
+        if (!helper.isAuthenticatedSystem() && task == null)
+            throw new ForbiddenError();
+
+        processInstanceService.removeAttachment(process, instance, attachmentId);
+        return Response.noContent().build();
+    }
 
     @Override
     public Response history(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {

@@ -272,6 +272,10 @@ public class Attachment implements Serializable {
             return this;
         }
 
+        public String getAttachmentId() {
+            return attachmentId;
+        }
+
         public String getUserId() {
             return userId;
         }

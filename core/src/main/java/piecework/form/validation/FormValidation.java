@@ -183,8 +183,6 @@ public class FormValidation implements Serializable {
 
         public Builder instance(ProcessInstance instance) {
             this.instance = instance;
-            if (instance != null)
-                attachments(instance.getAttachments());
             return this;
         }
         
