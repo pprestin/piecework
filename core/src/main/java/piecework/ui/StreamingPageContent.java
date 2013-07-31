@@ -38,7 +38,9 @@ public class StreamingPageContent implements StreamingOutput {
     }
 
     public void write(OutputStream output) throws IOException, WebApplicationException {
-        HtmlCleaner cleaner = new HtmlCleaner();
+        CleanerProperties cleanerProperties = new CleanerProperties();
+        cleanerProperties.setOmitXmlDeclaration(true);
+        HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
         TagNode node = cleaner.clean(content.getInputStream());
         node.traverse(new DecoratingVisitor(form));
         SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
