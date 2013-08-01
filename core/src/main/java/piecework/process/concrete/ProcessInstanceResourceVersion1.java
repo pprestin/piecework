@@ -16,7 +16,6 @@
 package piecework.process.concrete;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -29,15 +28,11 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.Payload;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.form.validation.SubmissionTemplateFactory;
-import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.model.ProcessExecution;
-import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -46,11 +41,9 @@ import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.form.handler.RequestHandler;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingAttachmentContent;
 import piecework.util.FieldUtil;
 
-import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -186,7 +179,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
+        return Response.ok(new ProcessInstance.Builder(instance).build(getViewContext())).build();
 	}
 	
 	@Override
@@ -199,7 +192,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Submission submission = submissionHandler.handle(process, template, formData);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
+        return Response.ok(new ProcessInstance.Builder(instance).build(getViewContext())).build();
 	}
 
 	@Override
@@ -212,7 +205,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        return Response.ok(new ProcessInstance.Builder(instance, new PassthroughSanitizer()).build(getViewContext())).build();
+        return Response.ok(new ProcessInstance.Builder(instance).build(getViewContext())).build();
 	}
 
     @Override
@@ -243,22 +236,22 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		Process process = processInstanceService.getProcess(processDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, processInstanceId);
 
-        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
                 .processDefinitionKey(processDefinitionKey)
                 .processDefinitionLabel(process.getProcessDefinitionLabel());
 
-        try {
-            ProcessExecution execution = facade.findExecution(new ProcessInstanceSearchCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
-
-            if (execution != null) {
-                builder.startTime(execution.getStartTime());
-                builder.endTime(execution.getEndTime());
-                builder.initiatorId(execution.getInitiatorId());
-            }
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to find execution ", e);
-        }
+//        try {
+//            ProcessExecution execution = facade.findExecution(new ProcessInstanceSearchCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
+//
+//            if (execution != null) {
+//                builder.startTime(execution.getStartTime());
+//                builder.endTime(execution.getEndTime());
+//                builder.initiatorId(execution.getInitiatorId());
+//            }
+//
+//        } catch (ProcessEngineException e) {
+//            LOG.error("Process engine unable to find execution ", e);
+//        }
 
         return Response.ok(builder.build(getViewContext())).build();
 	}

@@ -19,14 +19,18 @@ import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.enumeration.ActionType;
+import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
+import piecework.util.ManyMap;
 
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * @author James Renfro
@@ -60,13 +64,12 @@ public class Submission {
     @XmlTransient
     private final ActionType action;
 
-    @XmlElementWrapper(name="formData")
-    @XmlElementRef
-    private final List<FormValue> formData;
+    @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
+    private final Map<String, List<? extends Value>> data;
 
     @XmlTransient
     @Transient
-    private final List<FormValue> restrictedData;
+    private final Map<String, List<? extends Value>> restrictedData;
 
     @XmlElementWrapper(name="attachments")
     @XmlElementRef
@@ -91,22 +94,8 @@ public class Submission {
         this.processInstanceLabel = builder.processInstanceLabel;
         this.attachments = Collections.unmodifiableList(builder.attachments);
         this.action = builder.action;
-        List<FormValue> formValues = new ArrayList<FormValue>();
-        if (builder.formValueBuilderMap != null) {
-            for (FormValue.Builder formValueBuilder : builder.formValueBuilderMap.values()) {
-                formValues.add(formValueBuilder.build());
-            }
-        }
-        this.formData = Collections.unmodifiableList(formValues);
-
-        List<FormValue> restrictedValues = new ArrayList<FormValue>();
-        if (builder.restrictedValueBuilderMap != null) {
-            for (FormValue.Builder formValueBuilder : builder.restrictedValueBuilderMap.values()) {
-                formValues.add(formValueBuilder.build());
-            }
-        }
-        this.restrictedData = Collections.unmodifiableList(restrictedValues);
-
+        this.data = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.data);
+        this.restrictedData = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.restrictedData);
         this.submissionDate = builder.submissionDate;
         this.submitterId = builder.submitterId;
     }
@@ -143,31 +132,17 @@ public class Submission {
         return action;
     }
 
-    @JsonIgnore
-    public List<FormValue> getRestrictedData() {
-        return restrictedData;
+    public Map<String, List<? extends Value>> getData() {
+        return data;
     }
 
-    public List<FormValue> getFormData() {
-        return formData;
+    @JsonIgnore
+    public Map<String, List<? extends Value>> getRestrictedData() {
+        return restrictedData;
     }
 
     public List<Attachment> getAttachments() {
         return attachments;
-    }
-
-    @JsonIgnore
-    public Map<String, FormValue> getFormValueMap() {
-        Map<String, FormValue> map = new HashMap<String, FormValue>();
-    	if (formData != null && !formData.isEmpty()) {
-    		for (FormValue formValue : formData) {
-                String name = formValue.getName();
-                List<String> values = formValue.getValues();
-                if (name != null && values != null)
-    			    map.put(name, formValue);
-    		}
-    	}
-    	return map;
     }
 
     @JsonIgnore
@@ -189,8 +164,8 @@ public class Submission {
         private String processInstanceLabel;
         private String alias;
         private ActionType action;
-        private Map<String, FormValue.Builder> formValueBuilderMap = new HashMap<String, FormValue.Builder>();
-        private Map<String, FormValue.Builder> restrictedValueBuilderMap = new HashMap<String, FormValue.Builder>();
+        private ManyMap<String, Value> data;
+        private ManyMap<String, Value> restrictedData;
         private List<Attachment> attachments;
         private Date submissionDate;
         private String submitterId;
@@ -212,17 +187,35 @@ public class Submission {
             this.submissionId = sanitizer.sanitize(submissionId);
             this.action = submission.getAction();
 
-            if (submission.formData != null && !submission.formData.isEmpty()) {
-                for (FormValue formValue : submission.formData) {
-                    this.formValueBuilderMap.put(formValue.getName(), new FormValue.Builder(formValue, sanitizer));
-                }
-            }
+            if (submission.data != null && !submission.data.isEmpty()) {
+                this.data = new ManyMap<String, Value>(submission.data.size());
 
-            if (submission.restrictedData != null && !submission.restrictedData.isEmpty()) {
-                for (FormValue formValue : submission.restrictedData) {
-                    this.restrictedValueBuilderMap.put(formValue.getName(), new FormValue.Builder(formValue, sanitizer));
+                for (Map.Entry<String, List<? extends Value>> entry : submission.data.entrySet()) {
+                    List<? extends Value> values = entry.getValue();
+
+                    for (Value value : values) {
+                        if (value instanceof File) {
+                            File file = File.class.cast(value);
+                            File sanitized = new File.Builder()
+                                    .name(sanitizer.sanitize(file.getName()))
+                                    .contentType(sanitizer.sanitize(file.getContentType()))
+                                    .location(sanitizer.sanitize(file.getLocation()))
+                                    .link(sanitizer.sanitize(file.getLink()))
+                                    .build();
+                            this.data.putOne(entry.getKey(), sanitized);
+                        } else {
+                            this.data.putOne(entry.getKey(), new Value(sanitizer.sanitize(value.getValue())));
+                        }
+                    }
                 }
-            }
+
+            } else
+                this.data = new ManyMap<String, Value>();
+
+            if (submission.restrictedData != null && !submission.restrictedData.isEmpty())
+                this.restrictedData = new ManyMap<String, Value>((Map<String,List<Value>>) submission.restrictedData);
+            else
+                this.restrictedData = new ManyMap<String, Value>();
 
             if (submission.attachments != null && !submission.attachments.isEmpty()) {
                 this.attachments = new ArrayList<Attachment>();
@@ -283,173 +276,31 @@ public class Submission {
             return this;
         }
 
-//        public Builder formContent(String contentType, String key, String value, String location) {
-//            if (this.formData == null)
-//                this.formData = new ArrayList<FormValue>();
-//            this.formData.add(new FormValue.Builder().contentType(contentType).name(key).value(value).location(location).build());
-//            return this;
-//        }
-
-//        public Builder formData(Map<String, List<String>> formData) {
-//            for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
-//                formValue(entry.getKey(), entry.getValue());
-//            }
-//            return this;
-//        }
-
         public Builder action(String action) {
             if (action != null)
                 this.action = ActionType.valueOf(action);
             return this;
         }
 
-        public Builder formValue(FormValue formValue) {
-            String key = formValue.getName();
-
-            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
-            if (formValueBuilder == null) {
-                formValueBuilder = new FormValue.Builder().name(key);
-                formValueBuilderMap.put(key, formValueBuilder);
-            }
-
-            List<String> values = formValue.getValues();
-            List<FormValueDetail> details = formValue.getMetadata();
-
-            if (values != null) {
-                Iterator<FormValueDetail> iterator = null;
-                if (details != null)
-                    iterator = details.iterator();
-
-                for (String value : values) {
-                    if (value != null) {
-                        formValueBuilder.value(value);
-                        FormValueDetail detail = iterator != null ? iterator.next() : null;
-                        if (detail != null)
-                            formValueBuilder.detail(detail);
-                    }
-                }
-            }
+        public Builder formValue(String key, String value) {
+            this.data.putOne(key, new Value(value));
             return this;
         }
 
-        public Builder restrictedValue(FormValue formValue) {
-            String key = formValue.getName();
-
-            FormValue.Builder formValueBuilder = restrictedValueBuilderMap.get(key);
-            if (formValueBuilder == null) {
-                formValueBuilder = new FormValue.Builder().name(key);
-                restrictedValueBuilderMap.put(key, formValueBuilder);
-            }
-
-            List<String> values = formValue.getValues();
-            List<FormValueDetail> details = formValue.getMetadata();
-
-            if (values != null) {
-                Iterator<FormValueDetail> iterator = null;
-                if (details != null)
-                    iterator = details.iterator();
-
-                for (String value : values) {
-                    if (value != null) {
-                        formValueBuilder.value(value);
-                        FormValueDetail detail = iterator != null ? iterator.next() : null;
-                        if (detail != null)
-                            formValueBuilder.detail(detail);
-                    }
-                }
-            }
+        public Builder formValue(String key, File file) {
+            this.data.putOne(key, file);
             return this;
         }
 
-        public Builder formValue(String key, String ... values) {
-            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
-            if (formValueBuilder == null) {
-                formValueBuilder = new FormValue.Builder().name(key);
-                formValueBuilderMap.put(key, formValueBuilder);
-            }
-            if (values != null) {
-                for (String value : values) {
-                    formValueBuilder.value(value);
-                }
-            }
-
+        public Builder restrictedValue(String key, String value) {
+            this.restrictedData.putOne(key, new Value(value));
             return this;
         }
 
-//        public Builder formValueAndDetail(String key, String value, FormValueDetail detail) {
-//            FormValue.Builder formValueBuilder = formValueBuilderMap.get(key);
-//            if (formValueBuilder == null) {
-//                formValueBuilder = new FormValue.Builder().name(key);
-//                formValueBuilderMap.put(key, formValueBuilder);
-//            }
-//
-//            if (value != null) {
-//                formValueBuilder.value(value);
-//                if (detail != null)
-//                    formValueBuilder.detail(detail);
-//            }
-//
-//            return this;
-//        }
-
-
-//        public Builder restrictedValue(String key, String ... values) {
-//            FormValue.Builder formValueBuilder = restrictedValueBuilderMap.get(key);
-//            if (formValueBuilder == null) {
-//                formValueBuilder = new FormValue.Builder().name(key);
-//                restrictedValueBuilderMap.put(key, formValueBuilder);
-//            }
-//            if (values != null) {
-//                for (String value : values) {
-//                    formValueBuilder.value(value);
-//                }
-//            }
-//
-//            return this;
-//        }
-
-
-        public Builder restrictedValueAndDetail(String key, String value, FormValueDetail detail) {
-            FormValue.Builder formValueBuilder = restrictedValueBuilderMap.get(key);
-            if (formValueBuilder == null) {
-                formValueBuilder = new FormValue.Builder().name(key);
-                restrictedValueBuilderMap.put(key, formValueBuilder);
-            }
-
-            if (value != null) {
-                formValueBuilder.value(value);
-                if (detail != null)
-                    formValueBuilder.detail(detail);
-            }
-
+        public Builder restrictedValue(String key, File file) {
+            this.restrictedData.putOne(key, file);
             return this;
         }
-
-//        public Builder formValue(String key, List<String> values) {
-//            if (values == null)
-//                formValue(key);
-//
-//            return formValue(key, values.toArray(new String[values.size()]));
-//        }
-
-//        public Builder formValue(FormValue formValue, Sanitizer sanitizer) {
-//            if (formValue != null && formValue.getName() != null) {
-//                formValueBuilderMap.put(formValue.getName(), new FormValue.Builder(formValue, sanitizer));
-//            }
-//            return this;
-//        }
-//
-//        public Builder formValueBuilder(String name, FormValue.Builder formValueBuilder) {
-//            formValueBuilderMap.put(name, formValueBuilder);
-//            return this;
-//        }
-
-//        public Builder formValueMap(Map<String, FormValue> formValueMap) {
-//            for (Map.Entry<String, FormValue> entry : formValueMap.entrySet()) {
-//                formValue(entry.getValue());
-//            }
-//            return this;
-//        }
 
         public String getProcessDefinitionKey() {
             return processDefinitionKey;

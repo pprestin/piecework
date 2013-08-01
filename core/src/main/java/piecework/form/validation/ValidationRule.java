@@ -17,9 +17,7 @@ package piecework.form.validation;
 
 import org.apache.commons.lang.StringUtils;
 import piecework.exception.ValidationRuleException;
-import piecework.model.Constraint;
-import piecework.model.FormValue;
-import piecework.model.Option;
+import piecework.model.*;
 import piecework.util.ConstraintUtil;
 
 import java.util.*;
@@ -72,40 +70,40 @@ public class ValidationRule {
         this.minValueLength = builder.minValueLength;
     }
 
-    public void evaluate(Map<String, FormValue> formValueMap, Map<String, FormValue> instanceValueMap) throws ValidationRuleException {
+    public void evaluate(Map<String, List<? extends Value>> submissionData,  Map<String, List<? extends Value>> instanceData) throws ValidationRuleException {
         switch(type) {
         case CONSTRAINED:
-            evaluateConstraint(formValueMap);
+            evaluateConstraint(submissionData);
             break;
         case EMAIL:
-            evaluateEmail(formValueMap);
+            evaluateEmail(submissionData);
             break;
         case LIMITED_OPTIONS:
-            evaluateOptions(formValueMap);
+            evaluateOptions(submissionData);
             break;
         case NUMBER_OF_INPUTS:
-            evaluateNumberOfInputs(formValueMap);
+            evaluateNumberOfInputs(submissionData);
             break;
         case NUMERIC:
-            evaluateNumeric(formValueMap);
+            evaluateNumeric(submissionData);
             break;
         case PATTERN:
-            evaluatePattern(formValueMap);
+            evaluatePattern(submissionData);
             break;
         case REQUIRED:
-            evaluateRequired(formValueMap);
+            evaluateRequired(submissionData);
             break;
         case REQUIRED_IF_NO_PREVIOUS:
-            evaluateRequiredIfNoPrevious(formValueMap, instanceValueMap);
+            evaluateRequiredIfNoPrevious(submissionData, instanceData);
             break;
         case VALID_USER:
-            evaluateValidUser(formValueMap);
+            evaluateValidUser(submissionData);
             break;
         case VALUE_LENGTH:
-            evaluateValueLength(formValueMap);
+            evaluateValueLength(submissionData);
             break;
         case VALUES_MATCH:
-            evaluateValuesMatch(formValueMap);
+            evaluateValuesMatch(submissionData);
             break;
         }
     }
@@ -114,42 +112,36 @@ public class ValidationRule {
         return name;
     }
 
-    private void evaluateConstraint(Map<String, FormValue> formValueMap) throws ValidationRuleException {
-        if (!ConstraintUtil.evaluate(null, formValueMap, constraint))
+    private void evaluateConstraint(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
+        if (!ConstraintUtil.evaluate(null, submissionData, constraint))
             throw new ValidationRuleException("Field is required");
     }
 
-    private void evaluateEmail(Map<String, FormValue> formValueMap) throws ValidationRuleException {
+    private void evaluateEmail(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
 
     }
 
-    private void evaluateOptions(Map<String, FormValue> formValueMap) throws ValidationRuleException {
+    private void evaluateOptions(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
         if (options == null || options.isEmpty())
             throw new ValidationRuleException("No valid options for this field");
 
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                for (String value : values) {
-                    if (value != null && !options.contains(value))
-                        throw new ValidationRuleException("Not a valid option for this field");
-                }
-            }
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value != null && !options.contains(value.getValue()))
+                throw new ValidationRuleException("Not a valid option for this field");
         }
     }
 
-    private void evaluateNumberOfInputs(Map<String, FormValue> formValueMap) throws ValidationRuleException {
+    private void evaluateNumberOfInputs(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
         int numberOfInputs = 0;
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                for (String value : values) {
-                    if (StringUtils.isNotEmpty(value))
-                        numberOfInputs++;
-                }
-            }
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value instanceof File) {
+                File file = File.class.cast(value);
+                if (StringUtils.isNotEmpty(file.getName()))
+                    numberOfInputs++;
+            } else if (StringUtils.isNotEmpty(value.getValue()))
+                numberOfInputs++;
         }
 
         if (maxInputs < numberOfInputs)
@@ -158,119 +150,97 @@ public class ValidationRule {
             throw new ValidationRuleException("At least " + minInputs + " values are required");
     }
 
-    private void evaluateNumeric(Map<String, FormValue> formValueMap) throws ValidationRuleException {
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                for (String value : values) {
-                    if (value != null && !value.matches("^[0-9]+$"))
-                        throw new ValidationRuleException("Must be a number");
-                }
+    private void evaluateNumeric(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value != null && !value.getValue().matches("^[0-9]+$"))
+                throw new ValidationRuleException("Must be a number");
+        }
+    }
+
+    private void evaluatePattern(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value != null && pattern != null && !pattern.matcher(value.getValue()).matches()) {
+                String examplePattern = mask;
+                if (examplePattern == null)
+                    examplePattern = pattern.toString();
+
+                throw new ValidationRuleException("Does not match required pattern: " + examplePattern);
             }
         }
     }
 
-    private void evaluatePattern(Map<String, FormValue> formValueMap) throws ValidationRuleException {
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                for (String value : values) {
-                    if (value != null && pattern != null && !pattern.matcher(value).matches()) {
-                        String examplePattern = mask;
-                        if (examplePattern == null)
-                            examplePattern = pattern.toString();
-
-                        throw new ValidationRuleException("Does not match required pattern: " + examplePattern);
-                    }
-                }
-            }
-        }
-    }
-
-    private void evaluateRequired(Map<String, FormValue> formValueMap) throws ValidationRuleException {
+    private void evaluateRequired(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
         boolean hasAtLeastOneValue = false;
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                for (String value : values) {
-                    if (StringUtils.isNotEmpty(value))
-                        hasAtLeastOneValue = true;
-                }
-            }
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value instanceof File) {
+                File file = File.class.cast(value);
+                if (StringUtils.isNotEmpty(file.getName()))
+                    hasAtLeastOneValue = true;
+            } else if (StringUtils.isNotEmpty(value.getValue()))
+                hasAtLeastOneValue = true;
         }
 
         if (!hasAtLeastOneValue)
             throw new ValidationRuleException("Field is required");
     }
 
-    private void evaluateRequiredIfNoPrevious(Map<String, FormValue> formValueMap, Map<String, FormValue> instanceValueMap) throws ValidationRuleException {
+    private void evaluateRequiredIfNoPrevious(Map<String, List<? extends Value>> submissionData, Map<String, List<? extends Value>> instanceData) throws ValidationRuleException {
         boolean hasAtLeastOneValue = false;
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                for (String value : values) {
-                    if (StringUtils.isNotEmpty(value))
-                        hasAtLeastOneValue = true;
-                }
-            }
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value instanceof File) {
+                File file = File.class.cast(value);
+                if (StringUtils.isNotEmpty(file.getName()))
+                    hasAtLeastOneValue = true;
+            } else if (StringUtils.isNotEmpty(value.getValue()))
+                hasAtLeastOneValue = true;
         }
         if (!hasAtLeastOneValue) {
-            FormValue previousValue = safeFormValue(name, instanceValueMap);
-            if (previousValue != null) {
-                List<String> values = previousValue.getValues();
-                if (values != null && !values.isEmpty()) {
-                    for (String value : values) {
-                        if (StringUtils.isNotEmpty(value))
-                            hasAtLeastOneValue = true;
-                    }
-                }
+            List<? extends Value> previousValues = safeValues(name, instanceData);
+            for (Value value : previousValues) {
+                if (value instanceof File) {
+                    File file = File.class.cast(value);
+                    if (StringUtils.isNotEmpty(file.getName()))
+                        hasAtLeastOneValue = true;
+                } else if (StringUtils.isNotEmpty(value.getValue()))
+                    hasAtLeastOneValue = true;
             }
         }
         if (!hasAtLeastOneValue)
             throw new ValidationRuleException("Field is required");
     }
 
-    private void evaluateValidUser(Map<String, FormValue> formValueMap) throws ValidationRuleException {
+    private void evaluateValidUser(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
 
     }
 
-    private void evaluateValueLength(Map<String, FormValue> formValueMap) throws ValidationRuleException {
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                for (String value : values) {
-                    if (value != null) {
-                        if (value.length() > maxValueLength)
-                            throw new ValidationRuleException("Cannot be more than " + maxValueLength + " characters");
-                        else if (value.length() < minValueLength)
-                            throw new ValidationRuleException("Cannot be less than " + minValueLength + " characters");
-                    }
-                }
+    private void evaluateValueLength(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value != null) {
+                if (value.getValue().length() > maxValueLength)
+                    throw new ValidationRuleException("Cannot be more than " + maxValueLength + " characters");
+                else if (value.getValue().length() < minValueLength)
+                    throw new ValidationRuleException("Cannot be less than " + minValueLength + " characters");
             }
         }
     }
 
-    private void evaluateValuesMatch(Map<String, FormValue> formValueMap) throws ValidationRuleException {
-        FormValue formValue = safeFormValue(name, formValueMap);
-        if (formValue != null) {
-            List<String> values = formValue.getValues();
-            if (values != null && !values.isEmpty()) {
-                String lastValue = null;
-                for (String value : values) {
-                    if (lastValue != null && !lastValue.equals(value))
-                        throw new ValidationRuleException("Values do not match");
-                }
-            }
+    private void evaluateValuesMatch(Map<String, List<? extends Value>> submissionData) throws ValidationRuleException {
+        List<? extends Value> values = safeValues(name, submissionData);
+        String lastValue = null;
+        for (Value value : values) {
+            if (lastValue != null && !lastValue.equals(value.getValue()))
+                throw new ValidationRuleException("Values do not match");
+            lastValue = value.getValue();
         }
     }
 
-    private FormValue safeFormValue(String name, Map<String, FormValue> formValueMap) {
-        return name != null ? formValueMap.get(name) : null;
+    private List<? extends Value> safeValues(String name, Map<String, List<? extends Value>> submissionData) {
+        return name != null ? submissionData.get(name) : Collections.<Value>emptyList();
     }
 
     public final static class Builder {

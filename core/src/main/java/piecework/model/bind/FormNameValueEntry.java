@@ -13,21 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.handler;
+package piecework.model.bind;
 
-import piecework.model.FormValue;
-import piecework.model.FormValueDetail;
 import piecework.model.Value;
 
+import javax.xml.bind.annotation.*;
 import java.util.List;
 
 /**
  * @author James Renfro
  */
-public interface ValueHandler {
+@XmlRootElement(name="entry")
+public class FormNameValueEntry {
 
-    List<FormValue> handle(List<Value> values);
+    @XmlAttribute
+    public String name;
 
-    List<String> getAcceptableFieldNames(String name);
+    @XmlElementRef
+    public List<Value> values;
 
+    private FormNameValueEntry() {
+
+    }
+
+    public FormNameValueEntry(String name, List<Value> values) {
+        this.name = name;
+        this.values = values;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Value> getValues() {
+        return values;
+    }
 }

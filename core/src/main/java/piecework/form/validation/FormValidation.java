@@ -18,8 +18,14 @@ package piecework.form.validation;
 import java.io.Serializable;
 import java.util.*;
 
+import org.apache.commons.lang.StringUtils;
 import piecework.Constants;
 import piecework.model.*;
+import piecework.model.bind.FormNameValueEntryMapAdapter;
+import piecework.util.ManyMap;
+
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * @author James Renfro
@@ -29,10 +35,10 @@ public class FormValidation implements Serializable {
 	private static final long serialVersionUID = 8445504602269832413L;
 
     private final String title;
-	
-	private final Map<String, FormValue> formValueMap;
 
-    private final Map<String, FormValue> restrictedValueMap;
+    private final Map<String, List<? extends Value>> data;
+
+    private final Map<String, List<? extends Value>> restrictedData;
 	
 	private final List<Attachment> attachments;
 	
@@ -51,9 +57,9 @@ public class FormValidation implements Serializable {
 	private FormValidation(Builder builder) {
         this.title = builder.title;
 		this.results = builder.results != null ? Collections.unmodifiableList(builder.results) : null;
-		this.formValueMap = builder.formValueMap != null ? Collections.unmodifiableMap(builder.formValueMap) : null;
-        this.restrictedValueMap = builder.restrictedValueMap != null ? Collections.unmodifiableMap(builder.restrictedValueMap) : null;
-		this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
+        this.data = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.data);
+        this.restrictedData = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.restrictedData);
+        this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
 		this.unchangedFields = builder.unchangedFields != null ? Collections.unmodifiableSet(builder.unchangedFields) : null;
 	    this.submission = builder.submission;
         this.instance = builder.instance;
@@ -63,12 +69,12 @@ public class FormValidation implements Serializable {
         return title;
     }
 
-    public Map<String, FormValue> getFormValueMap() {
-		return formValueMap;
-	}
+    public Map<String, List<? extends Value>> getData() {
+        return data;
+    }
 
-    public Map<String, FormValue> getRestrictedValueMap() {
-        return restrictedValueMap;
+    public Map<String, List<? extends Value>> getRestrictedData() {
+        return restrictedData;
     }
 
     public List<Attachment> getAttachments() {
@@ -95,8 +101,8 @@ public class FormValidation implements Serializable {
 
         private String title;
         private List<ValidationResult> results;
-        private Map<String, FormValue> formValueMap;
-        private Map<String, FormValue> restrictedValueMap;
+        private ManyMap<String, Value> data;
+        private ManyMap<String, Value> restrictedData;
         private List<Attachment> attachments;
         private Set<String> unchangedFields;
         private Submission submission;
@@ -104,6 +110,9 @@ public class FormValidation implements Serializable {
 
         public Builder() {
             super();
+            this.attachments = new ArrayList<Attachment>();
+            this.data = new ManyMap<String, Value>();
+            this.restrictedData = new ManyMap<String, Value>();
         }
         
         public FormValidation build() {
@@ -135,20 +144,45 @@ public class FormValidation implements Serializable {
         	this.results.add(new ValidationResult(type, name, message));
         	return this;
         }
-        
-        public Builder formValue(FormValue formValue) {
-            if (this.formValueMap == null)
-                this.formValueMap = new HashMap<String, FormValue>();
-            if (formValue != null && formValue.getName() != null)
-                this.formValueMap.put(formValue.getName(), formValue);
+
+
+        public Builder data(ManyMap<String, Value> data) {
+            if (data != null && !data.isEmpty()) {
+                this.data.putAll(data);
+            }
             return this;
         }
 
-        public Builder restrictedValue(FormValue formValue) {
-            if (this.restrictedValueMap == null)
-                this.restrictedValueMap = new HashMap<String, FormValue>();
-            if (formValue != null && formValue.getName() != null)
-                this.restrictedValueMap.put(formValue.getName(), formValue);
+        public Builder restrictedData(ManyMap<String, Value> data) {
+            if (data != null && !data.isEmpty()) {
+                this.restrictedData.putAll(data);
+            }
+            return this;
+        }
+
+        public Builder formValue(String key, String ... values) {
+            if (values != null && values.length > 0) {
+                List<Value> list = new ArrayList<Value>(values.length);
+
+                for (String value : values) {
+                    list.add(new Value(value));
+                }
+                this.data.put(key, list);
+            }
+
+            return this;
+        }
+
+        public Builder restrictedValue(String key, String ... values) {
+            if (values != null && values.length > 0) {
+                List<Value> list = new ArrayList<Value>(values.length);
+
+                for (String value : values) {
+                    list.add(new Value(value));
+                }
+                this.restrictedData.put(key, list);
+            }
+
             return this;
         }
         

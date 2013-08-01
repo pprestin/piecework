@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-public class ManyMap<K, V> extends Hashtable<K, List<V>> {
+public class ManyMap<K, V> extends Hashtable<K, List<V>> implements Map<K, List<V>> {
     
 	private static final long serialVersionUID = -5990287399286512607L;
 
@@ -53,5 +53,6 @@ public class ManyMap<K, V> extends Hashtable<K, List<V>> {
 		
 		return list.size();
 	}
-	
+
+
 }

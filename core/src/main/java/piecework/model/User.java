@@ -121,12 +121,12 @@ public class User implements Serializable {
             super();
         }
 
-        public Builder(User user, Sanitizer sanitizer) {
-            this.userId = sanitizer.sanitize(user.userId);
-            this.visibleId = sanitizer.sanitize(user.visibleId);
-            this.displayName = sanitizer.sanitize(user.displayName);
-            this.emailAddress = sanitizer.sanitize(user.emailAddress);
-            this.phoneNumber = sanitizer.sanitize(user.phoneNumber);
+        public Builder(User user) {
+            this.userId = user.userId;
+            this.visibleId = user.visibleId;
+            this.displayName = user.displayName;
+            this.emailAddress = user.emailAddress;
+            this.phoneNumber = user.phoneNumber;
             this.attributes = new ManyMap<String, String>();
             if (user.attributes != null) {
                 for (Map.Entry<String, List<String>> entry : user.attributes.entrySet()) {
@@ -136,6 +136,26 @@ public class User implements Serializable {
                         continue;
                     for (String value : values) {
                         this.attributes.putOne(key, value);
+                    }
+                }
+            }
+        }
+
+        public Builder(User user, Sanitizer sanitizer) {
+            this.userId = sanitizer.sanitize(user.userId);
+            this.visibleId = sanitizer.sanitize(user.visibleId);
+            this.displayName = sanitizer.sanitize(user.displayName);
+            this.emailAddress = sanitizer.sanitize(user.emailAddress);
+            this.phoneNumber = sanitizer.sanitize(user.phoneNumber);
+            this.attributes = new ManyMap<String, String>();
+            if (user.attributes != null) {
+                for (Map.Entry<String, List<String>> entry : user.attributes.entrySet()) {
+                    String key = sanitizer.sanitize(entry.getKey());
+                    List<String> values = entry.getValue();
+                    if (key == null || values == null)
+                        continue;
+                    for (String value : values) {
+                        this.attributes.putOne(key, sanitizer.sanitize(value));
                     }
                 }
             }

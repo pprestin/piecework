@@ -15,17 +15,26 @@
  */
 package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang.StringUtils;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.*;
 
 /**
  * @author James Renfro
  */
-public class File {
+@XmlRootElement(name = File.Constants.ROOT_ELEMENT_NAME)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = File.Constants.TYPE_NAME)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class File extends Value {
+
+    @XmlTransient
+    private final String id;
 
     @XmlElement
     private final String name;
@@ -33,21 +42,31 @@ public class File {
     @XmlElement
     private final String contentType;
 
-    @XmlElement
+    @XmlTransient
     private final String location;
 
     @XmlAttribute
     private final String link;
+
+    @XmlTransient
+    private final String value;
 
     private File() {
         this(new Builder(), null);
     }
 
     private File(Builder builder, ViewContext context) {
+        this.id = builder.id;
         this.contentType = builder.contentType;
         this.location = builder.location;
         this.name = builder.name;
-        this.link = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.name) : null;
+        this.value = null;
+        this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
+    }
+
+    @JsonIgnore
+    public String getId() {
+        return id;
     }
 
     public String getName() {
@@ -58,6 +77,7 @@ public class File {
         return contentType;
     }
 
+    @JsonIgnore
     public String getLocation() {
         return location;
     }
@@ -66,14 +86,22 @@ public class File {
         return link;
     }
 
+    @JsonValue(value=false)
+    @JsonIgnore
+    public String getValue() {
+        return value;
+    }
+
     public final static class Builder {
 
+        private String id;
         private String name;
         private String contentType;
         private String location;
         private String processDefinitionKey;
         private String processInstanceId;
         private String fieldName;
+        private String link;
 
         public Builder() {
             super();
@@ -91,6 +119,11 @@ public class File {
 
         public File build(ViewContext context) {
             return new File(this, context);
+        }
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
         }
 
         public Builder name(String name) {
@@ -120,6 +153,11 @@ public class File {
 
         public Builder fieldName(String fieldName) {
             this.fieldName = fieldName;
+            return this;
+        }
+
+        public Builder link(String link) {
+            this.link = link;
             return this;
         }
 

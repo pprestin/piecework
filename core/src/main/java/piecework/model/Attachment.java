@@ -180,6 +180,20 @@ public class Attachment implements Serializable {
             super();
         }
 
+        public Builder(Attachment attachment) {
+            this.attachmentId = attachment.attachmentId;
+            this.name = attachment.name;
+            this.description = attachment.description;
+            this.contentType = attachment.contentType;
+            this.location = attachment.location;
+            this.user = attachment.user != null ? new User.Builder(attachment.user).build() : null;
+            this.userId = attachment.user != null && attachment.user.getUserId() != null ? attachment.user.getUserId() : attachment.userId;
+            this.lastModified = attachment.lastModified;
+            this.ordinal = attachment.ordinal;
+            this.isFieldAttachment = attachment.isFieldAttachment;
+            this.isDeleted = attachment.isDeleted;
+        }
+
         public Builder(Attachment attachment, Sanitizer sanitizer) {
             this.attachmentId = sanitizer.sanitize(attachment.attachmentId);
             this.name = sanitizer.sanitize(attachment.name);

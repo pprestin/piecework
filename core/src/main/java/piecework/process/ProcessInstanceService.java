@@ -48,11 +48,16 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.ui.StreamingAttachmentContent;
+import piecework.util.ManyMap;
 import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 /**
@@ -106,7 +111,7 @@ public class ProcessInstanceService {
             if (!facade.activate(process, instance))
                 throw new ConflictError();
 
-            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance)
                     .applicationStatus(process.getCancellationStatus())
                     .applicationStatusExplanation(reason)
                     .processStatus(Constants.ProcessStatuses.SUSPENDED);
@@ -129,7 +134,7 @@ public class ProcessInstanceService {
             if (!facade.cancel(process, instance))
                 throw new ConflictError();
 
-            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance)
                     .applicationStatus(process.getCancellationStatus())
                     .applicationStatusExplanation(reason)
                     .processStatus(Constants.ProcessStatuses.CANCELLED);
@@ -213,37 +218,29 @@ public class ProcessInstanceService {
         return instance;
     }
 
-    public Response readValue(Process process, ProcessInstance instance, String fieldName, String fileName) throws StatusCodeError {
-        Map<String, FormValue> formValueMap = instance.getFormValueMap();
-        FormValue formValue = fieldName != null ? formValueMap.get(fieldName) : null;
+    public Response readValue(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
+        Map<String, List<? extends Value>> data = instance.getData();
+        List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 
-        if (formValue == null || formValue.getMetadata() == null || StringUtils.isEmpty(fileName)) {
+        if (values == null || values.isEmpty() || StringUtils.isEmpty(fileId))
             throw new NotFoundError();
-        }
 
-        List<String> values = formValue.getValues();
-        List<FormValueDetail> details = formValue.getMetadata();
+        for (Value value : values) {
+            if (value == null)
+                continue;
 
-        if (values != null && !values.isEmpty()) {
-            for (int i=0;i<values.size();i++) {
-                String value = values.get(i);
+            if (value instanceof File) {
+                File file = File.class.cast(value);
 
-                if (StringUtils.isEmpty(value))
+                if (StringUtils.isEmpty(file.getId()))
                     continue;
 
-                FormValueDetail detail = details != null && details.size() > i ? details.get(i) : null;
-
-                if (fileName.equals(value)) {
-                    if (detail != null && detail.getLocation() != null) {
-                        Content content = contentRepository.findByLocation(detail.getLocation());
-                        if (content != null) {
-                            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
-                            String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
-                            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
-                        }
-                    } else {
-                        String contentDisposition = new StringBuilder("attachment; filename=").append(fieldName).append(".txt").toString();
-                        return Response.ok(value, MediaType.TEXT_PLAIN_TYPE).header("Content-Disposition", contentDisposition).build();
+                if (file.getId().equals(fileId)) {
+                    Content content = contentRepository.findByLocation(file.getLocation());
+                    if (content != null) {
+                        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+                        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
+                        return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
                     }
                 }
             }
@@ -257,56 +254,55 @@ public class ProcessInstanceService {
             throw new InternalServerError();
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, passthroughSanitizer);
+        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
         builder.removeAttachment(attachmentId);
 
         processInstanceRepository.save(builder.build());
     }
 
-    public void removeValue(Process process, ProcessInstance instance, String fieldName, String fileName) throws StatusCodeError {
-        Map<String, FormValue> instanceFormValueMap = instance.getFormValueMap();
-        FormValue formValue = instanceFormValueMap.get(fieldName);
+    public void removeValue(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
+        Map<String, List<? extends Value>> data = instance.getData();
+        List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 
-        if (formValue != null && StringUtils.isNotEmpty(fileName) && StringUtils.isNotEmpty(fieldName)) {
-            FormValue.Builder builder = new FormValue.Builder()
-                    .name(formValue.getName());
+        if (values == null || values.isEmpty() || StringUtils.isEmpty(fileId))
+            throw new NotFoundError();
 
-            List<String> values = formValue.getValues();
-            Iterator<FormValueDetail> detailIterator = formValue.getMetadata() != null ? formValue.getMetadata().iterator() : null;
+        List<Value> remainingValues = new ArrayList<Value>();
+        for (Value value : values) {
+            if (value == null)
+                continue;
 
-            if (detailIterator != null) {
-                for (String value : values) {
-                    FormValueDetail detail = detailIterator.next();
+            if (value instanceof File) {
+                File file = File.class.cast(value);
 
-                    if (value != null && detail != null) {
-                        if (!value.equals(fileName))
-                            builder.value(value).detail(detail);
-                    }
-                }
+                if (StringUtils.isEmpty(file.getId()))
+                    continue;
+
+                if (!file.getId().equals(fileId))
+                    remainingValues.add(value);
             }
-
-            Map<String, FormValue> formValueMap = new HashMap<String, FormValue>();
-            formValueMap.put(fieldName, builder.build());
-
-            updateProcessInstance(formValueMap, null, null, null, null, instance);
         }
+
+        ManyMap<String, Value> update = new ManyMap<String, Value>();
+        update.put(fieldName, remainingValues);
+
+        updateProcessInstance(update, null, null, null, null, instance);
     }
 
     public List<File> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {
-        Map<String, FormValue> formValueMap = instance.getFormValueMap();
-        FormValue formValue = fieldName != null ? formValueMap.get(fieldName) : null;
+        Map<String, List<? extends Value>> data = instance.getData();
+        List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 
         List<File> files = new ArrayList<File>();
 
-        if (formValue != null && formValue.getMetadata() != null) {
-            List<String> values = formValue.getValues();
-            List<FormValueDetail> details = formValue.getMetadata();
+        if (values != null && !values.isEmpty()) {
+            for (Value value : values) {
+                if (value == null)
+                    continue;
 
-            if (values != null && !values.isEmpty()) {
-                for (int i=0;i<values.size();i++) {
-                    String value = values.get(i);
-                    FormValueDetail detail = details != null && details.size() > i ? details.get(i) : null;
-                    files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(value).contentType(detail.getContentType()).build(getInstanceViewContext()));
+                if (value instanceof File) {
+                    File file = File.class.cast(value);
+                    files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(file.getName()).id(file.getId()).contentType(file.getContentType()).build(getInstanceViewContext()));
                 }
             }
         }
@@ -368,7 +364,7 @@ public class ProcessInstanceService {
     public void update(String processDefinitionKey, String processInstanceId, ProcessInstance processInstance) throws StatusCodeError {
         Process process = getProcess(processDefinitionKey);
         ProcessInstance persisted = read(process, processInstanceId);
-        ProcessInstance sanitized = new ProcessInstance.Builder(processInstance, sanitizer).build();
+        ProcessInstance sanitized = new ProcessInstance.Builder(processInstance).build();
 
         String processStatus = sanitized.getProcessStatus();
         String applicationStatus = sanitized.getApplicationStatus();
@@ -379,7 +375,7 @@ public class ProcessInstanceService {
                 if (!facade.suspend(process, persisted))
                     throw new ConflictError();
 
-                ProcessInstance.Builder modified = new ProcessInstance.Builder(persisted, new PassthroughSanitizer())
+                ProcessInstance.Builder modified = new ProcessInstance.Builder(persisted)
                         .applicationStatus(applicationStatus)
                         .applicationStatusExplanation(applicationStatusExplanation)
                         .processStatus(Constants.ProcessStatuses.SUSPENDED);
@@ -449,7 +445,7 @@ public class ProcessInstanceService {
                 List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
                 if (processInstances != null && !processInstances.isEmpty()) {
                     for (ProcessInstance processInstance : processInstances) {
-                        resultsBuilder.item(new ProcessInstance.Builder(processInstance, new PassthroughSanitizer()).build(getInstanceViewContext()));
+                        resultsBuilder.item(new ProcessInstance.Builder(processInstance).build(getInstanceViewContext()));
                     }
 
                     int size = processInstances.size();
@@ -488,14 +484,14 @@ public class ProcessInstanceService {
         if (attachments != null && !attachments.isEmpty())
             attachments = attachmentRepository.save(attachments);
 
-        Map<String, FormValue> formValueMap = isAttachment ? null : validation.getFormValueMap();
-        Map<String, FormValue> restrictedValueMap = isAttachment ? null : validation.getRestrictedValueMap();
+        ManyMap<String, Value> data = isAttachment ? null : validation.getData();
+        ManyMap<String, Value> restrictedData = isAttachment ? null : validation.getRestrictedData();
 
         ProcessInstance instance;
         if (previous != null)
-            instance = updateProcessInstance(formValueMap, restrictedValueMap, attachments, submission, processInstanceLabel, previous);
+            instance = updateProcessInstance(data, restrictedData, attachments, submission, processInstanceLabel, previous);
         else
-            instance = startProcessInstance(formValueMap, restrictedValueMap, attachments, submission, processInstanceLabel, process);
+            instance = startProcessInstance(data, restrictedData, attachments, submission, processInstanceLabel, process);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");
@@ -526,7 +522,7 @@ public class ProcessInstanceService {
             if (!facade.suspend(process, instance))
                 throw new ConflictError();
 
-            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance, new PassthroughSanitizer())
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance)
                     .applicationStatus(process.getCancellationStatus())
                     .applicationStatusExplanation(reason)
                     .processStatus(Constants.ProcessStatuses.SUSPENDED);
@@ -715,11 +711,9 @@ public class ProcessInstanceService {
         }
     }
 
-    private ProcessInstance startProcessInstance(Map<String, FormValue> formValueMap, Map<String, FormValue> restrictedValueMap, List<Attachment> attachments, Submission submission, String processInstanceLabel, Process process) throws StatusCodeError {
+    private ProcessInstance startProcessInstance(ManyMap<String, Value> data, ManyMap<String, Value> restrictedData, List<Attachment> attachments, Submission submission, String processInstanceLabel, Process process) throws StatusCodeError {
         ProcessInstance.Builder builder;
         try {
-            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-
             InternalUserDetails user = helper.getAuthenticatedPrincipal();
             String initiatorId = user != null ? user.getInternalId() : null;
             String initiationStatus = process.getInitiationStatus();
@@ -727,13 +721,13 @@ public class ProcessInstanceService {
                     .processDefinitionKey(process.getProcessDefinitionKey())
                     .processDefinitionLabel(process.getProcessDefinitionLabel())
                     .processInstanceLabel(processInstanceLabel)
-                    .formValueMap(formValueMap)
-                    .restrictedValueMap(restrictedValueMap)
+                    .data(data)
+                    .restrictedData(restrictedData)
                     .submission(submission)
                     .startTime(new Date())
                     .initiatorId(initiatorId)
                     .processStatus(Constants.ProcessStatuses.OPEN)
-                    .attachments(attachments, passthroughSanitizer)
+                    .attachments(attachments)
                     .applicationStatus(initiationStatus);
 
             // Save it before routing, then save again with the engine instance id
@@ -757,15 +751,14 @@ public class ProcessInstanceService {
         return processInstanceRepository.save(builder.build());
     }
 
-    private ProcessInstance updateProcessInstance(Map<String, FormValue> formValueMap, Map<String, FormValue> restrictedValueMap, List<Attachment> attachments, Submission submission, String processInstanceLabel, ProcessInstance instance) throws StatusCodeError {
+    private ProcessInstance updateProcessInstance(ManyMap<String, Value> update, ManyMap<String, Value> restrictedUpdate, List<Attachment> attachments, Submission submission, String processInstanceLabel, ProcessInstance instance) throws StatusCodeError {
         if (instance == null)
             throw new InternalServerError();
 
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance, passthroughSanitizer)
-                .attachments(attachments, passthroughSanitizer)
-                .formValueMap(formValueMap)
-                .restrictedValueMap(restrictedValueMap)
+        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
+                .attachments(attachments)
+                .data(update)
+                .restrictedData(restrictedUpdate)
                 .submission(submission);
 
         if (StringUtils.isNotEmpty(processInstanceLabel))
