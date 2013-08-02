@@ -46,13 +46,9 @@ public class FormValue implements Serializable {
     @XmlElementRef
     private final List<Message> messages;
 
-    @XmlElementWrapper(name="values")
+    @XmlElementWrapper(name="messages")
 	@XmlElement(name="value")
-	private final List<String> values;
-
-    @XmlTransient
-    @JsonIgnore
-    private final List<FormValueDetail> metadata;
+	private final List<Value> values;
 
     @XmlAttribute
     private final String link;
@@ -64,7 +60,6 @@ public class FormValue implements Serializable {
 	private FormValue(FormValue.Builder builder, ViewContext context) {
 		this.name = builder.name;
 		this.values = Collections.unmodifiableList(builder.values);
-        this.metadata = builder.metadata;
         this.messages = Collections.unmodifiableList(builder.messages);
         this.link = context != null && builder.processDefinitionKey != null && builder.formInstanceId != null && builder.name != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId, Constants.ROOT_ELEMENT_NAME, builder.name) : null;
     }
@@ -73,17 +68,12 @@ public class FormValue implements Serializable {
 		return name;
 	}
 
-	public List<String> getValues() {
+	public List<Value> getValues() {
 		return values;
 	}
 
     public List<Message> getMessages() {
         return messages;
-    }
-
-    @JsonIgnore
-    public List<FormValueDetail> getMetadata() {
-        return metadata;
     }
 
     public String getLink() {
@@ -95,26 +85,25 @@ public class FormValue implements Serializable {
 		private String name;
         private String processDefinitionKey;
         private String formInstanceId;
-		private List<String> values;
+		private List<Value> values;
         private List<Message> messages;
-		private List<FormValueDetail> metadata;
 
 		public Builder() {
 			super();
             this.messages = new ArrayList<Message>();
-            this.values = new ArrayList<String>();
+            this.values = new ArrayList<Value>();
 		}
 
 		public Builder(FormValue formValue, Sanitizer sanitizer) {
 			this.name = sanitizer.sanitize(formValue.name);
-			
+
 			if (formValue.values != null && !formValue.values.isEmpty()) {
-				this.values = new ArrayList<String>(formValue.values.size());
-				for (String value : formValue.values) {
-					this.values.add(sanitizer.sanitize(value));
+				this.values = new ArrayList<Value>(formValue.values.size());
+				for (Value value : formValue.values) {
+					this.values.add(value);
 				}
 			} else {
-                this.values = new ArrayList<String>();
+                this.values = new ArrayList<Value>();
             }
 
             if (formValue.messages != null && !formValue.messages.isEmpty()) {
@@ -124,13 +113,6 @@ public class FormValue implements Serializable {
                 }
             } else {
                 this.messages = new ArrayList<Message>();
-            }
-
-            if (formValue.metadata != null && !formValue.metadata.isEmpty()) {
-                this.metadata = new ArrayList<FormValueDetail>(formValue.metadata.size());
-                for (FormValueDetail detail : formValue.metadata) {
-                    this.metadata.add(new FormValueDetail.Builder(detail, sanitizer).build());
-                }
             }
 		}
 
@@ -164,40 +146,17 @@ public class FormValue implements Serializable {
             return this;
         }
 
-		public Builder value(String value) {
-			if (this.values == null) 
-				this.values = new ArrayList<String>();
-			this.values.add(value);
-			return this;
-		}
-
-        public Builder values(String ... values) {
-            if (this.values == null)
-                this.values = new ArrayList<String>();
-            if (values != null)
-                this.values.addAll(Arrays.asList(values));
-            return this;
-        }
-
-        public Builder values(List<String> values) {
-            if (this.values == null)
-                this.values = new ArrayList<String>();
+        public Builder values(List<Value> values) {
             if (values != null)
                 this.values.addAll(values);
             return this;
         }
 
-        public Builder detail(FormValueDetail detail) {
-            if (this.metadata == null)
-                this.metadata = new ArrayList<FormValueDetail>();
-            this.metadata.add(detail);
-            return this;
-        }
 	}
 	
 	public static class Constants {
         public static final String RESOURCE_LABEL = "FormValue";
-        public static final String ROOT_ELEMENT_NAME = "formValue";
+        public static final String ROOT_ELEMENT_NAME = "variable";
         public static final String TYPE_NAME = "FormValueType";
     }
 	

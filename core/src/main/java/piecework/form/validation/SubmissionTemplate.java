@@ -15,8 +15,6 @@
  */
 package piecework.form.validation;
 
-import com.google.common.collect.Sets;
-import piecework.form.handler.ValueHandler;
 import piecework.model.Button;
 import piecework.model.Field;
 import piecework.util.ManyMap;
@@ -31,8 +29,8 @@ public class SubmissionTemplate {
     private final Set<String> acceptable;
     private final Set<String> buttonNames;
     private final Map<String, Button> buttonValueMap;
-    private final Map<String, ValueHandler> handlerMap;
     private final Set<String> restricted;
+    private final Set<String> userFields;
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
     private final boolean isAttachmentAllowed;
 
@@ -44,8 +42,8 @@ public class SubmissionTemplate {
         this.acceptable = Collections.unmodifiableSet(builder.acceptable);
         this.buttonNames = Collections.unmodifiableSet(builder.buttonNames);
         this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
-        this.handlerMap = Collections.unmodifiableMap(builder.handlerMap);
         this.restricted = Collections.unmodifiableSet(builder.restricted);
+        this.userFields = Collections.unmodifiableSet(builder.userFields);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.fieldRuleMap = Collections.unmodifiableMap(builder.fieldRuleMap);
     }
@@ -58,12 +56,12 @@ public class SubmissionTemplate {
         return buttonValueMap.get(value);
     }
 
-    public Map<String, ValueHandler> getHandlerMap() {
-        return handlerMap;
-    }
-
     public Set<String> getRestricted() {
         return restricted;
+    }
+
+    public Set<String> getUserFields() {
+        return userFields;
     }
 
     public Set<String> getButtonNames() {
@@ -76,10 +74,6 @@ public class SubmissionTemplate {
 
     public Map<Field, List<ValidationRule>> getFieldRuleMap() {
         return fieldRuleMap;
-    }
-
-    public ValueHandler handler(String name) {
-        return handlerMap.get(name);
     }
 
     public boolean isAcceptable(String name) {
@@ -98,12 +92,16 @@ public class SubmissionTemplate {
         return restricted.contains(name);
     }
 
+    public boolean isUserField(String name) {
+        return userFields.contains(name);
+    }
+
     public final static class Builder {
         private Set<String> acceptable;
         private Set<String> restricted;
         private Set<String> buttonNames;
+        private Set<String> userFields;
         private Map<String, Button> buttonValueMap;
-        private Map<String, ValueHandler> handlerMap;
         private ManyMap<Field, ValidationRule> fieldRuleMap;
         private boolean isAttachmentAllowed;
 
@@ -111,8 +109,8 @@ public class SubmissionTemplate {
             this.acceptable = new HashSet<String>();
             this.buttonNames = new HashSet<String>();
             this.buttonValueMap = new HashMap<String, Button>();
-            this.handlerMap = new HashMap<String, ValueHandler>();
             this.restricted = new HashSet<String>();
+            this.userFields = new HashSet<String>();
             this.fieldRuleMap = new ManyMap<Field, ValidationRule>();
         }
 
@@ -125,19 +123,9 @@ public class SubmissionTemplate {
             return this;
         }
 
-        public Builder acceptables(Collection<String> keys) {
-            this.acceptable.addAll(keys);
-            return this;
-        }
-
         public Builder button(Button button) {
             this.buttonNames.add(button.getName());
             this.buttonValueMap.put(button.getValue(), button);
-            return this;
-        }
-
-        public Builder handler(String key, ValueHandler handler) {
-            this.handlerMap.put(key, handler);
             return this;
         }
 
@@ -155,6 +143,11 @@ public class SubmissionTemplate {
         public Builder rules(Field field, List<ValidationRule> rules) {
             if (rules != null && !rules.isEmpty())
                 this.fieldRuleMap.put(field, rules);
+            return this;
+        }
+
+        public Builder userField(String name) {
+            this.userFields.add(name);
             return this;
         }
 

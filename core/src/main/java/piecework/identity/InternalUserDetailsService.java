@@ -15,6 +15,7 @@
  */
 package piecework.identity;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -76,11 +77,12 @@ public class InternalUserDetailsService implements UserDetailsService {
 
     @Cacheable(value="userCache")
     public User getUser(String internalId) {
-        UserDetails userDetails = loadUserByInternalId(internalId);
+        if (StringUtils.isNotEmpty(internalId)) {
+            UserDetails userDetails = loadUserByInternalId(internalId);
 
-        if (userDetails != null)
-            return new User.Builder(userDetails).build();
-
+            if (userDetails != null)
+                return new User.Builder(userDetails).build();
+        }
         return null;
     }
 

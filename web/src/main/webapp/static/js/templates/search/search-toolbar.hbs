@@ -26,7 +26,8 @@
                 <li>
                     <!--<button class="btn btn-inverse selected-result-btn hide" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>-->
                     <button class="btn btn-inverse selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-calendar-empty icon-white"></i></button>
-                    <button class="btn btn-inverse selected-result-btn hide" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-off icon-white"></i></button>
+                    <button class="btn btn-inverse hide" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
+                    <button class="btn btn-inverse hide" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
                     <button class="btn btn-danger selected-result-btn hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
                 <li>
             </ul>
@@ -43,6 +44,21 @@
         </ul>
     </div>
 </form>
+
+<div id="activate-dialog" class="modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Are you sure you want to reactivate this process?</h3>
+    </div>
+    <div class="modal-body">
+        <p>Reactivating a process resumes execution.</p>
+        <textarea class="input-block-level" placeholder="Enter a reason" name="reason" id="activate-reason" rows="4"></textarea>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button type="button" id="activate-button" class="btn btn-primary">Activate</button>
+    </div>
+</div>
 
 <div id="assign-dialog" class="modal hide fade">
     <div class="modal-header">

@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.springframework.data.annotation.Id;
 
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,7 +39,7 @@ import piecework.util.ManyMap;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = User.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class User implements Serializable {
+public class User extends Value {
 
     private static final long serialVersionUID = -4312076944171057691L;
 
@@ -102,6 +103,12 @@ public class User implements Serializable {
     @JsonIgnore
     public ManyMap<String, String> getAttributes() {
         return attributes;
+    }
+
+    @JsonValue(value=false)
+    @JsonIgnore
+    public String getValue() {
+        return null;
     }
 
     public String getUri() {

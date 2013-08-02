@@ -71,7 +71,7 @@ public class RequestHandler {
 
         String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
 
-        Map<String, FormValue> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
+        Map<String, List<Value>> formValueMap = processInstance != null ? processInstance.getData() : null;
 
         Screen currentScreen = null;
         String taskId = null;
@@ -184,7 +184,7 @@ public class RequestHandler {
         return create(requestDetails, process, processInstance, task, previousFormRequest, null);
     }
 
-    private boolean satisfiesScreenConstraints(Screen screen, Map<String, FormValue> formValueMap, ActionType action) {
+    private boolean satisfiesScreenConstraints(Screen screen, Map<String, List<Value>> formValueMap, ActionType action) {
         Constraint constraint = ConstraintUtil.getConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE, screen.getConstraints());
         if (constraint != null && action != null) {
             ActionType expected = ActionType.valueOf(constraint.getValue());

@@ -36,7 +36,7 @@ public class QueryParameter {
     @XmlElement
     private final String name;
 
-    @XmlElementWrapper(name="values")
+    @XmlElementWrapper(name="messages")
     @XmlElement
     private final List<String> values;
 

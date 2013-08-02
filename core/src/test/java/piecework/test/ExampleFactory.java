@@ -20,6 +20,7 @@ import piecework.model.*;
 import piecework.model.Process;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -249,7 +250,7 @@ public class ExampleFactory {
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .formInstanceId("12345")
-                .formValue(employeeNameField().getName(), "Joe Testington")
+                .variable(employeeNameField().getName(), Collections.singletonList(new Value("Joe Testington")))
                 .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.STANDARD))
                 .build();
     }
@@ -260,7 +261,7 @@ public class ExampleFactory {
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .formInstanceId("12345")
-                .formValue(employeeNameField().getName(), "Joe Testington")
+                .variable(employeeNameField().getName(), Collections.singletonList(new Value("Joe Testington")))
                 .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD_TEMPLATE))
                 .build();
     }

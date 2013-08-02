@@ -19,12 +19,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
+import piecework.enumeration.EventType;
 
 import javax.xml.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -41,9 +39,9 @@ public class History {
     @XmlElement
     private final String processInstanceLabel;
 
-    @XmlElementWrapper(name="tasks")
+    @XmlElementWrapper(name="events")
     @XmlElementRef
-    private final List<Task> tasks;
+    private final Set<Event> events;
 
     @XmlElement
     private final User initiator;
@@ -67,7 +65,7 @@ public class History {
     private History(Builder builder, ViewContext context) {
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
-        this.tasks = Collections.unmodifiableList(builder.tasks);
+        this.events = Collections.unmodifiableSet(builder.events);
         this.initiator = builder.initiator;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
@@ -91,8 +89,8 @@ public class History {
         return uri;
     }
 
-    public List<Task> getTasks() {
-        return tasks;
+    public Set<Event> getEvents() {
+        return events;
     }
 
     public User getInitiator() {
@@ -113,13 +111,13 @@ public class History {
         private String processDefinitionLabel;
         private String processInstanceId;
         private String processInstanceLabel;
-        private List<Task> tasks;
+        private Set<Event> events;
         private User initiator;
         private Date startTime;
         private Date endTime;
 
         public Builder() {
-            this.tasks = new ArrayList<Task>();
+            this.events = new TreeSet<Event>();
         }
 
         public History build() {
@@ -150,19 +148,13 @@ public class History {
             return this;
         }
 
-        public Builder task(Task task) {
-            if (this.tasks == null)
-                this.tasks = new ArrayList<Task>();
-            if (task != null)
-                this.tasks.add(task);
+        public Builder operation(Operation operation, User user) {
+            this.events.add(new Event.Builder().type(EventType.OPERATION).operation(operation).date(operation.getDate()).user(user).build());
             return this;
         }
 
-        public Builder tasks(List<Task> tasks) {
-            if (this.tasks == null)
-                this.tasks = new ArrayList<Task>();
-            if (tasks != null)
-                this.tasks.addAll(tasks);
+        public Builder task(Task task) {
+            this.events.add(new Event.Builder().type(EventType.TASK).task(task).date(task.getEndTime()).user(task.getAssignee()).build());
             return this;
         }
 
@@ -181,7 +173,6 @@ public class History {
             return this;
         }
     }
-
 
     public static class Constants {
         public static final String RESOURCE_LABEL = "History";

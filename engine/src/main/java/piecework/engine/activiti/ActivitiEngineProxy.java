@@ -741,6 +741,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                     query.orderByTaskPriority().desc();
                     break;
             }
+        }  else {
+            query.orderByHistoricTaskInstanceStartTime().desc();
         }
 
         if (criteria.getComplete() != null) {

@@ -6,18 +6,28 @@
         <td>Started</td>
         <td></td>
         <td>{{initiator.displayName}}<br/>
-            {{date startTime}}</td>
+            <span class="muted">{{date startTime}}</span></td>
     </tr>
-    {{#each tasks}}
-        <tr>
-            <td><i class="icon-code-fork"></i></td>
-            <td>{{taskLabel}}</td>
-            <td>{{datediff endTime startTime}}</td>
-            <td>
-                {{assignee.displayName}}<br/>
-                {{#if endTime}}{{date endTime}}{{/if}}
-            </td>
-        </tr>
+    {{#each events}}
+    <tr>
+        {{#if task}}
+            {{#with task}}
+                <td><i class="icon-code-fork"></i></td>
+                <td>{{taskLabel}}</td>
+                <td>{{datediff endTime startTime}}</td>
+            {{/with}}
+        {{/if}}
+        {{#if operation}}
+            <td><i class="{{operation.icon}}"></i></td>
+            <td>{{description}}<br/>
+                <span class="muted">{{operation.reason}}</span></td>
+            <td></td>
+        {{/if}}
+        <td>
+            {{user.displayName}}<br/>
+            <span class="muted">{{date date}}</span>
+        </td>
+    </tr>
     {{/each}}
     {{#if endTime}}
         <tr>

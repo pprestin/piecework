@@ -134,14 +134,14 @@ public class GeneralUserTaskListener implements TaskListener {
         List<Notification> notifications = process.getNotifications();
         if (notifications != null && !notifications.isEmpty()) {
             Map<String, String> context = new HashMap<String, String>();
-            ManyMap<String, String> formValueMap = processInstance.getFormValueContentMap();
+            Map<String, List<Value>> formValueMap = processInstance.getData();
             if (formValueMap != null && !formValueMap.isEmpty()) {
-                for (Map.Entry<String, List<String>> entry : formValueMap.entrySet()) {
+                for (Map.Entry<String, List<Value>> entry : formValueMap.entrySet()) {
                     String key = entry.getKey();
-                    List<String> values = entry.getValue();
+                    List<Value> values = entry.getValue();
 
                     if (StringUtils.isNotEmpty(key) && !values.isEmpty()) {
-                        context.put(key, values.iterator().next());
+                        context.put(key, values.iterator().next().getValue());
                     }
                 }
             }

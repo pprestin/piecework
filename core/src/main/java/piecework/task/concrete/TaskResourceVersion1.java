@@ -119,7 +119,7 @@ public class TaskResourceVersion1 implements TaskResource {
         ActionType validatedAction = ActionType.COMPLETE;
         if (StringUtils.isNotEmpty(action)) {
             try {
-                validatedAction = ActionType.valueOf(action);
+                validatedAction = ActionType.valueOf(action.toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new BadRequestError(Constants.ExceptionCodes.task_action_invalid);
             }

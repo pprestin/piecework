@@ -36,13 +36,11 @@ public class FormValidation implements Serializable {
 
     private final String title;
 
-    private final Map<String, List<? extends Value>> data;
-
-    private final Map<String, List<? extends Value>> restrictedData;
+    private final Map<String, List<Value>> data;
 	
 	private final List<Attachment> attachments;
 	
-	private final List<ValidationResult> results;
+	private final Map<String, List<Message>> results;
 	
 	private final Set<String> unchangedFields;
 
@@ -56,9 +54,8 @@ public class FormValidation implements Serializable {
 	
 	private FormValidation(Builder builder) {
         this.title = builder.title;
-		this.results = builder.results != null ? Collections.unmodifiableList(builder.results) : null;
-        this.data = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.data);
-        this.restrictedData = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.restrictedData);
+		this.results = builder.results != null ? Collections.unmodifiableMap(builder.results) : null;
+        this.data = builder.data;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
 		this.unchangedFields = builder.unchangedFields != null ? Collections.unmodifiableSet(builder.unchangedFields) : null;
 	    this.submission = builder.submission;
@@ -69,19 +66,15 @@ public class FormValidation implements Serializable {
         return title;
     }
 
-    public Map<String, List<? extends Value>> getData() {
+    public Map<String, List<Value>> getData() {
         return data;
-    }
-
-    public Map<String, List<? extends Value>> getRestrictedData() {
-        return restrictedData;
     }
 
     public List<Attachment> getAttachments() {
 		return attachments;
 	}
 
-	public List<ValidationResult> getResults() {
+	public Map<String, List<Message>> getResults() {
 		return results;
 	}
 
@@ -100,9 +93,8 @@ public class FormValidation implements Serializable {
     public final static class Builder {
 
         private String title;
-        private List<ValidationResult> results;
         private ManyMap<String, Value> data;
-        private ManyMap<String, Value> restrictedData;
+        private ManyMap<String, Message> results;
         private List<Attachment> attachments;
         private Set<String> unchangedFields;
         private Submission submission;
@@ -112,7 +104,7 @@ public class FormValidation implements Serializable {
             super();
             this.attachments = new ArrayList<Attachment>();
             this.data = new ManyMap<String, Value>();
-            this.restrictedData = new ManyMap<String, Value>();
+            this.results = new ManyMap<String, Message>();
         }
         
         public FormValidation build() {
@@ -125,26 +117,19 @@ public class FormValidation implements Serializable {
         }
         
         public Builder error(String name, String message) {
-        	if (results == null)
-        		results = new ArrayList<ValidationResult>();
-        	this.results.add(new ValidationResult(Constants.ValidationStatus.ERROR, name, message));
+            this.results.putOne(name, new Message.Builder().type(Constants.ValidationStatus.ERROR).text(message).build());
         	return this;
         }
         
         public Builder warning(String name, String message) {
-        	if (results == null)
-        		results = new ArrayList<ValidationResult>();
-        	this.results.add(new ValidationResult(Constants.ValidationStatus.WARNING, name, message));
+            this.results.putOne(name, new Message.Builder().type(Constants.ValidationStatus.WARNING).text(message).build());
         	return this;
         }
         
         public Builder result(String type, String name, String message) {
-        	if (results == null)
-        		results = new ArrayList<ValidationResult>();
-        	this.results.add(new ValidationResult(type, name, message));
+            this.results.putOne(name, new Message.Builder().type(type).text(message).build());
         	return this;
         }
-
 
         public Builder data(ManyMap<String, Value> data) {
             if (data != null && !data.isEmpty()) {
@@ -153,39 +138,14 @@ public class FormValidation implements Serializable {
             return this;
         }
 
-        public Builder restrictedData(ManyMap<String, Value> data) {
-            if (data != null && !data.isEmpty()) {
-                this.restrictedData.putAll(data);
-            }
+        public <V extends Value> Builder formValue(String key, V ... values) {
+            if (values != null && values.length > 0)
+                this.data.put(key, Arrays.<Value>asList(values));
+            else
+                this.data.put(key, Collections.<Value>emptyList());
             return this;
         }
 
-        public Builder formValue(String key, String ... values) {
-            if (values != null && values.length > 0) {
-                List<Value> list = new ArrayList<Value>(values.length);
-
-                for (String value : values) {
-                    list.add(new Value(value));
-                }
-                this.data.put(key, list);
-            }
-
-            return this;
-        }
-
-        public Builder restrictedValue(String key, String ... values) {
-            if (values != null && values.length > 0) {
-                List<Value> list = new ArrayList<Value>(values.length);
-
-                for (String value : values) {
-                    list.add(new Value(value));
-                }
-                this.restrictedData.put(key, list);
-            }
-
-            return this;
-        }
-        
         public Builder attachment(Attachment attachment) {
             if (this.attachments == null)
                 this.attachments = new ArrayList<Attachment>();

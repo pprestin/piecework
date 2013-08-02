@@ -69,7 +69,7 @@ public class UserInputSanitizer implements Sanitizer {
 	}
 	
 	/**
-	 * Ensure that the passed map values and keys are stripped of any potential scripting
+	 * Ensure that the passed map messages and keys are stripped of any potential scripting
 	 */
 	public Map<String, List<String>> sanitize(final Map<String, List<String>> tainted) {
 		if (tainted == null)

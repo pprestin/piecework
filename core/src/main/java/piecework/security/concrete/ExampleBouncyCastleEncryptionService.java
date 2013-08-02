@@ -28,6 +28,7 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
 import piecework.model.Secret;
 import piecework.security.EncryptionService;
 
@@ -51,6 +52,7 @@ import java.util.Date;
  *
  * @author James Renfro
  */
+@Service
 public class ExampleBouncyCastleEncryptionService implements EncryptionService {
 
     @Autowired

@@ -182,7 +182,7 @@ public class FormService {
             return processInstanceService.readValue(process, instance, formValueName, formValueItem);
         }
 
-        return responseHandler.handle(formRequest, viewContext);
+        return responseHandler.handle(formRequest, process);
     }
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
@@ -326,15 +326,15 @@ public class FormService {
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();
 
-            List<ValidationResult> results = validation.getResults();
+            Map<String, List<Message>> results = validation.getResults();
 
             if (results != null && !results.isEmpty()) {
-                for (ValidationResult result : results) {
-                    LOG.warn("Validation error " + result.getMessage() + " : " + result.getPropertyName());
+                for (Map.Entry<String, List<Message>> result : results.entrySet()) {
+                    LOG.warn("Validation error " + result.getKey() + " : " + result.getValue().iterator().next().getText());
                 }
             }
 
-            return responseHandler.handle(formRequest, viewContext, validation);
+            return responseHandler.handle(formRequest, process, task, validation);
         }
 
         return Response.noContent().build();

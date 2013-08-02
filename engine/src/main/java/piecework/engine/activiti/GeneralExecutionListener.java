@@ -15,8 +15,11 @@
  */
 package piecework.engine.activiti;
 
+import com.mongodb.WriteResult;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
@@ -35,6 +38,8 @@ import java.util.Date;
  */
 @Service("generalExecutionListener")
 public class GeneralExecutionListener implements ExecutionListener {
+
+    private static final Logger LOG = Logger.getLogger(GeneralExecutionListener.class);
 
     @Autowired
     ProcessRepository processRepository;
@@ -60,13 +65,31 @@ public class GeneralExecutionListener implements ExecutionListener {
                 if (process != null) {
                     completionStatus = process.getCompletionStatus();
                 }
+
+                ProcessInstance.Builder builder = new ProcessInstance.Builder(processInstance);
+                builder.applicationStatus(completionStatus);
+                builder.processStatus(Constants.ProcessStatuses.COMPLETE);
+                builder.endTime(new Date());
+
+//                processInstance = builder.build();
+//                processInstance = processInstanceRepository.save(processInstance);
+
+                WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(processInstance.getProcessInstanceId())),
+                        new Update().set("endTime", new Date())
+                                .set("applicationStatus", completionStatus)
+                                .set("processStatus", Constants.ProcessStatuses.COMPLETE),
+                        ProcessInstance.class);
+
+
+                String error = result.getError();
+                if (StringUtils.isNotEmpty(error)) {
+                    LOG.error("Unable to correctly save final state of process instance " + processInstance.getProcessInstanceId() + ": " + error);
+                }
+            } else {
+                LOG.error("Unable to save final state of process instance with execution business key " + businessKey);
             }
 
-            mongoOperations.updateFirst(new Query(where("_id").is(businessKey)),
-                new Update().set("endTime", new Date())
-                    .set("applicationStatus", completionStatus)
-                    .set("processStatus", Constants.ProcessStatuses.COMPLETE),
-                ProcessInstance.class);
+
         }
     }
 

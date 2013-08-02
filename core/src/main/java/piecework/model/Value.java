@@ -30,7 +30,11 @@ import java.io.Serializable;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Value.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSubTypes({@JsonSubTypes.Type(value=File.class, name="file")})
+@JsonSubTypes({
+    @JsonSubTypes.Type(value=File.class, name="file"),
+    @JsonSubTypes.Type(value=Secret.class, name="secret"),
+    @JsonSubTypes.Type(value=User.class, name="user")
+})
 public class Value implements Serializable {
 
     @XmlValue
@@ -42,6 +46,10 @@ public class Value implements Serializable {
 
     public Value(String value) {
         this.value = value;
+    }
+
+    public String toString() {
+        return value;
     }
 
     @JsonValue

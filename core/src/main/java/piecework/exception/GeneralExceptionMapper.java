@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.security.access.AccessDeniedException;
 import piecework.model.Explanation;
 
@@ -39,15 +40,7 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
 	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
 	 */
 	public Response toResponse(RuntimeException exception) {
-
-        if (exception instanceof WebApplicationException) {
-            WebApplicationException webApplicationException = WebApplicationException.class.cast(exception);
-            Response response = webApplicationException.getResponse();
-            Explanation explanation = new Explanation();
-            explanation.setMessage(exception.getMessage());
-            int status = response != null ? response.getStatus() : Status.INTERNAL_SERVER_ERROR.getStatusCode();
-            return Response.status(status).entity(explanation).build();
-        } else if (exception instanceof AccessDeniedException) {
+        if (exception instanceof AccessDeniedException) {
             AccessDeniedException accessDeniedException = AccessDeniedException.class.cast(exception);
             Explanation explanation = new Explanation();
             explanation.setMessage("Not authorized");
@@ -55,11 +48,31 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
             return Response.status(Status.UNAUTHORIZED).entity(explanation).build();
         }
 
-		LOG.info("Uncaught exception. Sending exception message to client with status " + Status.INTERNAL_SERVER_ERROR + " and message " + exception.getMessage(), exception);
+        String messageHeader = "Internal Server Error";
+        String messageDetail = exception.getMessage();
+        Status status = null;
+
+        if (StringUtils.isEmpty(messageDetail))
+            messageDetail = "The system is unable to complete your request at this time.";
+
+        if (exception instanceof WebApplicationException) {
+            WebApplicationException webApplicationException = WebApplicationException.class.cast(exception);
+            Response response = webApplicationException.getResponse();
+            int statusCode = response != null ? response.getStatus() : Status.INTERNAL_SERVER_ERROR.getStatusCode();
+            status = Status.fromStatusCode(statusCode);
+        }
+
+        if (status != null)
+            messageHeader = status.getReasonPhrase();
+        else
+            status = Status.INTERNAL_SERVER_ERROR;
+
+		LOG.info("Uncaught exception. Sending exception message to client with status " + Status.INTERNAL_SERVER_ERROR + " and message " + messageDetail, exception);
 		exception.printStackTrace();
 		Explanation explanation = new Explanation();
-		explanation.setMessage(exception.getMessage());
-		return Response.status(Status.INTERNAL_SERVER_ERROR).entity(explanation).build();
+		explanation.setMessage(messageHeader);
+        explanation.setMessageDetail(messageDetail);
+		return Response.status(status).entity(explanation).build();
 	}
 
 }

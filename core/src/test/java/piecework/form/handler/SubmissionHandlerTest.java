@@ -74,11 +74,10 @@ public class SubmissionHandlerTest {
         Submission actual = submissionHandler.handle(process, template, map);
         Assert.assertNotNull(actual);
 
-        FormValue formValue = actual.getFormValueMap().get("TestField");
-        List<String> values = formValue.getValues();
-        Assert.assertEquals("1", values.get(0));
-        Assert.assertEquals("2", values.get(1));
-        Assert.assertEquals("3", values.get(2));
+        List<Value> values = actual.getData().get("TestField");
+        Assert.assertEquals("1", values.get(0).getValue());
+        Assert.assertEquals("2", values.get(1).getValue());
+        Assert.assertEquals("3", values.get(2).getValue());
     }
 
 }

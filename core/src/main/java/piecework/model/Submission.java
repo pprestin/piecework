@@ -65,11 +65,7 @@ public class Submission {
     private final ActionType action;
 
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
-    private final Map<String, List<? extends Value>> data;
-
-    @XmlTransient
-    @Transient
-    private final Map<String, List<? extends Value>> restrictedData;
+    private final Map<String, List<Value>> data;
 
     @XmlElementWrapper(name="attachments")
     @XmlElementRef
@@ -94,8 +90,7 @@ public class Submission {
         this.processInstanceLabel = builder.processInstanceLabel;
         this.attachments = Collections.unmodifiableList(builder.attachments);
         this.action = builder.action;
-        this.data = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.data);
-        this.restrictedData = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.restrictedData);
+        this.data = builder.data;
         this.submissionDate = builder.submissionDate;
         this.submitterId = builder.submitterId;
     }
@@ -132,13 +127,8 @@ public class Submission {
         return action;
     }
 
-    public Map<String, List<? extends Value>> getData() {
+    public Map<String, List<Value>> getData() {
         return data;
-    }
-
-    @JsonIgnore
-    public Map<String, List<? extends Value>> getRestrictedData() {
-        return restrictedData;
     }
 
     public List<Attachment> getAttachments() {
@@ -174,6 +164,7 @@ public class Submission {
             super();
             this.attachments = new ArrayList<Attachment>();
             this.action = ActionType.COMPLETE;
+            this.data = new ManyMap<String, Value>();
         }
 
         public Builder(Submission submission, Sanitizer sanitizer) {
@@ -190,7 +181,7 @@ public class Submission {
             if (submission.data != null && !submission.data.isEmpty()) {
                 this.data = new ManyMap<String, Value>(submission.data.size());
 
-                for (Map.Entry<String, List<? extends Value>> entry : submission.data.entrySet()) {
+                for (Map.Entry<String, List<Value>> entry : submission.data.entrySet()) {
                     List<? extends Value> values = entry.getValue();
 
                     for (Value value : values) {
@@ -211,11 +202,6 @@ public class Submission {
 
             } else
                 this.data = new ManyMap<String, Value>();
-
-            if (submission.restrictedData != null && !submission.restrictedData.isEmpty())
-                this.restrictedData = new ManyMap<String, Value>((Map<String,List<Value>>) submission.restrictedData);
-            else
-                this.restrictedData = new ManyMap<String, Value>();
 
             if (submission.attachments != null && !submission.attachments.isEmpty()) {
                 this.attachments = new ArrayList<Attachment>();
@@ -287,8 +273,8 @@ public class Submission {
             return this;
         }
 
-        public Builder formValue(String key, File file) {
-            this.data.putOne(key, file);
+        public <V extends Value> Builder formValue(String key, V value) {
+            this.data.putOne(key, value);
             return this;
         }
 
@@ -297,8 +283,8 @@ public class Submission {
             return this;
         }
 
-        public Builder restrictedValue(String key, File file) {
-            this.restrictedData.putOne(key, file);
+        public <V extends Value> Builder restrictedValue(String key, V value) {
+            this.restrictedData.putOne(key, value);
             return this;
         }
 

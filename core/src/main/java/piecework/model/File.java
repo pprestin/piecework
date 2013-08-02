@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.data.annotation.Id;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
@@ -34,6 +35,7 @@ import javax.xml.bind.annotation.*;
 public class File extends Value {
 
     @XmlTransient
+    @Id
     private final String id;
 
     @XmlElement
@@ -48,8 +50,6 @@ public class File extends Value {
     @XmlAttribute
     private final String link;
 
-    @XmlTransient
-    private final String value;
 
     private File() {
         this(new Builder(), null);
@@ -60,7 +60,6 @@ public class File extends Value {
         this.contentType = builder.contentType;
         this.location = builder.location;
         this.name = builder.name;
-        this.value = null;
         this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
     }
 
@@ -89,7 +88,7 @@ public class File extends Value {
     @JsonValue(value=false)
     @JsonIgnore
     public String getValue() {
-        return value;
+        return null;
     }
 
     public final static class Builder {
@@ -108,6 +107,7 @@ public class File extends Value {
         }
 
         public Builder(File file, Sanitizer sanitizer) {
+            this.id = sanitizer.sanitize(file.id);
             this.location = sanitizer.sanitize(file.location);
             this.contentType = sanitizer.sanitize(file.contentType);
             this.name = sanitizer.sanitize(file.name);
@@ -123,6 +123,11 @@ public class File extends Value {
 
         public Builder id(String id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder fieldName(String fieldName) {
+            this.fieldName = fieldName;
             return this;
         }
 
@@ -148,11 +153,6 @@ public class File extends Value {
 
         public Builder processInstanceId(String processInstanceId) {
             this.processInstanceId = processInstanceId;
-            return this;
-        }
-
-        public Builder fieldName(String fieldName) {
-            this.fieldName = fieldName;
             return this;
         }
 

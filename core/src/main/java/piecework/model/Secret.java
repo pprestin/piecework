@@ -15,22 +15,36 @@
  */
 package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.xml.bind.annotation.*;
 import java.util.Date;
 
 /**
  * @author James Renfro
  */
-@Document(collection = "secret")
-public class Secret {
+@XmlRootElement(name = Secret.Constants.ROOT_ELEMENT_NAME)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = Secret.Constants.TYPE_NAME)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Secret extends Value {
 
-    @Id
+    @XmlTransient
     private final String id;
+
+    @XmlTransient
     private final String name;
+
+    @XmlTransient
     private final Date date;
+
+    @XmlTransient
     private final byte[] ciphertext;
+
+    @XmlTransient
     private final byte[] iv;
 
     private Secret() {
@@ -45,22 +59,27 @@ public class Secret {
         this.iv = builder.iv;
     }
 
+    @JsonIgnore
     public String getId() {
         return id;
     }
 
+    @JsonIgnore
     public String getName() {
         return name;
     }
 
+    @JsonIgnore
     public Date getDate() {
         return date;
     }
 
+    @JsonIgnore
     public byte[] getCiphertext() {
         return ciphertext;
     }
 
+    @JsonIgnore
     public byte[] getIv() {
         return iv;
     }
@@ -100,6 +119,12 @@ public class Secret {
             this.iv = iv;
             return this;
         }
+    }
+
+    public static class Constants {
+        public static final String RESOURCE_LABEL = "Secret";
+        public static final String ROOT_ELEMENT_NAME = "secret";
+        public static final String TYPE_NAME = "SecretType";
     }
 
 }

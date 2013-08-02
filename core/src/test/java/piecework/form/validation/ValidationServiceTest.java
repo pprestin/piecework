@@ -25,6 +25,7 @@ import piecework.model.Process;
 import piecework.test.ExampleFactory;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -52,7 +53,7 @@ public class ValidationServiceTest {
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
 		FormValidation validation = validationService.validate(instance, template, submission, true);
 
-        List<ValidationResult> results = validation.getResults();
+        Map<String, List<Message>> results = validation.getResults();
 		Assert.assertNull(results);
 	}
 
@@ -67,7 +68,7 @@ public class ValidationServiceTest {
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
         FormValidation validation = validationService.validate(instance, template, submission, true);
 
-        List<ValidationResult> results = validation.getResults();
+        Map<String, List<Message>> results = validation.getResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(1, results.size());
     }
@@ -85,7 +86,7 @@ public class ValidationServiceTest {
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
         FormValidation validation = validationService.validate(instance, template, submission, true);
 
-        List<ValidationResult> results = validation.getResults();
+        Map<String, List<Message>> results = validation.getResults();
         Assert.assertNull(results);
     }
 
@@ -101,7 +102,7 @@ public class ValidationServiceTest {
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
         FormValidation validation = validationService.validate(instance, template, submission, true);
 
-        List<ValidationResult> results = validation.getResults();
+        Map<String, List<Message>> results = validation.getResults();
         Assert.assertNotNull(results);
         Assert.assertEquals(1, results.size());
     }

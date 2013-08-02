@@ -24,21 +24,20 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
 import piecework.exception.InternalServerError;
-import piecework.form.concrete.DefaultValueHandler;
 import piecework.form.validation.SubmissionTemplate;
+import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
 import piecework.process.concrete.ResourceHelper;
+import piecework.security.EncryptionService;
 import piecework.security.Sanitizer;
 import piecework.persistence.SubmissionRepository;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -52,7 +51,7 @@ public class SubmissionHandler {
     ContentRepository contentRepository;
 
     @Autowired
-    DefaultValueHandler defaultValueHandler;
+    EncryptionService encryptionService;
 
     @Autowired
     ResourceHelper helper;
@@ -62,6 +61,9 @@ public class SubmissionHandler {
 
     @Autowired
     SubmissionRepository submissionRepository;
+
+    @Autowired
+    InternalUserDetailsService userDetailsService;
 
     @Autowired
     UuidGenerator uuidGenerator;
@@ -189,9 +191,10 @@ public class SubmissionHandler {
         boolean isButton = template.isButton(name);
         boolean isRestricted = !isAcceptable && template.isRestricted(name);
         boolean isAttachment = !isAcceptable && !isRestricted && template.isAttachmentAllowed();
+        boolean isUserField = template.isUserField(name);
 
         if (isButton) {
-            // Note that submitting multiple button values on a form will result in unpredictable behavior
+            // Note that submitting multiple button messages on a form will result in unpredictable behavior
             Button button = template.getButton(value);
             if (button == null) {
                 LOG.error("Button of this name (" + name + ") exists, but the button value (" + value + ") has not been configured");
@@ -201,11 +204,12 @@ public class SubmissionHandler {
             return true;
         } else if (isAcceptable || isRestricted || isAttachment) {
             String location = null;
-            FormValueDetail detail = null;
+            File file = null;
 
             if (inputStream != null) {
                 String directory = StringUtils.isNotEmpty(submissionBuilder.getProcessDefinitionKey()) ? submissionBuilder.getProcessDefinitionKey() : "submissions";
-                location = "/" + directory + "/" + uuidGenerator.getNextId();
+                String id = uuidGenerator.getNextId();
+                location = "/" + directory + "/" + id;
 
                 Content content = new Content.Builder()
                         .contentType(contentType)
@@ -216,20 +220,33 @@ public class SubmissionHandler {
 
                 content = contentRepository.save(content);
                 location = content.getLocation();
-                detail = new FormValueDetail.Builder()
+                file = new File.Builder()
+                        .id(id)
+                        .name(value)
                         .location(location)
                         .contentType(contentType)
                         .build();
             }
 
-            if (isAcceptable) {
-                submissionBuilder.formValue(new FormValue.Builder().name(name).value(value).detail(detail).build());
-            } else if (isRestricted) {
-                submissionBuilder.restrictedValue(new FormValue.Builder().name(name).value(value).detail(detail).build());
+            if (isRestricted) {
+                try {
+                    submissionBuilder.formValue(name, encryptionService.encrypt(value));
+                } catch (Exception e) {
+                    LOG.error("Failed to correctly encrypt form value for " + name, e);
+                    throw new InternalServerError(Constants.ExceptionCodes.encryption_error, name);
+                }
+            } else if (isAcceptable) {
+                if (file != null)
+                    submissionBuilder.formValue(name, file);
+                else if (isUserField)
+                    submissionBuilder.formValue(name, userDetailsService.getUserByAnyId(value));
+                else
+                    submissionBuilder.formValue(name, value);
+
             } else if (isAttachment) {
-                if (detail != null) {
-                    contentType = detail.getContentType();
-                    location = detail.getLocation();
+                if (file != null) {
+                    contentType = file.getContentType();
+                    location = file.getLocation();
                 } else {
                     contentType = MediaType.TEXT_PLAIN;
                     location = null;
@@ -251,4 +268,20 @@ public class SubmissionHandler {
         return false;
     }
 
+//    public List<? extends Value> encrypted(List<? extends Value> messages) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+//        if (messages.isEmpty())
+//            return Collections.emptyList();
+//
+//        List<Secret> list = new ArrayList<Secret>(messages.size());
+//        for (Value value : messages) {
+//            String plaintext = value.getValue();
+//
+//            if (plaintext != null) {
+//                Secret secret = encryptionService.encrypt(plaintext);
+//                list.add(secret);
+//            }
+//        }
+//
+//        return list;
+//    }
 }

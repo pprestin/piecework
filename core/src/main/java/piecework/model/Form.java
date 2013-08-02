@@ -19,12 +19,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
+import piecework.model.bind.FormNameMessageMapAdapter;
+import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.*;
 
 /**
@@ -50,9 +53,11 @@ public class Form {
     @XmlElement
     private final Screen screen;
 
-    @XmlElementWrapper(name="formData")
-    @XmlElementRef
-    private final List<FormValue> formData;
+    @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
+    private final Map<String, List<Value>> data;
+
+    @XmlJavaTypeAdapter(FormNameMessageMapAdapter.class)
+    private final Map<String, List<Message>> validation;
 
     @XmlAttribute
     private final String root;
@@ -98,7 +103,8 @@ public class Form {
         this.submissionType = builder.submissionType;
         this.task = builder.task;
         this.screen = builder.screen;
-        this.formData = builder.formData != null ? Collections.unmodifiableList(builder.formData) : null;
+        this.data = builder.data;
+        this.validation = builder.validation;
         this.root = context != null ? context.getApplicationUri() : null;
         this.action = context != null ? context.getApplicationUri(builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
@@ -131,8 +137,12 @@ public class Form {
         return task;
     }
 
-    public List<FormValue> getFormData() {
-        return formData;
+    public Map<String, List<Value>> getData() {
+        return data;
+    }
+
+    public Map<String, List<Message>> getValidation() {
+        return validation;
     }
 
     @JsonIgnore
@@ -146,17 +156,6 @@ public class Form {
         if (attachments != null && !attachments.isEmpty()) {
             for (Attachment attachment : attachments) {
                 map.putOne(attachment.getName(), attachment);
-            }
-        }
-        return map;
-    }
-
-    @JsonIgnore
-    public Map<String, FormValue> getFormValueMap() {
-        Map<String, FormValue> map = new HashMap<String, FormValue>();
-        if (formData != null && !formData.isEmpty()) {
-            for (FormValue formValue : formData) {
-                map.put(formValue.getName(), formValue);
             }
         }
         return map;
@@ -209,7 +208,8 @@ public class Form {
         private String submissionType;
         private Task task;
         private Screen screen;
-        private List<FormValue> formData;
+        private ManyMap<String, Value> data;
+        private ManyMap<String, Message> validation;
         private String activation;
         private String attachment;
         private String cancellation;
@@ -222,6 +222,8 @@ public class Form {
         public Builder() {
             super();
             this.attachmentCount = 0;
+            this.data = new ManyMap<String, Value>();
+            this.validation = new ManyMap<String, Message>();
             this.valid = true;
         }
 
@@ -230,12 +232,16 @@ public class Form {
             this.submissionType = sanitizer.sanitize(form.submissionType);
             this.screen = form.screen != null ? new Screen.Builder(form.screen, sanitizer).build() : null;
             this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
-            if (form.formData != null && !form.formData.isEmpty()) {
-                this.formData = new ArrayList<FormValue>(form.formData.size());
-                for (FormValue formValue : form.formData) {
-                    this.formData.add(new FormValue.Builder(formValue, sanitizer).build());
-                }
-            }
+            if (form.data != null && !form.data.isEmpty())
+                this.data = new ManyMap<String, Value>(form.data);
+            else
+                this.data = new ManyMap<String, Value>();
+
+            if (form.validation != null && !form.validation.isEmpty())
+                this.validation = new ManyMap<String, Message>(form.validation);
+            else
+                this.validation = new ManyMap<String, Message>();
+
             this.attachmentCount = form.attachmentCount;
             this.attachments = form.getAttachments();
             this.valid = form.valid;
@@ -290,18 +296,19 @@ public class Form {
             return this;
         }
 
-        public Builder formValue(String key, String ... values) {
-            if (this.formData == null)
-                this.formData = new ArrayList<FormValue>();
-            this.formData.add(new FormValue.Builder().name(key).values(values).build());
+        public Builder variable(String key, List<Value> values) {
+            if (values != null)
+                this.data.put(key, values);
+            else
+                this.data.put(key, Collections.<Value>emptyList());
             return this;
         }
 
-        public Builder formValues(List<FormValue> formValues) {
-            if (this.formData == null)
-                this.formData = new ArrayList<FormValue>();
-            if (formValues != null)
-                this.formData.addAll(formValues);
+        public Builder validation(String key, List<Message> messages) {
+            if (messages != null)
+                this.validation.put(key, messages);
+            else
+                this.validation.put(key, Collections.<Message>emptyList());
             return this;
         }
 

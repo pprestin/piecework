@@ -15,23 +15,26 @@
  */
 package piecework.form.validation;
 
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Registry;
 import piecework.exception.ValidationRuleException;
-import piecework.form.concrete.DefaultValueHandler;
-import piecework.form.handler.ValueHandler;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.process.concrete.ResourceHelper;
 
 import com.google.common.collect.Sets;
+import piecework.security.EncryptionService;
+import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 
 /**
@@ -47,10 +50,10 @@ public class ValidationService {
 	Registry registry;
 
     @Autowired
-    DefaultValueHandler defaultValueHandler;
+    ResourceHelper helper;
 
     @Autowired
-    ResourceHelper helper;
+    EncryptionService encryptionService;
 
     @Autowired
     InternalUserDetailsService userDetailsService;
@@ -63,24 +66,19 @@ public class ValidationService {
 
         if (fieldRuleMap != null) {
             Set<String> acceptableFieldNames = new HashSet<String>(template.getAcceptable());
-            Map<String, List<? extends Value>> submissionData = submission.getData();
-            Map<String, List<? extends Value>> submissionRestrictedData = submission.getRestrictedData();
+            Map<String, List<Value>> submissionData = submission.getData();
+            Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
-            Map<String, List<? extends Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<? extends Value>>emptyMap();
-            Map<String, List<? extends Value>> instanceRestrictedData = instance != null ? instance.getRestrictedData() : Collections.<String, List<? extends Value>>emptyMap();
+            ManyMap<String, Value> decryptedSubmissionData = decrypted(submissionData);
+            ManyMap<String, Value> decryptedInstanceData = decrypted(instanceData);
 
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();
-                boolean isRestricted = field.isRestricted();
                 List<ValidationRule> rules = entry.getValue();
                 if (rules != null) {
                     for (ValidationRule rule : rules) {
                         try {
-                            if (isRestricted)
-                                rule.evaluate(submissionRestrictedData, instanceRestrictedData);
-                            else
-                                rule.evaluate(submissionData, instanceData);
-
+                            rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
                         } catch (ValidationRuleException e) {
                             validationBuilder.error(rule.getName(), e.getMessage());
                             if (onlyAcceptValidInputs)
@@ -107,7 +105,6 @@ public class ValidationService {
                     continue;
                 }
 
-                ManyMap<String, ? extends Value> data = new ManyMap<String, Value>();
                 if (acceptableFieldNames.contains(fieldName)) {
                     List<? extends Value> values = submissionData.get(fieldName);
                     List<? extends Value> previousValues = instanceData.get(fieldName);
@@ -124,16 +121,14 @@ public class ValidationService {
                         values = append(values, previousValues);
                     }
 
-                    ValueHandler handler = template.handler(fieldName);
-                    if (handler == null)
-                        handler = defaultValueHandler;
+                    if (values == null)
+                        values = Collections.emptyList();
 
-                    List<FormValue> formValues = handler.handle(formValue);
-                    for (FormValue storageFormValue : formValues) {
-                        validationBuilder.data
-                    }
+//                    if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
+//                        messages = users(messages);
+
+                    validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
                 }
-
             }
         }
 
@@ -152,6 +147,60 @@ public class ValidationService {
             combined.addAll(previousValues);
 
         return combined;
+    }
+
+    public ManyMap<String, Value> decrypted(Map<String, List<Value>> original) {
+        ManyMap<String, Value> map = new ManyMap<String, Value>();
+
+        if (original != null && !original.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
+                String key = entry.getKey();
+                try {
+                    List<Value> decrypted = decrypted(entry.getValue());
+                    map.put(key, decrypted);
+                } catch (Exception e) {
+                    LOG.error("Could not decrypt messages for " + key, e);
+                }
+            }
+        }
+
+        return map;
+    }
+
+    public List<Value> decrypted(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+        if (values.isEmpty())
+            return Collections.emptyList();
+
+        List<Value> list = new ArrayList<Value>(values.size());
+        for (Value value : values) {
+            if (value instanceof Secret) {
+                Secret secret = Secret.class.cast(value);
+                String plaintext = encryptionService.decrypt(secret);
+                list.add(new Value(plaintext));
+            } else {
+                list.add(value);
+            }
+        }
+
+        return list;
+    }
+
+    public List<? extends Value> users(List<? extends Value> values) {
+        if (values.isEmpty())
+            return Collections.emptyList();
+
+        List<User> list = new ArrayList<User>(values.size());
+        for (Value value : values) {
+            if (value instanceof User) {
+                list.add(User.class.cast(value));
+            } else {
+                User user = userDetailsService.getUserByAnyId(value.getValue());
+                if (user != null)
+                    list.add(user);
+            }
+        }
+
+        return list;
     }
 
 
@@ -196,16 +245,16 @@ public class ValidationService {
 
                             unvalidatedFieldNames.remove(button.getName());
 
-                            FormValue formValue = submissionValueMap.get(button.getName());
-                            List<String> values = formValue != null ? formValue.getAllValues() : null;
+                            FormValue variable = submissionValueMap.get(button.getName());
+                            List<String> messages = variable != null ? variable.getAllValues() : null;
 
-                            if (values != null && !values.isEmpty()) {
-                                for (String value : values) {
+                            if (messages != null && !messages.isEmpty()) {
+                                for (String value : messages) {
                                     if (StringUtils.isEmpty(value))
                                         continue;
 
                                     if (value.equals(button.getValue()))
-                                        validationBuilder.formValue(formValue);
+                                        validationBuilder.variable(variable);
                                 }
                             }
                         }
@@ -275,7 +324,7 @@ public class ValidationService {
                                 continue;
                             }
                         } else {
-                            // Remove any form values from the attachment map, since this has a field already
+                            // Remove any form messages from the attachment map, since this has a field already
                             unvalidatedFieldNames.remove(fieldName);
                             validateField(validationId, field, fieldMap, submissionValueMap, submissionAttachmentMap, instanceValueMap, instanceAttachmentMap, validationBuilder);
                         }
@@ -287,7 +336,7 @@ public class ValidationService {
         if (isAttachmentAllowed) {
 
             if (submissionAttachmentMap != null && !submissionAttachmentMap.isEmpty()) {
-                for (List<Attachment> attachments : submissionAttachmentMap.values()) {
+                for (List<Attachment> attachments : submissionAttachmentMap.messages()) {
                     if (attachments == null || attachments.isEmpty())
                         continue;
                     for (Attachment attachment : attachments) {
@@ -303,22 +352,22 @@ public class ValidationService {
 //                if (userDetails != null)
 //                    userId = userDetails.getInternalId();
 //
-//                for (FormValue formValue : formValues) {
-//                    if (unvalidatedFieldNames.contains(formValue.getName())) {
-//                        List<String> values = formValue.getAllValues();
+//                for (FormValue variable : formValues) {
+//                    if (unvalidatedFieldNames.contains(variable.getName())) {
+//                        List<String> messages = variable.getAllValues();
 //
-//                        if (values != null && !values.isEmpty()) {
-//                            for (String value : values) {
+//                        if (messages != null && !messages.isEmpty()) {
+//                            for (String value : messages) {
 //                                Attachment.Builder attachmentBuilder = new Attachment.Builder()
-//                                        .name(formValue.getName())
+//                                        .name(variable.getName())
 //                                        .description(value)
 //                                        .lastModified(new Date())
 //                                        .userId(userId);
 //
-//                                if (formValue.getContentType() != null) {
+//                                if (variable.getContentType() != null) {
 //                                    attachmentBuilder
-//                                        .contentType(formValue.getContentType())
-//                                        .location(formValue.getLocation());
+//                                        .contentType(variable.getContentType())
+//                                        .location(variable.getLocation());
 //                                } else {
 //                                    attachmentBuilder.contentType("text/plain");
 //                                }
@@ -344,10 +393,10 @@ public class ValidationService {
         boolean hasErrorResult = false;
         String fieldName = field.getName();
 
-        FormValue formValue = submissionValueMap.get(fieldName);
-        List<String> values = formValue != null ? formValue.getValues() : null;
+        FormValue variable = submissionValueMap.get(fieldName);
+        List<String> messages = variable != null ? variable.getMessages() : null;
         FormValue previousFormValue = instanceValueMap != null ? instanceValueMap.get(fieldName) : null;
-        List<String> previousValues = previousFormValue != null ? previousFormValue.getValues() : null;
+        List<String> previousValues = previousFormValue != null ? previousFormValue.getMessages() : null;
         String inputType = field.getType();
 
         boolean isEmailAddress = false;
@@ -358,9 +407,9 @@ public class ValidationService {
         boolean isText = inputType == null || FREEFORM_INPUT_TYPES.contains(inputType);
         boolean isFile = inputType != null && inputType.equals(Constants.FieldTypes.FILE);
         boolean isFieldSpecificUpdate = validationId != null && validationId.equals(fieldName);
-        boolean hasValues = !isFullyEmpty(values);
+        boolean hasValues = !isFullyEmpty(messages);
         boolean hasPreviousValues = !isFullyEmpty(previousValues);
-        boolean hasAtLeastEmptyValue = values != null && !values.isEmpty();
+        boolean hasAtLeastEmptyValue = messages != null && !messages.isEmpty();
 
         OptionResolver optionResolver = null;
 
@@ -408,9 +457,9 @@ public class ValidationService {
             // Check to make sure that we're not resubmitting a value that already exists in the database for this property
             if (previousValues != null && !previousValues.isEmpty()) {
                 isUnchanged = true;
-                for (int i=0;i<values.size();i++) {
+                for (int i=0;i<messages.size();i++) {
                     String previousValue = previousValues.size() > i ? previousValues.get(i) : null;
-                    String currentValue = values.get(i);
+                    String currentValue = messages.get(i);
 
                     if (previousValue == null || !previousValue.equals(currentValue)) {
                         isUnchanged = false;
@@ -420,7 +469,7 @@ public class ValidationService {
                 validationBuilder.unchangedField(fieldName);
             }
 
-            // Ensure that values for non-text properties all match valid options
+            // Ensure that messages for non-text properties all match valid options
             if (!isText) {
                 List<Option> options = field.getOptions();
 
@@ -436,8 +485,8 @@ public class ValidationService {
                         optionSet.add(option.getValue());
                     }
 
-                    if (values != null) {
-                        for (String value : values) {
+                    if (messages != null) {
+                        for (String value : messages) {
                             if (value != null) {
                                 if (!optionSet.contains(value)) {
                                     hasErrorResult = true;
@@ -459,19 +508,19 @@ public class ValidationService {
                     if (isPersonLookup) {
                         FormValue.Builder displayNameBuilder = new FormValue.Builder().name(fieldName + "__displayName");
                         FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(fieldName + "__visibleId");
-                        for (String value : values) {
+                        for (String value : messages) {
                             User user = userDetailsService.getUserByAnyId(value);
                             if (user != null) {
                                 displayNameBuilder.value(user.getDisplayName());
                                 visibleIdBuilder.value(user.getVisibleId());
                             }
                         }
-                        validationBuilder.formValue(displayNameBuilder.build());
-                        validationBuilder.formValue(visibleIdBuilder.build());
+                        validationBuilder.variable(displayNameBuilder.build());
+                        validationBuilder.variable(visibleIdBuilder.build());
                     }
                 }
 
-                for (String value : values) {
+                for (String value : messages) {
 
                     if (value.length() > field.getMaxValueLength()) {
                         hasErrorResult = true;
@@ -523,10 +572,10 @@ public class ValidationService {
 
                 if (field.getMaxInputs() < counter) {
                     hasErrorResult = true;
-                    validationBuilder.error(fieldName, "No more than " + field.getMaxInputs() + " values are allowed");
+                    validationBuilder.error(fieldName, "No more than " + field.getMaxInputs() + " messages are allowed");
                 } else if (field.getMinInputs() > counter) {
                     hasErrorResult = true;
-                    validationBuilder.error(fieldName, "At least " + field.getMinInputs() + " values are required");
+                    validationBuilder.error(fieldName, "At least " + field.getMinInputs() + " messages are required");
                 }
             }
         } else if (isFile) {
@@ -548,7 +597,7 @@ public class ValidationService {
         } else if (hasPreviousValues) {
             // File submission is a special case, since we don't want to overwrite an existing file
             if (isFile && previousFormValue != null) {
-                validationBuilder.formValue(previousFormValue);
+                validationBuilder.variable(previousFormValue);
             }
         } else {
 
@@ -597,12 +646,12 @@ public class ValidationService {
         }
 
         if (!hasErrorResult && hasAtLeastEmptyValue) {
-            if (values != null && !values.isEmpty()) {
+            if (messages != null && !messages.isEmpty()) {
                 // Ensure that we save the form value
                 if (field.isRestricted())
-                    validationBuilder.restrictedValue(formValue);
+                    validationBuilder.restrictedValue(variable);
                 else
-                    validationBuilder.formValue(formValue);
+                    validationBuilder.variable(variable);
             }
         }
     }   */

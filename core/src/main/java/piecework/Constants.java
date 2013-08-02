@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This interface contains constant values for resource parameters - path, query, etc.
+ * This interface contains constant messages for resource parameters - path, query, etc.
  * 
  * @author James Renfro
  */
@@ -48,13 +48,6 @@ public interface Constants {
     public static class ActionTypes {
         public static final String COMPLETE = "complete";
     }
-
-//    public static class ButtonActions {
-//        public static final String COMPLETE = "complete";
-//        public static final String REJECT = "reject";
-//        public static final String SAVE = "save";
-//        public static final String VALIDATE = "validate";
-//    }
 
     public static class ButtonTypes {
         public static final String BUTTON = "button";
@@ -84,24 +77,25 @@ public interface Constants {
 		public static final String IS_VALID_USER = "IS_VALID_USER";
 		public static final String IS_LIMITED_TO = "IS_LIMITED_TO";
         public static final String IS_STATE = "IS_STATE";
-//        public static final String SCREEN_IS_DISPLAYED_WHEN = "SCREEN_IS_DISPLAYED_WHEN";
         public static final String SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE = "SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE";
 	}
 
     public static class DeleteReasons {
         public static final String CANCELLED = "Cancelled";
     }
-	
+
 	public static class ExceptionCodes {
         public static final String active_task_required = "active_task_required";
         public static final String attachment_does_not_exist = "attachment_does_not_exist";
         public static final String certificate_does_not_match = "certificate_does_not_match";
+        public static final String encryption_error = "encryption_error";
         public static final String form_access_forbidden = "form_access_forbidden";
         public static final String instance_cannot_be_modified = "instance_cannot_be_modified";
         public static final String instance_does_not_exist = "instance_does_not_exist";
         public static final String insufficient_permission = "insufficient_permission";
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
+        public static final String invalid_process_status = "invalid_process_status";
         public static final String process_business_key_limit = "process_business_key_limit";
 		public static final String process_change_key_duplicate = "process_change_key_duplicate";
 		public static final String process_does_not_exist = "process_does_not_exist";
@@ -164,7 +158,8 @@ public interface Constants {
             KEYSTORE_PASSWORD = "keystore.password",
             CERTIFICATE_ISSUER_HEADER = "certificate.issuer.header",
             CERTIFICATE_SUBJECT_HEADER = "certificate.subject.header",
-            MAIL_SERVER_HOST = "mail.server.host";
+            MAIL_SERVER_HOST = "mail.server.host",
+            OPTIMIZATIONS_OFF = "optimizations.off";
     }
 
     public static class SubmissionTypes {

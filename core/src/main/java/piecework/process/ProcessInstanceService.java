@@ -15,18 +15,25 @@
  */
 package piecework.process;
 
+import com.mongodb.DBRef;
+import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.OperationType;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.SearchResults;
@@ -51,14 +58,11 @@ import piecework.ui.StreamingAttachmentContent;
 import piecework.util.ManyMap;
 import piecework.util.ProcessInstanceUtility;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -87,7 +91,7 @@ public class ProcessInstanceService {
     ResourceHelper helper;
 
     @Autowired
-    MongoOperations mongoOperations;
+    MongoTemplate mongoOperations;
 
     @Autowired
     ProcessRepository processRepository;
@@ -104,47 +108,9 @@ public class ProcessInstanceService {
     @Autowired
     ValidationService validationService;
 
-
-    public void activate(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
-
-        try {
-            if (!facade.activate(process, instance))
-                throw new ConflictError();
-
-            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance)
-                    .applicationStatus(process.getCancellationStatus())
-                    .applicationStatusExplanation(reason)
-                    .processStatus(Constants.ProcessStatuses.SUSPENDED);
-
-            processInstanceRepository.save(modified.build());
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Could not activate task", e);
-        }
-    }
-
     public ProcessInstance attach(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validate(process, instance, task, template, submission, false);
         return store(process, submission, validation, instance, true);
-    }
-
-    public void delete(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
-
-        try {
-            if (!facade.cancel(process, instance))
-                throw new ConflictError();
-
-            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance)
-                    .applicationStatus(process.getCancellationStatus())
-                    .applicationStatusExplanation(reason)
-                    .processStatus(Constants.ProcessStatuses.CANCELLED);
-
-            processInstanceRepository.save(modified.build());
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to cancel execution ", e);
-            throw new InternalServerError();
-        }
     }
 
     public SearchResults findAttachments(Process process, ProcessInstance processInstance, AttachmentQueryParameters queryParameters) throws StatusCodeError {
@@ -200,6 +166,72 @@ public class ProcessInstanceService {
         return searchResultsBuilder.build();
     }
 
+    public void operate(OperationType operationType, Process process, ProcessInstance instance, String applicationStatus, String reason) throws ConflictError, InternalServerError {
+        try {
+            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance);
+            String processStatus = instance.getProcessStatus();
+
+            if (operationType != OperationType.UPDATE) {
+                String defaultApplicationStatus;
+                switch(operationType) {
+                    case ACTIVATION:
+                        if (!facade.activate(process, instance))
+                            throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
+                        defaultApplicationStatus = instance.getPreviousApplicationStatus();
+                        processStatus = Constants.ProcessStatuses.OPEN;
+                        break;
+                    case CANCELLATION:
+                        if (!facade.cancel(process, instance))
+                            throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
+                        defaultApplicationStatus = process.getCancellationStatus();
+                        processStatus = Constants.ProcessStatuses.CANCELLED;
+                        break;
+                    case SUSPENSION:
+                        if (!facade.suspend(process, instance))
+                            throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
+                        defaultApplicationStatus = process.getSuspensionStatus();
+                        modified.previousApplicationStatus(instance.getApplicationStatus());
+                        processStatus = Constants.ProcessStatuses.SUSPENDED;
+                        break;
+                    default:
+                        throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
+                }
+
+                if (StringUtils.isNotEmpty(applicationStatus))
+                    applicationStatus = defaultApplicationStatus;
+            }
+
+            String userId = helper.getAuthenticatedSystemOrUserId();
+
+            boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
+
+            if (skipOptimization) {
+                modified.applicationStatus(applicationStatus)
+                        .applicationStatusExplanation(reason)
+                        .processStatus(processStatus)
+                        .operation(operationType, reason, new Date(), userId);
+
+                processInstanceRepository.save(modified.build());
+            } else {
+                WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
+                        new Update()
+                                .set("applicationStatus", applicationStatus)
+                                .set("applicationStatusExplanation", reason)
+                                .set("processStatus", processStatus)
+                                .push("operations", new Operation(operationType, reason, new Date(), userId)),
+                        ProcessInstance.class);
+
+                String error = result.getError();
+                if (StringUtils.isNotEmpty(error))
+                    LOG.error("Unable to correctly save applicationStatus " + applicationStatus + ", processStatus " + processStatus + ", and reason " + reason + " for " + instance.getProcessInstanceId() + ": " + error);
+            }
+
+        } catch (ProcessEngineException e) {
+            LOG.error("Process engine unable to cancel execution ", e);
+            throw new InternalServerError();
+        }
+    }
+
     public ProcessInstance read(String processDefinitionKey, String processInstanceId) throws StatusCodeError {
         Process process = getProcess(processDefinitionKey);
         return read(process, processInstanceId);
@@ -219,7 +251,7 @@ public class ProcessInstanceService {
     }
 
     public Response readValue(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
-        Map<String, List<? extends Value>> data = instance.getData();
+        Map<String, List<Value>> data = instance.getData();
         List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 
         if (values == null || values.isEmpty() || StringUtils.isEmpty(fileId))
@@ -253,15 +285,27 @@ public class ProcessInstanceService {
         if (instance == null)
             throw new InternalServerError();
 
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
-        builder.removeAttachment(attachmentId);
+        boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
 
-        processInstanceRepository.save(builder.build());
+        if (skipOptimization) {
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
+            builder.removeAttachment(attachmentId);
+
+            processInstanceRepository.save(builder.build());
+        } else {
+            Query query = new Query(where("_id").is(instance.getProcessInstanceId()));
+            Update update = new Update();
+
+            if (attachmentId != null)
+                update.pull("attachments", attachmentId);
+
+            mongoOperations.updateFirst(query, update, ProcessInstance.class);
+        }
     }
 
     public void removeValue(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
-        Map<String, List<? extends Value>> data = instance.getData();
+        Map<String, List<Value>> data = instance.getData();
         List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 
         if (values == null || values.isEmpty() || StringUtils.isEmpty(fileId))
@@ -286,11 +330,11 @@ public class ProcessInstanceService {
         ManyMap<String, Value> update = new ManyMap<String, Value>();
         update.put(fieldName, remainingValues);
 
-        updateProcessInstance(update, null, null, null, null, instance);
+        updateProcessInstance(update, null, null, null, instance);
     }
 
     public List<File> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {
-        Map<String, List<? extends Value>> data = instance.getData();
+        Map<String, List<Value>> data = instance.getData();
         List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 
         List<File> files = new ArrayList<File>();
@@ -331,24 +375,37 @@ public class ProcessInstanceService {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = read(process, rawProcessInstanceId);
 
+        List<Operation> operations = instance.getOperations();
         List<Task> tasks = findAllTasks(process, instance);
 
         InternalUserDetails initiatorUserDetails = userDetailsService.loadUserByAnyId(instance.getInitiatorId());
 
         User initiator = initiatorUserDetails != null ?  new User.Builder(initiatorUserDetails).build() : null;
 
-        History history = new History.Builder()
+        History.Builder history = new History.Builder()
             .processDefinitionKey(process.getProcessDefinitionKey())
             .processDefinitionLabel(process.getProcessDefinitionLabel())
             .processInstanceId(instance.getProcessInstanceId())
             .processInstanceLabel(instance.getProcessInstanceLabel())
             .startTime(instance.getStartTime())
             .endTime(instance.getEndTime())
-            .initiator(initiator)
-            .tasks(tasks)
-            .build(getInstanceViewContext());
+            .initiator(initiator);
 
-        return history;
+        if (operations != null) {
+            for (Operation operation : operations) {
+                String userId = operation.getUserId();
+                User user = userDetailsService.getUser(userId);
+                history.operation(operation, user);
+            }
+        }
+
+        if (tasks != null) {
+            for (Task task : tasks) {
+                history.task(task);
+            }
+        }
+
+        return history.build(getInstanceViewContext());
     }
 
     public Process getProcess(String processDefinitionKey) throws StatusCodeError {
@@ -370,27 +427,21 @@ public class ProcessInstanceService {
         String applicationStatus = sanitized.getApplicationStatus();
         String applicationStatusExplanation = sanitized.getApplicationStatusExplanation();
 
-        if (processStatus != null && processStatus.equalsIgnoreCase(Constants.ProcessStatuses.SUSPENDED)) {
-            try {
-                if (!facade.suspend(process, persisted))
-                    throw new ConflictError();
-
-                ProcessInstance.Builder modified = new ProcessInstance.Builder(persisted)
-                        .applicationStatus(applicationStatus)
-                        .applicationStatusExplanation(applicationStatusExplanation)
-                        .processStatus(Constants.ProcessStatuses.SUSPENDED);
-
-                processInstanceRepository.save(modified.build());
-                return;
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Process engine unable to cancel execution ", e);
-                throw new InternalServerError();
+        if (StringUtils.isNotEmpty(processStatus) || StringUtils.isEmpty(applicationStatus)) {
+            OperationType operationType = OperationType.UPDATE;
+            if (processStatus != null && !processStatus.equalsIgnoreCase(persisted.getProcessStatus())) {
+                if (processStatus.equals(Constants.ProcessStatuses.OPEN))
+                    operationType = OperationType.ACTIVATION;
+                else if (processStatus.equals(Constants.ProcessStatuses.CANCELLED))
+                    operationType = OperationType.CANCELLATION;
+                else if (processStatus.equals(Constants.ProcessStatuses.SUSPENDED))
+                    operationType = OperationType.SUSPENSION;
             }
+
+            operate(operationType, process, persisted, applicationStatus, applicationStatusExplanation);
+        } else {
+            throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
         }
-
-        throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
-
     }
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
@@ -484,14 +535,13 @@ public class ProcessInstanceService {
         if (attachments != null && !attachments.isEmpty())
             attachments = attachmentRepository.save(attachments);
 
-        ManyMap<String, Value> data = isAttachment ? null : validation.getData();
-        ManyMap<String, Value> restrictedData = isAttachment ? null : validation.getRestrictedData();
+        Map<String, List<Value>> data = isAttachment ? null : validation.getData();
 
         ProcessInstance instance;
         if (previous != null)
-            instance = updateProcessInstance(data, restrictedData, attachments, submission, processInstanceLabel, previous);
+            instance = updateProcessInstance(data, attachments, submission, processInstanceLabel, previous);
         else
-            instance = startProcessInstance(data, restrictedData, attachments, submission, processInstanceLabel, process);
+            instance = startProcessInstance(data, attachments, submission, processInstanceLabel, process);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");
@@ -514,24 +564,6 @@ public class ProcessInstanceService {
         FormValidation validation = validate(process, instance, task, template, submission, true);
         completeIfTaskExists(process, task, submission.getAction());
         return store(process, submission, validation, instance, false);
-    }
-
-    public void suspend(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
-
-        try {
-            if (!facade.suspend(process, instance))
-                throw new ConflictError();
-
-            ProcessInstance.Builder modified = new ProcessInstance.Builder(instance)
-                    .applicationStatus(process.getCancellationStatus())
-                    .applicationStatusExplanation(reason)
-                    .processStatus(Constants.ProcessStatuses.SUSPENDED);
-
-            processInstanceRepository.save(modified.build());
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Could not activate task", e);
-        }
     }
 
     public List<Task> findAllTasks(Process process, ProcessInstance instance) throws StatusCodeError {
@@ -659,7 +691,7 @@ public class ProcessInstanceService {
         if (LOG.isDebugEnabled())
             LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
 
-        List<ValidationResult> results = validation.getResults();
+        Map<String, List<Message>> results = validation.getResults();
         if (throwException && results != null && !results.isEmpty()) {
             // Throw an exception if the submitter needs to adjust the data
             throw new BadRequestError(validation);
@@ -711,7 +743,7 @@ public class ProcessInstanceService {
         }
     }
 
-    private ProcessInstance startProcessInstance(ManyMap<String, Value> data, ManyMap<String, Value> restrictedData, List<Attachment> attachments, Submission submission, String processInstanceLabel, Process process) throws StatusCodeError {
+    private ProcessInstance startProcessInstance(Map<String, List<Value>> data, List<Attachment> attachments, Submission submission, String processInstanceLabel, Process process) throws StatusCodeError {
         ProcessInstance.Builder builder;
         try {
             InternalUserDetails user = helper.getAuthenticatedPrincipal();
@@ -722,7 +754,6 @@ public class ProcessInstanceService {
                     .processDefinitionLabel(process.getProcessDefinitionLabel())
                     .processInstanceLabel(processInstanceLabel)
                     .data(data)
-                    .restrictedData(restrictedData)
                     .submission(submission)
                     .startTime(new Date())
                     .initiatorId(initiatorId)
@@ -743,27 +774,103 @@ public class ProcessInstanceService {
             builder.processInstanceId(stored.getProcessInstanceId());
             builder.engineProcessInstanceId(engineInstanceId);
 
+            WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(stored.getProcessInstanceId())),
+                    new Update().set("engineProcessInstanceId", engineInstanceId),
+                    ProcessInstance.class);
+
+            String error = result.getError();
+            if (StringUtils.isNotEmpty(error))
+                LOG.error("Unable to correctly save engine instance id " + engineInstanceId + " for " + stored.getProcessInstanceId() + ": " + error);
+
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to start instance ", e);
             throw new InternalServerError();
         }
 
-        return processInstanceRepository.save(builder.build());
+        return builder.build();
     }
 
-    private ProcessInstance updateProcessInstance(ManyMap<String, Value> update, ManyMap<String, Value> restrictedUpdate, List<Attachment> attachments, Submission submission, String processInstanceLabel, ProcessInstance instance) throws StatusCodeError {
+    private ProcessInstance updateProcessInstance(Map<String, List<Value>> data, List<Attachment> attachments, Submission submission, String processInstanceLabel, ProcessInstance instance) throws StatusCodeError {
         if (instance == null)
             throw new InternalServerError();
 
-        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
-                .attachments(attachments)
-                .data(update)
-                .restrictedData(restrictedUpdate)
-                .submission(submission);
+        boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
 
-        if (StringUtils.isNotEmpty(processInstanceLabel))
-            builder.processInstanceLabel(processInstanceLabel);
+        if (skipOptimization) {
+            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
+                    .attachments(attachments)
+                    .data(data)
+                    .submission(submission);
 
-        return processInstanceRepository.save(builder.build());
+            if (StringUtils.isNotEmpty(processInstanceLabel))
+                builder.processInstanceLabel(processInstanceLabel);
+
+            return processInstanceRepository.save(builder.build());
+        } else {
+            Query query = new Query(where("_id").is(instance.getProcessInstanceId()));
+            Update update = new Update();
+
+            if (attachments != null && !attachments.isEmpty()) {
+                DBRef[] attachmentRefs = new DBRef[attachments.size()];
+                for (int i=0;i<attachments.size();i++) {
+                    attachmentRefs[i] = new DBRef(mongoOperations.getDb(), mongoOperations.getCollectionName(Attachment.class), new ObjectId(attachments.get(i).getAttachmentId()));
+                }
+                update.pushAll("attachments", attachmentRefs);
+            }
+            if (submission != null)
+                update.push("submissions", new DBRef(mongoOperations.getDb(), mongoOperations.getCollectionName(Submission.class), new ObjectId(submission.getSubmissionId())));
+            if (StringUtils.isNotEmpty(processInstanceLabel))
+                update.set("processInstanceLabel", processInstanceLabel);
+            if (data != null && !data.isEmpty()) {
+                for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
+                    String key = "data." + entry.getKey();
+                    List<Value> values = entry.getValue();
+
+                    List<File> files = null;
+                    List<User> users = null;
+                    if (values != null) {
+                        for (Value value : values) {
+                            if (value instanceof File) {
+                                File file = File.class.cast(value);
+
+                                if (StringUtils.isNotEmpty(file.getName())) {
+                                    update.addToSet("keywords", file.getName().toLowerCase());
+                                    if (files == null)
+                                        files = new ArrayList<File>(values.size());
+                                    files.add(file);
+                                }
+                            } else if (value instanceof User) {
+                                User user = User.class.cast(value);
+                                if (user != null) {
+                                    if (user.getDisplayName() != null)
+                                        update.addToSet("keywords", user.getDisplayName());
+                                    if (user.getVisibleId() != null)
+                                        update.addToSet("keywords", user.getVisibleId());
+                                    if (user.getUserId() != null)
+                                        update.addToSet("keywords", user.getUserId());
+                                    if (user.getEmailAddress() != null)
+                                        update.addToSet("keywords", user.getEmailAddress());
+
+                                    if (users == null)
+                                        users = new ArrayList<User>(values.size());
+                                    users.add(user);
+                                }
+                            } else if (! (value instanceof Secret)) {
+                                if (StringUtils.isNotEmpty(value.getValue()))
+                                    update.addToSet("keywords", value.getValue().toLowerCase());
+                            }
+                        }
+                    }
+                    if (files != null)
+                        update.set(key, files);
+                    else if (users != null)
+                        update.set(key, users);
+                    else
+                        update.set(key, values);
+                }
+            }
+
+            return mongoOperations.findAndModify(query, update, ProcessInstance.class);
+        }
     }
 }

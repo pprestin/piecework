@@ -30,6 +30,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import piecework.enumeration.OperationType;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
@@ -74,11 +75,11 @@ public class ProcessInstance implements Serializable {
     @XmlElement
     private final String applicationStatusExplanation;
 
-    @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
-    private final Map<String, List<? extends Value>> data;
+    @XmlElement
+    private final String previousApplicationStatus;
 
-    @XmlTransient
-    private final Map<String, List<? extends Value>> restrictedData;
+    @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
+    private final Map<String, List<Value>> data;
 
     @XmlElement
     private final Date startTime;
@@ -102,6 +103,10 @@ public class ProcessInstance implements Serializable {
     @XmlTransient
     @JsonIgnore
     private final Set<String> keywords;
+
+    @XmlTransient
+    @JsonIgnore
+    private final List<Operation> operations;
 
     @XmlTransient
     @JsonIgnore
@@ -131,8 +136,8 @@ public class ProcessInstance implements Serializable {
         this.processStatus = builder.processStatus;
         this.applicationStatus = builder.applicationStatus;
         this.applicationStatusExplanation = builder.applicationStatusExplanation;
-        this.data = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.data);
-        this.restrictedData = Collections.unmodifiableMap((Map<String, List<? extends Value>>)builder.restrictedData);
+        this.previousApplicationStatus = builder.previousApplicationStatus;
+        this.data = builder.data;
         this.keywords = builder.keywords;
         List<Attachment> attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new ArrayList<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
         if (builder.attachments != null) {
@@ -141,6 +146,7 @@ public class ProcessInstance implements Serializable {
             }
         }
         this.attachments = Collections.unmodifiableList(attachments);
+        this.operations = Collections.unmodifiableList(builder.operations);
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
@@ -191,6 +197,10 @@ public class ProcessInstance implements Serializable {
         return applicationStatusExplanation;
     }
 
+    public String getPreviousApplicationStatus() {
+        return previousApplicationStatus;
+    }
+
     public Date getStartTime() {
         return startTime;
     }
@@ -203,13 +213,8 @@ public class ProcessInstance implements Serializable {
         return initiatorId;
     }
 
-    public Map<String, List<? extends Value>> getData() {
+    public Map<String, List<Value>> getData() {
         return data;
-    }
-
-    @JsonIgnore
-    public Map<String, List<? extends Value>> getRestrictedData() {
-        return restrictedData;
     }
 
     @JsonIgnore
@@ -228,30 +233,9 @@ public class ProcessInstance implements Serializable {
         return map;
     }
 
-//    @JsonIgnore
-//    public Map<String, FormValue> getFormValueMap() {
-//        Map<String, FormValue> map = new HashMap<String, FormValue>();
-//        if (formData != null && !formData.isEmpty()) {
-//            for (FormValue formValue : formData) {
-//                String name = formValue.getName();
-//                List<String> values = formValue.getValues();
-//                if (name != null && values != null)
-//                    map.put(name, formValue);
-//            }
-//        }
-//        return map;
-//    }
-//
-//    @JsonIgnore
-//	public ManyMap<String, String> getFormValueContentMap() {
-//    	ManyMap<String, String> map = new ManyMap<String, String>();
-//    	if (formData != null && !formData.isEmpty()) {
-//    		for (FormValue formValue : formData) {
-//    			map.put(formValue.getName(), formValue.getValues());
-//    		}
-//    	}
-//    	return map;
-//    }
+    public List<Operation> getOperations() {
+        return operations;
+    }
 
     public List<Submission> getSubmissions() {
         return submissions;
@@ -285,10 +269,11 @@ public class ProcessInstance implements Serializable {
         private String processStatus;
         private String applicationStatus;
         private String applicationStatusExplanation;
+        private String previousApplicationStatus;
         private ManyMap<String, Value> data;
-        private ManyMap<String, Value> restrictedData;
         private Set<String> keywords;
         private List<Attachment> attachments;
+        private List<Operation> operations;
         private List<Submission> submissions;
         private Date startTime;
         private Date endTime;
@@ -300,7 +285,7 @@ public class ProcessInstance implements Serializable {
             this.attachments = new ArrayList<Attachment>();
             this.keywords = new HashSet<String>();
             this.data = new ManyMap<String, Value>();
-            this.restrictedData = new ManyMap<String, Value>();
+            this.operations = new ArrayList<Operation>();
             this.submissions = new ArrayList<Submission>();
         }
 
@@ -314,6 +299,7 @@ public class ProcessInstance implements Serializable {
             this.processStatus = instance.processStatus;
             this.applicationStatus = instance.applicationStatus;
             this.applicationStatusExplanation = instance.applicationStatusExplanation;
+            this.previousApplicationStatus = instance.previousApplicationStatus;
             this.startTime = instance.startTime;
             this.endTime = instance.endTime;
             this.initiatorId = instance.initiatorId;
@@ -330,14 +316,14 @@ public class ProcessInstance implements Serializable {
                 this.keywords = new HashSet<String>();
 
             if (instance.data != null && !instance.data.isEmpty())
-				this.data = new ManyMap<String, Value>((Map<String,List<Value>>) instance.data);
+				this.data = new ManyMap<String, Value>(instance.data);
 			else
                 this.data = new ManyMap<String, Value>();
 
-            if (instance.restrictedData != null && !instance.restrictedData.isEmpty())
-                this.restrictedData = new ManyMap<String, Value>((Map<String,List<Value>>) instance.restrictedData);
+            if (instance.operations != null && !instance.operations.isEmpty())
+                this.operations = new ArrayList<Operation>(instance.operations);
             else
-                this.restrictedData = new ManyMap<String, Value>();
+                this.operations = new ArrayList<Operation>();
 
             if (instance.submissions != null && !instance.submissions.isEmpty())
                 this.submissions = new ArrayList<Submission>(instance.submissions);
@@ -415,6 +401,11 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
+        public Builder previousApplicationStatus(String previousApplicationStatus) {
+            this.previousApplicationStatus = previousApplicationStatus;
+            return this;
+        }
+
         public Builder startTime(Date startTime) {
             this.startTime = startTime;
             return this;
@@ -430,7 +421,12 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-        public Builder data(ManyMap<String, Value> data) {
+        public Builder operation(OperationType type, String reason, Date date, String userId) {
+            this.operations.add(new Operation(type, reason, date, userId));
+            return this;
+        }
+
+        public Builder data(Map<String, List<Value>> data) {
             if (data != null && !data.isEmpty()) {
                 for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
                     List<Value> values = entry.getValue();
@@ -451,15 +447,6 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-        public Builder restrictedData(ManyMap<String, Value> data) {
-            if (data != null && !data.isEmpty()) {
-                for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
-                    this.restrictedData.put(entry.getKey(), entry.getValue());
-                }
-            }
-            return this;
-        }
-
         public Builder formValue(String key, String ... values) {
             if (values != null && values.length > 0) {
                 List<Value> list = new ArrayList<Value>(values.length);
@@ -475,43 +462,6 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-//        public Builder formData(List<FormValue> formData) {
-//            this.formData = formData;
-//            return this;
-//        }
-//
-//        public Builder formValueMap(Map<String, FormValue> formValueMap) {
-//            Map<String, FormValue> map = new HashMap<String, FormValue>();
-//            if (this.formData != null && !this.formData.isEmpty()) {
-//                for (FormValue formValue : this.formData) {
-//                    map.put(formValue.getName(), formValue);
-//                }
-//            }
-//            if (formValueMap != null && !formValueMap.isEmpty()) {
-//                for (Map.Entry<String, FormValue> entry : formValueMap.entrySet()) {
-//                    map.put(entry.getKey(), entry.getValue());
-//                }
-//            }
-//            this.formData = new ArrayList<FormValue>();
-//            if (!map.isEmpty()) {
-//                for (Map.Entry<String, FormValue> entry : map.entrySet()) {
-//                    FormValue formValue = entry.getValue();
-//                    if (formValue == null)
-//                        continue;
-//
-//                    this.formData.add(formValue);
-//                    List<String> values = formValue.getValues();
-//                    if (values != null && !values.isEmpty()) {
-//                        for (String value : values) {
-//                            if (StringUtils.isNotEmpty(value))
-//                                this.keywords.add(value.toLowerCase());
-//                        }
-//                    }
-//                }
-//            }
-//            return this;
-//        }
-
         public Builder removeAttachment(String attachmentId) {
             if (this.attachments != null && attachmentId != null) {
                 List<Attachment> all = this.attachments;
@@ -523,36 +473,6 @@ public class ProcessInstance implements Serializable {
             }
             return this;
         }
-
-//        public Builder restrictedData(List<FormValue> restrictedData) {
-//            this.restrictedData = restrictedData;
-//            return this;
-//        }
-//
-//        public Builder restrictedValueMap(Map<String, FormValue> restrictedValueMap) {
-//            Map<String, FormValue> map = new HashMap<String, FormValue>();
-//            if (this.restrictedData != null && !this.restrictedData.isEmpty()) {
-//                for (FormValue formValue : this.restrictedData) {
-//                    map.put(formValue.getName(), formValue);
-//                }
-//            }
-//            if (restrictedValueMap != null && !restrictedValueMap.isEmpty()) {
-//                for (Map.Entry<String, FormValue> entry : restrictedValueMap.entrySet()) {
-//                    map.put(entry.getKey(), entry.getValue());
-//                }
-//            }
-//            this.restrictedData = new ArrayList<FormValue>();
-//            if (!map.isEmpty()) {
-//                for (Map.Entry<String, FormValue> entry : map.entrySet()) {
-//                    FormValue formValue = entry.getValue();
-//                    if (formValue == null)
-//                        continue;
-//
-//                    this.restrictedData.add(formValue);
-//                }
-//            }
-//            return this;
-//        }
 
         public Builder attachment(Attachment attachment) {
             if (attachment != null)

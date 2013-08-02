@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.enumeration.FieldTag;
-import piecework.form.concrete.ValidUserHandler;
-import piecework.form.handler.ValueHandler;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.util.ConstraintUtil;
@@ -41,9 +39,6 @@ public class SubmissionTemplateFactory {
 
     @Autowired(required=false)
     Registry registry;
-
-    @Autowired
-    ValidUserHandler validUserHandler;
 
     /*
      * Generated an "attachments only submission template", where all fields will be stored as attachments
@@ -108,23 +103,6 @@ public class SubmissionTemplateFactory {
 
                     for (Field field : fields) {
                         addField(builder, field);
-//                        builder.rules(validationRules(field));
-//                        if (!field.isDeleted() && field.isEditable()) {
-//                            String fieldName = field.getName();
-//                            if (fieldName == null)
-//                                continue;
-//
-//                            ValueHandler valueHandler = valueHandler(field);
-//                            if (valueHandler != null)  {
-//                                builder.handler(fieldName, valueHandler);
-//                                builder.acceptables(valueHandler.getAcceptableFieldNames(fieldName));
-//                            } else {
-//                                builder.acceptable(fieldName);
-//                            }
-//
-//                            if (field.isRestricted())
-//                                builder.restricted(fieldName);
-//                        }
                     }
                 }
             }
@@ -138,25 +116,15 @@ public class SubmissionTemplateFactory {
         if (!field.isDeleted() && field.isEditable()) {
             String fieldName = field.getName();
             if (fieldName != null) {
-                ValueHandler valueHandler = valueHandler(field);
-                if (valueHandler != null)  {
-                    builder.handler(fieldName, valueHandler);
-                    builder.acceptables(valueHandler.getAcceptableFieldNames(fieldName));
-                } else {
-                    builder.acceptable(fieldName);
-                }
+                builder.acceptable(fieldName);
 
                 if (field.isRestricted())
                     builder.restricted(fieldName);
+
+                if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
+                    builder.userField(fieldName);
             }
         }
-    }
-
-    private ValueHandler valueHandler(Field field) {
-        if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
-            return validUserHandler;
-
-        return null;
     }
 
     private Set<ValidationRule> validationRules(Field field) {

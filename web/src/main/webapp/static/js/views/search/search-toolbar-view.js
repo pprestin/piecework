@@ -9,6 +9,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 		className: 'main-toolbar',
 	    template: template,
 	    events: {
+	        'click #activate-button': '_onActivateButton',
 	        'click #delete-button': '_onDeleteButton',
 	        'click #history-dialog-button': '_onHistoryButton',
 	        'click #suspend-button': '_onSuspendButton',
@@ -55,6 +56,30 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             $processFilterContainer.append(processFilterView.$el);
 
             return this;
+        },
+        _onActivateButton: function() {
+            var selected = this.model.get("selected");
+            if (selected == null)
+                return;
+
+            var task = selected.get('task');
+            if (task != null) {
+                if (task.active)
+                    return;
+
+                var url = selected.get("activation") + ".json";
+                var data = $('#activate-reason').serialize();
+                $.post( url, data,
+                    function(data, textStatus, jqXHR) {
+                        $('#activate-dialog').modal('hide');
+                        Chaplin.mediator.publish("search", {status:"open"});
+                    }
+                ).fail(function(jqXHR, textStatus, errorThrown) {
+                     var explanation = $.parseJSON(jqXHR.responseText);
+                     var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                     toolbar.subview('notificationView', new NotificationView({container: '#activate-dialog > .modal-body', model: notification}));
+                 });
+            }
         },
 	    _onAddedToDOM: function() {
 	        $('title').text(window.piecework.context.applicationTitle);
@@ -120,12 +145,26 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 toolbar.subview('historyView', new NotificationView({container: '#history-dialog > .modal-body', model: notification}));
             });
 	    },
-        _onResultSelected: function(result) {
+        _onResultSelected: function(selected) {
+            if (selected == null)
+                return;
+
+            var task = selected.get('task');
+            if (task.active) {
+                this.$el.find('#activate-dialog-button').addClass('hide');
+                this.$el.find('#suspend-dialog-button').removeClass('hide');
+            } else {
+                this.$el.find('#activate-dialog-button').removeClass('hide');
+                this.$el.find('#suspend-dialog-button').addClass('hide');
+            }
+
             this.$el.find('.selected-result-btn').removeClass('hide');
-            this.model.set("selected", result);
+            this.model.set("selected", selected);
         },
         _onResultUnselected: function(result) {
             this.$el.find('.selected-result-btn').addClass('hide');
+            this.$el.find('#activate-dialog-button').addClass('hide');
+            this.$el.find('#suspend-dialog-button').addClass('hide');
             this.model.unset("selected");
         },
 	    _onSearch: function(data) {
@@ -139,7 +178,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	        if (selected == null)
 	            return;
 
-            var data = null;
+            var data = $('#suspend-reason').serialize();
             var task = selected.get('task');
             if (task != null) {
                 var url = selected.get("suspension") + ".json";
@@ -154,7 +193,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 ).fail(function(jqXHR, textStatus, errorThrown) {
                      var explanation = $.parseJSON(jqXHR.responseText);
                      var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
-                     toolbar.subview('historyView', new NotificationView({container: '#suspend-dialog > .modal-body', model: notification}));
+                     toolbar.subview('notificationView', new NotificationView({container: '#suspend-dialog > .modal-body', model: notification}));
                  });
             }
 	    },

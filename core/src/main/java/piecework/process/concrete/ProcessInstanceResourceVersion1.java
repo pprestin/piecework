@@ -30,6 +30,7 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
+import piecework.enumeration.OperationType;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.form.validation.SubmissionTemplateFactory;
@@ -41,10 +42,13 @@ import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.form.handler.RequestHandler;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingAttachmentContent;
-import piecework.util.FieldUtil;
+import piecework.form.FormFactory;
+import piecework.util.ProcessInstanceUtility;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -90,7 +94,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, false))
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
-        processInstanceService.activate(process, instance, reason);
+        processInstanceService.operate(OperationType.ACTIVATION, process, instance, null, reason);
         return Response.noContent().build();
     }
 
@@ -165,7 +169,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        processInstanceService.delete(process, instance, reason);
+        processInstanceService.operate(OperationType.CANCELLATION, process, instance, null, reason);
         return Response.noContent().build();
     }
 
@@ -265,7 +269,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !processInstanceService.userHasTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        processInstanceService.suspend(process, instance, reason);
+        processInstanceService.operate(OperationType.SUSPENSION, process, instance, null, reason);
         return Response.noContent().build();
     }
 
@@ -290,7 +294,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
         String reason = sanitizer.sanitize(rawReason);
 
-        processInstanceService.delete(process, instance, reason);
+        processInstanceService.operate(OperationType.CANCELLATION, process, instance, null, reason);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         ViewContext context = getViewContext();
@@ -351,14 +355,31 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (screen == null)
             throw new ConflictError();
 
-        Field field = FieldUtil.getField(process, screen, fieldName);
+        Field field = FormFactory.getField(process, screen, fieldName);
         if (field == null)
             throw new NotFoundError();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(field);
         Submission submission = submissionHandler.handle(process, template, body);
-        processInstanceService.save(process, instance, task, template, submission);
-        return Response.noContent().build();
+        ProcessInstance stored = processInstanceService.save(process, instance, task, template, submission);
+
+        Map<String, List<Value>> data = stored.getData();
+
+        String location = null;
+        if (data != null) {
+            File file = ProcessInstanceUtility.firstFile(fieldName, data);
+            String hostUri = environment.getProperty("host.uri");
+
+            location = hostUri +
+                new File.Builder(file, new PassthroughSanitizer())
+                    .processDefinitionKey(process.getProcessDefinitionKey())
+                    .processInstanceId(stored.getProcessInstanceId())
+                    .fieldName(fieldName)
+                    .build(processInstanceService.getInstanceViewContext())
+                    .getLink();
+        }
+
+        return Response.noContent().header(HttpHeaders.LOCATION, location).build();
     }
 
     @Override

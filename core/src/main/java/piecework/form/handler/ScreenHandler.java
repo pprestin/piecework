@@ -74,37 +74,37 @@ public class ScreenHandler {
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
 
-    public Screen nextScreen(Interaction interaction, Screen currentScreen, ProcessInstance processInstance, ActionType action) throws StatusCodeError {
-        if (interaction == null ||  interaction.getScreens() == null || interaction.getScreens().isEmpty())
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
-        Map<String, FormValue> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
-
-        Iterator<Screen> screenIterator = interaction.getScreens().iterator();
-
-        Screen nextScreen = null;
-        boolean isFound = false;
-        while (screenIterator.hasNext() && nextScreen == null) {
-            Screen cursor = screenIterator.next();
-
-            if (currentScreen == null) {
-                currentScreen = cursor;
-                isFound = true;
-            }
-
-            if (isFound) {
-                // Once we've reached the current screen then we can start looking for the next screen
-                if (satisfiesScreenConstraints(cursor, formValueMap, action))
-                    nextScreen = cursor;
-            } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
-                isFound = true;
-        }
-
-//        if (screenIterator.hasNext())
-//            submissionType = Constants.SubmissionTypes.INTERIM;
-
-        return nextScreen;
-    }
+//    public Screen nextScreen(Interaction interaction, Screen currentScreen, ProcessInstance processInstance, ActionType action) throws StatusCodeError {
+//        if (interaction == null ||  interaction.getScreens() == null || interaction.getScreens().isEmpty())
+//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+//
+//        Map<String, FormValue> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
+//
+//        Iterator<Screen> screenIterator = interaction.getScreens().iterator();
+//
+//        Screen nextScreen = null;
+//        boolean isFound = false;
+//        while (screenIterator.hasNext() && nextScreen == null) {
+//            Screen cursor = screenIterator.next();
+//
+//            if (currentScreen == null) {
+//                currentScreen = cursor;
+//                isFound = true;
+//            }
+//
+//            if (isFound) {
+//                // Once we've reached the current screen then we can start looking for the next screen
+//                if (satisfiesScreenConstraints(cursor, formValueMap, action))
+//                    nextScreen = cursor;
+//            } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
+//                isFound = true;
+//        }
+//
+////        if (screenIterator.hasNext())
+////            submissionType = Constants.SubmissionTypes.INTERIM;
+//
+//        return nextScreen;
+//    }
 
     private Screen firstScreen(Interaction interaction) throws StatusCodeError {
         if (interaction == null ||  interaction.getScreens() == null || interaction.getScreens().isEmpty())

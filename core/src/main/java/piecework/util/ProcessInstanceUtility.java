@@ -20,9 +20,8 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
 import piecework.form.validation.FormValidation;
-import piecework.model.FormValue;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -39,26 +38,13 @@ public class ProcessInstanceUtility {
         String processInstanceLabelTemplate = process.getProcessInstanceLabelTemplate();
 
         if (StringUtils.isEmpty(processInstanceLabel) && processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
-            Map<String, String> scopes = new HashMap<String, String>();
+            Map<String, Value> scopes = new HashMap<String, Value>();
 
-            Map<String, FormValue> instanceFormValueMap = instance != null ? instance.getFormValueMap() : null;
-            Map<String, FormValue> validationFormValueMap = validation.getFormValueMap();
-            if (instanceFormValueMap != null) {
-                for (Map.Entry<String,FormValue> entry : instanceFormValueMap.entrySet()) {
-                    FormValue formValue = entry.getValue();
-                    List<String> values = formValue != null ? formValue.getValues() : null;
-                    if (values != null && !values.isEmpty())
-                        scopes.put(entry.getKey(), values.iterator().next());
-                }
-            }
-            if (validationFormValueMap != null) {
-                for (Map.Entry<String,FormValue> entry : validationFormValueMap.entrySet()) {
-                    FormValue formValue = entry.getValue();
-                    List<String> values = formValue != null ? formValue.getValues() : null;
-                    if (values != null && !values.isEmpty())
-                        scopes.put(entry.getKey(), values.iterator().next());
-                }
-            }
+            Map<String, List<Value>> data = instance != null ? instance.getData() : null;
+            Map<String, List<Value>> validationData = validation.getData();
+
+            scopes(scopes, data);
+            scopes(scopes, validationData);
 
             StringWriter writer = new StringWriter();
             MustacheFactory mf = new DefaultMustacheFactory();
@@ -76,5 +62,81 @@ public class ProcessInstanceUtility {
 
         return processInstanceLabel;
     }
+
+    private static void scopes(Map<String, Value> scopes, Map<String, List<Value>> data) {
+        if (data != null) {
+            for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
+                List<Value> values = entry.getValue();
+                if (values != null && !values.isEmpty()) {
+                    String key = entry.getKey();
+                    Value value = values.iterator().next();
+                    scopes.put(key, value);
+//                    if (value instanceof File) {
+//                        File file = File.class.cast(value);
+//                        if (file != null && file.getName() != null)
+//                            scopes.put(key, file.getName());
+//                    } else if (value instanceof User) {
+//                        User user = User.class.cast(value);
+//                        if (user != null) {
+//                            scopes.put(key, user.getUserId());
+//                            if (user.getDisplayName() != null)
+//                                scopes.put(key + ".displayName", user.getDisplayName());
+//                            if (user.getVisibleId() != null)
+//                                scopes.put(key + ".visibleId", user.getVisibleId());
+//                        }
+//                    } else if (value.getValue() != null) {
+//                        scopes.put(key, value.getValue());
+//                    }
+                }
+            }
+        }
+    }
+
+    public static List<String> allStrings(String name, Map<String, List<Value>> map) {
+        List<Value> values = allValues(name, map);
+        List<String> strings = new ArrayList<String>();
+        for (Value value : values) {
+            strings.add(value.getValue());
+        }
+        return strings;
+    }
+
+    public static List<Value> allValues(String name, Map<String, List<Value>> map) {
+        if (map != null && name != null) {
+            List<Value> values = map.get(name);
+
+            if (values != null)
+                return values;
+            else
+                return Collections.emptyList();
+        }
+        return null;
+    }
+
+    public static File firstFile(String name, Map<String, List<Value>> map) {
+        Value value = firstValue(name, map);
+        return value != null && value instanceof File ? File.class.cast(value) : null;
+    }
+
+    public static User firstUser(String name, Map<String, List<Value>> map) {
+        Value value = firstValue(name, map);
+        return value != null && value instanceof User ? User.class.cast(value) : null;
+    }
+
+    public static String firstString(String name, Map<String, List<Value>> map) {
+        Value value = firstValue(name, map);
+        return value != null ? value.getValue() : null;
+    }
+
+    public static Value firstValue(String name, Map<String, List<Value>> map) {
+        if (map != null && name != null) {
+            List<Value> values = map.get(name);
+
+            if (values != null && !values.isEmpty())
+                return values.iterator().next();
+        }
+        return null;
+    }
+
 
 }

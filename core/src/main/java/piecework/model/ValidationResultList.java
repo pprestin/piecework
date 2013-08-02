@@ -15,6 +15,7 @@
  */
 package piecework.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class ValidationResultList {
 	private final Map<String, List<String>> formData;
 	
 	public ValidationResultList() {
-		this(null);
+		this((List<ValidationResult>)null);
 	}
 	
 	public ValidationResultList(List<ValidationResult> items) {
@@ -53,6 +54,22 @@ public class ValidationResultList {
 		this.items = items;
 		this.formData = formData;
 	}
+
+    public ValidationResultList(Map<String, List<Message>> results) {
+        this.items = new ArrayList<ValidationResult>();
+        if (results != null && !results.isEmpty()) {
+            for (Map.Entry<String, List<Message>> entry : results.entrySet()) {
+                List<Message> messages = entry.getValue();
+
+                if (messages != null && !messages.isEmpty()) {
+                    for (Message message : messages) {
+                        this.items.add(new ValidationResult(message.getType(), entry.getKey(), message.getText()));
+                    }
+                }
+            }
+        }
+        this.formData = null;
+    }
 
 	public List<ValidationResult> getItems() {
 		return items;

@@ -59,12 +59,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         VariableDecorator variableDecorator = new VariableDecorator(form);
         decoratorMap.putOne("span", variableDecorator);
-        decoratorMap.putOne("img", variableDecorator);
-        decoratorMap.putOne("ul", variableDecorator);
         decoratorMap.putOne("input", variableDecorator);
 
         Screen screen = form.getScreen();
-        Map<String, FormValue> formValueMap = variableDecorator.getFormValueMap();
+        Map<String, List<Value>> data = variableDecorator.getData();
+        Map<String, List<Message>> results = variableDecorator.getResults();
         if (screen != null) {
             List<Section> sections = screen.getSections();
             if (sections != null && !sections.isEmpty()) {
@@ -77,14 +76,19 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         continue;
 
                     for (Field field : fields) {
-                        FormValue formValue = formValueMap.get(field.getName());
-                        FieldDecorator fieldDecorator = new FieldDecorator(field, formValue);
+                        List<Value> values = data.get(field.getName());
+                        List<Message> messages = results.get(field.getName());
+                        FieldDecorator fieldDecorator = new FieldDecorator(field, values, messages);
                         FieldTag fieldTag = fieldDecorator.getFieldTag();
                         decoratorMap.putOne(fieldTag.getTagName(), fieldDecorator);
 
                         switch (fieldTag) {
                             case FILE:
                                 decoratorMap.putOne("form", new FileFieldFormDecorator(field));
+
+                                if (StringUtils.isNotEmpty(field.getAccept()) && field.getAccept().contains("image/"))
+                                    decoratorMap.putOne("img", new ImageFieldDecorator(field, values));
+
                                 break;
                         }
                     }
@@ -221,11 +225,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
     class FormDecorator implements TagDecorator {
 
         private final Form form;
-        private final Map<String, FormValue> formValueMap;
+        private final Map<String, List<Value>> data;
 
         public FormDecorator(Form form) {
             this.form = form;
-            this.formValueMap = form.getFormValueMap();
+            this.data = form.getData();
         }
 
         @Override
@@ -286,82 +290,42 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
     class VariableDecorator implements TagDecorator {
 
-        private final Map<String, FormValue> formValueMap;
-        private final ManyMap<String, Attachment> attachmentManyMap;
+        private final Map<String, List<Value>> data;
+        private final Map<String, List<Message>> results;
 
         public VariableDecorator(Form form) {
-            this.formValueMap = form.getFormValueMap();
-            this.attachmentManyMap = form.getAttachmentMap();
+            this.data = form.getData();
+            this.results = form.getValidation();
         }
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name, String variable) {
-            List<Attachment> attachments = attachmentManyMap.get(variable);
 
-            FormValue formValue = formValueMap.get(variable);
-            List<String> values = formValue != null ? formValue.getValues() : null;
-            List<FormValueDetail> formValueDetails = formValue != null ? formValue.getMetadata() : null;
+            String fieldName = variable;
+            String attributeName = null;
+
+            int indexOf = variable.indexOf('.');
+            if (indexOf != -1) {
+                fieldName = variable.substring(0, indexOf);
+
+                if (variable.length() > indexOf)
+                    attributeName = variable.substring(indexOf + 1);
+            }
+
+
+            List<Value> values = data.get(fieldName);
 
             String tagName = tag.getName() != null ? tag.getName() : "";
 
-            if (tagName.equals("img")) {
-                // Just grab the first value if it's an image tag
-                String filename = values != null && !values.isEmpty() ? values.iterator().next() : "";
-
-                if (formValueDetails != null && !formValueDetails.isEmpty()) {
-                    FormValueDetail detail = formValueDetails.get(0);
-
-                    Map<String, String> attributes = new HashMap<String, String>();
-                    attributes.putAll(tag.getAttributes());
-                    attributes.put("alt", filename);
-                    attributes.put("src", formValue.getLink() + "/" + filename);
-                    tag.setAttributes(attributes);
-                }
-            } else if (tagName.equals("ul")) {
-                TagNode exampleTag = new TagNode("li");
-                // Check to see if there is an example tag of how to format things
-                TagNode[] childTags = tag.getChildTags();
-                if (childTags != null && childTags.length > 0) {
-                    exampleTag = childTags[0];
-                } else {
-                    TagNode anchorTag = new TagNode("a");
-                    exampleTag.addChild(anchorTag);
-                }
-                tag.removeAllChildren();
-
-                if (formValue != null) {
-                    if (values != null && formValueDetails.size() == values.size()) {
-                        int i=0;
-                        for (String value : values) {
-                            TagNode liTag = exampleTag.makeCopy();
-                            TagNode[] exampleChildren = exampleTag.getChildTags();
-                            if (exampleChildren != null) {
-                                for (TagNode exampleChild : exampleChildren) {
-                                    TagNode liChild = exampleChild.makeCopy();
-
-                                    if (liChild.getName() != null && liChild.getName().equalsIgnoreCase("a")) {
-                                        liChild.addAttribute("href", formValue.getLink() + "/" + value);
-                                        liChild.addChild(new ContentNode(value));
-                                    }
-
-                                    liTag.addChild(liChild);
-                                }
-                            }
-
-                            tag.addChild(liTag);
-                            i++;
-                        }
-                    }
-                }
-            } else if (tagName.equalsIgnoreCase("input")) {
+            if (tagName.equalsIgnoreCase("input")) {
                 // Only modify the value if the input tag is disabled and it's a text input
                 String type = tag.getAttributeByName("type");
                 String disabled = tag.getAttributeByName("disabled");
 
                 if (type != null && disabled != null && type.equals("text")) {
                     if (values != null) {
-                        for (String value : values) {
-                            tag.addAttribute("value", value);
+                        for (Value value : values) {
+                            tag.addAttribute("value", value.getValue());
                             break;
                         }
                     }
@@ -369,15 +333,29 @@ public class DecoratingVisitor implements TagNodeVisitor {
             } else {
                 tag.removeAllChildren();
                 if (values != null) {
-                    for (String value : values) {
-                        tag.addChild(new ContentNode(value));
+                    for (Value value : values) {
+                        if (value instanceof User) {
+                            User user = User.class.cast(value);
+
+                            if (attributeName == null || attributeName.equals("displayName"))
+                                tag.addChild(new ContentNode(user.getDisplayName()));
+                            else if (attributeName.equals("visibleId"))
+                                tag.addChild(new ContentNode(user.getVisibleId()));
+
+                        } else {
+                            tag.addChild(new ContentNode(value.getValue()));
+                        }
                     }
                 }
             }
         }
 
-        public Map<String, FormValue> getFormValueMap() {
-            return formValueMap;
+        Map<String, List<Value>> getData() {
+            return data;
+        }
+
+        Map<String, List<Message>> getResults() {
+            return results;
         }
 
         @Override
@@ -397,13 +375,15 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         private final Field field;
         private final FieldTag fieldTag;
-        private final FormValue formValue;
+        private final List<Value> values;
+        private final List<Message> messages;
         private int index;
 
-        public FieldDecorator(Field field, FormValue formValue) {
+        public FieldDecorator(Field field, List<Value> values, List<Message> messages) {
             this.field = field;
             this.fieldTag = FieldTag.getInstance(field.getType());
-            this.formValue = formValue;
+            this.messages = messages;
+            this.values = values;
             this.index = 0;
         }
 
@@ -420,13 +400,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
             String value = null;
 
-            if (formValue != null) {
-                List<String> values = formValue.getValues();
+            if (values != null) {
+                if (values.size() > index) {
+                    value = values.get(index).getValue();
+                }
 
-                if (values.size() > index)
-                    value = values.get(index);
-
-                List<Message> messages = formValue.getMessages();
                 if (messages != null && !messages.isEmpty()) {
                     StringBuilder builder = new StringBuilder();
                     Iterator<Message> iterator = messages.iterator();
@@ -506,6 +484,42 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
     }
 
+    class ImageFieldDecorator implements TagDecorator {
+
+        private final Field field;
+        private final List<Value> values;
+
+        public ImageFieldDecorator(Field field, List<Value> values) {
+            this.field = field;
+            this.values = values;
+        }
+
+        @Override
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+            if (values != null) {
+                for (Value value : values) {
+                    if (value instanceof File) {
+                        File file = File.class.cast(value);
+                        Map<String, String> attributes = new HashMap<String, String>();
+                        attributes.putAll(tag.getAttributes());
+                        attributes.put("src", file.getLink());
+                        tag.setAttributes(attributes);
+                        break;
+                    }
+                }
+            }
+        }
+
+        @Override
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
+            return variable != null && field.getName() != null && variable.equals(field.getName());
+        }
+
+        public boolean isReusable() {
+            return false;
+        }
+    }
+
     class FileFieldFormDecorator implements TagDecorator {
 
         private final Field field;
@@ -537,5 +551,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         public boolean isReusable() {
             return false;
         }
+
     }
+
 }
