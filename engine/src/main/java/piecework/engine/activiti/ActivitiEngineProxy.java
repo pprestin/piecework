@@ -356,6 +356,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 }
             }
 
+            boolean isComplete = criteria.getProcessStatus() != null && criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE);
+
             List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(allowedProcessDefinitionKeys, engineProcessInstanceIds);
             if (processInstances != null && !processInstances.isEmpty()) {
                 MultiKeyMap processInstanceMap = new MultiKeyMap();
@@ -399,8 +401,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                         if (processInstance != null) {
                             if (instance instanceof org.activiti.engine.task.Task)
                                 tasks.add(convert(((org.activiti.engine.task.Task)instance), process, processInstance, false));
-                            else if (instance instanceof HistoricTaskInstance)
+                            else if (instance instanceof HistoricTaskInstance) {
                                 tasks.add(convert(((HistoricTaskInstance)instance), process, processInstance, false));
+                            }
                         }
                     }
                 }
@@ -696,11 +699,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
         if (StringUtils.isNotEmpty(criteria.getProcessStatus()) && !criteria.getProcessStatus().equals(Constants.ProcessStatuses.OPEN)) {
             if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE))
-                query.finished();
+                query.taskDeleteReason("completed");
             if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.CANCELLED))
                 query.taskDeleteReason(Constants.DeleteReasons.CANCELLED);
+
+            query.processFinished();
         } else {
-            query.unfinished();
+            query.processUnfinished();
         }
 
         List<String> taskIds = criteria.getTaskIds();
@@ -747,9 +752,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
         if (criteria.getComplete() != null) {
             if (criteria.getComplete().booleanValue())
-                query.finished();
+                query.processFinished();
             else
-                query.unfinished();
+                query.processUnfinished();
         }
 
         return query;

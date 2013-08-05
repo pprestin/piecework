@@ -205,14 +205,14 @@ public class ProcessInstanceService {
 
             boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
 
-            if (skipOptimization) {
-                modified.applicationStatus(applicationStatus)
-                        .applicationStatusExplanation(reason)
-                        .processStatus(processStatus)
-                        .operation(operationType, reason, new Date(), userId);
-
-                processInstanceRepository.save(modified.build());
-            } else {
+//            if (skipOptimization) {
+//                modified.applicationStatus(applicationStatus)
+//                        .applicationStatusExplanation(reason)
+//                        .processStatus(processStatus)
+//                        .operation(operationType, reason, new Date(), userId);
+//
+//                processInstanceRepository.save(modified.build());
+//            } else {
                 WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
                         new Update()
                                 .set("applicationStatus", applicationStatus)
@@ -224,7 +224,7 @@ public class ProcessInstanceService {
                 String error = result.getError();
                 if (StringUtils.isNotEmpty(error))
                     LOG.error("Unable to correctly save applicationStatus " + applicationStatus + ", processStatus " + processStatus + ", and reason " + reason + " for " + instance.getProcessInstanceId() + ": " + error);
-            }
+//            }
 
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to cancel execution ", e);
@@ -642,7 +642,7 @@ public class ProcessInstanceService {
                 .executionId(processInstance.getEngineProcessInstanceId())
                 .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC);
 
-        if (! helper.isAuthenticatedSystem()) {
+        if (! helper.isAuthenticatedSystem() && !helper.hasRole(process, AuthorizationRole.OVERSEER)) {
             // If the call is not being made by an authenticated system, then the principal is a user and must have an active task
             // on this instance
             InternalUserDetails user = helper.getAuthenticatedPrincipal();
@@ -655,6 +655,9 @@ public class ProcessInstanceService {
             if (limitToActive)
                 taskCriteria.active(Boolean.TRUE);
         }
+
+        if (!limitToActive)
+            taskCriteria.processStatus(Constants.ProcessStatuses.ALL);
 
         try {
             TaskResults taskResults = facade.findTasks(taskCriteria.build());

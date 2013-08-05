@@ -65,6 +65,9 @@ public class DecoratingVisitor implements TagNodeVisitor {
         Map<String, List<Value>> data = variableDecorator.getData();
         Map<String, List<Message>> results = variableDecorator.getResults();
         if (screen != null) {
+            boolean readonly = screen.isReadonly();
+            if (readonly)
+                decoratorMap.putOne("button", new ButtonDecorator(readonly));
             List<Section> sections = screen.getSections();
             if (sections != null && !sections.isEmpty()) {
                 for (Section section : sections) {
@@ -78,13 +81,13 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     for (Field field : fields) {
                         List<Value> values = data.get(field.getName());
                         List<Message> messages = results.get(field.getName());
-                        FieldDecorator fieldDecorator = new FieldDecorator(field, values, messages);
+                        FieldDecorator fieldDecorator = new FieldDecorator(field, values, messages, readonly);
                         FieldTag fieldTag = fieldDecorator.getFieldTag();
                         decoratorMap.putOne(fieldTag.getTagName(), fieldDecorator);
 
                         switch (fieldTag) {
                             case FILE:
-                                decoratorMap.putOne("form", new FileFieldFormDecorator(field));
+                                decoratorMap.putOne("form", new FileFieldFormDecorator(field, readonly));
 
                                 if (StringUtils.isNotEmpty(field.getAccept()) && field.getAccept().contains("image/"))
                                     decoratorMap.putOne("img", new ImageFieldDecorator(field, values));
@@ -215,6 +218,32 @@ public class DecoratingVisitor implements TagNodeVisitor {
         public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
             String container = tag.getAttributeByName("data-process-container");
             return container != null && container.equalsIgnoreCase("attachments");
+        }
+
+        public boolean isReusable() {
+            return false;
+        }
+    }
+
+    class ButtonDecorator implements TagDecorator {
+
+        private final boolean readonly;
+
+        public ButtonDecorator(boolean readonly) {
+            this.readonly = readonly;
+        }
+
+        @Override
+        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+            Map<String, String> attributes = new HashMap<String, String>();
+            if (readonly)
+                attributes.put("disabled", "disabled");
+            attributes.putAll(tag.getAttributes());
+        }
+
+        @Override
+        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
+            return name != null && name.equalsIgnoreCase("button");
         }
 
         public boolean isReusable() {
@@ -377,13 +406,15 @@ public class DecoratingVisitor implements TagNodeVisitor {
         private final FieldTag fieldTag;
         private final List<Value> values;
         private final List<Message> messages;
+        private final boolean readonly;
         private int index;
 
-        public FieldDecorator(Field field, List<Value> values, List<Message> messages) {
+        public FieldDecorator(Field field, List<Value> values, List<Message> messages, boolean readonly) {
             this.field = field;
             this.fieldTag = FieldTag.getInstance(field.getType());
             this.messages = messages;
             this.values = values;
+            this.readonly = readonly;
             this.index = 0;
         }
 
@@ -398,11 +429,11 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
             tag.setAttributes(attributes);
 
-            String value = null;
+            Value value = null;
 
             if (values != null) {
                 if (values.size() > index) {
-                    value = values.get(index).getValue();
+                    value = values.get(index);
                 }
 
                 if (messages != null && !messages.isEmpty()) {
@@ -431,25 +462,31 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         attributes.put("size", "" + field.getDisplayValueLength());
                 case CHECKBOX:
                 case RADIO:
-                    if (value != null)
-                        attributes.put("value", value);
+                    if (value != null) {
+                        if (value instanceof User) {
+                            User user = User.class.cast(value);
+                            attributes.put("value", user.getDisplayName());
+                        } else {
+                            attributes.put("value", value.getValue());
+                        }
+                    }
                     break;
                 case TEXTAREA:
                     tag.removeAllChildren();
                     if (value != null)
-                        tag.addChild(new ContentNode(value));
+                        tag.addChild(new ContentNode(value.getValue()));
+
                     break;
                 case SELECT_MULTIPLE:
                 case SELECT_ONE:
                     List<Option> options = field.getOptions();
                     if (options != null && !options.isEmpty()) {
                         tag.removeAllChildren();
-
                         for (Option option : options) {
                             TagNode optionNode = new TagNode("option");
                             Map<String, String> optionAttributes = new HashMap<String, String>();
                             optionAttributes.put("value", option.getValue());
-                            if (option.getValue() != null && value != null && option.getValue().equals(value))
+                            if (option.getValue() != null && value != null && option.getValue().equals(value.getValue()))
                                 optionAttributes.put("selected", "selected");
                             optionNode.setAttributes(optionAttributes);
                             optionNode.addChild(new ContentNode(option.getLabel()));
@@ -458,6 +495,9 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     }
                     break;
             }
+
+            if (readonly)
+                attributes.put("disabled", "disabled");
 
             this.index++;
         }
@@ -523,18 +563,22 @@ public class DecoratingVisitor implements TagNodeVisitor {
     class FileFieldFormDecorator implements TagDecorator {
 
         private final Field field;
+        private final boolean readonly;
 
-        public FileFieldFormDecorator(Field field) {
+        public FileFieldFormDecorator(Field field, boolean readonly) {
             this.field = field;
+            this.readonly = readonly;
         }
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name, String variable) {
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.putAll(tag.getAttributes());
-            attributes.put("action", field.getLink());
-            attributes.put("method", "POST");
-            attributes.put("enctype", "multipart/form-data");
+            if (!readonly) {
+                attributes.put("action", field.getLink());
+                attributes.put("method", "POST");
+                attributes.put("enctype", "multipart/form-data");
+            }
             tag.setAttributes(attributes);
         }
 

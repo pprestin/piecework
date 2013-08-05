@@ -16,6 +16,7 @@
 package piecework.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.security.Sanitizer;
@@ -55,6 +56,9 @@ public class FormRequest {
 
     private final String submissionType;
 
+    @Transient
+    private final Task task;
+
     private FormRequest() {
         this(new FormRequest.Builder());
     }
@@ -73,6 +77,7 @@ public class FormRequest {
         this.interaction = builder.interaction;
         this.screen = builder.screen;
         this.submissionType = builder.submissionType;
+        this.task = builder.task;
     }
 
     public String getRequestId() {
@@ -127,6 +132,10 @@ public class FormRequest {
         return submissionType;
     }
 
+    public Task getTask() {
+        return task;
+    }
+
     public final static class Builder {
 
         private String requestId;
@@ -139,6 +148,7 @@ public class FormRequest {
         private String certificateSubject;
         private String certificateIssuer;
         private String taskId;
+        private Task task;
         private Interaction interaction;
         private Screen screen;
         private String submissionType;
@@ -229,6 +239,13 @@ public class FormRequest {
 
         public Builder submissionType(String submissionType) {
             this.submissionType = submissionType;
+            return this;
+        }
+
+        public Builder task(Task task) {
+            this.task = task;
+            if (task != null)
+                this.taskId = task.getTaskInstanceId();
             return this;
         }
     }

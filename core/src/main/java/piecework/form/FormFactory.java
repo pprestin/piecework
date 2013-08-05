@@ -70,7 +70,7 @@ public class FormFactory {
         String formInstanceId = request.getRequestId();
 
         if (task == null)
-            task = task(process, request.getTaskId());
+            task = task(process, request);
 
         if (screen == null)
             screen = screen(process, task);
@@ -116,13 +116,16 @@ public class FormFactory {
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
 
-    private Task task(Process process, String taskId) throws StatusCodeError {
-        if (StringUtils.isEmpty(taskId))
+    private Task task(Process process, FormRequest request) throws StatusCodeError {
+        if (request.getTask() != null)
+            return request.getTask();
+
+        if (StringUtils.isEmpty(request.getTaskId()))
             return null;
 
         TaskCriteria criteria = new TaskCriteria.Builder()
                 .process(process)
-                .taskId(taskId)
+                .taskId(request.getTaskId())
                 .build();
 
         try {
@@ -314,6 +317,10 @@ public class FormFactory {
                     screenBuilder.section(section(formBuilder, section, data, results));
                 }
             }
+
+            if (task != null && !task.isActive())
+                screenBuilder.readonly();
+
             return screenBuilder.build();
         }
 

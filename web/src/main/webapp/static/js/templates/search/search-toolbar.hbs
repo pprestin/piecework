@@ -11,7 +11,7 @@
             </li>
             <li class="nav">
                 <div class="dropdown">
-                    <button class="btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="icon-plus-sign-alt"></i> <b class="caret"></b></button>
+                    <button class="btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="icon-play-circle"></i> <b class="caret"></b></button>
                     <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">
                         {{#each definitions}}
                         <li class="presentation" ><a href="{{link}}">{{task.processDefinitionLabel}}</a></li>
@@ -25,10 +25,10 @@
             <ul class="nav pull-right">
                 <li>
                     <!--<button class="btn btn-inverse selected-result-btn hide" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>-->
-                    <button class="btn btn-inverse selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-calendar-empty icon-white"></i></button>
+                    <button class="btn btn-inverse selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-archive icon-white"></i></button>
                     <button class="btn btn-inverse hide" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
                     <button class="btn btn-inverse hide" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
-                    <button class="btn btn-danger selected-result-btn hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
+                    <button class="btn btn-danger hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
                 <li>
             </ul>
         </ul>

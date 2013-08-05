@@ -153,10 +153,15 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             if (task.active) {
                 this.$el.find('#activate-dialog-button').addClass('hide');
                 this.$el.find('#suspend-dialog-button').removeClass('hide');
-            } else {
+            } else if (task.taskStatus == 'Suspended') {
                 this.$el.find('#activate-dialog-button').removeClass('hide');
                 this.$el.find('#suspend-dialog-button').addClass('hide');
             }
+
+            if (task.taskStatus != 'Cancelled' && task.taskStatus != 'Complete')
+                this.$el.find('#delete-dialog-button').removeClass('hide');
+            else
+                this.$el.find('#delete-dialog-button').addClass('hide');
 
             this.$el.find('.selected-result-btn').removeClass('hide');
             this.model.set("selected", selected);
@@ -165,6 +170,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             this.$el.find('.selected-result-btn').addClass('hide');
             this.$el.find('#activate-dialog-button').addClass('hide');
             this.$el.find('#suspend-dialog-button').addClass('hide');
+            this.$el.find('#delete-dialog-button').addClass('hide');
             this.model.unset("selected");
         },
 	    _onSearch: function(data) {

@@ -14,7 +14,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/history.hbs' ],
                 for (var i=0;i<events.length;i++) {
                     if (events[i].operation != undefined) {
                         if (events[i].operation.type == 'cancellation')
-                            events[i].operation.icon = 'icon-stop';
+                            events[i].operation.icon = 'icon-ban-circle';
                         else if (events[i].operation.type == 'suspension')
                             events[i].operation.icon = 'icon-pause';
                         else if (events[i].operation.type == 'activation')

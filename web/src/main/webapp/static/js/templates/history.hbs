@@ -2,7 +2,7 @@
 <p class="muted">{{processDefinitionLabel}}</p>
 <table class="table table-condensed">
     <tr>
-        <td><i class="icon-play"></i></td>
+        <td><i class="icon-play-circle"></i></td>
         <td>Started</td>
         <td></td>
         <td>{{initiator.displayName}}<br/>
@@ -12,7 +12,7 @@
     <tr>
         {{#if task}}
             {{#with task}}
-                <td><i class="icon-code-fork"></i></td>
+                <td><i class="icon-user"></i></td>
                 <td>{{taskLabel}}</td>
                 <td>{{datediff endTime startTime}}</td>
             {{/with}}
@@ -31,8 +31,8 @@
     {{/each}}
     {{#if endTime}}
         <tr>
-            <td><i class="icon-stop"></i></td>
-            <td>Ended</td>
+            <td><i class="icon-off"></i></td>
+            <td>Complete</td>
             <td></td>
             <td>{{date endTime}}</td>
         </tr>

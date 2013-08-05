@@ -80,7 +80,6 @@ public class GeneralExecutionListener implements ExecutionListener {
                                 .set("processStatus", Constants.ProcessStatuses.COMPLETE),
                         ProcessInstance.class);
 
-
                 String error = result.getError();
                 if (StringUtils.isNotEmpty(error)) {
                     LOG.error("Unable to correctly save final state of process instance " + processInstance.getProcessInstanceId() + ": " + error);

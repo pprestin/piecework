@@ -248,7 +248,15 @@ public class ValidationRule {
     }
 
     private List<? extends Value> safeValues(String name, ManyMap<String, Value> submissionData) {
-        return name != null ? submissionData.get(name) : Collections.<Value>emptyList();
+        List<? extends Value> values = null;
+
+        if (name != null)
+            values = submissionData.get(name);
+
+        if (values == null)
+            values = Collections.<Value>emptyList();
+
+        return values;
     }
 
     public final static class Builder {

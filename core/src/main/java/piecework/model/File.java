@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.data.annotation.Id;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
@@ -35,7 +34,6 @@ import javax.xml.bind.annotation.*;
 public class File extends Value {
 
     @XmlTransient
-    @Id
     private final String id;
 
     @XmlElement

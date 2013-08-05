@@ -370,13 +370,15 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             File file = ProcessInstanceUtility.firstFile(fieldName, data);
             String hostUri = environment.getProperty("host.uri");
 
-            location = hostUri +
-                new File.Builder(file, new PassthroughSanitizer())
-                    .processDefinitionKey(process.getProcessDefinitionKey())
-                    .processInstanceId(stored.getProcessInstanceId())
-                    .fieldName(fieldName)
-                    .build(processInstanceService.getInstanceViewContext())
-                    .getLink();
+            if (file != null) {
+                location = hostUri +
+                    new File.Builder(file, new PassthroughSanitizer())
+                        .processDefinitionKey(process.getProcessDefinitionKey())
+                        .processInstanceId(stored.getProcessInstanceId())
+                        .fieldName(fieldName)
+                        .build(processInstanceService.getInstanceViewContext())
+                        .getLink();
+            }
         }
 
         return Response.noContent().header(HttpHeaders.LOCATION, location).build();

@@ -141,7 +141,7 @@ public class RequestHandler {
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(processInstanceId)
-                .taskId(taskId)
+                .task(task)
                 .interaction(interaction)
                 .screen(nextScreen)
                 .submissionType(submissionType);
