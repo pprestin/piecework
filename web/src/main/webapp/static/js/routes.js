@@ -3,6 +3,7 @@ define(['controllers/form-controller'], function() {
 
   return function(match) {
     match(':servlet/:access/form', 'form#search');
+    match(':servlet/:access/form.html', 'form#search');
     match(':servlet/:access/form/', 'form#search');
     match(':servlet/:access/form/:processDefinitionKey', 'form#index');
     match(':servlet/:access/form/:processDefinitionKey/:requestId', 'form#index');

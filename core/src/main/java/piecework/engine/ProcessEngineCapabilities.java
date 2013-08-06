@@ -19,6 +19,8 @@ public interface ProcessEngineCapabilities {
 
     boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException;
 
+    boolean assign(Process process, String taskId, User user) throws ProcessEngineException;
+
     boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException;
 
     boolean suspend(Process process, ProcessInstance instance) throws ProcessEngineException;
@@ -27,9 +29,9 @@ public interface ProcessEngineCapabilities {
 
     ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException;
 
-    Task findTask(TaskCriteria criteria) throws ProcessEngineException;
+    Task findTask(TaskCriteria ... criterias) throws ProcessEngineException;
 
-    TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException;
+    TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException;
 
     boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException;
 

@@ -72,6 +72,9 @@ public class Form {
     private final String activation;
 
     @XmlAttribute
+    private final String assignment;
+
+    @XmlAttribute
     private final String attachment;
 
     @XmlAttribute
@@ -111,6 +114,7 @@ public class Form {
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
             this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
+        this.assignment = builder.assignment;
         this.activation = builder.activation;
         this.attachment = builder.attachment;
         this.cancellation = builder.cancellation;
@@ -177,6 +181,10 @@ public class Form {
         return activation;
     }
 
+    public String getAssignment() {
+        return assignment;
+    }
+
     public String getAttachment() {
         return attachment;
     }
@@ -211,6 +219,7 @@ public class Form {
         private ManyMap<String, Value> data;
         private ManyMap<String, Message> validation;
         private String activation;
+        private String assignment;
         private String attachment;
         private String cancellation;
         private String history;
@@ -268,6 +277,12 @@ public class Form {
                     this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
                 }
             }
+            return this;
+        }
+
+        public Builder taskSubresources(String processDefinitionKey, Task task, ViewContext context) {
+            this.assignment = context != null && task != null && task.getTaskInstanceId() != null ? context.getApplicationUri(processDefinitionKey, task.getTaskInstanceId(), "assign") : null;
+            this.task = task;
             return this;
         }
 

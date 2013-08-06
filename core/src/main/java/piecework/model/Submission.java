@@ -77,6 +77,9 @@ public class Submission {
     @XmlTransient
     private final String submitterId;
 
+    @XmlElement
+    private final String assignee;
+
     private Submission() {
         this(new Submission.Builder());
     }
@@ -93,6 +96,7 @@ public class Submission {
         this.data = builder.data;
         this.submissionDate = builder.submissionDate;
         this.submitterId = builder.submitterId;
+        this.assignee = builder.assignee;
     }
 
     @JsonIgnore
@@ -135,6 +139,10 @@ public class Submission {
         return attachments;
     }
 
+    public String getAssignee() {
+        return assignee;
+    }
+
     @JsonIgnore
 	public Date getSubmissionDate() {
         return submissionDate;
@@ -155,10 +163,10 @@ public class Submission {
         private String alias;
         private ActionType action;
         private ManyMap<String, Value> data;
-        private ManyMap<String, Value> restrictedData;
         private List<Attachment> attachments;
         private Date submissionDate;
         private String submitterId;
+        private String assignee;
 
         public Builder() {
             super();
@@ -211,6 +219,7 @@ public class Submission {
             } else {
                 this.attachments = new ArrayList<Attachment>();
             }
+            this.assignee = submission.assignee;
         }
 
         public Submission build() {
@@ -278,13 +287,8 @@ public class Submission {
             return this;
         }
 
-        public Builder restrictedValue(String key, String value) {
-            this.restrictedData.putOne(key, new Value(value));
-            return this;
-        }
-
-        public <V extends Value> Builder restrictedValue(String key, V value) {
-            this.restrictedData.putOne(key, value);
+        public Builder assignee(String assignee) {
+            this.assignee = assignee;
             return this;
         }
 

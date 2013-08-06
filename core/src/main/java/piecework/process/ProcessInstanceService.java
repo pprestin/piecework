@@ -22,8 +22,6 @@ import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -52,6 +50,7 @@ import piecework.persistence.ProcessRepository;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.AllowedTaskService;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.ui.StreamingAttachmentContent;
@@ -101,6 +100,9 @@ public class ProcessInstanceService {
 
     @Autowired
     Sanitizer sanitizer;
+
+    @Autowired
+    AllowedTaskService taskService;
 
     @Autowired
     InternalUserDetailsService userDetailsService;
@@ -166,10 +168,11 @@ public class ProcessInstanceService {
         return searchResultsBuilder.build();
     }
 
-    public void operate(OperationType operationType, Process process, ProcessInstance instance, String applicationStatus, String reason) throws ConflictError, InternalServerError {
+    public void operate(OperationType operationType, Process process, ProcessInstance instance, Task task, String applicationStatus, String argument) throws ConflictError, InternalServerError {
         try {
             ProcessInstance.Builder modified = new ProcessInstance.Builder(instance);
-            String processStatus = instance.getProcessStatus();
+            String processStatus = null;
+            String applicationStatusExplanation = null;
 
             if (operationType != OperationType.UPDATE) {
                 String defaultApplicationStatus;
@@ -179,12 +182,19 @@ public class ProcessInstanceService {
                             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
                         defaultApplicationStatus = instance.getPreviousApplicationStatus();
                         processStatus = Constants.ProcessStatuses.OPEN;
+                        applicationStatusExplanation = argument;
+                        break;
+                    case ASSIGNMENT:
+                        if (!facade.assign(process, task.getTaskInstanceId(), userDetailsService.getUserByAnyId(argument)))
+                            throw new ConflictError(Constants.ExceptionCodes.invalid_assignment);
+                        defaultApplicationStatus = instance.getPreviousApplicationStatus();
                         break;
                     case CANCELLATION:
                         if (!facade.cancel(process, instance))
                             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
                         defaultApplicationStatus = process.getCancellationStatus();
                         processStatus = Constants.ProcessStatuses.CANCELLED;
+                        applicationStatusExplanation = argument;
                         break;
                     case SUSPENSION:
                         if (!facade.suspend(process, instance))
@@ -192,6 +202,7 @@ public class ProcessInstanceService {
                         defaultApplicationStatus = process.getSuspensionStatus();
                         modified.previousApplicationStatus(instance.getApplicationStatus());
                         processStatus = Constants.ProcessStatuses.SUSPENDED;
+                        applicationStatusExplanation = argument;
                         break;
                     default:
                         throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
@@ -203,28 +214,25 @@ public class ProcessInstanceService {
 
             String userId = helper.getAuthenticatedSystemOrUserId();
 
-            boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
+            Update update = new Update();
 
-//            if (skipOptimization) {
-//                modified.applicationStatus(applicationStatus)
-//                        .applicationStatusExplanation(reason)
-//                        .processStatus(processStatus)
-//                        .operation(operationType, reason, new Date(), userId);
-//
-//                processInstanceRepository.save(modified.build());
-//            } else {
-                WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
-                        new Update()
-                                .set("applicationStatus", applicationStatus)
-                                .set("applicationStatusExplanation", reason)
-                                .set("processStatus", processStatus)
-                                .push("operations", new Operation(operationType, reason, new Date(), userId)),
-                        ProcessInstance.class);
+            if (applicationStatus != null)
+                update.set("applicationStatus", applicationStatus);
+            if (applicationStatusExplanation != null)
+                update.set("applicationStatusExplanation", applicationStatusExplanation);
+            if (processStatus != null)
+                update.set("processStatus", processStatus);
 
-                String error = result.getError();
-                if (StringUtils.isNotEmpty(error))
-                    LOG.error("Unable to correctly save applicationStatus " + applicationStatus + ", processStatus " + processStatus + ", and reason " + reason + " for " + instance.getProcessInstanceId() + ": " + error);
-//            }
+            update.push("operations", new Operation(operationType, argument, new Date(), userId));
+
+            WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
+                    update,
+                    ProcessInstance.class);
+
+            String error = result.getError();
+            if (StringUtils.isNotEmpty(error))
+                LOG.error("Unable to correctly save applicationStatus " + applicationStatus + ", processStatus " + processStatus + ", and reason " + argument + " for " + instance.getProcessInstanceId() + ": " + error);
+
 
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to cancel execution ", e);
@@ -438,7 +446,7 @@ public class ProcessInstanceService {
                     operationType = OperationType.SUSPENSION;
             }
 
-            operate(operationType, process, persisted, applicationStatus, applicationStatusExplanation);
+            operate(operationType, process, persisted, null, applicationStatus, applicationStatusExplanation);
         } else {
             throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
         }
@@ -611,75 +619,6 @@ public class ProcessInstanceService {
         }
     }
 
-    public Task userTask(Process process, String taskId) throws StatusCodeError {
-        TaskCriteria.Builder taskCriteria = new TaskCriteria.Builder()
-                .process(process)
-                .taskId(taskId)
-                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC);
-
-        if (! helper.isAuthenticatedSystem()) {
-            // If the call is not being made by an authenticated system, then the principal is a user and must have an active task
-            // on this instance
-            InternalUserDetails user = helper.getAuthenticatedPrincipal();
-
-            if (user == null)
-                throw new ForbiddenError();
-
-            taskCriteria.participantId(user.getInternalId());
-        }
-
-        try {
-            return facade.findTask(taskCriteria.build());
-        } catch (ProcessEngineException e) {
-            LOG.error(e);
-            throw new InternalServerError();
-        }
-    }
-
-    public Task userTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
-        TaskCriteria.Builder taskCriteria = new TaskCriteria.Builder()
-                .process(process)
-                .executionId(processInstance.getEngineProcessInstanceId())
-                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC);
-
-        if (! helper.isAuthenticatedSystem() && !helper.hasRole(process, AuthorizationRole.OVERSEER)) {
-            // If the call is not being made by an authenticated system, then the principal is a user and must have an active task
-            // on this instance
-            InternalUserDetails user = helper.getAuthenticatedPrincipal();
-
-            if (user == null)
-                throw new ForbiddenError();
-
-            taskCriteria.participantId(user.getInternalId());
-
-            if (limitToActive)
-                taskCriteria.active(Boolean.TRUE);
-        }
-
-        if (!limitToActive)
-            taskCriteria.processStatus(Constants.ProcessStatuses.ALL);
-
-        try {
-            TaskResults taskResults = facade.findTasks(taskCriteria.build());
-
-            if (taskResults != null && taskResults.getTasks() != null && !taskResults.getTasks().isEmpty())
-                return taskResults.getTasks().iterator().next();
-
-            return null;
-        } catch (ProcessEngineException e) {
-            LOG.error(e);
-            throw new InternalServerError();
-        }
-    }
-
-    public boolean userHasTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
-
-        if (userTask(process, processInstance, limitToActive) != null)
-            return true;
-
-        return false;
-    }
-
     public FormValidation validate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
         long time = 0;
 
@@ -722,15 +661,9 @@ public class ProcessInstanceService {
     private void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
         String taskId = task != null ? task.getTaskInstanceId() : null;
         if (StringUtils.isNotEmpty(taskId)) {
-            try {
-                InternalUserDetails user = helper.getAuthenticatedPrincipal();
-                task = facade.findTask(new TaskCriteria.Builder().process(process).participantId(user.getInternalId()).taskId(taskId).build());
-                if (task == null || !task.isActive())
-                    throw new ForbiddenError();
-
-            } catch (ProcessEngineException e) {
-                throw new InternalServerError();
-            }
+            task = taskService.allowedTask(process, taskId, false);
+            if (task == null || !task.isActive())
+                throw new ForbiddenError();
         }
     }
 

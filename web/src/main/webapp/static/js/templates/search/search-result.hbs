@@ -4,7 +4,8 @@
     <td><a href="{{../link}}.html" rel="external">{{processInstanceLabel}}</a></td>
     <td class="hide-narrow">{{taskStatus}}</td>
     <td class="hide-narrow">{{taskLabel}}</td>
-    <td class="hide-narrow">{{processDefinitionLabel}}</td>
+    <td class="hide-narrow">{{#if assignee}}{{assignee.displayName}}{{else}}Nobody{{/if}}</td>
+    <!--<td class="hide-narrow">{{processDefinitionLabel}}</td>-->
     <td>{{date startTime}}{{#if endTime}} - {{date endTime}}{{/if}}</td>
     {{/with}}
 {{/if}}

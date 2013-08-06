@@ -151,7 +151,7 @@ public class EngineConfiguration {
 //	}
 //
 //	@Bean
-//	public TaskService activitiTaskService(ApplicationContext applicationContext) throws Exception {
+//	public AllowedTaskService activitiTaskService(ApplicationContext applicationContext) throws Exception {
 //		return activitiEngine.getTaskService();
 //	}
 //

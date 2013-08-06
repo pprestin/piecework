@@ -95,6 +95,7 @@ public interface Constants {
         public static final String insufficient_permission = "insufficient_permission";
 		public static final String interaction_id_invalid = "interaction_id_invalid";
 		public static final String interaction_invalid = "interaction_invalid";
+        public static final String invalid_assignment = "invalid_assignment";
         public static final String invalid_process_status = "invalid_process_status";
         public static final String process_business_key_limit = "process_business_key_limit";
 		public static final String process_change_key_duplicate = "process_change_key_duplicate";

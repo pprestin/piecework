@@ -15,7 +15,6 @@
  */
 package piecework.form;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
@@ -35,8 +33,7 @@ import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.persistence.ContentRepository;
-import piecework.task.TaskCriteria;
-import piecework.task.TaskResults;
+import piecework.task.AllowedTaskService;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
@@ -93,6 +90,9 @@ public class FormService {
     @Autowired
     Sanitizer sanitizer;
 
+    @Autowired
+    AllowedTaskService taskService;
+
 
     public Response delete(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
@@ -116,10 +116,8 @@ public class FormService {
         String participantId = user != null ? user.getInternalId() : null;
 
         try {
-            Task task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
-
+            Task task = taskService.allowedTask(process, taskId, true);
             ProcessInstance processInstance = processInstanceService.read(process, task.getProcessInstanceId());
-
             facade.cancel(process, processInstance);
 
         } catch (ProcessEngineException e) {
@@ -187,54 +185,38 @@ public class FormService {
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
 
-        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.USER);
-
-        TaskCriteria.Builder executionCriteriaBuilder = new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer);
-
-        InternalUserDetails user = helper.getAuthenticatedPrincipal();
-        if (user != null)
-            executionCriteriaBuilder.participantId(user.getInternalId());
+        SearchResults results = taskService.allowedTasks(rawQueryParameters);
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
                 .link(viewContext.getApplicationUri());
 
-        Set<String> allowedProcessDefinitionKeys = Sets.newHashSet();
-        if (!allowedProcesses.isEmpty()) {
-            for (Process allowedProcess : allowedProcesses) {
-                if (StringUtils.isEmpty(allowedProcess.getProcessDefinitionKey()))
-                    continue;
-
-                allowedProcessDefinitionKeys.add(allowedProcess.getProcessDefinitionKey());
+        List<?> definitions = results.getDefinitions();
+        if (definitions != null) {
+            for (Object definition : definitions) {
+                Process allowedProcess = Process.class.cast(definition);
                 resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).processDefinitionLabel(allowedProcess.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
             }
         }
-        TaskCriteria executionCriteria = executionCriteriaBuilder.build();
 
-        try {
-            TaskResults results = facade.findTasks(executionCriteria);
+        List<?> items = results.getList();
+        if (items != null && !items.isEmpty()) {
 
-            List<Task> tasks = results.getTasks();
-            if (tasks != null && !tasks.isEmpty()) {
-
-                for (Task task : tasks) {
-                    resultsBuilder.item(new Form.Builder()
-                            .formInstanceId(task.getTaskInstanceId())
-                            .task(task)
-                            .processDefinitionKey(task.getProcessDefinitionKey())
-                            .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, processInstanceService.getInstanceViewContext())
-                            .build(viewContext));
-                }
+            for (Object item : items) {
+                Task task = Task.class.cast(item);
+                resultsBuilder.item(new Form.Builder()
+                        .formInstanceId(task.getTaskInstanceId())
+                        .taskSubresources(task.getProcessDefinitionKey(), task, processInstanceService.getTaskViewContext())
+                        .processDefinitionKey(task.getProcessDefinitionKey())
+                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, processInstanceService.getInstanceViewContext())
+                        .build(viewContext));
             }
-
-            resultsBuilder.firstResult(results.getFirstResult());
-            resultsBuilder.maxResults(results.getMaxResults());
-            resultsBuilder.total(Long.valueOf(results.getTotal()));
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Could not find tasks", e);
         }
+
+        resultsBuilder.firstResult(results.getFirstResult());
+        resultsBuilder.maxResults(results.getMaxResults());
+        resultsBuilder.total(Long.valueOf(results.getTotal()));
 
         return resultsBuilder.build(viewContext);
     }
@@ -247,7 +229,7 @@ public class FormService {
 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-        Task task = formRequest.getTaskId() != null ? processInstanceService.userTask(process, formRequest.getTaskId()) : null;
+        Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
@@ -270,7 +252,7 @@ public class FormService {
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
 
-        Task task = formRequest.getTaskId() != null ? processInstanceService.userTask(process, formRequest.getTaskId()) : null;
+        Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
@@ -349,7 +331,7 @@ public class FormService {
 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-        Task task = formRequest.getTaskId() != null ? processInstanceService.userTask(process, formRequest.getTaskId()) : null;
+        Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)

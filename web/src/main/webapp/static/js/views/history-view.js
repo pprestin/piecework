@@ -19,6 +19,8 @@ define([ 'chaplin', 'views/base/view', 'text!templates/history.hbs' ],
                             events[i].operation.icon = 'icon-pause';
                         else if (events[i].operation.type == 'activation')
                             events[i].operation.icon = 'icon-play';
+                        else if (events[i].operation.type == 'assignment')
+                            events[i].operation.icon = 'icon-user';
                         else
                            events[i].operation.icon = 'icon-wrench';
                     }

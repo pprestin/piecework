@@ -211,25 +211,6 @@ public class Process implements Serializable {
         return sectionMap;
     }
 
-//    @JsonIgnore
-//    public Map<String, Field> getFieldMap() {
-//        Map<String, Field> fieldMap = new HashMap<String, Field>();
-//        if (sections != null) {
-//            for (Section section : sections) {
-//                if (section.getFields() == null)
-//                    continue;
-//
-//                for (Field field : section.getFields()) {
-//                    if (field.getName() == null)
-//                        continue;
-//
-//                    fieldMap.put(field.getName(), field);
-//                }
-//            }
-//        }
-//        return fieldMap;
-//    }
-
     public List<Notification> getNotifications() {
         return notifications;
     }
@@ -252,8 +233,25 @@ public class Process implements Serializable {
 	public boolean isEmpty() {
 		return StringUtils.isEmpty(processDefinitionLabel) && StringUtils.isEmpty(processSummary) && StringUtils.isEmpty(participantSummary) && StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
 	}
-	
-	public final static class Builder {
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Process process = (Process) o;
+
+        if (!processDefinitionKey.equals(process.processDefinitionKey)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return processDefinitionKey.hashCode();
+    }
+
+    public final static class Builder {
 		
 		private String processDefinitionKey;		
 		private String processDefinitionLabel;

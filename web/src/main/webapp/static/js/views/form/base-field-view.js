@@ -60,6 +60,17 @@ define([ 'chaplin', 'views/base/view'],
                 }
             }
 
+            var constraints = this.model.get('constraints');
+            if (constraints != undefined && constraints.length > 0) {
+                for (var i=0;i<constraints.length;i++) {
+                    var constraint = constraints[i];
+
+                    if (constraint != undefined && constraint.type != null && constraint.type == 'IS_VALID_USER') {
+                        this.$el.find(':input').attr('data-process-user-lookup', 'true');
+                    }
+                }
+            }
+
             return this;
         },
         _subscribeDependencies: function(constraints) {

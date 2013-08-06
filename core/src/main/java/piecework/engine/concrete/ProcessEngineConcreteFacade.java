@@ -54,6 +54,12 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
+    public boolean assign(Process process, String taskId, User user) throws ProcessEngineException {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        return proxy.assign(process, taskId, user);
+    }
+
+    @Override
     public boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
         return proxy.cancel(process, instance);
@@ -105,43 +111,49 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
-        Task task = null;
-        if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
-            Set<String> engineSet = new HashSet<String>();
-            for (Process process : criteria.getProcesses()) {
-                if (process.getEngine() == null || engineSet.contains(process.getEngine()))
-                    continue;
-                engineSet.add(process.getEngine());
-                ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
-                task = proxy.findTask(criteria);
+    public Task findTask(TaskCriteria ... criterias) throws ProcessEngineException {
+        if (criterias != null && criterias.length > 0) {
+            for (TaskCriteria criteria : criterias) {
+                if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
+                    Set<String> engineSet = new HashSet<String>();
+                    for (Process process : criteria.getProcesses()) {
+                        if (process.getEngine() == null || engineSet.contains(process.getEngine()))
+                            continue;
+                        engineSet.add(process.getEngine());
+                        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+                        Task task = proxy.findTask(criteria);
 
-                if (task != null)
-                    break;
+                        if (task != null)
+                            return task;
+                    }
+                }
             }
-
         }
-        return task;
+        return null;
     }
 
     @Override
-    public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
+    public TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException {
         TaskResults.Builder builder = null;
-        if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
-            Set<String> engineSet = new HashSet<String>();
-            for (Process process : criteria.getProcesses()) {
-                if (process.getEngine() == null || engineSet.contains(process.getEngine()))
-                    continue;
-                engineSet.add(process.getEngine());
-                ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
-                TaskResults localResults = proxy.findTasks(criteria);
-                if (localResults == null)
-                    continue;
-                if (builder == null)
-                    builder = new TaskResults.Builder(localResults);
-                else {
-                    builder.tasks(localResults.getTasks());
-                    builder.addToTotal(localResults.getTotal());
+        if (criterias != null && criterias.length > 0) {
+            for (TaskCriteria criteria : criterias) {
+                if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
+                    Set<String> engineSet = new HashSet<String>();
+                    for (Process process : criteria.getProcesses()) {
+                        if (process.getEngine() == null || engineSet.contains(process.getEngine()))
+                            continue;
+                        engineSet.add(process.getEngine());
+                        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+                        TaskResults localResults = proxy.findTasks(criteria);
+                        if (localResults == null)
+                            continue;
+                        if (builder == null)
+                            builder = new TaskResults.Builder(localResults);
+                        else {
+                            builder.tasks(localResults.getTasks());
+                            builder.addToTotal(localResults.getTotal());
+                        }
+                    }
                 }
             }
         } else {

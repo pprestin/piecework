@@ -17,29 +17,24 @@ package piecework.form;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineFacade;
-import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
-import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.form.FormService;
 import piecework.form.validation.FormValidation;
 import piecework.form.validation.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstanceService;
+import piecework.process.concrete.ResourceHelper;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.TaskCriteria;
+import piecework.task.AllowedTaskService;
 import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 
-import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
 import java.util.*;
 
 /**
@@ -51,18 +46,19 @@ public class FormFactory {
     private static final Logger LOG = Logger.getLogger(FormFactory.class);
 
     @Autowired
-    ProcessEngineFacade facade;
+    FormService formService;
 
     @Autowired
-    FormService formService;
+    ResourceHelper helper;
 
     @Autowired
     ProcessInstanceService processInstanceService;
 
     @Autowired
-    ValidationService validationService;
+    AllowedTaskService taskService;
 
-    private PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+    @Autowired
+    ValidationService validationService;
 
     public Form form(FormRequest request, Process process, Task task, FormValidation validation) throws StatusCodeError {
         ProcessInstance instance = instance(process, request.getProcessInstanceId());
@@ -75,7 +71,9 @@ public class FormFactory {
         if (screen == null)
             screen = screen(process, task);
 
-        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, processInstanceService.getInstanceViewContext());
+        ViewContext instanceViewContext = processInstanceService.getInstanceViewContext();
+        String loggedInUserId = helper.getAuthenticatedSystemOrUserId();
+        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, instanceViewContext, loggedInUserId);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         ManyMap<String, Message> results = new ManyMap<String, Message>();
 
@@ -88,7 +86,7 @@ public class FormFactory {
             results.putAll(validation.getResults());
         }
 
-        return worker.form(formInstanceId, data, results, formService.getFormViewContext());
+        return worker.form(formInstanceId, data, results, formService.getFormViewContext(), processInstanceService.getTaskViewContext());
     }
 
     private ProcessInstance instance(Process process, String processInstanceId) throws StatusCodeError {
@@ -123,22 +121,7 @@ public class FormFactory {
         if (StringUtils.isEmpty(request.getTaskId()))
             return null;
 
-        TaskCriteria criteria = new TaskCriteria.Builder()
-                .process(process)
-                .taskId(request.getTaskId())
-                .build();
-
-        try {
-            Task task = facade.findTask(criteria);
-            if (task == null)
-                throw new NotFoundError(Constants.ExceptionCodes.task_does_not_exist);
-
-            return task;
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to find task ", e);
-            throw new InternalServerError();
-        }
+        return taskService.allowedTask(process, request.getTaskId(), false);
     }
 
     public static Field getField(Process process, Screen screen, String fieldName) {
@@ -244,8 +227,9 @@ public class FormFactory {
         private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         private final Screen screen;
         private final ViewContext instanceContext;
+        private final String loggedInUserId;
 
-        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext instanceContext) {
+        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext instanceContext, String loggedInUserId) {
             this.process = process;
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
@@ -253,13 +237,14 @@ public class FormFactory {
             this.task = task;
             this.screen = screen;
             this.instanceContext = instanceContext;
+            this.loggedInUserId = loggedInUserId;
         }
 
-        public Form form(String formInstanceId, ManyMap<String, Value> data, ManyMap<String, Message> results, ViewContext formContext) {
+        public Form form(String formInstanceId, ManyMap<String, Value> data, ManyMap<String, Message> results, ViewContext formContext, ViewContext taskContext) {
             Form.Builder builder = new Form.Builder()
                     .formInstanceId(formInstanceId)
                     .processDefinitionKey(processDefinitionKey)
-                    .task(task);
+                    .taskSubresources(processDefinitionKey, task, taskContext);
 
 
             builder.screen(screen(builder, screen, data, results));
@@ -318,8 +303,12 @@ public class FormFactory {
                 }
             }
 
-            if (task != null && !task.isActive())
-                screenBuilder.readonly();
+            if (task != null) {
+                if (!task.isActive())
+                    screenBuilder.readonly();
+                else if (task.getAssignee() != null && !task.getAssignee().getUserId().equals(loggedInUserId))
+                    screenBuilder.readonly();
+            }
 
             return screenBuilder.build();
         }

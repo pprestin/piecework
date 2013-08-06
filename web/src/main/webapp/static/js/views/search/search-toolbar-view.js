@@ -10,6 +10,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	    template: template,
 	    events: {
 	        'click #activate-button': '_onActivateButton',
+	        'click #assign-button': '_onAssignButton',
 	        'click #delete-button': '_onDeleteButton',
 	        'click #history-dialog-button': '_onHistoryButton',
 	        'click #suspend-button': '_onSuspendButton',
@@ -78,6 +79,38 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                      var explanation = $.parseJSON(jqXHR.responseText);
                      var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
                      toolbar.subview('notificationView', new NotificationView({container: '#activate-dialog > .modal-body', model: notification}));
+                 });
+            }
+        },
+        _onAssignButton: function() {
+            var assignee = this.$el.find('#assignee').val();
+
+            var selected = this.model.get("selected");
+            if (selected == null)
+                return;
+
+            var task = selected.get('task');
+            if (task != null) {
+                if (!task.active) {
+                    var notification = new Notification({title: 'Invalid state', message: 'Cannot assign a suspended task', permanent: true})
+                    toolbar.subview('notificationView', new NotificationView({container: '#assign-dialog > .modal-body', model: notification}));
+                }
+
+                var url = selected.get("assignment") + ".json";
+                var data = '{ "assignee": "' + assignee + '"}';
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: data,
+                    success: function(data, textStatus, jqXHR) {
+                        $('#assign-dialog').modal('hide');
+                        Chaplin.mediator.publish("search", {status:"open"});
+                    },
+                    contentType: "application/json"
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                     var explanation = $.parseJSON(jqXHR.responseText);
+                     var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                     toolbar.subview('notificationView', new NotificationView({container: '#assign-dialog > .modal-body', model: notification}));
                  });
             }
         },
@@ -156,12 +189,15 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             } else if (task.taskStatus == 'Suspended') {
                 this.$el.find('#activate-dialog-button').removeClass('hide');
                 this.$el.find('#suspend-dialog-button').addClass('hide');
+            } else {
+                this.$el.find('#activate-dialog-button').addClass('hide');
+                this.$el.find('#suspend-dialog-button').addClass('hide');
             }
 
             if (task.taskStatus != 'Cancelled' && task.taskStatus != 'Complete')
-                this.$el.find('#delete-dialog-button').removeClass('hide');
+                this.$el.find('.incomplete-selected-result-btn').removeClass('hide');
             else
-                this.$el.find('#delete-dialog-button').addClass('hide');
+                this.$el.find('.incomplete-selected-result-btn').addClass('hide');
 
             this.$el.find('.selected-result-btn').removeClass('hide');
             this.model.set("selected", selected);

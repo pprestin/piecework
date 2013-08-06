@@ -182,15 +182,13 @@ define([ 'chaplin',
             });
 	    },
 	    _onAddedToDOM: function(event) {
-            var formValues = this.model.get('formData');
-            if (formValues != undefined && formValues.length > 0) {
-                for (var i=0;i<formValues.length;i++) {
-                    var formValue = formValues[i];
-                    var name = formValue.name;
+            var data = this.model.get('data');
+            if (data != undefined) {
+                for (var name in data) {
                     if (name != undefined) {
+                        var values = data[name];
                         var selector = ':input[name="' + name + '"]';
                         var $element = $(selector);
-                        var values = formValue.values;
                         if (values != null && values.length > 0) {
                             if (values.length > 1) {
                                 var $controlGroup = $element.closest('.control-group');
@@ -201,15 +199,21 @@ define([ 'chaplin',
                                 $controlGroup.append($clone);
                             }
 
-                            if ($element.attr('type') != 'file') {
-                                $element.val(values);
+                            if ($element.attr('data-process-user-lookup') == 'true') {
+                                var value = values[0];
+                                $element.val(value.displayName);
+                            } else if ($element.attr('type') != 'file') {
+                               $element.val(values);
                             } else {
+                                var accept = $element.attr('accept');
                                 var re = RegExp("image/");
-                                if (formValue.accept != null && re.test(formValue.accept)) {
-                                    $element.before('<image src="' + formValue.link + '" alt="' + values[0] + '"/>');
-                                } else {
-                                    $element.before('<div class="file"><a href="' + formValue.link + '">' + values[0] + "</a></div>");
-                                }
+                                $.each(values, function(index, value) {
+                                    if (accept != null && re.test(accept)) {
+                                        $element.before('<div><image style="width:300px" src="' + value.link + '" alt="' + value.name + '"/></div>');
+                                    } else {
+                                        $element.before('<div class="file"><a href="' + value.link + '">' + value.name + "</a></div>");
+                                    }
+                                });
                             }
                         }
                     }

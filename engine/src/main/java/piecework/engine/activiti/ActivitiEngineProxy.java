@@ -110,7 +110,14 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         return false;
     }
 
-	@Override
+    @Override
+    public boolean assign(Process process, String taskId, User user) throws ProcessEngineException {
+        if (user != null && user.getUserId() != null)
+            taskService.setAssignee(taskId, user.getUserId());
+        return true;
+    }
+
+    @Override
 	public boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException {
         InternalUserDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
@@ -279,44 +286,45 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
-    public Task findTask(TaskCriteria criteria) throws ProcessEngineException {
-        if (criteria.getProcesses() == null || criteria.getProcesses().size() != 1)
-            throw new ProcessEngineException("Must provide the process for a task that is being looked up");
+    public Task findTask(TaskCriteria ... criterias) throws ProcessEngineException {
+        TaskCriteria criteria = criterias[0];
 
-        Process process = criteria.getProcesses().iterator().next();
+        if (criteria.getProcesses() == null)
+            return null;
 
-        org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
-        HistoricTaskInstance historicTask = null;
+        for (Process process : criteria.getProcesses()) {
+            org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
+            HistoricTaskInstance historicTask = null;
 
-        String engineProcessInstanceId;
-        if (activitiTask != null) {
-            engineProcessInstanceId = activitiTask.getProcessInstanceId();
-        } else {
-            historicTask = historicTaskQuery(criteria).singleResult();
-            if (historicTask == null)
-                return null;
+            String engineProcessInstanceId;
+            if (activitiTask != null) {
+                engineProcessInstanceId = activitiTask.getProcessInstanceId();
+            } else {
+                historicTask = historicTaskQuery(criteria).singleResult();
+                if (historicTask == null)
+                    continue;
 
-            engineProcessInstanceId = historicTask.getProcessInstanceId();
+                engineProcessInstanceId = historicTask.getProcessInstanceId();
+            }
+
+            ProcessInstance processInstance = processInstanceRepository.findByProcessDefinitionKeyAndEngineProcessInstanceId(process.getProcessDefinitionKey(), engineProcessInstanceId);
+
+            // Shouldn't happen unless the databases are out of sync... but in -dev we need to handle
+            if (processInstance == null)
+                continue;
+
+            if (historicTask != null)
+                return convert(historicTask, process, processInstance, true);
+
+            return convert(activitiTask, process, processInstance, true);
         }
 
-        ProcessInstance processInstance = processInstanceRepository.findByProcessDefinitionKeyAndEngineProcessInstanceId(process.getProcessDefinitionKey(), engineProcessInstanceId);
-
-//        ManyMap<String, Process> processDefinitionIdMap = getProcessDefinitionIdMap(criteria.getProcesses());
-//        List<Process> processes = processDefinitionIdMap.get(processDefinitionId);
-//        if (processes == null)
-//            throw new ProcessEngineException("Not authorized to see tasks of this process");
-//
-//        List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Sets.newHashSet(process.getProcessDefinitionKey()), Sets.newHashSet(processInstanceId));
-//        if (processInstances.isEmpty() || processInstances.size() > 1)
-//            throw new ProcessEngineException("Unable to find a single process instance for this task");
-
-        if (historicTask != null)
-            return convert(historicTask, process, processInstance, true);
-
-        return convert(activitiTask, process, processInstance, true);
+        return null;
     }
 
-    public TaskResults findTasks(TaskCriteria criteria) throws ProcessEngineException {
+    public TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException {
+        TaskCriteria criteria = criterias[0];
+
         TaskResults.Builder resultsBuilder = new TaskResults.Builder();
 
         if (criteria.getProcesses() == null || criteria.getProcesses().isEmpty())
@@ -654,6 +662,11 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (criteria.getMinPriority() != null)
             query.taskMinPriority(criteria.getMinPriority());
 
+        if (StringUtils.isNotEmpty(criteria.getProcessInstanceId())) {
+            ProcessInstance instance = processInstanceRepository.findOne(criteria.getProcessInstanceId());
+            query.executionId(instance.getEngineProcessInstanceId());
+        }
+
         TaskCriteria.OrderBy orderBy = criteria.getOrderBy();
         if (orderBy != null) {
            switch (orderBy) {
@@ -698,12 +711,14 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             query.processDefinitionKey(criteria.getProcesses().iterator().next().getEngineProcessDefinitionKey());
 
         if (StringUtils.isNotEmpty(criteria.getProcessStatus()) && !criteria.getProcessStatus().equals(Constants.ProcessStatuses.OPEN)) {
-            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE))
+            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE)) {
                 query.taskDeleteReason("completed");
-            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.CANCELLED))
+                query.processFinished();
+            }
+            if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.CANCELLED)) {
                 query.taskDeleteReason(Constants.DeleteReasons.CANCELLED);
-
-            query.processFinished();
+                query.processFinished();
+            }
         } else {
             query.processUnfinished();
         }
@@ -713,7 +728,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             query.taskId(taskIds.iterator().next());
 
         if (criteria.getExecutionId() != null)
-            query.processInstanceId(criteria.getExecutionId());
+            query.executionId(criteria.getExecutionId());
 
         if (criteria.getAssigneeId() != null)
             query.taskAssignee(criteria.getAssigneeId());

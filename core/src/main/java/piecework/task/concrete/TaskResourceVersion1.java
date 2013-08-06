@@ -28,6 +28,7 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.OperationType;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.form.validation.SubmissionTemplateFactory;
@@ -37,6 +38,7 @@ import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.identity.InternalUserDetailsService;
 import piecework.persistence.ProcessInstanceRepository;
+import piecework.task.AllowedTaskService;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.engine.exception.ProcessEngineException;
@@ -95,6 +97,9 @@ public class TaskResourceVersion1 implements TaskResource {
     @Autowired
     SubmissionTemplateFactory submissionTemplateFactory;
 
+    @Autowired
+    AllowedTaskService taskService;
+
     @Override
     public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, HttpServletRequest request, Submission rawSubmission) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
@@ -105,7 +110,11 @@ public class TaskResourceVersion1 implements TaskResource {
 
         RequestDetails requestDetails = requestDetails(request);
 
-        Task task = taskId != null ? processInstanceService.userTask(process, taskId) : null;
+        Task task = taskId != null ? taskService.allowedTask(process, taskId, true) : null;
+
+        if (task == null)
+            throw new NotFoundError();
+
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
@@ -123,8 +132,20 @@ public class TaskResourceVersion1 implements TaskResource {
             } catch (IllegalArgumentException e) {
                 throw new BadRequestError(Constants.ExceptionCodes.task_action_invalid);
             }
+        } else if (submission != null && submission.getAction() != null) {
+            validatedAction = submission.getAction();
         }
         switch (validatedAction) {
+            case ASSIGN:
+                String assignee = submission.getAssignee();
+                if (StringUtils.isEmpty(assignee)) {
+                    throw new BadRequestError(Constants.ExceptionCodes.invalid_assignment);
+                }
+                processInstanceService.operate(OperationType.ASSIGNMENT, process, instance, task, null, assignee);
+                break;
+            case CLAIM:
+                processInstanceService.operate(OperationType.ASSIGNMENT, process, instance, task, null, helper.getAuthenticatedSystemOrUserId());
+                break;
             case COMPLETE:
                 processInstanceService.submit(process, instance, task, template, submission);
                 break;
@@ -147,19 +168,11 @@ public class TaskResourceVersion1 implements TaskResource {
 
         piecework.model.Process process = processInstanceService.getProcess(processDefinitionKey);
 
-        TaskCriteria criteria = new TaskCriteria.Builder()
-                .process(process)
-                .taskId(taskId)
-                .build();
+        Task task = taskService.allowedTask(process, taskId, true);
+        if (task == null)
+            throw new NotFoundError();
 
-        try {
-            Task task = facade.findTask(criteria);
-
-            return Response.ok(new Task.Builder(task, new PassthroughSanitizer()).build(getViewContext())).build();
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to find task ", e);
-            throw new InternalServerError();
-        }
+        return Response.ok(new Task.Builder(task, new PassthroughSanitizer()).build(getViewContext())).build();
     }
 
     @Override

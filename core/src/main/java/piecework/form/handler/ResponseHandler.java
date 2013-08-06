@@ -79,7 +79,7 @@ public class ResponseHandler {
 
         Form form = formFactory.form(formRequest, process, task, validation);
 
-        if (form != null && form.getScreen() != null) {
+        if (form != null && form.getScreen() != null && !form.getScreen().isReadonly()) {
             String location = form.getScreen().getLocation();
 
             if (StringUtils.isNotEmpty(location)) {

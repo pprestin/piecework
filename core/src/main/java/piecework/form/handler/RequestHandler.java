@@ -24,14 +24,13 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
-import piecework.identity.InternalUserDetails;
+import piecework.process.ProcessInstanceService;
 import piecework.process.concrete.ResourceHelper;
-import piecework.task.TaskCriteria;
-import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
+import piecework.task.AllowedTaskService;
 import piecework.util.ConstraintUtil;
 
 import java.util.*;
@@ -48,10 +47,16 @@ public class RequestHandler {
     ProcessEngineFacade facade;
 
     @Autowired
+    ProcessInstanceService processInstanceService;
+
+    @Autowired
     RequestRepository requestRepository;
 
     @Autowired
     ResourceHelper resourceHelper;
+
+    @Autowired
+    AllowedTaskService taskService;
 
     public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {
         return create(requestDetails, process, null, (Task)null, null, null);
@@ -161,24 +166,10 @@ public class RequestHandler {
     public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
         Task task = null;
         if (StringUtils.isNotEmpty(taskId)) {
-            try {
-                InternalUserDetails user = resourceHelper.getAuthenticatedPrincipal();
-                String participantId = user != null ? user.getInternalId() : null;
-                task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).participantId(participantId).build());
+            task = taskService.allowedTask(process, taskId, false);
 
-                if (task == null) {
-                    if (resourceHelper.hasRole(process, AuthorizationRole.OVERSEER)) {
-                        task = facade.findTask(new TaskCriteria.Builder().process(process).taskId(taskId).processStatus(Constants.ProcessStatuses.ALL).build());
-                    }
-                    if (task == null) {
-                        throw new NotFoundError();
-                    }
-                }
-
-            } catch (ProcessEngineException e) {
-                LOG.error("Could not find task ", e);
-                throw new InternalServerError();
-            }
+            if (task == null)
+                throw new NotFoundError();
         }
 
         return create(requestDetails, process, processInstance, task, previousFormRequest, null);

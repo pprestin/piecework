@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import piecework.model.Process;
+import piecework.model.ProcessInstance;
 import piecework.security.Sanitizer;
 import piecework.util.ManyMap;
 
@@ -39,6 +40,7 @@ public class TaskCriteria {
     private final List<String> taskIds;
     private final String processDefinitionLabel;
     private final String processInstanceLabel;
+    private final String processInstanceId;
     private final String applicationStatus;
     private final String applicationStatusExplanation;
     private final String processStatus;
@@ -71,6 +73,7 @@ public class TaskCriteria {
         this.processStatus = builder.processStatus;
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
+        this.processInstanceId = builder.processInstanceId;
         this.minPriority = builder.minPriority;
         this.maxPriority = builder.maxPriority;
         this.active = builder.active;
@@ -109,6 +112,10 @@ public class TaskCriteria {
 
     public String getProcessInstanceLabel() {
         return processInstanceLabel;
+    }
+
+    public String getProcessInstanceId() {
+        return processInstanceId;
     }
 
     public String getApplicationStatus() {
@@ -187,6 +194,7 @@ public class TaskCriteria {
         private List<String> taskIds;
         private String processDefinitionLabel;
         private String processInstanceLabel;
+        private String processInstanceId;
         private String applicationStatus;
         private String applicationStatusExplanation;
         private String processStatus;
@@ -283,6 +291,12 @@ public class TaskCriteria {
                                     this.firstResult = Integer.valueOf(value);
                                 else if (key.equals("keyword"))
                                     this.keywords.add(value);
+                                else if (key.equals("maxPriority"))
+                                    this.maxPriority = Integer.valueOf(value);
+                                else if (key.equals("minPriority"))
+                                    this.minPriority = Integer.valueOf(value);
+                                else if (key.equals("processInstanceId"))
+                                    this.processInstanceId = value;
                                 else {
                                     if (key.startsWith("__"))
                                         this.contentParameters.putOne(key.substring(2), value);
@@ -327,6 +341,11 @@ public class TaskCriteria {
 
         public Builder executionId(String executionId) {
             this.executionId = executionId;
+            return this;
+        }
+
+        public Builder processInstanceId(String processInstanceId) {
+            this.processInstanceId = processInstanceId;
             return this;
         }
 
