@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.designer.concrete;
+package piecework.resource.concrete;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.common.ViewContext;
-import piecework.designer.DesignerResource;
+import piecework.resource.DesignerResource;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;
 

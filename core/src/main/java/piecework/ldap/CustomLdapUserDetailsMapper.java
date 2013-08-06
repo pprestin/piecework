@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.ldap.core.ContextMapper;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,7 +34,7 @@ import piecework.identity.InternalUserDetails;
 /**
  * @author James Renfro
  */
-public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper {
+public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implements ContextMapper {
 
 	private final Log logger = LogFactory.getLog(CustomLdapUserDetailsMapper.class);
 	
@@ -66,5 +67,9 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper {
 
         return new InternalUserDetails(userDetails, internalId, externalId, displayName, emailAddress);
     }
-	
+
+    @Override
+    public Object mapFromContext(Object ctx) {
+        return mapUserFromContext((DirContextOperations) ctx, null, null);
+    }
 }

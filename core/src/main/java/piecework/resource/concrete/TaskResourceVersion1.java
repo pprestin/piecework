@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.task.concrete;
+package piecework.resource.concrete;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
@@ -48,7 +48,7 @@ import piecework.process.*;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.TaskResource;
+import piecework.resource.TaskResource;
 import piecework.util.ManyMap;
 
 import javax.servlet.http.HttpServletRequest;

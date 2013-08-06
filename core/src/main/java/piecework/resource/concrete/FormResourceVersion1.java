@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.concrete;
+package piecework.resource.concrete;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -24,7 +24,7 @@ import piecework.form.FormService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
-import piecework.form.FormResource;
+import piecework.resource.FormResource;
 import piecework.model.Process;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;

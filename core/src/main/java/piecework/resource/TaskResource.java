@@ -1,4 +1,4 @@
-package piecework.task;
+package piecework.resource;
 
 import piecework.ApiResource;
 import piecework.ApplicationResource;

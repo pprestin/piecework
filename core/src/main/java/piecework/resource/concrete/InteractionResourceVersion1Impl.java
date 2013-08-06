@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.designer.concrete;
+package piecework.resource.concrete;
 
 import java.util.List;
 
@@ -39,7 +39,7 @@ import piecework.model.Interaction;
 import piecework.model.Process;
 import piecework.model.Screen;
 import piecework.persistence.InteractionRepository;
-import piecework.designer.InteractionResource;
+import piecework.resource.InteractionResource;
 import piecework.persistence.ProcessRepository;
 import piecework.persistence.ScreenRepository;
 import piecework.security.concrete.PassthroughSanitizer;

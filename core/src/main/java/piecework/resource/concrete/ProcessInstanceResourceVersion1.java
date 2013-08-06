@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.concrete;
+package piecework.resource.concrete;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.*;
@@ -38,6 +38,8 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
+import piecework.process.concrete.ResourceHelper;
+import piecework.resource.ProcessInstanceResource;
 import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;

@@ -14,6 +14,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	        'click #delete-button': '_onDeleteButton',
 	        'click #history-dialog-button': '_onHistoryButton',
 	        'click #suspend-button': '_onSuspendButton',
+	        'show #assign-dialog': '_onShowAssignDialog',
 	        'submit form': '_onFormSubmit',
 	    },
 	    listen: {
@@ -214,6 +215,25 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	    },
 	    _onSearched: function(data) {
 	        $('#instanceSearchButton').button('reset');
+	    },
+	    _onShowAssignDialog: function() {
+            $('#assignee').typeahead({
+                source: function(query, process) {
+                    var data = "displayNameLike=" + query;
+                    $.get('/workflow/secure/person', data, function(data, textStatus, jqXHR) {
+                        var people = new Array();
+                        if (data != null && data.list != null) {
+                            for (var i=0;i<data.list.length;i++) {
+                                people.append(data.list[i].displayName);
+                            }
+                        }
+
+                        process(people);
+                    });
+
+
+                }
+            });
 	    },
 	    _onSuspendButton: function() {
 	        var selected = this.model.get("selected");

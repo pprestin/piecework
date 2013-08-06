@@ -33,8 +33,8 @@ import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Interaction;
 import piecework.model.Process;
-import piecework.designer.InteractionResource;
-import piecework.process.ProcessResource;
+import piecework.resource.InteractionResource;
+import piecework.resource.ProcessResource;
 
 /**
  * @author James Renfro

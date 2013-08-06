@@ -16,17 +16,26 @@
 package piecework.identity;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.ldap.core.DirContextOperations;
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.filter.Filter;
+import org.springframework.ldap.filter.LikeFilter;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
+import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.model.User;
 
+import javax.naming.directory.SearchControls;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,14 +43,17 @@ import java.util.Map;
  */
 public class InternalUserDetailsService implements UserDetailsService {
 
+    @Autowired
+    LdapContextSource personLdapContextSource;
+
     private final LdapUserDetailsService delegate;
     private final LdapUserSearch userSearch;
     private final LdapUserSearch internalUserSearch;
     private final LdapAuthoritiesPopulator authoritiesPopulator;
-    private final LdapUserDetailsMapper userDetailsMapper;
+    private final CustomLdapUserDetailsMapper userDetailsMapper;
     private final String usernameAttribute;
 
-    public InternalUserDetailsService(LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, LdapUserDetailsMapper userDetailsMapper, String usernameAttribute) {
+    public InternalUserDetailsService(LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, String usernameAttribute) {
         this.delegate = new LdapUserDetailsService(userSearch, authoritiesPopulator);
         this.delegate.setUserDetailsMapper(userDetailsMapper);
         this.userDetailsMapper = userDetailsMapper;
@@ -49,6 +61,18 @@ public class InternalUserDetailsService implements UserDetailsService {
         this.internalUserSearch = internalUserSearch;
         this.authoritiesPopulator = authoritiesPopulator;
         this.usernameAttribute = usernameAttribute;
+    }
+
+    public List<InternalUserDetails> findUsersByDisplayName(String displayNameLike) {
+        SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
+
+        SearchControls searchControls = new SearchControls();
+        searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        template.setSearchControls(searchControls);
+
+        String base = "";
+        String filter = new LikeFilter("cn", displayNameLike).encode();
+        return template.search(base, filter, userDetailsMapper);
     }
 
     @Override

@@ -31,7 +31,7 @@ import piecework.test.config.UnitTestConfiguration;
 import piecework.exception.GoneError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Process;
-import piecework.process.ProcessResource;
+import piecework.resource.ProcessResource;
 
 /**
  * @author James Renfro

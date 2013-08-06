@@ -1,4 +1,4 @@
-package piecework.process;
+package piecework.resource;
 
 import piecework.ApiResource;
 import piecework.ApplicationResource;
@@ -17,6 +17,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.model.Submission;
+import piecework.process.AttachmentQueryParameters;
 
 import java.io.InputStream;
 

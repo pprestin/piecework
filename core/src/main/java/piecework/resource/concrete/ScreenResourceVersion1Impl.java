@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.designer.concrete;
+package piecework.resource.concrete;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -38,7 +38,7 @@ import piecework.model.Screen;
 import piecework.persistence.InteractionRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.persistence.ScreenRepository;
-import piecework.designer.ScreenResource;
+import piecework.resource.ScreenResource;
 import piecework.security.concrete.PassthroughSanitizer;
 
 /**

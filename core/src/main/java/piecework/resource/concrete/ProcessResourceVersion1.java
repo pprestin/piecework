@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.concrete;
-
-import java.util.List;
-import java.util.Set;
+package piecework.resource.concrete;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -25,26 +22,14 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import piecework.Constants;
-import piecework.persistence.InteractionRepository;
-import piecework.persistence.ScreenRepository;
-import piecework.model.Interaction;
-import piecework.model.Screen;
 import piecework.process.ProcessService;
-import piecework.security.Sanitizer;
-import piecework.authorization.AuthorizationRole;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
-import piecework.exception.ForbiddenError;
-import piecework.exception.GoneError;
-import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.Process;
-import piecework.persistence.ProcessRepository;
-import piecework.process.ProcessResource;
+import piecework.resource.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
 
 /**
