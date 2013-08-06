@@ -8,7 +8,7 @@
                 <li role="presentation" {{#if selected}}class="disabled"{{/if}}>
                     <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                         <label class="checkbox">
-                            <input type="checkbox" id="{{id}}" name="{{key}}" value="{{value}}" {{#if selected}}checked{{/if}}/>&nbsp;{{label}}
+                            <input type="checkbox" id="{{id}}" name="{{key}}" value="{{value}}" role="menuitem" {{#if selected}}checked{{/if}}/> {{label}}
                         </label>
                     </div>
                 </li>

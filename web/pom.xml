@@ -26,7 +26,7 @@
                 <configuration>
                     <port>8000</port>
                     <ajpPort>8009</ajpPort>
-                    <httpsPort>8443</httpsPort>
+                    <!--<httpsPort>8443</httpsPort>-->
                     <path>/piecework</path>
                     <clientAuth>true</clientAuth>
                 </configuration>

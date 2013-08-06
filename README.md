@@ -11,7 +11,7 @@ Some configuration is required to connect Piecework into backend identity manage
 
 The following commands will bring up the demo version (not much to see yet), which also starts an embedded mongodb (courtesy of https://github.com/flapdoodle-oss/embedmongo.flapdoodle.de) and an embedded LDAP server -- you may run into port conflicts if you already have an LDAP server running on your machine:
 
-> mvn tomcat:run -Dspring.profiles.active=dev,ldap,standalone
+> mvn org.apache.tomcat.maven:tomcat7-maven-plugin:2.1:run -Dspring.profiles.active=dev,ldap,embedded-ldap,embedded-mongo,data
 
 Open a browser and point to: http://localhost:8080/piecework/secure/v1/form/demo
 

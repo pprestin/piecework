@@ -14,8 +14,9 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	        'click #delete-button': '_onDeleteButton',
 	        'click #history-dialog-button': '_onHistoryButton',
 	        'click #suspend-button': '_onSuspendButton',
-	        'show #assign-dialog': '_onShowAssignDialog',
+	        'shown.bs.modal #assign-dialog': '_onShowAssignDialog',
 	        'submit form': '_onFormSubmit',
+	        'typeahead:selected': '_onTypeaheadSelected',
 	    },
 	    listen: {
             'addedToDOM': '_onAddedToDOM',
@@ -64,6 +65,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             if (selected == null)
                 return;
 
+            var toolbar = this;
             var task = selected.get('task');
             if (task != null) {
                 if (task.active)
@@ -84,12 +86,13 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             }
         },
         _onAssignButton: function() {
-            var assignee = this.$el.find('#assignee').val();
+            var assignee = this.$el.find('#assigneeId').val();
 
             var selected = this.model.get("selected");
             if (selected == null)
                 return;
 
+            var toolbar = this;
             var task = selected.get('task');
             if (task != null) {
                 if (!task.active) {
@@ -111,7 +114,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                      var explanation = $.parseJSON(jqXHR.responseText);
                      var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
-                     toolbar.subview('notificationView', new NotificationView({container: '#assign-dialog > .modal-body', model: notification}));
+                     toolbar.subview('notificationView', new NotificationView({container: '#assign-dialog .modal-body', model: notification}));
                  });
             }
         },
@@ -124,6 +127,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             if (selected == null)
                 return;
 
+            var toolbar = this;
             var data = $('#delete-reason').serialize();
             var task = selected.get('task');
             if (task != null) {
@@ -205,6 +209,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
         },
         _onResultUnselected: function(result) {
             this.$el.find('.selected-result-btn').addClass('hide');
+            this.$el.find('.incomplete-selected-result-btn').addClass('hide');
             this.$el.find('#activate-dialog-button').addClass('hide');
             this.$el.find('#suspend-dialog-button').addClass('hide');
             this.$el.find('#delete-dialog-button').addClass('hide');
@@ -218,28 +223,27 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	    },
 	    _onShowAssignDialog: function() {
             $('#assignee').typeahead({
-                source: function(query, process) {
-                    var data = "displayNameLike=" + query;
-                    $.get('/workflow/secure/person', data, function(data, textStatus, jqXHR) {
-                        var people = new Array();
-                        if (data != null && data.list != null) {
-                            for (var i=0;i<data.list.length;i++) {
-                                people.append(data.list[i].displayName);
-                            }
-                        }
-
-                        process(people);
-                    });
-
-
-                }
-            });
+                                        name: 'person-lookup',
+                                        remote: {
+                                            url: '/piecework/secure/person.json?displayNameLike=%QUERY',
+                                            filter: function(parsedResponse) {
+                                                var list = parsedResponse.list;
+                                                var data = new Array();
+                                                for (var i=0;i<list.length;i++) {
+                                                    var person = list[i];
+                                                    data.push({value: person.userId, displayName: person.displayName, tokens: [ person.displayName ]});
+                                                }
+                                                return data;
+                                            }
+                                        },
+                                        valueKey: 'displayName'
+                                     });
 	    },
 	    _onSuspendButton: function() {
 	        var selected = this.model.get("selected");
 	        if (selected == null)
 	            return;
-
+            var toolbar = this;
             var data = $('#suspend-reason').serialize();
             var task = selected.get('task');
             if (task != null) {
@@ -259,6 +263,10 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                  });
             }
 	    },
+	    _onTypeaheadSelected: function(obj, datum) {
+            this.$el.find('#assigneeId').val(datum.value);
+            this.$el.find("#assign-button").removeAttr('disabled');
+	    }
 	});
 
 	return SearchView;

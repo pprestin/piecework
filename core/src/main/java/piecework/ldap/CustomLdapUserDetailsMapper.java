@@ -16,6 +16,7 @@
 package piecework.ldap;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -70,6 +71,12 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implement
 
     @Override
     public Object mapFromContext(Object ctx) {
-        return mapUserFromContext((DirContextOperations) ctx, null, null);
+        if (ctx instanceof DirContextOperations) {
+            DirContextOperations contextOperations = DirContextOperations.class.cast(ctx);
+            String internalId = contextOperations.getStringAttribute(ldapInternalIdAttribute);
+            Collection<GrantedAuthority> authorities = Collections.emptyList();
+            return mapUserFromContext(contextOperations, internalId, authorities);
+        }
+        return null;
     }
 }

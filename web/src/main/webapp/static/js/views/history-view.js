@@ -4,7 +4,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/history.hbs' ],
 
 	var HistoryView = View.extend({
 		autoRender : true,
-		container: '#history-dialog > .modal-body',
+		container: '#history-dialog .modal-body',
 	    template: template,
 	    initialize: function(model, options) {
 	        View.__super__.initialize.apply(this, options);

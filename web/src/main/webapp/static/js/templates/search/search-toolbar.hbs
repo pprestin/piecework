@@ -1,120 +1,140 @@
-<form id="search-form" action="" method="GET">
-    <div class="navbar">
-        <ul class="toolbar-items">
-            <li class="nav">
-                <div class="btn-group">
-                    <input title="Search by keyword" role="" class="searchField" name="keyword" placeholder="Search" id="keyword" type="text">
-                </div>
-            </li>
-            <li class="nav">
-                <button class="btn" role="button" id="instanceSearchButton" type="submit" data-loading-text="&nbsp;&nbsp;<i class='icon-spinner icon-spin icon-large'></i>&nbsp;&nbsp;">&nbsp;&nbsp;<i class="icon-search"></i>&nbsp;&nbsp;</button>
-            </li>
-            <li class="nav">
-                <div class="dropdown">
-                    <button class="btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="icon-play-circle"></i> <b class="caret"></b></button>
-                    <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">
-                        {{#each definitions}}
-                        <li class="presentation" ><a href="{{link}}">{{task.processDefinitionLabel}}</a></li>
-                        {{/each}}
-                    </ul>
-                </div>
-            </li>
-            <!--<li class="nav btn-group">
-                <a class="btn btn-link" href="#clear" role="button" id="instanceClearButton" type="button">Clear</a>
-            </li>-->
-            <ul class="nav pull-right">
-                <li>
-                    <button class="btn btn-inverse incomplete-selected-result-btn hide" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
-                    <button class="btn btn-inverse selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-archive icon-white"></i></button>
-                    <button class="btn btn-inverse hide" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
-                    <button class="btn btn-inverse hide" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
-                    <button class="btn btn-danger incomplete-selected-result-btn hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
-                <li>
+<div class="container">
+    <form id="search-form" action="" method="GET">
+        <div class="nav-collapse collapse">
+            <ul class="toolbar-items">
+                <li class="nav navbar-nav">
+                    <div class="btn-group">
+                        <input title="Search by keyword" role="" class="form-control searchField" name="keyword" placeholder="Search" id="keyword" type="text">
+                    </div>
+                </li>
+                <li class="nav navbar-nav">
+                    <button class="btn btn-default" role="button" id="instanceSearchButton" type="submit" data-loading-text="&nbsp;&nbsp;<i class='icon-spinner icon-spin icon-large'></i>&nbsp;&nbsp;">&nbsp;&nbsp;<i class="icon-search"></i>&nbsp;&nbsp;</button>
+                </li>
+                <li class="nav navbar-nav">
+                    <div class="dropdown">
+                        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="icon-play-circle"></i> <b class="caret"></b></button>
+                        <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">
+                            {{#each definitions}}
+                            <li class="presentation"><a role="menuitem" href="{{link}}">{{task.processDefinitionLabel}}</a></li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                </li>
+                <ul class="nav navbar-nav pull-right">
+                    <li>
+                        <button class="btn btn-default incomplete-selected-result-btn hide" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
+                        <button class="btn btn-default selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-archive icon-white"></i></button>
+                        <button class="btn btn-default hide" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
+                        <button class="btn btn-default hide" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
+                        <button class="btn btn-danger incomplete-selected-result-btn hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
+                    <li>
+                </ul>
             </ul>
-        </ul>
-    </div>
-    <div>
-        <ul class="toolbar-items-buttons">
-            <li class="nav">
-                <div class="status-filter-container"></div>
-            </li>
-            <li class="nav">
-                <div class="process-filter-container"></div>
-            </li>
-        </ul>
-    </div>
-</form>
+        </div>
+        <div>
+            <ul class="toolbar-items-buttons">
+                <li class="nav navbar-nav">
+                    <div class="status-filter-container"></div>
+                </li>
+                <li class="nav navbar-nav">
+                    <div class="process-filter-container"></div>
+                </li>
+            </ul>
+        </div>
+    </form>
+</div>
 
-<div id="activate-dialog" class="modal hide fade">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>Are you sure you want to reactivate this process?</h3>
-    </div>
-    <div class="modal-body">
-        <p>Reactivating a process resumes execution.</p>
-        <textarea class="input-block-level" placeholder="Enter a reason" name="reason" id="activate-reason" rows="4"></textarea>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button type="button" id="activate-button" class="btn btn-primary">Activate</button>
+<div id="activate-dialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Are you sure you want to reactivate this process?</h4>
+            </div>
+            <div class="modal-body">
+                <p>Reactivating a process resumes execution.</p>
+                <textarea class="input-block-level" placeholder="Enter a reason" name="reason" id="activate-reason" rows="4"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button type="button" id="activate-button" class="btn btn-primary">Activate</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="assign-dialog" class="modal hide fade">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>Assign Task</h3>
-    </div>
-    <div class="modal-body" style="height:150px">
-        <label class="inline">Assignee</label>
-        <input type="text" id="assignee" name="assignee"/>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button type="button" id="assign-button" class="btn btn-primary">Assign</button>
-    </div>
-</div>
-
-<div id="delete-dialog" class="modal hide fade">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>Are you sure you want to delete this process?</h3>
-    </div>
-    <div class="modal-body">
-        <p>Deleting a process <b>permanently</b> stops execution and <u>cannot</u> be reversed.</p>
-        <textarea class="input-block-level" placeholder="Enter a reason" name="reason" id="delete-reason" rows="4"></textarea>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button type="button" id="delete-button" class="btn btn-danger">Delete</button>
+<div id="assign-dialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Assign Task</h4>
+            </div>
+            <div class="modal-body">
+                <label class="inline">Assignee</label>
+                <input class="form-control" type="text" id="assignee" name="assignee" autocomplete="off"/>
+                <input type="hidden" id="assigneeId"/>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button type="button" class="btn btn-primary" id="assign-button" disabled>Assign</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="history-dialog" class="modal hide fade">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>History</h3>
-    </div>
-    <div class="modal-body">
-
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+<div id="delete-dialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Are you sure you want to delete this process?</h4>
+            </div>
+            <div class="modal-body">
+                <p>Deleting a process <b>permanently</b> stops execution and <u>cannot</u> be reversed.</p>
+                <textarea class="form-control input-block-level" placeholder="Enter a reason" name="reason" id="delete-reason" rows="4"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button type="button" class="btn btn-danger" id="delete-button">Delete</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="suspend-dialog" class="modal hide fade">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>Are you sure you want to suspend this process?</h3>
+<div id="history-dialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">History</h4>
+            </div>
+            <div class="modal-body">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+            </div>
+        </div>
     </div>
-    <div class="modal-body">
-        <p>Suspending a process pauses execution.</p>
-        <textarea class="input-block-level" placeholder="Enter a reason" name="reason" id="suspend-reason" rows="4"></textarea>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button type="button" id="suspend-button" class="btn btn-primary">Suspend</button>
+</div>
+
+<div id="suspend-dialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Are you sure you want to suspend this process?</h4>
+            </div>
+            <div class="modal-body">
+                <p>Suspending a process pauses execution.</p>
+                <textarea class="form-control input-block-level" placeholder="Enter a reason" name="reason" id="suspend-reason" rows="4"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button type="button" id="suspend-button" class="btn btn-primary">Suspend</button>
+            </div>
+        </div>
     </div>
 </div>
 
