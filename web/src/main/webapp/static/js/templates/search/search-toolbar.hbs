@@ -65,21 +65,29 @@
 
 <div id="assign-dialog" class="modal fade">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Assign Task</h4>
+        <form>
+            <fieldset>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Assign Task</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="assignee">Assignee</label>
+                        <div>
+                            <input class="form-control" type="text" id="assignee" name="assignee" autocomplete="off"/>
+                        </div>
+                    </div>
+                    <input type="hidden" id="assigneeId"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="assign-button" disabled>Assign</button>
+                </div>
             </div>
-            <div class="modal-body">
-                <label class="inline">Assignee</label>
-                <input class="form-control" type="text" id="assignee" name="assignee" autocomplete="off"/>
-                <input type="hidden" id="assigneeId"/>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
-                <button type="button" class="btn btn-primary" id="assign-button" disabled>Assign</button>
-            </div>
-        </div>
+            </fieldset>
+        </form>
     </div>
 </div>
 

@@ -16,6 +16,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	        'click #suspend-button': '_onSuspendButton',
 	        'shown.bs.modal #assign-dialog': '_onShowAssignDialog',
 	        'submit form': '_onFormSubmit',
+	        'typeahead:autocompleted': '_onTypeaheadAutocompleted',
 	        'typeahead:selected': '_onTypeaheadSelected',
 	    },
 	    listen: {
@@ -262,6 +263,10 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                      toolbar.subview('notificationView', new NotificationView({container: '#suspend-dialog > .modal-body', model: notification}));
                  });
             }
+	    },
+	    _onTypeaheadAutocompleted: function(obj, datum) {
+	        this.$el.find('#assigneeId').val(datum.value);
+            this.$el.find("#assign-button").removeAttr('disabled');
 	    },
 	    _onTypeaheadSelected: function(obj, datum) {
             this.$el.find('#assigneeId').val(datum.value);

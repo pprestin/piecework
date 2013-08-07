@@ -57,6 +57,10 @@ input.searchField {
     margin-bottom: 0px;
 }
 
+label {
+    font-weight: normal;
+}
+
 p.lead {
     font-size: 16px;
     font-weight: 300;
@@ -248,9 +252,22 @@ div.screen-footer {
     vertical-align: text-top;
 }
 
+.twitter-typeahead {
+    display: block;
+}
+
 .twitter-typeahead .tt-query,
 .twitter-typeahead .tt-hint {
   margin-bottom: 0;
+}
+
+.twitter-typeahead .tt-hint {
+    display: block;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.428571429;
+    border: 1px solid transparent;
 }
 
 .tt-dropdown-menu {
