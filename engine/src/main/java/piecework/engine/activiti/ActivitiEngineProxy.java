@@ -169,7 +169,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 }
                 // Always assign the task to the user before completing it
                 if (StringUtils.isNotEmpty(userId))
-                    taskService.claim(taskId, userId);
+                    taskService.setAssignee(taskId, userId);
 
                 taskService.complete(taskId);
                 return true;
