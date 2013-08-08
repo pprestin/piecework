@@ -366,7 +366,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
             boolean isComplete = criteria.getProcessStatus() != null && criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE);
 
-            List<ProcessInstance> processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(allowedProcessDefinitionKeys, engineProcessInstanceIds);
+            List<ProcessInstance> processInstances;
+
+            if (StringUtils.isNotEmpty(criteria.getKeyword()))
+                processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdInAndKeyword(allowedProcessDefinitionKeys, engineProcessInstanceIds, criteria.getKeyword());
+            else
+                processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(allowedProcessDefinitionKeys, engineProcessInstanceIds);
+
             if (processInstances != null && !processInstances.isEmpty()) {
                 MultiKeyMap processInstanceMap = new MultiKeyMap();
                 for (ProcessInstance processInstance : processInstances) {

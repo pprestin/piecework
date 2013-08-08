@@ -82,16 +82,17 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
             var $target = $(event.target);
             var $dropdown = $target.closest('.dropdown');
             var $toggle = $dropdown.find('.dropdown-toggle-text');
-            var $checkbox = $target.next('.hidden-checkbox');
-            var isChecked = $checkbox.is(':checked');
             $toggle.text($target.closest('label').text());
             var id = $target.attr('id');
             $dropdown.find(':checkbox').each(function(i, element) {
                 if (element.id != id)
                     element.checked = false;
+                else {
+                    var status = element.value;
+                    Chaplin.mediator.publish("search", {processStatus: status});
+                }
             });
 
-            $dropdown.closest('form').submit();
 	    }
 	});
 

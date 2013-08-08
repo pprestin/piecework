@@ -46,6 +46,7 @@ public class TaskCriteria {
     private final String processStatus;
     private final Integer minPriority;
     private final Integer maxPriority;
+    private final String keyword;
     private final Boolean active;
     private final Boolean complete;
     private final Date createdBefore;
@@ -74,6 +75,7 @@ public class TaskCriteria {
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.processInstanceId = builder.processInstanceId;
+        this.keyword = builder.keyword;
         this.minPriority = builder.minPriority;
         this.maxPriority = builder.maxPriority;
         this.active = builder.active;
@@ -116,6 +118,10 @@ public class TaskCriteria {
 
     public String getProcessInstanceId() {
         return processInstanceId;
+    }
+
+    public String getKeyword() {
+        return keyword;
     }
 
     public String getApplicationStatus() {
@@ -198,7 +204,7 @@ public class TaskCriteria {
         private String applicationStatus;
         private String applicationStatusExplanation;
         private String processStatus;
-        private List<String> keywords;
+        private String keyword;
         private Integer minPriority;
         private Integer maxPriority;
         private Boolean complete;
@@ -219,7 +225,6 @@ public class TaskCriteria {
         public Builder() {
             super();
             this.processes = new HashSet<Process>();
-            this.keywords = new ArrayList<String>();
         }
 
         public Builder(Set<Process> allowedProcesses, Map<String, List<String>> queryParameters, Sanitizer sanitizer) {
@@ -236,7 +241,6 @@ public class TaskCriteria {
             }
             this.contentParameters = new ManyMap<String, String>();
             this.sanitizedParameters = new ManyMap<String, String>();
-            this.keywords = new ArrayList<String>();
             Set<Process> selectedProcesses = null;
             if (queryParameters != null && sanitizer != null) {
                 DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
@@ -290,7 +294,7 @@ public class TaskCriteria {
                                 else if (key.equals("firstResult"))
                                     this.firstResult = Integer.valueOf(value);
                                 else if (key.equals("keyword"))
-                                    this.keywords.add(value);
+                                    this.keyword = value;
                                 else if (key.equals("maxPriority"))
                                     this.maxPriority = Integer.valueOf(value);
                                 else if (key.equals("minPriority"))

@@ -77,7 +77,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 $.post( url, data,
                     function(data, textStatus, jqXHR) {
                         $('#activate-dialog').modal('hide');
-                        Chaplin.mediator.publish("search", {status:"open"});
+                        Chaplin.mediator.publish("search", {processStatus: "open"});
                     }
                 ).fail(function(jqXHR, textStatus, errorThrown) {
                      var explanation = $.parseJSON(jqXHR.responseText);
@@ -109,7 +109,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                     data: data,
                     success: function(data, textStatus, jqXHR) {
                         $('#assign-dialog').modal('hide');
-                        Chaplin.mediator.publish("search", {status:"open"});
+                        Chaplin.mediator.publish("search", {processStatus:"open"});
                     },
                     contentType: "application/json"
                 }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -136,7 +136,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 $.post(url, data,
                     function(data, textStatus, jqXHR) {
                         $('#delete-dialog').modal('hide');
-                        Chaplin.mediator.publish("search", {status:"open"});
+                        Chaplin.mediator.publish("search", {processStatus:"open"});
                     }
                 ).fail(function(jqXHR, textStatus, errorThrown) {
                       var explanation = $.parseJSON(jqXHR.responseText);

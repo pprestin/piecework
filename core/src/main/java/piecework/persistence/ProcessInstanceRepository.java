@@ -41,4 +41,7 @@ public interface ProcessInstanceRepository extends MongoRepository<ProcessInstan
     @Query(value="{ 'processDefinitionKey' : { $in: ?0 }, 'engineProcessInstanceId' : { $in: ?1 } }")
     List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds);
 
+    @Query(value="{ 'processDefinitionKey' : { $in: ?0 }, 'engineProcessInstanceId' : { $in: ?1 }, 'keywords' : { $regex: ?2 }  }")
+    List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdInAndKeyword(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds, String keyword);
+
 }
