@@ -90,6 +90,8 @@ public class InternalUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByInternalId(String internalId) {
         DirContextOperations userData = internalUserSearch.searchForUser(internalId);
         String username = userData.getStringAttribute(usernameAttribute);
+        if (username == null)
+            return null;
         return userDetailsMapper.mapUserFromContext(userData, username,
                 authoritiesPopulator.getGrantedAuthorities(userData, username));
     }

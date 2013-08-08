@@ -228,6 +228,10 @@ div.screen-footer {
     line-height: 16px;
 }
 
+#assign-dialog .modal-body {
+    height: 300px;
+}
+
 .modal-body {
     max-height: 500px;
     overflow-y: auto;

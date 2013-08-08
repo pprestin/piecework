@@ -223,16 +223,21 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	        $('#instanceSearchButton').button('reset');
 	    },
 	    _onShowAssignDialog: function() {
+	        var url = this.model.get("link");
+	        var indexOf = url.indexOf('form');
+	        url = url.substring(0,indexOf) + 'person.json?displayNameLike=%QUERY';
             $('#assignee').typeahead({
                                         name: 'person-lookup',
                                         remote: {
-                                            url: '/piecework/secure/person.json?displayNameLike=%QUERY',
+                                            url: url,
                                             filter: function(parsedResponse) {
                                                 var list = parsedResponse.list;
                                                 var data = new Array();
-                                                for (var i=0;i<list.length;i++) {
-                                                    var person = list[i];
-                                                    data.push({value: person.userId, displayName: person.displayName, tokens: [ person.displayName ]});
+                                                if (list != null) {
+                                                    for (var i=0;i<list.length;i++) {
+                                                        var person = list[i];
+                                                        data.push({value: person.userId, displayName: person.displayName, tokens: [ person.displayName ]});
+                                                    }
                                                 }
                                                 return data;
                                             }

@@ -4,7 +4,8 @@
 {{#if options}}
     {{#each options}}
         <label class="checkbox">
-            <input type="checkbox"
+            <input class="form-control"
+                   type="checkbox"
                    name="{{name}}"
                    value="{{value}}"
                     {{#if ../required}}class="required"{{/if}}/> {{label}}

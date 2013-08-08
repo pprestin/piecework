@@ -28,6 +28,7 @@ import org.activiti.engine.task.IdentityLinkType;
 import org.activiti.engine.task.TaskQuery;
 import org.apache.commons.collections.map.MultiKeyMap;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -56,6 +57,8 @@ import piecework.util.ManyMap;
  */
 @Service
 public class ActivitiEngineProxy implements ProcessEngineProxy {
+
+    private static final Logger LOG = Logger.getLogger(ActivitiEngineProxy.class);
 
     @Autowired
     ResourceHelper helper;
@@ -339,8 +342,17 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             query = historicTaskQuery(criteria);
         }
 
+        long time = 0;
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
+
         List<?> instances = query.list();
         int size = instances.size();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Searching for tasks took " + (System.currentTimeMillis() - time) + " ms");
+            time = System.currentTimeMillis();
+        }
 
         resultsBuilder.firstResult(0);
         resultsBuilder.maxResults(size);
@@ -425,6 +437,9 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         } else {
             tasks = Collections.emptyList();
         }
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Searching for associated process instances took " + (System.currentTimeMillis() - time) + " ms");
 
         resultsBuilder.tasks(tasks);
 

@@ -88,8 +88,19 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
                 if (element.id != id)
                     element.checked = false;
                 else {
+                    var keyword = $('#keyword').val();
+                    var processDefinitionKey = $(':checkbox[name="processDefinitionKey"]:checked').val();
                     var status = element.value;
-                    Chaplin.mediator.publish("search", {processStatus: status});
+
+                    var data = {};
+                    if (keyword !== undefined && keyword != '')
+                        data['keyword'] = keyword;
+                    if (status !== undefined && status != '')
+                        data['processStatus'] = status;
+                    if (processDefinitionKey !== undefined && processDefinitionKey != '')
+                        data['processDefinitionKey'] = processDefinitionKey;
+
+                    Chaplin.mediator.publish("search", data);
                 }
             });
 

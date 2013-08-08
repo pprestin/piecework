@@ -110,7 +110,7 @@ public class AllowedTaskService {
     public SearchResults allowedTasks(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
         Set<Process> overseerProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
-        Set<Process> allowedProcesses = Sets.intersection(overseerProcesses, userProcesses);
+        Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
         ViewContext taskViewContext = getTaskViewContext();
 

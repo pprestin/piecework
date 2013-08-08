@@ -4,7 +4,7 @@ define([ 'models/base/collection', 'models/design/fields', 'views/form/fields-vi
 
 	var SectionView = View.extend({
 		autoRender: false,
-		className: 'section hide',
+		className: 'section hide row',
 		tagName: 'li',
 		template: template,
 		render: function() {

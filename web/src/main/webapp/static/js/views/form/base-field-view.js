@@ -4,7 +4,7 @@ define([ 'chaplin', 'views/base/view'],
 
 	var FieldView = View.extend({
 		autoRender: true,
-		className: 'control-group',
+		className: 'form-group col-lg-4',
 		tagName: 'div',
 		events: {
 		    'change': '_onValueChange',

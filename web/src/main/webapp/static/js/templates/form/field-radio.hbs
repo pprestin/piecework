@@ -4,7 +4,8 @@
 {{#if options}}
 {{#each options}}
 <label class="radio inline">
-    <input type="radio"
+    <input class="form-control"
+           type="radio"
            name="{{../name}}"
            value="{{value}}"
     {{#if ../required}}class="required"{{/if}}

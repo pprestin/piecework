@@ -9,6 +9,7 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 		className: 'main-toolbar narrow',
 	    template: template,
 	    events: {
+	        'click #activate-button': '_onActivateButton',
 	        'click #attachments-button': '_onAttachmentsButton',
 	        'click #attach-button': '_onAttachComment',
 	        'click #back-button': '_onBackButton',
@@ -21,6 +22,27 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        'attachmentCountChanged mediator': '_onAttachmentCountChanged',
 	        'backToSearch mediator': '_onBackToSearch',
 	    },
+	    _onActivateButton: function() {
+            var toolbar = this;
+            var task = this.model.get("task");
+            if (task != null) {
+                if (task.active)
+                    return;
+
+                var url = this.model.get("activation") + ".json";
+                var data = $('#activate-reason').serialize();
+                $.post( url, data,
+                    function(data, textStatus, jqXHR) {
+                        $('#activate-dialog').modal('hide');
+                        Chaplin.mediator.publish("search", {processStatus: "open"});
+                    }
+                ).fail(function(jqXHR, textStatus, errorThrown) {
+                     var explanation = $.parseJSON(jqXHR.responseText);
+                     var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                     toolbar.subview('notificationView', new NotificationView({container: '#activate-dialog > .modal-body', model: notification}));
+                 });
+            }
+        },
 	    _onAddedToDOM: function() {
 	        $('title').text(window.piecework.context.applicationTitle);
 	    },
@@ -57,13 +79,22 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
             this._uploadAttachments(data);
 	    },
 	    _onDeleteButton: function() {
-            var data = null;
-            var url = this.model.get("cancellation") + ".json";
-            $.post(url, data,
-                function(data, textStatus, jqXHR) {
-                    Chaplin.mediator.publish('backToSearch');
-                }
-            ).fail(function() {  });
+            var toolbar = this;
+            var data = $('#delete-reason').serialize();
+            var task = this.model.get('task');
+            if (task != null) {
+                var url = this.model.get("cancellation") + ".json";
+                $.post(url, data,
+                    function(data, textStatus, jqXHR) {
+                        $('#delete-dialog').modal('hide');
+                        Chaplin.mediator.publish('backToSearch');
+                    }
+                ).fail(function(jqXHR, textStatus, errorThrown) {
+                      var explanation = $.parseJSON(jqXHR.responseText);
+                      var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                      toolbar.subview('notificationView', new NotificationView({container: '#delete-dialog > .modal-body', model: notification}));
+                });
+            }
 	    },
 	    _onBackButton: function() {
 	        var root = this.model.get("root");
@@ -73,18 +104,24 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        $('.attach-file').click();
 	    },
 	    _onSuspendButton: function() {
-	        var data = null;
+            var toolbar = this;
+            var data = $('#suspend-reason').serialize();
             var task = this.model.get("task");
             if (task != null) {
                 var url = this.model.get("suspension") + ".json";
                 if (!task.active) {
                     url = this.model.get("activation") + ".json";
                 }
-                $.post(url, data,
+                $.post( url, data,
                     function(data, textStatus, jqXHR) {
+                        $('#suspend-dialog').modal('hide');
                         Chaplin.mediator.publish('backToSearch');
                     }
-                ).fail(function() {  });
+                ).fail(function(jqXHR, textStatus, errorThrown) {
+                     var explanation = $.parseJSON(jqXHR.responseText);
+                     var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
+                     toolbar.subview('notificationView', new NotificationView({container: '#suspend-dialog > .modal-body', model: notification}));
+                 });
             }
 	    },
 	    _onBackToSearch: function() {
