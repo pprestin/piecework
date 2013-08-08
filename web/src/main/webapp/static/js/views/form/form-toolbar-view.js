@@ -125,7 +125,7 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
             }
 	    },
 	    _onBackToSearch: function() {
-            var root = this.model.get("root");
+            var root = this.model.get("root") + ".html";
             Chaplin.mediator.publish("!router:route", root);
 	    },
 	    _onDeleteSuccess: function() {

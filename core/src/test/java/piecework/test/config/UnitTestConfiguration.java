@@ -268,6 +268,11 @@ public class UnitTestConfiguration {
         public List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds) {
             return null;
         }
+
+        @Override
+        public List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdInAndKeyword(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds, String keyword) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
     }
 	
 	public class InteractionRepositoryStub extends MongoRepositoryStub<Interaction> implements InteractionRepository {
