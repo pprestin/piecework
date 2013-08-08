@@ -1,25 +1,31 @@
-@media (max-width: 979px) {
+@media (max-width: 768px) {
     .main-footer {
         display: none;
     }
     .hide-narrow {
         display: none;
     }
-}
-/*@media (min-width:  980px) {
-    .container-fluid {
-        padding-right: 50px;
-        padding-left: 50px;
-    }
     .main-content {
-        padding-top: 100px;
+        padding-top: 80px;
+        padding-bottom: 0px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .selected-buttons {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+}
+@media (min-width:  769px) {
+    .main-content {
+        padding-top: 110px;
         padding-bottom: 100px;
     }
-    ul.toolbar-items,
-    ul.toolbar-items-buttons {
 
+    .selected-buttons {
+        float: right!important;
     }
-}*/
+}
 
 body {
     font-size: 16px;
@@ -164,8 +170,7 @@ div.screen-footer {
 }
 
 .main-content {
-    padding-top: 100px;
-    padding-bottom: 100px;
+
 }
 
 .main-footer {
@@ -176,7 +181,6 @@ div.screen-footer {
 .main-navbar {
     background-color: whitesmoke;
     border-bottom: 1px solid #CCCCCC;
-    height: 100px;
     padding-left: 0px;
     padding-right: 0px;
 }
@@ -222,6 +226,11 @@ div.screen-footer {
 
 .main-toolbar ul.toolbar-items-buttons li {
     line-height: 16px;
+}
+
+.modal-body {
+    max-height: 500px;
+    overflow-y: auto;
 }
 
 .menu-item-check {
