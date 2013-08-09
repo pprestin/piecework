@@ -1,25 +1,36 @@
-<div class="container">
+<div class="container visible-sm">
+    <div class="row col-lg-2 col-lg-offset-4 col-sm-2 col-sm-offset-4">
+        <button class="btn btn-default navbar-btn" type="button" style="margin-bottom: 8px" data-toggle="collapse" data-target=".pw-navbar-collapse"><i class="icon-reorder"></i></button>
+    </div>
+</div>
+<div class="container nav-collapse collapse navbar-responsive-collapse pw-navbar-collapse">
     <div class="row">
-        <form class="nav-collapse collapse navbar-responsive-collapse pw-navbar-collapse navbar-form form-inline pull-left" style="padding-right: 5px">
-            <input style="width:200px" title="Search by keyword" role="" class="form-control searchField" name="keyword" placeholder="Search" id="keyword" type="text">
-            <button class="btn btn-default" role="button" id="instanceSearchButton" type="submit" data-loading-text="&nbsp;&nbsp;<i class='icon-spinner icon-spin icon-large'></i>&nbsp;&nbsp;">&nbsp;&nbsp;<i class="icon-search"></i>&nbsp;&nbsp;</button>
-            <span class="dropdown">
-                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="icon-play-circle"></i> <b class="caret"></b></button>
-                <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">
-                    {{#each definitions}}
-                    <li class="presentation"><a role="menuitem" href="{{link}}">{{task.processDefinitionLabel}}</a></li>
-                    {{/each}}
-                </ul>
-            </span>
-        </form>
-        <div class="selected-buttons">
-            <button class="btn btn-default navbar-btn incomplete-selected-result-btn hide" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
-            <button class="btn btn-default navbar-btn selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-archive icon-white"></i></button>
-            <button class="btn btn-default navbar-btn hide" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
-            <button class="btn btn-default navbar-btn hide" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
-            <button class="btn btn-danger navbar-btn incomplete-selected-result-btn hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
+        <div class="col-lg-4 col-sm-4">
+            <form class="navbar-form form-inline" style="padding-right: 5px;width:350px">
+                <input style="width:200px" title="Search by keyword" role="" class="form-control searchField" name="keyword" placeholder="Search" id="keyword" type="text">
+                <button class="btn btn-default" role="button" id="instanceSearchButton" type="submit" data-loading-text="&nbsp;&nbsp;<i class='icon-spinner icon-spin icon-large'></i>&nbsp;&nbsp;">&nbsp;&nbsp;<i class="icon-search"></i>&nbsp;&nbsp;</button>
+                <span class="dropdown">
+                    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="icon-play-circle"></i> <b class="caret"></b></button>
+                    <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">
+                        {{#each definitions}}
+                        <li class="presentation"><a role="menuitem" href="{{link}}">{{task.processDefinitionLabel}}</a></li>
+                        {{/each}}
+                    </ul>
+                </span>
+            </form>
         </div>
-        <ul class="nav-collapse collapse navbar-responsive-collapse pw-navbar-collapse nav navbar-nav toolbar-items-buttons">
+        <div class="col-lg-4 col-sm-4 col-lg-offset-4 col-sm-offset-4">
+            <div class="responsive-pull-right">
+                <button class="btn btn-default navbar-btn incomplete-selected-result-btn hide" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
+                <button class="btn btn-default navbar-btn selected-result-btn hide" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="icon-archive icon-white"></i></button>
+                <button class="btn btn-default navbar-btn hide" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
+                <button class="btn btn-default navbar-btn hide" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
+                <button class="btn btn-danger navbar-btn incomplete-selected-result-btn hide" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <ul class="nav navbar-nav toolbar-items-buttons">
             <li class="status-filter-container">
             </li>
             <li class="process-filter-container">

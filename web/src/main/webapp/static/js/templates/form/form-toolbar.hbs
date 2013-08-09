@@ -1,5 +1,6 @@
 <div class="container">
     <div class="row">
+        <div class="col-lg-8">
         {{#if task}}
             {{#if task.active}}
                  <button class="btn btn-default navbar-btn" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
@@ -8,7 +9,8 @@
                  <button class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
             {{/if}}
         {{/if}}
-        <div class="selected-buttons">
+        </div>
+        <div class="col-lg-4">
             {{#if task.active}}
                 <a class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment"></i></a>
                 <button class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i class="icon-folder-open"></i>&nbsp;<span id="attachment-count">{{attachmentCount}}</span></button>

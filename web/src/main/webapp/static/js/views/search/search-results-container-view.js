@@ -5,6 +5,7 @@ define([ 'backbone', 'chaplin', 'models/base/collection', 'views/search/search-r
 
 	var SearchResultsContainerView = View.extend({
 		autoRender : true,
+		className: 'col-lg-12',
 		container: '.main-content',
 	    template: template,
 	    initialize: function(model, options) {
