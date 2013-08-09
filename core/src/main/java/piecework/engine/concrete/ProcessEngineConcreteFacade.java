@@ -139,7 +139,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
                         if (task != null) {
                             ProcessInstance instance = processInstanceRepository.findByProcessDefinitionKeyAndEngineProcessInstanceId(process.getProcessDefinitionKey(), task.getEngineProcessInstanceId());
                             if (instance == null)
-                                return null;
+                                continue;
 
                             return new Task.Builder(task, new PassthroughSanitizer())
                                     .processInstanceId(instance.getProcessInstanceId())
