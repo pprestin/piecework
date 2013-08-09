@@ -12,7 +12,6 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        'click #activate-button': '_onActivateButton',
 	        'click #attachments-button': '_onAttachmentsButton',
 	        'click #attach-button': '_onAttachComment',
-	        'click #back-button': '_onBackButton',
 	        'click #delete-button': '_onDeleteButton',
 	        'click #file-button': '_onFileButton',
 	        'click #suspend-button': '_onSuspendButton',

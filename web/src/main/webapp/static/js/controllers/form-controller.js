@@ -51,7 +51,7 @@ define([
         }
 
         var model = window.piecework.model;
-        window.piecework.model = null;
+
         if (model == null)
             model = {};
 
@@ -122,8 +122,8 @@ define([
             requestId = requestId.substring(0, requestId.length - 5);
 
         var model = window.piecework.model;
-        window.piecework.model = null;
-        if (model == null)
+
+        if (model == null || model.total != undefined)
             model = {};
 
         this.compose('formView', {
