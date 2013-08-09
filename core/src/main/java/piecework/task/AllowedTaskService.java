@@ -65,7 +65,14 @@ public class AllowedTaskService {
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
 
         try {
-            return facade.findTask(overseerCriteria(overseerProcesses, taskId), userCriteria(userProcesses, taskId));
+            TaskCriteria.Builder criteriaBuilder = new TaskCriteria.Builder().taskId(taskId);
+            if (overseerProcesses.contains(process)) {
+                criteriaBuilder.process(process);
+            } else if (userProcesses.contains(process)) {
+                criteriaBuilder.process(process).participantId(helper.getAuthenticatedSystemOrUserId());
+            }
+
+            return facade.findTask(criteriaBuilder.build());
         } catch (ProcessEngineException e) {
             LOG.error(e);
             throw new InternalServerError();
