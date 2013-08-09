@@ -74,12 +74,26 @@ public class SubmissionHandler {
     }
 
     public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest) throws InternalServerError {
-        Submission.Builder submissionBuilder = new Submission.Builder(rawSubmission, sanitizer)
+        String userId = helper.getAuthenticatedSystemOrUserId();
+        Submission.Builder submissionBuilder = new Submission.Builder(rawSubmission, sanitizer, true)
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
                 .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
-                .submitterId(helper.getAuthenticatedSystemOrUserId());
+                .submitterId(userId);
+
+        for (Map.Entry<String, List<Value>> entry : rawSubmission.getData().entrySet()) {
+            String name = sanitizer.sanitize(entry.getKey());
+            List<? extends Value> values = entry.getValue();
+
+            for (Value value : values) {
+                String actualValue = value.getValue();
+                if (!handleStorage(template, submissionBuilder, name, actualValue, userId)) {
+                    LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
+                }
+            }
+        }
+
 
         return submissionRepository.save(submissionBuilder.build());
     }

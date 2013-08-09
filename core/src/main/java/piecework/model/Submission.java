@@ -175,7 +175,7 @@ public class Submission {
             this.data = new ManyMap<String, Value>();
         }
 
-        public Builder(Submission submission, Sanitizer sanitizer) {
+        public Builder(Submission submission, Sanitizer sanitizer, boolean ignoreData) {
             this.submissionId = sanitizer.sanitize(submission.submissionId);
             this.processDefinitionKey = sanitizer.sanitize(submission.processDefinitionKey);
             this.processInstanceLabel = sanitizer.sanitize(submission.processInstanceLabel);
@@ -186,7 +186,7 @@ public class Submission {
             this.submissionId = sanitizer.sanitize(submissionId);
             this.action = submission.getAction();
 
-            if (submission.data != null && !submission.data.isEmpty()) {
+            if (!ignoreData && submission.data != null && !submission.data.isEmpty()) {
                 this.data = new ManyMap<String, Value>(submission.data.size());
 
                 for (Map.Entry<String, List<Value>> entry : submission.data.entrySet()) {
