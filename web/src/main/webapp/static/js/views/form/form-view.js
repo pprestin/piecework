@@ -64,6 +64,7 @@ define([ 'chaplin',
             if (screen == undefined)
                 return this;
 
+            var readonly = screen.readonly;
             var pageLink = this.model.get("link");
             var groupings = screen.groupings;
             var groupingIndex = this.model.get("groupingIndex");
@@ -87,6 +88,7 @@ define([ 'chaplin',
                     var sectionId = section.sectionId;
                     var isSelected = sectionMap[sectionId];
                     section.selected = isSelected != undefined ? isSelected : false;
+                    section.readonly = readonly;
                 }
             }
 
@@ -284,6 +286,7 @@ define([ 'chaplin',
             if (screen == undefined)
                 return this;
 
+            var readonly = screen.readonly;
             var task = this.model.get("task");
             var pageLink = this.model.get("link");
             var groupings = screen.groupings;
@@ -313,6 +316,9 @@ define([ 'chaplin',
                     return;
                 }
             }
+
+            if (readonly)
+                return;
 
             var buttonsView;
             if (grouping.buttons != undefined && grouping.buttons.length > 0) {

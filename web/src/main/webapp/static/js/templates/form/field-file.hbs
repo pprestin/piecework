@@ -1,6 +1,7 @@
 {{#if label}}
 <label>{{label}}</label>
 {{/if}}
+{{#if editable}}
 <input class="form-control"
        type="{{type}}"
        name="{{name}}"
@@ -13,6 +14,9 @@
 {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
 {{#if pattern}}pattern="{{pattern}}"{{/if}}
 {{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}} />
+{{else}}
+<p class="text-muted">No files</p>
+{{/if}}
 {{#if messages}}
 {{#each messages}}
 <span class="help-inline generated">{{text}}</span>

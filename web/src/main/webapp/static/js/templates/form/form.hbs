@@ -11,9 +11,11 @@
     <div class="notifications"></div>
     <div class="screen" id="{{screenId}}">
         <div class="screen-header"></div>
-        <div class="screen-content">
+        <fieldset {{#if readonly}}disabled{{/if}}>
+            <div class="screen-content">
 
-        </div>
+            </div>
+        </fieldset>
         <div class="screen-footer">
 
         </div>

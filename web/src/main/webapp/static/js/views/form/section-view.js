@@ -17,7 +17,14 @@ define([ 'models/base/collection', 'models/design/fields', 'views/form/fields-vi
 //            this.$el.toggle(isSelected);
             var view = this.subview('fieldsView');
             if (!view) {
-                var fields = new Fields(this.model.get("fields"));
+                var readonly = this.model.get("readonly");
+                var modelFields = this.model.get("fields");
+                if (readonly) {
+                    for (var i=0;i<modelFields.length;i++) {
+                        modelFields[i].editable = false;
+                    }
+                }
+                var fields = new Fields(modelFields);
                 view = new FieldsView({autoRender: false, collection: fields});
                 this.subview('fieldsView', view);
             }
