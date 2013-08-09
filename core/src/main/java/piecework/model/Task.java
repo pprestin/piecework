@@ -49,6 +49,9 @@ public class Task implements Serializable {
     @XmlAttribute
     private final String processInstanceId;
 
+    @XmlTransient
+    private final String engineProcessInstanceId;
+
     @XmlAttribute
     private final String processInstanceAlias;
 
@@ -123,6 +126,7 @@ public class Task implements Serializable {
         this.processInstanceLabel = builder.processInstanceLabel;
         this.processInstanceId = builder.processInstanceId;
         this.processInstanceAlias = builder.processInstanceAlias;
+        this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.assignee = builder.assignee;
         this.candidateAssignees = Collections.unmodifiableList(builder.candidateAssignees);
         this.startTime = builder.startTime;
@@ -174,6 +178,11 @@ public class Task implements Serializable {
 
     public String getProcessInstanceAlias() {
         return processInstanceAlias;
+    }
+
+    @JsonIgnore
+    public String getEngineProcessInstanceId() {
+        return engineProcessInstanceId;
     }
 
     public User getAssignee() {
@@ -230,6 +239,7 @@ public class Task implements Serializable {
         private String processDefinitionKey;
         private String processDefinitionLabel;
         private String processInstanceLabel;
+        private String engineProcessInstanceId;
         private String taskLabel;
         private String taskDescription;
         private String taskStatus;
@@ -259,6 +269,7 @@ public class Task implements Serializable {
             this.processInstanceLabel = sanitizer.sanitize(task.processInstanceLabel);
             this.processInstanceId = sanitizer.sanitize(task.processInstanceId);
             this.processInstanceAlias = sanitizer.sanitize(task.processInstanceAlias);
+            this.engineProcessInstanceId = sanitizer.sanitize(task.engineProcessInstanceId);
             this.assignee = task.assignee != null ? new User.Builder(task.assignee, sanitizer).build() : null;
             if (task.candidateAssignees != null && !task.candidateAssignees.isEmpty()) {
                 this.candidateAssignees = new ArrayList<User>(task.candidateAssignees.size());
@@ -327,6 +338,11 @@ public class Task implements Serializable {
 
         public Builder processInstanceId(String processInstanceId) {
             this.processInstanceId = processInstanceId;
+            return this;
+        }
+
+        public Builder engineProcessInstanceId(String engineProcessInstanceId) {
+            this.engineProcessInstanceId = engineProcessInstanceId;
             return this;
         }
 

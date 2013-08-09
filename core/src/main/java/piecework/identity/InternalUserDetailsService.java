@@ -57,6 +57,15 @@ public class InternalUserDetailsService implements UserDetailsService {
     private final CustomLdapUserDetailsMapper userDetailsMapper;
     private final String usernameAttribute;
 
+    public InternalUserDetailsService() {
+        this.delegate = null;
+        this.userDetailsMapper = null;
+        this.userSearch = null;
+        this.internalUserSearch = null;
+        this.authoritiesPopulator = null;
+        this.usernameAttribute = null;
+    }
+
     public InternalUserDetailsService(LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, String usernameAttribute) {
         this.delegate = new LdapUserDetailsService(userSearch, authoritiesPopulator);
         this.delegate.setUserDetailsMapper(userDetailsMapper);

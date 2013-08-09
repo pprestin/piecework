@@ -23,6 +23,11 @@ import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -38,10 +43,7 @@ import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.HtmlProvider;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -49,6 +51,7 @@ import java.util.Map;
 @Configuration
 @Profile({"dev","intg","eval","prod"})
 @ComponentScan(basePackages = "piecework")
+@EnableCaching(proxyTargetClass=true)
 public class ApplicationConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(ApplicationConfiguration.class);
@@ -150,6 +153,19 @@ public class ApplicationConfiguration {
         factory.setBus(sf.getBus());
         manager.registerBindingFactory(JAXRSBindingFactory.JAXRS_BINDING_ID, factory);
         return sf.create();
+    }
+
+    @Bean
+    public CacheManager cacheManager() {
+        SimpleCacheManager cacheManager = new SimpleCacheManager();
+        List<Cache> caches = new ArrayList<Cache>();
+        caches.add(new ConcurrentMapCache("userCache"));
+        caches.add(new ConcurrentMapCache("userAnyIdCache"));
+        caches.add(new ConcurrentMapCache("processDefinitionIds"));
+        caches.add(new ConcurrentMapCache("processDefinitionIdMap"));
+
+        cacheManager.setCaches(caches);
+        return cacheManager;
     }
 
 }

@@ -62,7 +62,6 @@ define([
 
         this.compose('resultsModel', Results, model);
         var resultsModel = this.compose('resultsModel');
-//        resultsModel.parse(model);
 
         var collection = resultsModel.get("list");
 

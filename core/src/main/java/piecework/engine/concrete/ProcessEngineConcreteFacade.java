@@ -15,22 +15,30 @@
  */
 package piecework.engine.concrete;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import com.google.common.collect.Sets;
+import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import piecework.Constants;
 import piecework.Registry;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
+import piecework.exception.NotFoundError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.process.ProcessInstanceService;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
+import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
@@ -38,8 +46,13 @@ import piecework.task.TaskResults;
 @Service
 public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
 
+    private static final Logger LOG = Logger.getLogger(ProcessEngineConcreteFacade.class);
+
 	@Autowired
     Registry registry;
+
+    @Autowired
+    ProcessInstanceRepository processInstanceRepository;
 
     @Override
     public String start(piecework.model.Process process, String alias, Map<String, ?> data) throws ProcessEngineException {
@@ -123,8 +136,17 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
                         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
                         Task task = proxy.findTask(criteria);
 
-                        if (task != null)
-                            return task;
+                        if (task != null) {
+                            ProcessInstance instance = processInstanceRepository.findByProcessDefinitionKeyAndEngineProcessInstanceId(process.getProcessDefinitionKey(), task.getEngineProcessInstanceId());
+                            if (instance == null)
+                                throw new ProcessEngineException(Constants.ExceptionCodes.instance_does_not_exist);
+
+                            return new Task.Builder(task, new PassthroughSanitizer())
+                                    .processInstanceId(instance.getProcessInstanceId())
+                                    .processInstanceAlias(instance.getAlias())
+                                    .processInstanceLabel(instance.getProcessInstanceLabel())
+                                    .build();
+                        }
                     }
                 }
             }
@@ -134,19 +156,31 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
 
     @Override
     public TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException {
+        String keyword = null;
         TaskResults.Builder builder = null;
+        Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
+        Set<String> engineProcessInstanceIds = new HashSet<String>();
+
         if (criterias != null && criterias.length > 0) {
             for (TaskCriteria criteria : criterias) {
+                if (StringUtils.isNotEmpty(criteria.getKeyword()))
+                    keyword = criteria.getKeyword();
+
                 if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
                     Set<String> engineSet = new HashSet<String>();
                     for (Process process : criteria.getProcesses()) {
+                        allowedProcessDefinitionKeys.add(process.getProcessDefinitionKey());
                         if (process.getEngine() == null || engineSet.contains(process.getEngine()))
                             continue;
                         engineSet.add(process.getEngine());
                         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+
                         TaskResults localResults = proxy.findTasks(criteria);
                         if (localResults == null)
                             continue;
+
+                        engineProcessInstanceIds.addAll(localResults.getEngineProcessInstanceIds());
+
                         if (builder == null)
                             builder = new TaskResults.Builder(localResults);
                         else {
@@ -159,7 +193,67 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
         } else {
             builder = new TaskResults.Builder();
         }
-        return builder.build();
+
+        long time = 0;
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
+
+        TaskResults.Builder resultsBuilder = new TaskResults.Builder();
+
+        List<Task> taskInstances = builder.build().getTasks();
+        List<Task> tasks;
+        int count = 0;
+
+        if (taskInstances != null && !taskInstances.isEmpty()) {
+            tasks = new ArrayList<Task>(taskInstances.size());
+
+            List<ProcessInstance> processInstances;
+
+            if (StringUtils.isNotEmpty(keyword))
+                processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdInAndKeyword(allowedProcessDefinitionKeys, engineProcessInstanceIds, keyword);
+            else
+                processInstances = processInstanceRepository.findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(allowedProcessDefinitionKeys, engineProcessInstanceIds);
+
+            if (processInstances != null && !processInstances.isEmpty()) {
+
+                MultiKeyMap processInstanceMap = new MultiKeyMap();
+                for (ProcessInstance processInstance : processInstances) {
+                    if (processInstance == null)
+                        continue;
+                    if (org.apache.cxf.common.util.StringUtils.isEmpty(processInstance.getProcessDefinitionKey()))
+                        continue;
+                    if (org.apache.cxf.common.util.StringUtils.isEmpty(processInstance.getEngineProcessInstanceId()))
+                        continue;
+
+                    processInstanceMap.put(processInstance.getProcessDefinitionKey(), processInstance.getEngineProcessInstanceId(), processInstance);
+                }
+                for (Task taskInstance : taskInstances) {
+                    ProcessInstance instance = ProcessInstance.class.cast(processInstanceMap.get(taskInstance.getProcessDefinitionKey(), taskInstance.getEngineProcessInstanceId()));
+                    if (instance == null)
+                        continue;
+
+                    tasks.add(new Task.Builder(taskInstance, new PassthroughSanitizer())
+                            .processInstanceId(instance.getProcessInstanceId())
+                            .processInstanceAlias(instance.getAlias())
+                            .processInstanceLabel(instance.getProcessInstanceLabel())
+                            .build());
+                    count++;
+                }
+            }
+        } else {
+            tasks = Collections.emptyList();
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Searching for process instances took " + (System.currentTimeMillis() - time) + " ms");
+        }
+
+        resultsBuilder.firstResult(1);
+        resultsBuilder.maxResults(count);
+        resultsBuilder.total(count);
+        resultsBuilder.tasks(tasks);
+
+        return resultsBuilder.build();
     }
 
     @Override

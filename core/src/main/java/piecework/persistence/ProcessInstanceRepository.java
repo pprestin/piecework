@@ -38,10 +38,10 @@ public interface ProcessInstanceRepository extends MongoRepository<ProcessInstan
     @Query(value="{ 'processInstanceId' : { $in: ?0 }, 'keywords' : { $regex: ?1 } }")
     List<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword);
 
-    @Query(value="{ 'processDefinitionKey' : { $in: ?0 }, 'engineProcessInstanceId' : { $in: ?1 } }")
+    @Query(value="{ 'processDefinitionKey' : { $in: ?0 }, 'engineProcessInstanceId' : { $in: ?1 } }", fields="{ 'processDefinitionKey': 1, 'processInstanceId':1, 'engineProcessInstanceId': 1, 'alias':1, 'processInstanceLabel':1 }")
     List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdIn(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds);
 
-    @Query(value="{ 'processDefinitionKey' : { $in: ?0 }, 'engineProcessInstanceId' : { $in: ?1 }, 'keywords' : { $regex: ?2 }  }")
+    @Query(value="{ 'processDefinitionKey' : { $in: ?0 }, 'engineProcessInstanceId' : { $in: ?1 }, 'keywords' : { $regex: ?2 }  }", fields="{ 'processDefinitionKey': 1, 'processInstanceId':1, 'engineProcessInstanceId': 1, 'alias':1, 'processInstanceLabel':1 }")
     List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdInAndKeyword(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds, String keyword);
 
 }

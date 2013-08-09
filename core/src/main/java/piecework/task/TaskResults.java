@@ -18,13 +18,16 @@ package piecework.task;
 import piecework.model.Task;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author James Renfro
  */
 public class TaskResults {
     private final List<Task> tasks;
+    private final Set<String> engineProcessInstanceIds;
     private final int firstResult;
     private final int maxResults;
     private final long total;
@@ -35,6 +38,7 @@ public class TaskResults {
 
     private TaskResults(Builder builder) {
         this.tasks = builder.tasks;
+        this.engineProcessInstanceIds = builder.engineProcessInstanceIds;
         this.firstResult = builder.firstResult;
         this.maxResults = builder.maxResults;
         this.total = builder.total;
@@ -42,6 +46,10 @@ public class TaskResults {
 
     public List<Task> getTasks() {
         return tasks;
+    }
+
+    public Set<String> getEngineProcessInstanceIds() {
+        return engineProcessInstanceIds;
     }
 
     public int getFirstResult() {
@@ -58,19 +66,25 @@ public class TaskResults {
 
     public final static class Builder {
         private List<Task> tasks;
+        private Set<String> engineProcessInstanceIds;
         private int firstResult;
         private int maxResults;
         private long total;
 
         public Builder() {
-
+            this.tasks = new ArrayList<Task>();
+            this.engineProcessInstanceIds = new HashSet<String>();
         }
 
         public Builder(TaskResults results) {
-            if (results.tasks != null) {
-                this.tasks = new ArrayList<Task>();
+            this.tasks = new ArrayList<Task>();
+            if (results.tasks != null)
                 this.tasks.addAll(results.tasks);
-            }
+
+            this.engineProcessInstanceIds = new HashSet<String>();
+            if (results.engineProcessInstanceIds != null)
+                this.engineProcessInstanceIds.addAll(results.engineProcessInstanceIds);
+
             this.total = results.total;
             this.firstResult = results.firstResult;
             this.maxResults = results.maxResults;
@@ -81,16 +95,17 @@ public class TaskResults {
         }
 
         public Builder task(Task task) {
-            if (this.tasks == null)
-                this.tasks = new ArrayList<Task>();
             this.tasks.add(task);
             return this;
         }
 
         public Builder tasks(List<Task> tasks) {
-            if (this.tasks == null)
-                this.tasks = new ArrayList<Task>();
             this.tasks.addAll(tasks);
+            return this;
+        }
+
+        public Builder engineProcessInstanceId(String engineProcessInstanceId) {
+            this.engineProcessInstanceIds.add(engineProcessInstanceId);
             return this;
         }
 
