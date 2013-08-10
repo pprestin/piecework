@@ -8,7 +8,7 @@ define([
 
 	var AttachmentsView = CollectionView.extend({
 		autoRender: true,
-		className: 'attachments span3',
+		className: 'attachments col-lg-3 col-sm-3',
         container: '.main-content',
         fallbackSelector: '.attachment-fallback',
 		tagName: 'ul',

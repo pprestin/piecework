@@ -11,7 +11,11 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/attachment.hbs' ],
 	        'click .delete-attachment-btn': '_onDeleteAttachment',
 	    },
 	    _onDeleteAttachment: function(event) {
-	        Backbone.sync('delete', this.model);
+	        Backbone.sync('delete', this.model, {
+	            success: function() {
+	                Chaplin.mediator.publish('refreshAttachments');
+	            }
+	        });
 	    }
 	});
 

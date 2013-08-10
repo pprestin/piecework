@@ -4,17 +4,13 @@ define([ 'models/base/collection', 'models/design/fields', 'views/form/fields-vi
 
 	var SectionView = View.extend({
 		autoRender: false,
-		className: 'section hide row',
+		className: 'section hide',
 		tagName: 'li',
 		template: template,
 		render: function() {
             View.__super__.render.apply(this);
             var sectionId = this.model.get("sectionId");
             this.$el.attr('id', sectionId);
-//            var isSelected = this.model.get("selected");
-//            if (isSelected == undefined)
-//                isSelected = false;
-//            this.$el.toggle(isSelected);
             var view = this.subview('fieldsView');
             if (!view) {
                 var readonly = this.model.get("readonly");

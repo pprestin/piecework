@@ -2,11 +2,13 @@
     <button type="button" class="close delete-attachment-btn"><i class="icon-trash"></i></button>
 </div>
 <div class="attachment-body">
-    {{#if inline}}
-        <p>{{description}}</p>
-    {{else}}
-        <p><a href="{{link}}"><i class="icon-file"></i>&nbsp;{{name}}</a></p>
-    {{/if}}
+    <div class="container">
+        {{#if inline}}
+            <p>{{description}}</p>
+        {{else}}
+            <p><a href="{{link}}">{{description}}</a></p>
+        {{/if}}
+    </div>
 </div>
 <div class="attachment-footer">
     <p class="muted">{{user.displayName}}<br/>{{date lastModified}}</p>

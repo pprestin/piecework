@@ -96,7 +96,6 @@ public class Form {
     @JsonIgnore
     private final List<Attachment> attachments;
 
-
     private Form() {
         this(new Form.Builder(), new ViewContext());
     }
@@ -272,6 +271,7 @@ public class Form {
             this.suspension = context.getApplicationUri(processDefinitionKey, processInstanceId, "suspension");
             if (attachments != null && !attachments.isEmpty()) {
                 PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                this.attachmentCount = attachments.size();
                 this.attachments = new ArrayList<Attachment>(attachments.size());
                 for (Attachment attachment : attachments) {
                     this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));

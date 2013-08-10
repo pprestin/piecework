@@ -9,6 +9,7 @@ define([ 'chaplin',
 
 	var FormView = View.extend({
 		autoRender : false,
+		className: 'col-lg-12 col-sm-12',
 		container: '.main-content',
 		id: 'main-form',
 		tagName: 'form',
@@ -20,6 +21,7 @@ define([ 'chaplin',
 	    listen: {
              'addedToDOM': '_onAddedToDOM',
              'groupingIndex:change mediator': '_onGroupingIndexChange',
+             'refreshAttachments mediator': '_onRefreshAttachments',
              'showAttachments mediator': '_onShowAttachments',
 	    },
 	    initialize: function(model, options) {
@@ -364,6 +366,13 @@ define([ 'chaplin',
 	    _onFailure: function(jqXHR, textStatus, errorThrown) {
             alert('Failure!');
 	    },
+	    _onRefreshAttachments: function() {
+	        var attachmentsView = this.subview('attachmentsView');
+	        if (attachmentsView != undefined) {
+	            var attachments = attachmentsView.collection;
+	            attachments.fetch();
+	        }
+	    },
 	    _onShowAttachments: function() {
 	        var attachmentsView = this.subview('attachmentsView');
 
@@ -375,13 +384,8 @@ define([ 'chaplin',
                 attachments.fetch();
             }
 
-            this.$el.toggleClass('span9');
-//            attachmentsView.$el.toggle(0);
-
-//            else {
-//                attachmentsView.collection.fetch();
-//                attachmentsView.$el.toggle(0);
-//            }
+            this.$el.toggleClass('col-lg-12 col-sm-12');
+            this.$el.toggleClass('col-lg-9 col-sm-9');
 	    },
 	    _onSyncAttachments: function(attachments) {
             Chaplin.mediator.publish('attachmentCountChanged', attachments.length);

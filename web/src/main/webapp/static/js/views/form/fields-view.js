@@ -18,7 +18,7 @@ define([
 		autoRender: false,
 		className: "fields",
 		container: ".section-content",
-		tagName: 'div',
+		tagName: 'fieldset',
 		initItemView: function(field) {
 			var fieldId = field.cid;
 			var type = field.get("type");

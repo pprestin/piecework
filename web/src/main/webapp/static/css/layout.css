@@ -23,13 +23,14 @@
     }
     .responsive-pull-right {
         float: right!important;
+        margin-top: -3px;
     }
     .selected-buttons {
         float: right!important;
     }
 }
 
-body {
+/*body {
     font-size: 16px;
 }
 h1 {
@@ -54,8 +55,7 @@ h2 {
 
 h3 {
     font-weight: 200;
-    margin-bottom: 5px;
-}
+}*/
 
 input, textarea, .uneditable-input {
     width: auto;
@@ -99,9 +99,11 @@ ul.sections {
 }
 
 ul.sections li.section {
-    border: 1px solid #CCCCCC;
-    margin: 10px 0px;
-    padding: 0px 20px 20px;
+    margin: 10px;
+    padding: 20px;
+    background-color: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
 }
 
 ul.screen-buttons {

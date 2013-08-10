@@ -20,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.ldap.SizeLimitExceededException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.Filter;
 import org.springframework.ldap.filter.LikeFilter;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -79,16 +81,24 @@ public class InternalUserDetailsService implements UserDetailsService {
     public List<InternalUserDetails> findUsersByDisplayName(String displayNameLike) {
         String ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
         String ldapDisplayNameAttribute = environment.getProperty("ldap.attribute.name.display");
+        String ldapInternalIdAttribute = environment.getProperty("ldap.attribute.id.external");
         SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
 
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         searchControls.setTimeLimit(10000);
         searchControls.setReturningAttributes(null);
+        searchControls.setCountLimit(20);
         template.setSearchControls(searchControls);
 
-        String filter = new LikeFilter(ldapDisplayNameAttribute, displayNameLike + "*").encode();
-        return template.search(ldapPersonSearchBase, filter, userDetailsMapper);
+        displayNameLike = displayNameLike.replaceAll(" ", "*");
+
+        String filter = new AndFilter().and(new LikeFilter(ldapDisplayNameAttribute, displayNameLike + "*")).and(new LikeFilter(ldapInternalIdAttribute, "*")).encode();
+        try {
+            return template.search(ldapPersonSearchBase, filter, userDetailsMapper);
+        } catch (SizeLimitExceededException e) {
+            return null;
+        }
     }
 
     @Override

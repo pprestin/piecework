@@ -1,6 +1,9 @@
 {{#if screen}}
 {{#with screen}}
-    <h1>{{title}}</h1>
+    {{#if readonly}}
+        <div class="alert">This form cannot be modified - it may be assigned to another person or the task it depends on may not be active</div>
+    {{/if}}
+    <h2>{{title}}</h2>
     {{#breadcrumb groupings}}{{#url "step"}}{{/url}}{{/breadcrumb}}
     <!--{{#each groupings}}-->
         <!--<div class="grouping" id="{{groupingId}}">-->
@@ -11,11 +14,9 @@
     <div class="notifications"></div>
     <div class="screen" id="{{screenId}}">
         <div class="screen-header"></div>
-        <fieldset {{#if readonly}}disabled{{/if}}>
-            <div class="screen-content">
+        <div class="screen-content">
 
-            </div>
-        </fieldset>
+        </div>
         <div class="screen-footer">
 
         </div>
