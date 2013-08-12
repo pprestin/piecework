@@ -271,13 +271,13 @@ define([ 'chaplin',
                     var selector = ':input[name="' + item.propertyName + '"]';
                     var $input = $(selector);
                     var $element = $input;
-
-                    $input.closest('.control-group').addClass(item.type);
+                    var $formGroup = $input.closest('.form-group');
+                    $formGroup.addClass('has-' + item.type);
 
                     if ($input.is(':checkbox') || $input.is(':radio')) {
-                        $element = $input.closest('.control-group').find('label');
+                        $element = $formGroup.find('label');
                     }
-                    $element.after('<span class="help-inline generated">' + item.message + '</span>')
+                    $element.after('<span class="help-block generated">' + item.message + '</span>')
                 }
             }
 	    },
