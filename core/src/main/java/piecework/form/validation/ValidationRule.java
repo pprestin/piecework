@@ -176,6 +176,9 @@ public class ValidationRule {
         boolean hasAtLeastOneValue = false;
         List<? extends Value> values = safeValues(name, submissionData);
         for (Value value : values) {
+            if (value == null)
+                continue;
+
             if (value instanceof File) {
                 File file = File.class.cast(value);
                 if (StringUtils.isNotEmpty(file.getName()))
