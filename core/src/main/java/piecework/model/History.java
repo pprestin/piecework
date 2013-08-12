@@ -148,13 +148,8 @@ public class History {
             return this;
         }
 
-        public Builder operation(Operation operation, User user) {
-            this.events.add(new Event.Builder().type(EventType.OPERATION).operation(operation).date(operation.getDate()).user(user).build());
-            return this;
-        }
-
-        public Builder task(Task task) {
-            this.events.add(new Event.Builder().type(EventType.TASK).task(task).date(task.getEndTime()).user(task.getAssignee()).build());
+        public Builder event(Event event) {
+            this.events.add(event);
             return this;
         }
 

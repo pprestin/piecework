@@ -246,7 +246,6 @@ public class FormFactory {
                     .processDefinitionKey(processDefinitionKey)
                     .taskSubresources(processDefinitionKey, task, taskContext);
 
-
             builder.screen(screen(builder, screen, data, results));
 
             if (processInstanceId != null)
@@ -284,7 +283,7 @@ public class FormFactory {
 
         private Screen screen(Form.Builder formBuilder, Screen screen, ManyMap<String, Value> data, ManyMap<String, Message> results) {
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
-            Map<String, Section> sectionMap = process.getSectionMap();
+            Map<String, Section> sectionMap = new HashMap<String, Section>(process.getSectionMap());
             List<Grouping> groupings = screen.getGroupings();
 
             for (Grouping grouping : groupings) {
@@ -295,7 +294,7 @@ public class FormFactory {
                     continue;
 
                 for (String sectionId : sectionsIds) {
-                    Section section = sectionMap.get(sectionId);
+                    Section section = sectionMap.remove(sectionId);
                     if (section == null)
                         continue;
 

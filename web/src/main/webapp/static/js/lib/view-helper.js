@@ -32,8 +32,8 @@ define([
             else
                 out += '<li><a href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a>';
 
-            if (i<l-1)
-                out += ' <span class="divider">»</span></li>';
+//            if (i<l-1)
+//                out += ' <span class="divider">»</span></li>';
         }
     }
 

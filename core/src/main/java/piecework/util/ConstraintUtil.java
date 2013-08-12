@@ -45,6 +45,9 @@ public class ConstraintUtil {
     }
 
     public static boolean evaluate(Map<String, Field> fieldMap, ManyMap<String, Value> submissionData, Constraint constraint) {
+        if (constraint == null)
+            return true;
+
         String constraintName = constraint.getName();
         String constraintValue = constraint.getValue();
         Pattern pattern = Pattern.compile(constraintValue);

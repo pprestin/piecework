@@ -12,6 +12,7 @@ public enum FieldTag {
     CHECKBOX(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "checkbox"))),
     EMAIL(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "email"))),
     FILE(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "file"))),
+    HTML(new FieldTagDefinition("div")),
     NUMBER(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "number"))),
     RADIO(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "radio"))),
     SELECT_MULTIPLE(new FieldTagDefinition("select", new FieldAttributeDefinition("multiple"))),

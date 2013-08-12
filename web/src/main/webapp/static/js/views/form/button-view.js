@@ -8,7 +8,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/form/button.hbs' ],
 	    template: template,
 	    render: function(options) {
             View.__super__.render.apply(this, options);
-            if (this.model.get("type") == 'submit')
+            if (this.model.get("type") == 'submit' || this.model.get("alt") == 'Next')
                 this.$el.find(".btn").addClass('btn-primary');
 
             return this;

@@ -16,6 +16,7 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ComparisonChain;
 import piecework.enumeration.OperationType;
 
 import javax.xml.bind.annotation.*;
@@ -28,7 +29,11 @@ import java.util.Date;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Operation.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Operation {
+public class Operation implements Comparable<Operation> {
+
+    @XmlID
+    @XmlAttribute
+    private final String id;
 
     @XmlElement
     private final OperationType type;
@@ -43,14 +48,19 @@ public class Operation {
     private final Date date;
 
     public Operation() {
-        this(null, null, null, null);
+        this(null, null, null, null, null);
     }
 
-    public Operation(OperationType type, String reason, Date date, String userId) {
+    public Operation(String id, OperationType type, String reason, Date date, String userId) {
+        this.id = id;
         this.type = type;
         this.reason = reason;
         this.date = date;
         this.userId = userId;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getReason() {
@@ -67,6 +77,15 @@ public class Operation {
 
     public Date getDate() {
         return date;
+    }
+
+    @Override
+    public int compareTo(Operation other) {
+        return ComparisonChain.start()
+                .compare(date, other.date)
+                .compare(type, other.type)
+                .compare(id, other.id)
+                .result();
     }
 
     public static class Constants {

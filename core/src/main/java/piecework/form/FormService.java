@@ -337,7 +337,7 @@ public class FormService {
         if (task != null && task.getProcessInstanceId() != null)
             instance = processInstanceService.read(process, task.getProcessInstanceId());
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen(), validationId);
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
         processInstanceService.validate(process, instance, task, template, submission, true);

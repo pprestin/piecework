@@ -3,15 +3,16 @@
 {{/if}}
 {{#if options}}
 {{#each options}}
-<label class="radio inline">
-    <input class="form-control"
-           type="radio"
-           name="{{../name}}"
-           value="{{value}}"
-    {{#if ../required}}class="required"{{/if}}
-    {{#if selected}}checked{{/if}}
-    /> {{label}}
-</label>
+<div class="radio">
+    <label>
+        <input type="radio"
+               name="{{../name}}"
+               value="{{value}}"
+        {{#if ../required}}class="required"{{/if}}
+        {{#if selected}}checked{{/if}}
+        /> {{label}}
+    </label>
+</div>
 {{/each}}
 {{/if}}
 {{#if messages}}

@@ -421,8 +421,8 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
-        public Builder operation(OperationType type, String reason, Date date, String userId) {
-            this.operations.add(new Operation(type, reason, date, userId));
+        public Builder operation(String id, OperationType type, String reason, Date date, String userId) {
+            this.operations.add(new Operation(id, type, reason, date, userId));
             return this;
         }
 

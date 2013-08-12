@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.collect.ComparisonChain;
 import org.springframework.data.annotation.Id;
 
 import org.springframework.security.core.userdetails.UserDetails;

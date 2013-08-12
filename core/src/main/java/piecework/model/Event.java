@@ -16,15 +16,14 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ComparisonChain;
+import org.apache.commons.lang.StringUtils;
 import piecework.common.ViewContext;
 import piecework.enumeration.EventType;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -34,6 +33,10 @@ import java.util.List;
 @XmlType(name = Event.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Event implements Serializable, Comparable<Event> {
+
+    @XmlID
+    @XmlAttribute
+    private final String id;
 
     @XmlElement
     private final EventType type;
@@ -58,6 +61,7 @@ public class Event implements Serializable, Comparable<Event> {
     }
 
     private Event(Builder builder) {
+        this.id = StringUtils.isNotEmpty(builder.id) ? builder.id : UUID.randomUUID().toString();
         this.type = builder.type;
         this.description = builder.description;
         this.operation = builder.operation;
@@ -90,18 +94,35 @@ public class Event implements Serializable, Comparable<Event> {
         return user;
     }
 
+    public boolean equals(Object other) {
+        if (other instanceof Event) {
+            Event otherEvent = Event.class.cast(other);
+            return id.equals(otherEvent.id);
+        }
+        return false;
+    }
+
+    public int hashCode() {
+        return id.hashCode();
+    }
+
     @Override
     public int compareTo(Event other) {
-        if (other != null && date != null) {
-            if (other.date == null)
-                return 1;
-            return date.compareTo(other.date);
-        }
-        return 0;
+        if (date == null)
+            return 1;
+        if (other.date == null)
+            return -1;
+
+        int result = date.compareTo(other.date);
+        if (result == 0)
+            return id.compareTo(other.id);
+
+        return result;
     }
 
     public final static class Builder {
 
+        private String id;
         private EventType type;
         private String description;
         private Operation operation;
@@ -115,6 +136,11 @@ public class Event implements Serializable, Comparable<Event> {
 
         public Event build() {
             return new Event(this);
+        }
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
         }
 
         public Builder type(EventType type) {

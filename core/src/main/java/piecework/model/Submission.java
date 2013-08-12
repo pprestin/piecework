@@ -184,6 +184,7 @@ public class Submission {
             this.taskId = sanitizer.sanitize(submission.taskId);
             this.submissionDate = submission.submissionDate;
             this.submissionId = sanitizer.sanitize(submissionId);
+            this.submitterId = sanitizer.sanitize(submission.submitterId);
             this.action = submission.getAction();
 
             if (!ignoreData && submission.data != null && !submission.data.isEmpty()) {

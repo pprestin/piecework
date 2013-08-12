@@ -241,7 +241,7 @@ public class Screen implements Serializable {
                 this.constraints = new ArrayList<Constraint>();
             }
 
-            if (screen.sections != null && !screen.sections.isEmpty()) {
+            if (includeSections && screen.sections != null && !screen.sections.isEmpty()) {
                 this.sections = new ArrayList<Section>(screen.sections.size());
                 for (Section section : screen.sections) {
                     this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());

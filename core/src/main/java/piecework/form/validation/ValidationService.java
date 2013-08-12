@@ -94,7 +94,7 @@ public class ValidationService {
                         if (options != null) {
                             for (Option option : options) {
                                 if (StringUtils.isNotEmpty(option.getName()) && submissionData.containsKey(option.getName()))
-                                    fieldName = option.getValue();
+                                    fieldName = option.getName();
                             }
                         }
                     }

@@ -31,6 +31,7 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.EventType;
 import piecework.enumeration.OperationType;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetailsService;
@@ -223,7 +224,7 @@ public class ProcessInstanceService {
             if (processStatus != null)
                 update.set("processStatus", processStatus);
 
-            update.push("operations", new Operation(operationType, argument, new Date(), userId));
+            update.push("operations", new Operation(UUID.randomUUID().toString(), operationType, argument, new Date(), userId));
 
             WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
                     update,
@@ -399,17 +400,28 @@ public class ProcessInstanceService {
             .endTime(instance.getEndTime())
             .initiator(initiator);
 
+        int i = 1;
         if (operations != null) {
             for (Operation operation : operations) {
+                String id = "operation-" + i;
                 String userId = operation.getUserId();
                 User user = userDetailsService.getUser(userId);
-                history.operation(operation, user);
+                if (operation.getType() == OperationType.ASSIGNMENT) {
+                    User assignee = userDetailsService.getUser(operation.getReason());
+                    String assigneeName = assignee != null ? assignee.getDisplayName() + " (" + assignee.getVisibleId() + ") " : operation.getReason();
+                    operation = new Operation(operation.getId(), operation.getType(), assigneeName, operation.getDate(), operation.getUserId());
+                }
+                history.event(new Event.Builder().id(id).type(EventType.OPERATION).operation(operation).date(operation.getDate()).user(user).build());
+                i++;
             }
         }
 
         if (tasks != null) {
             for (Task task : tasks) {
-                history.task(task);
+                String id = "task-" + i;
+                Date date = task.getStartTime();
+                history.event(new Event.Builder().id(id).type(EventType.TASK).task(task).date(date).user(task.getAssignee()).build());
+                i++;
             }
         }
 
@@ -685,6 +697,13 @@ public class ProcessInstanceService {
             InternalUserDetails user = helper.getAuthenticatedPrincipal();
             String initiatorId = user != null ? user.getInternalId() : null;
             String initiationStatus = process.getInitiationStatus();
+
+            if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(submission.getSubmitterId())) {
+                User submitter = userDetailsService.getUserByAnyId(submission.getSubmitterId());
+                if (submitter != null)
+                    initiatorId = submitter.getUserId();
+            }
+
             builder = new ProcessInstance.Builder()
                     .processDefinitionKey(process.getProcessDefinitionKey())
                     .processDefinitionLabel(process.getProcessDefinitionLabel())
