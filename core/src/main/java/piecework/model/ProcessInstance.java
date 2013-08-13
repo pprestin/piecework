@@ -23,8 +23,6 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -32,8 +30,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.enumeration.OperationType;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
-import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 /**
@@ -113,8 +111,8 @@ public class ProcessInstance implements Serializable {
     @DBRef
     private final List<Submission> submissions;
 
-    @XmlTransient
-    @JsonIgnore
+    @XmlElementWrapper(name="attachments")
+    @XmlElementRef
     @DBRef
     private final List<Attachment> attachments;
 
@@ -123,10 +121,10 @@ public class ProcessInstance implements Serializable {
     private final boolean isDeleted;
 
     private ProcessInstance() {
-        this(new ProcessInstance.Builder(), new ViewContext());
+        this(new ProcessInstance.Builder(), new ViewContext(), false);
     }
 
-    private ProcessInstance(ProcessInstance.Builder builder, ViewContext context) {
+    private ProcessInstance(Builder builder, ViewContext context, boolean includeSubresources) {
         this.processInstanceId = builder.processInstanceId;
         this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.alias = builder.alias;
@@ -137,14 +135,49 @@ public class ProcessInstance implements Serializable {
         this.applicationStatus = builder.applicationStatus;
         this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.previousApplicationStatus = builder.previousApplicationStatus;
-        this.data = builder.data;
+
         this.keywords = builder.keywords;
-        List<Attachment> attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new ArrayList<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
-        if (builder.attachments != null) {
-            for (Attachment attachment : builder.attachments) {
-                attachments.add(new Attachment.Builder(attachment).build(context));
+
+        List<Attachment> attachments = null;
+        if (includeSubresources) {
+            attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new ArrayList<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
+            if (builder.attachments != null) {
+                for (Attachment attachment : builder.attachments) {
+                    attachments.add(new Attachment.Builder(attachment).build(context));
+                }
             }
+            if (builder.data != null && !builder.data.isEmpty()) {
+                ManyMap<String, Value> data = new ManyMap<String, Value>();
+                for (Map.Entry<String, List<Value>> entry : builder.data.entrySet()) {
+
+                    List<Value> values = entry.getValue();
+                    if (values == null)
+                        continue;
+
+                    String fieldName = entry.getKey();
+                    for (Value value : values) {
+                        if (value instanceof File) {
+                            File file = File.class.cast(value);
+
+                            data.putOne(fieldName, new File.Builder(file)
+                                    .processDefinitionKey(processDefinitionKey)
+                                    .processInstanceId(processInstanceId)
+                                    .fieldName(fieldName)
+                                    .build(context));
+                        } else {
+                            data.putOne(fieldName, value);
+                        }
+                    }
+                }
+                this.data = Collections.unmodifiableMap(data);
+            } else {
+                this.data = Collections.emptyMap();
+            }
+        } else {
+            attachments = builder.attachments;
+            this.data = builder.data;
         }
+
         this.attachments = Collections.unmodifiableList(attachments);
         this.operations = Collections.unmodifiableList(builder.operations);
         this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
@@ -341,11 +374,15 @@ public class ProcessInstance implements Serializable {
         }
 
         public ProcessInstance build() {
-            return new ProcessInstance(this, null);
+            return new ProcessInstance(this, null, false);
         }
 
         public ProcessInstance build(ViewContext context) {
-            return new ProcessInstance(this, context);
+            return new ProcessInstance(this, context, false);
+        }
+
+        public ProcessInstance buildWithSubresources(ViewContext context) {
+            return new ProcessInstance(this, context, true);
         }
 
         public Builder processInstanceId(String processInstanceId) {

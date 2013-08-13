@@ -104,6 +104,13 @@ public class File extends Value {
             super();
         }
 
+        public Builder(File file) {
+            this.id = file.id;
+            this.location = file.location;
+            this.contentType = file.contentType;
+            this.name = file.name;
+        }
+
         public Builder(File file, Sanitizer sanitizer) {
             this.id = sanitizer.sanitize(file.id);
             this.location = sanitizer.sanitize(file.location);
