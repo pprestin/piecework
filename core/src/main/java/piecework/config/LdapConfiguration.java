@@ -63,6 +63,7 @@ import org.springframework.util.StringUtils;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.identity.InternalUserDetailsService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
+import piecework.ldap.LdapSettings;
 import piecework.security.CustomAuthenticationSource;
 import piecework.util.KeyManagerCabinet;
 
@@ -86,6 +87,11 @@ public class LdapConfiguration {
     @Autowired
     CustomLdapUserDetailsMapper userDetailsMapper;
 
+    @Bean
+    public LdapSettings ldapSettings(Environment environment) {
+        return new LdapSettings(environment);
+    }
+
 	@Bean
 	public InternalUserDetailsService userDetailsService(Environment environment) throws Exception {
         String ldapExternalIdAttribute = environment.getProperty("ldap.attribute.id.external");
@@ -100,14 +106,12 @@ public class LdapConfiguration {
 
 	@Bean
 	public LdapContextSource groupLdapContextSource(Environment environment) throws Exception {
-        String ldapGroupUrl = environment.getProperty("ldap.group.url");
-        String ldapGroupBase = environment.getProperty("ldap.group.base");
-        String ldapPersonDn = environment.getProperty("ldap.person.dn");
+        LdapSettings ldapSettings = ldapSettings(environment);
 
 		LdapContextSource context = new LdapContextSource();
-		context.setUrl(ldapGroupUrl);
-		context.setBase(ldapGroupBase);
-        context.setUserDn(ldapPersonDn);
+		context.setUrl(ldapSettings.getLdapGroupUrl());
+		context.setBase(ldapSettings.getLdapGroupBase());
+        context.setUserDn(ldapSettings.getLdapPersonDn());
 		context.setAuthenticationSource(authenticationSource(environment));
 		context.setAuthenticationStrategy(authenticationStrategy(environment));
 
@@ -116,14 +120,12 @@ public class LdapConfiguration {
 	
 	@Bean(name="personLdapContextSource")
 	public LdapContextSource personLdapContextSource(Environment environment) throws Exception {
-        String ldapPersonUrl = environment.getProperty("ldap.person.url");
-        String ldapPersonBase = environment.getProperty("ldap.person.base");
-        String ldapPersonDn = environment.getProperty("ldap.person.dn");
+        LdapSettings ldapSettings = ldapSettings(environment);
 
 		LdapContextSource context = new LdapContextSource();
-		context.setUrl(ldapPersonUrl);
-		context.setBase(ldapPersonBase);
-		context.setUserDn(ldapPersonDn);
+		context.setUrl(ldapSettings.getLdapPersonUrl());
+		context.setBase(ldapSettings.getLdapPersonBase());
+		context.setUserDn(ldapSettings.getLdapPersonDn());
 		context.setAuthenticationSource(authenticationSource(environment));
 		context.setAuthenticationStrategy(authenticationStrategy(environment));
 
@@ -269,10 +271,9 @@ public class LdapConfiguration {
 	}
 	
 	private LdapUserSearch userSearch(Environment environment) throws Exception {
-        String ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
-        String ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
+        LdapSettings ldapSettings = ldapSettings(environment);
 
-		LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapPersonSearchBase, ldapPersonSearchFilter, personLdapContextSource(environment));
+		LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapSettings.getLdapPersonSearchFilter(), personLdapContextSource(environment));
 		((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
 		((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
 		((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
@@ -280,14 +281,14 @@ public class LdapConfiguration {
 	}
 
     private LdapUserSearch userSearchInternal(Environment environment) throws Exception {
-        String ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
-        String ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter.internal");
+        LdapSettings ldapSettings = ldapSettings(environment);
+        String ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilterInternal();
 
         // Fallback to original setting if an internal setting is not defined
         if (StringUtils.isEmpty(ldapPersonSearchFilter))
-            ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
+            ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilter();
 
-        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapPersonSearchBase, ldapPersonSearchFilter, personLdapContextSource(environment));
+        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapPersonSearchFilter, personLdapContextSource(environment));
         ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
         ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
         ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);

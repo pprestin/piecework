@@ -35,6 +35,7 @@ import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
+import piecework.ldap.LdapSettings;
 import piecework.model.User;
 
 import javax.naming.directory.SearchControls;
@@ -51,6 +52,9 @@ public class InternalUserDetailsService implements UserDetailsService {
 
     @Autowired
     LdapContextSource personLdapContextSource;
+
+    @Autowired
+    LdapSettings ldapSettings;
 
     private final LdapUserDetailsService delegate;
     private final LdapUserSearch userSearch;
@@ -79,21 +83,16 @@ public class InternalUserDetailsService implements UserDetailsService {
     }
 
     public List<InternalUserDetails> findUsersByDisplayName(String displayNameLike) {
-        String ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
-        String ldapDisplayNameAttribute = environment.getProperty("ldap.attribute.name.display");
-        String ldapInternalIdAttribute = environment.getProperty("ldap.attribute.id.external");
+        String ldapPersonSearchBase = ldapSettings.getLdapPersonSearchBase();
+        String ldapDisplayNameAttribute = ldapSettings.getLdapPersonAttributeDisplayName();
+        String ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
         SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
 
-        SearchControls searchControls = new SearchControls();
-        searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        searchControls.setTimeLimit(10000);
-        searchControls.setReturningAttributes(null);
-        searchControls.setCountLimit(20);
-        template.setSearchControls(searchControls);
+        template.setSearchControls(ldapSettings.getSearchControls());
 
         displayNameLike = displayNameLike.replaceAll(" ", "*");
 
-        String filter = new AndFilter().and(new LikeFilter(ldapDisplayNameAttribute, displayNameLike + "*")).and(new LikeFilter(ldapInternalIdAttribute, "*")).encode();
+        String filter = new AndFilter().and(new LikeFilter(ldapDisplayNameAttribute, displayNameLike + "*")).and(new LikeFilter(ldapExternalIdAttribute, "*")).encode();
         try {
             return template.search(ldapPersonSearchBase, filter, userDetailsMapper);
         } catch (SizeLimitExceededException e) {

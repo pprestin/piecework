@@ -28,6 +28,11 @@
                 <!--<ref bean="customBpmnUserTaskParseHandler" />-->
             </list>
         </property>
+        <property name="customSessionFactories">
+            <list>
+                <ref bean="ldapIdentitySessionFactory" />
+            </list>
+        </property>
         <property name="idGenerator">
             <bean class="org.activiti.engine.impl.persistence.StrongUuidGenerator" />
         </property>
