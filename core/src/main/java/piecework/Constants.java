@@ -153,6 +153,7 @@ public interface Constants {
 
     public static class Settings {
         public static final String
+            ACT_AS_USER_HEADER = "security.act.as.header",
             BASE_APPLICATION_URI = "base.application.uri",
             BASE_SERVICE_URI = "base.service.uri",
             KEYSTORE_FILE = "keystore.file",

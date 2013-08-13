@@ -15,6 +15,7 @@
  */
 package piecework.form;
 
+import com.sun.media.sound.AiffFileReader;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -33,6 +34,7 @@ import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.persistence.ContentRepository;
+import piecework.security.SecuritySettings;
 import piecework.task.AllowedTaskService;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.form.handler.RequestHandler;
@@ -80,6 +82,9 @@ public class FormService {
 
     @Autowired
     ResponseHandler responseHandler;
+
+    @Autowired
+    SecuritySettings securitySettings;
 
     @Autowired
     SubmissionHandler submissionHandler;
@@ -351,9 +356,6 @@ public class FormService {
     }
 
     private RequestDetails requestDetails(HttpServletRequest request) {
-        String certificateIssuerHeader = environment.getProperty(Constants.Settings.CERTIFICATE_ISSUER_HEADER);
-        String certificateSubjectHeader = environment.getProperty(Constants.Settings.CERTIFICATE_SUBJECT_HEADER);
-
-        return new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        return new RequestDetails.Builder(request, securitySettings).build();
     }
 }

@@ -65,6 +65,7 @@ import piecework.identity.InternalUserDetailsService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapSettings;
 import piecework.security.CustomAuthenticationSource;
+import piecework.security.SecuritySettings;
 import piecework.util.KeyManagerCabinet;
 
 /**
@@ -146,16 +147,38 @@ public class LdapConfiguration {
 
     @Bean
     public KeyManagerCabinet keyManagerCabinet(Environment environment) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        String keystoreFile = environment.getProperty("keystore.file");
-        String keystorePassword = environment.getProperty("keystore.password");
 
         try {
-            return new KeyManagerCabinet.Builder(keystoreFile, keystorePassword).build();
+            return new KeyManagerCabinet.Builder(securitySettings(environment)).build();
         } catch (FileNotFoundException e) {
             LOG.error("Could not create key manager cabinet because keystore file not found");
         }
 
         return null;
+    }
+
+    @Bean
+    public LdapAuthenticationType authenticationType(Environment environment) {
+        String ldapAuthenticationType = environment.getProperty("ldap.authentication.type");
+
+        LdapAuthenticationType type = LdapAuthenticationType.BIND;
+
+        try {
+            if (ldapAuthenticationType != null && !ldapAuthenticationType.equalsIgnoreCase("${ldap.authentication.type}"))
+                type = LdapAuthenticationType.valueOf(ldapAuthenticationType.toUpperCase());
+        } catch (IllegalArgumentException iae) {
+            LOG.warn("Authentication type: " + ldapAuthenticationType.toUpperCase() + " is not valid");
+        }
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Using ldap authentication type " + type.toString());
+
+        return type;
+    }
+
+    @Bean
+    public SecuritySettings securitySettings(Environment environment) {
+        return new SecuritySettings(environment);
     }
 	
 	private LdapAuthenticator authenticator(Environment environment) throws Exception {
@@ -225,25 +248,8 @@ public class LdapConfiguration {
 		
 		return strategy;
 	}
-	
-	private LdapAuthenticationType authenticationType(Environment environment) {
-        String ldapAuthenticationType = environment.getProperty("ldap.authentication.type");
 
-		LdapAuthenticationType type = LdapAuthenticationType.BIND;
-		
-		try {
-			if (ldapAuthenticationType != null && !ldapAuthenticationType.equalsIgnoreCase("${ldap.authentication.type}")) 
-				type = LdapAuthenticationType.valueOf(ldapAuthenticationType.toUpperCase());
-		} catch (IllegalArgumentException iae) {
-			LOG.warn("Authentication type: " + ldapAuthenticationType.toUpperCase() + " is not valid");
-		}
-			
-		if (LOG.isDebugEnabled())
-			LOG.debug("Using ldap authentication type " + type.toString());
-		
-		return type;
-	}
-	
+
 	private LdapAuthoritiesPopulator authoritiesPopulator(Environment environment) throws Exception {
         String ldapGroupSearchBase = environment.getProperty("ldap.group.search.base");
         String ldapGroupSearchFilter  = environment.getProperty("ldap.group.search.filter");

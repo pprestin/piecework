@@ -44,6 +44,7 @@ import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.form.handler.RequestHandler;
+import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.AllowedTaskService;
 import piecework.ui.StreamingAttachmentContent;
@@ -87,6 +88,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 	@Autowired
 	Sanitizer sanitizer;
+
+    @Autowired
+    SecuritySettings securitySettings;
 
     @Autowired
     AllowedTaskService taskService;
@@ -418,10 +422,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     private RequestDetails requestDetails(HttpServletRequest request) {
-        String certificateIssuerHeader = environment.getProperty(Constants.Settings.CERTIFICATE_ISSUER_HEADER);
-        String certificateSubjectHeader = environment.getProperty(Constants.Settings.CERTIFICATE_SUBJECT_HEADER);
-
-        return new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        return new RequestDetails.Builder(request, securitySettings).build();
     }
 
 }

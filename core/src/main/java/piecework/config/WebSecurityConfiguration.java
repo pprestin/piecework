@@ -37,10 +37,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
-import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
-import piecework.security.AuthorityMappingPreAuthenticatedProvider;
-import piecework.security.DebugAuthenticationFilter;
-import piecework.security.SingleSignOnAuthenticationFilter;
+import piecework.security.*;
 
 import java.net.URL;
 import java.util.ArrayList;

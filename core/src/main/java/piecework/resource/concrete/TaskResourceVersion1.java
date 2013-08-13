@@ -38,6 +38,7 @@ import piecework.exception.*;
 import piecework.identity.InternalUserDetails;
 import piecework.identity.InternalUserDetailsService;
 import piecework.persistence.ProcessInstanceRepository;
+import piecework.security.SecuritySettings;
 import piecework.task.AllowedTaskService;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
@@ -90,6 +91,9 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Autowired
     Sanitizer sanitizer;
+
+    @Autowired
+    SecuritySettings securitySettings;
 
     @Autowired
     SubmissionHandler submissionHandler;
@@ -301,10 +305,7 @@ public class TaskResourceVersion1 implements TaskResource {
     }
 
     private RequestDetails requestDetails(HttpServletRequest request) {
-        String certificateIssuerHeader = environment.getProperty(Constants.Settings.CERTIFICATE_ISSUER_HEADER);
-        String certificateSubjectHeader = environment.getProperty(Constants.Settings.CERTIFICATE_SUBJECT_HEADER);
-
-        return new RequestDetails.Builder(request, certificateIssuerHeader, certificateSubjectHeader).build();
+        return new RequestDetails.Builder(request, securitySettings).build();
     }
 
     private String toInternalId(String userId) {

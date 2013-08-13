@@ -16,6 +16,7 @@
 package piecework.common;
 
 import org.apache.commons.lang.StringUtils;
+import piecework.security.SecuritySettings;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,6 +31,7 @@ public class RequestDetails {
     private final String remoteHost;
     private final int remotePort;
     private final String remoteUser;
+    private final String actAsUser;
     private final boolean isServiceCall;
 
     private RequestDetails() {
@@ -43,6 +45,7 @@ public class RequestDetails {
         this.remoteHost = builder.remoteHost;
         this.remotePort = builder.remotePort;
         this.remoteUser = builder.remoteUser;
+        this.actAsUser = builder.actAsUser;
         this.isServiceCall = builder.isServiceCall;
     }
 
@@ -70,6 +73,10 @@ public class RequestDetails {
         return remoteUser;
     }
 
+    public String getActAsUser() {
+        return actAsUser;
+    }
+
     public boolean isServiceCall() {
         return isServiceCall;
     }
@@ -80,6 +87,7 @@ public class RequestDetails {
         private String remoteUser;
         private String remoteHost;
         private int remotePort;
+        private String actAsUser;
         private String certificateIssuer;
         private String certificateSubject;
         private boolean isServiceCall;
@@ -88,12 +96,14 @@ public class RequestDetails {
 
         }
 
-        public Builder(HttpServletRequest request, String certificateIssuerHeader, String certificateSubjectHeader) {
+        public Builder(HttpServletRequest request, SecuritySettings settings) {
             if (request != null) {
-                if (StringUtils.isNotEmpty(certificateIssuerHeader))
-                    this.certificateIssuer = request.getHeader(certificateIssuerHeader);
-                if (StringUtils.isNotEmpty(certificateSubjectHeader))
-                    this.certificateSubject = request.getHeader(certificateSubjectHeader);
+                if (StringUtils.isNotEmpty(settings.getCertificateIssuerHeader()))
+                    this.certificateIssuer = request.getHeader(settings.getCertificateIssuerHeader());
+                if (StringUtils.isNotEmpty(settings.getCertificateSubjectHeader()))
+                    this.certificateSubject = request.getHeader(settings.getCertificateSubjectHeader());
+                if (StringUtils.isNotEmpty(settings.getActAsUserHeader()))
+                    this.actAsUser = request.getHeader(settings.getActAsUserHeader());
 
                 this.remoteAddr = request.getRemoteAddr();
                 this.remoteHost = request.getRemoteHost();

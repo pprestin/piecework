@@ -40,6 +40,7 @@ import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.form.AnonymousFormResource;
+import piecework.security.SecuritySettings;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.HtmlProvider;
 

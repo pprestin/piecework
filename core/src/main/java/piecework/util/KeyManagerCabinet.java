@@ -15,6 +15,9 @@
  */
 package piecework.util;
 
+import org.apache.commons.lang.StringUtils;
+import piecework.security.SecuritySettings;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -63,13 +66,11 @@ public class KeyManagerCabinet {
 	 */
 	public final static class Builder {
 		
-		private final String keystoreFile;
-		private final String keystorePassword;
+		private final SecuritySettings securitySettings;
 		private String keystoreType;
 		
-		public Builder(String keystoreFile, String keystorePassword) {
-			this.keystoreFile = keystoreFile;
-			this.keystorePassword = keystorePassword;
+		public Builder(SecuritySettings securitySettings) {
+			this.securitySettings = securitySettings;
 			this.keystoreType = "JKS";
 		}
 		
@@ -82,18 +83,21 @@ public class KeyManagerCabinet {
 			if (keystoreType == null)
 	        	keystoreType = "JKS";
 
+            if (StringUtils.isEmpty(securitySettings.getKeystoreFile()))
+                return new KeyManagerCabinet(null, null);
+
 	        KeyStore ks = KeyStore.getInstance(keystoreType);
-			FileInputStream fis = new FileInputStream(keystoreFile);
+			FileInputStream fis = new FileInputStream(securitySettings.getKeystoreFile());
 
 			try {
-				ks.load(fis, keystorePassword.toCharArray());
+				ks.load(fis, securitySettings.getKeystorePassword());
 			} finally {
 				if (fis != null)
 					fis.close();
 			}
 
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-			kmf.init(ks, keystorePassword.toCharArray());
+			kmf.init(ks, securitySettings.getKeystorePassword());
 			
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
 			tmf.init((KeyStore)null);

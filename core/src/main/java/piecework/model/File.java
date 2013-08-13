@@ -48,6 +48,8 @@ public class File extends Value {
     @XmlAttribute
     private final String link;
 
+    @XmlAttribute
+    private final String uri;
 
     private File() {
         this(new Builder(), null);
@@ -59,6 +61,7 @@ public class File extends Value {
         this.location = builder.location;
         this.name = builder.name;
         this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
+        this.uri = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
     }
 
     @JsonIgnore
@@ -81,6 +84,10 @@ public class File extends Value {
 
     public String getLink() {
         return link;
+    }
+
+    public String getUri() {
+        return uri;
     }
 
     @JsonValue(value=false)
