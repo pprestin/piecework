@@ -356,8 +356,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                     org.activiti.engine.task.Task activitiTask = org.activiti.engine.task.Task.class.cast(instance);
                     engineProcessInstanceId = activitiTask.getProcessInstanceId();
                     List<Process> processes = processMap.get(activitiTask.getProcessDefinitionId());
-                    for (Process process : processes) {
-                        resultsBuilder.task(convert(activitiTask, process, true));
+                    if (processes != null) {
+                        for (Process process : processes) {
+                            resultsBuilder.task(convert(activitiTask, process, true));
+                        }
                     }
                 } else {
                     HistoricTaskInstance historicTask = HistoricTaskInstance.class.cast(instance);
@@ -366,8 +368,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
                     engineProcessInstanceId = historicTask.getProcessInstanceId();
                     List<Process> processes = processMap.get(historicTask.getProcessDefinitionId());
-                    for (Process process : processes) {
-                        resultsBuilder.task(convert(historicTask, process, true));
+                    if (processes != null) {
+                        for (Process process : processes) {
+                            resultsBuilder.task(convert(historicTask, process, true));
+                        }
                     }
                 }
                 resultsBuilder.engineProcessInstanceId(engineProcessInstanceId);

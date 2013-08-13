@@ -132,6 +132,10 @@ public class SubmissionTemplateFactory {
 
         String fieldName = field.getName();
         Set<ValidationRule> rules = new HashSet<ValidationRule>();
+
+        if (!field.isEditable())
+            return rules;
+
         if (field.isRequired()) {
             if (fieldTag == FieldTag.FILE)
                 rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());

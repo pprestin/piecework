@@ -60,6 +60,8 @@ public class ValidationService {
 
 
     public FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
+
+
         FormValidation.Builder validationBuilder = new FormValidation.Builder().instance(instance).submission(submission);
 
         Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();

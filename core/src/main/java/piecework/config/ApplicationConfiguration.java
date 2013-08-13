@@ -25,16 +25,17 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.interceptor.DefaultKeyGenerator;
+import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.env.Environment;
-import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
@@ -42,7 +43,6 @@ import piecework.form.AnonymousFormResource;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.HtmlProvider;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -70,7 +70,7 @@ public class ApplicationConfiguration {
 
     @Autowired
     CustomJaxbJsonProvider jsonProvider;
-	
+
 	@Bean
 	public Bus cxf() {
 		return BusFactory.newInstance().createBus();
@@ -157,15 +157,7 @@ public class ApplicationConfiguration {
 
     @Bean
     public CacheManager cacheManager() {
-        SimpleCacheManager cacheManager = new SimpleCacheManager();
-        List<Cache> caches = new ArrayList<Cache>();
-        caches.add(new ConcurrentMapCache("userCache"));
-        caches.add(new ConcurrentMapCache("userAnyIdCache"));
-        caches.add(new ConcurrentMapCache("processDefinitionIds"));
-        caches.add(new ConcurrentMapCache("processDefinitionIdMap"));
-
-        cacheManager.setCaches(caches);
-        return cacheManager;
+        return new ConcurrentMapCacheManager();
     }
 
 }
