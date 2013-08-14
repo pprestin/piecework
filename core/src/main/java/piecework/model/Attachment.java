@@ -209,6 +209,7 @@ public class Attachment implements Serializable, Comparable<Attachment> {
 
         public Builder() {
             super();
+            this.lastModified = new Date();
         }
 
         public Builder(Attachment attachment) {
