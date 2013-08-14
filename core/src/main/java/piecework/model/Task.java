@@ -82,10 +82,16 @@ public class Task implements Serializable {
     @Transient
     private final User assignee;
 
+    @XmlTransient
+    private final String assigneeId;
+
     @XmlElementWrapper(name="candidateAssignees")
     @XmlElementRef(name="candidateAssignee")
     @Transient
     private final List<User> candidateAssignees;
+
+    @XmlTransient
+    private final List<String> candidateAssigneeIds;
 
     @XmlElement
     private final Date startTime;
@@ -132,7 +138,9 @@ public class Task implements Serializable {
         this.processInstanceAlias = builder.processInstanceAlias;
         this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.assignee = builder.assignee;
+        this.assigneeId = builder.assigneeId;
         this.candidateAssignees = Collections.unmodifiableList(builder.candidateAssignees);
+        this.candidateAssigneeIds = Collections.unmodifiableList(builder.candidateAssigneeIds);
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.claimTime = builder.claimTime;
@@ -197,6 +205,16 @@ public class Task implements Serializable {
 		return candidateAssignees;
 	}
 
+    @JsonIgnore
+    public String getAssigneeId() {
+        return assigneeId;
+    }
+
+    @JsonIgnore
+    public List<String> getCandidateAssigneeIds() {
+        return candidateAssigneeIds;
+    }
+
     public Date getStartTime() {
         return startTime;
     }
@@ -248,7 +266,9 @@ public class Task implements Serializable {
         private String taskDescription;
         private String taskStatus;
         private User assignee;
+        private String assigneeId;
         private List<User> candidateAssignees;
+        private List<String> candidateAssigneeIds;
         private Date startTime;
         private Date endTime;
         private Date claimTime;
@@ -260,6 +280,7 @@ public class Task implements Serializable {
         public Builder() {
             super();
             this.candidateAssignees = new ArrayList<User>();
+            this.candidateAssigneeIds = new ArrayList<String>();
         }
 
         public Builder(Task task, Sanitizer sanitizer) {
@@ -275,6 +296,7 @@ public class Task implements Serializable {
             this.processInstanceAlias = sanitizer.sanitize(task.processInstanceAlias);
             this.engineProcessInstanceId = sanitizer.sanitize(task.engineProcessInstanceId);
             this.assignee = task.assignee != null ? new User.Builder(task.assignee, sanitizer).build() : null;
+            this.assigneeId = task.assigneeId;
             if (task.candidateAssignees != null && !task.candidateAssignees.isEmpty()) {
                 this.candidateAssignees = new ArrayList<User>(task.candidateAssignees.size());
                 for (User candidateAssignee : task.candidateAssignees) {
@@ -283,6 +305,7 @@ public class Task implements Serializable {
             } else {
                 this.candidateAssignees = Collections.emptyList();
             }
+            this.candidateAssigneeIds = task.candidateAssigneeIds != null ? Collections.unmodifiableList(task.candidateAssigneeIds) : Collections.<String>emptyList();
             this.startTime = task.startTime;
             this.dueDate = task.dueDate;
             this.endTime = task.endTime;
@@ -357,14 +380,18 @@ public class Task implements Serializable {
 
         public Builder assignee(User assignee) {
             this.assignee = assignee;
+            if (assignee != null)
+                this.assigneeId = assignee.getUserId();
             return this;
         }
 
         public Builder candidateAssignee(User candidateAssignee) {
             if (this.candidateAssignees == null)
                 this.candidateAssignees = new ArrayList<User>();
-            if (candidateAssignee != null)
+            if (candidateAssignee != null) {
                 this.candidateAssignees.add(candidateAssignee);
+                this.candidateAssigneeIds.add(candidateAssignee.getUserId());
+            }
             return this;
         }
 

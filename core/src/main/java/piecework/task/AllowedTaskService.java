@@ -202,7 +202,7 @@ public class AllowedTaskService {
         }
 
         int count = 0;
-        List<Task> tasks = taskRepository.findByProcessDefinitionKeyIn(allowedProcessDefinitionKeys);
+        List<Task> tasks = findTasksByCriteria(overseerCriteria, userCriteria);
         if (tasks != null && !tasks.isEmpty()) {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             for (Task task : tasks) {
@@ -240,7 +240,7 @@ public class AllowedTaskService {
         return "v1";
     }
 
-    private List<Task> findTasksByCriteria(TaskCriteria criteria) {
+    private List<Task> findTasksByCriteria(TaskCriteria ... criterias) {
 
 
 

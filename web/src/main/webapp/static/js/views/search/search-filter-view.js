@@ -90,7 +90,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
                 else {
                     var keyword = $('#keyword').val();
                     var processDefinitionKey = $(':checkbox[name="processDefinitionKey"]:checked').val();
-                    var status = element.value;
+                    var status = $(':checkbox[name="processStatus"]:checked').val();
 
                     var data = {};
                     if (keyword !== undefined && keyword != '')
