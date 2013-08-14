@@ -772,6 +772,7 @@ public class ProcessInstanceService {
         boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
 
         if (skipOptimization) {
+            instance = processInstanceRepository.findOne(instance.getProcessInstanceId());
             ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
                     .attachments(attachments)
                     .data(data)

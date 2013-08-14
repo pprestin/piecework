@@ -66,11 +66,10 @@ public class GeneralExecutionListener implements ExecutionListener {
                     completionStatus = process.getCompletionStatus();
                 }
 
-                ProcessInstance.Builder builder = new ProcessInstance.Builder(processInstance);
-                builder.applicationStatus(completionStatus);
-                builder.processStatus(Constants.ProcessStatuses.COMPLETE);
-                builder.endTime(new Date());
-
+//                ProcessInstance.Builder builder = new ProcessInstance.Builder(processInstance);
+//                builder.applicationStatus(completionStatus);
+//                builder.processStatus(Constants.ProcessStatuses.COMPLETE);
+//                builder.endTime(new Date());
 //                processInstance = builder.build();
 //                processInstance = processInstanceRepository.save(processInstance);
 
