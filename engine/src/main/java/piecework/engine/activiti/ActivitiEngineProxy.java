@@ -630,7 +630,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
         if (StringUtils.isNotEmpty(criteria.getProcessInstanceId())) {
             ProcessInstance instance = processInstanceRepository.findOne(criteria.getProcessInstanceId());
-            query.executionId(instance.getEngineProcessInstanceId());
+            query.processInstanceId(instance.getEngineProcessInstanceId());
         }
 
         TaskCriteria.OrderBy orderBy = criteria.getOrderBy();
@@ -704,6 +704,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
         if (criteria.getDueAfter() != null)
             query.taskDueAfter(criteria.getDueAfter());
+
+        if (StringUtils.isNotEmpty(criteria.getProcessInstanceId())) {
+            ProcessInstance instance = processInstanceRepository.findOne(criteria.getProcessInstanceId());
+            if (instance != null)
+                query.processInstanceId(instance.getEngineProcessInstanceId());
+        }
 
         TaskCriteria.OrderBy orderBy = criteria.getOrderBy();
         if (orderBy != null) {
