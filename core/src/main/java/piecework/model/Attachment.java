@@ -164,7 +164,7 @@ public class Attachment implements Serializable, Comparable<Attachment> {
     public int compareTo(Attachment o) {
         int result = 0;
         if (lastModified != null && o.lastModified != null)
-            result = lastModified.compareTo(o.lastModified);
+            result = o.lastModified.compareTo(lastModified);
         if (result == 0 && description != null && o.description != null)
             result = description.compareTo(o.description);
         if (result == 0 && name != null && o.name != null)
