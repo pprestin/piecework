@@ -125,7 +125,7 @@ public class ProcessInstanceService {
 
         int count = 0;
         Map<String, User> userMap = new HashMap<String, User>();
-        List<Attachment> storedAttachments = processInstance.getAttachments();
+        Set<Attachment> storedAttachments = processInstance.getAttachments();
         if (storedAttachments != null && !storedAttachments.isEmpty()) {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             for (Attachment storedAttachment : storedAttachments) {
@@ -241,12 +241,12 @@ public class ProcessInstanceService {
         }
     }
 
-    public ProcessInstance read(String processDefinitionKey, String processInstanceId) throws StatusCodeError {
+    public ProcessInstance read(String processDefinitionKey, String processInstanceId, boolean full) throws StatusCodeError {
         Process process = getProcess(processDefinitionKey);
-        return read(process, processInstanceId);
+        return read(process, processInstanceId, full);
     }
 
-    public ProcessInstance read(Process process, String rawProcessInstanceId) throws StatusCodeError {
+    public ProcessInstance read(Process process, String rawProcessInstanceId, boolean full) throws StatusCodeError {
         String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
         ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
 
@@ -255,6 +255,23 @@ public class ProcessInstanceService {
 
         if (instance.isDeleted())
             throw new GoneError(Constants.ExceptionCodes.instance_does_not_exist);
+
+
+        if (full) {
+            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
+            ViewContext viewContext = getInstanceViewContext();
+
+            Set<String> attachmentIds = instance.getAttachmentIds();
+            if (attachmentIds != null && !attachmentIds.isEmpty()) {
+                Iterable<Attachment> attachments = attachmentRepository.findAll(attachmentIds);
+
+                for (Attachment attachment : attachments) {
+                    builder.attachment(new Attachment.Builder(attachment).build(viewContext));
+                }
+            }
+
+            return builder.build(viewContext);
+        }
 
         return instance;
     }
@@ -365,7 +382,7 @@ public class ProcessInstanceService {
 
     public StreamingAttachmentContent getAttachmentContent(Process process, ProcessInstance processInstance, String attachmentId) {
 
-        List<Attachment> storedAttachments = processInstance.getAttachments();
+        Set<Attachment> storedAttachments = processInstance.getAttachments();
         if (storedAttachments != null && !storedAttachments.isEmpty()) {
             for (Attachment storedAttachment : storedAttachments) {
                 if (StringUtils.isEmpty(attachmentId) || StringUtils.isEmpty(storedAttachment.getAttachmentId()) || !attachmentId.equals(storedAttachment.getAttachmentId()))
@@ -382,7 +399,7 @@ public class ProcessInstanceService {
 
     public History getHistory(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
 
         List<Operation> operations = instance.getOperations();
         List<Task> tasks = findAllTasks(process, instance);
@@ -440,7 +457,7 @@ public class ProcessInstanceService {
 
     public void update(String processDefinitionKey, String processInstanceId, ProcessInstance processInstance) throws StatusCodeError {
         Process process = getProcess(processDefinitionKey);
-        ProcessInstance persisted = read(process, processInstanceId);
+        ProcessInstance persisted = read(process, processInstanceId, false);
         ProcessInstance sanitized = new ProcessInstance.Builder(processInstance).build();
 
         String processStatus = sanitized.getProcessStatus();
@@ -511,7 +528,10 @@ public class ProcessInstanceService {
                 // Otherwise, look up all instances that match the query
                 Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
                 // Don't include form data in the result
-                query.fields().exclude("formData");
+                org.springframework.data.mongodb.core.query.Field field = query.fields();
+                field.exclude("data");
+
+//                query.fields().exclude("attachments");
 
                 List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
                 if (processInstances != null && !processInstances.isEmpty()) {

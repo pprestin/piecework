@@ -25,7 +25,7 @@
         <property name="postBpmnParseHandlers">
             <list>
                 <ref bean="customBpmnProcessParseHandler" />
-                <!--<ref bean="customBpmnUserTaskParseHandler" />-->
+                <ref bean="customBpmnUserTaskParseHandler" />
             </list>
         </property>
         <property name="customSessionFactories">

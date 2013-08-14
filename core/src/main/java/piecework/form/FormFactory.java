@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessEngineFacade;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.form.validation.FormValidation;
@@ -93,7 +92,7 @@ public class FormFactory {
         if (StringUtils.isEmpty(processInstanceId))
             return null;
 
-        return processInstanceService.read(process.getProcessDefinitionKey(), processInstanceId);
+        return processInstanceService.read(process.getProcessDefinitionKey(), processInstanceId, false);
     }
 
     private Screen screen(Process process, Task task) throws StatusCodeError {
@@ -222,7 +221,7 @@ public class FormFactory {
         private final Process process;
         private final String processDefinitionKey;
         private final String processInstanceId;
-        private final List<Attachment> attachments;
+        private final Set<Attachment> attachments;
         private final Task task;
         private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         private final Screen screen;
@@ -233,7 +232,7 @@ public class FormFactory {
             this.process = process;
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
-            this.attachments = instance != null ? instance.getAttachments() : Collections.<Attachment>emptyList();
+            this.attachments = instance != null ? instance.getAttachments() : Collections.<Attachment>emptySet();
             this.task = task;
             this.screen = screen;
             this.instanceContext = instanceContext;

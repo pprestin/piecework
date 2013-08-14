@@ -32,6 +32,7 @@ import piecework.enumeration.OperationType;
 import piecework.form.handler.SubmissionHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.form.validation.SubmissionTemplateFactory;
+import piecework.model.Process;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
@@ -114,6 +115,10 @@ public class TaskResourceVersion1 implements TaskResource {
 
         RequestDetails requestDetails = requestDetails(request);
 
+        String actingUser = helper.getAuthenticatedSystemOrUserId();
+        if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(requestDetails.getActAsUser()))
+            actingUser = requestDetails.getActAsUser();
+
         Task task = taskId != null ? taskService.allowedTask(process, taskId, true) : null;
 
         if (task == null)
@@ -122,7 +127,7 @@ public class TaskResourceVersion1 implements TaskResource {
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
-            instance = processInstanceService.read(process, task.getProcessInstanceId());
+            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
 
@@ -148,7 +153,7 @@ public class TaskResourceVersion1 implements TaskResource {
                 processInstanceService.operate(OperationType.ASSIGNMENT, process, instance, task, null, assignee);
                 break;
             case CLAIM:
-                processInstanceService.operate(OperationType.ASSIGNMENT, process, instance, task, null, helper.getAuthenticatedSystemOrUserId());
+                processInstanceService.operate(OperationType.ASSIGNMENT, process, instance, task, null, actingUser);
                 break;
             case COMPLETE:
                 processInstanceService.submit(process, instance, task, template, submission);
@@ -193,104 +198,124 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Override
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+        SearchResults results = taskService.allowedTasks(rawQueryParameters);
+
+        ViewContext instanceViewContext = processInstanceService.getInstanceViewContext();
+        ViewContext taskViewContext = processInstanceService.getTaskViewContext();
+
         SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
                 .resourceLabel("Tasks")
-                .link(processInstanceService.getTaskViewContext().getApplicationUri())
-                .uri(processInstanceService.getTaskViewContext().getServiceUri());
+                .link(taskViewContext.getApplicationUri())
+                .uri(taskViewContext.getServiceUri());
 
-        ManyMap<String, String> queryParameters = new ManyMap<String, String>();
-        DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
-        TaskCriteria.Builder criteriaBuilder = new TaskCriteria.Builder().processes(helper.findProcesses(AuthorizationRole.OVERSEER, AuthorizationRole.USER));
-
-        if (!helper.isAuthenticatedSystem()) {
-            InternalUserDetails user = helper.getAuthenticatedPrincipal();
-            if (user != null)
-                criteriaBuilder.participantId(user.getInternalId());
-            else {
-                return resultsBuilder.build();
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        List<?> items = results.getList();
+        if (items != null && !items.isEmpty()) {
+            for (Object item : items) {
+                Task task = Task.class.cast(item);
+                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer).build(taskViewContext));
             }
         }
 
-        ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
-        for (Map.Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
-            String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
-            List<String> rawValues = rawQueryParameterEntry.getValue();
-            if (rawValues != null && !rawValues.isEmpty()) {
-                for (String rawValue : rawValues) {
-                    String value = sanitizer.sanitize(rawValue);
-                    queryParameters.putOne(key, value);
+        resultsBuilder.firstResult(results.getFirstResult());
+        resultsBuilder.maxResults(results.getMaxResults());
+        resultsBuilder.total(Long.valueOf(results.getTotal()));
 
-                    try {
-                        boolean isEngineParameter = true;
-                        if (key.equals("taskId"))
-                            criteriaBuilder.taskId(value);
-                        else if (key.equals("active"))
-                            criteriaBuilder.active(Boolean.valueOf(value));
-                        else if (key.equals("assignee"))
-                            criteriaBuilder.assigneeId(toInternalId(value));
-                        else if (key.equals("candidateAssignee"))
-                            criteriaBuilder.candidateAssigneeId(toInternalId(value));
-                        else if (key.equals("participantId"))
-                            criteriaBuilder.participantId(toInternalId(value));
-                        else if (key.equals("complete"))
-                            criteriaBuilder.complete(Boolean.valueOf(value));
-                        else if (key.equals("createdAfter"))
-                            criteriaBuilder.createdAfter(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("createdBefore"))
-                            criteriaBuilder.createdBefore(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("dueBefore"))
-                            criteriaBuilder.dueBefore(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("dueAfter"))
-                            criteriaBuilder.dueAfter(dateTimeFormatter.parseDateTime(value).toDate());
-                        else if (key.equals("alias"))
-                            criteriaBuilder.businessKey(value);
-                        else if (key.equals("processInstanceId")) {
-                            ProcessInstance processInstance = processInstanceRepository.findOne(value);
-                            if (processInstance != null)
-                                criteriaBuilder.executionId(processInstance.getEngineProcessInstanceId());
-                        } else if (key.equals("maxPriority"))
-                            criteriaBuilder.maxPriority(Integer.valueOf(value));
-                        else if (key.equals("minPriority"))
-                            criteriaBuilder.minPriority(Integer.valueOf(value));
-                        else if (key.equals("maxResults"))
-                            criteriaBuilder.maxResults(Integer.valueOf(value));
-                        else if (key.equals("firstResult"))
-                            criteriaBuilder.firstResult(Integer.valueOf(value));
-                        else {
-                            contentQueryParameters.putOne(key, value);
-                            isEngineParameter = false;
-                        }
+        return resultsBuilder.build(taskViewContext);
 
-                        if (isEngineParameter)
-                            resultsBuilder.parameter(key, value);
-
-                    } catch (NumberFormatException e) {
-                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
-                    } catch (IllegalArgumentException e) {
-                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
-                    }
-                }
-            }
-        }
-
-        try {
-            TaskResults results = facade.findTasks(criteriaBuilder.build());
-            if (results.getTasks() != null && !results.getTasks().isEmpty()) {
-                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-                List<Task> tasks = new ArrayList<Task>(results.getTasks().size());
-                for (Task task : results.getTasks()) {
-                    tasks.add(new Task.Builder(task, passthroughSanitizer).build(processInstanceService.getTaskViewContext()));
-                }
-                resultsBuilder.items(tasks);
-            }
-
-            resultsBuilder.total(results.getTotal());
-            resultsBuilder.firstResult(results.getFirstResult());
-            resultsBuilder.maxResults(results.getMaxResults());
-        } catch (ProcessEngineException e) {
-            throw new InternalServerError();
-        }
-        return resultsBuilder.build();
+//        ManyMap<String, String> queryParameters = new ManyMap<String, String>();
+//        DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
+//        TaskCriteria.Builder criteriaBuilder = new TaskCriteria.Builder().processes(helper.findProcesses(AuthorizationRole.OVERSEER, AuthorizationRole.USER));
+//
+//        if (!helper.isAuthenticatedSystem()) {
+//            InternalUserDetails user = helper.getAuthenticatedPrincipal();
+//            if (user != null)
+//                criteriaBuilder.participantId(user.getInternalId());
+//            else {
+//                return resultsBuilder.build();
+//            }
+//        }
+//
+//        ManyMap<String, String> contentQueryParameters = new ManyMap<String, String>();
+//        for (Map.Entry<String, List<String>> rawQueryParameterEntry : rawQueryParameters.entrySet()) {
+//            String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
+//            List<String> rawValues = rawQueryParameterEntry.getValue();
+//            if (rawValues != null && !rawValues.isEmpty()) {
+//                for (String rawValue : rawValues) {
+//                    String value = sanitizer.sanitize(rawValue);
+//                    queryParameters.putOne(key, value);
+//
+//                    try {
+//                        boolean isEngineParameter = true;
+//                        if (key.equals("taskId"))
+//                            criteriaBuilder.taskId(value);
+//                        else if (key.equals("active"))
+//                            criteriaBuilder.active(Boolean.valueOf(value));
+//                        else if (key.equals("assignee"))
+//                            criteriaBuilder.assigneeId(toInternalId(value));
+//                        else if (key.equals("candidateAssignee"))
+//                            criteriaBuilder.candidateAssigneeId(toInternalId(value));
+//                        else if (key.equals("participantId"))
+//                            criteriaBuilder.participantId(toInternalId(value));
+//                        else if (key.equals("complete"))
+//                            criteriaBuilder.complete(Boolean.valueOf(value));
+//                        else if (key.equals("createdAfter"))
+//                            criteriaBuilder.createdAfter(dateTimeFormatter.parseDateTime(value).toDate());
+//                        else if (key.equals("createdBefore"))
+//                            criteriaBuilder.createdBefore(dateTimeFormatter.parseDateTime(value).toDate());
+//                        else if (key.equals("dueBefore"))
+//                            criteriaBuilder.dueBefore(dateTimeFormatter.parseDateTime(value).toDate());
+//                        else if (key.equals("dueAfter"))
+//                            criteriaBuilder.dueAfter(dateTimeFormatter.parseDateTime(value).toDate());
+//                        else if (key.equals("alias"))
+//                            criteriaBuilder.businessKey(value);
+//                        else if (key.equals("processInstanceId")) {
+//                            ProcessInstance processInstance = processInstanceRepository.findOne(value);
+//                            if (processInstance != null)
+//                                criteriaBuilder.executionId(processInstance.getEngineProcessInstanceId());
+//                        } else if (key.equals("maxPriority"))
+//                            criteriaBuilder.maxPriority(Integer.valueOf(value));
+//                        else if (key.equals("minPriority"))
+//                            criteriaBuilder.minPriority(Integer.valueOf(value));
+//                        else if (key.equals("maxResults"))
+//                            criteriaBuilder.maxResults(Integer.valueOf(value));
+//                        else if (key.equals("firstResult"))
+//                            criteriaBuilder.firstResult(Integer.valueOf(value));
+//                        else {
+//                            contentQueryParameters.putOne(key, value);
+//                            isEngineParameter = false;
+//                        }
+//
+//                        if (isEngineParameter)
+//                            resultsBuilder.parameter(key, value);
+//
+//                    } catch (NumberFormatException e) {
+//                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
+//                    } catch (IllegalArgumentException e) {
+//                        LOG.warn("Unable to parse query parameter key: " + key + " value: " + value, e);
+//                    }
+//                }
+//            }
+//        }
+//
+//        try {
+//            TaskResults results = facade.findTasks(criteriaBuilder.build());
+//            if (results.getTasks() != null && !results.getTasks().isEmpty()) {
+//                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+//                List<Task> tasks = new ArrayList<Task>(results.getTasks().size());
+//                for (Task task : results.getTasks()) {
+//                    tasks.add(new Task.Builder(task, passthroughSanitizer).build(processInstanceService.getTaskViewContext()));
+//                }
+//                resultsBuilder.items(tasks);
+//            }
+//
+//            resultsBuilder.total(results.getTotal());
+//            resultsBuilder.firstResult(results.getFirstResult());
+//            resultsBuilder.maxResults(results.getMaxResults());
+//        } catch (ProcessEngineException e) {
+//            throw new InternalServerError();
+//        }
+//        return resultsBuilder.build();
     }
 
     public ViewContext getViewContext() {

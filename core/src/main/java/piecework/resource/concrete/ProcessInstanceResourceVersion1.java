@@ -98,7 +98,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, false))
@@ -111,7 +111,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultivaluedMap<String, String> formData) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
         Task task = taskService.allowedTask(process, instance, true);
         if (task == null)
@@ -127,7 +127,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultipartBody body) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
         Task task = taskService.allowedTask(process, instance, true);
         if (task == null)
@@ -143,7 +143,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response attachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
 
         if (!taskService.hasAllowedTask(process, instance, false))
             throw new ForbiddenError();
@@ -155,7 +155,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
         if (!taskService.hasAllowedTask(process, instance, true))
@@ -173,7 +173,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response cancel(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER))
@@ -225,7 +225,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response detach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
         Task task = taskService.allowedTask(process, instance, true);
@@ -248,7 +248,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 		
 		Process process = processInstanceService.getProcess(processDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, processInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, processInstanceId, false);
 
         ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
                 .processDefinitionKey(processDefinitionKey)
@@ -273,7 +273,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
@@ -301,7 +301,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
 	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
         processInstanceService.operate(OperationType.CANCELLATION, process, instance, null, null, reason);
@@ -323,7 +323,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response remove(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
@@ -337,7 +337,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response value(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
@@ -350,7 +350,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response value(HttpServletRequest request, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         Task task = taskService.allowedTask(process, instance, true);
@@ -397,7 +397,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public Response values(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))

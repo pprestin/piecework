@@ -263,7 +263,7 @@ public class Form {
             return new Form(this, context);
         }
 
-        public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, List<Attachment> attachments, ViewContext context) {
+        public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, Set<Attachment> attachments, ViewContext context) {
             this.activation = context.getApplicationUri(processDefinitionKey, processInstanceId, "activation");
             this.attachment = context.getApplicationUri(processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
             this.cancellation = context.getApplicationUri(processDefinitionKey, processInstanceId, "cancellation");

@@ -20,6 +20,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
@@ -32,11 +33,13 @@ import piecework.exception.StatusCodeError;
 import piecework.identity.InternalUserDetails;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.TaskRepository;
 import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 
 import javax.ws.rs.core.MultivaluedMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -58,7 +61,14 @@ public class AllowedTaskService {
     ProcessEngineFacade facade;
 
     @Autowired
+    MongoOperations mongoOperations;
+
+    @Autowired
     Sanitizer sanitizer;
+
+    @Autowired
+    TaskRepository taskRepository;
+
 
     public Task allowedTask(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
         Set<Process> overseerProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
@@ -115,6 +125,10 @@ public class AllowedTaskService {
     }
 
     public SearchResults allowedTasks(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+        long time = 0;
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
+
         Set<Process> overseerProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
         Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
@@ -152,6 +166,59 @@ public class AllowedTaskService {
             throw new InternalServerError();
         }
 
+        if (LOG.isDebugEnabled())
+            LOG.debug("Retrieving tasks took " + (System.currentTimeMillis() - time) + " ms");
+
+        return resultsBuilder.build();
+    }
+
+    public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+        long time = 0;
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
+
+        Set<Process> overseerProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
+        Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
+        Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
+
+        TaskCriteria overseerCriteria = overseerCriteria(overseerProcesses, rawQueryParameters);
+        TaskCriteria userCriteria = userCriteria(userProcesses, rawQueryParameters);
+
+        ViewContext taskViewContext = getTaskViewContext();
+
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
+                .resourceLabel("Tasks")
+                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
+                .link(taskViewContext.getApplicationUri());
+
+        Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
+        if (!allowedProcesses.isEmpty()) {
+            for (Process allowedProcess : allowedProcesses) {
+                if (StringUtils.isEmpty(allowedProcess.getProcessDefinitionKey()))
+                    continue;
+                resultsBuilder.definition(allowedProcess);
+                allowedProcessDefinitionKeys.add(allowedProcess.getProcessDefinitionKey());
+            }
+        }
+
+        int count = 0;
+        List<Task> tasks = taskRepository.findByProcessDefinitionKeyIn(allowedProcessDefinitionKeys);
+        if (tasks != null && !tasks.isEmpty()) {
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            for (Task task : tasks) {
+                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer)
+                        .build(taskViewContext));
+                count++;
+            }
+        }
+
+        resultsBuilder.firstResult(1);
+        resultsBuilder.maxResults(count);
+        resultsBuilder.total(Long.valueOf(count));
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Retrieving tasks took " + (System.currentTimeMillis() - time) + " ms");
+
         return resultsBuilder.build();
     }
 
@@ -173,6 +240,12 @@ public class AllowedTaskService {
         return "v1";
     }
 
+    private List<Task> findTasksByCriteria(TaskCriteria criteria) {
+
+
+
+        return null;
+    }
 
     private TaskCriteria overseerCriteria(Set<Process> allowedProcesses, MultivaluedMap<String, String> rawQueryParameters) {
         return new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer).build();

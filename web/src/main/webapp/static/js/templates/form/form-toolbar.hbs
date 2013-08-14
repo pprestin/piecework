@@ -23,7 +23,19 @@
                     {{#if task.assignee}}
                         <p class="navbar-text text-primary">Assigned to {{task.assignee.displayName}}</p>
                     {{/if}}
-                    <button class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
+                    <div class="btn-group">
+                        <button class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
+                        {{#if task.candidateAssignees}}
+                            <button type="button" class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown">
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                {{#each task.candidateAssignees}}
+                                    <li><a class="candidate-assignee" id="{{userId}}">Assign to {{displayName}}</a></li>
+                                {{/each}}
+                            </ul>
+                        {{/if}}
+                    </div>
                     <a class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment-alt"></i></a>
                     <button class="btn btn-default navbar-btn" id="file-button" title="Attach file"><i class="icon-paper-clip"></i></button>
                     <input type="file" name="attachment" class="attach-file hide"/>

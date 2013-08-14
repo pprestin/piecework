@@ -15,7 +15,6 @@
  */
 package piecework.form;
 
-import com.sun.media.sound.AiffFileReader;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -122,7 +121,7 @@ public class FormService {
 
         try {
             Task task = taskService.allowedTask(process, taskId, true);
-            ProcessInstance processInstance = processInstanceService.read(process, task.getProcessInstanceId());
+            ProcessInstance processInstance = processInstanceService.read(process, task.getProcessInstanceId(), false);
             facade.cancel(process, processInstance);
 
         } catch (ProcessEngineException e) {
@@ -181,7 +180,7 @@ public class FormService {
             if (StringUtils.isEmpty(formRequest.getProcessInstanceId()))
                 throw new NotFoundError();
 
-            ProcessInstance instance = processInstanceService.read(process, formRequest.getProcessInstanceId());
+            ProcessInstance instance = processInstanceService.read(process, formRequest.getProcessInstanceId(), false);
             return processInstanceService.readValue(process, instance, formValueName, formValueItem);
         }
 
@@ -207,14 +206,15 @@ public class FormService {
 
         List<?> items = results.getList();
         if (items != null && !items.isEmpty()) {
-
+            ViewContext instanceViewContext = processInstanceService.getInstanceViewContext();
+            ViewContext taskViewContext = processInstanceService.getTaskViewContext();
             for (Object item : items) {
                 Task task = Task.class.cast(item);
                 resultsBuilder.item(new Form.Builder()
                         .formInstanceId(task.getTaskInstanceId())
-                        .taskSubresources(task.getProcessDefinitionKey(), task, processInstanceService.getTaskViewContext())
+                        .taskSubresources(task.getProcessDefinitionKey(), task, taskViewContext)
                         .processDefinitionKey(task.getProcessDefinitionKey())
-                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, processInstanceService.getInstanceViewContext())
+                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, instanceViewContext)
                         .build(viewContext));
             }
         }
@@ -238,7 +238,7 @@ public class FormService {
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
-            instance = processInstanceService.read(process, task.getProcessInstanceId());
+            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
@@ -261,7 +261,7 @@ public class FormService {
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
-            instance = processInstanceService.read(process, task.getProcessInstanceId());
+            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
@@ -340,7 +340,7 @@ public class FormService {
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
-            instance = processInstanceService.read(process, task.getProcessInstanceId());
+            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen(), validationId);
         Submission submission = submissionHandler.handle(process, template, body, formRequest);

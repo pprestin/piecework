@@ -20,6 +20,7 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
+import org.activiti.engine.task.IdentityLink;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
@@ -32,10 +33,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.identity.InternalUserDetails;
+import piecework.identity.InternalUserDetailsService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
+import piecework.persistence.TaskRepository;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 import java.io.StringReader;
@@ -63,7 +67,10 @@ public class GeneralUserTaskListener implements TaskListener {
     MongoOperations mongoOperations;
 
     @Autowired
-    UserDetailsService userDetailsService;
+    TaskRepository taskRepository;
+
+    @Autowired
+    InternalUserDetailsService userDetailsService;
 
     @Override
     public void notify(DelegateTask delegateTask) {
@@ -90,39 +97,39 @@ public class GeneralUserTaskListener implements TaskListener {
         Set<Candidate> approvers = new HashSet<Candidate>();
         Set<Candidate> watchers = new HashSet<Candidate>();
 
-        List<Interaction> interactions = process.getInteractions();
-        if (interactions != null) {
-            Interaction selectedInteraction = null;
-            for (Interaction interaction : interactions) {
-                if (interaction.getTaskDefinitionKeys() != null && interaction.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
-                    selectedInteraction = interaction;
-                    break;
-                }
-            }
-
-            if (selectedInteraction != null) {
-                List<Candidate> candidates = selectedInteraction.getCandidates();
-                if (candidates == null)
-                    return;
-
-                for (Candidate candidate : candidates) {
-                    if (candidate.getCandidateId() == null)
-                        continue;
-                    if (candidate.getType() == null)
-                        continue;
-
-                    if (candidate.getType().equals(Constants.CandidateTypes.PERSON))
-                        delegateTask.addCandidateUser(candidate.getCandidateId());
-                    else if (candidate.getType().equals(Constants.CandidateTypes.GROUP))
-                        delegateTask.addCandidateGroup(candidate.getCandidateId());
-
-                    if (candidate.getRole() != null && candidate.getRole().equals(Constants.CandidateRoles.APPROVER))
-                        approvers.add(candidate);
-                    else if (candidate.getRole() != null && candidate.getRole().equals(Constants.CandidateRoles.WATCHER))
-                        watchers.add(candidate);
-                }
-            }
-        }
+//        List<Interaction> interactions = process.getInteractions();
+//        if (interactions != null) {
+//            Interaction selectedInteraction = null;
+//            for (Interaction interaction : interactions) {
+//                if (interaction.getTaskDefinitionKeys() != null && interaction.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
+//                    selectedInteraction = interaction;
+//                    break;
+//                }
+//            }
+//
+//            if (selectedInteraction != null) {
+//                List<Candidate> candidates = selectedInteraction.getCandidates();
+//                if (candidates == null)
+//                    return;
+//
+//                for (Candidate candidate : candidates) {
+//                    if (candidate.getCandidateId() == null)
+//                        continue;
+//                    if (candidate.getType() == null)
+//                        continue;
+//
+//                    if (candidate.getType().equals(Constants.CandidateTypes.PERSON))
+//                        delegateTask.addCandidateUser(candidate.getCandidateId());
+//                    else if (candidate.getType().equals(Constants.CandidateTypes.GROUP))
+//                        delegateTask.addCandidateGroup(candidate.getCandidateId());
+//
+//                    if (candidate.getRole() != null && candidate.getRole().equals(Constants.CandidateRoles.APPROVER))
+//                        approvers.add(candidate);
+//                    else if (candidate.getRole() != null && candidate.getRole().equals(Constants.CandidateRoles.WATCHER))
+//                        watchers.add(candidate);
+//                }
+//            }
+//        }
 
         String taskEventType = null;
 
@@ -130,6 +137,58 @@ public class GeneralUserTaskListener implements TaskListener {
             taskEventType = Constants.TaskEventTypes.CREATE;
         if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE))
             taskEventType = Constants.TaskEventTypes.COMPLETE;
+
+        Task.Builder taskBuilder = null;
+
+        if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_CREATE)) {
+            taskBuilder = new Task.Builder()
+                .taskInstanceId(delegateTask.getId())
+                .taskDefinitionKey(delegateTask.getTaskDefinitionKey())
+                .processInstanceId(processInstance.getProcessInstanceId())
+                .processInstanceAlias(processInstance.getAlias())
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .processDefinitionLabel(process.getProcessDefinitionLabel())
+                .processInstanceLabel(processInstance.getProcessInstanceLabel())
+                .engineProcessInstanceId(delegateTask.getProcessInstanceId())
+                .taskLabel(delegateTask.getName())
+                .taskDescription(delegateTask.getDescription())
+                .taskStatus(Constants.TaskStatuses.OPEN)
+                .startTime(delegateTask.getCreateTime())
+                .dueDate(delegateTask.getDueDate())
+                .priority(delegateTask.getPriority())
+                .active();
+
+
+        } else if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE)) {
+            Task task = taskRepository.findOne(delegateTask.getId());
+
+            if (task != null) {
+                taskBuilder = new Task.Builder(task, new PassthroughSanitizer())
+                    .taskStatus(Constants.TaskStatuses.COMPLETE)
+                    .endTime(new Date());
+            }
+        }
+
+        if (taskBuilder != null) {
+
+            String assigneeId = delegateTask.getAssignee();
+
+            if (StringUtils.isNotEmpty(assigneeId)) {
+                taskBuilder.assignee(userDetailsService.getUser(assigneeId));
+            }
+
+            Set<IdentityLink> candidates = delegateTask.getCandidates();
+            if (candidates != null) {
+                for (IdentityLink candidate : candidates) {
+                    if (StringUtils.isNotEmpty(candidate.getUserId())) {
+                        taskBuilder.assignee(userDetailsService.getUser(candidate.getUserId()));
+                    }
+                }
+            }
+
+            taskRepository.save(taskBuilder.build());
+        }
+
 
         List<Notification> notifications = process.getNotifications();
         if (notifications != null && !notifications.isEmpty()) {

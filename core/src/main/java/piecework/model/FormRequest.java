@@ -44,6 +44,8 @@ public class FormRequest {
 
     private final String remoteUser;
 
+    private final String actAsUser;
+
     private final String certificateSubject;
 
     private final String certificateIssuer;
@@ -72,6 +74,7 @@ public class FormRequest {
         this.remoteHost = builder.remoteHost;
         this.remotePort = builder.remotePort;
         this.remoteUser = builder.remoteUser;
+        this.actAsUser = builder.actAsUser;
         this.certificateSubject = builder.certificateSubject;
         this.certificateIssuer = builder.certificateIssuer;
         this.interaction = builder.interaction;
@@ -102,6 +105,10 @@ public class FormRequest {
 
     public int getRemotePort() {
         return remotePort;
+    }
+
+    public String getActAsUser() {
+        return actAsUser;
     }
 
     public String getRemoteUser() {
@@ -145,6 +152,7 @@ public class FormRequest {
         private String remoteHost;
         private int remotePort;
         private String remoteUser;
+        private String actAsUser;
         private String certificateSubject;
         private String certificateIssuer;
         private String taskId;
@@ -165,6 +173,7 @@ public class FormRequest {
             this.remoteHost = sanitizer.sanitize(request.remoteHost);
             this.remotePort = request.remotePort;
             this.remoteUser = sanitizer.sanitize(request.remoteUser);
+            this.actAsUser = sanitizer.sanitize(request.actAsUser);
             this.certificateSubject = sanitizer.sanitize(request.certificateSubject);
             this.certificateIssuer = sanitizer.sanitize(request.certificateIssuer);
             this.taskId = sanitizer.sanitize(request.taskId);
@@ -214,6 +223,11 @@ public class FormRequest {
 
         public Builder remoteUser(String remoteUser) {
             this.remoteUser = remoteUser;
+            return this;
+        }
+
+        public Builder actAsUser(String actAsUser) {
+            this.actAsUser = actAsUser;
             return this;
         }
 

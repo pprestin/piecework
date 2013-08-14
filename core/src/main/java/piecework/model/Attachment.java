@@ -35,7 +35,7 @@ import java.util.Date;
 @XmlType(name = Attachment.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = Attachment.Constants.ROOT_ELEMENT_NAME)
-public class Attachment implements Serializable {
+public class Attachment implements Serializable, Comparable<Attachment> {
 
 	private static final long serialVersionUID = 3332973881472650839L;
 
@@ -160,7 +160,39 @@ public class Attachment implements Serializable {
 		return isDeleted;
 	}
 
-	public final static class Builder {
+    @Override
+    public int compareTo(Attachment o) {
+        if (lastModified != null && o.lastModified != null) {
+            int result = lastModified.compareTo(o.lastModified);
+            if (result == 0 && description != null && o.description != null)
+                result = description.compareTo(o.description);
+            if (result == 0 && name != null && o.name != null)
+                result = name.compareTo(o.name);
+            if (result == 0 && attachmentId != null && o.attachmentId != null)
+                result = attachmentId.compareTo(o.attachmentId);
+            return result;
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Attachment that = (Attachment) o;
+
+        if (!attachmentId.equals(that.attachmentId)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return attachmentId.hashCode();
+    }
+
+    public final static class Builder {
 
     	private String attachmentId;
     	private String processDefinitionKey;

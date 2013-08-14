@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -108,23 +109,28 @@ public class ProcessInstance implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-    @DBRef
-    private final List<Submission> submissions;
+//    @DBRef
+    private final List<String> submissionIds;
 
     @XmlElementWrapper(name="attachments")
     @XmlElementRef
-    @DBRef
-    private final List<Attachment> attachments;
+//    @DBRef
+    @Transient
+    private final Set<Attachment> attachments;
+
+    @XmlTransient
+    @JsonIgnore
+    private final Set<String> attachmentIds;
 
     @XmlTransient
     @JsonIgnore
     private final boolean isDeleted;
 
     private ProcessInstance() {
-        this(new ProcessInstance.Builder(), new ViewContext(), false);
+        this(new ProcessInstance.Builder(), new ViewContext());
     }
 
-    private ProcessInstance(Builder builder, ViewContext context, boolean includeSubresources) {
+    private ProcessInstance(Builder builder, ViewContext context) {
         this.processInstanceId = builder.processInstanceId;
         this.engineProcessInstanceId = builder.engineProcessInstanceId;
         this.alias = builder.alias;
@@ -135,17 +141,50 @@ public class ProcessInstance implements Serializable {
         this.applicationStatus = builder.applicationStatus;
         this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.previousApplicationStatus = builder.previousApplicationStatus;
-
+        this.attachmentIds = Collections.unmodifiableSet(builder.attachmentIds);
         this.keywords = builder.keywords;
 
-        List<Attachment> attachments = null;
-        if (includeSubresources) {
-            attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new ArrayList<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
-            if (builder.attachments != null) {
-                for (Attachment attachment : builder.attachments) {
-                    attachments.add(new Attachment.Builder(attachment).build(context));
-                }
-            }
+//        Set<Attachment> attachments = null;
+//        if (includeSubresources) {
+//            attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new TreeSet<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
+//            if (builder.attachments != null) {
+//                for (Attachment attachment : builder.attachments) {
+//                    attachments.add(new Attachment.Builder(attachment).build(context));
+//                }
+//            }
+//            if (builder.data != null && !builder.data.isEmpty()) {
+//                ManyMap<String, Value> data = new ManyMap<String, Value>();
+//                for (Map.Entry<String, List<Value>> entry : builder.data.entrySet()) {
+//
+//                    List<Value> values = entry.getValue();
+//                    if (values == null)
+//                        continue;
+//
+//                    String fieldName = entry.getKey();
+//                    for (Value value : values) {
+//                        if (value instanceof File) {
+//                            File file = File.class.cast(value);
+//
+//                            data.putOne(fieldName, new File.Builder(file)
+//                                    .processDefinitionKey(processDefinitionKey)
+//                                    .processInstanceId(processInstanceId)
+//                                    .fieldName(fieldName)
+//                                    .build(context));
+//                        } else {
+//                            data.putOne(fieldName, value);
+//                        }
+//                    }
+//                }
+//                this.data = Collections.unmodifiableMap(data);
+//            } else {
+//                this.data = Collections.emptyMap();
+//            }
+//        } else {
+//            attachments = Collections.emptyList();
+//            this.data = Collections.emptyMap();
+//        }
+
+        if (context != null) {
             if (builder.data != null && !builder.data.isEmpty()) {
                 ManyMap<String, Value> data = new ManyMap<String, Value>();
                 for (Map.Entry<String, List<Value>> entry : builder.data.entrySet()) {
@@ -174,13 +213,12 @@ public class ProcessInstance implements Serializable {
                 this.data = Collections.emptyMap();
             }
         } else {
-            attachments = builder.attachments;
-            this.data = builder.data;
+            this.data = Collections.unmodifiableMap(builder.data);
         }
 
-        this.attachments = Collections.unmodifiableList(attachments);
+        this.attachments = Collections.unmodifiableSet(builder.attachments);
         this.operations = Collections.unmodifiableList(builder.operations);
-        this.submissions = builder.submissions != null ? Collections.unmodifiableList(builder.submissions) : null;
+        this.submissionIds = builder.submissionIds != null ? Collections.unmodifiableList(builder.submissionIds) : null;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.initiatorId = builder.initiatorId;
@@ -270,13 +308,17 @@ public class ProcessInstance implements Serializable {
         return operations;
     }
 
-    public List<Submission> getSubmissions() {
-        return submissions;
+    public List<String> getSubmissionIds() {
+        return submissionIds;
     }
 	
-	public List<Attachment> getAttachments() {
+	public Set<Attachment> getAttachments() {
 		return attachments;
 	}
+
+    public Set<String> getAttachmentIds() {
+        return attachmentIds;
+    }
 
     public String getLink() {
         return link;
@@ -305,9 +347,10 @@ public class ProcessInstance implements Serializable {
         private String previousApplicationStatus;
         private ManyMap<String, Value> data;
         private Set<String> keywords;
-        private List<Attachment> attachments;
+        private Set<Attachment> attachments;
+        private Set<String> attachmentIds;
         private List<Operation> operations;
-        private List<Submission> submissions;
+        private List<String> submissionIds;
         private Date startTime;
         private Date endTime;
         private String initiatorId;
@@ -315,11 +358,12 @@ public class ProcessInstance implements Serializable {
 
         public Builder() {
             super();
-            this.attachments = new ArrayList<Attachment>();
+            this.attachments = new TreeSet<Attachment>();
+            this.attachmentIds = new HashSet<String>();
             this.keywords = new HashSet<String>();
             this.data = new ManyMap<String, Value>();
             this.operations = new ArrayList<Operation>();
-            this.submissions = new ArrayList<Submission>();
+            this.submissionIds = new ArrayList<String>();
         }
 
         public Builder(ProcessInstance instance) {
@@ -339,9 +383,14 @@ public class ProcessInstance implements Serializable {
             this.isDeleted = instance.isDeleted;
 
             if (instance.attachments != null && !instance.attachments.isEmpty())
-                this.attachments = new ArrayList<Attachment>(instance.attachments);
+                this.attachments = new TreeSet<Attachment>(instance.attachments);
             else
-                this.attachments = new ArrayList<Attachment>();
+                this.attachments = new TreeSet<Attachment>();
+
+            if (instance.attachmentIds != null && !instance.attachmentIds.isEmpty())
+                this.attachmentIds = new HashSet<String>(instance.attachmentIds);
+            else
+                this.attachmentIds = new HashSet<String>();
 
             if (instance.keywords != null && !instance.keywords.isEmpty())
                 this.keywords = new HashSet<String>(instance.keywords);
@@ -358,10 +407,10 @@ public class ProcessInstance implements Serializable {
             else
                 this.operations = new ArrayList<Operation>();
 
-            if (instance.submissions != null && !instance.submissions.isEmpty())
-                this.submissions = new ArrayList<Submission>(instance.submissions);
+            if (instance.submissionIds != null && !instance.submissionIds.isEmpty())
+                this.submissionIds = new ArrayList<String>(instance.submissionIds);
             else
-                this.submissions = new ArrayList<Submission>();
+                this.submissionIds = new ArrayList<String>();
 
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
                 this.keywords.add(this.processInstanceLabel.toLowerCase());
@@ -374,15 +423,11 @@ public class ProcessInstance implements Serializable {
         }
 
         public ProcessInstance build() {
-            return new ProcessInstance(this, null, false);
+            return new ProcessInstance(this, null);
         }
 
         public ProcessInstance build(ViewContext context) {
-            return new ProcessInstance(this, context, false);
-        }
-
-        public ProcessInstance buildWithSubresources(ViewContext context) {
-            return new ProcessInstance(this, context, true);
+            return new ProcessInstance(this, context);
         }
 
         public Builder processInstanceId(String processInstanceId) {
@@ -500,38 +545,44 @@ public class ProcessInstance implements Serializable {
         }
 
         public Builder removeAttachment(String attachmentId) {
-            if (this.attachments != null && attachmentId != null) {
-                List<Attachment> all = this.attachments;
-                this.attachments = new ArrayList<Attachment>();
-                for (Attachment attachment : all) {
-                    if (attachment.getAttachmentId() == null || !attachmentId.equals(attachment.getAttachmentId()))
-                        this.attachments.add(attachment);
-                }
-            }
+            if (this.attachmentIds != null && attachmentId != null)
+                this.attachmentIds.remove(attachmentId);
+
             return this;
         }
 
         public Builder attachment(Attachment attachment) {
-            if (attachment != null)
+            if (attachment != null) {
                 this.attachments.add(attachment);
+                this.attachmentIds.add(attachment.getAttachmentId());
+            }
             return this;
         }
 
-        public Builder attachments(List<Attachment> attachments) {
-            if (attachments != null)
-                this.attachments.addAll(attachments);
+        public Builder attachments(Iterable<Attachment> attachments) {
+            if (attachments != null) {
+                for (Attachment attachment : attachments) {
+                    attachment(attachment);
+                }
+            }
+
         	return this;
         }
 
         public Builder submission(Submission submission) {
             if (submission != null)
-                this.submissions.add(submission);
+                this.submissionIds.add(submission.getSubmissionId());
             return this;
         }
 
         public Builder submissions(List<Submission> submissions) {
-            if (submissions != null)
-                this.submissions.addAll(submissions);
+            if (submissions != null) {
+                for (Submission submission : submissions) {
+                    if (submission == null)
+                        continue;
+                    this.submissionIds.add(submission.getSubmissionId());
+                }
+            }
             return this;
         }
         

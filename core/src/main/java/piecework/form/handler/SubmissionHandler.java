@@ -68,14 +68,17 @@ public class SubmissionHandler {
     @Autowired
     UuidGenerator uuidGenerator;
 
-
     public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission) throws InternalServerError {
         return handle(process, template, rawSubmission);
     }
 
     public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest) throws InternalServerError {
-        String userId = helper.getAuthenticatedSystemOrUserId();
+        String submitterId = helper.getAuthenticatedSystemOrUserId();
 
+        if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(formRequest.getActAsUser()))
+            submitterId = formRequest.getActAsUser();
+        else if (rawSubmission != null && StringUtils.isNotEmpty(rawSubmission.getSubmitterId()))
+            submitterId = sanitizer.sanitize(rawSubmission.getSubmitterId());
 
         Submission.Builder submissionBuilder;
 
@@ -88,7 +91,7 @@ public class SubmissionHandler {
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
                 .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
-                .submitterId(userId);
+                .submitterId(submitterId);
 
         if (rawSubmission != null && rawSubmission.getData() != null) {
             for (Map.Entry<String, List<Value>> entry : rawSubmission.getData().entrySet()) {
@@ -97,7 +100,7 @@ public class SubmissionHandler {
 
                 for (Value value : values) {
                     String actualValue = value.getValue();
-                    if (!handleStorage(template, submissionBuilder, name, actualValue, userId)) {
+                    if (!handleStorage(template, submissionBuilder, name, actualValue, submitterId)) {
                         LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                     }
                 }

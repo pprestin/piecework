@@ -156,6 +156,7 @@ public class RequestHandler {
                     .remoteHost(requestDetails.getRemoteHost())
                     .remotePort(requestDetails.getRemotePort())
                     .remoteUser(requestDetails.getRemoteUser())
+                    .actAsUser(requestDetails.getActAsUser())
                     .certificateIssuer(requestDetails.getCertificateIssuer())
                     .certificateSubject(requestDetails.getCertificateSubject());
         }
