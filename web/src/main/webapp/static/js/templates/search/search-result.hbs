@@ -2,9 +2,9 @@
 {{#if task}}
     {{#with task}}
     <td><a href="{{../link}}.html" rel="external">{{processInstanceLabel}}</a></td>
-    <td class="hide-narrow">{{taskStatus}}</td>
-    <td class="hide-narrow">{{taskLabel}}</td>
-    <td class="hide-narrow">{{#if assignee}}{{assignee.displayName}}{{else}}Nobody{{/if}}</td>
+    <td class="hidden-xs">{{taskStatus}}</td>
+    <td class="hidden-sm" style="cursor:pointer"><span class="use-tooltip" title="{{taskDescription}}" data-placement="right" data-trigger="hover">{{taskLabel}}</span></td>
+    <td class="hidden-sm">{{#if assignee}}{{assignee.displayName}}{{else}}Nobody{{/if}}</td>
     <!--<td class="hide-narrow">{{processDefinitionLabel}}</td>-->
     <td>{{date startTime}}{{#if endTime}} - {{date endTime}}{{/if}}</td>
     {{/with}}

@@ -162,17 +162,16 @@ public class Attachment implements Serializable, Comparable<Attachment> {
 
     @Override
     public int compareTo(Attachment o) {
-        if (lastModified != null && o.lastModified != null) {
-            int result = lastModified.compareTo(o.lastModified);
-            if (result == 0 && description != null && o.description != null)
-                result = description.compareTo(o.description);
-            if (result == 0 && name != null && o.name != null)
-                result = name.compareTo(o.name);
-            if (result == 0 && attachmentId != null && o.attachmentId != null)
-                result = attachmentId.compareTo(o.attachmentId);
-            return result;
-        }
-        return 0;
+        int result = 0;
+        if (lastModified != null && o.lastModified != null)
+            result = lastModified.compareTo(o.lastModified);
+        if (result == 0 && description != null && o.description != null)
+            result = description.compareTo(o.description);
+        if (result == 0 && name != null && o.name != null)
+            result = name.compareTo(o.name);
+        if (result == 0 && attachmentId != null && o.attachmentId != null)
+            result = attachmentId.compareTo(o.attachmentId);
+        return result;
     }
 
     @Override
