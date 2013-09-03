@@ -6,6 +6,7 @@ import piecework.authorization.AuthorizationRole;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 import piecework.model.ProcessInstance;
+import piecework.model.Acumen;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -72,8 +73,8 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/activation")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    @Consumes("application/x-www-form-urlencoded")
-    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+    @Consumes({"application/x-www-form-urlencoded","application/xml","application/json"})
+    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, Acumen reason) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
@@ -121,8 +122,8 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    @Consumes("application/x-www-form-urlencoded")
-    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+    @Consumes({"application/x-www-form-urlencoded","application/xml","application/json"})
+    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, Acumen reason) throws StatusCodeError;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")

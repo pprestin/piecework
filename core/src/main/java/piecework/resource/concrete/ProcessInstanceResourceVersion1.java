@@ -96,10 +96,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     AllowedTaskService taskService;
 
     @Override
-    public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+    public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, Acumen rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String reason = sanitizer.sanitize(rawReason);
+        String reason = sanitizer.sanitize(rawReason.getReason());
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, false))
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
@@ -271,10 +271,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
-    public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+    public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, Acumen rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String reason = sanitizer.sanitize(rawReason);
+        String reason = sanitizer.sanitize(rawReason.getReason());
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
