@@ -291,8 +291,6 @@ define([ 'chaplin',
                     inputs.prop('disabled', true);
 
                     $('#comment-button').prop('disabled', true);
-//                    $('#suspend-button').addClass('btn-success');
-//                    $('#suspend-button').attr('title', 'Reactivate')
 
                     if (task.processStatus == 'suspended') {
                         var notification = new Notification({title: 'Process suspended', message: 'This process has been suspended and no other actions can be taken on it until it has been reactivated. Use the green button at the top-left of this window to reactivate.'})

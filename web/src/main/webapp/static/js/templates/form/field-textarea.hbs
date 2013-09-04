@@ -3,7 +3,8 @@
 {{/if}}
 <textarea id="{{fieldId}}" class="form-control" name="{{name}}" maxlength="{{maxValueLength}}" rows="5" cols="80"
 {{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}}
-{{#if required}}class="required"{{/if}}>
+{{#if required}}class="required"{{/if}}
+{{#unless editable}}disabled{{/unless}}>
 </textarea>
 {{#if messages}}
 {{#each messages}}

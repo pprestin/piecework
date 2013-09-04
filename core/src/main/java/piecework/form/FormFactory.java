@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
@@ -72,7 +73,8 @@ public class FormFactory {
 
         ViewContext instanceViewContext = processInstanceService.getInstanceViewContext();
         String loggedInUserId = helper.getAuthenticatedSystemOrUserId();
-        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, instanceViewContext, loggedInUserId);
+        boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
+        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, instanceViewContext, loggedInUserId, hasOversight);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         ManyMap<String, Message> results = new ManyMap<String, Message>();
 
@@ -228,8 +230,9 @@ public class FormFactory {
         private final Screen screen;
         private final ViewContext instanceContext;
         private final String loggedInUserId;
+        private final boolean hasOversight;
 
-        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext instanceContext, String loggedInUserId) {
+        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext instanceContext, String loggedInUserId, boolean hasOversight) {
             this.process = process;
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
@@ -239,6 +242,7 @@ public class FormFactory {
             this.screen = screen;
             this.instanceContext = instanceContext;
             this.loggedInUserId = loggedInUserId;
+            this.hasOversight = hasOversight;
         }
 
         public Form form(String formInstanceId, ManyMap<String, Value> data, ManyMap<String, Message> results, ViewContext formContext, ViewContext taskContext) {
@@ -247,7 +251,8 @@ public class FormFactory {
                     .processDefinitionKey(processDefinitionKey)
                     .taskSubresources(processDefinitionKey, task, taskContext);
 
-            builder.screen(screen(builder, screen, data, results));
+            if (hasOversight || task == null || task.getAssigneeId() == null || task.getAssigneeId().equals(loggedInUserId))
+                builder.screen(screen(builder, screen, data, results));
 
             if (processInstanceId != null)
                 builder.instanceSubresources(processDefinitionKey, processInstanceId, attachments, attachmentCount, instanceContext);

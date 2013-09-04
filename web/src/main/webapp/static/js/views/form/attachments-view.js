@@ -15,15 +15,14 @@ define([
         itemView: AttachmentView,
         listen: {
             'refreshAttachments mediator': '_onRefreshAttachments',
+            'showAttachments mediator': '_onShowAttachments',
         },
-//        render: function() {
-////            this.$el.append('<div class="attachment-fallback hide">No items</div>');
-//            CollectionView.__super__.render.apply(this);
-//            return this;
-//        }
         _onRefreshAttachments: function() {
             this.collection.fetch();
         },
+        _onShowAttachments: function() {
+            this.$el.toggle();
+        }
 	});
 
 	return AttachmentsView;
