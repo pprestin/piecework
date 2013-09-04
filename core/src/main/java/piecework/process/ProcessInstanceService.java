@@ -17,8 +17,10 @@ package piecework.process;
 
 import com.mongodb.DBRef;
 import com.mongodb.WriteResult;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.bouncycastle.crypto.digests.MD5Digest;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -61,6 +63,9 @@ import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.DatatypeConverter;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
 import java.util.*;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -420,6 +425,15 @@ public class ProcessInstanceService {
 
                 if (!file.getId().equals(fileId))
                     remainingValues.add(value);
+            } else {
+                String link = value.getValue();
+                try {
+                    String id = DatatypeConverter.printBase64Binary(MessageDigest.getInstance("SHA1").digest(link.getBytes()));
+                    if (id == null || !id.equals(fileId))
+                        remainingValues.add(value);
+                } catch (Exception e) {
+                    LOG.error("Unable to digest link for content type of url", e);
+                }
             }
         }
 
@@ -429,11 +443,11 @@ public class ProcessInstanceService {
         updateProcessInstance(update, null, null, null, instance);
     }
 
-    public List<File> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {
+    public List<Value> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {
         Map<String, List<Value>> data = instance.getData();
         List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 
-        List<File> files = new ArrayList<File>();
+        List<Value> files = new ArrayList<Value>();
 
         if (values != null && !values.isEmpty()) {
             for (Value value : values) {
@@ -443,6 +457,14 @@ public class ProcessInstanceService {
                 if (value instanceof File) {
                     File file = File.class.cast(value);
                     files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(file.getName()).id(file.getId()).contentType(file.getContentType()).build(getInstanceViewContext()));
+                } else {
+                    String link = value.getValue();
+                    try {
+                        String id = URLEncoder.encode(DatatypeConverter.printBase64Binary(MessageDigest.getInstance("SHA1").digest(link.getBytes())), "UTF-8");
+                        files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(link).id(id).contentType("text/url").build(getInstanceViewContext()));
+                    } catch (Exception e) {
+                        LOG.error("Unable to digest link for content type of url", e);
+                    }
                 }
             }
         }

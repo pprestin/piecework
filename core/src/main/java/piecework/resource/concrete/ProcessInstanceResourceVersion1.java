@@ -391,7 +391,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             }
         }
 
-        return Response.noContent().header(HttpHeaders.LOCATION, location).build();
+        ResponseBuilder builder = Response.noContent();
+
+        if (location != null)
+            builder.header(HttpHeaders.LOCATION, location);
+
+        return builder.build();
     }
 
     @Override
@@ -403,7 +408,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        List<File> files = processInstanceService.searchValues(process, instance, fieldName);
+        List<Value> files = processInstanceService.searchValues(process, instance, fieldName);
         SearchResults searchResults = new SearchResults.Builder()
                 .items(files)
                 .build();
