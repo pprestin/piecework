@@ -104,7 +104,17 @@ public class ResponseHandler {
         if (location.startsWith("classpath:")) {
             ClassPathResource resource = new ClassPathResource(location.substring("classpath:".length()));
             try {
-                content = new Content.Builder().inputStream(resource.getInputStream()).contentType("text/html").build();
+                BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
+                String contentType = URLConnection.guessContentTypeFromStream(inputStream);
+                if (contentType == null) {
+                    if (location.endsWith(".css"))
+                        contentType = "text/css";
+                    else if (location.endsWith(".js"))
+                        contentType = "application/json";
+                    else
+                        contentType = "text/html";
+                }
+                content = new Content.Builder().inputStream(inputStream).contentType(contentType).build();
             } catch (IOException e) {
                 throw new InternalServerError();
             }
