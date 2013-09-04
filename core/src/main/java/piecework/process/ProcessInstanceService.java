@@ -33,6 +33,7 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.EventType;
 import piecework.enumeration.OperationType;
+import piecework.form.handler.ResponseHandler;
 import piecework.form.validation.SubmissionTemplate;
 import piecework.identity.InternalUserDetailsService;
 import piecework.model.SearchResults;
@@ -98,6 +99,9 @@ public class ProcessInstanceService {
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
+    ResponseHandler responseHandler;
 
     @Autowired
     Sanitizer sanitizer;
@@ -275,6 +279,72 @@ public class ProcessInstanceService {
 
         return instance;
     }
+
+    public Response readStatic(Process process, String name) throws StatusCodeError {
+
+        String base = process.getBase();
+
+        if (StringUtils.isNotEmpty(base)) {
+            Content content = responseHandler.content(base + "/" + name);
+
+            if (content != null)
+                return Response.ok(content.getInputStream()).type(content.getContentType()).build();
+        }
+
+        throw new NotFoundError();
+    }
+
+//    public Response readScript(Process process, Screen screen, String scriptName) throws StatusCodeError {
+//
+//        List<File> scripts = screen.getScripts();
+//
+//        File file = null;
+//        if (scripts != null) {
+//            for (File script : scripts) {
+//                if (script != null && script.getName() != null && script.getName().equals(scriptName)) {
+//                    file = script;
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if (file == null)
+//            throw new NotFoundError();
+//
+//        Content content = contentRepository.findByLocation(file.getLocation());
+//        if (content != null) {
+//            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+//            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).build();
+//        }
+//
+//        throw new NotFoundError();
+//    }
+//
+//    public Response readStylesheet(Process process, Screen screen, String stylesheetName) throws StatusCodeError {
+//
+//        List<File> stylesheets = screen.getStylesheets();
+//
+//        File file = null;
+//        if (stylesheets != null) {
+//            for (File stylesheet : stylesheets) {
+//                if (stylesheet != null && stylesheet.getName() != null && stylesheet.getName().equals(stylesheetName)) {
+//                    file = stylesheet;
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if (file == null)
+//            throw new NotFoundError();
+//
+//        Content content = contentRepository.findByLocation(file.getLocation());
+//        if (content != null) {
+//            StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+//            return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).build();
+//        }
+//
+//        throw new NotFoundError();
+//    }
 
     public Response readValue(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
         Map<String, List<Value>> data = instance.getData();

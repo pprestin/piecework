@@ -56,7 +56,7 @@ define([ 'chaplin', 'views/base/view'],
                 var maxInputs = this.model.get("maxInputs");
                 if (maxInputs != null && maxInputs > 1) {
                     this.$el.addClass('input-append');
-                    this.$el.find(':input').after('<div class="btn-group"><button class="btn add-input-button" type="button" role="button"><i class="icon-plus-sign"></i></button></div>');
+                    this.$el.find(':input').after('<div class="btn-group"><button class="btn btn-default add-input-button" type="button" role="button"><i class="icon-plus-sign"></i></button></div>');
                 }
             }
 
@@ -114,6 +114,8 @@ define([ 'chaplin', 'views/base/view'],
             var name = event.target.name;
             var value = event.target.value;
             Chaplin.mediator.publish('value:' + name, name, value);
+            this.$el.removeClass('has-error');
+            this.$el.find('span.generated').remove();
         },
         _onDependencyValueChange: function(name, value) {
             var constraints = this.model.get('constraints');

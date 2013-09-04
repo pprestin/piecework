@@ -77,6 +77,9 @@ public class Process implements Serializable {
     private final String suspensionStatus;
 
     @XmlAttribute
+    private final String base;
+
+    @XmlAttribute
     @Transient
     private final String link;
 
@@ -127,6 +130,7 @@ public class Process implements Serializable {
         this.cancellationStatus = builder.cancellationStatus;
         this.completionStatus = builder.completionStatus;
         this.suspensionStatus = builder.suspensionStatus;
+        this.base = builder.base;
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey) : null;
 		this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
@@ -165,7 +169,11 @@ public class Process implements Serializable {
 		return engine;
 	}
 
-	public String getEngineProcessDefinitionKey() {
+    public String getBase() {
+        return base;
+    }
+
+    public String getEngineProcessDefinitionKey() {
 		return engineProcessDefinitionKey;
 	}
 
@@ -260,6 +268,7 @@ public class Process implements Serializable {
 		private String participantSummary;		
 		private String engine;		
 		private String engineProcessDefinitionKey;
+        private String base;
         private String initiationStatus;
         private String cancellationStatus;
         private String completionStatus;
@@ -286,7 +295,8 @@ public class Process implements Serializable {
 			this.participantSummary = sanitizer.sanitize(process.participantSummary);
 			this.engine = sanitizer.sanitize(process.engine);
 			this.engineProcessDefinitionKey = sanitizer.sanitize(process.engineProcessDefinitionKey);
-		    this.initiationStatus = sanitizer.sanitize(process.initiationStatus);
+		    this.base = sanitizer.sanitize(process.base);
+            this.initiationStatus = sanitizer.sanitize(process.initiationStatus);
             this.cancellationStatus = sanitizer.sanitize(process.cancellationStatus);
             this.completionStatus = sanitizer.sanitize(process.completionStatus);
             this.suspensionStatus = sanitizer.sanitize(process.suspensionStatus);
@@ -362,6 +372,11 @@ public class Process implements Serializable {
 			this.engineProcessDefinitionKey = engineProcessDefinitionKey;
 			return this;
 		}
+
+        public Builder base(String base) {
+            this.base = base;
+            return this;
+        }
 
         public Builder cancellationStatus(String cancellationStatus) {
             this.cancellationStatus = cancellationStatus;

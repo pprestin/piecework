@@ -134,8 +134,9 @@ public class FormService {
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
         String formValueName = null;
-        String formValueItem = null;
-        boolean isFormValueResource = false;
+//        String formValueItem = null;
+//        boolean isFormValueResource = false;
+        boolean isStatic = false;
         boolean isSubmissionResource;
 
         if (pathSegments != null && !pathSegments.isEmpty()) {
@@ -147,16 +148,25 @@ public class FormService {
             if (isSubmissionResource && pathSegmentIterator.hasNext()) {
                 requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
             }
+            isStatic = StringUtils.isNotEmpty(requestId) && requestId.equals("static");
 
             if (pathSegmentIterator.hasNext()) {
-                String path = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-                isFormValueResource = path != null && path.equals(FormValue.Constants.ROOT_ELEMENT_NAME);
-                if (pathSegmentIterator.hasNext()) {
-                    formValueName = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-
+                String staticResourceName = "";
+                while (pathSegmentIterator.hasNext()) {
+                    staticResourceName += sanitizer.sanitize(pathSegmentIterator.next().getPath());
                     if (pathSegmentIterator.hasNext())
-                        formValueItem = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+                        staticResourceName += "/";
                 }
+                if (isStatic)
+                    return processInstanceService.readStatic(process, staticResourceName);
+
+//                isFormValueResource = path != null && path.equals(FormValue.Constants.ROOT_ELEMENT_NAME);
+//                if (pathSegmentIterator.hasNext()) {
+//                    formValueName = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+//
+//                    if (pathSegmentIterator.hasNext())
+//                        formValueItem = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+//                }
             }
         }
 
@@ -176,13 +186,13 @@ public class FormService {
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
 
-        if (isFormValueResource) {
-            if (StringUtils.isEmpty(formRequest.getProcessInstanceId()))
-                throw new NotFoundError();
-
-            ProcessInstance instance = processInstanceService.read(process, formRequest.getProcessInstanceId(), false);
-            return processInstanceService.readValue(process, instance, formValueName, formValueItem);
-        }
+//        if (isFormValueResource) {
+//            if (StringUtils.isEmpty(formRequest.getProcessInstanceId()))
+//                throw new NotFoundError();
+//
+//            ProcessInstance instance = processInstanceService.read(process, formRequest.getProcessInstanceId(), false);
+//            return processInstanceService.readValue(process, instance, formValueName, formValueItem);
+//        } else
 
         return responseHandler.handle(formRequest, process);
     }
@@ -214,7 +224,7 @@ public class FormService {
                         .formInstanceId(task.getTaskInstanceId())
                         .taskSubresources(task.getProcessDefinitionKey(), task, taskViewContext)
                         .processDefinitionKey(task.getProcessDefinitionKey())
-                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, instanceViewContext)
+                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, 0, instanceViewContext)
                         .build(viewContext));
             }
         }

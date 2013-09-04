@@ -17,6 +17,7 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -60,8 +61,11 @@ public class Screen implements Serializable {
     @XmlAttribute
     private final boolean isAttachmentAllowed;
 
-    @XmlElementWrapper(name="stylesheets")
-    private final List<String> stylesheets;
+//    @XmlElementWrapper(name="stylesheets")
+//    private final List<File> stylesheets;
+//
+//    @XmlElementWrapper(name="scripts")
+//    private final List<File> scripts;
 
     @XmlElementWrapper(name="groupings")
     @XmlElementRef
@@ -106,7 +110,8 @@ public class Screen implements Serializable {
 		this.isDeleted = builder.isDeleted;
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.groupings = Collections.unmodifiableList(builder.groupings);
-        this.stylesheets = Collections.unmodifiableList(builder.stylesheets);
+//        this.stylesheets = Collections.unmodifiableList(builder.stylesheets);
+//        this.scripts = Collections.unmodifiableList(builder.scripts);
 		this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.sections = Collections.unmodifiableList(builder.sections);
         this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
@@ -146,9 +151,13 @@ public class Screen implements Serializable {
         return groupings;
     }
 
-    public List<String> getStylesheets() {
-        return stylesheets;
-    }
+//    public List<File> getStylesheets() {
+//        return stylesheets;
+//    }
+//
+//    public List<File> getScripts() {
+//        return scripts;
+//    }
 
     public List<Section> getSections() {
         return sections;
@@ -184,7 +193,8 @@ public class Screen implements Serializable {
 		private String location;
         private boolean isAttachmentAllowed;
         private List<Grouping> groupings;
-        private List<String> stylesheets;
+        private List<File> stylesheets;
+        private List<File> scripts;
         private List<Constraint> constraints;
         private List<Section> sections;
         private int reviewIndex;
@@ -196,7 +206,8 @@ public class Screen implements Serializable {
 			super();
             this.groupings = new ArrayList<Grouping>();
             this.sections = new ArrayList<Section>();
-            this.stylesheets = new ArrayList<String>();
+            this.stylesheets = new ArrayList<File>();
+            this.scripts = new ArrayList<File>();
             this.constraints = new ArrayList<Constraint>();
 		}
 
@@ -223,14 +234,23 @@ public class Screen implements Serializable {
                 this.groupings = new ArrayList<Grouping>();
             }
 
-            if (screen.stylesheets != null && !screen.stylesheets.isEmpty()) {
-                this.stylesheets = new ArrayList<String>(screen.stylesheets.size());
-                for (String stylesheet : screen.stylesheets) {
-                    this.stylesheets.add(sanitizer.sanitize(stylesheet));
-                }
-            } else {
-                this.stylesheets = new ArrayList<String>();
-            }
+//            if (screen.stylesheets != null && !screen.stylesheets.isEmpty()) {
+//                this.stylesheets = new ArrayList<File>(screen.stylesheets.size());
+//                for (File stylesheet : screen.stylesheets) {
+//                    this.stylesheets.add(new File.Builder(stylesheet, sanitizer).build());
+//                }
+//            } else {
+//                this.stylesheets = new ArrayList<File>();
+//            }
+//
+//            if (screen.scripts != null && !screen.scripts.isEmpty()) {
+//                this.scripts = new ArrayList<File>(screen.scripts.size());
+//                for (File script : screen.scripts) {
+//                    this.scripts.add(new File.Builder(script, sanitizer).build());
+//                }
+//            } else {
+//                this.stylesheets = new ArrayList<File>();
+//            }
 
             if (screen.constraints != null && !screen.constraints.isEmpty()) {
                 this.constraints = new ArrayList<Constraint>(screen.constraints.size());
@@ -289,6 +309,18 @@ public class Screen implements Serializable {
 			this.location = location;
 			return this;
 		}
+
+        public Builder stylesheet(File stylesheet) {
+            if (stylesheet != null)
+                this.stylesheets.add(stylesheet);
+            return this;
+        }
+
+        public Builder script(File script) {
+            if (script != null)
+                this.scripts.add(script);
+            return this;
+        }
 
         public Builder attachmentAllowed(boolean isAttachmentAllowed) {
             this.isAttachmentAllowed = isAttachmentAllowed;

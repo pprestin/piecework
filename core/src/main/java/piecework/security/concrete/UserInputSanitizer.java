@@ -67,7 +67,7 @@ public class UserInputSanitizer implements Sanitizer {
 		
 		return null;
 	}
-	
+
 	/**
 	 * Ensure that the passed map messages and keys are stripped of any potential scripting
 	 */

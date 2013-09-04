@@ -26,6 +26,16 @@ define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-too
 	        'attachmentCountChanged mediator': '_onAttachmentCountChanged',
 	        'backToSearch mediator': '_onBackToSearch',
 	    },
+	    initialize: function(model, options) {
+            View.__super__.initialize.apply(this, options);
+
+            var task = this.model.get("task");
+            if (task != null && task.taskStatus != null && task.taskStatus == 'Suspended') {
+                this.model.set("suspended", "true");
+            }
+
+            return this;
+        },
 	    _onActivateButton: function() {
             var toolbar = this;
             var task = this.model.get("task");

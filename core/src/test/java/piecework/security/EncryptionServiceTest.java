@@ -50,7 +50,4 @@ public class EncryptionServiceTest {
         Assert.assertEquals("This is a simple test", cleartext);
     }
 
-
-
-
 }

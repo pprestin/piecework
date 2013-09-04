@@ -15,7 +15,7 @@ define([ 'chaplin',
 		tagName: 'form',
 	    template: template,
 	    events: {
-	        'click button': '_onFormSubmit',
+	        'click button.action-button': '_onFormSubmit',
 	        'load': '_onLoaded',
 	    },
 	    listen: {
@@ -237,38 +237,18 @@ define([ 'chaplin',
             if (validated != undefined && validated != 'false')
                 return true;
 
-//            var validated = $('#main-form').prop("validated");
-//            if (type != 'wizard' || (validated != undefined && validated))
-//                return true;
-
             this._doValidate($form, $button);
 
             return false;
 
 	    },
-//	    _onFormValid: function(data, textStatus, jqXHR) {
-//
-//            var next = $(':button[type="submit"]:visible').val();
-//
-//            if (next != 'submit' && next != 'reject' && next != 'approve') {
-////                $('#main-form').prop("validated", true);
-////                $('#main-form').submit();
-////            } else {
-//                var breadcrumbSelector = 'a[href="' + next + '"]';
-//                var $li = $('ul.breadcrumb').find(breadcrumbSelector).closest('li'); //.prev('li');
-//                $li.find('span.inactive-text').remove();
-//                $li.find('a').removeClass('hide');
-//
-//                Chaplin.mediator.publish('!router:route', next);
-//            }
-//	    },
 	    _onFormInvalid: function(jqXHR, textStatus, errorThrown) {
             var errors = $.parseJSON(jqXHR.responseText);
 
             if (errors.items != null) {
                 for (var i=0;i<errors.items.length;i++) {
                     var item = errors.items[i];
-                    var selector = ':input[name="' + item.propertyName + '"]';
+                    var selector = ':input[name="' + item.propertyName + '"]:last';
                     var $input = $(selector);
                     var $element = $input;
                     var $formGroup = $input.closest('.form-group');
@@ -276,6 +256,8 @@ define([ 'chaplin',
 
                     if ($input.is(':checkbox') || $input.is(':radio')) {
                         $element = $formGroup.find('label');
+                    } else if ($formGroup.hasClass('input-append') && $input.next('div.btn-group').length > 0) {
+                        $element = $formGroup.find('div.btn-group');
                     }
                     $element.after('<span class="help-block generated">' + item.message + '</span>')
                 }
@@ -309,12 +291,13 @@ define([ 'chaplin',
                     inputs.prop('disabled', true);
 
                     $('#comment-button').prop('disabled', true);
-                    $('#suspend-button').addClass('btn-success');
-                    $('#suspend-button').attr('title', 'Reactivate')
+//                    $('#suspend-button').addClass('btn-success');
+//                    $('#suspend-button').attr('title', 'Reactivate')
 
-                    var notification = new Notification({title: 'Process suspended', message: 'This process has been suspended and no other actions can be taken on it until it has been reactivated. Use the green button at the top-left of this window to reactivate.'})
-                    this.subview('notification', new NotificationView({container: '.notifications', model: notification}));
-
+                    if (task.processStatus == 'suspended') {
+                        var notification = new Notification({title: 'Process suspended', message: 'This process has been suspended and no other actions can be taken on it until it has been reactivated. Use the green button at the top-left of this window to reactivate.'})
+                        this.subview('notification', new NotificationView({container: '.notifications', model: notification}));
+                    }
                     return;
                 }
             }

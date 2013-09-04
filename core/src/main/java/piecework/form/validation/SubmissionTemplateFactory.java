@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 @Service
 public class SubmissionTemplateFactory {
 
-    private static final Set<FieldTag> FREEFORM_INPUT_TYPES = Sets.newHashSet(FieldTag.TEXT, FieldTag.TEXTAREA);
+    private static final Set<FieldTag> FREEFORM_INPUT_TYPES = Sets.newHashSet(FieldTag.FILE, FieldTag.EMAIL, FieldTag.NUMBER, FieldTag.TEXT, FieldTag.TEXTAREA);
 
     @Autowired(required=false)
     Registry registry;
@@ -136,13 +136,6 @@ public class SubmissionTemplateFactory {
         if (!field.isEditable())
             return rules;
 
-        if (field.isRequired()) {
-            if (fieldTag == FieldTag.FILE)
-                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());
-            else
-                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
-        }
-
         OptionResolver optionResolver = null;
         List<Constraint> constraints = field.getConstraints();
         if (constraints != null && !constraints.isEmpty()) {
@@ -183,6 +176,13 @@ public class SubmissionTemplateFactory {
                         .options(options).build());
             }
         } else {
+            if (field.isRequired()) {
+                if (fieldTag == FieldTag.FILE)
+                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());
+                else
+                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
+            }
+
             Pattern pattern = field.getPattern() != null ? Pattern.compile(field.getPattern()) : null;
             if (pattern != null)
                 rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.PATTERN).name(fieldName).pattern(pattern).build());

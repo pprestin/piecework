@@ -222,6 +222,7 @@ public class FormFactory {
         private final String processDefinitionKey;
         private final String processInstanceId;
         private final Set<Attachment> attachments;
+        private final int attachmentCount;
         private final Task task;
         private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         private final Screen screen;
@@ -233,6 +234,7 @@ public class FormFactory {
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
             this.attachments = instance != null ? instance.getAttachments() : Collections.<Attachment>emptySet();
+            this.attachmentCount = instance != null && instance.getAttachmentIds() != null ? instance.getAttachmentIds().size() : 0;
             this.task = task;
             this.screen = screen;
             this.instanceContext = instanceContext;
@@ -248,7 +250,7 @@ public class FormFactory {
             builder.screen(screen(builder, screen, data, results));
 
             if (processInstanceId != null)
-                builder.instanceSubresources(processDefinitionKey, processInstanceId, attachments, instanceContext);
+                builder.instanceSubresources(processDefinitionKey, processInstanceId, attachments, attachmentCount, instanceContext);
 
             return builder.build(formContext);
         }

@@ -1,16 +1,21 @@
+{{#if task}}
+    {{#if task.active}}
+    <div class="alert">This form cannot be modified - it is assigned to {{task.assignee.displayName}}</div>
+    {{else}}
+        {{#if task.endTime}}
+            <div class="alert">This form can no longer be modified - it was completed by {{task.assignee.displayName}} on {{date task.endTime}}</div>
+        {{else}}
+            <div class="alert">This form can no longer be modified - it has been suspended</div>
+        {{/if}}
+    {{/if}}
+{{/if}}
 {{#if screen}}
 {{#with screen}}
     {{#if readonly}}
-        <div class="alert">This form cannot be modified - it may be assigned to another person or the task it depends on may not be active</div>
+
     {{/if}}
     <h2>{{title}}</h2>
     {{#breadcrumb groupings}}{{#url "step"}}{{/url}}{{/breadcrumb}}
-    <!--{{#each groupings}}-->
-        <!--<div class="grouping" id="{{groupingId}}">-->
-            <!--{{#if title}}<h2>{{title}}</h2>{{/if}}-->
-            <!--{{#if description}}<p class="lead">{{description}}</p>{{/if}}-->
-        <!--</div>-->
-    <!--{{/each}}-->
     <div class="notifications"></div>
     <div class="screen" id="{{screenId}}">
         <div class="screen-header"></div>

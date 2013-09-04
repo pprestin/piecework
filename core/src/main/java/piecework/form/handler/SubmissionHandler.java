@@ -294,20 +294,4 @@ public class SubmissionHandler {
         return false;
     }
 
-//    public List<? extends Value> encrypted(List<? extends Value> messages) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
-//        if (messages.isEmpty())
-//            return Collections.emptyList();
-//
-//        List<Secret> list = new ArrayList<Secret>(messages.size());
-//        for (Value value : messages) {
-//            String plaintext = value.getValue();
-//
-//            if (plaintext != null) {
-//                Secret secret = encryptionService.encrypt(plaintext);
-//                list.add(secret);
-//            }
-//        }
-//
-//        return list;
-//    }
 }

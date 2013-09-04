@@ -18,6 +18,7 @@ package piecework.ui;
 import org.htmlcleaner.*;
 import piecework.model.Content;
 import piecework.model.Form;
+import piecework.model.Process;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
@@ -29,10 +30,12 @@ import java.io.OutputStream;
  */
 public class StreamingPageContent implements StreamingOutput {
 
+    private final Process process;
     private final Form form;
     private final Content content;
 
-    public StreamingPageContent(Form form, Content content) {
+    public StreamingPageContent(Process process, Form form, Content content) {
+        this.process = process;
         this.form = form;
         this.content = content;
     }

@@ -58,6 +58,9 @@ public class CustomJaxbJsonProvider implements MessageBodyReader, MessageBodyWri
 
     @Override
     public boolean isWriteable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        if (InputStream.class.isAssignableFrom(type))
+            return false;
+
         return jacksonJaxbJsonProvider.isWriteable(type, genericType, annotations, mediaType);
     }
 

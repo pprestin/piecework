@@ -82,6 +82,9 @@ public class AllowedTaskService {
                 criteriaBuilder.process(process).participantId(helper.getAuthenticatedSystemOrUserId());
             }
 
+            if (!limitToActive)
+                criteriaBuilder.processStatus(Constants.ProcessStatuses.ALL);
+
             return facade.findTask(criteriaBuilder.build());
         } catch (ProcessEngineException e) {
             LOG.error(e);

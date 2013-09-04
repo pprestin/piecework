@@ -705,6 +705,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (criteria.getDueAfter() != null)
             query.taskDueAfter(criteria.getDueAfter());
 
+        if (StringUtils.isNotEmpty(criteria.getAssigneeId()))
+            query.taskAssignee(criteria.getAssigneeId());
+
+        if (StringUtils.isNotEmpty(criteria.getParticipantId()))
+            query.taskInvolvedUser(criteria.getParticipantId());
+
         if (StringUtils.isNotEmpty(criteria.getProcessInstanceId())) {
             ProcessInstance instance = processInstanceRepository.findOne(criteria.getProcessInstanceId());
             if (instance != null)

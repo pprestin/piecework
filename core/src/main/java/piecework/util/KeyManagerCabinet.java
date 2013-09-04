@@ -44,16 +44,22 @@ public class KeyManagerCabinet {
 	static {
 		CIPHER_SUITES_LIST = Arrays.asList(CIPHER_SUITES);
 	}
+
+    private final KeyStore keystore;
+	private final KeyManager[] keyManagers;
+	private final TrustManager[] trustManagers;
 	
-	private KeyManager[] keyManagers;
-	private TrustManager[] trustManagers;
-	
-	private KeyManagerCabinet(KeyManager[] keyManagers, TrustManager[] trustManagers) {
-		this.keyManagers = keyManagers;
+	private KeyManagerCabinet(KeyStore keystore, KeyManager[] keyManagers, TrustManager[] trustManagers) {
+		this.keystore = keystore;
+        this.keyManagers = keyManagers;
 		this.trustManagers = trustManagers;
 	}
 
-	public KeyManager[] getKeyManagers() {
+    public KeyStore getKeystore() {
+        return keystore;
+    }
+
+    public KeyManager[] getKeyManagers() {
 		return keyManagers;
 	}
 
@@ -84,7 +90,7 @@ public class KeyManagerCabinet {
 	        	keystoreType = "JKS";
 
             if (StringUtils.isEmpty(securitySettings.getKeystoreFile()))
-                return new KeyManagerCabinet(null, null);
+                return new KeyManagerCabinet(null, null, null);
 
 	        KeyStore ks = KeyStore.getInstance(keystoreType);
 			FileInputStream fis = new FileInputStream(securitySettings.getKeystoreFile());
@@ -102,7 +108,7 @@ public class KeyManagerCabinet {
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
 			tmf.init((KeyStore)null);
 			
-			return new KeyManagerCabinet(kmf.getKeyManagers(), tmf.getTrustManagers());
+			return new KeyManagerCabinet(ks, kmf.getKeyManagers(), tmf.getTrustManagers());
 		}
 		
 	}

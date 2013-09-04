@@ -272,14 +272,16 @@ public class DecoratingVisitor implements TagNodeVisitor {
                 attributes.put("action", formUri);
                 attributes.put("method", "POST");
                 attributes.put("enctype", "multipart/form-data");
-                tag.setAttributes(attributes);
-
             } else if (type.equals("attachments")) {
                 String attachmentUri = form.getAttachment() != null ? form.getAttachment() : "";
                 attributes.put("action", attachmentUri);
                 attributes.put("method", "POST");
-                tag.setAttributes(attributes);
+            } else if (type.equals("cancellation")) {
+                String attachmentUri = form.getCancellation() != null ? form.getCancellation() : "";
+                attributes.put("action", attachmentUri);
+                attributes.put("method", "POST");
             }
+            tag.setAttributes(attributes);
         }
 
         @Override

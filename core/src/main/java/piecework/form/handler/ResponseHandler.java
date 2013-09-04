@@ -38,7 +38,9 @@ import piecework.persistence.ContentRepository;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.net.URLConnection;
 
 
 /**
@@ -80,29 +82,11 @@ public class ResponseHandler {
         Form form = formFactory.form(formRequest, process, task, validation);
 
         if (form != null && form.getScreen() != null && !form.getScreen().isReadonly()) {
-            String location = form.getScreen().getLocation();
 
-            if (StringUtils.isNotEmpty(location)) {
-                // If the location is not blank then retrieve from that location
-                Content content;
-                if (location.startsWith("classpath:")) {
-                    ClassPathResource resource = new ClassPathResource(location.substring("classpath:".length()));
-                    try {
-                        content = new Content.Builder().inputStream(resource.getInputStream()).contentType("text/html").build();
-                    } catch (IOException e) {
-                        throw new InternalServerError();
-                    }
-                } else if (location.startsWith("file:")) {
-                    FileSystemResource resource = new FileSystemResource(location.substring("file:".length()));
-                    try {
-                        content = new Content.Builder().inputStream(resource.getInputStream()).contentType("text/html").build();
-                    } catch (IOException e) {
-                        throw new InternalServerError();
-                    }
-                } else {
-                    content = contentRepository.findByLocation(location);
-                }
-                return Response.ok(new StreamingPageContent(form, content), content.getContentType()).build();
+            if (StringUtils.isNotEmpty(form.getScreen().getLocation())) {
+                String location = process.getBase() + "/" + form.getScreen().getLocation();
+                Content content = content(location);
+                return Response.ok(new StreamingPageContent(process, form, content), content.getContentType()).build();
             }
         }
 
@@ -112,6 +96,40 @@ public class ResponseHandler {
     public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
         String hostUri = environment.getProperty("host.uri");
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, hostUri + formService.getFormViewContext().getApplicationUri(formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
+    }
+
+    public Content content(String location) throws StatusCodeError {
+        // If the location is not blank then retrieve from that location
+        Content content;
+        if (location.startsWith("classpath:")) {
+            ClassPathResource resource = new ClassPathResource(location.substring("classpath:".length()));
+            try {
+                content = new Content.Builder().inputStream(resource.getInputStream()).contentType("text/html").build();
+            } catch (IOException e) {
+                throw new InternalServerError();
+            }
+        } else if (location.startsWith("file:")) {
+            FileSystemResource resource = new FileSystemResource(location.substring("file:".length()));
+            try {
+                BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
+                String contentType = URLConnection.guessContentTypeFromStream(inputStream);
+                if (contentType == null) {
+                    if (location.endsWith(".css"))
+                        contentType = "text/css";
+                    else if (location.endsWith(".js"))
+                        contentType = "application/json";
+                    else
+                        contentType = "text/html";
+                }
+                content = new Content.Builder().inputStream(inputStream).contentType(contentType).build();
+            } catch (IOException e) {
+                LOG.error("Unable to retrieve content input stream", e);
+                throw new InternalServerError();
+            }
+        } else {
+            content = contentRepository.findByLocation(location);
+        }
+        return content;
     }
 
 }

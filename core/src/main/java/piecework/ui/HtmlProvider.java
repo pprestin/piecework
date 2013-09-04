@@ -39,9 +39,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -200,7 +198,9 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 	private boolean hasTemplateResource(Class<?> type) {
 		if (type.equals(SearchResults.class))
 			return true;
-		
+		if (InputStream.class.isAssignableFrom(type))
+            return false;
+
 		Resource resource = getTemplateResource(type, null);
 		return resource != null && resource.exists();
 	}

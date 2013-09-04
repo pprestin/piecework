@@ -114,8 +114,8 @@ public class ValidationRule {
     }
 
     private void evaluateConstraint(ManyMap<String, Value> submissionData) throws ValidationRuleException {
-        if (!ConstraintUtil.evaluate(null, submissionData, constraint))
-            throw new ValidationRuleException("Field is required");
+        if (ConstraintUtil.evaluate(null, submissionData, constraint))
+            evaluateRequired(submissionData);
     }
 
     private void evaluateEmail(ManyMap<String, Value> submissionData) throws ValidationRuleException {
@@ -149,15 +149,15 @@ public class ValidationRule {
         }
 
         if (maxInputs < numberOfInputs)
-            throw new ValidationRuleException("No more than " + maxInputs + " messages are allowed");
+            throw new ValidationRuleException("No more than " + maxInputs + " are allowed");
         else if (minInputs > numberOfInputs)
-            throw new ValidationRuleException("At least " + minInputs + " messages are required");
+            throw new ValidationRuleException("At least " + minInputs + " are required");
     }
 
     private void evaluateNumeric(ManyMap<String, Value> submissionData) throws ValidationRuleException {
         List<? extends Value> values = safeValues(name, submissionData);
         for (Value value : values) {
-            if (value != null && !value.getValue().matches("^[0-9]+$"))
+            if (value != null && StringUtils.isNotEmpty(value.getValue()) && !value.getValue().matches("^[0-9]+$"))
                 throw new ValidationRuleException("Must be a number");
         }
     }
@@ -165,7 +165,7 @@ public class ValidationRule {
     private void evaluatePattern(ManyMap<String, Value> submissionData) throws ValidationRuleException {
         List<? extends Value> values = safeValues(name, submissionData);
         for (Value value : values) {
-            if (value != null && pattern != null && !pattern.matcher(value.getValue()).matches()) {
+            if (value != null && StringUtils.isNotEmpty(value.getValue()) && pattern != null && !pattern.matcher(value.getValue()).matches()) {
                 String examplePattern = mask;
                 if (examplePattern == null)
                     examplePattern = pattern.toString();
