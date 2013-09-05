@@ -72,7 +72,7 @@ import piecework.util.KeyManagerCabinet;
  * @author James Renfro
  */
 @Configuration
-@Profile("ldap")
+//@Profile("ldap")
 public class LdapConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(LdapConfiguration.class);

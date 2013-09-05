@@ -100,7 +100,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/cancellation")
-    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("application/x-www-form-urlencoded")
     Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
 

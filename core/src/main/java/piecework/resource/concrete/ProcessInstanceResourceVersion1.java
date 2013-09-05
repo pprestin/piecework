@@ -176,7 +176,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
-        if (!helper.hasRole(process, AuthorizationRole.OVERSEER))
+        String currentUserId = helper.getAuthenticatedSystemOrUserId();
+        boolean isInitiator = instance.getInitiatorId() != null && currentUserId != null && instance.getInitiatorId().equals(currentUserId);
+
+        if (!isInitiator && !helper.hasRole(process, AuthorizationRole.OVERSEER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         processInstanceService.operate(OperationType.CANCELLATION, process, instance, null, null, reason);
