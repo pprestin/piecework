@@ -200,7 +200,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
 
         TaskResults.Builder resultsBuilder = new TaskResults.Builder();
 
-        List<Task> taskInstances = builder.build().getTasks();
+        List<Task> taskInstances = builder != null ? builder.build().getTasks() : null;
         List<Task> tasks;
         int count = 0;
 
