@@ -61,9 +61,11 @@ import piecework.ui.StreamingAttachmentContent;
 import piecework.util.ManyMap;
 import piecework.util.ProcessInstanceUtility;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.util.*;
@@ -376,6 +378,14 @@ public class ProcessInstanceService {
                         return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
                     }
                 }
+            } else {
+                String link = value.getValue();
+                String id = safeBase64(link);
+                if (id != null && id.equals(fileId)) {
+                    if (!link.startsWith("http"))
+                        link = "http://" + link;
+                    return Response.status(Response.Status.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, link).build();
+                }
             }
         }
 
@@ -427,13 +437,9 @@ public class ProcessInstanceService {
                     remainingValues.add(value);
             } else {
                 String link = value.getValue();
-                try {
-                    String id = DatatypeConverter.printBase64Binary(MessageDigest.getInstance("SHA1").digest(link.getBytes()));
-                    if (id == null || !id.equals(fileId))
-                        remainingValues.add(value);
-                } catch (Exception e) {
-                    LOG.error("Unable to digest link for content type of url", e);
-                }
+                String id = safeBase64(link);
+                if (id == null || !id.equals(fileId))
+                    remainingValues.add(value);
             }
         }
 
@@ -459,17 +465,26 @@ public class ProcessInstanceService {
                     files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(file.getName()).id(file.getId()).contentType(file.getContentType()).build(getInstanceViewContext()));
                 } else {
                     String link = value.getValue();
-                    try {
-                        String id = URLEncoder.encode(DatatypeConverter.printBase64Binary(MessageDigest.getInstance("SHA1").digest(link.getBytes())), "UTF-8");
+                    String id = safeBase64(link);
+                    if (link != null)
                         files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(link).id(id).contentType("text/url").build(getInstanceViewContext()));
-                    } catch (Exception e) {
-                        LOG.error("Unable to digest link for content type of url", e);
-                    }
                 }
             }
         }
 
         return files;
+    }
+
+    private static String safeBase64(String link) {
+        try {
+            String original = DatatypeConverter.printBase64Binary(MessageDigest.getInstance("SHA1").digest(link.getBytes()));
+            String safe = original.replaceAll("\\+", "-");
+            safe = safe.replaceAll("\\/", "_");
+            return safe.replaceAll("=", ",");
+        } catch (Exception e) {
+            LOG.error("Unable to digest link for content type of url", e);
+        }
+        return null;
     }
 
     public StreamingAttachmentContent getAttachmentContent(Process process, ProcessInstance processInstance, String attachmentId) {
