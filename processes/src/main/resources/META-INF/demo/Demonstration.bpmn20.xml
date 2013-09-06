@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+    <process id="DemonstrationProcess" name="Demonstration Process">
+
+        <startEvent id="start" name="Start"></startEvent>
+        <userTask id="demonstrationReviewTask" name="Demonstration Form">
+            <extensionElements>
+                <activiti:taskListener event="create" delegateExpression="${Demonstration}"></activiti:taskListener>
+            </extensionElements>
+        </userTask>
+        <userTask id="demonstrationApprovalTask" name="Demonstration Form">
+            <extensionElements>
+                <activiti:taskListener event="create" delegateExpression="${Demonstration}"></activiti:taskListener>
+            </extensionElements>
+        </userTask>
+        <endEvent id="end" name="End">
+        </endEvent>
+
+        <exclusiveGateway id="exclusive" name="Exclusive Gateway"/>
+
+        <sequenceFlow id="flow1" name="" sourceRef="start" targetRef="demonstrationReviewTask"></sequenceFlow>
+        <sequenceFlow id="flow2" name="" sourceRef="demonstrationReviewTask" targetRef="demonstrationApprovalTask"></sequenceFlow>
+        <sequenceFlow id="flow3" name="" sourceRef="demonstrationApprovalTask" targetRef="exclusive"></sequenceFlow>
+        <sequenceFlow id="rejectionFlow" name="" sourceRef="exclusive" targetRef="demonstrationReviewTask">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[
+		        ${demonstrationApprovalTask_action == 'REJECT'}
+		    ]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="approvalFlow" name="" sourceRef="exclusive" targetRef="end"></sequenceFlow>
+    </process>
+</definitions>
