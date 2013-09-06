@@ -102,7 +102,7 @@ public class FormFactory {
         List<Interaction> interactions = process.getInteractions();
         if (interactions != null && !interactions.isEmpty()) {
             for (Interaction interaction : interactions) {
-                if (interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
+                if (interaction != null && interaction.getTaskDefinitionKeys() != null && interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
                     selectedInteraction = interaction;
                     break;
                 }

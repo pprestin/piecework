@@ -8,7 +8,7 @@
                 <input type="checkbox"
                        name="{{name}}"
                        value="{{value}}"
-                        {{#if ../required}}class="required"{{/if}}/> {{label}}
+                        {{#if ../required}}class="required"{{/if}} {{#unless editable}}disabled{{/unless}}/> {{label}}
                         {{#if selected}}checked{{/if}}
             </label>
         </div>

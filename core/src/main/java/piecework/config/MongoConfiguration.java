@@ -18,6 +18,7 @@ package piecework.config;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -67,6 +68,7 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
             mongoInstance = embeddedMongo();
             mongoInstance.startEmbeddedMongo();
             mongoInstance.importData();
+            return new MongoClient(Collections.singletonList(new ServerAddress("127.0.0.1", 37017)));
         }
         MongoClientOptions.Builder optionsBuilder = new MongoClientOptions.Builder();
         if (environment.getProperty("mongo.use.ssl", Boolean.class, Boolean.FALSE))
@@ -114,11 +116,11 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private List<ServerAddress> getServerAddresses() throws UnknownHostException {
 		List<ServerAddress> serverAddresses = new LinkedList<ServerAddress>();
-        String mongoServerAddresses = environment.getProperty("mongo.server.addresses", "127.0.0.1:37017");
+        String mongoServerAddresses = environment.getProperty("mongo.server.addresses", "127.0.0.1:27017");
 		String[] addresses = mongoServerAddresses.split(",");
 		for (String address : addresses) {
 			String ip = null;
-			int port = 37017;
+			int port = 27017;
 			String[] tokens = address.split(":");
 			if (tokens.length > 0) {
 				ip = tokens[0];

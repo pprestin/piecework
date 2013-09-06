@@ -134,8 +134,6 @@ public class FormService {
     public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
         String formValueName = null;
-//        String formValueItem = null;
-//        boolean isFormValueResource = false;
         boolean isStatic = false;
         boolean isSubmissionResource;
 
@@ -159,14 +157,6 @@ public class FormService {
                 }
                 if (isStatic)
                     return processInstanceService.readStatic(process, staticResourceName);
-
-//                isFormValueResource = path != null && path.equals(FormValue.Constants.ROOT_ELEMENT_NAME);
-//                if (pathSegmentIterator.hasNext()) {
-//                    formValueName = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-//
-//                    if (pathSegmentIterator.hasNext())
-//                        formValueItem = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-//                }
             }
         }
 
@@ -185,14 +175,6 @@ public class FormService {
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
-
-//        if (isFormValueResource) {
-//            if (StringUtils.isEmpty(formRequest.getProcessInstanceId()))
-//                throw new NotFoundError();
-//
-//            ProcessInstance instance = processInstanceService.read(process, formRequest.getProcessInstanceId(), false);
-//            return processInstanceService.readValue(process, instance, formValueName, formValueItem);
-//        } else
 
         return responseHandler.handle(formRequest, process);
     }

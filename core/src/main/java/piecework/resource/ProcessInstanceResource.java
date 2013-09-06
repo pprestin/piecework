@@ -3,10 +3,10 @@ package piecework.resource;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.model.OperationDetails;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 import piecework.model.ProcessInstance;
-import piecework.model.Acumen;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -19,8 +19,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.model.Submission;
 import piecework.process.AttachmentQueryParameters;
-
-import java.io.InputStream;
 
 /**
  * @author James Renfro
@@ -73,8 +71,14 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/activation")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    @Consumes({"application/x-www-form-urlencoded","application/xml","application/json"})
-    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, Acumen reason) throws StatusCodeError;
+    @Consumes({"application/x-www-form-urlencoded"})
+    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/activation")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes({"application/xml","application/json"})
+    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
@@ -104,6 +108,12 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Consumes("application/x-www-form-urlencoded")
     Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
 
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/cancellation")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes({"application/xml","application/json"})
+    Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws StatusCodeError;
+
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
@@ -122,8 +132,14 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    @Consumes({"application/x-www-form-urlencoded","application/xml","application/json"})
-    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, Acumen reason) throws StatusCodeError;
+    @Consumes({"application/x-www-form-urlencoded"})
+    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/suspension")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes({"application/xml","application/json"})
+    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws StatusCodeError;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")

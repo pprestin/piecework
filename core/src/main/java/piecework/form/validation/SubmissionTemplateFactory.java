@@ -145,11 +145,10 @@ public class SubmissionTemplateFactory {
                     continue;
 
                 if (type.equals(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN))
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.CONSTRAINED)
+                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.CONSTRAINED_REQUIRED)
                             .name(fieldName)
                             .constraint(constraint)
                             .build());
-
                 if (type.equals(Constants.ConstraintTypes.IS_VALID_USER))
                     rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALID_USER).name(fieldName).build());
                 else if (type.equals(Constants.ConstraintTypes.IS_NUMERIC))
@@ -163,6 +162,13 @@ public class SubmissionTemplateFactory {
             }
         }
 
+        if (field.isRequired()) {
+            if (fieldTag == FieldTag.FILE)
+                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());
+            else
+                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
+        }
+
         if (!FREEFORM_INPUT_TYPES.contains(fieldTag)) {
             List<Option> options = field.getOptions();
 
@@ -171,18 +177,11 @@ public class SubmissionTemplateFactory {
 
             // If no options are stored, then assume that any option is valid
             if (options != null && !options.isEmpty()) {
-                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.CONSTRAINED)
+                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.LIMITED_OPTIONS)
                         .name(fieldName)
                         .options(options).build());
             }
         } else {
-            if (field.isRequired()) {
-                if (fieldTag == FieldTag.FILE)
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());
-                else
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
-            }
-
             Pattern pattern = field.getPattern() != null ? Pattern.compile(field.getPattern()) : null;
             if (pattern != null)
                 rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.PATTERN).name(fieldName).pattern(pattern).build());

@@ -96,16 +96,21 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     AllowedTaskService taskService;
 
     @Override
-    public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, Acumen rawReason) throws StatusCodeError {
+    public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String reason = sanitizer.sanitize(rawReason.getReason());
+        String reason = sanitizer.sanitize(rawReason);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, false))
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
         processInstanceService.operate(OperationType.ACTIVATION, process, instance, null, null, reason);
         return Response.noContent().build();
+    }
+
+    @Override
+    public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws StatusCodeError {
+        return activate(rawProcessDefinitionKey, rawProcessInstanceId, details.getReason());
     }
 
     @Override
@@ -184,6 +189,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         processInstanceService.operate(OperationType.CANCELLATION, process, instance, null, null, reason);
         return Response.noContent().build();
+    }
+
+    @Override
+    public Response cancel(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws StatusCodeError {
+        return cancel(rawProcessDefinitionKey, rawProcessInstanceId, details.getReason());
     }
 
     @Override
@@ -274,16 +284,21 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
-    public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, Acumen rawReason) throws StatusCodeError {
+    public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String reason = sanitizer.sanitize(rawReason.getReason());
+        String reason = sanitizer.sanitize(rawReason);
 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         processInstanceService.operate(OperationType.SUSPENSION, process, instance, null, null, reason);
         return Response.noContent().build();
+    }
+
+    @Override
+    public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws StatusCodeError {
+        return suspend(rawProcessDefinitionKey, rawProcessInstanceId, details.getReason());
     }
 
     @Override

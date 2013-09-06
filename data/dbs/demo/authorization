@@ -15,6 +15,12 @@
                 "processDefinitionKeys": [
                     "Demonstration"
                 ],
+                "role": "ROLE_USER"
+            },
+            {
+                "processDefinitionKeys": [
+                    "Demonstration"
+                ],
                 "role": "ROLE_OWNER"
             }
         ], 

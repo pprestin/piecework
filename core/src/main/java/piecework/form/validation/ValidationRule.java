@@ -31,6 +31,7 @@ public class ValidationRule {
 
     public enum ValidationRuleType {
         CONSTRAINED,
+        CONSTRAINED_REQUIRED,
         EMAIL,
         LIMITED_OPTIONS,
         NUMBER_OF_INPUTS,
@@ -76,6 +77,9 @@ public class ValidationRule {
         case CONSTRAINED:
             evaluateConstraint(submissionData);
             break;
+        case CONSTRAINED_REQUIRED:
+            evaluateConstraintRequired(submissionData);
+            break;
         case EMAIL:
             evaluateEmail(submissionData);
             break;
@@ -114,6 +118,11 @@ public class ValidationRule {
     }
 
     private void evaluateConstraint(ManyMap<String, Value> submissionData) throws ValidationRuleException {
+        if (!ConstraintUtil.evaluate(null, submissionData, constraint))
+            throw new ValidationRuleException("Not a valid input for this field");
+    }
+
+    private void evaluateConstraintRequired(ManyMap<String, Value> submissionData) throws ValidationRuleException {
         if (ConstraintUtil.evaluate(null, submissionData, constraint))
             evaluateRequired(submissionData);
     }
