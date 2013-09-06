@@ -9,8 +9,8 @@ Some configuration is required to connect Piecework into backend identity manage
 
 The following commands will bring up the demo version (not much to see yet), which also starts an embedded mongodb (courtesy of https://github.com/flapdoodle-oss/embedmongo.flapdoodle.de) and an embedded LDAP server -- you may run into port conflicts if you already have an LDAP server running on your machine:
 
-> mvn clean install -Dmaven.test.skip=true
-> mvn org.apache.tomcat.maven:tomcat7-maven-plugin:2.1:run -Dspring.profiles.active=embedded-ldap,embedded-mongo,data -Ddebug.mode=true
+	% mvn clean install -Dmaven.test.skip=true
+	% mvn org.apache.tomcat.maven:tomcat7-maven-plugin:2.1:run -Dspring.profiles.active=embedded-ldap,embedded-mongo,data -Ddebug.mode=true
 
 Open a browser and point to: http://localhost:8000/piecework/secure/form.html
 
@@ -26,14 +26,14 @@ To let Piecework know where your configuration files will live, pass a system pr
 
 For example, to start up with tomcat using maven on Linux, you'll want to do something like the following:
 
-	> pwd
+	% pwd
 	/Users/someuser/piecework
-	> cd ../
-	> mkdir piecework-config
-	> cp piecework/integration/src/main/resources/META-INF/piecework/default.properties piecework-config/my.properties
+	% cd ../
+	% mkdir piecework-config
+	% cp piecework/integration/src/main/resources/META-INF/piecework/default.properties piecework-config/my.properties
 	\[ edit my.properties to point to your ldap system, keystore, etc \]
-	> cd piecework
-	> mvn tomcat:run -Dpiecework.config.location=/Users/someuser/piecework-config
+	% cd piecework
+	% mvn tomcat:run -Dpiecework.config.location=/Users/someuser/piecework-config
 
 If you don't want to use TLS protected LDAP for identity and authorization behind a Single-Sign-On authentication layer, then you'll want to make some modifications to the ldap configuration.
 
