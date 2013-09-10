@@ -33,16 +33,15 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.ldap.core.support.LdapContextSource;
-import piecework.service.ProcessInstanceService;
-import piecework.service.ProcessService;
+import piecework.Toolkit;
+import piecework.Versions;
+import piecework.service.*;
 import piecework.Registry;
 import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.concrete.ProcessEngineConcreteFacade;
 import piecework.form.FormFactory;
-import piecework.service.FormService;
 import piecework.validation.SubmissionTemplateFactory;
-import piecework.service.ValidationService;
 import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityService;
 import piecework.ldap.LdapSettings;
@@ -185,6 +184,11 @@ public class UnitTestConfiguration {
     }
 
     @Bean
+    public ProcessHistoryService historyService() {
+        return new ProcessHistoryService();
+    }
+
+    @Bean
     public ProcessService processService() {
         return new ProcessService();
     }
@@ -197,6 +201,16 @@ public class UnitTestConfiguration {
     @Bean
     public ValidationService validationService() {
         return new ValidationService();
+    }
+
+    @Bean
+    public Toolkit toolkit() {
+        return new Toolkit();
+    }
+
+    @Bean
+    public Versions versions() {
+        return new Versions();
     }
 
     @Bean

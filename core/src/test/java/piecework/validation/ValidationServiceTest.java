@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import piecework.Constants;
+import piecework.exception.StatusCodeError;
 import piecework.service.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
@@ -43,7 +44,7 @@ public class ValidationServiceTest {
 	}
 
 	@Test
-	public void testValidateFirstOfTwoSections() {
+	public void testValidateFirstOfTwoSections() throws StatusCodeError {
         Process process = ExampleFactory.exampleProcess();
         ProcessInstance instance = null;
 		Submission submission = new Submission.Builder()
@@ -52,14 +53,14 @@ public class ValidationServiceTest {
 			.build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
-		FormValidation validation = validationService.validate(instance, template, submission, true);
+		FormValidation validation = validationService.validate(process, instance, null, template, submission, true);
 
         Map<String, List<Message>> results = validation.getResults();
 		Assert.assertNull(results);
 	}
 
     @Test
-    public void testValidateFirstOfTwoSectionsFailed() {
+    public void testValidateFirstOfTwoSectionsFailed() throws StatusCodeError {
         Process process = ExampleFactory.exampleProcess();
         ProcessInstance instance = null;
         Submission submission = new Submission.Builder()
@@ -67,7 +68,7 @@ public class ValidationServiceTest {
                 .build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD), "A");
-        FormValidation validation = validationService.validate(instance, template, submission, true);
+        FormValidation validation = validationService.validate(process, instance, null, template, submission, true);
 
         Map<String, List<Message>> results = validation.getResults();
         Assert.assertNotNull(results);
@@ -75,7 +76,7 @@ public class ValidationServiceTest {
     }
 
     @Test
-    public void testValidateBothOfTwoSections() {
+    public void testValidateBothOfTwoSections() throws StatusCodeError {
         Process process = ExampleFactory.exampleProcess();
         ProcessInstance instance = null;
         Submission submission = new Submission.Builder()
@@ -85,14 +86,14 @@ public class ValidationServiceTest {
                 .build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
-        FormValidation validation = validationService.validate(instance, template, submission, true);
+        FormValidation validation = validationService.validate(process, instance, null, template, submission, true);
 
         Map<String, List<Message>> results = validation.getResults();
         Assert.assertNull(results);
     }
 
     @Test
-    public void testValidateBothOfTwoSectionsFailed() {
+    public void testValidateBothOfTwoSectionsFailed() throws StatusCodeError {
         Process process = ExampleFactory.exampleProcess();
         ProcessInstance instance = null;
         Submission submission = new Submission.Builder()
@@ -101,7 +102,7 @@ public class ValidationServiceTest {
                 .build();
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD));
-        FormValidation validation = validationService.validate(instance, template, submission, true);
+        FormValidation validation = validationService.validate(process, instance, null, template, submission, true);
 
         Map<String, List<Message>> results = validation.getResults();
         Assert.assertNotNull(results);
