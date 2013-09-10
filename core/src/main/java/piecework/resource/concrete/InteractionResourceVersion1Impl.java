@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.Versions;
 import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
@@ -61,6 +62,9 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 	
 	@Autowired
 	Sanitizer sanitizer;
+
+    @Autowired
+    Versions versions;
 	
 	@Value("${base.application.uri}")
 	String baseApplicationUri;
@@ -198,10 +202,9 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		
 		return builder.build();
 	}
-	
-	@Override
+
 	public ViewContext getViewContext() {
-		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "interaction", "Interaction");
+        return versions.getVersion1();
 	}
 	
 	private Interaction getInteraction(String id) throws StatusCodeError {

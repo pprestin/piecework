@@ -22,10 +22,8 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
-import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
-import piecework.process.ProcessInstanceService;
-import piecework.process.concrete.ResourceHelper;
+import piecework.identity.IdentityHelper;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -44,16 +42,10 @@ public class RequestHandler {
     private static final Logger LOG = Logger.getLogger(RequestHandler.class);
 
     @Autowired
-    ProcessEngineFacade facade;
-
-    @Autowired
-    ProcessInstanceService processInstanceService;
-
-    @Autowired
     RequestRepository requestRepository;
 
     @Autowired
-    ResourceHelper resourceHelper;
+    IdentityHelper identityHelper;
 
     @Autowired
     AllowedTaskService taskService;
@@ -110,8 +102,8 @@ public class RequestHandler {
 
             } else {
                 // Ensure that this user has the right to initiate processes of this type
-                if (!resourceHelper.hasRole(process, AuthorizationRole.INITIATOR))
-                    throw new NotFoundError();
+                if (!identityHelper.hasRole(process, AuthorizationRole.INITIATOR))
+                    throw new ForbiddenError();
 
                 // Pick the first interaction and the first screen
                 interaction = interactionIterator.next();

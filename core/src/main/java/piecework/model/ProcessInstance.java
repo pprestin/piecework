@@ -222,8 +222,8 @@ public class ProcessInstance implements Serializable {
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.initiatorId = builder.initiatorId;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId) : null;
-        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId) : null;
+        this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId) : null;
         this.isDeleted = builder.isDeleted;
     }
 

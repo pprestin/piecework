@@ -101,8 +101,8 @@ public class Attachment implements Serializable, Comparable<Attachment> {
         this.lastModified = builder.lastModified;
         this.isFieldAttachment = builder.isFieldAttachment;
         this.isDeleted = builder.isDeleted;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME, builder.attachmentId) : null;
-        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME, builder.attachmentId) : null;
+        this.link = context != null ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME, builder.attachmentId) : null;
+        this.uri = context != null ? context.getServiceUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, Constants.ROOT_ELEMENT_NAME, builder.attachmentId) : null;
     }
 	
 	public String getAttachmentId() {

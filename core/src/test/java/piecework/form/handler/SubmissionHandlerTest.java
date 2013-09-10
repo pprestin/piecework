@@ -26,8 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.form.validation.SubmissionTemplate;
-import piecework.form.validation.SubmissionTemplateFactory;
+import piecework.validation.SubmissionTemplate;
+import piecework.validation.SubmissionTemplateFactory;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.model.*;
 import piecework.test.ExampleFactory;
@@ -35,7 +35,6 @@ import piecework.test.ExampleFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author James Renfro

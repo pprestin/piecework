@@ -24,7 +24,7 @@ import org.springframework.security.ldap.userdetails.LdapUserDetails;
 /**
  * @author James Renfro
  */
-public class InternalUserDetails implements LdapUserDetails {
+public class IdentityDetails implements LdapUserDetails {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -34,7 +34,7 @@ public class InternalUserDetails implements LdapUserDetails {
 	private final String displayName;
     private final String emailAddress;
 	
-	public InternalUserDetails(UserDetails delegate, String internalId, String externalId, String displayName, String emailAddress) {
+	public IdentityDetails(UserDetails delegate, String internalId, String externalId, String displayName, String emailAddress) {
 		this.delegate = delegate;
         this.internalId = internalId;
         this.externalId = externalId;

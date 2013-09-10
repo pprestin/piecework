@@ -93,7 +93,7 @@ public class Constraint implements Serializable {
         this.and = builder.and != null ? Collections.unmodifiableList(builder.and) : null;
         this.or = builder.or != null ? Collections.unmodifiableList(builder.or) : null;
 //        this.subconstraints = builder.subconstraints != null ? Collections.unmodifiableList(builder.subconstraints) : null;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.constraintId) : null;
+        this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.constraintId) : null;
     }
 	
 	public String getConstraintId() {

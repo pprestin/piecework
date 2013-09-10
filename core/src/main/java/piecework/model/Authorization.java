@@ -79,8 +79,8 @@ public class Authorization {
         this.groupNamespace = builder.groupNamespace;
         this.isDeleted = builder.isDeleted;
         this.authorities = builder.authorities != null ? Collections.unmodifiableList(builder.authorities) : null;
-        this.link = context != null ? context.getApplicationUri(builder.groupNamespace, builder.groupId) : null;
-        this.uri = context != null ? context.getServiceUri(builder.groupNamespace, builder.groupId) : null;
+        this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.groupNamespace, builder.groupId) : null;
+        this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.groupNamespace, builder.groupId) : null;
     }
 
     public String getAuthorizationId() {

@@ -29,18 +29,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.identity.InternalUserDetails;
-import piecework.identity.InternalUserDetailsService;
+import piecework.identity.IdentityDetails;
+import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.persistence.TaskRepository;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ManyMap;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -70,7 +68,7 @@ public class GeneralUserTaskListener implements TaskListener {
     TaskRepository taskRepository;
 
     @Autowired
-    InternalUserDetailsService userDetailsService;
+    IdentityService userDetailsService;
 
     @Override
     public void notify(DelegateTask delegateTask) {
@@ -263,10 +261,10 @@ public class GeneralUserTaskListener implements TaskListener {
                 if (candidate.getType().equals(Constants.CandidateTypes.PERSON)) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(candidate.getCandidateId());
 
-                    if (userDetails instanceof InternalUserDetails) {
-                        InternalUserDetails internalUserDetails = InternalUserDetails.class.cast(userDetails);
-                        if (StringUtils.isNotEmpty(internalUserDetails.getEmailAddress()))
-                            email.addTo(internalUserDetails.getEmailAddress(), internalUserDetails.getDisplayName());
+                    if (userDetails instanceof IdentityDetails) {
+                        IdentityDetails identityDetails = IdentityDetails.class.cast(userDetails);
+                        if (StringUtils.isNotEmpty(identityDetails.getEmailAddress()))
+                            email.addTo(identityDetails.getEmailAddress(), identityDetails.getDisplayName());
                     }
                 }
             }

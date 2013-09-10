@@ -18,14 +18,12 @@ package piecework.form.handler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.authorization.AuthorizationRole;
 import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
-import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.concrete.ResourceHelper;
+import piecework.identity.IdentityHelper;
 import piecework.util.ConstraintUtil;
 
 import java.util.Iterator;
@@ -39,11 +37,11 @@ import java.util.Map;
 public class ScreenHandler {
 
     @Autowired
-    ResourceHelper resourceHelper;
+    IdentityHelper identityHelper;
 
     public Screen firstScreen(Process process) throws StatusCodeError {
 //        // Ensure that this user has the right to initiate processes of this type
-//        if (!resourceHelper.hasRole(process, AuthorizationRole.INITIATOR))
+//        if (!identityHelper.hasRole(process, AuthorizationRole.INITIATOR))
 //            throw new NotFoundError();
 
         List<Interaction> interactions = process.getInteractions();

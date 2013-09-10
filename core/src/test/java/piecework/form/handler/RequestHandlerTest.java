@@ -26,6 +26,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.Constants;
 import piecework.common.RequestDetails;
+import piecework.security.SecuritySettings;
 import piecework.test.config.UnitTestConfiguration;
 import piecework.exception.ForbiddenError;
 import piecework.model.FormRequest;
@@ -47,6 +48,9 @@ public class RequestHandlerTest {
     @Autowired
     RequestHandler requestHandler;
 
+    @Autowired
+    SecuritySettings securitySettings;
+
     HttpServletRequest servletRequest;
     Process process;
     String processInstanceId;
@@ -65,8 +69,7 @@ public class RequestHandlerTest {
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester");
 
-        RequestDetails requestDetails = new RequestDetails.Builder().build();
-        Interaction firstInteraction = process.getInteractions().iterator().next();
+        RequestDetails requestDetails = new RequestDetails.Builder(servletRequest, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         assertValid(formRequest);
 
@@ -81,14 +84,14 @@ public class RequestHandlerTest {
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester").thenReturn("somebodyelse");
 
-        RequestDetails requestDetails = new RequestDetails.Builder().build();
-        Interaction firstInteraction = process.getInteractions().iterator().next();
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
+        RequestDetails firstRequest = new RequestDetails.Builder(servletRequest, securitySettings).build();
+        FormRequest formRequest = requestHandler.create(firstRequest, process);
         assertValid(formRequest);
 
         boolean isExceptionThrown = false;
         try {
-            requestHandler.handle(requestDetails, formRequest.getRequestId());
+            RequestDetails secondRequest = new RequestDetails.Builder(servletRequest, securitySettings).build();
+            requestHandler.handle(secondRequest, formRequest.getRequestId());
         } catch (ForbiddenError error) {
             isExceptionThrown = true;
         }

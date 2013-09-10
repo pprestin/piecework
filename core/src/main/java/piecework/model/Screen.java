@@ -114,7 +114,7 @@ public class Screen implements Serializable {
 //        this.scripts = Collections.unmodifiableList(builder.scripts);
 		this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.sections = Collections.unmodifiableList(builder.sections);
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
+        this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
 	    this.reviewIndex = builder.reviewIndex;
         this.readonly = builder.readonly;
     }

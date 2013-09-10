@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.validation;
+package piecework.validation;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import piecework.Constants;
+import piecework.service.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.test.ExampleFactory;

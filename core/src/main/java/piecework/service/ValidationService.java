@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.validation;
+package piecework.service;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -27,15 +27,21 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Registry;
+import piecework.exception.BadRequestError;
+import piecework.exception.StatusCodeError;
 import piecework.exception.ValidationRuleException;
-import piecework.identity.InternalUserDetailsService;
+import piecework.identity.IdentityService;
 import piecework.model.*;
-import piecework.process.concrete.ResourceHelper;
+import piecework.model.Process;
+import piecework.identity.IdentityHelper;
 
 import com.google.common.collect.Sets;
 import piecework.security.EncryptionService;
-import piecework.util.ConstraintUtil;
+import piecework.task.AllowedTaskService;
 import piecework.util.ManyMap;
+import piecework.validation.FormValidation;
+import piecework.validation.SubmissionTemplate;
+import piecework.validation.ValidationRule;
 
 /**
  * @author James Renfro
@@ -47,20 +53,46 @@ public class ValidationService {
 	private static final Logger LOG = Logger.getLogger(ValidationService.class);
 
 	@Autowired(required=false)
-	Registry registry;
+    Registry registry;
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
 
     @Autowired
     EncryptionService encryptionService;
 
     @Autowired
-    InternalUserDetailsService userDetailsService;
+    IdentityService identityService;
+
+    @Autowired
+    AllowedTaskService taskService;
 
 
-    public FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
+    public FormValidation validate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
+        long time = 0;
 
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
+
+        taskService.checkIsActiveIfTaskExists(process, task);
+
+        // Validate the submission
+        FormValidation validation = validate(instance, template, submission, throwException);
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
+
+        Map<String, List<Message>> results = validation.getResults();
+        if (throwException && results != null && !results.isEmpty()) {
+            // Throw an exception if the submitter needs to adjust the data
+            throw new BadRequestError(validation);
+        }
+
+        return validation;
+    }
+
+
+    private FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
 
         FormValidation.Builder validationBuilder = new FormValidation.Builder().instance(instance).submission(submission);
 
@@ -196,7 +228,7 @@ public class ValidationService {
             if (value instanceof User) {
                 list.add(User.class.cast(value));
             } else {
-                User user = userDetailsService.getUserByAnyId(value.getValue());
+                User user = identityService.getUserByAnyId(value.getValue());
                 if (user != null)
                     list.add(user);
             }
@@ -350,7 +382,7 @@ public class ValidationService {
 //            List<FormValue> formValues = submission.getFormData();
 //            if (formValues != null && !formValues.isEmpty()) {
 //                String userId = null;
-//                InternalUserDetails userDetails = helper.getAuthenticatedPrincipal();
+//                IdentityDetails userDetails = helper.getAuthenticatedPrincipal();
 //                if (userDetails != null)
 //                    userId = userDetails.getInternalId();
 //
@@ -511,7 +543,7 @@ public class ValidationService {
                         FormValue.Builder displayNameBuilder = new FormValue.Builder().name(fieldName + "__displayName");
                         FormValue.Builder visibleIdBuilder = new FormValue.Builder().name(fieldName + "__visibleId");
                         for (String value : messages) {
-                            User user = userDetailsService.getUserByAnyId(value);
+                            User user = identityService.getUserByAnyId(value);
                             if (user != null) {
                                 displayNameBuilder.value(user.getDisplayName());
                                 visibleIdBuilder.value(user.getVisibleId());
@@ -561,7 +593,7 @@ public class ValidationService {
                     }
 
                     if (isPersonLookup) {
-                        InternalUserDetails userDetails = userDetailsService.loadUserByAnyId(value);
+                        IdentityDetails userDetails = identityService.loadUserByAnyId(value);
 
                         if (userDetails == null) {
                             hasErrorResult = true;

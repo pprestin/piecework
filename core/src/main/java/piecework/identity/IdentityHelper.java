@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process.concrete;
+package piecework.identity;
 
 import java.security.cert.X509Certificate;
 import java.util.Collection;
@@ -35,7 +35,7 @@ import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.identity.InternalUserDetails;
+import piecework.identity.IdentityDetails;
 import piecework.model.Process;
 import piecework.persistence.ProcessRepository;
 
@@ -45,7 +45,7 @@ import com.google.common.collect.Sets;
  * @author James Renfro
  */
 @Service
-public class ResourceHelper {
+public class IdentityHelper {
 
 	@Autowired
 	ProcessRepository processRepository;
@@ -61,8 +61,8 @@ public class ResourceHelper {
 
                 if (authentication.getCredentials() != null && authentication.getCredentials() instanceof X509Certificate) {
                     userId = principalAsObject.toString();
-                } else if (principalAsObject instanceof InternalUserDetails) {
-                    InternalUserDetails principal = InternalUserDetails.class.cast(principalAsObject);
+                } else if (principalAsObject instanceof IdentityDetails) {
+                    IdentityDetails principal = IdentityDetails.class.cast(principalAsObject);
                     userId = principal.getInternalId();
                 }
             }
@@ -70,16 +70,16 @@ public class ResourceHelper {
         return userId;
     }
 
-    public InternalUserDetails getAuthenticatedPrincipal() {
-        InternalUserDetails principal = null;
+    public IdentityDetails getAuthenticatedPrincipal() {
+        IdentityDetails principal = null;
         SecurityContext context = SecurityContextHolder.getContext();
         if (context != null) {
             Authentication authentication = context.getAuthentication();
 
             if (authentication != null) {
                 Object principalAsObject = authentication.getPrincipal();
-                if (principalAsObject instanceof InternalUserDetails)
-                    principal = InternalUserDetails.class.cast(principalAsObject);
+                if (principalAsObject instanceof IdentityDetails)
+                    principal = IdentityDetails.class.cast(principalAsObject);
             }
         }
         return principal;

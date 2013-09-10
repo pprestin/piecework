@@ -24,12 +24,12 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
 import piecework.exception.InternalServerError;
-import piecework.form.validation.SubmissionTemplate;
-import piecework.identity.InternalUserDetailsService;
+import piecework.validation.SubmissionTemplate;
+import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
-import piecework.process.concrete.ResourceHelper;
+import piecework.identity.IdentityHelper;
 import piecework.security.EncryptionService;
 import piecework.security.Sanitizer;
 import piecework.persistence.SubmissionRepository;
@@ -54,7 +54,7 @@ public class SubmissionHandler {
     EncryptionService encryptionService;
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
 
     @Autowired
     Sanitizer sanitizer;
@@ -63,7 +63,7 @@ public class SubmissionHandler {
     SubmissionRepository submissionRepository;
 
     @Autowired
-    InternalUserDetailsService userDetailsService;
+    IdentityService userDetailsService;
 
     @Autowired
     UuidGenerator uuidGenerator;

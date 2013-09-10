@@ -24,7 +24,8 @@ import javax.ws.rs.core.UriInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import piecework.process.ProcessService;
+import piecework.Versions;
+import piecework.service.ProcessService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
@@ -41,10 +42,13 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	@Autowired
     ProcessService processService;
 
+    @Autowired
+    Versions versions;
+
 	@Override
 	public Response create(Process rawProcess) throws StatusCodeError {
 		Process result = processService.create(rawProcess);
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(processService.getProcessViewContext()));
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(versions.getVersion1()));
 		return responseBuilder.build();
 	}
 	
@@ -53,7 +57,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
         Process result = processService.delete(rawProcessDefinitionKey);
 
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);		
-		ViewContext context = processService.getProcessViewContext();
+		ViewContext context = versions.getVersion1();
 		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
@@ -65,7 +69,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
         Process result = processService.update(rawProcessDefinitionKey, rawProcess);
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-		ViewContext context = processService.getProcessViewContext();
+		ViewContext context = versions.getVersion1();
 		String location = context != null ? context.getApplicationUri(result.getProcessDefinitionKey()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
@@ -77,7 +81,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	public Response read(String rawProcessDefinitionKey) throws StatusCodeError {
         Process result = processService.read(rawProcessDefinitionKey);
 				
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(processService.getProcessViewContext()));
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(versions.getVersion1()));
 		return responseBuilder.build();
 	}
 	
@@ -88,7 +92,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public String getVersion() {
-        return processService.getVersion();
+        return versions.getVersion1().getVersion();
     }
 
 }

@@ -15,7 +15,7 @@
  */
 package piecework.exception;
 
-import piecework.form.validation.FormValidation;
+import piecework.validation.FormValidation;
 import piecework.model.ValidationResultList;
 
 

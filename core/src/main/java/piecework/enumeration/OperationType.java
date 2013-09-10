@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "OperationEnumType")
 @XmlEnum
 public enum OperationType {
-    ACTIVATION("activation", "Reactivated"), ASSIGNMENT("assignment", "Assigned"), CANCELLATION("cancellation", "Cancelled"), UPDATE("update", "Updated"), SUSPENSION("suspension", "Suspended");
+    ACTIVATION("activation", "Reactivated"), ASSIGNMENT("assignment", "Assigned"), CANCELLATION("cancellation", "Cancelled"), START("start", "Started"), SUSPENSION("suspension", "Suspended"), UPDATE("update", "Updated");
 
     private final String value;
     private final String description;

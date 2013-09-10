@@ -18,6 +18,8 @@ package piecework.test.config;
 import java.io.IOException;
 import java.util.List;
 
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,15 +27,25 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.ldap.core.support.LdapContextSource;
+import piecework.service.ProcessInstanceService;
+import piecework.service.ProcessService;
 import piecework.Registry;
 import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.concrete.ProcessEngineConcreteFacade;
-import piecework.form.FormService;
-import piecework.form.validation.SubmissionTemplateFactory;
-import piecework.form.validation.ValidationService;
-import piecework.identity.InternalUserDetailsService;
+import piecework.form.FormFactory;
+import piecework.service.FormService;
+import piecework.validation.SubmissionTemplateFactory;
+import piecework.service.ValidationService;
+import piecework.identity.IdentityDetails;
+import piecework.identity.IdentityService;
+import piecework.ldap.LdapSettings;
 import piecework.persistence.AuthorizationRepository;
 import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.engine.ProcessEngineProxy;
@@ -44,19 +56,22 @@ import piecework.form.handler.SubmissionHandler;
 import piecework.persistence.concrete.InMemoryContentRepository;
 import piecework.model.*;
 import piecework.persistence.InteractionRepository;
+import piecework.identity.IdentityHelper;
 import piecework.resource.InteractionResource;
 import piecework.model.Process;
-import piecework.process.*;
 import piecework.persistence.ScreenRepository;
 import piecework.resource.ScreenResource;
 import piecework.resource.concrete.InteractionResourceVersion1Impl;
 import piecework.process.concrete.MongoRepositoryStub;
 import piecework.resource.concrete.ProcessResourceVersion1;
-import piecework.process.concrete.ResourceHelper;
 import piecework.resource.concrete.ScreenResourceVersion1Impl;
 import piecework.resource.ProcessResource;
+import piecework.security.EncryptionService;
+import piecework.security.SecuritySettings;
+import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.Sanitizer;
+import piecework.task.AllowedTaskService;
 
 /**
  * @author James Renfro
@@ -78,6 +93,20 @@ public class UnitTestConfiguration {
     @Bean
     public Registry registry() {
         return new Registry();
+    }
+
+    @Bean
+    public MongoTemplate mongoTemplate() {
+        DB db = Mockito.mock(DB.class);
+        DBCollection collection = Mockito.mock(DBCollection.class);
+        MongoDbFactory factory = Mockito.mock(MongoDbFactory.class);
+        MongoMappingContext mappingContext = new MongoMappingContext();
+        MappingMongoConverter converter = new MappingMongoConverter(factory, mappingContext);
+
+        Mockito.when(factory.getDb()).thenReturn(db);
+        Mockito.when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
+
+        return new MongoTemplate(factory, converter);
     }
 
 	@Bean
@@ -105,9 +134,21 @@ public class UnitTestConfiguration {
         return new SubmissionHandler();
     }
 
+    @Bean
+    public FormFactory formFactory() {
+        return new FormFactory();
+    }
+
 	@Bean
-	public ResourceHelper helper() {
-		return new ResourceHelper();
+	public IdentityHelper helper() {
+        IdentityHelper helper = Mockito.mock(IdentityHelper.class);
+        IdentityDetails user = Mockito.mock(IdentityDetails.class);
+        Mockito.when(user.getInternalId()).thenReturn("123456789");
+        Mockito.when(user.getDisplayName()).thenReturn("Test User");
+        Mockito.when(user.getExternalId()).thenReturn("testuser");
+        Mockito.when(helper.getAuthenticatedPrincipal()).thenReturn(user);
+        Mockito.when(helper.hasRole(Mockito.any(Process.class), Mockito.any(String.class))).thenReturn(true);
+		return helper;
 	}
 	
 	@Bean
@@ -127,6 +168,16 @@ public class UnitTestConfiguration {
 		ScreenResourceVersion1Impl resource = new ScreenResourceVersion1Impl();
 		return resource;
 	}
+
+    @Bean
+    public AllowedTaskService allowedTaskService() {
+        return new AllowedTaskService();
+    }
+
+    @Bean
+    public EncryptionService encryptionService() {
+        return new PassthroughEncryptionService();
+    }
 
     @Bean
     public FormService formService() {
@@ -168,6 +219,11 @@ public class UnitTestConfiguration {
         return new InteractionRepositoryStub();
     }
 
+    @Bean
+    public NotificationRepository notificationRepository() {
+        return new NotificationRepositoryStub();
+    }
+
 	@Bean 
 	public ProcessRepository processRepository() {
 		return new ProcessRepositoryStub();
@@ -189,22 +245,14 @@ public class UnitTestConfiguration {
 	}
 
     @Bean
+    public SectionRepository sectionRepository() {
+        return new SectionRepositoryStub();
+    }
+
+    @Bean
     public SubmissionRepository submissionRepository() {
         return new SubmissionRepositoryStub();
     }
-	
-//	@Bean
-//	public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) {
-//		// This is the list of places to look for configuration properties
-//		List<Resource> resources = new ArrayList<Resource>();
-//		resources.add(new ClassPathResource("META-INF/piecework/default.properties"));
-//
-//		PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-//		configurer.setEnvironment(environment);
-//		configurer.setLocations(resources.toArray(new Resource[resources.size()]));
-//		configurer.setIgnoreUnresolvablePlaceholders(true);
-//		return configurer;
-//	}
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
@@ -214,13 +262,28 @@ public class UnitTestConfiguration {
     }
 
     @Bean
-    public InternalUserDetailsService internalUserDetailsService() {
-        return Mockito.mock(InternalUserDetailsService.class);
+    public LdapContextSource ldapContextSource() {
+        return Mockito.mock(LdapContextSource.class);
+    }
+
+    @Bean
+    public LdapSettings ldapSettings(Environment environment) {
+        return new LdapSettings(environment);
+    }
+
+    @Bean
+    public IdentityService internalUserDetailsService() {
+        return Mockito.mock(IdentityService.class);
     }
 
     @Bean
     public MongoOperations mongoOperations() {
         return Mockito.mock(MongoOperations.class);
+    }
+
+    @Bean
+    public SecuritySettings securitySettings(Environment environment) {
+        return new SecuritySettings(environment);
     }
 
     @Bean
@@ -279,6 +342,10 @@ public class UnitTestConfiguration {
 
 	}
 
+    public class NotificationRepositoryStub extends MongoRepositoryStub<Notification> implements NotificationRepository {
+
+    }
+
     public class RequestRepositoryStub extends MongoRepositoryStub<FormRequest> implements RequestRepository {
 
     }
@@ -286,6 +353,10 @@ public class UnitTestConfiguration {
 	public class ScreenRepositoryStub extends MongoRepositoryStub<Screen> implements ScreenRepository {
 
 	}
+
+    public class SectionRepositoryStub extends MongoRepositoryStub<Section> implements SectionRepository {
+
+    }
 
     public class SubmissionRepositoryStub extends MongoRepositoryStub<Submission> implements SubmissionRepository {
 

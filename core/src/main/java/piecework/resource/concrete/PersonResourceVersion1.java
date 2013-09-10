@@ -18,18 +18,17 @@ package piecework.resource.concrete;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import piecework.Versions;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
-import piecework.identity.InternalUserDetails;
-import piecework.identity.InternalUserDetailsService;
+import piecework.identity.IdentityService;
+import piecework.identity.IdentityDetails;
 import piecework.identity.PersonSearchCriteria;
 import piecework.model.ProcessInstance;
 import piecework.model.SearchResults;
 import piecework.model.User;
 import piecework.resource.PersonResource;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 import java.util.List;
 
 /**
@@ -42,7 +41,10 @@ public class PersonResourceVersion1 implements PersonResource {
     Environment environment;
 
     @Autowired
-    InternalUserDetailsService userDetailsService;
+    IdentityService userDetailsService;
+
+    @Autowired
+    Versions versions;
 
     @Override
     public SearchResults search(PersonSearchCriteria criteria) throws StatusCodeError {
@@ -50,11 +52,11 @@ public class PersonResourceVersion1 implements PersonResource {
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("People")
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
-                .link(getViewContext().getApplicationUri());
+                .link(versions.getVersion1().getApplicationUri(User.Constants.ROOT_ELEMENT_NAME));
 
-        List<InternalUserDetails> userDetails = userDetailsService.findUsersByDisplayName(criteria.getDisplayNameLike());
+        List<IdentityDetails> userDetails = userDetailsService.findUsersByDisplayName(criteria.getDisplayNameLike());
         if (userDetails != null) {
-            for (InternalUserDetails userDetail : userDetails) {
+            for (IdentityDetails userDetail : userDetails) {
                 resultsBuilder.item(new User.Builder(userDetail).build());
             }
         }
@@ -64,13 +66,7 @@ public class PersonResourceVersion1 implements PersonResource {
 
     @Override
     public String getVersion() {
-        return "v1";
+        return versions.getVersion1().getVersion();
     }
 
-    @Override
-    public ViewContext getViewContext() {
-        String baseApplicationUri = environment.getProperty("base.application.uri");
-        String baseServiceUri = environment.getProperty("base.service.uri");
-        return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "instance", "Instance");
-    }
 }

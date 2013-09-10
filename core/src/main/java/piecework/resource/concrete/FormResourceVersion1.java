@@ -20,13 +20,14 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import piecework.form.FormService;
+import piecework.Versions;
+import piecework.service.FormService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
 import piecework.resource.FormResource;
 import piecework.model.Process;
-import piecework.process.concrete.ResourceHelper;
+import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,43 +49,46 @@ public class FormResourceVersion1 implements FormResource {
     FormService formService;
 
     @Autowired
-    ResourceHelper resourceHelper;
+    IdentityHelper identityHelper;
 
     @Autowired
     Sanitizer sanitizer;
 
+    @Autowired
+    Versions versions;
+
     @Override
     public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
-        return formService.provideFormResponse(request, getViewContext(), process, null);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        return formService.provideFormResponse(request, process, null);
     }
 
     @Override
     public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final HttpServletRequest request) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
-        return formService.provideFormResponse(request, getViewContext(), process, pathSegments);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        return formService.provideFormResponse(request, process, pathSegments);
     }
 
     @Override
     public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
         return formService.saveForm(request, getViewContext(), process, rawRequestId, body);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
         return formService.submitForm(request, getViewContext(), process, rawRequestId, body);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = resourceHelper.findProcess(processDefinitionKey, true);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
         return formService.validateForm(request, getViewContext(), process, body, rawRequestId, rawValidationId);
     }
 
@@ -94,9 +98,8 @@ public class FormResourceVersion1 implements FormResource {
         return formService.search(rawQueryParameters, getViewContext());
     }
 
-    @Override
 	public ViewContext getViewContext() {
-        return formService.getFormViewContext();
+        return versions.getVersion1();
 	}
 
 }

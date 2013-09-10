@@ -147,8 +147,8 @@ public class Task implements Serializable {
         this.dueDate = builder.dueDate;
         this.priority = builder.priority;
         this.active = builder.active;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
-        this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey, builder.taskInstanceId) : null;
+        this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
+        this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.isDeleted = builder.isDeleted;
     }
 

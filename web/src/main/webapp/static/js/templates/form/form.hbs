@@ -1,5 +1,5 @@
-{{#if task}}
-    {{#if readonly}}
+{{#if screen.readonly}}
+    {{#if task}}
         {{#if task.active}}
         <div class="alert">This form cannot be modified - it is assigned to {{task.assignee.displayName}}</div>
         {{else}}

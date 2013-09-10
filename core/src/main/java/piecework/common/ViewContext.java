@@ -23,19 +23,15 @@ public class ViewContext {
 	private final String baseApplicationUri;
 	private final String baseServiceUri;
 	private final String version;
-	private final String path;
-	private final String label;
 	
 	public ViewContext() {
-		this(null, null, null, null, null);
+		this(null, null, null);
 	}
 	
-	public ViewContext(String baseUri, String baseServiceUri, String version, String path, String label) {
+	public ViewContext(String baseUri, String baseServiceUri, String version) {
 		this.baseApplicationUri = baseUri;
 		this.baseServiceUri = baseServiceUri;
 		this.version = version;
-		this.path = path;
-		this.label = label;
 	}
 
 	public String getBaseApplicationUri() {
@@ -50,36 +46,26 @@ public class ViewContext {
 		return version;
 	}
 
-	public String getPath() {
-		return path;
+	public String getApplicationUri(String ... fragments) {
+
+		return buildUri(false, baseApplicationUri, fragments);
 	}
 	
-	public String getLabel() {
-		return label;
-	}
+	public String getServiceUri(String ... fragments) {
 
-	public String getApplicationUri(String ... ids) {
-
-		return buildUri(false, baseApplicationUri, ids);
+		return buildUri(true, baseServiceUri, fragments);
 	}
 	
-	public String getServiceUri(String ... ids) {
-
-		return buildUri(true, baseServiceUri, ids);
-	}
-	
-	protected String buildUri(boolean includeVersion, String base, String ... ids) {
+	protected String buildUri(boolean includeVersion, String base, String ... fragments) {
 
 		if (base != null) {
             StringBuilder builder = new StringBuilder();
             builder.append(base);
             if (includeVersion && version != null)
                 builder.append("/").append(version);
-            if (path != null)
-                builder.append("/").append(path);
-			
-			if (ids != null && ids.length > 0) {
-				for (String id : ids) {
+
+			if (fragments != null && fragments.length > 0) {
+				for (String id : fragments) {
                     if (id == null)
                         continue;
 					builder.append("/").append(id);

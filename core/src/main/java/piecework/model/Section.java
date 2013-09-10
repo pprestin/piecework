@@ -88,7 +88,7 @@ public class Section {
         this.references = builder.references != null ? Collections.unmodifiableList(builder.references) : null;
 		this.fields = builder.fields != null ? Collections.unmodifiableList(builder.fields) : null;
 //		this.buttons = builder.buttons != null ? Collections.unmodifiableList(builder.buttons) : null;
-		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.sectionId) : null;
+		this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.sectionId) : null;
 	}
 	
 	public String getSectionId() {

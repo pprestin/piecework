@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.validation;
+package piecework;
 
-import piecework.Registrant;
-import piecework.form.legacy.AttributeValidation;
-import piecework.util.PropertyValueReader;
+import piecework.exception.StatusCodeError;
 
 /**
  * @author James Renfro
  */
-public interface ConstraintValidator<C> extends Registrant<C> {
+public interface Command<T> {
 
-	AttributeValidation validate(String propertyName, C constraint, PropertyValueReader propertyValueReader, boolean isFieldSpecificUpdate, boolean isRestricted, boolean isText, boolean isUnchanged);
+    <T> T execute(Toolkit toolkit) throws StatusCodeError;
 
 }

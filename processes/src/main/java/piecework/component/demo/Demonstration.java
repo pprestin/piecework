@@ -30,14 +30,13 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceService;
-import piecework.process.ProcessService;
+import piecework.service.ProcessInstanceService;
+import piecework.service.ProcessService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author James Renfro

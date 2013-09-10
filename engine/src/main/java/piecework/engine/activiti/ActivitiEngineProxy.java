@@ -17,37 +17,32 @@ package piecework.engine.activiti;
 
 import java.util.*;
 
-import com.google.common.collect.Sets;
 import org.activiti.engine.*;
 import org.activiti.engine.history.*;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.DeploymentBuilder;
-import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
 import org.activiti.engine.task.TaskQuery;
-import org.apache.commons.collections.map.MultiKeyMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.engine.exception.TaskAlreadyClaimedException;
 import piecework.enumeration.ActionType;
-import piecework.identity.InternalUserDetailsService;
+import piecework.identity.*;
 import piecework.model.User;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.identity.InternalUserDetails;
 import piecework.model.Process;
 import piecework.model.ProcessExecution;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.process.concrete.ResourceHelper;
+import piecework.identity.IdentityHelper;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.util.ManyMap;
@@ -61,13 +56,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     private static final Logger LOG = Logger.getLogger(ActivitiEngineProxy.class);
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
 
     @Autowired
     ActivitiEngineProxyHelper proxyHelper;
 
     @Autowired
-    IdentityService identityService;
+    org.activiti.engine.IdentityService identityService;
 
     @Autowired
     HistoryService historyService;
@@ -76,7 +71,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
-    InternalUserDetailsService userDetailsService;
+    piecework.identity.IdentityService userDetailsService;
 
 	@Autowired
 	RuntimeService runtimeService;
@@ -89,7 +84,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public String start(Process process, String processBusinessKey, Map<String, ?> data) throws ProcessEngineException {
-        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
 
@@ -101,7 +96,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException {
-        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
 
@@ -125,7 +120,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
 	public boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException {
-        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
 
@@ -142,7 +137,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean suspend(Process process, ProcessInstance instance) throws ProcessEngineException {
-        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
 
@@ -159,7 +154,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException {
-        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
 
@@ -191,7 +186,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public void deploy(Process process, String name, ProcessModelResource... resources) throws ProcessEngineException {
-        InternalUserDetails principal = helper.getAuthenticatedPrincipal();
+        IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         identityService.setAuthenticatedUserId(userId);
 
@@ -397,9 +392,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .taskDescription(instance.getDescription())
                 .taskStatus(instance.isSuspended() ? Constants.TaskStatuses.SUSPENDED : Constants.TaskStatuses.OPEN)
                 .engineProcessInstanceId(instance.getProcessInstanceId())
-//                .processInstanceId(processInstance.getProcessInstanceId())
-//                .processInstanceAlias(processInstance.getAlias())
-//                .processInstanceLabel(processInstance.getProcessInstanceLabel())
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processDefinitionLabel(process.getProcessDefinitionLabel())
                 .priority(instance.getPriority())
@@ -438,9 +430,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .taskDefinitionKey(instance.getTaskDefinitionKey())
                 .taskLabel(instance.getName())
                 .taskDescription(instance.getDescription())
-//                .processInstanceId(processInstance.getProcessInstanceId())
-//                .processInstanceAlias(processInstance.getAlias())
-//                .processInstanceLabel(processInstance.getProcessInstanceLabel())
                 .engineProcessInstanceId(instance.getProcessInstanceId())
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processDefinitionLabel(process.getProcessDefinitionLabel())

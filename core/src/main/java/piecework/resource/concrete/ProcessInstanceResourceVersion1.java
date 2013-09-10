@@ -26,19 +26,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import piecework.Constants;
+import piecework.*;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
-import piecework.engine.ProcessEngineFacade;
-import piecework.enumeration.OperationType;
 import piecework.form.handler.SubmissionHandler;
-import piecework.form.validation.SubmissionTemplate;
-import piecework.form.validation.SubmissionTemplateFactory;
+import piecework.service.ProcessHistoryService;
+import piecework.service.ProcessInstanceService;
+import piecework.service.ProcessService;
+import piecework.service.ValuesService;
+import piecework.validation.SubmissionTemplate;
+import piecework.validation.SubmissionTemplateFactory;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.*;
-import piecework.process.concrete.ResourceHelper;
+import piecework.identity.IdentityHelper;
 import piecework.resource.ProcessInstanceResource;
 import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
@@ -63,19 +65,22 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
 
     @Autowired
+    AttachmentService attachmentService;
+
+    @Autowired
     Environment environment;
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
+
+    @Autowired
+    ProcessHistoryService historyService;
 
     @Autowired
     ProcessService processService;
 
     @Autowired
     ProcessInstanceService processInstanceService;
-
-	@Autowired
-    ProcessEngineFacade facade;
 
     @Autowired
     RequestHandler requestHandler;
@@ -95,6 +100,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Autowired
     AllowedTaskService taskService;
 
+    @Autowired
+    ValuesService valuesService;
+
+    @Autowired
+    Versions versions;
+
     @Override
     public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
@@ -104,7 +115,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, false))
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
-        processInstanceService.operate(OperationType.ACTIVATION, process, instance, null, null, reason);
+        processInstanceService.activate(process, instance, reason);
         return Response.noContent().build();
     }
 
@@ -125,7 +136,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
         Submission submission = submissionHandler.handle(process, template, formData);
 
-        processInstanceService.attach(process, instance, task, template, submission);
+        attachmentService.attach(process, instance, task, template, submission);
         return Response.noContent().build();
     }
 
@@ -141,7 +152,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
         Submission submission = submissionHandler.handle(process, template, body);
 
-        processInstanceService.attach(process, instance, task, template, submission);
+        attachmentService.attach(process, instance, task, template, submission);
         return Response.noContent().build();
     }
 
@@ -153,7 +164,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!taskService.hasAllowedTask(process, instance, false))
             throw new ForbiddenError();
 
-        SearchResults searchResults = processInstanceService.findAttachments(process, instance, queryParameters);
+        SearchResults searchResults = attachmentService.search(process, instance, queryParameters);
         return Response.ok(searchResults).build();
     }
 
@@ -166,7 +177,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError();
 
-        StreamingAttachmentContent content = processInstanceService.getAttachmentContent(process, instance, attachmentId);
+        StreamingAttachmentContent content = attachmentService.content(process, instance, attachmentId);
 
         if (content == null)
             throw new NotFoundError(Constants.ExceptionCodes.attachment_does_not_exist, attachmentId);
@@ -187,7 +198,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!isInitiator && !helper.hasRole(process, AuthorizationRole.OVERSEER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        processInstanceService.operate(OperationType.CANCELLATION, process, instance, null, null, reason);
+        processInstanceService.cancel(process, instance, reason);
         return Response.noContent().build();
     }
 
@@ -206,7 +217,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        return Response.ok(new ProcessInstance.Builder(instance).build(getViewContext())).build();
+        return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
 	}
 	
 	@Override
@@ -219,7 +230,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Submission submission = submissionHandler.handle(process, template, formData);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        return Response.ok(new ProcessInstance.Builder(instance).build(getViewContext())).build();
+        return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
 	}
 
 	@Override
@@ -232,7 +243,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        return Response.ok(new ProcessInstance.Builder(instance).build(getViewContext())).build();
+        return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
 	}
 
     @Override
@@ -245,13 +256,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.isAuthenticatedSystem() && task == null)
             throw new ForbiddenError();
 
-        processInstanceService.removeAttachment(process, instance, attachmentId);
+        attachmentService.delete(process, instance, attachmentId);
         return Response.noContent().build();
     }
 
     @Override
     public Response history(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
-        History history = processInstanceService.getHistory(rawProcessDefinitionKey, rawProcessInstanceId);
+        History history = historyService.read(rawProcessDefinitionKey, rawProcessInstanceId);
         return Response.ok(history).build();
     }
 
@@ -260,7 +271,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
 		
-		Process process = processInstanceService.getProcess(processDefinitionKey);
+		Process process = processService.read(processDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, processInstanceId, false);
 
         ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
@@ -280,7 +291,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 //            LOG.error("Process engine unable to find execution ", e);
 //        }
 
-        return Response.ok(builder.build(getViewContext())).build();
+        return Response.ok(builder.build(versions.getVersion1())).build();
 	}
 
     @Override
@@ -292,7 +303,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        processInstanceService.operate(OperationType.SUSPENSION, process, instance, null, null, reason);
+        processInstanceService.suspend(process, instance, reason);
         return Response.noContent().build();
     }
 
@@ -309,7 +320,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         processInstanceService.update(processDefinitionKey, processInstanceId, instance);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-        ViewContext context = getViewContext();
+        ViewContext context = versions.getVersion1();
         String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
         if (location != null)
             responseBuilder.location(UriBuilder.fromPath(location).build());
@@ -322,10 +333,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
-        processInstanceService.operate(OperationType.CANCELLATION, process, instance, null, null, reason);
+        processInstanceService.cancel(process, instance, reason);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-        ViewContext context = getViewContext();
+        ViewContext context = versions.getVersion1();
         String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
         if (location != null)
             responseBuilder.location(UriBuilder.fromPath(location).build());
@@ -335,7 +346,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	@Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-		return processInstanceService.search(rawQueryParameters, getViewContext());
+		return processInstanceService.search(rawQueryParameters, versions.getVersion1());
 	}
 
     @Override
@@ -348,7 +359,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        processInstanceService.removeValue(process, instance, fieldName, valueId);
+        valuesService.delete(process, instance, fieldName, valueId);
         return Response.noContent().build();
     }
 
@@ -362,7 +373,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        return processInstanceService.readValue(process, instance, fieldName, valueId);
+        return valuesService.read(process, instance, fieldName, valueId);
     }
 
     @Override
@@ -393,6 +404,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         Map<String, List<Value>> data = stored.getData();
 
+        ViewContext version1 = versions.getVersion1();
         String location = null;
         if (data != null) {
             File file = ProcessInstanceUtility.firstFile(fieldName, data);
@@ -404,7 +416,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
                         .processDefinitionKey(process.getProcessDefinitionKey())
                         .processInstanceId(stored.getProcessInstanceId())
                         .fieldName(fieldName)
-                        .build(processInstanceService.getInstanceViewContext())
+                        .build(version1)
                         .getLink();
             }
         }
@@ -426,7 +438,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        List<Value> files = processInstanceService.searchValues(process, instance, fieldName);
+        List<Value> files = valuesService.searchValues(process, instance, fieldName);
         SearchResults searchResults = new SearchResults.Builder()
                 .items(files)
                 .build();
@@ -435,13 +447,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-	public ViewContext getViewContext() {
-        return processInstanceService.getInstanceViewContext();
-	}
-
-    @Override
     public String getVersion() {
-        return processInstanceService.getVersion();
+        return versions.getVersion1().getVersion();
     }
 
     private RequestDetails requestDetails(HttpServletRequest request) {

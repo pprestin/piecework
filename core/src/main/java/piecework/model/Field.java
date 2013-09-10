@@ -152,7 +152,7 @@ public class Field implements Serializable {
         this.isDeleted = builder.isDeleted;
         this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.options = builder.options != null ? Collections.unmodifiableList(builder.options) : null;
-        this.link = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.name) : null;
+        this.link = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.name) : null;
     }
 
     public String getFieldId() {

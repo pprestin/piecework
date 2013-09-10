@@ -19,7 +19,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringUtils;
-import piecework.form.validation.FormValidation;
+import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
 

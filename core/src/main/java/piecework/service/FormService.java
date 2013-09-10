@@ -13,36 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.Versions;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
 import piecework.form.handler.SubmissionHandler;
-import piecework.form.validation.SubmissionTemplate;
-import piecework.form.validation.SubmissionTemplateFactory;
+import piecework.validation.SubmissionTemplate;
+import piecework.validation.SubmissionTemplateFactory;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
-import piecework.identity.InternalUserDetails;
-import piecework.persistence.ContentRepository;
+import piecework.identity.IdentityDetails;
+import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
 import piecework.task.AllowedTaskService;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.form.handler.RequestHandler;
 import piecework.form.handler.ResponseHandler;
-import piecework.form.validation.FormValidation;
+import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceService;
-import piecework.process.concrete.ResourceHelper;
 import piecework.security.Sanitizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -62,16 +60,10 @@ public class FormService {
     private static final Logger LOG = Logger.getLogger(FormService.class);
 
     @Autowired
-    Environment environment;
-
-    @Autowired
-    ContentRepository contentRepository;
-
-    @Autowired
     ProcessEngineFacade facade;
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
 
     @Autowired
     ProcessInstanceService processInstanceService;
@@ -97,6 +89,12 @@ public class FormService {
     @Autowired
     AllowedTaskService taskService;
 
+    @Autowired
+    ValidationService validationService;
+
+    @Autowired
+    Versions versions;
+
 
     public Response delete(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
@@ -116,7 +114,7 @@ public class FormService {
         if (StringUtils.isEmpty(taskId))
             throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
 
-        InternalUserDetails user = helper.getAuthenticatedPrincipal();
+        IdentityDetails user = helper.getAuthenticatedPrincipal();
         String participantId = user != null ? user.getInternalId() : null;
 
         try {
@@ -131,9 +129,8 @@ public class FormService {
         return Response.noContent().build();
     }
 
-    public Response provideFormResponse(HttpServletRequest request, ViewContext viewContext, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
+    public Response provideFormResponse(HttpServletRequest request, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
-        String formValueName = null;
         boolean isStatic = false;
         boolean isSubmissionResource;
 
@@ -156,7 +153,7 @@ public class FormService {
                         staticResourceName += "/";
                 }
                 if (isStatic)
-                    return processInstanceService.readStatic(process, staticResourceName);
+                    return readStatic(process, staticResourceName);
             }
         }
 
@@ -186,7 +183,7 @@ public class FormService {
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-                .link(viewContext.getApplicationUri());
+                .link(viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME));
 
         List<?> definitions = results.getDefinitions();
         if (definitions != null) {
@@ -198,15 +195,15 @@ public class FormService {
 
         List<?> items = results.getList();
         if (items != null && !items.isEmpty()) {
-            ViewContext instanceViewContext = processInstanceService.getInstanceViewContext();
-            ViewContext taskViewContext = processInstanceService.getTaskViewContext();
+            ViewContext version = versions.getVersion1();
+
             for (Object item : items) {
                 Task task = Task.class.cast(item);
                 resultsBuilder.item(new Form.Builder()
                         .formInstanceId(task.getTaskInstanceId())
-                        .taskSubresources(task.getProcessDefinitionKey(), task, taskViewContext)
+                        .taskSubresources(task.getProcessDefinitionKey(), task, version)
                         .processDefinitionKey(task.getProcessDefinitionKey())
-                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, 0, instanceViewContext)
+                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, 0, version)
                         .build(viewContext));
             }
         }
@@ -299,7 +296,7 @@ public class FormService {
                     return responseHandler.redirect(formRequest, viewContext);
 
                 case VALIDATE:
-                    processInstanceService.validate(process, instance, task, template, submission, true);
+                    validationService.validate(process, instance, task, template, submission, true);
                     return responseHandler.redirect(formRequest, viewContext);
             }
         } catch (BadRequestError e) {
@@ -337,17 +334,26 @@ public class FormService {
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen(), validationId);
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
-        processInstanceService.validate(process, instance, task, template, submission, true);
+        validationService.validate(process, instance, task, template, submission, true);
 
         return Response.noContent().build();
     }
 
-    public ViewContext getFormViewContext() {
-        String baseApplicationUri = environment.getProperty("base.application.uri");
-        return new ViewContext(baseApplicationUri, null, null, Form.Constants.ROOT_ELEMENT_NAME, "Form");
-    }
-
     private RequestDetails requestDetails(HttpServletRequest request) {
         return new RequestDetails.Builder(request, securitySettings).build();
+    }
+
+    private Response readStatic(Process process, String name) throws StatusCodeError {
+
+        String base = process.getBase();
+
+        if (StringUtils.isNotEmpty(base)) {
+            Content content = responseHandler.content(base + "/" + name);
+
+            if (content != null)
+                return Response.ok(content.getInputStream()).type(content.getContentType()).build();
+        }
+
+        throw new NotFoundError();
     }
 }

@@ -30,7 +30,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 
 import piecework.identity.DisplayNameConverter;
-import piecework.identity.InternalUserDetails;
+import piecework.identity.IdentityDetails;
 
 /**
  * @author James Renfro
@@ -66,7 +66,7 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implement
         if (displayNameConverter != null)
             displayName = displayNameConverter.convert(displayName);
 
-        return new InternalUserDetails(userDetails, internalId, externalId, displayName, emailAddress);
+        return new IdentityDetails(userDetails, internalId, externalId, displayName, emailAddress);
     }
 
     @Override

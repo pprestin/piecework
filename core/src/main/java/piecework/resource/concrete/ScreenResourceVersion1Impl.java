@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.Versions;
 import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
@@ -58,6 +59,9 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 	
 	@Autowired
 	Sanitizer sanitizer;
+
+    @Autowired
+    Versions versions;
 	
 	@Value("${base.application.uri}")
 	String baseApplicationUri;
@@ -99,7 +103,7 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 				.Builder(screenRepository.save(record), passthroughSanitizer)
 				.processDefinitionKey(processDefinitionKey)
 				.interactionId(interactionId)
-				.build(getViewContext());
+				.build(versions.getVersion1());
 		
 		// Save the reference to the screen in the interaction
 		interactionRepository.save(new Interaction.Builder(interaction, passthroughSanitizer).screen(result).build());
@@ -142,8 +146,8 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 		Screen result = screenRepository.save(record);
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
-		ViewContext context = getViewContext();
-		String location = context != null ? context.getApplicationUri(result.getScreenId()) : null;
+		ViewContext context = versions.getVersion1();
+		String location = context != null ? context.getApplicationUri(Screen.Constants.ROOT_ELEMENT_NAME, result.getScreenId()) : null;
 		if (location != null)
 			responseBuilder.location(UriBuilder.fromPath(location).build());	
 		
@@ -169,11 +173,6 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 		String interactionId = sanitizer.sanitize(rawInteractionId);
 		
 		return null;
-	}
-	
-	@Override
-	public ViewContext getViewContext() {
-		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "screen", "Screen");
 	}
 
 	private Screen getScreen(String id) throws StatusCodeError {

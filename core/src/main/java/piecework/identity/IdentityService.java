@@ -18,13 +18,10 @@ package piecework.identity;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.core.env.Environment;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.ldap.SizeLimitExceededException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.filter.AndFilter;
-import org.springframework.ldap.filter.Filter;
 import org.springframework.ldap.filter.LikeFilter;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -32,23 +29,17 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
-import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapSettings;
 import piecework.model.User;
 
-import javax.naming.directory.SearchControls;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author James Renfro
  */
-public class InternalUserDetailsService implements UserDetailsService {
-
-    @Autowired
-    Environment environment;
+public class IdentityService implements UserDetailsService {
 
     @Autowired
     LdapContextSource personLdapContextSource;
@@ -63,7 +54,7 @@ public class InternalUserDetailsService implements UserDetailsService {
     private final CustomLdapUserDetailsMapper userDetailsMapper;
     private final String usernameAttribute;
 
-    public InternalUserDetailsService() {
+    public IdentityService() {
         this.delegate = null;
         this.userDetailsMapper = null;
         this.userSearch = null;
@@ -72,7 +63,7 @@ public class InternalUserDetailsService implements UserDetailsService {
         this.usernameAttribute = null;
     }
 
-    public InternalUserDetailsService(LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, String usernameAttribute) {
+    public IdentityService(LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, String usernameAttribute) {
         this.delegate = new LdapUserDetailsService(userSearch, authoritiesPopulator);
         this.delegate.setUserDetailsMapper(userDetailsMapper);
         this.userDetailsMapper = userDetailsMapper;
@@ -82,7 +73,7 @@ public class InternalUserDetailsService implements UserDetailsService {
         this.usernameAttribute = usernameAttribute;
     }
 
-    public List<InternalUserDetails> findUsersByDisplayName(String displayNameLike) {
+    public List<IdentityDetails> findUsersByDisplayName(String displayNameLike) {
         String ldapPersonSearchBase = ldapSettings.getLdapPersonSearchBase();
         String ldapDisplayNameAttribute = ldapSettings.getLdapPersonAttributeDisplayName();
         String ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
@@ -114,12 +105,12 @@ public class InternalUserDetailsService implements UserDetailsService {
                 authoritiesPopulator.getGrantedAuthorities(userData, username));
     }
 
-    public InternalUserDetails loadUserByAnyId(String id) {
+    public IdentityDetails loadUserByAnyId(String id) {
         try {
-            return InternalUserDetails.class.cast(loadUserByInternalId(id));
+            return IdentityDetails.class.cast(loadUserByInternalId(id));
         } catch (UsernameNotFoundException e) {
             try {
-                return InternalUserDetails.class.cast(loadUserByUsername(id));
+                return IdentityDetails.class.cast(loadUserByUsername(id));
             } catch (UsernameNotFoundException e2) {
                 return null;
             }

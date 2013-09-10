@@ -107,12 +107,12 @@ public class Form {
         this.screen = builder.screen;
         this.data = builder.data;
         this.validation = builder.validation;
-        this.root = context != null ? context.getApplicationUri() : null;
-        this.action = context != null ? context.getApplicationUri(builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
+        this.root = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME) : null;
+        this.action = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
-            this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, task.getTaskInstanceId()) : null;
+            this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
-            this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
+            this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
         this.assignment = builder.assignment;
         this.activation = builder.activation;
         this.attachment = builder.attachment;
@@ -264,11 +264,11 @@ public class Form {
         }
 
         public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, Set<Attachment> attachments, int attachmentCount, ViewContext context) {
-            this.activation = context.getApplicationUri(processDefinitionKey, processInstanceId, "activation");
-            this.attachment = context.getApplicationUri(processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
-            this.cancellation = context.getApplicationUri(processDefinitionKey, processInstanceId, "cancellation");
-            this.history = context.getApplicationUri(processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
-            this.suspension = context.getApplicationUri(processDefinitionKey, processInstanceId, "suspension");
+            this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
+            this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
+            this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
+            this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+            this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
             if (attachments != null && !attachments.isEmpty()) {
                 PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
                 this.attachmentCount = attachments.size();
@@ -283,7 +283,7 @@ public class Form {
         }
 
         public Builder taskSubresources(String processDefinitionKey, Task task, ViewContext context) {
-            this.assignment = context != null && task != null && task.getTaskInstanceId() != null ? context.getApplicationUri(processDefinitionKey, task.getTaskInstanceId(), "assign") : null;
+            this.assignment = context != null && task != null && task.getTaskInstanceId() != null ? context.getApplicationUri(Task.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, task.getTaskInstanceId(), "assign") : null;
             this.task = task;
             return this;
         }

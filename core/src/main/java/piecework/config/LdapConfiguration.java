@@ -24,7 +24,6 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
@@ -36,7 +35,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
 import org.springframework.ldap.core.AuthenticationSource;
@@ -45,23 +43,20 @@ import org.springframework.ldap.core.support.ExternalTlsDirContextAuthentication
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticator;
 import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 import org.springframework.security.ldap.authentication.LdapAuthenticator;
 import org.springframework.security.ldap.authentication.PasswordComparisonAuthenticator;
-import org.springframework.security.ldap.authentication.SpringSecurityAuthenticationSource;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
-import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 
 import org.springframework.util.StringUtils;
 import piecework.authorization.AuthorizationRoleMapper;
-import piecework.identity.InternalUserDetailsService;
+import piecework.identity.IdentityService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapSettings;
 import piecework.security.CustomAuthenticationSource;
@@ -94,10 +89,10 @@ public class LdapConfiguration {
     }
 
 	@Bean
-	public InternalUserDetailsService userDetailsService(Environment environment) throws Exception {
+	public IdentityService userDetailsService(Environment environment) throws Exception {
         String ldapExternalIdAttribute = environment.getProperty("ldap.attribute.id.external");
 
-		return new InternalUserDetailsService(userSearch(environment), userSearchInternal(environment), authoritiesPopulator(environment), userDetailsMapper, ldapExternalIdAttribute);
+		return new IdentityService(userSearch(environment), userSearchInternal(environment), authoritiesPopulator(environment), userDetailsMapper, ldapExternalIdAttribute);
 	}
 
     @Bean

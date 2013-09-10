@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.validation;
+package piecework.validation;
 
 import java.io.Serializable;
 import java.util.*;
 
-import org.apache.commons.lang.StringUtils;
 import piecework.Constants;
 import piecework.model.*;
-import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.util.ManyMap;
-
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * @author James Renfro

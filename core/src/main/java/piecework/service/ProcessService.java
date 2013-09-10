@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
+package piecework.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.ViewContext;
 import piecework.exception.ForbiddenError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
@@ -28,7 +28,7 @@ import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.*;
-import piecework.process.concrete.ResourceHelper;
+import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 
@@ -48,7 +48,7 @@ public class ProcessService {
     Environment environment;
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
 
     @Autowired
     ProcessRepository processRepository;
@@ -67,6 +67,9 @@ public class ProcessService {
 
     @Autowired
     Sanitizer sanitizer;
+
+    @Autowired
+    Versions versions;
 
     public Process create(Process rawProcess) {
         piecework.model.Process.Builder builder = new Process.Builder(rawProcess, sanitizer, true);
@@ -141,7 +144,7 @@ public class ProcessService {
         if (processes != null && !processes.isEmpty()) {
             results = new ArrayList<Process>(processes.size());
             for (Process process : processes) {
-                results.add(new Process.Builder(process, sanitizer, false).build(getProcessViewContext()));
+                results.add(new Process.Builder(process, sanitizer, false).build(versions.getVersion1()));
             }
         } else {
             results = Collections.emptyList();
@@ -217,12 +220,6 @@ public class ProcessService {
         }
 
         return processRepository.save(builder.build());
-    }
-
-    public ViewContext getProcessViewContext() {
-        String baseApplicationUri = environment.getProperty(Constants.Settings.BASE_APPLICATION_URI);
-        String baseServiceUri = environment.getProperty(Constants.Settings.BASE_SERVICE_URI);
-        return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), "process", "Process");
     }
 
     public String getVersion() {

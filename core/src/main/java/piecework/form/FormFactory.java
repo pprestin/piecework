@@ -20,16 +20,18 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.Versions;
+import piecework.service.FormService;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
-import piecework.form.validation.FormValidation;
-import piecework.form.validation.ValidationService;
+import piecework.validation.FormValidation;
+import piecework.service.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceService;
-import piecework.process.concrete.ResourceHelper;
+import piecework.service.ProcessInstanceService;
+import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.AllowedTaskService;
 import piecework.util.ConstraintUtil;
@@ -49,7 +51,7 @@ public class FormFactory {
     FormService formService;
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
 
     @Autowired
     ProcessInstanceService processInstanceService;
@@ -59,6 +61,9 @@ public class FormFactory {
 
     @Autowired
     ValidationService validationService;
+
+    @Autowired
+    Versions versions;
 
     public Form form(FormRequest request, Process process, Task task, FormValidation validation) throws StatusCodeError {
         ProcessInstance instance = instance(process, request.getProcessInstanceId());
@@ -71,10 +76,10 @@ public class FormFactory {
         if (screen == null)
             screen = screen(process, task);
 
-        ViewContext instanceViewContext = processInstanceService.getInstanceViewContext();
+        ViewContext version = versions.getVersion1();
         String loggedInUserId = helper.getAuthenticatedSystemOrUserId();
         boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
-        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, instanceViewContext, loggedInUserId, hasOversight);
+        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, version, loggedInUserId, hasOversight);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         ManyMap<String, Message> results = new ManyMap<String, Message>();
 
@@ -87,7 +92,7 @@ public class FormFactory {
             results.putAll(validation.getResults());
         }
 
-        return worker.form(formInstanceId, data, results, formService.getFormViewContext(), processInstanceService.getTaskViewContext());
+        return worker.form(formInstanceId, data, results);
     }
 
     private ProcessInstance instance(Process process, String processInstanceId) throws StatusCodeError {
@@ -228,11 +233,11 @@ public class FormFactory {
         private final Task task;
         private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         private final Screen screen;
-        private final ViewContext instanceContext;
+        private final ViewContext version;
         private final String loggedInUserId;
         private final boolean hasOversight;
 
-        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext instanceContext, String loggedInUserId, boolean hasOversight) {
+        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext version, String loggedInUserId, boolean hasOversight) {
             this.process = process;
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
@@ -240,24 +245,24 @@ public class FormFactory {
             this.attachmentCount = instance != null && instance.getAttachmentIds() != null ? instance.getAttachmentIds().size() : 0;
             this.task = task;
             this.screen = screen;
-            this.instanceContext = instanceContext;
+            this.version = version;
             this.loggedInUserId = loggedInUserId;
             this.hasOversight = hasOversight;
         }
 
-        public Form form(String formInstanceId, ManyMap<String, Value> data, ManyMap<String, Message> results, ViewContext formContext, ViewContext taskContext) {
+        public Form form(String formInstanceId, ManyMap<String, Value> data, ManyMap<String, Message> results) {
             Form.Builder builder = new Form.Builder()
                     .formInstanceId(formInstanceId)
                     .processDefinitionKey(processDefinitionKey)
-                    .taskSubresources(processDefinitionKey, task, taskContext);
+                    .taskSubresources(processDefinitionKey, task, version);
 
             if (hasOversight || task == null || task.getAssigneeId() == null || task.getAssigneeId().equals(loggedInUserId))
                 builder.screen(screen(builder, screen, data, results));
 
             if (processInstanceId != null)
-                builder.instanceSubresources(processDefinitionKey, processInstanceId, attachments, attachmentCount, instanceContext);
+                builder.instanceSubresources(processDefinitionKey, processInstanceId, attachments, attachmentCount, this.version);
 
-            return builder.build(formContext);
+            return builder.build(version);
         }
 
         private Field field(Form.Builder formBuilder, Field field, ManyMap<String, Value> data, ManyMap<String, Message> results) {
@@ -284,7 +289,7 @@ public class FormFactory {
                 formBuilder.validation(fieldName, messages);
             }
 
-            return fieldBuilder.build(instanceContext);
+            return fieldBuilder.build(version);
         }
 
         private Screen screen(Form.Builder formBuilder, Screen screen, ManyMap<String, Value> data, ManyMap<String, Message> results) {
@@ -343,7 +348,7 @@ public class FormFactory {
                                 .processDefinitionKey(processDefinitionKey)
                                 .processInstanceId(processInstanceId)
                                 .fieldName(fieldName)
-                                .build(instanceContext));
+                                .build(version));
                 } else {
                     list.add(value);
                 }

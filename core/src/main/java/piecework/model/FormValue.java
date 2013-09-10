@@ -61,7 +61,7 @@ public class FormValue implements Serializable {
 		this.name = builder.name;
 		this.values = Collections.unmodifiableList(builder.values);
         this.messages = Collections.unmodifiableList(builder.messages);
-        this.link = context != null && builder.processDefinitionKey != null && builder.formInstanceId != null && builder.name != null ? context.getApplicationUri(builder.processDefinitionKey, builder.formInstanceId, Constants.ROOT_ELEMENT_NAME, builder.name) : null;
+        this.link = context != null && builder.processDefinitionKey != null && builder.formInstanceId != null && builder.name != null ? context.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.formInstanceId, Constants.ROOT_ELEMENT_NAME, builder.name) : null;
     }
 	
 	public String getName() {

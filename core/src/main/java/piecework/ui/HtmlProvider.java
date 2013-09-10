@@ -27,10 +27,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import piecework.identity.IdentityDetails;
 import piecework.model.Explanation;
 import piecework.model.User;
 import piecework.model.SearchResults;
-import piecework.identity.InternalUserDetails;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -93,8 +93,8 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		
 		Object principal = authentication != null ? authentication.getPrincipal() : null;
 		
-		if (principal != null && principal instanceof InternalUserDetails) {
-			InternalUserDetails userDetails = InternalUserDetails.class.cast(principal);
+		if (principal != null && principal instanceof IdentityDetails) {
+			IdentityDetails userDetails = IdentityDetails.class.cast(principal);
             internalId = userDetails.getInternalId();
             externalId = userDetails.getExternalId();
 			userName = userDetails.getDisplayName();

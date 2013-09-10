@@ -37,5 +37,11 @@ For example, to start up with tomcat using maven on Linux, you'll want to do som
 
 If you don't want to use TLS protected LDAP for identity and authorization behind a Single-Sign-On authentication layer, then you'll want to make some modifications to the ldap configuration.
 
+## Keystore
 
+To bring up Tomcat with the httpsPort setting requires a default Java keystore file with a self-signed certificate
+installed. Assuming that you're working on Linux or Mac, you should be able to just run the java keytool command and it will generate a file called .keystore under your home directory. On Windows, it may be necessary to adjust the
+pom.xml under web/ to have it point to the keystore you generate.
+
+	% keytool -genkey -keyalg RSA
 

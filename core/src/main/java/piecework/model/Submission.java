@@ -74,7 +74,7 @@ public class Submission {
     @XmlTransient
     private final Date submissionDate;
 
-    @XmlTransient
+    @XmlElement
     private final String submitterId;
 
     @XmlElement
@@ -148,7 +148,6 @@ public class Submission {
         return submissionDate;
     }
 
-    @JsonIgnore
     public String getSubmitterId() {
         return submitterId;
     }

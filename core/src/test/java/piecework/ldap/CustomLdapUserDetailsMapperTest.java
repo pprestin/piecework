@@ -15,8 +15,6 @@
  */
 package piecework.ldap;
 
-import org.apache.cxf.configuration.jsse.SSLUtils;
-import org.apache.cxf.configuration.security.FiltersType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -24,44 +22,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.ldap.SizeLimitExceededException;
-import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
-import org.springframework.ldap.core.ContextMapper;
-import org.springframework.ldap.core.ContextMapperCallbackHandler;
-import org.springframework.ldap.core.DirContextOperations;
-import org.springframework.ldap.core.DistinguishedName;
-import org.springframework.ldap.core.support.AbstractContextMapper;
-import org.springframework.ldap.core.support.DirContextAuthenticationStrategy;
-import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.LdapContextSource;
-import org.springframework.ldap.filter.AndFilter;
-import org.springframework.ldap.filter.LikeFilter;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.ldap.SpringSecurityLdapTemplate;
-import org.springframework.security.ldap.authentication.SpringSecurityAuthenticationSource;
-import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
-import org.springframework.security.ldap.search.LdapUserSearch;
-import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.config.EmbeddedLdapConfiguration;
 import piecework.config.LdapConfiguration;
-import piecework.identity.InternalUserDetails;
+import piecework.identity.IdentityDetails;
 import piecework.test.config.UnitTestConfiguration;
 import org.springframework.security.ldap.server.ApacheDSContainer;
-import piecework.util.KeyManagerCabinet;
-
-import javax.naming.directory.SearchControls;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.security.*;
-import java.security.cert.CertificateException;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author James Renfro
@@ -98,10 +69,10 @@ public class CustomLdapUserDetailsMapperTest {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(testUser);
 
-        Assert.assertTrue(userDetails instanceof InternalUserDetails);
+        Assert.assertTrue(userDetails instanceof IdentityDetails);
 
-        InternalUserDetails internalUserDetails = InternalUserDetails.class.cast(userDetails);
-        Assert.assertEquals(testUser, internalUserDetails.getUsername());
+        IdentityDetails identityDetails = IdentityDetails.class.cast(userDetails);
+        Assert.assertEquals(testUser, identityDetails.getUsername());
     }
 
 

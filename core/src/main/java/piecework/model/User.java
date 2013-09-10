@@ -15,7 +15,6 @@
  */
 package piecework.model;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -24,11 +23,10 @@ import javax.xml.bind.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ComparisonChain;
 import org.springframework.data.annotation.Id;
 
 import org.springframework.security.core.userdetails.UserDetails;
-import piecework.identity.InternalUserDetails;
+import piecework.identity.IdentityDetails;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
 import piecework.util.ManyMap;
@@ -78,7 +76,7 @@ public class User extends Value {
         this.emailAddress = builder.emailAddress;
         this.phoneNumber = builder.phoneNumber;
         this.attributes = builder.attributes;
-        this.uri = context != null ? context.getApplicationUri(builder.userId) : null;
+        this.uri = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.userId) : null;
     }
 
     public String getUserId() {
@@ -170,12 +168,12 @@ public class User extends Value {
         }
 
         public Builder(UserDetails details) {
-            if (details instanceof InternalUserDetails) {
-                InternalUserDetails internalUserDetails = InternalUserDetails.class.cast(details);
-                this.userId = internalUserDetails.getInternalId();
-                this.visibleId = internalUserDetails.getExternalId();
-                this.displayName = internalUserDetails.getDisplayName();
-                this.emailAddress = internalUserDetails.getEmailAddress();
+            if (details instanceof IdentityDetails) {
+                IdentityDetails identityDetails = IdentityDetails.class.cast(details);
+                this.userId = identityDetails.getInternalId();
+                this.visibleId = identityDetails.getExternalId();
+                this.displayName = identityDetails.getDisplayName();
+                this.emailAddress = identityDetails.getEmailAddress();
             } else {
                 this.userId = details.getUsername();
                 this.displayName = details.getUsername();

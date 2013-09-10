@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.validation;
+package piecework.validation;
 
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;

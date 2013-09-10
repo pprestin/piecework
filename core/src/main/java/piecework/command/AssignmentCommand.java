@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
+package piecework.command;
 
-import piecework.common.ViewContext;
+import piecework.Command;
+import piecework.Toolkit;
+import piecework.enumeration.OperationType;
+import piecework.exception.StatusCodeError;
+import piecework.model.*;
 
 /**
- * Marker interface for REST resources
- * 
  * @author James Renfro
  */
-public interface Resource {
+public class AssignmentCommand extends InstanceStateCommand {
 
+    public AssignmentCommand(piecework.model.Process process, ProcessInstance instance, Task task, String assignee) {
+        super(process, instance, OperationType.ASSIGNMENT);
+        this.task = task;
+        this.reason = assignee;
+    }
 
 }

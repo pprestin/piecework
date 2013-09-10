@@ -22,17 +22,15 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
+import piecework.Versions;
 import piecework.common.ViewContext;
 import piecework.form.FormFactory;
-import piecework.form.FormService;
-import piecework.form.validation.ValidationService;
-import piecework.process.ProcessInstanceService;
+import piecework.service.FormService;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
-import piecework.form.validation.FormValidation;
+import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ProcessRepository;
 import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
 
@@ -64,13 +62,7 @@ public class ResponseHandler {
     FormService formService;
 
     @Autowired
-    ProcessRepository processRepository;
-
-    @Autowired
-    ProcessInstanceService processInstanceService;
-
-    @Autowired
-    ValidationService validationService;
+    Versions versions;
 
 
     public Response handle(FormRequest formRequest, Process process) throws StatusCodeError {
@@ -95,7 +87,7 @@ public class ResponseHandler {
 
     public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
         String hostUri = environment.getProperty("host.uri");
-        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, hostUri + formService.getFormViewContext().getApplicationUri(formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
+        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, hostUri + versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
     }
 
     public Content content(String location) throws StatusCodeError {

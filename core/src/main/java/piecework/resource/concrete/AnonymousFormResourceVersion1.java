@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import piecework.Versions;
+import piecework.service.FormService;
 import piecework.model.Form;
 import piecework.persistence.ProcessRepository;
 import piecework.security.Sanitizer;
@@ -54,39 +56,37 @@ public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
     @Autowired
     Sanitizer sanitizer;
 
+    @Autowired
+    Versions versions;
+
     @Override
     public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.provideFormResponse(request, getViewContext(), process, null);
+        return formService.provideFormResponse(request, process, null);
     }
 
     @Override
     public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final HttpServletRequest request) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.provideFormResponse(request, getViewContext(), process, pathSegments);
+        return formService.provideFormResponse(request, process, pathSegments);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.submitForm(request, getViewContext(), process, rawRequestId, body);
+        return formService.submitForm(request, versions.getVersion1(), process, rawRequestId, body);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.validateForm(request, getViewContext(), process, body, rawRequestId, rawValidationId);
+        return formService.validateForm(request, versions.getVersion1(), process, body, rawRequestId, rawValidationId);
     }
 
-    @Override
-    public ViewContext getViewContext() {
-        String publicApplicationUri = environment.getProperty("base.public.uri");
-        return new ViewContext(publicApplicationUri, null, null, Form.Constants.ROOT_ELEMENT_NAME, "Form");
-    }
 
     private Process verifyProcessAllowsAnonymousSubmission(final String rawProcessDefinitionKey) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);

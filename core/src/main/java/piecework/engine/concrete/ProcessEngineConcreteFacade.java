@@ -17,28 +17,23 @@ package piecework.engine.concrete;
 
 import java.util.*;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.collections.map.MultiKeyMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import piecework.Constants;
 import piecework.Registry;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
-import piecework.exception.NotFoundError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.process.ProcessInstanceService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
-import piecework.util.ManyMap;
 
 /**
  * @author James Renfro

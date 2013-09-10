@@ -131,8 +131,8 @@ public class Process implements Serializable {
         this.completionStatus = builder.completionStatus;
         this.suspensionStatus = builder.suspensionStatus;
         this.base = builder.base;
-        this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey) : null;
-		this.uri = context != null ? context.getServiceUri(builder.processDefinitionKey) : null;
+        this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
+		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
         this.sections = Collections.unmodifiableList(builder.sections);
         this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());

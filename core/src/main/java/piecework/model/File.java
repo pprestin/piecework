@@ -60,8 +60,8 @@ public class File extends Value {
         this.contentType = builder.contentType;
         this.location = builder.location;
         this.name = builder.name;
-        this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
-        this.uri = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getServiceUri(builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
+        this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
+        this.uri = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getServiceUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
     }
 
     @JsonIgnore

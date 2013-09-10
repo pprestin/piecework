@@ -20,28 +20,29 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
+import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
-import piecework.identity.InternalUserDetails;
+import piecework.identity.IdentityDetails;
+import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.TaskRepository;
-import piecework.process.concrete.ResourceHelper;
+import piecework.Toolkit;
+import piecework.command.TaskCommand;
+import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -55,19 +56,25 @@ public class AllowedTaskService {
     Environment environment;
 
     @Autowired
-    ResourceHelper helper;
+    IdentityHelper helper;
 
     @Autowired
     ProcessEngineFacade facade;
 
     @Autowired
-    MongoOperations mongoOperations;
+    IdentityService identityService;
 
     @Autowired
     Sanitizer sanitizer;
 
+//    @Autowired
+//    TaskRepository taskRepository;
+
     @Autowired
-    TaskRepository taskRepository;
+    Toolkit toolkit;
+
+    @Autowired
+    Versions versions;
 
 
     public Task allowedTask(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
@@ -101,7 +108,7 @@ public class AllowedTaskService {
         if (! helper.isAuthenticatedSystem() && !helper.hasRole(process, AuthorizationRole.OVERSEER)) {
             // If the call is not being made by an authenticated system, then the principal is a user and must have an active task
             // on this instance
-            InternalUserDetails user = helper.getAuthenticatedPrincipal();
+            IdentityDetails user = helper.getAuthenticatedPrincipal();
 
             if (user == null)
                 throw new ForbiddenError();
@@ -136,12 +143,12 @@ public class AllowedTaskService {
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
         Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
-        ViewContext taskViewContext = getTaskViewContext();
+        ViewContext taskViewContext = versions.getVersion1();
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-                .link(taskViewContext.getApplicationUri());
+                .link(taskViewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME));
 
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
@@ -175,6 +182,66 @@ public class AllowedTaskService {
         return resultsBuilder.build();
     }
 
+    public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
+        String taskId = task != null ? task.getTaskInstanceId() : null;
+        if (StringUtils.isNotEmpty(taskId)) {
+            task = allowedTask(process, taskId, false);
+            if (task == null || !task.isActive())
+                throw new ForbiddenError();
+        }
+    }
+
+    public void completeIfTaskExists(Process process, Task task, ActionType action) throws StatusCodeError {
+        TaskCommand complete = new TaskCommand(process, task, action);
+        complete.execute(toolkit);
+    }
+
+    public List<Task> findAllTasks(Process process, ProcessInstance instance) throws StatusCodeError {
+        TaskCriteria taskCriteria = new TaskCriteria.Builder()
+                .process(process)
+                .executionId(instance.getEngineProcessInstanceId())
+                .processStatus(Constants.ProcessStatuses.ALL)
+                .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC)
+                .build();
+        try {
+            TaskResults taskResults = facade.findTasks(taskCriteria);
+
+            List<Task> tasks = taskResults.getTasks();
+            List<Task> convertedTasks;
+
+            ViewContext version1 = versions.getVersion1();
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            if (tasks != null && !tasks.isEmpty()) {
+                convertedTasks = new ArrayList<Task>(tasks.size());
+                for (Task task : tasks) {
+                    Task.Builder builder = new Task.Builder(task, passthroughSanitizer);
+
+                    if (task.getAssignee() != null && StringUtils.isNotEmpty(task.getAssignee().getUserId())) {
+                        builder.assignee(identityService.getUser(task.getAssignee().getUserId()));
+                    }
+
+                    if (task.getCandidateAssignees() != null && !task.getCandidateAssignees().isEmpty()) {
+                        builder.clearCandidateAssignees();
+                        for (User candidateAssignee : task.getCandidateAssignees()) {
+                            builder.candidateAssignee(identityService.getUser(candidateAssignee.getUserId()));
+                        }
+                    }
+
+                    convertedTasks.add(builder.build(version1));
+                }
+
+            } else {
+                convertedTasks = Collections.emptyList();
+            }
+
+            return convertedTasks;
+
+        } catch (ProcessEngineException e) {
+            LOG.error(e);
+            throw new InternalServerError();
+        }
+    }
+
     public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
         long time = 0;
         if (LOG.isDebugEnabled())
@@ -187,7 +254,7 @@ public class AllowedTaskService {
         TaskCriteria overseerCriteria = overseerCriteria(overseerProcesses, rawQueryParameters);
         TaskCriteria userCriteria = userCriteria(userProcesses, rawQueryParameters);
 
-        ViewContext taskViewContext = getTaskViewContext();
+        ViewContext taskViewContext = versions.getVersion1();
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
@@ -231,16 +298,6 @@ public class AllowedTaskService {
             return true;
 
         return false;
-    }
-
-    public ViewContext getTaskViewContext() {
-        String baseApplicationUri = environment.getProperty("base.application.uri");
-        String baseServiceUri = environment.getProperty("base.service.uri");
-        return new ViewContext(baseApplicationUri, baseServiceUri, getVersion(), Task.Constants.ROOT_ELEMENT_NAME, Task.Constants.RESOURCE_LABEL);
-    }
-
-    public String getVersion() {
-        return "v1";
     }
 
     private List<Task> findTasksByCriteria(TaskCriteria ... criterias) {

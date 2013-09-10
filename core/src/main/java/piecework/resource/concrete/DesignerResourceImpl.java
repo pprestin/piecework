@@ -47,10 +47,5 @@ public class DesignerResourceImpl implements DesignerResource {
 	public IndexView index() throws StatusCodeError {
 		return new IndexView();
 	}
-	
-	@Override
-	public ViewContext getViewContext() {
-		return new ViewContext(baseApplicationUri, baseServiceUri, "v1", "design", "Process Designer");
-	}
 
 }
