@@ -38,6 +38,7 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
 import piecework.security.*;
+import piecework.security.concrete.ExampleBouncyCastleEncryptionService;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -151,6 +152,11 @@ public class WebSecurityConfiguration {
         SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
         singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
         return singleSignOnAuthenticationFilter;
+    }
+
+    @Bean
+    public EncryptionService encryptionService() {
+        return new ExampleBouncyCastleEncryptionService();
     }
 
 }

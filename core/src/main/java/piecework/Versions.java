@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.common.ViewContext;
-import piecework.model.Task;
 
 import javax.annotation.PostConstruct;
 
@@ -32,17 +31,19 @@ public class Versions {
     @Autowired
     Environment environment;
 
+    private String hostUri;
     private String baseApplicationUri;
     private String baseServiceUri;
 
     @PostConstruct
     public void initialize() {
+        this.hostUri = environment.getProperty("host.uri");
         this.baseApplicationUri = environment.getProperty("base.application.uri");
         this.baseServiceUri = environment.getProperty("base.service.uri");
     }
 
     public ViewContext getVersion1() {
-        return new ViewContext(baseApplicationUri, baseServiceUri, "v1");
+        return new ViewContext(hostUri, baseApplicationUri, baseServiceUri, "v1");
     }
 
 }

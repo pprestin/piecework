@@ -25,7 +25,7 @@ import piecework.Versions;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
-import piecework.form.handler.SubmissionHandler;
+import piecework.handler.SubmissionHandler;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
 import piecework.model.SearchResults;
@@ -36,8 +36,8 @@ import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
 import piecework.task.AllowedTaskService;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.form.handler.RequestHandler;
-import piecework.form.handler.ResponseHandler;
+import piecework.handler.RequestHandler;
+import piecework.handler.ResponseHandler;
 import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -234,7 +234,7 @@ public class FormService {
 
         processInstanceService.save(process, instance, task, template, submission);
 
-        return responseHandler.redirect(formRequest, viewContext);
+        return responseHandler.redirect(formRequest);
     }
 
     public Response submitForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
@@ -274,7 +274,7 @@ public class FormService {
                         return Response.noContent().build();
                     }
 
-                    return responseHandler.redirect(nextFormRequest, viewContext);
+                    return responseHandler.redirect(nextFormRequest);
 
                 case REJECT:
                     stored = processInstanceService.reject(process, instance, task, template, submission);
@@ -289,15 +289,15 @@ public class FormService {
                         return Response.noContent().build();
                     }
 
-                    return responseHandler.redirect(nextFormRequest, viewContext);
+                    return responseHandler.redirect(nextFormRequest);
 
                 case SAVE:
                     processInstanceService.save(process, instance, task, template, submission);
-                    return responseHandler.redirect(formRequest, viewContext);
+                    return responseHandler.redirect(formRequest);
 
                 case VALIDATE:
                     validationService.validate(process, instance, task, template, submission, true);
-                    return responseHandler.redirect(formRequest, viewContext);
+                    return responseHandler.redirect(formRequest);
             }
         } catch (BadRequestError e) {
             FormValidation validation = e.getValidation();

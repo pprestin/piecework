@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.handler;
+package piecework.handler;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import piecework.Constants;
+import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
+import piecework.identity.IdentityHelper;
+import piecework.persistence.RequestRepository;
 import piecework.security.SecuritySettings;
-import piecework.test.config.UnitTestConfiguration;
+import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.AllowedTaskService;
 import piecework.exception.ForbiddenError;
 import piecework.model.FormRequest;
 import piecework.model.Interaction;
@@ -40,26 +45,40 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author James Renfro
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes={UnitTestConfiguration.class})
-@ActiveProfiles("test")
+@RunWith(MockitoJUnitRunner.class)
 public class RequestHandlerTest {
 
-    @Autowired
+    @InjectMocks
     RequestHandler requestHandler;
 
-    @Autowired
+    @Mock
+    RequestRepository requestRepository;
+
+    @Mock
+    IdentityHelper identityHelper;
+
+    @Mock
+    AllowedTaskService taskService;
+
+    @Mock
     SecuritySettings securitySettings;
 
-    HttpServletRequest servletRequest;
-    Process process;
-    String processInstanceId;
+    private HttpServletRequest servletRequest;
+    private Process process;
 
     @Before
     public void setUp() throws Exception {
         this.servletRequest = Mockito.mock(HttpServletRequest.class);
         this.process = ExampleFactory.exampleProcess();
-        this.processInstanceId = "123";
+        Mockito.when(identityHelper.hasRole(process, AuthorizationRole.INITIATOR)).thenReturn(true);
+        Mockito.when(requestRepository.save(Mockito.any(FormRequest.class))).thenAnswer(new Answer<FormRequest>() {
+            @Override
+            public FormRequest answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                FormRequest formRequest = FormRequest.class.cast(args[0]);
+                return new FormRequest.Builder(formRequest, new PassthroughSanitizer()).requestId("1").build();
+            }
+        });
     }
 
     @Test
@@ -72,6 +91,8 @@ public class RequestHandlerTest {
         RequestDetails requestDetails = new RequestDetails.Builder(servletRequest, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         assertValid(formRequest);
+
+        Mockito.when(requestRepository.findOne(Mockito.any(String.class))).thenReturn(formRequest);
 
         FormRequest handleRequest = requestHandler.handle(requestDetails, formRequest.getRequestId());
         assertEqual(formRequest, handleRequest);
@@ -111,7 +132,7 @@ public class RequestHandlerTest {
         Assert.assertEquals(expectedInteraction.getLabel(), actualInteraction.getLabel());
 
         Screen actualScreen = formRequest.getScreen();
-        Screen expectedScreen = ExampleFactory.exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD);
+        Screen expectedScreen = ExampleFactory.exampleScreen(Constants.ScreenTypes.WIZARD);
         Assert.assertEquals(expectedScreen.getTitle(), actualScreen.getTitle());
     }
 

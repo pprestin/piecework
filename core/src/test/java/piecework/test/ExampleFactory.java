@@ -39,7 +39,7 @@ public class ExampleFactory {
     public static FormRequest exampleFormRequest(String formInstanceId) {
         return new FormRequest.Builder()
                 .requestId(formInstanceId)
-                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD))
+                .screen(exampleScreen(Constants.ScreenTypes.WIZARD))
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .build();
     }
@@ -209,7 +209,7 @@ public class ExampleFactory {
                 .build();
     }
 
-    public static Screen exampleScreenWithTwoSections(String type) {
+    public static Screen exampleScreen(String type) {
 
         return new Screen.Builder()
                 .title("First screen")
@@ -229,8 +229,22 @@ public class ExampleFactory {
                 .title("Second screen")
                 .grouping(new Grouping.Builder()
                         .groupingId("B")
-                        .button(new Button.Builder().buttonId("b2").label("Next").type("button").value("submit").tooltip("Complete").build())
+                        .button(new Button.Builder().buttonId("b2").name("next").label("Next").type("button").value("submit").tooltip("Complete").build())
                         .sectionId(exampleSectionWithConfirmationNumber().getSectionId())
+                        .build())
+                .attachmentAllowed(false)
+                .build();
+    }
+
+    public static Screen exampleScreenForReview(String type) {
+
+        return new Screen.Builder()
+                .title("Review screen")
+                .type(type)
+                .grouping(new Grouping.Builder()
+                        .groupingId("A")
+                        .button(new Button.Builder().buttonId("b1").name("next").label("Next").type("button-link").value("next").tooltip("Go to next step").build())
+                        .sectionId(exampleSectionWithTwoFields().getSectionId())
                         .build())
                 .attachmentAllowed(false)
                 .build();
@@ -239,8 +253,17 @@ public class ExampleFactory {
     public static Interaction exampleInteractionWithTwoScreens() {
         return new Interaction.Builder()
                 .label("Example Interaction")
-                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD))
+                .screen(exampleScreen(Constants.ScreenTypes.WIZARD))
                 .screen(exampleThankYouScreen())
+                .build();
+    }
+
+    public static Interaction exampleInteractionForTaskReview() {
+        return new Interaction.Builder()
+                .label("Example Interaction for Review")
+                .screen(exampleScreenForReview(Constants.ScreenTypes.WIZARD))
+                .screen(exampleThankYouScreen())
+                .taskDefinitionKey("Review")
                 .build();
     }
 
@@ -251,7 +274,7 @@ public class ExampleFactory {
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .formInstanceId("12345")
                 .variable(employeeNameField().getName(), Collections.singletonList(new Value("Joe Testington")))
-                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.STANDARD))
+                .screen(exampleScreen(Constants.ScreenTypes.STANDARD))
                 .build();
     }
 
@@ -262,7 +285,7 @@ public class ExampleFactory {
                 .submissionType(Constants.SubmissionTypes.INTERIM)
                 .formInstanceId("12345")
                 .variable(employeeNameField().getName(), Collections.singletonList(new Value("Joe Testington")))
-                .screen(exampleScreenWithTwoSections(Constants.ScreenTypes.WIZARD_TEMPLATE))
+                .screen(exampleScreen(Constants.ScreenTypes.WIZARD_TEMPLATE))
                 .build();
     }
 
@@ -270,6 +293,7 @@ public class ExampleFactory {
         return new Process.Builder()
                 .processDefinitionKey("Demonstration")
                 .interaction(exampleInteractionWithTwoScreens())
+                .interaction(exampleInteractionForTaskReview())
                 .section(exampleSectionWithTwoFields())
                 .section(exampleSectionWithConfirmationNumber())
                 .section(exampleSectionWithOneField())

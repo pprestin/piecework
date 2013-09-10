@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.handler;
+package piecework.handler;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -49,6 +49,15 @@ public class RequestHandler {
 
     @Autowired
     AllowedTaskService taskService;
+
+    /*
+     * Constructor for testing -- normally not used
+     */
+//    public RequestHandler(RequestRepository requestRepository, IdentityHelper identityHelper, AllowedTaskService taskService) {
+//        this.requestRepository = requestRepository;
+//        this.identityHelper = identityHelper;
+//        this.taskService = taskService;
+//    }
 
     public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {
         return create(requestDetails, process, null, (Task)null, null, null);

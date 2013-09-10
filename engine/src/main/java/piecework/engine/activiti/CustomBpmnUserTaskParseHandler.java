@@ -36,13 +36,15 @@ import java.util.List;
 @Service("customBpmnUserTaskParseHandler")
 public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<UserTask> {
 
-    @Autowired
+    @Autowired(required = false)
     GeneralUserTaskListener generalUserTaskListener;
 
     @Override
     protected void executeParse(BpmnParse bpmnParse, UserTask element) {
-        TaskDefinition taskDefinition = (TaskDefinition) bpmnParse.getCurrentActivity().getProperty(UserTaskParseHandler.PROPERTY_TASK_DEFINITION);
-        taskDefinition.addTaskListener(TaskListener.EVENTNAME_ALL_EVENTS, generalUserTaskListener);
+        if (generalUserTaskListener != null) {
+            TaskDefinition taskDefinition = (TaskDefinition) bpmnParse.getCurrentActivity().getProperty(UserTaskParseHandler.PROPERTY_TASK_DEFINITION);
+            taskDefinition.addTaskListener(TaskListener.EVENTNAME_ALL_EVENTS, generalUserTaskListener);
+        }
 
 //        List<ActivitiListener> taskListeners = element.getTaskListeners();
 //        if (taskListeners == null) {

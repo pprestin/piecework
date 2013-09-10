@@ -81,7 +81,7 @@ public class SubmissionTemplate {
     }
 
     public boolean isButton(String name) {
-        return buttonNames.contains(name);
+        return name != null && buttonNames.contains(name);
     }
 
     public boolean isAttachmentAllowed() {

@@ -34,13 +34,15 @@ import java.util.List;
 @Service("customBpmnProcessParseHandler")
 public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Process> {
 
-    @Autowired
+    @Autowired(required=false)
     GeneralExecutionListener generalExecutionListener;
 
     @Override
     protected void executeParse(BpmnParse bpmnParse, Process element) {
-        ProcessDefinitionEntity processDefinitionEntity = bpmnParse.getCurrentProcessDefinition();
-        processDefinitionEntity.addExecutionListener(ExecutionListener.EVENTNAME_END, generalExecutionListener);
+        if (generalExecutionListener != null) {
+            ProcessDefinitionEntity processDefinitionEntity = bpmnParse.getCurrentProcessDefinition();
+            processDefinitionEntity.addExecutionListener(ExecutionListener.EVENTNAME_END, generalExecutionListener);
+        }
     }
 
     @Override

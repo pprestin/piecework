@@ -50,7 +50,6 @@ import java.util.*;
  * @author James Renfro
  */
 @Configuration
-//@Profile({"dev","intg","eval","prod"})
 @ComponentScan(basePackages = "piecework")
 @EnableCaching(proxyTargetClass=true)
 public class ApplicationConfiguration {

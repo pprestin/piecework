@@ -40,6 +40,7 @@
 		<activemq.version>5.5.0</activemq.version>
 		<antisamy.version>1.4.3</antisamy.version>
 		<aspectj.weaver.version>1.5.4</aspectj.weaver.version>
+        <bouncycastle.version>1.49</bouncycastle.version>
 		<camel.version>2.8.0</camel.version>
 		<cglib.version>2.2</cglib.version>
 		<commons-beanutils.version>1.8.3</commons-beanutils.version>
@@ -355,12 +356,23 @@
 				<artifactId>apacheds-all</artifactId>
 				<version>1.5.5</version>
 				<type>jar</type>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>bouncycastle:bcprov-jdk15</artifactId>
+                        <groupId>org.bouncycastle</groupId>
+                    </exclusion>
+                </exclusions>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpclient</artifactId>
 				<version>${httpclient4-version}</version>
 			</dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>

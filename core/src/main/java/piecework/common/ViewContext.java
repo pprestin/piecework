@@ -20,21 +20,27 @@ package piecework.common;
  */
 public class ViewContext {
 
+    private final String hostUri;
 	private final String baseApplicationUri;
 	private final String baseServiceUri;
 	private final String version;
 	
 	public ViewContext() {
-		this(null, null, null);
+		this(null, null, null, null);
 	}
 	
-	public ViewContext(String baseUri, String baseServiceUri, String version) {
+	public ViewContext(String hostUri, String baseUri, String baseServiceUri, String version) {
+        this.hostUri = hostUri;
 		this.baseApplicationUri = baseUri;
 		this.baseServiceUri = baseServiceUri;
 		this.version = version;
 	}
 
-	public String getBaseApplicationUri() {
+    public String getHostUri() {
+        return hostUri;
+    }
+
+    public String getBaseApplicationUri() {
 		return baseApplicationUri;
 	}
 
@@ -60,7 +66,7 @@ public class ViewContext {
 
 		if (base != null) {
             StringBuilder builder = new StringBuilder();
-            builder.append(base);
+            builder.append(hostUri).append(base);
             if (includeVersion && version != null)
                 builder.append("/").append(version);
 

@@ -20,12 +20,16 @@ import org.activiti.engine.RepositoryService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.web.portlet.MockActionRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.engine.activiti.ActivitiEngineProxyHelper;
 import piecework.engine.activiti.config.TestConfiguration;
+import piecework.engine.activiti.identity.LdapIdentitySessionFactory;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
 import piecework.model.Process;
@@ -44,10 +48,9 @@ import java.util.List;
 @ActiveProfiles("test")
 public class ActivitiEngineProxyTest {
 
-	
 	@Autowired
 	ProcessEngineProxy engineProxy;
-	
+
 	@Autowired
 	RepositoryService repositoryService;
 

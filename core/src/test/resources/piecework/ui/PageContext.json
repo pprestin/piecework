@@ -1,0 +1,31 @@
+{
+  "applicationTitle" : "Test application",
+  "pageTitle" : "Test page",
+  "resource" : {
+    "processInstanceId" : "1",
+    "alias" : null,
+    "processDefinitionKey" : "Test",
+    "processDefinitionLabel" : "Testing Process",
+    "processInstanceLabel" : "A Simple Test",
+    "processStatus" : null,
+    "applicationStatus" : null,
+    "applicationStatusExplanation" : null,
+    "previousApplicationStatus" : null,
+    "data" : { },
+    "startTime" : null,
+    "endTime" : null,
+    "initiatorId" : null,
+    "link" : null,
+    "uri" : null,
+    "attachments" : [ ]
+  },
+  "user" : {
+    "userId" : "123",
+    "visibleId" : "jtest",
+    "displayName" : "Jill Test",
+    "emailAddress" : null,
+    "phoneNumber" : null,
+    "uri" : null
+  },
+  "static" : "http://localhost/resources"
+}

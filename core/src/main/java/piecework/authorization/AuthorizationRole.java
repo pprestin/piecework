@@ -19,9 +19,8 @@ package piecework.authorization;
 /**
  * @author James Renfro
  */
-public final class AuthorizationRole { //implements Comparable<AuthorizationRole> {
+public final class AuthorizationRole {
 
-//	public static final String ANONYMOUS = "anonymous";
 	public static final String CREATOR = "ROLE_CREATOR";
 	public static final String OWNER = "ROLE_OWNER";
 	public static final String USER = "ROLE_USER";

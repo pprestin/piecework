@@ -63,7 +63,7 @@ public class ProcessResourceVersion1ImplTest {
 		Assert.assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		Assert.assertEquals(exampleProcessDefinitionKey, result.getProcessDefinitionKey());
 		Assert.assertEquals(exampleProcessLabel, result.getProcessDefinitionLabel());
-		Assert.assertEquals("/piecework/api/v1/process/demo", result.getUri());
+		Assert.assertEquals("http://localhost:8000/piecework/api/v1/process/demo", result.getUri());
 		
 		// Read
 		response = resource.read(exampleProcessDefinitionKey);

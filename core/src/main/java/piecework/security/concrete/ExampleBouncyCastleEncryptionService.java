@@ -52,7 +52,6 @@ import java.util.Date;
  *
  * @author James Renfro
  */
-@Service
 public class ExampleBouncyCastleEncryptionService implements EncryptionService {
 
     @Autowired

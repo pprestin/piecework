@@ -48,9 +48,6 @@ public class FormFactory {
     private static final Logger LOG = Logger.getLogger(FormFactory.class);
 
     @Autowired
-    FormService formService;
-
-    @Autowired
     IdentityHelper helper;
 
     @Autowired
@@ -107,7 +104,10 @@ public class FormFactory {
         List<Interaction> interactions = process.getInteractions();
         if (interactions != null && !interactions.isEmpty()) {
             for (Interaction interaction : interactions) {
-                if (interaction != null && interaction.getTaskDefinitionKeys() != null && interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
+                if (interaction == null)
+                    continue;
+                if ((task == null && interaction.getTaskDefinitionKeys().isEmpty()) ||
+                    interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
                     selectedInteraction = interaction;
                     break;
                 }

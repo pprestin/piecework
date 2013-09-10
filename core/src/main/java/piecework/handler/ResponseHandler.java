@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form.handler;
+package piecework.handler;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -23,9 +23,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
-import piecework.common.ViewContext;
 import piecework.form.FormFactory;
-import piecework.service.FormService;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.validation.FormValidation;
@@ -59,9 +57,6 @@ public class ResponseHandler {
     FormFactory formFactory;
 
     @Autowired
-    FormService formService;
-
-    @Autowired
     Versions versions;
 
 
@@ -85,9 +80,8 @@ public class ResponseHandler {
         return Response.ok(form).build();
     }
 
-    public Response redirect(FormRequest formRequest, ViewContext viewContext) throws StatusCodeError {
-        String hostUri = environment.getProperty("host.uri");
-        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, hostUri + versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
+    public Response redirect(FormRequest formRequest) throws StatusCodeError {
+        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
     }
 
     public Content content(String location) throws StatusCodeError {
