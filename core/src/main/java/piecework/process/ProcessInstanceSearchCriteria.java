@@ -42,6 +42,7 @@ public class ProcessInstanceSearchCriteria {
     private final String applicationStatus;
     private final String applicationStatusExplanation;
     private final String processStatus;
+    private final String taskStatus;
     private final List<String> keywords;
     private final List<String> executionIds;
     private final Boolean complete;
@@ -73,6 +74,7 @@ public class ProcessInstanceSearchCriteria {
         this.applicationStatus = builder.applicationStatus;
         this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.processStatus = builder.processStatus;
+        this.taskStatus = builder.taskStatus;
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.keywords = Collections.unmodifiableList(builder.keywords);
@@ -132,6 +134,10 @@ public class ProcessInstanceSearchCriteria {
 
     public String getProcessStatus() {
         return processStatus;
+    }
+
+    public String getTaskStatus() {
+        return taskStatus;
     }
 
     public List<String> getKeywords() {
@@ -214,6 +220,7 @@ public class ProcessInstanceSearchCriteria {
         private String applicationStatus;
         private String applicationStatusExplanation;
         private String processStatus;
+        private String taskStatus;
         private List<String> executionIds;
         private Boolean complete;
         private Boolean suspended;
@@ -286,6 +293,8 @@ public class ProcessInstanceSearchCriteria {
                                     this.applicationStatusExplanation = value;
                                 else if (key.equals("processStatus"))
                                     this.processStatus = value;
+                                else if (key.equals("taskStatus"))
+                                    this.taskStatus = value;
                                 else if (key.equals("initiatedBy"))
                                     this.initiatedBy = value;
                                 else if (key.equals("completedAfter"))
@@ -424,6 +433,11 @@ public class ProcessInstanceSearchCriteria {
 
         public Builder processStatus(String processStatus) {
             this.processStatus = processStatus;
+            return this;
+        }
+
+        public Builder taskStatus(String taskStatus) {
+            this.taskStatus = taskStatus;
             return this;
         }
 

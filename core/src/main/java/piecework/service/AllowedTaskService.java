@@ -20,6 +20,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
@@ -38,6 +40,8 @@ import piecework.model.Process;
 import piecework.Toolkit;
 import piecework.command.TaskCommand;
 import piecework.identity.IdentityHelper;
+import piecework.process.ProcessInstanceQueryBuilder;
+import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
@@ -65,6 +69,9 @@ public class AllowedTaskService {
 
     @Autowired
     IdentityService identityService;
+
+    @Autowired
+    MongoTemplate mongoOperations;
 
     @Autowired
     Sanitizer sanitizer;
@@ -253,8 +260,8 @@ public class AllowedTaskService {
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
         Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
-        TaskCriteria overseerCriteria = overseerCriteria(overseerProcesses, rawQueryParameters);
-        TaskCriteria userCriteria = userCriteria(userProcesses, rawQueryParameters);
+//        TaskCriteria overseerCriteria = overseerCriteria(overseerProcesses, rawQueryParameters);
+//        TaskCriteria userCriteria = userCriteria(userProcesses, rawQueryParameters);
 
         ViewContext taskViewContext = versions.getVersion1();
 
@@ -263,30 +270,95 @@ public class AllowedTaskService {
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
                 .link(taskViewContext.getApplicationUri());
 
-        Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
+
+        ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
+                new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
+        ViewContext version1 = versions.getVersion1();
+
         if (!allowedProcesses.isEmpty()) {
-            for (Process allowedProcess : allowedProcesses) {
-                if (StringUtils.isEmpty(allowedProcess.getProcessDefinitionKey()))
-                    continue;
-                resultsBuilder.definition(allowedProcess);
-                allowedProcessDefinitionKeys.add(allowedProcess.getProcessDefinitionKey());
-            }
-        }
-
-        int count = 0;
-        List<Task> tasks = findTasksByCriteria(overseerCriteria, userCriteria);
-        if (tasks != null && !tasks.isEmpty()) {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-            for (Task task : tasks) {
-                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer)
-                        .build(taskViewContext));
-                count++;
+
+            for (Process allowedProcess : allowedProcesses) {
+                executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey())
+                        .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
+                        .engine(allowedProcess.getEngine());
+
+                resultsBuilder.definition(new Process.Builder(allowedProcess, passthroughSanitizer, false)
+                        .interactions(null).build(version1));
             }
+            ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
+
+            // Otherwise, look up all instances that match the query
+            Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
+            // Don't include form data in the result
+            org.springframework.data.mongodb.core.query.Field field = query.fields();
+            field.exclude("data");
+
+//                query.fields().exclude("attachments");
+
+
+            List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
+            if (processInstances != null && !processInstances.isEmpty()) {
+                int count = 0;
+                for (ProcessInstance processInstance : processInstances) {
+                    List<Task> tasks = processInstance.getTasks();
+                    if (tasks != null && !tasks.isEmpty()) {
+                        for (Task task : tasks) {
+                            if (executionCriteria.getTaskStatus() == null ||
+                                    task.getTaskStatus() == null ||
+                                    task.getTaskStatus().equals(executionCriteria.getTaskStatus())) {
+                                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer).build(version1));
+                                count++;
+                            }
+                        }
+                    }
+                }
+
+                if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
+
+                    if (executionCriteria.getFirstResult() != null)
+                        resultsBuilder.firstResult(executionCriteria.getFirstResult());
+                    else
+                        resultsBuilder.firstResult(1);
+
+                    if (executionCriteria.getMaxResults() != null)
+                        resultsBuilder.maxResults(executionCriteria.getMaxResults());
+                    else
+                        resultsBuilder.maxResults(count);
+
+                    resultsBuilder.total(Long.valueOf(count));
+                } else {
+                    resultsBuilder.firstResult(1);
+                    resultsBuilder.maxResults(count);
+                    resultsBuilder.total(Long.valueOf(count));
+                }
+            }
+
         }
 
-        resultsBuilder.firstResult(1);
-        resultsBuilder.maxResults(count);
-        resultsBuilder.total(Long.valueOf(count));
+//        Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
+//        if (!allowedProcesses.isEmpty()) {
+//            for (Process allowedProcess : allowedProcesses) {
+//                if (StringUtils.isEmpty(allowedProcess.getProcessDefinitionKey()))
+//                    continue;
+//                resultsBuilder.definition(allowedProcess);
+//                allowedProcessDefinitionKeys.add(allowedProcess.getProcessDefinitionKey());
+//            }
+//        }
+//        int count = 0;
+//        List<Task> tasks = findTasksByCriteria(overseerCriteria, userCriteria);
+//        if (tasks != null && !tasks.isEmpty()) {
+//            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+//            for (Task task : tasks) {
+//                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer)
+//                        .build(taskViewContext));
+//                count++;
+//            }
+//        }
+//
+//        resultsBuilder.firstResult(1);
+//        resultsBuilder.maxResults(count);
+//        resultsBuilder.total(Long.valueOf(count));
 
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieving tasks took " + (System.currentTimeMillis() - time) + " ms");
@@ -303,6 +375,8 @@ public class AllowedTaskService {
     }
 
     private List<Task> findTasksByCriteria(TaskCriteria ... criterias) {
+
+
 
 
 

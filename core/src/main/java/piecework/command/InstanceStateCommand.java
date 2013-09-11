@@ -32,8 +32,11 @@ import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.Toolkit;
 import piecework.identity.IdentityHelper;
+import piecework.security.concrete.PassthroughSanitizer;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -134,6 +137,7 @@ public class InstanceStateCommand extends InstanceCommand {
             if (processStatus != null)
                 update.set("processStatus", processStatus);
 
+            update.set("tasks", tasks(instance.getTasks(), operation));
             update.push("operations", new Operation(UUID.randomUUID().toString(), operation, reason, new Date(), userId));
 
             WriteResult result = operations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
@@ -160,6 +164,33 @@ public class InstanceStateCommand extends InstanceCommand {
         String processInstanceId = instance != null ? instance.getProcessInstanceId() : "";
 
         return "{ processDefinitionKey: \"" + processDefinitionKey + "\", processInstanceId: \"" + processInstanceId + "\", operation: \"" + operation + "\" }";
+    }
+
+    private static List<Task> tasks(List<Task> originals, OperationType operation) {
+        List<Task> tasks = new ArrayList<Task>();
+        if (originals != null && !originals.isEmpty()) {
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            for (Task original : originals) {
+                Task.Builder builder = new Task.Builder(original, passthroughSanitizer);
+                switch (operation) {
+                    case ACTIVATION:
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED))
+                            builder.taskStatus(Constants.TaskStatuses.OPEN);
+                        break;
+                    case CANCELLATION:
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN))
+                            builder.taskStatus(Constants.TaskStatuses.CANCELLED);
+                        break;
+                    case SUSPENSION:
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN))
+                            builder.taskStatus(Constants.TaskStatuses.SUSPENDED);
+                        break;
+                }
+                tasks.add(builder.build());
+            }
+        }
+
+        return tasks;
     }
 
 }

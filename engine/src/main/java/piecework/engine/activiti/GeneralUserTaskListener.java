@@ -28,6 +28,8 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -43,6 +45,8 @@ import piecework.security.concrete.PassthroughSanitizer;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -63,9 +67,6 @@ public class GeneralUserTaskListener implements TaskListener {
 
     @Autowired
     MongoOperations mongoOperations;
-
-    @Autowired
-    TaskRepository taskRepository;
 
     @Autowired
     IdentityService userDetailsService;
@@ -158,7 +159,18 @@ public class GeneralUserTaskListener implements TaskListener {
 
 
         } else if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE)) {
-            Task task = taskRepository.findOne(delegateTask.getId());
+
+            Task task = null; //taskRepository.findOne(delegateTask.getId());
+
+            List<Task> tasks = processInstance.getTasks();
+            if (tasks != null && !tasks.isEmpty()) {
+                for (Task current : tasks) {
+                    if (current != null && current.getTaskInstanceId().equals(delegateTask.getId())) {
+                        task = current;
+                        break;
+                    }
+                }
+            }
 
             if (task != null) {
                 taskBuilder = new Task.Builder(task, new PassthroughSanitizer())
@@ -184,7 +196,15 @@ public class GeneralUserTaskListener implements TaskListener {
                 }
             }
 
-            taskRepository.save(taskBuilder.build());
+            Query query =  new Query();
+            query.addCriteria(where("processInstanceId").is(processInstance.getProcessInstanceId()));
+
+            Update update = new Update();
+            update.push("tasks", taskBuilder.build());
+
+            mongoOperations.updateFirst(query, update, ProcessInstance.class);
+
+//            taskRepository.save(taskBuilder.build());
         }
 
 

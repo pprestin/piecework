@@ -38,8 +38,7 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Task.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = Task.Constants.ROOT_ELEMENT_NAME)
-public class Task implements Serializable {
+public class Task implements Serializable, Comparable<Task> {
 
     private static final long serialVersionUID = 8102389797252020510L;
 
@@ -150,6 +149,33 @@ public class Task implements Serializable {
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.isDeleted = builder.isDeleted;
+    }
+
+    @Override
+    public int compareTo(Task o) {
+        int result = 0;
+        if (result == 0 && taskDefinitionKey != null && o.taskDefinitionKey != null)
+            result = taskDefinitionKey.compareTo(o.taskDefinitionKey);
+        if (result == 0 && taskInstanceId != null && o.taskInstanceId != null)
+            result = taskInstanceId.compareTo(o.taskInstanceId);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Task that = (Task) o;
+
+        if (!taskInstanceId.equals(that.taskInstanceId)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return taskInstanceId.hashCode();
     }
 
     public String getTaskInstanceId() {

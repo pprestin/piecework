@@ -177,7 +177,7 @@ public class FormService {
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
 
-        SearchResults results = taskService.allowedTasks(rawQueryParameters);
+        SearchResults results = taskService.allowedTasksDirect(rawQueryParameters);
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")

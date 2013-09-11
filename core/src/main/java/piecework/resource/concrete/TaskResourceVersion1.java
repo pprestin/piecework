@@ -189,7 +189,7 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Override
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
-        SearchResults results = taskService.allowedTasks(rawQueryParameters);
+        SearchResults results = taskService.allowedTasksDirect(rawQueryParameters);
 
         ViewContext version = versions.getVersion1();
 

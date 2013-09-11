@@ -109,6 +109,10 @@ public class ProcessInstance implements Serializable {
 
     @XmlTransient
     @JsonIgnore
+    private final List<Task> tasks;
+
+    @XmlTransient
+    @JsonIgnore
 //    @DBRef
     private final List<String> submissionIds;
 
@@ -143,7 +147,7 @@ public class ProcessInstance implements Serializable {
         this.previousApplicationStatus = builder.previousApplicationStatus;
         this.attachmentIds = Collections.unmodifiableSet(builder.attachmentIds);
         this.keywords = builder.keywords;
-
+        this.tasks = Collections.unmodifiableList(builder.tasks);
 //        Set<Attachment> attachments = null;
 //        if (includeSubresources) {
 //            attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new TreeSet<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
@@ -289,6 +293,11 @@ public class ProcessInstance implements Serializable {
     }
 
     @JsonIgnore
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    @JsonIgnore
     public Set<String> getKeywords() {
         return keywords;
     }
@@ -351,6 +360,7 @@ public class ProcessInstance implements Serializable {
         private Set<String> attachmentIds;
         private List<Operation> operations;
         private List<String> submissionIds;
+        private List<Task> tasks;
         private Date startTime;
         private Date endTime;
         private String initiatorId;
@@ -364,6 +374,7 @@ public class ProcessInstance implements Serializable {
             this.data = new ManyMap<String, Value>();
             this.operations = new ArrayList<Operation>();
             this.submissionIds = new ArrayList<String>();
+            this.tasks = new ArrayList<Task>();
         }
 
         public Builder(ProcessInstance instance) {
@@ -411,6 +422,11 @@ public class ProcessInstance implements Serializable {
                 this.submissionIds = new ArrayList<String>(instance.submissionIds);
             else
                 this.submissionIds = new ArrayList<String>();
+
+            if (instance.tasks != null && !instance.tasks.isEmpty())
+                this.tasks = new ArrayList<Task>(instance.tasks);
+            else
+                this.tasks = new ArrayList<Task>();
 
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
                 this.keywords.add(this.processInstanceLabel.toLowerCase());
@@ -505,6 +521,19 @@ public class ProcessInstance implements Serializable {
 
         public Builder operation(String id, OperationType type, String reason, Date date, String userId) {
             this.operations.add(new Operation(id, type, reason, date, userId));
+            return this;
+        }
+
+        public Builder task(Task task) {
+            this.tasks.add(task);
+            return this;
+        }
+
+        public Builder tasks(List<Task> tasks) {
+            if (tasks != null)
+                this.tasks = new ArrayList<Task>(tasks);
+            else
+                this.tasks = new ArrayList<Task>();
             return this;
         }
 
