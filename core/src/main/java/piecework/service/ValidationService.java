@@ -37,7 +37,6 @@ import piecework.identity.IdentityHelper;
 
 import com.google.common.collect.Sets;
 import piecework.security.EncryptionService;
-import piecework.task.AllowedTaskService;
 import piecework.util.ManyMap;
 import piecework.validation.FormValidation;
 import piecework.validation.SubmissionTemplate;

@@ -70,7 +70,7 @@ import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.Sanitizer;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 
 /**
  * @author James Renfro

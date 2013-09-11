@@ -32,7 +32,7 @@ import piecework.identity.IdentityHelper;
 import piecework.persistence.RequestRepository;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 import piecework.exception.ForbiddenError;
 import piecework.model.FormRequest;
 import piecework.model.Interaction;

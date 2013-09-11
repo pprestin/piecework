@@ -51,7 +51,7 @@
 		<commons-io.version>1.4</commons-io.version>
 		<commons-lang.version>2.3</commons-lang.version>
 		<commons-validator.version>1.4.0</commons-validator.version>
-		<cxf.version>2.7.5</cxf.version>
+		<cxf.version>2.7.6</cxf.version>
 		<ehcache.version>2.6.5</ehcache.version>
 		<ehcache-spring-annotations.version>1.2.0</ehcache-spring-annotations.version>
 		<flapdoodle.version>1.33</flapdoodle.version>
@@ -61,7 +61,6 @@
 		<hibernate.version>3.6.0.Final</hibernate.version>
 		<hibernate-validator.version>4.0.0.CR1</hibernate-validator.version>
 		<htmlcleaner.version>2.5</htmlcleaner.version>
-		<httpclient4-version>4.1.1</httpclient4-version>
 		<jackson.version>2.2.1</jackson.version>
 		<jaxb.api.version>2.1</jaxb.api.version>
 		<jaxb.impl.version>2.1.13</jaxb.impl.version>
@@ -358,15 +357,10 @@
 				<type>jar</type>
                 <exclusions>
                     <exclusion>
-                        <artifactId>bouncycastle:bcprov-jdk15</artifactId>
+                        <artifactId>bcprov-jdk15</artifactId>
                         <groupId>org.bouncycastle</groupId>
                     </exclusion>
                 </exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.httpcomponents</groupId>
-				<artifactId>httpclient</artifactId>
-				<version>${httpclient4-version}</version>
 			</dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>

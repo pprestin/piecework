@@ -52,7 +52,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 public class InteractionResourceVersion1Impl implements InteractionResource {
 		
 	@Autowired
-	ProcessRepository processRespository;
+	ProcessRepository processRepository;
 	
 	@Autowired
 	InteractionRepository interactionRepository;
@@ -65,20 +65,14 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 
     @Autowired
     Versions versions;
-	
-	@Value("${base.application.uri}")
-	String baseApplicationUri;
-	
-	@Value("${base.service.uri}")
-	String baseServiceUri;
-	
+
 	@Override
 	public Response create(String rawProcessDefinitionKey, Interaction interaction)
 			throws StatusCodeError {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 
 		// Process must already exist
-		Process process = processRespository.findOne(processDefinitionKey);
+		Process process = processRepository.findOne(processDefinitionKey);
 		if (process == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 		
@@ -108,7 +102,7 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		// Ensure that a reference to the interaction is added on the process
 		Process.Builder processBuilder = new Process.Builder(process, passthroughSanitizer, true);
 		processBuilder.interaction(result);
-		processRespository.save(processBuilder.build());
+		processRepository.save(processBuilder.build());
 		
 		ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(result, passthroughSanitizer).processDefinitionKey(processDefinitionKey).build(getViewContext()));
 		return responseBuilder.build();
@@ -133,7 +127,7 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		String interactionId = sanitizer.sanitize(rawInteractionId);
  
 		// Process must already exist
-		Process process = processRespository.findOne(processDefinitionKey);
+		Process process = processRepository.findOne(processDefinitionKey);
 		if (process == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 
@@ -219,7 +213,7 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 	}
 	
 	private Process getProcess(String processDefinitionKey) throws BadRequestError {
-		Process process = processRespository.findOne(processDefinitionKey);
+		Process process = processRepository.findOne(processDefinitionKey);
 		if (process == null)
 			throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 		return process;

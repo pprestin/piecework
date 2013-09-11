@@ -21,7 +21,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Versions;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
@@ -29,7 +28,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ValidationService;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 import piecework.test.ExampleFactory;
 
 /**

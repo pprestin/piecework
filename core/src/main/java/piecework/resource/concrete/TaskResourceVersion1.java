@@ -39,7 +39,7 @@ import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 import piecework.handler.RequestHandler;
 import piecework.model.*;
 import piecework.security.Sanitizer;
@@ -59,12 +59,6 @@ import java.util.List;
 public class TaskResourceVersion1 implements TaskResource {
 
     private static final Logger LOG = Logger.getLogger(TaskResourceVersion1.class);
-
-    @Autowired
-    Environment environment;
-
-    @Autowired
-    ProcessEngineFacade facade;
 
     @Autowired
     IdentityHelper helper;
@@ -227,13 +221,6 @@ public class TaskResourceVersion1 implements TaskResource {
 
     private RequestDetails requestDetails(HttpServletRequest request) {
         return new RequestDetails.Builder(request, securitySettings).build();
-    }
-
-    private String toInternalId(String userId) {
-        IdentityDetails userDetails = userDetailsService.loadUserByAnyId(userId);
-        if (userDetails != null)
-            return userDetails.getInternalId();
-        return null;
     }
 
 }

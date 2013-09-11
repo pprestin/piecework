@@ -34,7 +34,6 @@ import piecework.exception.*;
 import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
-import piecework.task.AllowedTaskService;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.handler.RequestHandler;
 import piecework.handler.ResponseHandler;

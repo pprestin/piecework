@@ -41,7 +41,6 @@ import piecework.persistence.ProcessInstanceRepository;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.AllowedTaskService;
 import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.MultivaluedMap;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.task;
+package piecework.service;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
@@ -40,6 +40,8 @@ import piecework.command.TaskCommand;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.TaskCriteria;
+import piecework.task.TaskResults;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;

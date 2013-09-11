@@ -43,9 +43,6 @@ public class FormResourceVersion1 implements FormResource {
     private static final Logger LOG = Logger.getLogger(FormResourceVersion1.class);
 
     @Autowired
-    Environment environment;
-
-    @Autowired
     FormService formService;
 
     @Autowired

@@ -38,9 +38,6 @@ import java.util.List;
 public class PersonResourceVersion1 implements PersonResource {
 
     @Autowired
-    Environment environment;
-
-    @Autowired
     IdentityService userDetailsService;
 
     @Autowired

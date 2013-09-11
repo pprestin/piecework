@@ -48,7 +48,7 @@ import piecework.common.ViewContext;
 import piecework.handler.RequestHandler;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 import piecework.ui.StreamingAttachmentContent;
 import piecework.form.FormFactory;
 import piecework.util.ProcessInstanceUtility;
@@ -277,19 +277,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
                 .processDefinitionKey(processDefinitionKey)
                 .processDefinitionLabel(process.getProcessDefinitionLabel());
-
-//        try {
-//            ProcessExecution execution = facade.findExecution(new ProcessInstanceSearchCriteria.Builder().executionId(instance.getEngineProcessInstanceId()).build());
-//
-//            if (execution != null) {
-//                builder.startTime(execution.getStartTime());
-//                builder.endTime(execution.getEndTime());
-//                builder.initiatorId(execution.getInitiatorId());
-//            }
-//
-//        } catch (ProcessEngineException e) {
-//            LOG.error("Process engine unable to find execution ", e);
-//        }
 
         return Response.ok(builder.build(versions.getVersion1())).build();
 	}

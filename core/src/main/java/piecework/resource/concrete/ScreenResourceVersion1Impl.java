@@ -62,13 +62,6 @@ public class ScreenResourceVersion1Impl implements ScreenResource {
 
     @Autowired
     Versions versions;
-	
-	@Value("${base.application.uri}")
-	String baseApplicationUri;
-	
-	@Value("${base.service.uri}")
-	String baseServiceUri;
-	
 
 	@Override
 	public Response create(String rawProcessDefinitionKey, String rawInteractionId,

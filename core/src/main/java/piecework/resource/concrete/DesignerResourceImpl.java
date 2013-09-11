@@ -32,12 +32,6 @@ import piecework.exception.StatusCodeError;
 @Service
 public class DesignerResourceImpl implements DesignerResource {
 
-    @Value("${base.application.uri}")
-    String baseApplicationUri;
-
-    @Value("${base.service.uri}")
-    String baseServiceUri;
-
 	@Override
 	public Response root() throws StatusCodeError {
 		return Response.seeOther(UriBuilder.fromPath("designer").build()).build();

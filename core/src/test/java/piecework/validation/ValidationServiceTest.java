@@ -23,7 +23,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.exception.StatusCodeError;
@@ -33,7 +32,7 @@ import piecework.security.EncryptionService;
 import piecework.service.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 import piecework.test.ExampleFactory;
 
 import java.util.List;

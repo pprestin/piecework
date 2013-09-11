@@ -24,7 +24,6 @@ import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityService;
 import piecework.model.*;
-import piecework.task.AllowedTaskService;
 
 import java.util.Date;
 import java.util.List;

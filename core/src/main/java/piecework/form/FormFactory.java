@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
-import piecework.service.FormService;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
@@ -33,7 +32,7 @@ import piecework.model.Process;
 import piecework.service.ProcessInstanceService;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 

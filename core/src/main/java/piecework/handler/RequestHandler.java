@@ -28,7 +28,7 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
-import piecework.task.AllowedTaskService;
+import piecework.service.AllowedTaskService;
 import piecework.util.ConstraintUtil;
 
 import java.util.*;
