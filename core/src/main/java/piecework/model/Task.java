@@ -456,6 +456,11 @@ public class Task implements Serializable, Comparable<Task> {
             return this;
         }
 
+        public Builder suspended() {
+            this.active = false;
+            return this;
+        }
+
         public Builder delete() {
             this.isDeleted = true;
             return this;

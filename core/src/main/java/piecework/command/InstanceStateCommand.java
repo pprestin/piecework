@@ -174,16 +174,22 @@ public class InstanceStateCommand extends InstanceCommand {
                 Task.Builder builder = new Task.Builder(original, passthroughSanitizer);
                 switch (operation) {
                     case ACTIVATION:
-                        if (original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED))
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED)) {
                             builder.taskStatus(Constants.TaskStatuses.OPEN);
+                            builder.active();
+                        }
                         break;
                     case CANCELLATION:
-                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN))
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN) || original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED)) {
                             builder.taskStatus(Constants.TaskStatuses.CANCELLED);
+                            builder.finished();
+                        }
                         break;
                     case SUSPENSION:
-                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN))
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN)) {
                             builder.taskStatus(Constants.TaskStatuses.SUSPENDED);
+                            builder.suspended();
+                        }
                         break;
                 }
                 tasks.add(builder.build());
