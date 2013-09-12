@@ -18,6 +18,7 @@ package piecework.engine.activiti;
 import java.util.*;
 
 import org.activiti.engine.*;
+import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.DeploymentBuilder;
@@ -390,7 +391,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .taskDefinitionKey(instance.getTaskDefinitionKey())
                 .taskLabel(instance.getName())
                 .taskDescription(instance.getDescription())
-                .taskStatus(instance.isSuspended() ? Constants.TaskStatuses.SUSPENDED : Constants.TaskStatuses.OPEN)
+                .taskStatus(instance.isSuspended() ? Constants.TaskStatuses.SUSPENDED : Constants.TaskStatuses.OPEN) //default case
                 .engineProcessInstanceId(instance.getProcessInstanceId())
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processDefinitionLabel(process.getProcessDefinitionLabel())
@@ -398,6 +399,16 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 .startTime(instance.getCreateTime())
                 .dueDate(instance.getDueDate());
 
+        if(instance instanceof DelegateTask)
+        {
+            String eventName = ((DelegateTask)instance).getEventName();
+
+            if(eventName != null && eventName.equals(Constants.ActionTypes.COMPLETE)) {
+                    taskBuilder.taskStatus(Constants.TaskStatuses.COMPLETE);
+            }
+        }
+
+        //!suspended and !completed
         if (!instance.isSuspended())
             taskBuilder.active();
 
