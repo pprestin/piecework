@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import piecework.*;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
+import piecework.enumeration.ActionType;
 import piecework.handler.SubmissionHandler;
 import piecework.service.ProcessHistoryService;
 import piecework.service.ProcessInstanceService;
@@ -214,7 +215,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         RequestDetails requestDetails = requestDetails(request);
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest);
+        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, ActionType.CREATE);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
         return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
@@ -315,10 +316,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String reason = sanitizer.sanitize(rawReason);
+        String reason = sanitizer.sanitize(details.getReason());
 
         processInstanceService.cancel(process, instance, reason);
 
