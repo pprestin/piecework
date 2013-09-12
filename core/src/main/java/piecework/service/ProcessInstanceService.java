@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
@@ -76,7 +76,7 @@ public class ProcessInstanceService {
     AllowedTaskService taskService;
 
     @Autowired
-    Toolkit toolkit;
+    CommandExecutor commandExecutor;
 
     @Autowired
     ValidationService validationService;
@@ -88,18 +88,18 @@ public class ProcessInstanceService {
     public void activate(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
         InstanceStateCommand activation = new InstanceStateCommand(process, instance, OperationType.ACTIVATION);
         activation.reason(reason);
-        activation.execute(toolkit);
+        commandExecutor.execute(activation);
     }
 
     public void assign(Process process, ProcessInstance instance, Task task, String assignee) throws StatusCodeError {
         AssignmentCommand assignment = new AssignmentCommand(process, instance, task, assignee);
-        assignment.execute(toolkit);
+        commandExecutor.execute(assignment);
     }
 
     public void cancel(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
         InstanceStateCommand cancellation = new InstanceStateCommand(process, instance, OperationType.CANCELLATION);
         cancellation.reason(reason);
-        cancellation.execute(toolkit);
+        commandExecutor.execute(cancellation);
     }
 
     public ProcessInstance read(String processDefinitionKey, String processInstanceId, boolean full) throws StatusCodeError {
@@ -140,7 +140,7 @@ public class ProcessInstanceService {
     public void suspend(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
         InstanceStateCommand suspension = new InstanceStateCommand(process, instance, OperationType.SUSPENSION);
         suspension.reason(reason);
-        suspension.execute(toolkit);
+        commandExecutor.execute(suspension);
     }
 
     public void update(String processDefinitionKey, String processInstanceId, ProcessInstance processInstance) throws StatusCodeError {
@@ -165,7 +165,7 @@ public class ProcessInstanceService {
             InstanceStateCommand command = new InstanceStateCommand(process, persisted, operationType);
             command.applicationStatus(applicationStatus);
             command.reason(applicationStatusExplanation);
-            command.execute(toolkit);
+            commandExecutor.execute(command);
         } else {
             throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
         }
@@ -290,7 +290,7 @@ public class ProcessInstanceService {
                .attachments(attachments)
                .data(data);
 
-        ProcessInstance instance = persist.execute(toolkit);
+        ProcessInstance instance = commandExecutor.execute(persist);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");

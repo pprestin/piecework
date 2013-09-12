@@ -30,7 +30,7 @@ import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityService;
 import piecework.model.*;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
 
@@ -74,14 +74,14 @@ public class InstanceStateCommand extends InstanceCommand {
         return this;
     }
 
-    public ProcessInstance execute(Toolkit toolkit) throws StatusCodeError {
+    public ProcessInstance execute(CommandExecutor commandExecutor) throws StatusCodeError {
         if (LOG.isDebugEnabled())
             LOG.debug("Executing instance state command " + this.toString());
 
-        ProcessEngineFacade facade = toolkit.getFacade();
-        IdentityHelper helper = toolkit.getHelper();
-        IdentityService identityService = toolkit.getIdentityService();
-        MongoTemplate operations = toolkit.getMongoOperations();
+        ProcessEngineFacade facade = commandExecutor.getFacade();
+        IdentityHelper helper = commandExecutor.getHelper();
+        IdentityService identityService = commandExecutor.getIdentityService();
+        MongoTemplate operations = commandExecutor.getMongoOperations();
 
         try {
             ProcessInstance.Builder modified = new ProcessInstance.Builder(instance);

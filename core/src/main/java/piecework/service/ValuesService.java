@@ -18,7 +18,7 @@ package piecework.service;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 import piecework.Versions;
 import piecework.common.ViewContext;
 import piecework.exception.NotFoundError;
@@ -48,7 +48,7 @@ public class ValuesService {
     ContentRepository contentRepository;
 
     @Autowired
-    Toolkit toolkit;
+    CommandExecutor commandExecutor;
 
     @Autowired
     Versions versions;
@@ -125,7 +125,7 @@ public class ValuesService {
 
         InstanceCommand persist = new UpdateInstanceCommand(process, instance);
         persist.data(update);
-        persist.execute(toolkit);
+        commandExecutor.execute(persist);
     }
 
     public List<Value> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {

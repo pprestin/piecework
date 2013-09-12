@@ -22,6 +22,6 @@ import piecework.exception.StatusCodeError;
  */
 public interface Command<T> {
 
-    <T> T execute(Toolkit toolkit) throws StatusCodeError;
+    <T> T execute(CommandExecutor commandExecutor) throws StatusCodeError;
 
 }

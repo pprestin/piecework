@@ -15,10 +15,7 @@
  */
 package piecework.command;
 
-import piecework.Command;
-import piecework.Toolkit;
 import piecework.enumeration.OperationType;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
 
 /**

@@ -30,9 +30,10 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             View.__super__.render.apply(this);
 
             var statusFilter = new SearchFilter({
+                name: 'statusFilter',
                 selector: 'parameters',
                 options: [
-                    { 'id': "statusOpen", 'label': "Open", 'key': "processStatus", 'value': "open", 'default': true },
+                    {id: "statusOpen", label: "Open", key: "processStatus", value: "open", 'default': true },
                     {id: "statusComplete", label: "Complete", key: "processStatus", value: 'complete'},
                     {id: "statusCancelled", label: "Deleted", key: "processStatus", value: 'cancelled'},
                     {id: "statusSuspended", label: "Suspended", key: "processStatus", value: 'suspended'},
@@ -42,6 +43,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             });
 
             var processFilter = new SearchFilter({
+                name: 'processFilter',
                 selector: 'parameters',
                 key: 'definitions',
                 results: this.model

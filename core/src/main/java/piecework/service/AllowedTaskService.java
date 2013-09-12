@@ -37,7 +37,7 @@ import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 import piecework.command.TaskCommand;
 import piecework.identity.IdentityHelper;
 import piecework.process.ProcessInstanceQueryBuilder;
@@ -76,11 +76,8 @@ public class AllowedTaskService {
     @Autowired
     Sanitizer sanitizer;
 
-//    @Autowired
-//    TaskRepository taskRepository;
-
     @Autowired
-    Toolkit toolkit;
+    CommandExecutor commandExecutor;
 
     @Autowired
     Versions versions;
@@ -202,7 +199,7 @@ public class AllowedTaskService {
 
     public void completeIfTaskExists(Process process, Task task, ActionType action) throws StatusCodeError {
         TaskCommand complete = new TaskCommand(process, task, action);
-        complete.execute(toolkit);
+        commandExecutor.execute(complete);
     }
 
     public List<Task> findAllTasks(Process process, ProcessInstance instance) throws StatusCodeError {
@@ -260,16 +257,12 @@ public class AllowedTaskService {
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
         Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
-//        TaskCriteria overseerCriteria = overseerCriteria(overseerProcesses, rawQueryParameters);
-//        TaskCriteria userCriteria = userCriteria(userProcesses, rawQueryParameters);
-
         ViewContext taskViewContext = versions.getVersion1();
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
                 .link(taskViewContext.getApplicationUri());
-
 
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
@@ -294,9 +287,6 @@ public class AllowedTaskService {
             org.springframework.data.mongodb.core.query.Field field = query.fields();
             field.exclude("data");
 
-//                query.fields().exclude("attachments");
-
-
             List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
             if (processInstances != null && !processInstances.isEmpty()) {
                 int count = 0;
@@ -314,8 +304,14 @@ public class AllowedTaskService {
                     }
                 }
 
-                if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
+                if (count == 0 && environment.getProperty("synchronize.tasks", Boolean.class, Boolean.FALSE)) {
+                    SearchResults internalTasks = allowedTasks(rawQueryParameters);
+                    if (internalTasks.getTotal() != null && internalTasks.getTotal().longValue() > 0) {
 
+                    }
+                }
+
+                if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
                     if (executionCriteria.getFirstResult() != null)
                         resultsBuilder.firstResult(executionCriteria.getFirstResult());
                     else
@@ -336,30 +332,6 @@ public class AllowedTaskService {
 
         }
 
-//        Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
-//        if (!allowedProcesses.isEmpty()) {
-//            for (Process allowedProcess : allowedProcesses) {
-//                if (StringUtils.isEmpty(allowedProcess.getProcessDefinitionKey()))
-//                    continue;
-//                resultsBuilder.definition(allowedProcess);
-//                allowedProcessDefinitionKeys.add(allowedProcess.getProcessDefinitionKey());
-//            }
-//        }
-//        int count = 0;
-//        List<Task> tasks = findTasksByCriteria(overseerCriteria, userCriteria);
-//        if (tasks != null && !tasks.isEmpty()) {
-//            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-//            for (Task task : tasks) {
-//                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer)
-//                        .build(taskViewContext));
-//                count++;
-//            }
-//        }
-//
-//        resultsBuilder.firstResult(1);
-//        resultsBuilder.maxResults(count);
-//        resultsBuilder.total(Long.valueOf(count));
-
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieving tasks took " + (System.currentTimeMillis() - time) + " ms");
 
@@ -374,14 +346,6 @@ public class AllowedTaskService {
         return false;
     }
 
-    private List<Task> findTasksByCriteria(TaskCriteria ... criterias) {
-
-
-
-
-
-        return null;
-    }
 
     private TaskCriteria overseerCriteria(Set<Process> allowedProcesses, MultivaluedMap<String, String> rawQueryParameters) {
         return new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer).build();

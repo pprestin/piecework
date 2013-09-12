@@ -8,7 +8,7 @@ define([ 'chaplin', 'views/base/view', 'text!templates/search/search-filter.hbs'
 		tagName: 'div',
 	    template: template,
 	    events: {
-            'change :checkbox': '_onClickCheckbox'
+            'change :checkbox': '_onClickCheckbox',
 	    },
 	    initialize: function(options) {
             View.__super__.initialize.apply(this);

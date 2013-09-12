@@ -30,7 +30,7 @@ import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 import piecework.identity.IdentityHelper;
 
 import java.util.Date;
@@ -51,16 +51,16 @@ public class StartInstanceCommand extends InstanceCommand {
     }
 
     @Override
-    public ProcessInstance execute(Toolkit toolkit) throws StatusCodeError {
+    public ProcessInstance execute(CommandExecutor commandExecutor) throws StatusCodeError {
 
         if (LOG.isDebugEnabled())
             LOG.debug("Executing start instance command " + this.toString());
 
-        ProcessEngineFacade facade = toolkit.getFacade();
-        IdentityHelper helper = toolkit.getHelper();
-        IdentityService identityService = toolkit.getIdentityService();
-        MongoTemplate operations = toolkit.getMongoOperations();
-        ProcessInstanceRepository repository = toolkit.getProcessInstanceRepository();
+        ProcessEngineFacade facade = commandExecutor.getFacade();
+        IdentityHelper helper = commandExecutor.getHelper();
+        IdentityService identityService = commandExecutor.getIdentityService();
+        MongoTemplate operations = commandExecutor.getMongoOperations();
+        ProcessInstanceRepository repository = commandExecutor.getProcessInstanceRepository();
 
         ProcessInstance.Builder builder;
         try {

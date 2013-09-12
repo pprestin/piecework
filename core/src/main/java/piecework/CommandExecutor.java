@@ -21,6 +21,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import piecework.engine.ProcessEngineFacade;
+import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityService;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.identity.IdentityHelper;
@@ -29,9 +30,9 @@ import piecework.identity.IdentityHelper;
  * @author James Renfro
  */
 @Service
-public class Toolkit {
+public class CommandExecutor {
 
-    private static final Logger LOG = Logger.getLogger(Toolkit.class);
+    private static final Logger LOG = Logger.getLogger(CommandExecutor.class);
 
     @Autowired
     Environment environment;
@@ -50,6 +51,20 @@ public class Toolkit {
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    public <T> T execute(Command<T> command) throws StatusCodeError {
+        long start = 0;
+        if (LOG.isDebugEnabled()) {
+            start = System.currentTimeMillis();
+            LOG.debug("Executing " + command.getClass());
+        }
+        T result = command.execute(this);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Command completed in " + (System.currentTimeMillis() - start) + " ms");
+        }
+        return result;
+    }
 
     public Environment getEnvironment() {
         return environment;

@@ -33,7 +33,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.ldap.core.support.LdapContextSource;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 import piecework.Versions;
 import piecework.service.*;
 import piecework.Registry;
@@ -204,8 +204,8 @@ public class UnitTestConfiguration {
     }
 
     @Bean
-    public Toolkit toolkit() {
-        return new Toolkit();
+    public CommandExecutor toolkit() {
+        return new CommandExecutor();
     }
 
     @Bean

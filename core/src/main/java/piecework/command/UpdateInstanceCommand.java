@@ -29,7 +29,7 @@ import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,7 @@ public class UpdateInstanceCommand extends InstanceCommand {
     }
 
     @Override
-    public ProcessInstance execute(Toolkit toolkit) throws StatusCodeError {
+    public ProcessInstance execute(CommandExecutor commandExecutor) throws StatusCodeError {
 
         if (LOG.isDebugEnabled())
             LOG.debug("Executing update instance command " + this.toString());
@@ -59,9 +59,9 @@ public class UpdateInstanceCommand extends InstanceCommand {
         if (instance == null)
             throw new InternalServerError();
 
-        Environment environment = toolkit.getEnvironment();
-        MongoTemplate operations = toolkit.getMongoOperations();
-        ProcessInstanceRepository repository = toolkit.getProcessInstanceRepository();
+        Environment environment = commandExecutor.getEnvironment();
+        MongoTemplate operations = commandExecutor.getMongoOperations();
+        ProcessInstanceRepository repository = commandExecutor.getProcessInstanceRepository();
 
         boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
 

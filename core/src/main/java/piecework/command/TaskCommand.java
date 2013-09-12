@@ -25,7 +25,7 @@ import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.Toolkit;
+import piecework.CommandExecutor;
 
 /**
  * @author James Renfro
@@ -45,8 +45,8 @@ public class TaskCommand implements Command<Boolean> {
     }
 
     @Override
-    public Boolean execute(Toolkit toolkit) throws StatusCodeError {
-        ProcessEngineFacade facade = toolkit.getFacade();
+    public Boolean execute(CommandExecutor commandExecutor) throws StatusCodeError {
+        ProcessEngineFacade facade = commandExecutor.getFacade();
 
         boolean result = false;
         String taskId = task != null ? task.getTaskInstanceId() : null;
