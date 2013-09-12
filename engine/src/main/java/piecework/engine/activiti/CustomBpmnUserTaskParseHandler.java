@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -43,25 +44,14 @@ public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<Use
     protected void executeParse(BpmnParse bpmnParse, UserTask element) {
         if (generalUserTaskListener != null) {
             TaskDefinition taskDefinition = (TaskDefinition) bpmnParse.getCurrentActivity().getProperty(UserTaskParseHandler.PROPERTY_TASK_DEFINITION);
-            taskDefinition.addTaskListener(TaskListener.EVENTNAME_ALL_EVENTS, generalUserTaskListener);
-        }
 
-//        List<ActivitiListener> taskListeners = element.getTaskListeners();
-//        if (taskListeners == null) {
-//            taskListeners = new ArrayList<ActivitiListener>();
-//            element.setTaskListeners(taskListeners);
-//        }
-//
-//        ActivitiListener createTaskListener = new ActivitiListener();
-//        createTaskListener.setEvent(TaskListener.EVENTNAME_ALL_EVENTS);
-//        createTaskListener.setImplementation("${generalUserTaskListener}");
-//        createTaskListener.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_DELEGATEEXPRESSION);
-////        taskListeners.add(createTaskListener);
-//
-//        bpmnParse.getListenerFactory().createDelegateExpressionTaskListener(createTaskListener);
-//
-//
-//        bpmnParse.
+            Map<String, List<TaskListener>> listeners = taskDefinition.getTaskListeners();
+            for(Map.Entry<String, List<TaskListener>> entry : taskDefinition.getTaskListeners().entrySet())
+            {
+                entry.getValue().add(0, generalUserTaskListener);
+            }
+            taskDefinition.setTaskListeners(listeners);
+        }
     }
 
     @Override
