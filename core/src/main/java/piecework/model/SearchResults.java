@@ -253,6 +253,23 @@ public class SearchResults implements Serializable {
             }
             return this;
         }
+
+        public Builder parameters(List<QueryParameter> parameters) {
+            if (parameters != null && !parameters.isEmpty()) {
+                this.parameters = new ManyMap<String, String>();
+                for (QueryParameter parameter : parameters) {
+                    this.parameters.put(parameter.getName(), parameter.getValues());
+                }
+            }
+            return this;
+        }
+
+        public Builder parameters(Map<String, List<String>> map) {
+            if (map != null && !map.isEmpty()) {
+                this.parameters = new ManyMap<String, String>(map);
+            }
+            return this;
+        }
 		
 		public Builder firstResult(Integer firstResult) {
 			this.firstResult = firstResult;

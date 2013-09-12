@@ -79,7 +79,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 $.post( url, data,
                     function(data, textStatus, jqXHR) {
                         $('#activate-dialog').modal('hide');
-                        Chaplin.mediator.publish("search", {processStatus: "open"});
+                        Chaplin.mediator.publish("search", {processStatus: "suspended"});
                     }
                 ).fail(function(jqXHR, textStatus, errorThrown) {
                      var explanation = $.parseJSON(jqXHR.responseText);
@@ -223,6 +223,21 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	    },
 	    _onSearched: function(data) {
 	        $('#instanceSearchButton').button('reset');
+
+//            var processDefinitionKey = null;
+//            var processStatus = 'open';
+//
+//            if (data.parameters != null && data.parameters.processStatus != null)
+//                processStatus = data.processStatus[0];
+//
+//            $('[name="processStatus"]').val(processStatus);
+//            $('.status-filter-container').find('.dropdown-toggle-text').text($('[name="processStatus"]').find(':selected').label);
+//
+//            if (data.parameters != null && data.parameters.processDefinitionKey != null)
+//                processDefinitionKey = data.processDefinitionKey[0];
+//
+//            $('[name="processDefinitionKey"]').val(processDefinitionKey);
+
 	    },
 	    _onShowAssignDialog: function() {
 	        var url = this.model.get("link");
@@ -262,7 +277,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 $.post( url, data,
                     function(data, textStatus, jqXHR) {
                         $('#suspend-dialog').modal('hide');
-                        Chaplin.mediator.publish("search", {status:"open"});
+                        Chaplin.mediator.publish("search", {processStatus:"open"});
                     }
                 ).fail(function(jqXHR, textStatus, errorThrown) {
                      var explanation = $.parseJSON(jqXHR.responseText);

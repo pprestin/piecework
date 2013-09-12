@@ -280,6 +280,7 @@ public class AllowedTaskService {
                         .interactions(null).build(version1));
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
+            resultsBuilder.parameters(executionCriteria.getSanitizedParameters());
 
             // Otherwise, look up all instances that match the query
             Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();

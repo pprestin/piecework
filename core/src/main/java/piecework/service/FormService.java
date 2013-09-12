@@ -95,7 +95,7 @@ public class FormService {
     Versions versions;
 
 
-    public Response delete(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+    public Response delete(HttpServletRequest request, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
@@ -182,7 +182,8 @@ public class FormService {
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-                .link(viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME));
+                .link(viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME))
+                .parameters(results.getParameters());
 
         List<?> definitions = results.getDefinitions();
         if (definitions != null) {
