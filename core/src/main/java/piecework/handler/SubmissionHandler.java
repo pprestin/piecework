@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
+import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
 import piecework.validation.SubmissionTemplate;
 import piecework.identity.IdentityService;
@@ -68,11 +69,11 @@ public class SubmissionHandler {
     @Autowired
     UuidGenerator uuidGenerator;
 
-    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission) throws InternalServerError {
-        return handle(process, template, rawSubmission);
-    }
+//    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission) throws InternalServerError {
+//        return handle(process, template, rawSubmission);
+//    }
 
-    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest) throws InternalServerError {
+    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest, ActionType action) throws InternalServerError {
         String submitterId = helper.getAuthenticatedSystemOrUserId();
 
         if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(formRequest.getActAsUser()))
@@ -91,7 +92,8 @@ public class SubmissionHandler {
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
                 .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
-                .submitterId(submitterId);
+                .submitterId(submitterId)
+                .action(action.name());
 
         if (rawSubmission != null && rawSubmission.getData() != null) {
             for (Map.Entry<String, List<Value>> entry : rawSubmission.getData().entrySet()) {

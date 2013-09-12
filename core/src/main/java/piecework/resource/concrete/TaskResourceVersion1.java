@@ -120,11 +120,6 @@ public class TaskResourceVersion1 implements TaskResource {
         if (task != null && task.getProcessInstanceId() != null)
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
-        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
-
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
-        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest);
-
         ActionType validatedAction = ActionType.COMPLETE;
         if (StringUtils.isNotEmpty(action)) {
             try {
@@ -132,9 +127,16 @@ public class TaskResourceVersion1 implements TaskResource {
             } catch (IllegalArgumentException e) {
                 throw new BadRequestError(Constants.ExceptionCodes.task_action_invalid);
             }
-        } else if (submission != null && submission.getAction() != null) {
+        }
+
+        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, validatedAction);
+
+        if (submission != null && submission.getAction() != null) {
             validatedAction = submission.getAction();
         }
+
         switch (validatedAction) {
             case ASSIGN:
                 String assignee = submission.getAssignee();

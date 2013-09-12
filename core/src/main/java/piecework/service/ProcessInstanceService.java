@@ -288,7 +288,8 @@ public class ProcessInstanceService {
 
         persist.label(ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel()))
                .attachments(attachments)
-               .data(data);
+               .data(data)
+               .submission(submission);
 
         ProcessInstance instance = commandExecutor.execute(persist);
 
