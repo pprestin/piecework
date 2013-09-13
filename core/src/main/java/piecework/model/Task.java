@@ -78,6 +78,9 @@ public class Task implements Serializable, Comparable<Task> {
     private final String taskStatus;
 
     @XmlElement
+    private final String taskAction;
+
+    @XmlElement
     @Transient
     private final User assignee;
 
@@ -131,6 +134,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.taskLabel = builder.taskLabel;
         this.taskDescription = builder.taskDescription;
         this.taskStatus = builder.taskStatus;
+        this.taskAction = builder.taskAction;
         this.processDefinitionLabel = builder.processDefinitionLabel;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.processInstanceId = builder.processInstanceId;
@@ -200,6 +204,10 @@ public class Task implements Serializable, Comparable<Task> {
 
     public String getTaskStatus() {
         return taskStatus;
+    }
+
+    public String getTaskAction() {
+        return taskAction;
     }
 
     public String getProcessDefinitionLabel() {
@@ -291,6 +299,7 @@ public class Task implements Serializable, Comparable<Task> {
         private String taskLabel;
         private String taskDescription;
         private String taskStatus;
+        private String taskAction;
         private User assignee;
         private String assigneeId;
         private List<User> candidateAssignees;
@@ -315,6 +324,7 @@ public class Task implements Serializable, Comparable<Task> {
             this.taskLabel = sanitizer.sanitize(task.taskLabel);
             this.taskDescription = sanitizer.sanitize(task.taskDescription);
             this.taskStatus = sanitizer.sanitize(task.taskStatus);
+            this.taskAction = sanitizer.sanitize(task.taskAction);
             this.processDefinitionKey = sanitizer.sanitize(task.processDefinitionKey);
             this.processDefinitionLabel = sanitizer.sanitize(task.processDefinitionLabel);
             this.processInstanceLabel = sanitizer.sanitize(task.processInstanceLabel);
@@ -376,6 +386,11 @@ public class Task implements Serializable, Comparable<Task> {
 
         public Builder taskStatus(String taskStatus) {
             this.taskStatus = taskStatus;
+            return this;
+        }
+
+        public Builder taskAction(String taskAction) {
+            this.taskAction = taskAction;
             return this;
         }
 

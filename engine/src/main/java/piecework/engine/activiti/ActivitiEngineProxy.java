@@ -155,6 +155,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             if (activitiTask != null)  {
                 if (action != null) {
                     String variableName = activitiTask.getTaskDefinitionKey() + "_action";
+                    processEngine.getTaskService().setVariableLocal(taskId, variableName, action.name());
                     processEngine.getTaskService().setVariable(taskId, variableName, action.name());
                 }
                 // Always assign the task to the user before completing it

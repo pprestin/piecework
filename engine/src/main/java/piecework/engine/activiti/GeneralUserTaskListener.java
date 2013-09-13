@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.enumeration.ActionType;
 import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityService;
 import piecework.model.*;
@@ -83,8 +84,15 @@ public class GeneralUserTaskListener implements TaskListener {
             return;
 
         Map<String, Object> variables = delegateTask.getVariables();
+        Map<String, Object> localVariables = delegateTask.getVariablesLocal();
+
         String processDefinitionKey = String.class.cast(variables.get("PIECEWORK_PROCESS_DEFINITION_KEY"));
         String processInstanceId = String.class.cast(variables.get("PIECEWORK_PROCESS_INSTANCE_ID"));
+
+        String action = String.class.cast(delegateTask.getVariableLocal(taskDefinitionKey + "_action"));
+
+        if (StringUtils.isNotEmpty(action))
+            action = ActionType.valueOf(action).description();
 
         ProcessInstance processInstance = processInstanceRepository.findOne(processInstanceId);
         if (processInstance == null)
@@ -153,6 +161,7 @@ public class GeneralUserTaskListener implements TaskListener {
                 .taskLabel(delegateTask.getName())
                 .taskDescription(delegateTask.getDescription())
                 .taskStatus(Constants.TaskStatuses.OPEN)
+                .taskAction(action)
                 .startTime(delegateTask.getCreateTime())
                 .dueDate(delegateTask.getDueDate())
                 .priority(delegateTask.getPriority())
@@ -177,7 +186,8 @@ public class GeneralUserTaskListener implements TaskListener {
                 taskBuilder = new Task.Builder(task, new PassthroughSanitizer());
 
                 if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE)) {
-                    taskBuilder.taskStatus(Constants.TaskStatuses.COMPLETE)
+                    taskBuilder.taskAction(action)
+                        .taskStatus(Constants.TaskStatuses.COMPLETE)
                         .endTime(new Date());
                 }
             }

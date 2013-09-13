@@ -27,6 +27,7 @@ import piecework.model.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -54,7 +55,7 @@ public class ProcessHistoryService {
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
         List<Operation> operations = instance.getOperations();
-        List<Task> tasks = taskService.findAllTasks(process, instance);
+        Set<Task> tasks = instance.getTasks();
 
         IdentityDetails initiatorUserDetails = identityService.loadUserByAnyId(instance.getInitiatorId());
 
