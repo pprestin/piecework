@@ -195,6 +195,7 @@ input[type="text"].form-control {
 .main-footer {
     background-color: whitesmoke;
     border-top: 1px solid #CCCCCC;
+    z-index: 0;
 }
 
 .main-navbar {
