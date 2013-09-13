@@ -73,7 +73,7 @@ public class ProcessInstanceService {
     Sanitizer sanitizer;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Autowired
     CommandExecutor commandExecutor;

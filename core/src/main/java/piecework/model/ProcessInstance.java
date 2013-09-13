@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -109,7 +110,7 @@ public class ProcessInstance implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-    private final List<Task> tasks;
+    private final Map<String, Task> tasks;
 
     @XmlTransient
     @JsonIgnore
@@ -147,7 +148,7 @@ public class ProcessInstance implements Serializable {
         this.previousApplicationStatus = builder.previousApplicationStatus;
         this.attachmentIds = Collections.unmodifiableSet(builder.attachmentIds);
         this.keywords = builder.keywords;
-        this.tasks = Collections.unmodifiableList(builder.tasks);
+        this.tasks = Collections.unmodifiableMap(builder.tasks);
 //        Set<Attachment> attachments = null;
 //        if (includeSubresources) {
 //            attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new TreeSet<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
@@ -293,8 +294,8 @@ public class ProcessInstance implements Serializable {
     }
 
     @JsonIgnore
-    public List<Task> getTasks() {
-        return tasks;
+    public Set<Task> getTasks() {
+        return new TreeSet<Task>(tasks.values());
     }
 
     @JsonIgnore
@@ -360,7 +361,7 @@ public class ProcessInstance implements Serializable {
         private Set<String> attachmentIds;
         private List<Operation> operations;
         private List<String> submissionIds;
-        private List<Task> tasks;
+        private Map<String, Task> tasks;
         private Date startTime;
         private Date endTime;
         private String initiatorId;
@@ -374,7 +375,7 @@ public class ProcessInstance implements Serializable {
             this.data = new ManyMap<String, Value>();
             this.operations = new ArrayList<Operation>();
             this.submissionIds = new ArrayList<String>();
-            this.tasks = new ArrayList<Task>();
+            this.tasks = new HashMap<String, Task>();
         }
 
         public Builder(ProcessInstance instance) {
@@ -424,9 +425,9 @@ public class ProcessInstance implements Serializable {
                 this.submissionIds = new ArrayList<String>();
 
             if (instance.tasks != null && !instance.tasks.isEmpty())
-                this.tasks = new ArrayList<Task>(instance.tasks);
+                this.tasks = new HashMap<String, Task>(instance.tasks);
             else
-                this.tasks = new ArrayList<Task>();
+                this.tasks = new HashMap<String, Task>();
 
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
                 this.keywords.add(this.processInstanceLabel.toLowerCase());
@@ -525,15 +526,16 @@ public class ProcessInstance implements Serializable {
         }
 
         public Builder task(Task task) {
-            this.tasks.add(task);
+            this.tasks.put(task.getTaskInstanceId(), task);
             return this;
         }
 
         public Builder tasks(List<Task> tasks) {
-            if (tasks != null)
-                this.tasks = new ArrayList<Task>(tasks);
-            else
-                this.tasks = new ArrayList<Task>();
+            if (tasks != null) {
+                for (Task task : tasks) {
+                    task(task);
+                }
+            }
             return this;
         }
 

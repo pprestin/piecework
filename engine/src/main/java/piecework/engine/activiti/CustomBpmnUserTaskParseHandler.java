@@ -45,13 +45,21 @@ public class CustomBpmnUserTaskParseHandler extends AbstractBpmnParseHandler<Use
         if (generalUserTaskListener != null) {
             TaskDefinition taskDefinition = (TaskDefinition) bpmnParse.getCurrentActivity().getProperty(UserTaskParseHandler.PROPERTY_TASK_DEFINITION);
 
-            Map<String, List<TaskListener>> listeners = taskDefinition.getTaskListeners();
-            for(Map.Entry<String, List<TaskListener>> entry : taskDefinition.getTaskListeners().entrySet())
-            {
-                entry.getValue().add(0, generalUserTaskListener);
-            }
-            taskDefinition.setTaskListeners(listeners);
+            Map<String, List<TaskListener>> taskListeners = taskDefinition.getTaskListeners();
+
+            addTaskListener(TaskListener.EVENTNAME_CREATE, generalUserTaskListener, taskListeners);
+            addTaskListener(TaskListener.EVENTNAME_ASSIGNMENT, generalUserTaskListener, taskListeners);
+            addTaskListener(TaskListener.EVENTNAME_COMPLETE, generalUserTaskListener, taskListeners);
         }
+    }
+
+    private void addTaskListener(String eventName, TaskListener taskListener, Map<String, List<TaskListener>> taskListeners) {
+        List<TaskListener> taskEventListeners = taskListeners.get(eventName);
+        if (taskEventListeners == null) {
+            taskEventListeners = new ArrayList<TaskListener>();
+            taskListeners.put(eventName, taskEventListeners);
+        }
+        taskEventListeners.add(0, taskListener);
     }
 
     @Override

@@ -44,7 +44,7 @@ public class ProcessHistoryService {
     ProcessInstanceService processInstanceService;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Autowired
     Versions versions;

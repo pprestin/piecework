@@ -27,6 +27,7 @@ import org.apache.commons.mail.SimpleEmail;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -158,11 +159,11 @@ public class GeneralUserTaskListener implements TaskListener {
                 .active();
 
 
-        } else if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE)) {
+        } else {
 
             Task task = null; //taskRepository.findOne(delegateTask.getId());
 
-            List<Task> tasks = processInstance.getTasks();
+            Set<Task> tasks = processInstance.getTasks();
             if (tasks != null && !tasks.isEmpty()) {
                 for (Task current : tasks) {
                     if (current != null && current.getTaskInstanceId().equals(delegateTask.getId())) {
@@ -173,9 +174,12 @@ public class GeneralUserTaskListener implements TaskListener {
             }
 
             if (task != null) {
-                taskBuilder = new Task.Builder(task, new PassthroughSanitizer())
-                    .taskStatus(Constants.TaskStatuses.COMPLETE)
-                    .endTime(new Date());
+                taskBuilder = new Task.Builder(task, new PassthroughSanitizer());
+
+                if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE)) {
+                    taskBuilder.taskStatus(Constants.TaskStatuses.COMPLETE)
+                        .endTime(new Date());
+                }
             }
         }
 
@@ -199,12 +203,14 @@ public class GeneralUserTaskListener implements TaskListener {
             Query query =  new Query();
             query.addCriteria(where("processInstanceId").is(processInstance.getProcessInstanceId()));
 
+            Task updated = taskBuilder.build();
             Update update = new Update();
-            update.push("tasks", taskBuilder.build());
+            update.set("tasks." + updated.getTaskInstanceId(), updated);
+            FindAndModifyOptions options = new FindAndModifyOptions();
+            options.returnNew(true);
+            ProcessInstance stored = mongoOperations.findAndModify(query, update, options, ProcessInstance.class);
 
-            mongoOperations.updateFirst(query, update, ProcessInstance.class);
-
-//            taskRepository.save(taskBuilder.build());
+            LOG.debug("Stored process instance changes");
         }
 
 

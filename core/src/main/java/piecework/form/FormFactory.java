@@ -32,7 +32,7 @@ import piecework.model.Process;
 import piecework.service.ProcessInstanceService;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.service.AllowedTaskService;
+import piecework.service.TaskService;
 import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 
@@ -53,7 +53,7 @@ public class FormFactory {
     ProcessInstanceService processInstanceService;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Autowired
     ValidationService validationService;

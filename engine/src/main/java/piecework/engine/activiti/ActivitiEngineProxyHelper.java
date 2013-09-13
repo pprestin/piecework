@@ -16,6 +16,7 @@
 package piecework.engine.activiti;
 
 import com.google.common.collect.Sets;
+import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,13 +38,13 @@ import java.util.Set;
 public class ActivitiEngineProxyHelper {
 
     @Autowired
-    RepositoryService repositoryService;
+    ProcessEngine processEngine;
 
     @Cacheable("processDefinitionIds")
     public Set<String> getProcessDefinitionIds(String ... keys) {
         Set<String> keySet = Sets.newHashSet(keys);
         Set<String> set = new HashSet<String>();
-        for (ProcessDefinition processDefinition : repositoryService.createProcessDefinitionQuery().list()) {
+        for (ProcessDefinition processDefinition : processEngine.getRepositoryService().createProcessDefinitionQuery().list()) {
             if (keySet.contains(processDefinition.getKey()))
                 set.add(processDefinition.getId());
         }
@@ -70,7 +71,7 @@ public class ActivitiEngineProxyHelper {
         }
 
         ManyMap<String, Process> map = new ManyMap<String, Process>();
-        for (ProcessDefinition processDefinition : repositoryService.createProcessDefinitionQuery().list()) {
+        for (ProcessDefinition processDefinition : processEngine.getRepositoryService().createProcessDefinitionQuery().list()) {
             List<Process> matchingProcesses = processDefinitionKeyMap.get(processDefinition.getKey());
             if (matchingProcesses != null && !matchingProcesses.isEmpty())
                 map.put(processDefinition.getId(), matchingProcesses);

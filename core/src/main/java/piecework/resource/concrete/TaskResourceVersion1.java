@@ -19,27 +19,24 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.common.RequestDetails;
-import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
 import piecework.handler.SubmissionHandler;
 import piecework.service.ValidationService;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
-import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
-import piecework.service.AllowedTaskService;
+import piecework.service.TaskService;
 import piecework.handler.RequestHandler;
 import piecework.model.*;
 import piecework.security.Sanitizer;
@@ -88,7 +85,7 @@ public class TaskResourceVersion1 implements TaskResource {
     SubmissionTemplateFactory submissionTemplateFactory;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Autowired
     ValidationService validationService;

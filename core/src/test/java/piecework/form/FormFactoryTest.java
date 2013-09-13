@@ -27,8 +27,8 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.service.ProcessInstanceService;
+import piecework.service.TaskService;
 import piecework.service.ValidationService;
-import piecework.service.AllowedTaskService;
 import piecework.test.ExampleFactory;
 
 /**
@@ -47,7 +47,7 @@ public class FormFactoryTest {
     ProcessInstanceService processInstanceService;
 
     @Mock
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Mock
     ValidationService validationService;

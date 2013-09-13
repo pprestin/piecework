@@ -32,7 +32,7 @@ import piecework.identity.IdentityHelper;
 import piecework.persistence.RequestRepository;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.service.AllowedTaskService;
+import piecework.service.TaskService;
 import piecework.exception.ForbiddenError;
 import piecework.model.FormRequest;
 import piecework.model.Interaction;
@@ -58,7 +58,7 @@ public class RequestHandlerTest {
     IdentityHelper identityHelper;
 
     @Mock
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Mock
     SecuritySettings securitySettings;

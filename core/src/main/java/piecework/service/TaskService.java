@@ -54,9 +54,9 @@ import java.util.*;
  * @author James Renfro
  */
 @Service
-public class AllowedTaskService {
+public class TaskService {
 
-    private static final Logger LOG = Logger.getLogger(AllowedTaskService.class);
+    private static final Logger LOG = Logger.getLogger(TaskService.class);
 
     @Autowired
     Environment environment;
@@ -291,16 +291,32 @@ public class AllowedTaskService {
             List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
             if (processInstances != null && !processInstances.isEmpty()) {
                 int count = 0;
+
+                String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
+                String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.OPEN;
+
+
                 for (ProcessInstance processInstance : processInstances) {
-                    List<Task> tasks = processInstance.getTasks();
+                    Set<Task> tasks = processInstance.getTasks();
                     if (tasks != null && !tasks.isEmpty()) {
                         for (Task task : tasks) {
-                            if (executionCriteria.getTaskStatus() == null ||
-                                    task.getTaskStatus() == null ||
-                                    task.getTaskStatus().equals(executionCriteria.getTaskStatus())) {
-                                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer).build(version1));
-                                count++;
+                            if (!processStatus.equals(Constants.ProcessStatuses.ALL) &&
+                                    !processStatus.equalsIgnoreCase(task.getTaskStatus()))
+                                continue;
+
+                            if (!taskStatus.equals(Constants.TaskStatuses.ALL) &&
+                                    !taskStatus.equals(task.getTaskStatus()))
+                                continue;
+
+
+                            Task.Builder builder = new Task.Builder(task, passthroughSanitizer);
+
+                            if (StringUtils.isNotEmpty(task.getAssigneeId())) {
+                                builder.assignee(identityService.getUser(task.getAssigneeId()));
                             }
+
+                            resultsBuilder.item(builder.build(version1));
+                            count++;
                         }
                     }
                 }

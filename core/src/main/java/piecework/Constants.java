@@ -189,6 +189,7 @@ public interface Constants {
         public static final String COMPLETE = "Complete";
         public static final String CANCELLED = "Cancelled";
         public static final String SUSPENDED = "Suspended";
+        public static final String ALL = "all";
     }
 
     public static class ValidationStatus {

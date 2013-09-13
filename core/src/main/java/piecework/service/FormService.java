@@ -86,7 +86,7 @@ public class FormService {
     Sanitizer sanitizer;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Autowired
     ValidationService validationService;

@@ -64,7 +64,7 @@ public class ValidationService {
     IdentityService identityService;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
 
     public FormValidation validate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {

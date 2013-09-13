@@ -70,7 +70,7 @@ import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.Sanitizer;
-import piecework.service.AllowedTaskService;
+import piecework.service.TaskService;
 
 /**
  * @author James Renfro
@@ -169,8 +169,8 @@ public class UnitTestConfiguration {
 	}
 
     @Bean
-    public AllowedTaskService allowedTaskService() {
-        return new AllowedTaskService();
+    public TaskService allowedTaskService() {
+        return new TaskService();
     }
 
     @Bean

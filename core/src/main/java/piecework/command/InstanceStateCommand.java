@@ -34,10 +34,7 @@ import piecework.CommandExecutor;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -137,7 +134,14 @@ public class InstanceStateCommand extends InstanceCommand {
             if (processStatus != null)
                 update.set("processStatus", processStatus);
 
-            update.set("tasks", tasks(instance.getTasks(), operation));
+            if (operation != OperationType.ASSIGNMENT && operation != OperationType.UPDATE) {
+                Set<Task> tasks = tasks(instance.getTasks(), operation);
+                if (tasks != null) {
+                    for (Task task : tasks) {
+                        update.set("tasks." + task.getTaskInstanceId(), task);
+                    }
+                }
+            }
             update.push("operations", new Operation(UUID.randomUUID().toString(), operation, reason, new Date(), userId));
 
             WriteResult result = operations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
@@ -166,8 +170,8 @@ public class InstanceStateCommand extends InstanceCommand {
         return "{ processDefinitionKey: \"" + processDefinitionKey + "\", processInstanceId: \"" + processInstanceId + "\", operation: \"" + operation + "\" }";
     }
 
-    private static List<Task> tasks(List<Task> originals, OperationType operation) {
-        List<Task> tasks = new ArrayList<Task>();
+    private static Set<Task> tasks(Set<Task> originals, OperationType operation) {
+        Set<Task> tasks = new TreeSet<Task>();
         if (originals != null && !originals.isEmpty()) {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             for (Task original : originals) {

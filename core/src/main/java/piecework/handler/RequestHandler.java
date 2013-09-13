@@ -28,7 +28,7 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
-import piecework.service.AllowedTaskService;
+import piecework.service.TaskService;
 import piecework.util.ConstraintUtil;
 
 import java.util.*;
@@ -48,12 +48,12 @@ public class RequestHandler {
     IdentityHelper identityHelper;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     /*
      * Constructor for testing -- normally not used
      */
-//    public RequestHandler(RequestRepository requestRepository, IdentityHelper identityHelper, AllowedTaskService taskService) {
+//    public RequestHandler(RequestRepository requestRepository, IdentityHelper identityHelper, TaskService taskService) {
 //        this.requestRepository = requestRepository;
 //        this.identityHelper = identityHelper;
 //        this.taskService = taskService;

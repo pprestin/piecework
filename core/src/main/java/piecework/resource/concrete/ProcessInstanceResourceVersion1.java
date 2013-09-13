@@ -49,7 +49,7 @@ import piecework.common.ViewContext;
 import piecework.handler.RequestHandler;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.service.AllowedTaskService;
+import piecework.service.TaskService;
 import piecework.ui.StreamingAttachmentContent;
 import piecework.form.FormFactory;
 import piecework.util.ProcessInstanceUtility;
@@ -99,7 +99,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     SecuritySettings securitySettings;
 
     @Autowired
-    AllowedTaskService taskService;
+    TaskService taskService;
 
     @Autowired
     ValuesService valuesService;
@@ -396,10 +396,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         String location = null;
         if (data != null) {
             File file = ProcessInstanceUtility.firstFile(fieldName, data);
-            String hostUri = environment.getProperty("host.uri");
 
             if (file != null) {
-                location = hostUri +
+                location =
                     new File.Builder(file, new PassthroughSanitizer())
                         .processDefinitionKey(process.getProcessDefinitionKey())
                         .processInstanceId(stored.getProcessInstanceId())

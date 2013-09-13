@@ -16,6 +16,7 @@
 package piecework.engine;
 
 import junit.framework.Assert;
+import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.RepositoryService;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class ActivitiEngineProxyTest {
 	ProcessEngineProxy engineProxy;
 
 	@Autowired
-	RepositoryService repositoryService;
+    ProcessEngine processEngine;
 
     private Process process;
 
@@ -61,7 +62,7 @@ public class ActivitiEngineProxyTest {
         process = ExampleFactory.exampleProcess();
 
 		ClassPathResource resource = new ClassPathResource("META-INF/example.bpmn20.xml");
-		repositoryService.createDeployment().name(process.getEngineProcessDefinitionKey()).addInputStream("example.bpmn20.xml", resource.getInputStream()).deploy();
+        processEngine.getRepositoryService().createDeployment().name(process.getEngineProcessDefinitionKey()).addInputStream("example.bpmn20.xml", resource.getInputStream()).deploy();
     }
 	
 	@Test

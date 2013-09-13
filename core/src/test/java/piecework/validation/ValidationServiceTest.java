@@ -29,10 +29,10 @@ import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
 import piecework.identity.IdentityService;
 import piecework.security.EncryptionService;
+import piecework.service.TaskService;
 import piecework.service.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.service.AllowedTaskService;
 import piecework.test.ExampleFactory;
 
 import java.util.List;
@@ -63,7 +63,7 @@ public class ValidationServiceTest {
     IdentityService identityService;
 
     @Mock
-    AllowedTaskService taskService;
+    TaskService taskService;
 
 	@Before
 	public void setUp() {
