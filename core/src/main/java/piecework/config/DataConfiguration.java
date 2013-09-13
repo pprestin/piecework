@@ -60,7 +60,7 @@ public class DataConfiguration {
 		File directory = new File(mongoFilesystem, "dbs");
 		
 		if (!directory.exists()) {
-			LOG.debug("No startup data exists");
+			LOG.debug("No startup data exists under path " + directory.getAbsolutePath());
 			return;
 		}
 		

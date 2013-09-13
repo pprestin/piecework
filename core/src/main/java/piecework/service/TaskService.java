@@ -293,8 +293,7 @@ public class TaskService {
                 int count = 0;
 
                 String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
-                String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.OPEN;
-
+                String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : processStatus;
 
                 for (ProcessInstance processInstance : processInstances) {
                     Set<Task> tasks = processInstance.getTasks();
@@ -305,7 +304,7 @@ public class TaskService {
                                 continue;
 
                             if (!taskStatus.equals(Constants.TaskStatuses.ALL) &&
-                                    !taskStatus.equals(task.getTaskStatus()))
+                                    !taskStatus.equalsIgnoreCase(task.getTaskStatus()))
                                 continue;
 
 

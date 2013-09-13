@@ -149,9 +149,12 @@ public class WebSecurityConfiguration {
             return requestHeaderAuthenticationFilter;
         }
 
-        SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
-        singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
-        return singleSignOnAuthenticationFilter;
+        if (authenticationType() == AuthenticationType.PREAUTH) {
+            SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
+            singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
+            return singleSignOnAuthenticationFilter;
+        }
+        return null;
     }
 
     @Bean
