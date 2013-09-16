@@ -15,6 +15,7 @@
  */
 package piecework.ldap;
 
+import org.apache.log4j.Logger;
 import org.springframework.core.env.Environment;
 
 import javax.naming.directory.SearchControls;
@@ -23,38 +24,71 @@ import javax.naming.directory.SearchControls;
  * @author James Renfro
  */
 public class LdapSettings {
+    public enum LdapAuthenticationEncryption { NONE, TLS, SSL }
+    public enum LdapAuthenticationType { PASSWORDCOMPARE, BIND }
 
+    private static final Logger LOG = Logger.getLogger(LdapSettings.class);
+
+    private final LdapAuthenticationEncryption encryption;
+    private final LdapAuthenticationType authenticationType;
     private final String ldapGroupUrl;
     private final String ldapGroupBase;
+    private final String ldapGroupSearchBase;
+    private final String ldapGroupSearchFilter;
     private final String ldapPersonDn;
     private final String ldapPersonAttributeDisplayName;
     private final String ldapPersonAttributeIdInternal;
     private final String ldapPersonAttributeIdExternal;
+    private final String ldapPersonAttributeEmail;
     private final String ldapPersonUrl;
     private final String ldapPersonBase;
     private final String ldapPersonSearchBase;
     private final String ldapPersonSearchFilter;
     private final String ldapPersonSearchFilterInternal;
+    private final String ldapDefaultUser;
+    private final char[] ldapDefaultPassword;
     private final SearchControls searchControls;
 
     public LdapSettings(Environment environment) {
+        this.encryption = authenticationEncryption(environment.getProperty("ldap.authentication.encryption"));
+        this.authenticationType = authenticationType(environment.getProperty("ldap.authentication.type"));
+        this.ldapGroupSearchBase = environment.getProperty("ldap.group.search.base");
+        this.ldapGroupSearchFilter  = environment.getProperty("ldap.group.search.filter");
         this.ldapPersonUrl = environment.getProperty("ldap.person.url");
         this.ldapPersonBase = environment.getProperty("ldap.person.base");
         this.ldapPersonDn = environment.getProperty("ldap.person.dn");
         this.ldapPersonAttributeDisplayName = environment.getProperty("ldap.attribute.name.display");
         this.ldapPersonAttributeIdInternal = environment.getProperty("ldap.attribute.id.internal");
         this.ldapPersonAttributeIdExternal = environment.getProperty("ldap.attribute.id.external");
+        this.ldapPersonAttributeEmail = environment.getProperty("ldap.attribute.email");
         this.ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
         this.ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
         this.ldapPersonSearchFilterInternal = environment.getProperty("ldap.person.search.filter.internal");
         this.ldapGroupUrl = environment.getProperty("ldap.group.url");
         this.ldapGroupBase = environment.getProperty("ldap.group.base");
-
+        this.ldapDefaultUser = environment.getProperty("ldap.authentication.user");
+        this.ldapDefaultPassword = environment.getProperty("ldap.authentication.password") != null ? environment.getProperty("ldap.authentication.password").toCharArray() : null;
         this.searchControls = new SearchControls();
         this.searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         this.searchControls.setTimeLimit(10000);
         this.searchControls.setReturningAttributes(null);
         this.searchControls.setCountLimit(20);
+    }
+
+    public LdapAuthenticationEncryption getEncryption() {
+        return encryption;
+    }
+
+    public LdapAuthenticationType getAuthenticationType() {
+        return authenticationType;
+    }
+
+    public String getLdapGroupSearchBase() {
+        return ldapGroupSearchBase;
+    }
+
+    public String getLdapGroupSearchFilter() {
+        return ldapGroupSearchFilter;
     }
 
     public String getLdapGroupUrl() {
@@ -97,6 +131,18 @@ public class LdapSettings {
         return ldapPersonAttributeIdExternal;
     }
 
+    public String getLdapPersonAttributeEmail() {
+        return ldapPersonAttributeEmail;
+    }
+
+    public String getLdapDefaultUser() {
+        return ldapDefaultUser;
+    }
+
+    public char[] getLdapDefaultPassword() {
+        return ldapDefaultPassword;
+    }
+
     public SearchControls getSearchControls() {
         return searchControls;
     }
@@ -105,4 +151,36 @@ public class LdapSettings {
         return ldapPersonSearchFilterInternal;
     }
 
+    private static LdapAuthenticationEncryption authenticationEncryption(String ldapAuthenticationEncryption) {
+        LdapAuthenticationEncryption encryption = LdapAuthenticationEncryption.NONE;
+
+        try {
+            if (ldapAuthenticationEncryption != null && !ldapAuthenticationEncryption.equalsIgnoreCase("${ldap.authentication.encryption}"))
+                encryption = LdapAuthenticationEncryption.valueOf(ldapAuthenticationEncryption.toUpperCase());
+        } catch (IllegalArgumentException iae) {
+            LOG.warn("Authentication encryption: " + ldapAuthenticationEncryption.toUpperCase() + " is not valid");
+        }
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Using ldap authentication encryption " + encryption.toString());
+
+        return encryption;
+    }
+
+    private LdapAuthenticationType authenticationType(String ldapAuthenticationType) {
+
+        LdapAuthenticationType type = LdapAuthenticationType.BIND;
+
+        try {
+            if (ldapAuthenticationType != null && !ldapAuthenticationType.equalsIgnoreCase("${ldap.authentication.type}"))
+                type = LdapAuthenticationType.valueOf(ldapAuthenticationType.toUpperCase());
+        } catch (IllegalArgumentException iae) {
+            LOG.warn("Authentication type: " + ldapAuthenticationType.toUpperCase() + " is not valid");
+        }
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Using ldap authentication type " + type.toString());
+
+        return type;
+    }
 }

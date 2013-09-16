@@ -27,7 +27,7 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.CommandExecutor;

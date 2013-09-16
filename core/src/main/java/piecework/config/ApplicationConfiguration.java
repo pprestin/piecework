@@ -15,52 +15,79 @@
  */
 package piecework.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.binding.BindingFactoryManager;
+import org.apache.cxf.configuration.jsse.SSLUtils;
+import org.apache.cxf.configuration.security.FiltersType;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CachingConfigurer;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.cache.interceptor.DefaultKeyGenerator;
-import org.springframework.cache.interceptor.KeyGenerator;
-import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
+import org.springframework.ldap.core.AuthenticationSource;
+import org.springframework.ldap.core.support.DirContextAuthenticationStrategy;
+import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
+import org.springframework.security.ldap.authentication.*;
+import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
+import org.springframework.security.ldap.search.LdapUserSearch;
+import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
+import org.springframework.util.StringUtils;
+import piecework.authorization.AuthorizationRoleMapper;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.form.AnonymousFormResource;
+import piecework.identity.DisplayNameConverter;
+import piecework.ldap.CustomLdapUserDetailsMapper;
+import piecework.ldap.LdapIdentityService;
+import piecework.ldap.LdapSettings;
+import piecework.security.CustomAuthenticationSource;
 import piecework.security.SecuritySettings;
+import piecework.service.IdentityService;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.HtmlProvider;
+import piecework.util.KeyManagerCabinet;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.*;
 
 /**
  * @author James Renfro
  */
 @Configuration
-@ComponentScan(basePackages = "piecework")
-@EnableCaching(proxyTargetClass=true)
 public class ApplicationConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(ApplicationConfiguration.class);
+    private static final List<String> CIPHER_SUITES_LIST = Arrays.asList("SSL_RSA_WITH_RC4_128_MD5", "SSL_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_DSS_WITH_AES_128_CBC_SHA", "SSL_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA", "SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA", "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA", "TLS_EMPTY_RENEGOTIATION_INFO_SCSV", "TLS_KRB5_WITH_RC4_128_SHA", "TLS_KRB5_WITH_RC4_128_MD5", "TLS_KRB5_WITH_3DES_EDE_CBC_SHA", "TLS_KRB5_WITH_3DES_EDE_CBC_MD5", "TLS_KRB5_WITH_DES_CBC_SHA", "TLS_KRB5_WITH_DES_CBC_MD5", "TLS_KRB5_EXPORT_WITH_RC4_40_SHA", "TLS_KRB5_EXPORT_WITH_RC4_40_MD5", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5" );
+    private static int SSL_CACHE_TIMEOUT = 86400000;
 
-	@Autowired 
+    @Autowired
 	piecework.ApplicationResource[] applicationResources;
 
     @Autowired
     piecework.ApiResource[] apiResources;
+
+    @Autowired(required = false)
+    DisplayNameConverter displayNameConverter;
 
     @Autowired
     AnonymousFormResource formResource;
@@ -156,8 +183,194 @@ public class ApplicationConfiguration {
     }
 
     @Bean
+    public HtmlProvider htmlProvider() {
+        return new HtmlProvider();
+    }
+
+    @Bean
+    public JacksonJaxbJsonProvider jacksonJaxbJsonProvider() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        return new JacksonJaxbJsonProvider(objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
+    }
+
+    @Bean
+    public CustomJaxbJsonProvider customJaxbJsonProvider() {
+        return new CustomJaxbJsonProvider();
+    }
+
+    @Bean(name="pieceworkAuthorizationRoleMapper")
+    public AuthorizationRoleMapper authorizationRoleMapper() {
+        return new AuthorizationRoleMapper();
+    }
+
+    @Bean
     public CacheManager cacheManager() {
         return new ConcurrentMapCacheManager();
     }
 
+    @Bean
+    public KeyManagerCabinet keyManagerCabinet(Environment environment) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        SecuritySettings securitySettings = securitySettings(environment);
+        return keyManagerCabinet(securitySettings);
+    }
+
+    private KeyManagerCabinet keyManagerCabinet(SecuritySettings securitySettings) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+
+        try {
+            return new KeyManagerCabinet.Builder(securitySettings).build();
+        } catch (FileNotFoundException e) {
+            LOG.error("Could not create key manager cabinet because keystore file not found");
+        }
+
+        return null;
+    }
+
+    @Bean
+    public SecuritySettings securitySettings(Environment environment) {
+        return new SecuritySettings(environment);
+    }
+
+    @Bean
+    public IdentityService userDetailsService(Environment environment) throws Exception {
+        String identityProviderProtocol = environment.getProperty("identity.provider.protocol");
+
+        LdapSettings ldapSettings = ldapSettings(environment);
+        SecuritySettings securitySettings = securitySettings(environment);
+
+        LdapContextSource contextSource = personLdapContextSource(ldapSettings, securitySettings);
+        LdapUserSearch userSearch = userSearch(contextSource, ldapSettings);
+        LdapUserSearch userSearchInternal = userSearchInternal(environment, contextSource);
+        LdapAuthoritiesPopulator authoritiesPopulator = authoritiesPopulator(ldapSettings, securitySettings);
+        CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper(ldapSettings);
+
+        return new LdapIdentityService(contextSource, userSearch, userSearchInternal, authoritiesPopulator, userDetailsMapper, ldapSettings);
+    }
+
+    private LdapAuthenticator authenticator(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {
+
+        AbstractLdapAuthenticator authenticator = null;
+
+        LdapSettings.LdapAuthenticationType type = ldapSettings.getAuthenticationType();
+
+        switch (type) {
+            case PASSWORDCOMPARE:
+                authenticator = new PasswordComparisonAuthenticator(personLdapContextSource);
+                break;
+            default:
+                authenticator = new BindAuthenticator(personLdapContextSource);
+        }
+
+        authenticator.setUserSearch(userSearch(personLdapContextSource, ldapSettings));
+
+        return authenticator;
+    }
+
+    private AuthenticationSource authenticationSource(LdapSettings ldapSettings) {
+        CustomAuthenticationSource authenticationSource = new CustomAuthenticationSource();
+
+        LdapSettings.LdapAuthenticationEncryption encryption = ldapSettings.getEncryption();
+
+        if (encryption == LdapSettings.LdapAuthenticationEncryption.TLS)
+            return new DefaultValuesAuthenticationSourceDecorator(authenticationSource, ldapSettings.getLdapDefaultUser(), new String(ldapSettings.getLdapDefaultPassword()));
+
+        return authenticationSource;
+    }
+
+    private DirContextAuthenticationStrategy authenticationStrategy(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
+        LdapSettings.LdapAuthenticationEncryption encryption = ldapSettings.getEncryption();
+
+        DirContextAuthenticationStrategy strategy = null;
+
+        switch (encryption) {
+            case TLS:
+                strategy = new ExternalTlsDirContextAuthenticationStrategy();
+                ((ExternalTlsDirContextAuthenticationStrategy)strategy).setSslSocketFactory(sslSocketFactory(securitySettings));
+                break;
+            default:
+                strategy = new SimpleDirContextAuthenticationStrategy();
+        }
+
+        return strategy;
+    }
+
+    private LdapAuthoritiesPopulator authoritiesPopulator(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
+        DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(ldapSettings, securitySettings), ldapSettings.getLdapGroupSearchBase());
+        authoritiesPopulator.setGroupSearchFilter(ldapSettings.getLdapGroupSearchFilter());
+        return authoritiesPopulator;
+    }
+
+    private LdapContextSource groupLdapContextSource(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
+
+        LdapContextSource context = new LdapContextSource();
+        context.setUrl(ldapSettings.getLdapGroupUrl());
+        context.setBase(ldapSettings.getLdapGroupBase());
+        context.setUserDn(ldapSettings.getLdapPersonDn());
+        context.setAuthenticationSource(authenticationSource(ldapSettings));
+        context.setAuthenticationStrategy(authenticationStrategy(ldapSettings, securitySettings));
+        context.afterPropertiesSet();
+
+        return context;
+    }
+
+    private LdapContextSource personLdapContextSource(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
+
+        LdapContextSource context = new LdapContextSource();
+        context.setUrl(ldapSettings.getLdapPersonUrl());
+        context.setBase(ldapSettings.getLdapPersonBase());
+        context.setUserDn(ldapSettings.getLdapPersonDn());
+        context.setAuthenticationSource(authenticationSource(ldapSettings));
+        context.setAuthenticationStrategy(authenticationStrategy(ldapSettings, securitySettings));
+        context.afterPropertiesSet();
+
+        return context;
+    }
+
+    private LdapSettings ldapSettings(Environment environment) {
+        return new LdapSettings(environment);
+    }
+
+    private SSLSocketFactory sslSocketFactory(SecuritySettings securitySettings) throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
+        KeyManagerCabinet cabinet = keyManagerCabinet(securitySettings);
+        String provider = null;
+        String protocol = "TLS";
+
+        SSLContext ctx = provider == null ? SSLContext.getInstance(protocol) : SSLContext
+                .getInstance(protocol, provider);
+
+        ctx.getClientSessionContext().setSessionTimeout(SSL_CACHE_TIMEOUT);
+        ctx.init(cabinet.getKeyManagers(), cabinet.getTrustManagers(), null);
+
+        FiltersType filter = new FiltersType();
+        String[] cs = SSLUtils.getCiphersuites(CIPHER_SUITES_LIST, SSLUtils.getSupportedCipherSuites(ctx), filter, java.util.logging.Logger.getLogger(this.getClass().getCanonicalName()), false);
+
+        return new piecework.util.SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
+    }
+
+    private CustomLdapUserDetailsMapper userDetailsMapper(LdapSettings ldapSettings) throws Exception {
+        return new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), displayNameConverter, ldapSettings);
+    }
+
+    private LdapUserSearch userSearch(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {
+        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapSettings.getLdapPersonSearchFilter(), personLdapContextSource);
+        ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
+        ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
+        ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
+        return userSearch;
+    }
+
+    private LdapUserSearch userSearchInternal(Environment environment, LdapContextSource personLdapContextSource) throws Exception {
+        LdapSettings ldapSettings = ldapSettings(environment);
+        String ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilterInternal();
+
+        // Fallback to original setting if an internal setting is not defined
+        if (StringUtils.isEmpty(ldapPersonSearchFilter))
+            ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilter();
+
+        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapPersonSearchFilter, personLdapContextSource);
+        ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
+        ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
+        ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
+        return userSearch;
+    }
 }

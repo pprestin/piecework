@@ -16,12 +16,10 @@
 package piecework.resource.concrete;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
-import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.identity.IdentityDetails;
 import piecework.identity.PersonSearchCriteria;
 import piecework.model.ProcessInstance;
@@ -51,13 +49,8 @@ public class PersonResourceVersion1 implements PersonResource {
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
                 .link(versions.getVersion1().getApplicationUri(User.Constants.ROOT_ELEMENT_NAME));
 
-        List<IdentityDetails> userDetails = userDetailsService.findUsersByDisplayName(criteria.getDisplayNameLike());
-        if (userDetails != null) {
-            for (IdentityDetails userDetail : userDetails) {
-                resultsBuilder.item(new User.Builder(userDetail).build());
-            }
-        }
-
+        List<User> users = userDetailsService.findUsersByDisplayName(criteria.getDisplayNameLike());
+        resultsBuilder.items(users);
         return resultsBuilder.build();
     }
 

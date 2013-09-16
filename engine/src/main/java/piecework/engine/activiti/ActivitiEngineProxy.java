@@ -69,7 +69,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
-    piecework.identity.IdentityService userDetailsService;
+    piecework.service.IdentityService userDetailsService;
 
 	@Override
 	public String start(Process process, String processBusinessKey, Map<String, ?> data) throws ProcessEngineException {

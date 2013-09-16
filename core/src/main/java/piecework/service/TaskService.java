@@ -34,7 +34,6 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
-import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.CommandExecutor;

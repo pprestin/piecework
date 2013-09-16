@@ -30,7 +30,7 @@ import piecework.handler.SubmissionHandler;
 import piecework.service.ValidationService;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;

@@ -30,7 +30,7 @@ import piecework.service.ProcessInstanceService;
 import piecework.service.ValidationService;
 import piecework.validation.FormValidation;
 import piecework.validation.SubmissionTemplate;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
@@ -152,8 +152,7 @@ public class AttachmentService {
 
                 User user = userId != null ? userMap.get(userId) : null;
                 if (user == null && userId != null) {
-                    UserDetails userDetails = identityService.loadUserByInternalId(userId);
-                    user = new User.Builder(userDetails).build();
+                    user = identityService.getUser(userId);
 
                     if (user != null)
                         userMap.put(user.getUserId(), user);

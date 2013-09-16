@@ -22,7 +22,6 @@ import piecework.enumeration.EventType;
 import piecework.enumeration.OperationType;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
-import piecework.identity.IdentityService;
 import piecework.model.*;
 
 import java.util.Date;
@@ -57,9 +56,7 @@ public class ProcessHistoryService {
         List<Operation> operations = instance.getOperations();
         Set<Task> tasks = instance.getTasks();
 
-        IdentityDetails initiatorUserDetails = identityService.loadUserByAnyId(instance.getInitiatorId());
-
-        User initiator = initiatorUserDetails != null ?  new User.Builder(initiatorUserDetails).build() : null;
+        User initiator = identityService.getUser(instance.getInitiatorId());
 
         History.Builder history = new History.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())

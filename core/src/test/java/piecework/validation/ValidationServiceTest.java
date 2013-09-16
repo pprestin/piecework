@@ -27,7 +27,7 @@ import piecework.Constants;
 import piecework.Registry;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.security.EncryptionService;
 import piecework.service.TaskService;
 import piecework.service.ValidationService;

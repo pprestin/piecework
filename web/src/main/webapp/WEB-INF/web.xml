@@ -12,7 +12,7 @@
 
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>piecework.config.ApplicationConfiguration</param-value>
+        <param-value>piecework.config.PropertiesConfiguration</param-value>
     </context-param>
 
 	<listener>

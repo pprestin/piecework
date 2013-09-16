@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.identity;
+package piecework.ldap;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,56 +24,55 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.LikeFilter;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
-import piecework.ldap.CustomLdapUserDetailsMapper;
-import piecework.ldap.LdapSettings;
+import piecework.identity.IdentityDetails;
 import piecework.model.User;
+import piecework.service.IdentityService;
 
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author James Renfro
  */
-public class IdentityService implements UserDetailsService {
+public class LdapIdentityService implements IdentityService {
 
-    @Autowired
-    LdapContextSource personLdapContextSource;
-
-    @Autowired
-    LdapSettings ldapSettings;
-
+    private final LdapContextSource personLdapContextSource;
+    private final LdapSettings ldapSettings;
     private final LdapUserDetailsService delegate;
     private final LdapUserSearch userSearch;
     private final LdapUserSearch internalUserSearch;
     private final LdapAuthoritiesPopulator authoritiesPopulator;
     private final CustomLdapUserDetailsMapper userDetailsMapper;
-    private final String usernameAttribute;
 
-    public IdentityService() {
+    public LdapIdentityService() {
+        this.personLdapContextSource = null;
         this.delegate = null;
         this.userDetailsMapper = null;
         this.userSearch = null;
         this.internalUserSearch = null;
         this.authoritiesPopulator = null;
-        this.usernameAttribute = null;
+        this.ldapSettings = null;
     }
 
-    public IdentityService(LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, String usernameAttribute) {
+    public LdapIdentityService(LdapContextSource personLdapContextSource, LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, LdapSettings ldapSettings) {
+        this.personLdapContextSource = personLdapContextSource;
         this.delegate = new LdapUserDetailsService(userSearch, authoritiesPopulator);
         this.delegate.setUserDetailsMapper(userDetailsMapper);
         this.userDetailsMapper = userDetailsMapper;
         this.userSearch = userSearch;
         this.internalUserSearch = internalUserSearch;
         this.authoritiesPopulator = authoritiesPopulator;
-        this.usernameAttribute = usernameAttribute;
+        this.ldapSettings = ldapSettings;
     }
 
-    public List<IdentityDetails> findUsersByDisplayName(String displayNameLike) {
+    public List<User> findUsersByDisplayName(String displayNameLike) {
         String ldapPersonSearchBase = ldapSettings.getLdapPersonSearchBase();
         String ldapDisplayNameAttribute = ldapSettings.getLdapPersonAttributeDisplayName();
         String ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
@@ -85,7 +84,14 @@ public class IdentityService implements UserDetailsService {
 
         String filter = new AndFilter().and(new LikeFilter(ldapDisplayNameAttribute, displayNameLike + "*")).and(new LikeFilter(ldapExternalIdAttribute, "*")).encode();
         try {
-            return template.search(ldapPersonSearchBase, filter, userDetailsMapper);
+            List<IdentityDetails> identityDetailsList = template.search(ldapPersonSearchBase, filter, userDetailsMapper);
+            List<User> users = identityDetailsList != null && !identityDetailsList.isEmpty() ? new ArrayList<User>(identityDetailsList.size()) : Collections.<User>emptyList();
+            if (identityDetailsList != null) {
+                for (IdentityDetails identityDetails : identityDetailsList) {
+                    users.add(new User.Builder(identityDetails).build());
+                }
+            }
+            return users;
         } catch (SizeLimitExceededException e) {
             return null;
         }
@@ -98,7 +104,7 @@ public class IdentityService implements UserDetailsService {
 
     public UserDetails loadUserByInternalId(String internalId) {
         DirContextOperations userData = internalUserSearch.searchForUser(internalId);
-        String username = userData.getStringAttribute(usernameAttribute);
+        String username = userData.getStringAttribute(ldapSettings.getLdapPersonAttributeIdInternal());
         if (username == null)
             return null;
         return userDetailsMapper.mapUserFromContext(userData, username,
@@ -141,5 +147,6 @@ public class IdentityService implements UserDetailsService {
 
         return null;
     }
+
 
 }

@@ -15,7 +15,9 @@
  */
 package piecework.config;
 
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
@@ -27,6 +29,8 @@ import java.io.IOException;
  * @author James Renfro
  */
 @Configuration
+@ComponentScan(basePackages = "piecework")
+@EnableCaching(proxyTargetClass=true)
 public class PropertiesConfiguration {
 
     @Bean

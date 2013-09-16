@@ -30,7 +30,6 @@ import piecework.Registry;
 import piecework.exception.BadRequestError;
 import piecework.exception.StatusCodeError;
 import piecework.exception.ValidationRuleException;
-import piecework.identity.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.identity.IdentityHelper;

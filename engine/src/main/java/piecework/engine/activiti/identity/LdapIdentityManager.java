@@ -32,6 +32,7 @@ import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.stereotype.Service;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapSettings;
+import piecework.service.IdentityService;
 
 import javax.naming.directory.SearchControls;
 import java.util.ArrayList;
@@ -44,37 +45,48 @@ import java.util.List;
 public class LdapIdentityManager extends UserEntityManager {
 
     @Autowired
-    LdapContextSource personLdapContextSource;
+    IdentityService identityService;
 
-    @Autowired
-    LdapSettings ldapSettings;
-
-    @Autowired
-    CustomLdapUserDetailsMapper userDetailsMapper;
+//    @Autowired
+//    LdapContextSource personLdapContextSource;
+//
+//    @Autowired
+//    LdapSettings ldapSettings;
+//
+//    @Autowired
+//    CustomLdapUserDetailsMapper userDetailsMapper;
 
     @Override
     public UserEntity findUserById(String userId) {
-        AndFilter filter = new AndFilter();
+        piecework.model.User internalUser = identityService.getUser(userId);
 
-        filter.and(new LikeFilter(ldapSettings.getLdapPersonAttributeIdInternal(), userId));
+        if (internalUser == null)
+            return null;
 
-        ContextMapperCallbackHandler callbackHandler = new ContextMapperCallbackHandler(userDetailsMapper);
+        UserEntity user = new UserEntity(userId);
+        user.setEmail(internalUser.getEmailAddress());
 
-        try {
-            SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
-
-            template.setSearchControls(ldapSettings.getSearchControls());
-            template.search(DistinguishedName.EMPTY_PATH,
-                    filter.encode(),
-                    ldapSettings.getSearchControls(), callbackHandler);
-        }
-        catch (SizeLimitExceededException e) {
-            // Ignore this. We want to limit our results.
-        }
-
-        List<?> list = callbackHandler.getList();
-
-        UserEntity user = (UserEntity) (list != null && !list.isEmpty() ? list.get(0) : null);
+//        AndFilter filter = new AndFilter();
+//
+//        filter.and(new LikeFilter(ldapSettings.getLdapPersonAttributeIdInternal(), userId));
+//
+//        ContextMapperCallbackHandler callbackHandler = new ContextMapperCallbackHandler(userDetailsMapper);
+//
+//        try {
+//            SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
+//
+//            template.setSearchControls(ldapSettings.getSearchControls());
+//            template.search(DistinguishedName.EMPTY_PATH,
+//                    filter.encode(),
+//                    ldapSettings.getSearchControls(), callbackHandler);
+//        }
+//        catch (SizeLimitExceededException e) {
+//            // Ignore this. We want to limit our results.
+//        }
+//
+//        List<?> list = callbackHandler.getList();
+//
+//        UserEntity user = (UserEntity) (list != null && !list.isEmpty() ? list.get(0) : null);
 
         return user;
     }

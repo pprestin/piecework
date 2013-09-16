@@ -28,7 +28,7 @@ import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.CommandExecutor;
 import piecework.identity.IdentityHelper;

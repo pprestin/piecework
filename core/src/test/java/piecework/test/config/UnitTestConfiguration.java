@@ -43,7 +43,7 @@ import piecework.engine.concrete.ProcessEngineConcreteFacade;
 import piecework.form.FormFactory;
 import piecework.validation.SubmissionTemplateFactory;
 import piecework.identity.IdentityDetails;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.ldap.LdapSettings;
 import piecework.persistence.AuthorizationRepository;
 import piecework.common.CustomPropertySourcesConfigurer;

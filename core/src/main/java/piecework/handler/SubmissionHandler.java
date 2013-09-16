@@ -26,7 +26,7 @@ import piecework.common.UuidGenerator;
 import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
 import piecework.validation.SubmissionTemplate;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;

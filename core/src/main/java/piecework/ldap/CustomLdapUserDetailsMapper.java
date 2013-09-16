@@ -44,17 +44,16 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implement
     private final String ldapExternalIdAttribute;
     private final String ldapDisplayNameAttribute;
     private final String ldapEmailAttribute;
+    private final DisplayNameConverter displayNameConverter;
 
-    @Autowired(required = false)
-    DisplayNameConverter displayNameConverter;
-
-	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate, Environment environment) {
+	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate, DisplayNameConverter displayNameConverter, LdapSettings ldapSettings) {
 		this.delegate = delegate;
-        this.ldapInternalIdAttribute = environment.getProperty("ldap.attribute.id.internal");
-        this.ldapExternalIdAttribute = environment.getProperty("ldap.attribute.id.external");
-        this.ldapDisplayNameAttribute = environment.getProperty("ldap.attribute.name.display");
-        this.ldapEmailAttribute = environment.getProperty("ldap.attribute.email");
-	}
+        this.ldapInternalIdAttribute = ldapSettings.getLdapPersonAttributeIdInternal();
+        this.ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
+        this.ldapDisplayNameAttribute = ldapSettings.getLdapPersonAttributeDisplayName();
+        this.ldapEmailAttribute = ldapSettings.getLdapPersonAttributeEmail();
+	    this.displayNameConverter = displayNameConverter;
+    }
 	
 	public UserDetails mapUserFromContext(DirContextOperations ctx, String username, Collection<? extends GrantedAuthority> authorities) {
         UserDetails userDetails = delegate.mapUserFromContext(ctx, username, authorities);

@@ -36,12 +36,11 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.enumeration.ActionType;
 import piecework.identity.IdentityDetails;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
-import piecework.persistence.TaskRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 
 import java.io.StringReader;
@@ -84,7 +83,6 @@ public class GeneralUserTaskListener implements TaskListener {
             return;
 
         Map<String, Object> variables = delegateTask.getVariables();
-        Map<String, Object> localVariables = delegateTask.getVariablesLocal();
 
         String processDefinitionKey = String.class.cast(variables.get("PIECEWORK_PROCESS_DEFINITION_KEY"));
         String processInstanceId = String.class.cast(variables.get("PIECEWORK_PROCESS_INSTANCE_ID"));

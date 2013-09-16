@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.StatusCodeError;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.identity.IdentityHelper;
 

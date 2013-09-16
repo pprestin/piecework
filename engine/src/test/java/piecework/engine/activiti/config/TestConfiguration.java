@@ -15,9 +15,7 @@
  */
 package piecework.engine.activiti.config;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -35,10 +33,9 @@ import piecework.engine.activiti.identity.LdapIdentityManager;
 import piecework.engine.activiti.identity.LdapIdentitySessionFactory;
 import piecework.engine.test.ExampleFactory;
 import piecework.identity.IdentityHelper;
-import piecework.identity.IdentityService;
+import piecework.service.IdentityService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapSettings;
-import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
