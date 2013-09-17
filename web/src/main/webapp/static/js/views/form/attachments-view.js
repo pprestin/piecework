@@ -1,9 +1,11 @@
 define([
         'chaplin',
+        'models/notification',
         'views/form/attachment-view',
         'views/base/collection-view',
+        'views/form/notification-view',
         ],
-    function(Chaplin, AttachmentView, CollectionView) {
+    function(Chaplin, Notification, AttachmentView, CollectionView, NotificationView) {
 	'use strict';
 
 	var AttachmentsView = CollectionView.extend({
@@ -17,11 +19,15 @@ define([
             'refreshAttachments mediator': '_onRefreshAttachments',
             'showAttachments mediator': '_onShowAttachments',
         },
+        showAttachments: function() {
+//            this._onShowAttachments();
+        },
         _onRefreshAttachments: function() {
-            this.collection.fetch();
+//            this.collection.fetch();
         },
         _onShowAttachments: function() {
-            this.$el.toggle();
+
+              this.$el.toggle();
         }
 	});
 

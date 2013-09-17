@@ -339,9 +339,9 @@ public class Task implements Serializable, Comparable<Task> {
                     this.candidateAssignees.add(new User.Builder(candidateAssignee, sanitizer).build());
                 }
             } else {
-                this.candidateAssignees = Collections.emptyList();
+                this.candidateAssignees = new ArrayList<User>();
             }
-            this.candidateAssigneeIds = task.candidateAssigneeIds != null ? Collections.unmodifiableList(task.candidateAssigneeIds) : Collections.<String>emptyList();
+            this.candidateAssigneeIds = task.candidateAssigneeIds != null ? new ArrayList<String>(task.candidateAssigneeIds) : new ArrayList<String>();
             this.startTime = task.startTime;
             this.dueDate = task.dueDate;
             this.endTime = task.endTime;

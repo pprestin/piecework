@@ -345,32 +345,29 @@ define([ 'chaplin',
             }
 	    },
 	    _onFailure: function(jqXHR, textStatus, errorThrown) {
-            alert('Failure!');
-	    },
-	    _onRefreshAttachments: function() {
-	        var attachmentsView = this.subview('attachmentsView');
-	        if (attachmentsView != undefined) {
-	            var attachments = attachmentsView.collection;
-	            attachments.fetch();
-	        }
-	    },
-	    _onShowAttachments: function() {
-	        var attachmentsView = this.subview('attachmentsView');
 
-	        if (attachmentsView == undefined) {
-	            var urlRoot = this.model.get("attachment");
-	            var attachments = new Attachments({}, {url: urlRoot});
-	            this.listenTo(attachments, 'sync', this._onSyncAttachments);
-                attachmentsView = this.subview('attachmentsView', new AttachmentsView({collection: attachments}));
-                attachments.fetch();
-            }
-
-            this.$el.toggleClass('col-lg-12 col-sm-12');
-            this.$el.toggleClass('col-lg-9 col-sm-9');
 	    },
-	    _onSyncAttachments: function(attachments) {
-            Chaplin.mediator.publish('attachmentCountChanged', attachments.length);
-	    }
+        _onRefreshAttachments: function() {
+           var attachmentsView = this.subview('attachmentsView');
+           if (attachmentsView != undefined) {
+               var attachments = attachmentsView.collection;
+               attachments.fetch();
+           }
+        },
+        _onShowAttachments: function() {
+           var attachmentsView = this.subview('attachmentsView');
+
+           if (attachmentsView == undefined) {
+               var urlRoot = this.model.get("attachment");
+               var attachments = new Attachments({}, {url: urlRoot});
+               this.listenTo(attachments, 'sync', this._onSyncAttachments);
+               this.subview('attachmentsView', new AttachmentsView({collection: attachments}));
+               attachments.fetch();
+           }
+
+           this.$el.toggleClass('col-lg-12 col-sm-12');
+           this.$el.toggleClass('col-lg-9 col-sm-9');
+        },
 	});
 
 	return FormView;

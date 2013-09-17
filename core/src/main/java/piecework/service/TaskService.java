@@ -107,7 +107,7 @@ public class TaskService {
     public Task allowedTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
         TaskCriteria.Builder taskCriteria = new TaskCriteria.Builder()
                 .process(process)
-                .executionId(processInstance.getEngineProcessInstanceId())
+                .processInstanceId(processInstance.getProcessInstanceId())
                 .orderBy(TaskCriteria.OrderBy.CREATED_TIME_ASC);
 
         if (! helper.isAuthenticatedSystem() && !helper.hasRole(process, AuthorizationRole.OVERSEER)) {

@@ -1,5 +1,5 @@
-define([ 'backbone', 'chaplin', 'views/base/view', 'text!templates/form/form-toolbar.hbs' ],
-		function(Backbone, Chaplin, View, template) {
+define([ 'backbone', 'chaplin', 'models/notification', 'views/base/view', 'views/form/notification-view', 'text!templates/form/form-toolbar.hbs' ],
+		function(Backbone, Chaplin, Notification, View, NotificationView, template) {
 	'use strict';
 
 	var FormToolbarView = View.extend({

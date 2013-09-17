@@ -244,7 +244,7 @@ public class ApplicationConfiguration {
         LdapAuthoritiesPopulator authoritiesPopulator = authoritiesPopulator(ldapSettings, securitySettings);
         CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper(ldapSettings);
 
-        return new LdapIdentityService(contextSource, userSearch, userSearchInternal, authoritiesPopulator, userDetailsMapper, ldapSettings);
+        return new LdapIdentityService(contextSource, userSearch, userSearchInternal, authoritiesPopulator, userDetailsMapper, ldapSettings, cacheManager());
     }
 
     private LdapAuthenticator authenticator(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {

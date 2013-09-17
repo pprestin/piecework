@@ -203,7 +203,7 @@ public class GeneralUserTaskListener implements TaskListener {
             if (candidates != null) {
                 for (IdentityLink candidate : candidates) {
                     if (StringUtils.isNotEmpty(candidate.getUserId())) {
-                        taskBuilder.assignee(userDetailsService.getUser(candidate.getUserId()));
+                        taskBuilder.candidateAssignee(userDetailsService.getUser(candidate.getUserId()));
                     }
                 }
             }
