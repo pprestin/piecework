@@ -38,29 +38,25 @@ import piecework.identity.IdentityDetails;
 public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implements ContextMapper {
 
 	private final Log logger = LogFactory.getLog(CustomLdapUserDetailsMapper.class);
-	
-	private final LdapUserDetailsMapper delegate;
-    private final String ldapInternalIdAttribute;
-    private final String ldapExternalIdAttribute;
-    private final String ldapDisplayNameAttribute;
-    private final String ldapEmailAttribute;
-    private final DisplayNameConverter displayNameConverter;
 
-	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate, DisplayNameConverter displayNameConverter, LdapSettings ldapSettings) {
+    @Autowired
+    DisplayNameConverter displayNameConverter;
+
+    @Autowired
+    LdapSettings ldapSettings;
+
+	private final LdapUserDetailsMapper delegate;
+
+	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate) {
 		this.delegate = delegate;
-        this.ldapInternalIdAttribute = ldapSettings.getLdapPersonAttributeIdInternal();
-        this.ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
-        this.ldapDisplayNameAttribute = ldapSettings.getLdapPersonAttributeDisplayName();
-        this.ldapEmailAttribute = ldapSettings.getLdapPersonAttributeEmail();
-	    this.displayNameConverter = displayNameConverter;
     }
 	
 	public UserDetails mapUserFromContext(DirContextOperations ctx, String username, Collection<? extends GrantedAuthority> authorities) {
         UserDetails userDetails = delegate.mapUserFromContext(ctx, username, authorities);
-        String internalId = ctx.getStringAttribute(ldapInternalIdAttribute);
-        String externalId = ctx.getStringAttribute(ldapExternalIdAttribute);
-        String displayName = ctx.getStringAttribute(ldapDisplayNameAttribute);
-        String emailAddress = StringUtils.isNotEmpty(ldapEmailAttribute) ? ctx.getStringAttribute(ldapEmailAttribute) : "";
+        String internalId = ctx.getStringAttribute(ldapSettings.getLdapPersonAttributeIdInternal());
+        String externalId = ctx.getStringAttribute(ldapSettings.getLdapPersonAttributeIdExternal());
+        String displayName = ctx.getStringAttribute(ldapSettings.getLdapPersonAttributeDisplayName());
+        String emailAddress = StringUtils.isNotEmpty(ldapSettings.getLdapPersonAttributeEmail()) ? ctx.getStringAttribute(ldapSettings.getLdapPersonAttributeEmail()) : "";
 
         if (displayNameConverter != null)
             displayName = displayNameConverter.convert(displayName);
@@ -72,7 +68,7 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implement
     public Object mapFromContext(Object ctx) {
         if (ctx instanceof DirContextOperations) {
             DirContextOperations contextOperations = DirContextOperations.class.cast(ctx);
-            String internalId = contextOperations.getStringAttribute(ldapInternalIdAttribute);
+            String internalId = contextOperations.getStringAttribute(ldapSettings.getLdapPersonAttributeIdInternal());
             Collection<GrantedAuthority> authorities = Collections.emptyList();
             return mapUserFromContext(contextOperations, internalId, authorities);
         }

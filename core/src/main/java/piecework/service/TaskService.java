@@ -247,6 +247,17 @@ public class TaskService {
         }
     }
 
+    private Set<String> processDefinitionKeys(Set<Process> processes) {
+        Set<String> set = new HashSet<String>();
+        if (processes != null) {
+            for (Process process : processes) {
+                set.add(process.getProcessDefinitionKey());
+            }
+        }
+
+        return set;
+    }
+
     public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
         long time = 0;
         if (LOG.isDebugEnabled())
@@ -255,6 +266,11 @@ public class TaskService {
         Set<Process> overseerProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
         Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
+
+        Set<String> overseerProcessDefinitionKeys = processDefinitionKeys(overseerProcesses);
+        Set<String> userProcessDefinitionKeys = processDefinitionKeys(userProcesses);
+
+        String currentUserId = helper.getAuthenticatedSystemOrUserId();
 
         ViewContext taskViewContext = versions.getVersion1();
 
@@ -292,7 +308,7 @@ public class TaskService {
                 int count = 0;
 
                 String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
-                String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : processStatus;
+                String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.ALL;
 
                 for (ProcessInstance processInstance : processInstances) {
                     Set<Task> tasks = processInstance.getTasks();
@@ -306,6 +322,10 @@ public class TaskService {
                                     !taskStatus.equalsIgnoreCase(task.getTaskStatus()))
                                 continue;
 
+                            if (!overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())) {
+                                if (!task.getCandidateAssignees().contains(currentUserId) && !task.getAssigneeId().equals(currentUserId))
+                                    continue;
+                            }
 
                             Task.Builder builder = new Task.Builder(task, passthroughSanitizer);
 
@@ -322,7 +342,7 @@ public class TaskService {
                 if (count == 0 && environment.getProperty("synchronize.tasks", Boolean.class, Boolean.FALSE)) {
                     SearchResults internalTasks = allowedTasks(rawQueryParameters);
                     if (internalTasks.getTotal() != null && internalTasks.getTotal().longValue() > 0) {
-
+                        resultsBuilder.items(internalTasks.getList());
                     }
                 }
 

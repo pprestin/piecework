@@ -26,10 +26,7 @@ import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -93,7 +90,7 @@ public class Task implements Serializable, Comparable<Task> {
     private final List<User> candidateAssignees;
 
     @XmlTransient
-    private final List<String> candidateAssigneeIds;
+    private final Set<String> candidateAssigneeIds;
 
     @XmlElement
     private final Date startTime;
@@ -143,7 +140,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.assignee = builder.assignee;
         this.assigneeId = builder.assigneeId;
         this.candidateAssignees = Collections.unmodifiableList(builder.candidateAssignees);
-        this.candidateAssigneeIds = Collections.unmodifiableList(builder.candidateAssigneeIds);
+        this.candidateAssigneeIds = Collections.unmodifiableSet(builder.candidateAssigneeIds);
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
         this.claimTime = builder.claimTime;
@@ -158,6 +155,10 @@ public class Task implements Serializable, Comparable<Task> {
     @Override
     public int compareTo(Task o) {
         int result = 0;
+        if (result == 0 && endTime != null && o.endTime != null)
+            result = o.endTime.compareTo(endTime);
+        if (result == 0 && startTime != null && o.startTime != null)
+            result = o.startTime.compareTo(startTime);
         if (result == 0 && taskDefinitionKey != null && o.taskDefinitionKey != null)
             result = taskDefinitionKey.compareTo(o.taskDefinitionKey);
         if (result == 0 && taskInstanceId != null && o.taskInstanceId != null)
@@ -245,7 +246,7 @@ public class Task implements Serializable, Comparable<Task> {
     }
 
     @JsonIgnore
-    public List<String> getCandidateAssigneeIds() {
+    public Set<String> getCandidateAssigneeIds() {
         return candidateAssigneeIds;
     }
 
@@ -303,7 +304,7 @@ public class Task implements Serializable, Comparable<Task> {
         private User assignee;
         private String assigneeId;
         private List<User> candidateAssignees;
-        private List<String> candidateAssigneeIds;
+        private Set<String> candidateAssigneeIds;
         private Date startTime;
         private Date endTime;
         private Date claimTime;
@@ -315,7 +316,7 @@ public class Task implements Serializable, Comparable<Task> {
         public Builder() {
             super();
             this.candidateAssignees = new ArrayList<User>();
-            this.candidateAssigneeIds = new ArrayList<String>();
+            this.candidateAssigneeIds = new HashSet<String>();
         }
 
         public Builder(Task task, Sanitizer sanitizer) {
@@ -341,7 +342,7 @@ public class Task implements Serializable, Comparable<Task> {
             } else {
                 this.candidateAssignees = new ArrayList<User>();
             }
-            this.candidateAssigneeIds = task.candidateAssigneeIds != null ? new ArrayList<String>(task.candidateAssigneeIds) : new ArrayList<String>();
+            this.candidateAssigneeIds = task.candidateAssigneeIds != null ? new HashSet<String>(task.candidateAssigneeIds) : new HashSet<String>();
             this.startTime = task.startTime;
             this.dueDate = task.dueDate;
             this.endTime = task.endTime;

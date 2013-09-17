@@ -35,7 +35,7 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                 options: [
                     {id: "statusOpen", label: "Open", key: "processStatus", value: "open", 'default': true },
                     {id: "statusComplete", label: "Complete", key: "processStatus", value: 'complete'},
-                    {id: "statusCancelled", label: "Deleted", key: "processStatus", value: 'cancelled'},
+                    {id: "statusCancelled", label: "Cancelled", key: "processStatus", value: 'cancelled'},
                     {id: "statusSuspended", label: "Suspended", key: "processStatus", value: 'suspended'},
                     {id: "statusAny", label: "Any status", key: "processStatus", value: 'all' }
                 ],

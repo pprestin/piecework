@@ -14,8 +14,8 @@
             {{#with task}}
                 <td><i class="icon-user"></i></td>
                 <td>{{taskLabel}}<br/>
-                    <span class="text-muted">{{taskAction}}</span></td>
-                <td>{{#unless endTime}}Pending{{else}}{{datediff endTime startTime}}{{/unless}}</td>
+                    <span class="text-muted">{{taskStatus}}</span></td>
+                <td>{{#if endTime}}{{datediff endTime startTime}}{{/if}}</td>
             {{/with}}
         {{/if}}
         {{#if operation}}

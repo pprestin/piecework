@@ -32,6 +32,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportResource;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
 import org.springframework.ldap.core.AuthenticationSource;
@@ -85,9 +86,6 @@ public class ApplicationConfiguration {
 
     @Autowired
     piecework.ApiResource[] apiResources;
-
-    @Autowired(required = false)
-    DisplayNameConverter displayNameConverter;
 
     @Autowired
     AnonymousFormResource formResource;
@@ -227,6 +225,11 @@ public class ApplicationConfiguration {
     }
 
     @Bean
+    public LdapSettings ldapSettings(Environment environment) {
+        return new LdapSettings(environment);
+    }
+
+    @Bean
     public SecuritySettings securitySettings(Environment environment) {
         return new SecuritySettings(environment);
     }
@@ -242,9 +245,14 @@ public class ApplicationConfiguration {
         LdapUserSearch userSearch = userSearch(contextSource, ldapSettings);
         LdapUserSearch userSearchInternal = userSearchInternal(environment, contextSource);
         LdapAuthoritiesPopulator authoritiesPopulator = authoritiesPopulator(ldapSettings, securitySettings);
-        CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper(ldapSettings);
+        CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper();
 
         return new LdapIdentityService(contextSource, userSearch, userSearchInternal, authoritiesPopulator, userDetailsMapper, ldapSettings, cacheManager());
+    }
+
+    @Bean
+    public CustomLdapUserDetailsMapper userDetailsMapper() throws Exception {
+        return new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper());
     }
 
     private LdapAuthenticator authenticator(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {
@@ -326,10 +334,6 @@ public class ApplicationConfiguration {
         return context;
     }
 
-    private LdapSettings ldapSettings(Environment environment) {
-        return new LdapSettings(environment);
-    }
-
     private SSLSocketFactory sslSocketFactory(SecuritySettings securitySettings) throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
         KeyManagerCabinet cabinet = keyManagerCabinet(securitySettings);
         String provider = null;
@@ -345,10 +349,6 @@ public class ApplicationConfiguration {
         String[] cs = SSLUtils.getCiphersuites(CIPHER_SUITES_LIST, SSLUtils.getSupportedCipherSuites(ctx), filter, java.util.logging.Logger.getLogger(this.getClass().getCanonicalName()), false);
 
         return new piecework.util.SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
-    }
-
-    private CustomLdapUserDetailsMapper userDetailsMapper(LdapSettings ldapSettings) throws Exception {
-        return new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), displayNameConverter, ldapSettings);
     }
 
     private LdapUserSearch userSearch(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {

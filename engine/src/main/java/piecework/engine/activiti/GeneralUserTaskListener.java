@@ -87,10 +87,11 @@ public class GeneralUserTaskListener implements TaskListener {
         String processDefinitionKey = String.class.cast(variables.get("PIECEWORK_PROCESS_DEFINITION_KEY"));
         String processInstanceId = String.class.cast(variables.get("PIECEWORK_PROCESS_INSTANCE_ID"));
 
-        String action = String.class.cast(delegateTask.getVariableLocal(taskDefinitionKey + "_action"));
+        String actionValue = String.class.cast(delegateTask.getVariableLocal(taskDefinitionKey + "_action"));
+        ActionType action = ActionType.COMPLETE;
 
-        if (StringUtils.isNotEmpty(action))
-            action = ActionType.valueOf(action).description();
+        if (StringUtils.isNotEmpty(actionValue))
+            action = ActionType.valueOf(actionValue);
 
         ProcessInstance processInstance = processInstanceRepository.findOne(processInstanceId);
         if (processInstance == null)
@@ -159,7 +160,7 @@ public class GeneralUserTaskListener implements TaskListener {
                 .taskLabel(delegateTask.getName())
                 .taskDescription(delegateTask.getDescription())
                 .taskStatus(Constants.TaskStatuses.OPEN)
-                .taskAction(action)
+                .taskAction(actionValue)
                 .startTime(delegateTask.getCreateTime())
                 .dueDate(delegateTask.getDueDate())
                 .priority(delegateTask.getPriority())
@@ -184,8 +185,11 @@ public class GeneralUserTaskListener implements TaskListener {
                 taskBuilder = new Task.Builder(task, new PassthroughSanitizer());
 
                 if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE)) {
-                    taskBuilder.taskAction(action)
-                        .taskStatus(Constants.TaskStatuses.COMPLETE)
+                    String taskStatus = action == ActionType.REJECT ? Constants.TaskStatuses.REJECTED : Constants.TaskStatuses.COMPLETE;
+
+                    taskBuilder.taskAction(actionValue)
+                        .taskStatus(taskStatus)
+                        .finished()
                         .endTime(new Date());
                 }
             }
