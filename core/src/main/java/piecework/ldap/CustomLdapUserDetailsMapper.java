@@ -39,7 +39,7 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implement
 
 	private final Log logger = LogFactory.getLog(CustomLdapUserDetailsMapper.class);
 
-    @Autowired
+    @Autowired(required = false)
     DisplayNameConverter displayNameConverter;
 
     @Autowired
