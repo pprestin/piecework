@@ -122,5 +122,9 @@ public class UserInputSanitizer implements Sanitizer {
 			}
 			LOG.warn(builder.toString());
 		}
-	}	
+	}
+
+    public void setAntisamyPolicy(Policy antisamyPolicy) {
+        this.antisamyPolicy = antisamyPolicy;
+    }
 }

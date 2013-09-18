@@ -97,7 +97,7 @@ public class SubmissionHandler {
                 List<? extends Value> values = entry.getValue();
 
                 for (Value value : values) {
-                    String actualValue = value.getValue();
+                    String actualValue = sanitizer.sanitize(value.getValue());
                     if (!handleStorage(template, submissionBuilder, name, actualValue, submitterId)) {
                         LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                     }

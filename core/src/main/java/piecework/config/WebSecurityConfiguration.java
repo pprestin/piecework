@@ -120,7 +120,7 @@ public class WebSecurityConfiguration {
 
     @Bean
     public Policy antisamyPolicy() throws Exception {
-        ClassPathResource policyResource = new ClassPathResource("META-INF/piecework/antisamy-1.4.3.xml");
+        ClassPathResource policyResource = new ClassPathResource("META-INF/piecework/antisamy-piecework-1.4.4.xml");
         URL policyUrl = policyResource.getURL();
 
         return Policy.getInstance(policyUrl);
