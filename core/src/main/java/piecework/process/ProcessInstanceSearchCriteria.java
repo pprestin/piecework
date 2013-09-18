@@ -297,6 +297,8 @@ public class ProcessInstanceSearchCriteria {
                                     this.taskStatus = value;
                                 else if (key.equals("initiatedBy"))
                                     this.initiatedBy = value;
+                                else if (key.equals("orderBy"))
+                                    this.orderBy = ProcessInstanceSearchCriteria.OrderBy.valueOf(value);
                                 else if (key.equals("completedAfter"))
                                     this.completedAfter = dateTimeFormatter.parseDateTime(value).toDate();
                                 else if (key.equals("completedBefore"))
