@@ -23,6 +23,7 @@ import piecework.enumeration.OperationType;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
 import piecework.model.*;
+import piecework.security.concrete.PassthroughSanitizer;
 
 import java.util.Date;
 import java.util.List;
@@ -83,11 +84,14 @@ public class ProcessHistoryService {
             }
         }
 
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         if (tasks != null) {
             for (Task task : tasks) {
                 String id = "task-" + i;
                 Date date = task.getStartTime();
-                history.event(new Event.Builder().id(id).type(EventType.TASK).task(task).date(date).user(task.getAssignee()).build());
+
+                Task decoratedTask = taskService.rebuildTask(task, passthroughSanitizer);
+                history.event(new Event.Builder().id(id).type(EventType.TASK).task(decoratedTask).date(date).user(decoratedTask.getAssignee()).build());
                 i++;
             }
         }

@@ -101,8 +101,8 @@ public class ValidationService {
             Map<String, List<Value>> submissionData = submission.getData();
             Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
-            ManyMap<String, Value> decryptedSubmissionData = decrypted(submissionData);
-            ManyMap<String, Value> decryptedInstanceData = decrypted(instanceData);
+            ManyMap<String, Value> decryptedSubmissionData = encryptionService.decrypt(submissionData);
+            ManyMap<String, Value> decryptedInstanceData = encryptionService.decrypt(instanceData);
 
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();
@@ -179,42 +179,6 @@ public class ValidationService {
             combined.addAll(previousValues);
 
         return combined;
-    }
-
-    public ManyMap<String, Value> decrypted(Map<String, List<Value>> original) {
-        ManyMap<String, Value> map = new ManyMap<String, Value>();
-
-        if (original != null && !original.isEmpty()) {
-            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
-                String key = entry.getKey();
-                try {
-                    List<Value> decrypted = decrypted(entry.getValue());
-                    map.put(key, decrypted);
-                } catch (Exception e) {
-                    LOG.error("Could not decrypt messages for " + key, e);
-                }
-            }
-        }
-
-        return map;
-    }
-
-    public List<Value> decrypted(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
-        if (values.isEmpty())
-            return Collections.emptyList();
-
-        List<Value> list = new ArrayList<Value>(values.size());
-        for (Value value : values) {
-            if (value instanceof Secret) {
-                Secret secret = Secret.class.cast(value);
-                String plaintext = encryptionService.decrypt(secret);
-                list.add(new Value(plaintext));
-            } else {
-                list.add(value);
-            }
-        }
-
-        return list;
     }
 
     public List<? extends Value> users(List<? extends Value> values) {

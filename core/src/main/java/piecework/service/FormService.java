@@ -237,7 +237,7 @@ public class FormService {
         return responseHandler.redirect(formRequest);
     }
 
-    public Response submitForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+    public Response submitForm(HttpServletRequest request, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
@@ -247,9 +247,16 @@ public class FormService {
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
 
         Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
-        ProcessInstance instance = null;
+        String processInstanceId = null;
 
-        if (task != null && task.getProcessInstanceId() != null)
+        if (task != null)
+            processInstanceId = task.getProcessInstanceId();
+
+        if (StringUtils.isEmpty(processInstanceId))
+            processInstanceId = formRequest.getProcessInstanceId();
+
+        ProcessInstance instance = null;
+        if (StringUtils.isNotEmpty(processInstanceId))
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
@@ -310,7 +317,7 @@ public class FormService {
                 }
             }
 
-            return responseHandler.handle(formRequest, process, task, validation);
+            return responseHandler.handle(formRequest, process, instance, task, validation);
         }
 
         return Response.noContent().build();

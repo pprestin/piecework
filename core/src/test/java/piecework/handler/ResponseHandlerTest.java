@@ -23,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.core.env.Environment;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.common.ViewContext;
@@ -57,9 +56,6 @@ public class ResponseHandlerTest {
     ContentRepository contentRepository;
 
     @Mock
-    Environment environment;
-
-    @Mock
     FormFactory formFactory;
 
     @Mock
@@ -82,7 +78,7 @@ public class ResponseHandlerTest {
 
         ViewContext version1 = new ViewContext("http://localhost:8000", "/secure", "/api", "/v1");
         Mockito.when(versions.getVersion1()).thenReturn(version1);
-        Mockito.when(formFactory.form(any(FormRequest.class), any(Process.class), any(Task.class), any(FormValidation.class))).thenReturn(form);
+        Mockito.when(formFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class))).thenReturn(form);
     }
 
     @Test
@@ -94,7 +90,7 @@ public class ResponseHandlerTest {
 
     @Test
     public void testHandleTask() throws StatusCodeError {
-        Response response = responseHandler.handle(formRequest, process, task, null);
+        Response response = responseHandler.handle(formRequest, process, null, task, null);
         Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         Assert.assertEquals(form.getFormInstanceId(), ((Form)response.getEntity()).getFormInstanceId());
     }

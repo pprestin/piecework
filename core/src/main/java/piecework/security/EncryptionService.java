@@ -17,9 +17,13 @@ package piecework.security;
 
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import piecework.model.Secret;
+import piecework.model.Value;
+import piecework.util.ManyMap;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -29,5 +33,9 @@ public interface EncryptionService {
     Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException;
 
     String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException;
+
+    ManyMap<String, Value> decrypt(Map<String, List<Value>> data);
+
+    List<Value> decrypt(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException;
 
 }

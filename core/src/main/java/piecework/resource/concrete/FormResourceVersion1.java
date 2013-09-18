@@ -18,7 +18,6 @@ package piecework.resource.concrete;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.service.FormService;
@@ -79,7 +78,7 @@ public class FormResourceVersion1 implements FormResource {
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.submitForm(request, getViewContext(), process, rawRequestId, body);
+        return formService.submitForm(request, process, rawRequestId, body);
     }
 
     @Override

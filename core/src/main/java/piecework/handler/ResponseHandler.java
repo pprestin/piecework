@@ -18,7 +18,6 @@ package piecework.handler;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
@@ -51,9 +50,6 @@ public class ResponseHandler {
     ContentRepository contentRepository;
 
     @Autowired
-    Environment environment;
-
-    @Autowired
     FormFactory formFactory;
 
     @Autowired
@@ -61,12 +57,12 @@ public class ResponseHandler {
 
 
     public Response handle(FormRequest formRequest, Process process) throws StatusCodeError {
-        return handle(formRequest, process, null, null);
+        return handle(formRequest, process, null, null, null);
     }
 
-    public Response handle(FormRequest formRequest, Process process, Task task, FormValidation validation) throws StatusCodeError {
+    public Response handle(FormRequest formRequest, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
 
-        Form form = formFactory.form(formRequest, process, task, validation);
+        Form form = formFactory.form(formRequest, process, instance, task, validation);
 
         if (form != null && form.getScreen() != null && !form.getScreen().isReadonly()) {
 

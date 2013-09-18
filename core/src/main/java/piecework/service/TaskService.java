@@ -327,13 +327,7 @@ public class TaskService {
                                     continue;
                             }
 
-                            Task.Builder builder = new Task.Builder(task, passthroughSanitizer);
-
-                            if (StringUtils.isNotEmpty(task.getAssigneeId())) {
-                                builder.assignee(identityService.getUser(task.getAssigneeId()));
-                            }
-
-                            resultsBuilder.item(builder.build(version1));
+                            resultsBuilder.item(rebuildTask(task, passthroughSanitizer));
                             count++;
                         }
                     }
@@ -381,6 +375,21 @@ public class TaskService {
         return false;
     }
 
+    public Task rebuildTask(Task task, Sanitizer sanitizer) {
+        Task.Builder builder = new Task.Builder(task, sanitizer);
+
+        if (StringUtils.isNotEmpty(task.getAssigneeId())) {
+            builder.assignee(identityService.getUser(task.getAssigneeId()));
+        }
+        Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
+        if (candidateAssigneeIds != null && !candidateAssigneeIds.isEmpty()) {
+            for (String candidateAssigneeId : candidateAssigneeIds) {
+                builder.candidateAssignee(identityService.getUser(candidateAssigneeId));
+            }
+        }
+
+        return builder.build(versions.getVersion1());
+    }
 
     private TaskCriteria overseerCriteria(Set<Process> allowedProcesses, MultivaluedMap<String, String> rawQueryParameters) {
         return new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer).build();

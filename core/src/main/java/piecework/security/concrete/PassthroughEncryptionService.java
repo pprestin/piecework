@@ -26,7 +26,7 @@ import java.security.GeneralSecurityException;
 /**
  * @author James Renfro
  */
-public class PassthroughEncryptionService implements EncryptionService {
+public class PassthroughEncryptionService extends BaseEncryptionService {
 
     @Override
     public Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException {

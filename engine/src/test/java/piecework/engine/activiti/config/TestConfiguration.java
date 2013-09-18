@@ -22,7 +22,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.support.LdapContextSource;
+import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.config.PropertiesConfiguration;
 import piecework.engine.activiti.ActivitiEngineProxy;
 import piecework.engine.ProcessEngineProxy;
@@ -40,13 +43,15 @@ import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
 
+import java.io.IOException;
+
 /**
  * @author James Renfro
  */
 @Configuration
 @Profile("test")
 @PropertySource("classpath:META-INF/test.properties")
-@Import({PropertiesConfiguration.class, EngineConfiguration.class})
+@Import({EngineConfiguration.class})
 public class TestConfiguration {
 
 	@Bean
@@ -115,6 +120,13 @@ public class TestConfiguration {
     @Bean
     public IdentityService userDetailsService() {
         return Mockito.mock(IdentityService.class);
+    }
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer loadProperties(Environment environment) throws IOException {
+        CustomPropertySourcesConfigurer configurer = new CustomPropertySourcesConfigurer();
+        configurer.setCustomLocations(environment);
+        return configurer;
     }
 	
 }

@@ -25,6 +25,7 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.security.EncryptionService;
 import piecework.validation.FormValidation;
 import piecework.service.ValidationService;
 import piecework.model.*;
@@ -50,24 +51,14 @@ public class FormFactory {
     IdentityHelper helper;
 
     @Autowired
-    ProcessInstanceService processInstanceService;
-
-    @Autowired
-    TaskService taskService;
-
-    @Autowired
-    ValidationService validationService;
+    EncryptionService encryptionService;
 
     @Autowired
     Versions versions;
 
-    public Form form(FormRequest request, Process process, Task task, FormValidation validation) throws StatusCodeError {
-        ProcessInstance instance = instance(process, request.getProcessInstanceId());
+    public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
         Screen screen = request.getScreen();
         String formInstanceId = request.getRequestId();
-
-        if (task == null)
-            task = task(process, request);
 
         if (screen == null)
             screen = screen(process, task);
@@ -80,22 +71,15 @@ public class FormFactory {
         ManyMap<String, Message> results = new ManyMap<String, Message>();
 
         if (instance != null) {
-            data.putAll(validationService.decrypted(instance.getData()));
+            data.putAll(encryptionService.decrypt(instance.getData()));
         }
 
         if (validation != null) {
-            data.putAll(validationService.decrypted(validation.getData()));
+            data.putAll(encryptionService.decrypt(validation.getData()));
             results.putAll(validation.getResults());
         }
 
         return worker.form(formInstanceId, data, results);
-    }
-
-    private ProcessInstance instance(Process process, String processInstanceId) throws StatusCodeError {
-        if (StringUtils.isEmpty(processInstanceId))
-            return null;
-
-        return processInstanceService.read(process.getProcessDefinitionKey(), processInstanceId, false);
     }
 
     private Screen screen(Process process, Task task) throws StatusCodeError {
@@ -119,15 +103,15 @@ public class FormFactory {
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
 
-    private Task task(Process process, FormRequest request) throws StatusCodeError {
-        if (request.getTask() != null)
-            return request.getTask();
-
-        if (StringUtils.isEmpty(request.getTaskId()))
-            return null;
-
-        return taskService.allowedTask(process, request.getTaskId(), false);
-    }
+//    private Task task(Process process, FormRequest request) throws StatusCodeError {
+//        if (request.getTask() != null)
+//            return request.getTask();
+//
+//        if (StringUtils.isEmpty(request.getTaskId()))
+//            return null;
+//
+//        return taskService.allowedTask(process, request.getTaskId(), false);
+//    }
 
     public static Field getField(Process process, Screen screen, String fieldName) {
         if (process == null || screen == null || StringUtils.isEmpty(fieldName))

@@ -28,10 +28,8 @@ import org.springframework.stereotype.Service;
 
 import piecework.Versions;
 import piecework.service.FormService;
-import piecework.model.Form;
 import piecework.persistence.ProcessRepository;
 import piecework.security.Sanitizer;
-import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.form.*;
 import piecework.model.Process;
@@ -77,7 +75,7 @@ public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.submitForm(request, versions.getVersion1(), process, rawRequestId, body);
+        return formService.submitForm(request, process, rawRequestId, body);
     }
 
     @Override

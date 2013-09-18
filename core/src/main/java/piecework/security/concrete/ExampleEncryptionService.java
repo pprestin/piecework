@@ -41,7 +41,7 @@ import java.util.Date;
  *
  * @author James Renfro
  */
-public class ExampleEncryptionService implements EncryptionService {
+public class ExampleEncryptionService extends BaseEncryptionService {
 
     @Autowired
     Environment environment;

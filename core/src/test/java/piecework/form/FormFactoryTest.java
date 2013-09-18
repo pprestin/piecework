@@ -61,7 +61,7 @@ public class FormFactoryTest {
         Process process = ExampleFactory.exampleProcess();
         FormRequest request = new FormRequest.Builder().build();
 
-        Form form = formFactory.form(request, process, null, null);
+        Form form = formFactory.form(request, process, instance, null, null);
 
         Assert.assertNotNull(form);
         Assert.assertEquals("First screen", form.getScreen().getTitle());
@@ -74,7 +74,7 @@ public class FormFactoryTest {
         Process process = ExampleFactory.exampleProcess();
         FormRequest request = new FormRequest.Builder().build();
         Task task = new Task.Builder().taskDefinitionKey("Review").build();
-        Form form = formFactory.form(request, process, task, null);
+        Form form = formFactory.form(request, process, instance, task, null);
 
         Assert.assertNotNull(form);
         Assert.assertEquals("Review screen", form.getScreen().getTitle());
