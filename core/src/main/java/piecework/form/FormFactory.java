@@ -57,6 +57,11 @@ public class FormFactory {
     Versions versions;
 
     public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
+        long start = 0;
+
+        if (LOG.isDebugEnabled())
+            start = System.currentTimeMillis();
+
         Screen screen = request.getScreen();
         String formInstanceId = request.getRequestId();
 
@@ -79,7 +84,11 @@ public class FormFactory {
             results.putAll(validation.getResults());
         }
 
-        return worker.form(formInstanceId, data, results);
+        Form form = worker.form(formInstanceId, data, results);
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Constructed form in " + (System.currentTimeMillis() - start) + " ms");
+        return form;
     }
 
     private Screen screen(Process process, Task task) throws StatusCodeError {

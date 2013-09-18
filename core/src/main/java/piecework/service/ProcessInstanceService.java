@@ -109,6 +109,12 @@ public class ProcessInstanceService {
 
     public ProcessInstance read(Process process, String rawProcessInstanceId, boolean full) throws StatusCodeError {
         String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
+        long start = 0;
+        if (LOG.isDebugEnabled()) {
+            start = System.currentTimeMillis();
+            LOG.debug("Retrieving instance for " + processInstanceId);
+        }
+
         ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
 
         if (instance == null || !instance.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
@@ -124,6 +130,8 @@ public class ProcessInstanceService {
 
             Set<String> attachmentIds = instance.getAttachmentIds();
             if (attachmentIds != null && !attachmentIds.isEmpty()) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Retrieving all attachments for instance " + processInstanceId);
                 Iterable<Attachment> attachments = attachmentRepository.findAll(attachmentIds);
 
                 for (Attachment attachment : attachments) {
@@ -131,8 +139,14 @@ public class ProcessInstanceService {
                 }
             }
 
+            if (LOG.isDebugEnabled())
+                LOG.debug("Retrieved instance and attachments for " + processInstanceId + " in " + (System.currentTimeMillis() - start) + " ms");
+
             return builder.build(viewContext);
         }
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Retrieved instance for " + processInstanceId + " in " + (System.currentTimeMillis() - start) + " ms");
 
         return instance;
     }
@@ -279,8 +293,11 @@ public class ProcessInstanceService {
             time = System.currentTimeMillis();
 
         List<Attachment> attachments = validation.getAttachments();
-        if (attachments != null && !attachments.isEmpty())
+        if (attachments != null && !attachments.isEmpty()) {
+            if (LOG.isDebugEnabled())
+                LOG.debug("Persisting " + attachments.size() + " attachments");
             attachments = attachmentRepository.save(attachments);
+        }
 
         Map<String, List<Value>> data = isAttachment ? null : validation.getData();
 

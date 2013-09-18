@@ -114,12 +114,10 @@ public class ProcessInstance implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-//    @DBRef
     private final List<String> submissionIds;
 
     @XmlElementWrapper(name="attachments")
     @XmlElementRef
-//    @DBRef
     @Transient
     private final Set<Attachment> attachments;
 

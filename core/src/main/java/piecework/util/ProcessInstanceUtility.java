@@ -34,8 +34,11 @@ import java.util.*;
 public class ProcessInstanceUtility {
 
     public static String processInstanceLabel(Process process, ProcessInstance instance, FormValidation validation, String submissionLabel) {
-        String processInstanceLabel = submissionLabel;
+        String processInstanceLabel = instance != null ? instance.getProcessInstanceLabel() : null;
         String processInstanceLabelTemplate = process.getProcessInstanceLabelTemplate();
+
+        if (StringUtils.isEmpty(processInstanceLabel))
+            processInstanceLabel = submissionLabel;
 
         if (StringUtils.isEmpty(processInstanceLabel) && processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
             Map<String, Value> scopes = new HashMap<String, Value>();

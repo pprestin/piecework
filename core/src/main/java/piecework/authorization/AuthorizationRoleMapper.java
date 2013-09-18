@@ -15,6 +15,7 @@
  */
 package piecework.authorization;
 
+import org.apache.log4j.Logger;
 import piecework.model.Authorization;
 
 import java.util.*;
@@ -29,6 +30,8 @@ import piecework.persistence.AuthorizationRepository;
  */
 public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
 
+    private static final Logger LOG = Logger.getLogger(AuthorizationRoleMapper.class);
+
     @Autowired
     AuthorizationRepository repository;
 
@@ -36,7 +39,11 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
 	public Collection<? extends GrantedAuthority> mapAuthorities(Collection<? extends GrantedAuthority> authorities) {
 		
 		if (authorities != null) {
-			Collection<ResourceAuthority> mapped = new ArrayList<ResourceAuthority>();
+			long start = 0;
+            if (LOG.isDebugEnabled())
+                start = System.currentTimeMillis();
+
+            Collection<ResourceAuthority> mapped = new ArrayList<ResourceAuthority>();
 			Set<String> authorizationIds = new HashSet<String>();
             for (GrantedAuthority authority : authorities) {
 				String authorizationId = authority.getAuthority();
@@ -56,6 +63,9 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
                     }
                 }
             }
+
+            if (LOG.isDebugEnabled())
+                LOG.debug("Mapped authorization roles in " + (System.currentTimeMillis() - start) + " ms");
 
 			return mapped;
 		}

@@ -362,7 +362,7 @@ public class TaskService {
         }
 
         if (LOG.isDebugEnabled())
-            LOG.debug("Retrieving tasks took " + (System.currentTimeMillis() - time) + " ms");
+            LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
 
         return resultsBuilder.build();
     }

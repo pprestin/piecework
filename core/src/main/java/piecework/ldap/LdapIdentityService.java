@@ -123,14 +123,25 @@ public class LdapIdentityService implements IdentityService {
         Cache cache = cacheManager.getCache("loadUserByUsername");
         Cache.ValueWrapper wrapper = cache.get(username);
 
-        if (wrapper != null)
-            return (UserDetails) wrapper.get();
+        UserDetails userDetails = null;
+
+        if (wrapper != null) {
+            userDetails = (UserDetails) wrapper.get();
+            if (userDetails == null)
+                throw new UsernameNotFoundException(username);
+
+            return userDetails;
+        }
 
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieving user by username " + username);
 
-        UserDetails userDetails = delegate.loadUserByUsername(username);
-        cache.put(username, userDetails);
+
+        try {
+            userDetails = delegate.loadUserByUsername(username);
+        } finally {
+            cache.put(username, userDetails);
+        }
         return userDetails;
     }
 
