@@ -59,6 +59,9 @@ public class FormRequest {
     private final String submissionType;
 
     @Transient
+    private final ProcessInstance instance;
+
+    @Transient
     private final Task task;
 
     private FormRequest() {
@@ -80,6 +83,7 @@ public class FormRequest {
         this.interaction = builder.interaction;
         this.screen = builder.screen;
         this.submissionType = builder.submissionType;
+        this.instance = builder.instance;
         this.task = builder.task;
     }
 
@@ -139,6 +143,10 @@ public class FormRequest {
         return submissionType;
     }
 
+    public ProcessInstance getInstance() {
+        return instance;
+    }
+
     public Task getTask() {
         return task;
     }
@@ -156,6 +164,7 @@ public class FormRequest {
         private String certificateSubject;
         private String certificateIssuer;
         private String taskId;
+        private ProcessInstance instance;
         private Task task;
         private Interaction interaction;
         private Screen screen;
@@ -253,6 +262,13 @@ public class FormRequest {
 
         public Builder submissionType(String submissionType) {
             this.submissionType = submissionType;
+            return this;
+        }
+
+        public Builder instance(ProcessInstance instance) {
+            this.instance = instance;
+            if (instance != null)
+                this.processInstanceId = instance.getProcessInstanceId();
             return this;
         }
 

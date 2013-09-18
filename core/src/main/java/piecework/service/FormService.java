@@ -162,7 +162,7 @@ public class FormService {
 
         if (StringUtils.isNotEmpty(requestId)) {
             try {
-                formRequest = requestHandler.create(requestDetails, process, null, requestId, null);
+                formRequest = requestHandler.create(requestDetails, process, requestId, null);
             } catch (NotFoundError e) {
                 formRequest = requestHandler.handle(requestDetails, requestId);
             }

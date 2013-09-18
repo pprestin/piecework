@@ -28,6 +28,8 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
+import piecework.security.concrete.PassthroughSanitizer;
+import piecework.service.ProcessInstanceService;
 import piecework.service.TaskService;
 import piecework.util.ConstraintUtil;
 
@@ -46,6 +48,9 @@ public class RequestHandler {
 
     @Autowired
     IdentityHelper identityHelper;
+
+    @Autowired
+    ProcessInstanceService processInstanceService;
 
     @Autowired
     TaskService taskService;
@@ -80,10 +85,8 @@ public class RequestHandler {
         Map<String, List<Value>> formValueMap = processInstance != null ? processInstance.getData() : null;
 
         Screen currentScreen = null;
-        String taskId = null;
 
         if (task != null) {
-            taskId = task.getTaskInstanceId();
             processInstanceId = task.getProcessInstanceId();
         }
 
@@ -147,6 +150,7 @@ public class RequestHandler {
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(processInstanceId)
+                .instance(processInstance)
                 .task(task)
                 .interaction(interaction)
                 .screen(nextScreen)
@@ -165,13 +169,17 @@ public class RequestHandler {
         return requestRepository.save(formRequestBuilder.build());
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, Process process, String taskId, FormRequest previousFormRequest) throws StatusCodeError {
         Task task = null;
         if (StringUtils.isNotEmpty(taskId)) {
             task = taskService.allowedTask(process, taskId, false);
 
             if (task == null)
                 throw new NotFoundError();
+        }
+        ProcessInstance processInstance = null;
+        if (task != null) {
+            processInstance = processInstanceService.read(process, task.getProcessInstanceId(), false);
         }
 
         return create(requestDetails, process, processInstance, task, previousFormRequest, null);
@@ -224,7 +232,15 @@ public class RequestHandler {
             }
         }
 
-        return formRequest;
+        ProcessInstance instance = formRequest.getInstance();
+
+        if (instance == null && StringUtils.isNotEmpty(formRequest.getProcessDefinitionKey()) && StringUtils.isNotEmpty(formRequest.getProcessInstanceId()))
+            instance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId(), false);
+
+        FormRequest.Builder builder = new FormRequest.Builder(formRequest, new PassthroughSanitizer())
+                .instance(instance);
+
+        return builder.build();
     }
 
 }
