@@ -44,8 +44,6 @@ import java.util.Set;
 @Service
 public class ProcessService {
 
-    @Autowired
-    Environment environment;
 
     @Autowired
     IdentityHelper helper;

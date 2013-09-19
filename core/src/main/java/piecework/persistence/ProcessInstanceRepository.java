@@ -18,6 +18,7 @@ package piecework.persistence;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import piecework.model.*;
+import piecework.persistence.custom.ProcessInstanceRepositoryCustom;
 
 import java.util.List;
 import java.util.Set;
@@ -25,7 +26,7 @@ import java.util.Set;
 /**
  * @author James Renfro
  */
-public interface ProcessInstanceRepository extends MongoRepository<ProcessInstance, String> {
+public interface ProcessInstanceRepository extends MongoRepository<ProcessInstance, String>, ProcessInstanceRepositoryCustom {
 
     @Query(value="{ 'processDefinitionKey' : ?0, 'engineProcessInstanceId' : ?1 }")
     ProcessInstance findByProcessDefinitionKeyAndEngineProcessInstanceId(String processDefinitionKey, String engineProcessInstanceId);

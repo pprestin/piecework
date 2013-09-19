@@ -231,7 +231,7 @@ public class ProcessInstanceSearchCriteria {
         private Date completedBefore;
         private Date completedAfter;
         private String initiatedBy;
-        private OrderBy orderBy;
+        private OrderBy orderBy = OrderBy.START_TIME_DESC;
         private Integer firstResult;
         private Integer maxResults;
         private List<String> keywords;

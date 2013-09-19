@@ -18,8 +18,11 @@ package piecework.service;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.CommandExecutor;
@@ -27,7 +30,6 @@ import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
 import piecework.enumeration.OperationType;
-import piecework.process.ProcessInstanceQueryBuilder;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.validation.SubmissionTemplate;
 import piecework.model.SearchResults;
@@ -62,9 +64,6 @@ public class ProcessInstanceService {
 
     @Autowired
     IdentityHelper helper;
-
-    @Autowired
-    MongoTemplate mongoOperations;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
@@ -185,16 +184,17 @@ public class ProcessInstanceService {
         }
     }
 
-    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
+
+        ViewContext version1 = versions.getVersion1();
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Workflows")
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
-                .link(viewContext.getApplicationUri());
+                .link(version1.getApplicationUri());
 
-        ViewContext version1 = versions.getVersion1();
         Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
@@ -213,59 +213,103 @@ public class ProcessInstanceService {
                 }
             }
 
-            if (executionCriteria.getProcessInstanceIds().size() == 1) {
-                // If the user provided an actual instance id, then we can look it up directly and ignore the other parameters
-                String processInstanceId = executionCriteria.getProcessInstanceIds().iterator().next();
-                resultsBuilder.parameter("processInstanceId", processInstanceId);
+            int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
+            int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
 
-                if (StringUtils.isNotEmpty(processInstanceId)) {
-                    ProcessInstance single = processInstanceRepository.findOne(processInstanceId);
+            Sort.Direction direction = Sort.Direction.DESC;
+            String sortProperty = "startTime";
+            switch (executionCriteria.getOrderBy()) {
+            case START_TIME_ASC:
+                direction = Sort.Direction.ASC;
+                sortProperty = "startTime";
+                break;
+            case START_TIME_DESC:
+                direction = Sort.Direction.DESC;
+                sortProperty = "startTime";
+                break;
+            case END_TIME_ASC:
+                direction = Sort.Direction.ASC;
+                sortProperty = "endTime";
+                break;
+            case END_TIME_DESC:
+                direction = Sort.Direction.DESC;
+                sortProperty = "endTime";
+                break;
+            }
 
-                    // Verify that the user is allowed to see processes like this instance
-                    if (single != null && single.getProcessDefinitionKey() != null && allowedProcesses.contains(single.getProcessDefinitionKey())) {
-                        resultsBuilder.item(single);
-                        resultsBuilder.total(Long.valueOf(1));
-                        resultsBuilder.firstResult(1);
-                        resultsBuilder.maxResults(1);
-                    }
-                }
-            } else {
-                // Otherwise, look up all instances that match the query
-                Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
-                // Don't include form data in the result
-                org.springframework.data.mongodb.core.query.Field field = query.fields();
-                field.exclude("data");
+            Pageable pageable = new PageRequest(firstResult, maxResult, new Sort(direction, sortProperty));
+            Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
 
-//                query.fields().exclude("attachments");
-
-                List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
-                if (processInstances != null && !processInstances.isEmpty()) {
-                    for (ProcessInstance processInstance : processInstances) {
-                        resultsBuilder.item(new ProcessInstance.Builder(processInstance).build(version1));
-                    }
-
-                    int size = processInstances.size();
-                    if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
-                        long total = mongoOperations.count(query, ProcessInstance.class);
-
-                        if (executionCriteria.getFirstResult() != null)
-                            resultsBuilder.firstResult(executionCriteria.getFirstResult());
-                        else
-                            resultsBuilder.firstResult(1);
-
-                        if (executionCriteria.getMaxResults() != null)
-                            resultsBuilder.maxResults(executionCriteria.getMaxResults());
-                        else
-                            resultsBuilder.maxResults(size);
-
-                        resultsBuilder.total(total);
-                    } else {
-                        resultsBuilder.firstResult(1);
-                        resultsBuilder.maxResults(size);
-                        resultsBuilder.total(Long.valueOf(size));
-                    }
+            if (page.hasContent()) {
+                for (ProcessInstance instance : page.getContent()) {
+                    resultsBuilder.item(new ProcessInstance.Builder(instance).build(version1));
                 }
             }
+
+            resultsBuilder.page(page, pageable);
+
+//            if (executionCriteria.getProcessInstanceIds().size() == 1) {
+//                // If the user provided an actual instance id, then we can look it up directly and ignore the other parameters
+//                String processInstanceId = executionCriteria.getProcessInstanceIds().iterator().next();
+//                resultsBuilder.parameter("processInstanceId", processInstanceId);
+//
+//                if (StringUtils.isNotEmpty(processInstanceId)) {
+//                    ProcessInstance single = processInstanceRepository.findOne(processInstanceId);
+//
+//                    // Verify that the user is allowed to see processes like this instance
+//                    if (single != null && single.getProcessDefinitionKey() != null && allowedProcesses.contains(single.getProcessDefinitionKey())) {
+//                        resultsBuilder.item(single);
+//                        resultsBuilder.total(Long.valueOf(1));
+//                        resultsBuilder.firstResult(1);
+//                        resultsBuilder.maxResults(1);
+//                    }
+//                }
+//            } else {
+//
+//                SearchResults interimResults = processInstanceRepository.findByCriteria(executionCriteria);
+//
+//                resultsBuilder.items(interimResults.getList());
+//                resultsBuilder.firstResult(interimResults.getFirstResult());
+//                resultsBuilder.maxResults(interimResults.getMaxResults());
+//                resultsBuilder.total(interimResults.getTotal());
+//                resultsBuilder.parameters(interimResults.getParameters());
+//
+////                // Otherwise, look up all instances that match the query
+////                Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
+////                // Don't include form data in the result
+////                org.springframework.data.mongodb.core.query.Field field = query.fields();
+////                field.exclude("data");
+////
+//////                query.fields().exclude("attachments");
+////
+////                List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
+////                if (processInstances != null && !processInstances.isEmpty()) {
+////                    for (ProcessInstance processInstance : processInstances) {
+////                        resultsBuilder.item(new ProcessInstance.Builder(processInstance).build(version1));
+////                    }
+////
+////                    int size = processInstances.size();
+////                    if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
+////                        long total = mongoOperations.count(query, ProcessInstance.class);
+////
+////                        if (executionCriteria.getFirstResult() != null)
+////                            resultsBuilder.firstResult(executionCriteria.getFirstResult());
+////                        else
+////                            resultsBuilder.firstResult(1);
+////
+////                        if (executionCriteria.getMaxResults() != null)
+////                            resultsBuilder.maxResults(executionCriteria.getMaxResults());
+////                        else
+////                            resultsBuilder.maxResults(size);
+////
+////                        resultsBuilder.total(total);
+////                    } else {
+////                        resultsBuilder.firstResult(1);
+////                        resultsBuilder.maxResults(size);
+////                        resultsBuilder.total(Long.valueOf(size));
+////                    }
+////                }
+//            }
         }
         return resultsBuilder.build();
     }

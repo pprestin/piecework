@@ -334,7 +334,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	@Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-		return processInstanceService.search(rawQueryParameters, versions.getVersion1());
+		return processInstanceService.search(rawQueryParameters);
 	}
 
     @Override

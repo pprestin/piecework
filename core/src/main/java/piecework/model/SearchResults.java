@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import piecework.common.ViewContext;
 import piecework.util.ManyMap;
 
@@ -290,6 +292,13 @@ public class SearchResults implements Serializable {
 			this.page = page;
 			return this;
 		}
+
+        public Builder page(Page<?> page, Pageable pageable) {
+            this.total = page.getTotalElements();
+            this.firstResult = pageable.getOffset() + 1;
+            this.maxResults = page.getSize();
+            return this;
+        }
 		
 		public Builder moreResults(Boolean moreResults) {
 			this.moreResults = moreResults;

@@ -20,6 +20,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -39,6 +43,7 @@ import piecework.model.Process;
 import piecework.CommandExecutor;
 import piecework.command.TaskCommand;
 import piecework.identity.IdentityHelper;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceQueryBuilder;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.Sanitizer;
@@ -70,7 +75,7 @@ public class TaskService {
     IdentityService identityService;
 
     @Autowired
-    MongoTemplate mongoOperations;
+    ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
     Sanitizer sanitizer;
@@ -297,21 +302,39 @@ public class TaskService {
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
             resultsBuilder.parameters(executionCriteria.getSanitizedParameters());
 
-            // Otherwise, look up all instances that match the query
-            Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
-            // Don't include form data in the result
-            org.springframework.data.mongodb.core.query.Field field = query.fields();
-            field.exclude("data");
+            int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
+            int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
 
-            List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
-            if (processInstances != null && !processInstances.isEmpty()) {
-                int count = 0;
+            Sort.Direction direction = Sort.Direction.DESC;
+            String sortProperty = "startTime";
+            switch (executionCriteria.getOrderBy()) {
+                case START_TIME_ASC:
+                    direction = Sort.Direction.ASC;
+                    sortProperty = "startTime";
+                    break;
+                case START_TIME_DESC:
+                    direction = Sort.Direction.DESC;
+                    sortProperty = "startTime";
+                    break;
+                case END_TIME_ASC:
+                    direction = Sort.Direction.ASC;
+                    sortProperty = "endTime";
+                    break;
+                case END_TIME_DESC:
+                    direction = Sort.Direction.DESC;
+                    sortProperty = "endTime";
+                    break;
+            }
 
+            Pageable pageable = new PageRequest(firstResult, maxResult, new Sort(direction, sortProperty));
+            Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
+
+            if (page.hasContent()) {
                 String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
                 String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.ALL;
-
-                for (ProcessInstance processInstance : processInstances) {
-                    Set<Task> tasks = processInstance.getTasks();
+                int count = 0;
+                for (ProcessInstance instance : page.getContent()) {
+                    Set<Task> tasks = instance.getTasks();
                     if (tasks != null && !tasks.isEmpty()) {
                         for (Task task : tasks) {
                             if (!processStatus.equals(Constants.ProcessStatuses.ALL) &&
@@ -358,6 +381,69 @@ public class TaskService {
                     resultsBuilder.total(Long.valueOf(count));
                 }
             }
+
+
+//            // Otherwise, look up all instances that match the query
+//            Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
+//            // Don't include form data in the result
+//            org.springframework.data.mongodb.core.query.Field field = query.fields();
+//            field.exclude("data");
+//
+//            List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
+//            if (processInstances != null && !processInstances.isEmpty()) {
+//                int count = 0;
+//
+//                String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
+//                String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.ALL;
+//
+//                for (ProcessInstance processInstance : processInstances) {
+//                    Set<Task> tasks = processInstance.getTasks();
+//                    if (tasks != null && !tasks.isEmpty()) {
+//                        for (Task task : tasks) {
+//                            if (!processStatus.equals(Constants.ProcessStatuses.ALL) &&
+//                                    !processStatus.equalsIgnoreCase(task.getTaskStatus()))
+//                                continue;
+//
+//                            if (!taskStatus.equals(Constants.TaskStatuses.ALL) &&
+//                                    !taskStatus.equalsIgnoreCase(task.getTaskStatus()))
+//                                continue;
+//
+//                            if (!overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())) {
+//                                if (!task.getCandidateAssignees().contains(currentUserId) && !task.getAssigneeId().equals(currentUserId))
+//                                    continue;
+//                            }
+//
+//                            resultsBuilder.item(rebuildTask(task, passthroughSanitizer));
+//                            count++;
+//                        }
+//                    }
+//                }
+//
+//                if (count == 0 && environment.getProperty("synchronize.tasks", Boolean.class, Boolean.FALSE)) {
+//                    SearchResults internalTasks = allowedTasks(rawQueryParameters);
+//                    if (internalTasks.getTotal() != null && internalTasks.getTotal().longValue() > 0) {
+//                        resultsBuilder.items(internalTasks.getList());
+//                    }
+//                }
+//
+//                if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
+//                    if (executionCriteria.getFirstResult() != null)
+//                        resultsBuilder.firstResult(executionCriteria.getFirstResult());
+//                    else
+//                        resultsBuilder.firstResult(1);
+//
+//                    if (executionCriteria.getMaxResults() != null)
+//                        resultsBuilder.maxResults(executionCriteria.getMaxResults());
+//                    else
+//                        resultsBuilder.maxResults(count);
+//
+//                    resultsBuilder.total(Long.valueOf(count));
+//                } else {
+//                    resultsBuilder.firstResult(1);
+//                    resultsBuilder.maxResults(count);
+//                    resultsBuilder.total(Long.valueOf(count));
+//                }
+//            }
 
         }
 

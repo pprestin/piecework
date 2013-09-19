@@ -52,7 +52,7 @@ import javax.net.ssl.SSLSocketFactory;
  * @author James Renfro
  */
 @Configuration
-@EnableMongoRepositories(basePackages="piecework.persistence")
+@EnableMongoRepositories(basePackages="piecework.persistence",repositoryImplementationPostfix="CustomImpl")
 public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);
