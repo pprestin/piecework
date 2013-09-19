@@ -17,6 +17,7 @@ package piecework.test.config;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -27,6 +28,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -35,6 +38,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.ldap.core.support.LdapContextSource;
 import piecework.CommandExecutor;
 import piecework.Versions;
+import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.service.*;
 import piecework.Registry;
 import piecework.common.UuidGenerator;
@@ -348,6 +352,16 @@ public class UnitTestConfiguration {
 
         @Override
         public List<ProcessInstance> findByProcessDefinitionKeyInAndEngineProcessInstanceIdInAndKeyword(Iterable<String> processDefinitionKeys, Iterable<String> engineProcessInstanceIds, String keyword) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public Page<ProcessInstance> findByCriteria(ProcessInstanceSearchCriteria criteria, Pageable pageable) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public ProcessInstance update(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }

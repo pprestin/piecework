@@ -60,7 +60,7 @@ public class UpdateInstanceCommand extends InstanceCommand {
             throw new InternalServerError();
 
         ProcessInstanceRepository repository = commandExecutor.getProcessInstanceRepository();
-        repository.update(instance.getProcessInstanceId(), label, data, attachments, submission);
+        instance = repository.update(instance.getProcessInstanceId(), label, data, attachments, submission);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Executed update instance command " + this.toString());
@@ -74,102 +74,5 @@ public class UpdateInstanceCommand extends InstanceCommand {
 
         return "{ processDefinitionKey: \"" + processDefinitionKey + "\", processInstanceId: \"" + processInstanceId + "\" }";
     }
-
-
-//    protected ProcessInstance save(ProcessInstanceRepository processInstanceRepository) {
-//        ProcessInstance instance = processInstanceRepository.findOne(this.instance.getProcessInstanceId());
-//        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
-//                .attachments(attachments)
-//                .data(data)
-//                .submission(submission);
-//
-//        if (StringUtils.isNotEmpty(label))
-//            builder.processInstanceLabel(label);
-//
-//        return processInstanceRepository.save(builder.build());
-//    }
-//
-//    protected ProcessInstance update(MongoTemplate operations) {
-//        Query query = new Query(where("_id").is(instance.getProcessInstanceId()));
-//        Update update = new Update();
-//
-//        attachments(update, operations);
-//        data(update);
-//        label(update);
-//        submission(update, operations);
-//
-//        return operations.findAndModify(query, update, ProcessInstance.class);
-//    }
-//
-//    private void attachments(Update update, MongoTemplate operations) {
-//        if (attachments != null && !attachments.isEmpty()) {
-//            DBRef[] attachmentRefs = new DBRef[attachments.size()];
-//            for (int i=0;i<attachments.size();i++) {
-//                attachmentRefs[i] = new DBRef(operations.getDb(), operations.getCollectionName(Attachment.class), new ObjectId(attachments.get(i).getAttachmentId()));
-//            }
-//            update.pushAll("attachments", attachmentRefs);
-//        }
-//    }
-//
-//    private void data(Update update) {
-//        if (data != null && !data.isEmpty()) {
-//            for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
-//                String key = "data." + entry.getKey();
-//                List<Value> values = entry.getValue();
-//
-//                List<File> files = null;
-//                List<User> users = null;
-//                if (values != null) {
-//                    for (Value value : values) {
-//                        if (value instanceof File) {
-//                            File file = File.class.cast(value);
-//
-//                            if (StringUtils.isNotEmpty(file.getName())) {
-//                                update.addToSet("keywords", file.getName().toLowerCase());
-//                                if (files == null)
-//                                    files = new ArrayList<File>(values.size());
-//                                files.add(file);
-//                            }
-//                        } else if (value instanceof User) {
-//                            User user = User.class.cast(value);
-//                            if (user != null) {
-//                                if (user.getDisplayName() != null)
-//                                    update.addToSet("keywords", user.getDisplayName());
-//                                if (user.getVisibleId() != null)
-//                                    update.addToSet("keywords", user.getVisibleId());
-//                                if (user.getUserId() != null)
-//                                    update.addToSet("keywords", user.getUserId());
-//                                if (user.getEmailAddress() != null)
-//                                    update.addToSet("keywords", user.getEmailAddress());
-//
-//                                if (users == null)
-//                                    users = new ArrayList<User>(values.size());
-//                                users.add(user);
-//                            }
-//                        } else if (! (value instanceof Secret)) {
-//                            if (StringUtils.isNotEmpty(value.getValue()))
-//                                update.addToSet("keywords", value.getValue().toLowerCase());
-//                        }
-//                    }
-//                }
-//                if (files != null)
-//                    update.set(key, files);
-//                else if (users != null)
-//                    update.set(key, users);
-//                else
-//                    update.set(key, values);
-//            }
-//        }
-//    }
-//
-//    private void label(Update update) {
-//        if (StringUtils.isNotEmpty(label))
-//            update.set("processInstanceLabel", label);
-//    }
-//
-//    private void submission(Update update, MongoTemplate operations) {
-//        if (submission != null)
-//            update.push("submissions", new DBRef(operations.getDb(), operations.getCollectionName(Submission.class), new ObjectId(submission.getSubmissionId())));
-//    }
 
 }
