@@ -59,7 +59,6 @@ public class StartInstanceCommand extends InstanceCommand {
         ProcessEngineFacade facade = commandExecutor.getFacade();
         IdentityHelper helper = commandExecutor.getHelper();
         IdentityService identityService = commandExecutor.getIdentityService();
-        MongoTemplate operations = commandExecutor.getMongoOperations();
         ProcessInstanceRepository repository = commandExecutor.getProcessInstanceRepository();
 
         ProcessInstance.Builder builder;
@@ -99,13 +98,7 @@ public class StartInstanceCommand extends InstanceCommand {
             builder.processInstanceId(stored.getProcessInstanceId());
             builder.engineProcessInstanceId(engineInstanceId);
 
-            WriteResult result = operations.updateFirst(new Query(where("_id").is(stored.getProcessInstanceId())),
-                    new Update().set("engineProcessInstanceId", engineInstanceId),
-                    ProcessInstance.class);
-
-            String error = result.getError();
-            if (StringUtils.isNotEmpty(error))
-                LOG.error("Unable to correctly save engine instance id " + engineInstanceId + " for " + stored.getProcessInstanceId() + ": " + error);
+            repository.update(stored.getProcessInstanceId(), engineInstanceId);
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Executed start instance command " + this.toString());

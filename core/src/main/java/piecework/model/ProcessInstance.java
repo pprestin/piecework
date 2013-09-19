@@ -147,45 +147,6 @@ public class ProcessInstance implements Serializable {
         this.attachmentIds = Collections.unmodifiableSet(builder.attachmentIds);
         this.keywords = builder.keywords;
         this.tasks = Collections.unmodifiableMap(builder.tasks);
-//        Set<Attachment> attachments = null;
-//        if (includeSubresources) {
-//            attachments = builder.attachments != null && !builder.attachments.isEmpty() ? new TreeSet<Attachment>(builder.attachments.size()) : Collections.<Attachment>emptyList();
-//            if (builder.attachments != null) {
-//                for (Attachment attachment : builder.attachments) {
-//                    attachments.add(new Attachment.Builder(attachment).build(context));
-//                }
-//            }
-//            if (builder.data != null && !builder.data.isEmpty()) {
-//                ManyMap<String, Value> data = new ManyMap<String, Value>();
-//                for (Map.Entry<String, List<Value>> entry : builder.data.entrySet()) {
-//
-//                    List<Value> values = entry.getValue();
-//                    if (values == null)
-//                        continue;
-//
-//                    String fieldName = entry.getKey();
-//                    for (Value value : values) {
-//                        if (value instanceof File) {
-//                            File file = File.class.cast(value);
-//
-//                            data.putOne(fieldName, new File.Builder(file)
-//                                    .processDefinitionKey(processDefinitionKey)
-//                                    .processInstanceId(processInstanceId)
-//                                    .fieldName(fieldName)
-//                                    .build(context));
-//                        } else {
-//                            data.putOne(fieldName, value);
-//                        }
-//                    }
-//                }
-//                this.data = Collections.unmodifiableMap(data);
-//            } else {
-//                this.data = Collections.emptyMap();
-//            }
-//        } else {
-//            attachments = Collections.emptyList();
-//            this.data = Collections.emptyMap();
-//        }
 
         if (context != null) {
             if (builder.data != null && !builder.data.isEmpty()) {
@@ -294,6 +255,11 @@ public class ProcessInstance implements Serializable {
     @JsonIgnore
     public Set<Task> getTasks() {
         return new TreeSet<Task>(tasks.values());
+    }
+
+    @JsonIgnore
+    public Task getTask(String id) {
+        return tasks.get(id);
     }
 
     @JsonIgnore

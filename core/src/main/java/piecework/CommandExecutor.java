@@ -47,9 +47,6 @@ public class CommandExecutor {
     IdentityService identityService;
 
     @Autowired
-    MongoTemplate mongoOperations;
-
-    @Autowired
     ProcessInstanceRepository processInstanceRepository;
 
     public <T> T execute(Command<T> command) throws StatusCodeError {
@@ -80,10 +77,6 @@ public class CommandExecutor {
 
     public IdentityService getIdentityService() {
         return identityService;
-    }
-
-    public MongoTemplate getMongoOperations() {
-        return mongoOperations;
     }
 
     public ProcessInstanceRepository getProcessInstanceRepository() {

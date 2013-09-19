@@ -28,6 +28,7 @@ import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.CommandExecutor;
@@ -78,7 +79,7 @@ public class InstanceStateCommand extends InstanceCommand {
         ProcessEngineFacade facade = commandExecutor.getFacade();
         IdentityHelper helper = commandExecutor.getHelper();
         IdentityService identityService = commandExecutor.getIdentityService();
-        MongoTemplate operations = commandExecutor.getMongoOperations();
+        ProcessInstanceRepository processInstanceRepository = commandExecutor.getProcessInstanceRepository();
 
         try {
             ProcessInstance.Builder modified = new ProcessInstance.Builder(instance);
@@ -124,33 +125,13 @@ public class InstanceStateCommand extends InstanceCommand {
             }
 
             String userId = helper.getAuthenticatedSystemOrUserId();
-
-            Update update = new Update();
-
-            if (applicationStatus != null)
-                update.set("applicationStatus", applicationStatus);
-            if (applicationStatusExplanation != null)
-                update.set("applicationStatusExplanation", applicationStatusExplanation);
-            if (processStatus != null)
-                update.set("processStatus", processStatus);
+            Set<Task> tasks = null;
 
             if (operation != OperationType.ASSIGNMENT && operation != OperationType.UPDATE) {
-                Set<Task> tasks = tasks(instance.getTasks(), operation);
-                if (tasks != null) {
-                    for (Task task : tasks) {
-                        update.set("tasks." + task.getTaskInstanceId(), task);
-                    }
-                }
+                tasks = tasks(instance.getTasks(), operation);
             }
-            update.push("operations", new Operation(UUID.randomUUID().toString(), operation, reason, new Date(), userId));
 
-            WriteResult result = operations.updateFirst(new Query(where("_id").is(instance.getProcessInstanceId())),
-                    update,
-                    ProcessInstance.class);
-
-            String error = result.getError();
-            if (StringUtils.isNotEmpty(error))
-                LOG.error("Unable to correctly save applicationStatus " + applicationStatus + ", processStatus " + processStatus + ", and reason " + reason + " for " + instance.getProcessInstanceId() + ": " + error);
+            processInstanceRepository.update(instance.getProcessInstanceId(), new Operation(UUID.randomUUID().toString(), operation, reason, new Date(), userId), applicationStatus, applicationStatusExplanation, processStatus, tasks);
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Executed instance state command " + this.toString());

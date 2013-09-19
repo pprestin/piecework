@@ -15,29 +15,29 @@
  */
 package piecework.persistence.concrete;
 
-import com.mongodb.DBRef;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.stereotype.Service;
-import piecework.common.ViewContext;
 import piecework.model.*;
 import piecework.persistence.custom.ProcessInstanceRepositoryCustom;
 import piecework.process.ProcessInstanceQueryBuilder;
 import piecework.process.ProcessInstanceSearchCriteria;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -49,6 +49,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepositoryCustom {
 
     private static final Logger LOG = Logger.getLogger(ProcessInstanceRepositoryCustomImpl.class);
+
+    private static final FindAndModifyOptions OPTIONS = new FindAndModifyOptions().returnNew(true);
 
     @Autowired
     MongoTemplate mongoOperations;
@@ -86,10 +88,58 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         return page;
     }
 
+    @Override
+    public ProcessInstance findByTaskId(String processDefinitionKey, String taskId) {
+        Query query = new Query(where("tasks." + taskId).exists(true).and("processDefinitionKey").is(processDefinitionKey));
+        return mongoOperations.findOne(query, ProcessInstance.class);
+    }
+
+    @Override
+    public boolean update(String id, String engineProcessInstanceId) {
+        WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(id)),
+                new Update().set("engineProcessInstanceId", engineProcessInstanceId),
+                ProcessInstance.class);
+        String error = result.getError();
+        if (StringUtils.isNotEmpty(error)) {
+            LOG.error("Unable to correctly save engineProcessInstanceId " + engineProcessInstanceId + " for " + id + ": " + error);
+            return false;
+        }
+        return true;
+    }
 
     @Override
     public ProcessInstance update(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
-        return updateSimply(id, label, data, attachments, submission);
+        return updateEfficiently(id, label, data, attachments, submission);
+    }
+
+    @Override
+    public boolean update(String id, Operation operation, String applicationStatus, String applicationStatusExplanation, String processStatus, Set<Task> tasks) {
+        Query query = new Query(where("_id").is(id));
+        Update update = new Update();
+
+        if (applicationStatus != null)
+            update.set("applicationStatus", applicationStatus);
+        if (applicationStatusExplanation != null)
+            update.set("applicationStatusExplanation", applicationStatusExplanation);
+        if (processStatus != null)
+            update.set("processStatus", processStatus);
+
+        if (tasks != null) {
+            for (Task task : tasks) {
+                update.set("tasks." + task.getTaskInstanceId(), task);
+            }
+        }
+
+        update.push("operations", operation);
+
+        WriteResult result = mongoOperations.updateFirst(query, update, ProcessInstance.class);
+
+        String error = result.getError();
+        if (StringUtils.isNotEmpty(error)) {
+            LOG.error("Unable to correctly save applicationStatus " + applicationStatus + ", processStatus " + processStatus + ", and reason " + operation.getReason() + " for " + id + ": " + error);
+            return false;
+        }
+        return true;
     }
 
     private ProcessInstance updateEfficiently(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
@@ -101,7 +151,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         include(update, label);
         include(update, submission);
 
-        return mongoOperations.findAndModify(query, update, ProcessInstance.class);
+        return mongoOperations.findAndModify(query, update, OPTIONS, ProcessInstance.class);
 
     }
 
@@ -139,53 +189,32 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         }
     }
 
-    private static void include(Update update, Map<String, List<Value>> data) {
+    private void include(Update update, Map<String, List<Value>> data) {
         if (data != null && !data.isEmpty()) {
+            MongoConverter converter = mongoOperations.getConverter();
+            MongoTypeMapper typeMapper = converter.getTypeMapper();
+
             for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
                 String key = "data." + entry.getKey();
                 List<Value> values = entry.getValue();
+                List<Object> dbObjects = new ArrayList<Object>();
 
-                List<File> files = null;
-                List<User> users = null;
-                if (values != null) {
-                    for (Value value : values) {
-                        if (value instanceof File) {
-                            File file = File.class.cast(value);
-
-                            if (StringUtils.isNotEmpty(file.getName())) {
-                                update.addToSet("keywords", file.getName().toLowerCase());
-                                if (files == null)
-                                    files = new ArrayList<File>(values.size());
-                                files.add(file);
-                            }
-                        } else if (value instanceof User) {
-                            User user = User.class.cast(value);
-                            if (user != null) {
-                                if (user.getDisplayName() != null)
-                                    update.addToSet("keywords", user.getDisplayName());
-                                if (user.getVisibleId() != null)
-                                    update.addToSet("keywords", user.getVisibleId());
-                                if (user.getUserId() != null)
-                                    update.addToSet("keywords", user.getUserId());
-                                if (user.getEmailAddress() != null)
-                                    update.addToSet("keywords", user.getEmailAddress());
-
-                                if (users == null)
-                                    users = new ArrayList<User>(values.size());
-                                users.add(user);
-                            }
-                        } else if (! (value instanceof Secret)) {
-                            if (StringUtils.isNotEmpty(value.getValue()))
-                                update.addToSet("keywords", value.getValue().toLowerCase());
+                for (Value value : values) {
+                    if (value != null) {
+                        Object dbObject = converter.convertToMongoType(value);
+                        Class<?> clz = null;
+                        if (value instanceof File)
+                            clz = File.class;
+                        else if (value instanceof User)
+                            clz = User.class;
+                        if (clz != null) {
+                            typeMapper.writeType(clz, DBObject.class.cast(dbObject));
                         }
+                        dbObjects.add(dbObject);
                     }
                 }
-                if (files != null)
-                    update.set(key, files);
-                else if (users != null)
-                    update.set(key, users);
-                else
-                    update.set(key, values);
+
+                update.set(key, dbObjects);
             }
         }
     }
