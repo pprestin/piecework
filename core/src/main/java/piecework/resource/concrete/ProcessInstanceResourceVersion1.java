@@ -316,10 +316,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws StatusCodeError {
+	public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String reason = sanitizer.sanitize(details.getReason());
+        String reason = null;
 
         processInstanceService.cancel(process, instance, reason);
 
