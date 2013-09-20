@@ -8,14 +8,16 @@
        size="20"
        data-max-inputs="{{maxInputs}}"
        data-min-inputs="{{minInputs}}"
+       data-pw-person-lookup="{{name}}"
        autocomplete="off"
 {{#if required}}class="required"{{/if}}
 {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
 {{#if pattern}}pattern="{{pattern}}"{{/if}}
 {{#if defaultValue}}placeholder="{{defaultValue}}"{{else}}placeholder="Start typing name"{{/if}}
-{{#if value}}value="{{value}}"{{/if}}
-{{#unless editable}}disabled{{/unless}}/>
+{{#unless editable}}name="{{name}}" disabled{{/unless}}/>
+{{#if editable}}
 <input type="hidden" name="{{name}}"/>
+{{/if}}
 </div>
 {{#if messages}}
 {{#each messages}}

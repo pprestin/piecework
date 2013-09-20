@@ -208,7 +208,7 @@ define([ 'chaplin',
                                 $controlGroup.append($clone);
                             }
 
-                            if ($element.attr('data-process-user-lookup') == 'true') {
+                            if ($element.attr('data-pw-person-lookup') != null) {
                                 var value = values[0];
                                 $element.val(value.displayName);
                             } else if ($element.attr('type') != 'file') {

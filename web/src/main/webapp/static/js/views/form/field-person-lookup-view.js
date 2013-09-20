@@ -15,26 +15,30 @@ define([ 'views/form/base-field-view', 'text!templates/form/field-person-lookup.
 		render: function(options) {
             View.__super__.render.apply(this, options);
             var url = '../person.json?displayNameLike=%QUERY';
-            var $textbox = this.$el.find('input[type="text"]');
-            $textbox.attr('data-process-user-lookup', 'true');
-            $textbox.typeahead({
-                name: 'person-lookup',
-                remote: {
-                    url: url,
-                    filter: function(parsedResponse) {
-                        var list = parsedResponse.list;
-                        var data = new Array();
-                        if (list != null) {
-                            for (var i=0;i<list.length;i++) {
-                                var person = list[i];
-                                data.push({value: person.userId, displayName: person.displayName, tokens: [ person.displayName ]});
+            var editable = this.model.get('editable');
+
+            if (editable) {
+                var $textbox = this.$el.find('input[type="text"]');
+                $textbox.attr('data-process-user-lookup', 'true');
+                $textbox.typeahead({
+                    name: 'person-lookup',
+                    remote: {
+                        url: url,
+                        filter: function(parsedResponse) {
+                            var list = parsedResponse.list;
+                            var data = new Array();
+                            if (list != null) {
+                                for (var i=0;i<list.length;i++) {
+                                    var person = list[i];
+                                    data.push({value: person.userId, displayName: person.displayName, tokens: [ person.displayName ]});
+                                }
                             }
+                            return data;
                         }
-                        return data;
-                    }
-                },
-                valueKey: 'displayName'
-            });
+                    },
+                    valueKey: 'displayName'
+                });
+            }
 
             return this;
         },
