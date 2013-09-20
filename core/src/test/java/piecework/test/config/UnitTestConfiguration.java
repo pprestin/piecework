@@ -18,6 +18,7 @@ package piecework.test.config;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -363,6 +364,21 @@ public class UnitTestConfiguration {
         @Override
         public ProcessInstance update(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public ProcessInstance findByTaskId(String processDefinitionKey, String taskId) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public boolean update(String id, Operation operation, String applicationStatus, String applicationStatusExplanation, String processStatus, Set<Task> tasks) {
+            return false;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public boolean update(String id, String engineProcessInstanceId) {
+            return false;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 	

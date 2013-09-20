@@ -35,6 +35,11 @@ define([ 'chaplin',
                 var formInstanceId = this.model.get("formInstanceId");
                 var re = new RegExp(formInstanceId + "$");
 
+                // Strip off root if it exists, since absolute urls will mess up routing
+                var root = location.protocol + "//" + location.host;
+                if (new RegExp(root).test(link))
+                    link = link.substring(root.length);
+
                 if (! re.test(link))
                     link += '/' + formInstanceId;
 
