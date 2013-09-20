@@ -26,6 +26,7 @@ import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.CommandExecutor;
+import piecework.validation.FormValidation;
 
 /**
  * @author James Renfro
@@ -37,11 +38,13 @@ public class TaskCommand implements Command<Boolean> {
     private final Process process;
     private final Task task;
     private final ActionType action;
+    private final FormValidation validation;
 
-    public TaskCommand(piecework.model.Process process, Task task, ActionType action) {
+    public TaskCommand(Process process, Task task, ActionType action, FormValidation validation) {
         this.process = process;
         this.task = task;
         this.action = action;
+        this.validation = validation;
     }
 
     @Override
@@ -52,7 +55,7 @@ public class TaskCommand implements Command<Boolean> {
         String taskId = task != null ? task.getTaskInstanceId() : null;
         if (StringUtils.isNotEmpty(taskId)) {
             try {
-                result = facade.completeTask(process, taskId, action);
+                result = facade.completeTask(process, taskId, action, validation);
             } catch (ProcessEngineException e) {
                 LOG.error(e);
                 throw new InternalServerError(e);

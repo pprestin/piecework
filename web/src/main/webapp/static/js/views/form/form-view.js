@@ -238,13 +238,19 @@ define([ 'chaplin',
 
             var $button = $(event.target);
             var $form = $button.closest('form');
-            var validated = $form.attr('data-validated');
-            if (validated != undefined && validated != 'false')
+            var action = $button.attr('data-action');
+
+            if (action == 'SAVE') {
                 return true;
+            } else {
+                var validated = $form.attr('data-validated');
+                if (validated != undefined && validated != 'false')
+                    return true;
 
-            this._doValidate($form, $button);
+                this._doValidate($form, $button);
 
-            return false;
+                return false;
+            }
 
 	    },
 	    _onFormInvalid: function(jqXHR, textStatus, errorThrown) {

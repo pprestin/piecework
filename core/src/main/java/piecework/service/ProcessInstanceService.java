@@ -22,7 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.CommandExecutor;
@@ -316,7 +315,7 @@ public class ProcessInstanceService {
 
     public ProcessInstance reject(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validationService.validate(process, instance, task, template, submission, false);
-        taskService.completeIfTaskExists(process, task, submission.getAction());
+        taskService.completeIfTaskExists(process, task, submission.getAction(), validation);
         return store(process, submission, validation, instance, false);
     }
 
@@ -327,7 +326,7 @@ public class ProcessInstanceService {
 
     public ProcessInstance submit(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validationService.validate(process, instance, task, template, submission, true);
-        taskService.completeIfTaskExists(process, task, submission.getAction());
+        taskService.completeIfTaskExists(process, task, submission.getAction(), validation);
         return store(process, submission, validation, instance, false);
     }
 

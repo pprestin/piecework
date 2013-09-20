@@ -145,9 +145,6 @@ public class TaskResourceVersion1 implements TaskResource {
             case CLAIM:
                 processInstanceService.assign(process, instance, task, actingUser);
                 break;
-            case COMPLETE:
-                processInstanceService.submit(process, instance, task, template, submission);
-                break;
             case SAVE:
                 processInstanceService.save(process, instance, task, template, submission);
                 break;
@@ -156,6 +153,9 @@ public class TaskResourceVersion1 implements TaskResource {
                 break;
             case VALIDATE:
                 validationService.validate(process, instance, task, template, submission, true);
+                break;
+            default:
+                processInstanceService.submit(process, instance, task, template, submission);
                 break;
         }
         return Response.noContent().build();

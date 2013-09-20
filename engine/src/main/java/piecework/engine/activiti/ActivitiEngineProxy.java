@@ -34,19 +34,17 @@ import piecework.Constants;
 import piecework.engine.exception.TaskAlreadyClaimedException;
 import piecework.enumeration.ActionType;
 import piecework.identity.*;
-import piecework.model.User;
+import piecework.model.*;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
-import piecework.model.ProcessExecution;
-import piecework.model.ProcessInstance;
-import piecework.model.Task;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.identity.IdentityHelper;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.util.ManyMap;
+import piecework.validation.FormValidation;
 
 /**
  * @author James Renfro
@@ -142,7 +140,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException {
+    public boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
@@ -153,11 +151,33 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
 
             if (activitiTask != null)  {
+                Map<String, String> variables = new HashMap<String, String>();
                 if (action != null) {
                     String variableName = activitiTask.getTaskDefinitionKey() + "_action";
-                    processEngine.getRuntimeService().setVariable(activitiTask.getExecutionId(), variableName, action.name());
+                    variables.put(variableName, action.name());
                     processEngine.getTaskService().setVariableLocal(taskId, variableName, action.name());
                 }
+
+                // Since we sometimes need to use user-submitted data to route the process instance, include
+                // just the first value here -- later, it may be necessary to include more complicated logic to
+                // determine which values should be passed to Activiti
+                Map<String, List<Value>> data = validation.getData();
+                if (data != null && !data.isEmpty()) {
+                    for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
+                        List<Value> values = entry.getValue();
+                        if (values != null) {
+                            for (Value value : values) {
+                                if (value == null || value.getValue() == null)
+                                    continue;
+
+                                // Only put the first value in, then break out of the loop
+                                variables.put(entry.getKey(), value.getValue());
+                                break;
+                            }
+                        }
+                    }
+                }
+                processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
                 // Always assign the task to the user before completing it
                 if (StringUtils.isNotEmpty(userId))
                     processEngine.getTaskService().setAssignee(taskId, userId);

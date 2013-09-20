@@ -34,6 +34,7 @@ import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
+import piecework.validation.FormValidation;
 
 /**
  * @author James Renfro
@@ -252,11 +253,11 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException {
+    public boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
-        return proxy.completeTask(process, taskId, action);
+        return proxy.completeTask(process, taskId, action, validation);
     }
 
     @Override

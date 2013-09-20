@@ -43,6 +43,7 @@ import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
+import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
@@ -236,8 +237,8 @@ public class TaskService {
         }
     }
 
-    public void completeIfTaskExists(Process process, Task task, ActionType action) throws StatusCodeError {
-        TaskCommand complete = new TaskCommand(process, task, action);
+    public void completeIfTaskExists(Process process, Task task, ActionType action, FormValidation validation) throws StatusCodeError {
+        TaskCommand complete = new TaskCommand(process, task, action, validation);
         commandExecutor.execute(complete);
     }
 

@@ -7,6 +7,7 @@ import piecework.model.Process;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
+import piecework.validation.FormValidation;
 
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public interface ProcessEngineCapabilities {
 
     TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException;
 
-    boolean completeTask(Process process, String taskId, ActionType action) throws ProcessEngineException;
+    boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException;
 
     void deploy(Process process, String name, ProcessModelResource ... resources) throws ProcessEngineException;
 
