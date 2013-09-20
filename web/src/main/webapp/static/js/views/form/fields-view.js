@@ -6,11 +6,12 @@ define([
         'views/form/field-file-view',
         'views/form/field-listbox-view',
         'views/form/field-html-view',
+        'views/form/field-person-lookup-view',
         'views/form/field-radio-view',
         'views/form/field-textarea-view',
         'views/form/field-textbox-view'
         ],
-    function(Chaplin, Field, CollectionView, CheckboxView, FileView, ListboxView, HtmlView, RadioView, TextareaView,
+    function(Chaplin, Field, CollectionView, CheckboxView, FileView, ListboxView, HtmlView, PersonLookupView, RadioView, TextareaView,
 				TextboxView) {
 	'use strict';
 
@@ -34,8 +35,19 @@ define([
 	            return new HtmlView({id: fieldId, model: field});
 	        else if (type == 'file')
 	            return new FileView({id: fieldId, model: field});
-	    	else
-	    		return new TextboxView({id: fieldId, model: field});
+
+            var constraints = field.get('constraints');
+            if (constraints != undefined && constraints.length > 0) {
+                for (var i=0;i<constraints.length;i++) {
+                    var constraint = constraints[i];
+
+                    if (constraint != undefined && constraint.type != null && constraint.type == 'IS_VALID_USER') {
+                        return new PersonLookupView({id: fieldId, model: field});
+                    }
+                }
+            }
+
+	    	return new TextboxView({id: fieldId, model: field});
 	    },
 	});
 

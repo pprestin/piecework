@@ -29,35 +29,16 @@
     }
 }
 
-/*body {
-    font-size: 16px;
-}
-h1 {
-    margin: 20px 0px;
-    font-size: 50px;
-    font-weight: 200;
-    line-height: 1;
-    letter-spacing: -1px;
-}
-h2 {
-    margin: 10px 0px;
-    font-weight: 200;
-    margin-bottom: 5px;
-}
-
-h2 {
-    color: #000;
-    font-weight: normal;
-    font-size: 20px;
-    vertical-align: middle;
-}
-
-h3 {
-    font-weight: 200;
-}*/
-
 input, .uneditable-input {
     width: auto;
+}
+
+input[type="text"]:disabled.tt-hint {
+    background-color: cornsilk;
+}
+
+input[type="text"]:disabled.pw-person-found {
+    background-color: white;
 }
 
 input.searchField {
