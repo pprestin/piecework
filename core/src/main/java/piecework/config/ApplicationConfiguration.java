@@ -61,6 +61,7 @@ import piecework.security.SecuritySettings;
 import piecework.service.IdentityService;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.HtmlProvider;
+import piecework.ui.JavascriptProvider;
 import piecework.util.KeyManagerCabinet;
 
 import javax.net.ssl.SSLContext;
@@ -96,6 +97,9 @@ public class ApplicationConfiguration {
     @Autowired
     CustomJaxbJsonProvider jsonProvider;
 
+    @Autowired
+    JavascriptProvider javascriptProvider;
+
 	@Bean
 	public Bus cxf() {
 		return BusFactory.newInstance().createBus();
@@ -130,6 +134,7 @@ public class ApplicationConfiguration {
     @Bean
     public Server applicationServer() {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
+        extensionMappings.put("js", "text/javascript");
         extensionMappings.put("json", "application/json");
         extensionMappings.put("xml", "application/xml");
         extensionMappings.put("html", "text/html");
@@ -145,6 +150,7 @@ public class ApplicationConfiguration {
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);
         providers.add(jsonProvider);
+        providers.add(javascriptProvider);
         sf.setProviders(providers);
 
         BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);

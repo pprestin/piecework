@@ -27,6 +27,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 
 import piecework.PublicApplicationResource;
@@ -45,24 +46,24 @@ public interface AnonymousFormResource extends PublicApplicationResource {
     @GET
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context HttpServletRequest request) throws StatusCodeError;
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
 	@Path("{processDefinitionKey}/{segments:.*}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context HttpServletRequest request) throws StatusCodeError;
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes("multipart/form-data")
-    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Produces("application/json")
     @Consumes("multipart/form-data")
-    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
 
 }

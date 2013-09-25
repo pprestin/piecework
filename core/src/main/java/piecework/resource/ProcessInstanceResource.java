@@ -1,5 +1,6 @@
 package piecework.resource;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
@@ -30,19 +31,19 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes({"application/xml","application/json"})
-    Response create(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, Submission submission) throws StatusCodeError;
+    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, Submission submission) throws StatusCodeError;
 
     @POST
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("application/x-www-form-urlencoded")
-    Response create(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
+    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
 	
 	@POST
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("multipart/form-data")
-	Response createMultipart(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, MultipartBody body) throws StatusCodeError;
+	Response createMultipart(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultipartBody body) throws StatusCodeError;
 	
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}")
@@ -150,7 +151,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("multipart/form-data")
-    Response value(@Context HttpServletRequest request, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, MultipartBody body) throws StatusCodeError;
+    Response value(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, MultipartBody body) throws StatusCodeError;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldId}")

@@ -15,11 +15,11 @@
  */
 package piecework.resource.concrete;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,10 +209,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, Submission rawSubmission) throws StatusCodeError {
+	public Response create(MessageContext context, String rawProcessDefinitionKey, Submission rawSubmission) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, ActionType.CREATE);
@@ -222,10 +222,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 	
 	@Override
-	public Response create(HttpServletRequest request, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
+	public Response create(MessageContext context, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, formData);
@@ -235,10 +235,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
 	@Override
-	public Response createMultipart(HttpServletRequest request, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
+	public Response createMultipart(MessageContext context, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
@@ -365,7 +365,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-    public Response value(HttpServletRequest request, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws StatusCodeError {
+    public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws StatusCodeError {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
@@ -374,7 +374,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (task == null && !helper.isAuthenticatedSystem())
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
 
         Screen screen = formRequest.getScreen();
@@ -436,10 +436,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     @Override
     public String getVersion() {
         return versions.getVersion1().getVersion();
-    }
-
-    private RequestDetails requestDetails(HttpServletRequest request) {
-        return new RequestDetails.Builder(request, securitySettings).build();
     }
 
 }

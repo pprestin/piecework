@@ -163,7 +163,8 @@ public class RequestHandler {
                     .remoteUser(requestDetails.getRemoteUser())
                     .actAsUser(requestDetails.getActAsUser())
                     .certificateIssuer(requestDetails.getCertificateIssuer())
-                    .certificateSubject(requestDetails.getCertificateSubject());
+                    .certificateSubject(requestDetails.getCertificateSubject())
+                    .contentType(requestDetails.getContentType());
         }
 
         return requestRepository.save(formRequestBuilder.build());

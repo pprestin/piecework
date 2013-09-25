@@ -15,6 +15,7 @@
  */
 package piecework.resource;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
@@ -24,10 +25,7 @@ import piecework.exception.StatusCodeError;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import java.util.List;
 
 /**
@@ -39,35 +37,35 @@ public interface FormResource extends ApplicationResource {
     @GET
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    @Produces({"text/html","application/json", "application/xml"})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context HttpServletRequest request) throws StatusCodeError;
+    @Produces({"text/html","application/json", "application/xml", "text/javascript"})
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
 	@Path("{processDefinitionKey}/{segments:.*}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html","application/json", "application/xml"})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context HttpServletRequest request) throws StatusCodeError;
+    @Produces({"text/html","application/json", "application/xml", "text/javascript"})
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/save/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("multipart/form-data")
     @Produces("text/html")
-    Response save(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+    Response save(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("multipart/form-data")
     @Produces("text/html")
-    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces("application/json")
     @Consumes("multipart/form-data")
-    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context HttpServletRequest request, MultipartBody body) throws StatusCodeError;
+    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
 
     @GET
     @Path("")

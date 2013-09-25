@@ -35,6 +35,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLConnection;
 
 
@@ -66,8 +67,17 @@ public class ResponseHandler {
 
         if (form != null && form.getScreen() != null && !form.getScreen().isReadonly()) {
 
-            if (StringUtils.isNotEmpty(form.getScreen().getLocation())) {
+            String contentType = formRequest != null && formRequest.getContentType() != null ? formRequest.getContentType() : "text/html";
+
+            if (StringUtils.isNotEmpty(form.getScreen().getLocation()) && !contentType.equals("text/javascript")) {
                 String location = process.getBase() + "/" + form.getScreen().getLocation();
+
+                if (location.startsWith("https://")) {
+                    if (location.contains("{formRequestId}") && task != null)
+                        location = location.replace("{formRequestId}", task.getTaskInstanceId());
+                    return Response.seeOther(URI.create(location)).build();
+                }
+
                 Content content = content(location);
                 return Response.ok(new StreamingPageContent(process, form, content), content.getContentType()).build();
             }
@@ -84,8 +94,12 @@ public class ResponseHandler {
         // If the location is not blank then retrieve from that location
         Content content;
         if (location.startsWith("classpath:")) {
-            ClassPathResource resource = new ClassPathResource(location.substring("classpath:".length()));
+            String classpathLocation = location.substring("classpath:".length());
+            ClassPathResource resource = new ClassPathResource(classpathLocation);
             try {
+                if (!resource.exists())
+                    resource = new ClassPathResource(classpathLocation + ".js");
+
                 BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
                 String contentType = URLConnection.guessContentTypeFromStream(inputStream);
                 if (contentType == null) {

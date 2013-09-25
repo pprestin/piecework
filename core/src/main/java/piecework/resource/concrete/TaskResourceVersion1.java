@@ -17,6 +17,7 @@ package piecework.resource.concrete;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -94,14 +95,14 @@ public class TaskResourceVersion1 implements TaskResource {
     Versions versions;
 
     @Override
-    public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, HttpServletRequest request, Submission rawSubmission) throws StatusCodeError {
+    public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, Submission rawSubmission) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
         String action = sanitizer.sanitize(rawAction);
 
         piecework.model.Process process = processService.read(processDefinitionKey);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 
         String actingUser = helper.getAuthenticatedSystemOrUserId();
         if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(requestDetails.getActAsUser()))
@@ -216,10 +217,6 @@ public class TaskResourceVersion1 implements TaskResource {
     @Override
     public String getVersion() {
         return versions.getVersion1().getVersion();
-    }
-
-    private RequestDetails requestDetails(HttpServletRequest request) {
-        return new RequestDetails.Builder(request, securitySettings).build();
     }
 
 }

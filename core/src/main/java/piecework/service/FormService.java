@@ -16,6 +16,7 @@
 package piecework.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,7 @@ import piecework.model.Process;
 import piecework.security.Sanitizer;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
@@ -95,14 +97,14 @@ public class FormService {
     Versions versions;
 
 
-    public Response delete(HttpServletRequest request, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+    public Response delete(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         String taskId;
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
         try {
             FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
             taskId = formRequest.getTaskId();
@@ -128,7 +130,7 @@ public class FormService {
         return Response.noContent().build();
     }
 
-    public Response provideFormResponse(HttpServletRequest request, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
+    public Response provideFormResponse(MessageContext context, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
         String requestId = null;
         boolean isStatic = false;
         boolean isSubmissionResource;
@@ -156,7 +158,7 @@ public class FormService {
             }
         }
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
 
         FormRequest formRequest = null;
 
@@ -215,13 +217,13 @@ public class FormService {
         return resultsBuilder.build(viewContext);
     }
 
-    public Response saveForm(HttpServletRequest request, ViewContext viewContext, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+    public Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
@@ -237,13 +239,13 @@ public class FormService {
         return responseHandler.redirect(formRequest);
     }
 
-    public Response submitForm(HttpServletRequest request, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+    public Response submitForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
 
         Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
@@ -323,14 +325,14 @@ public class FormService {
         return Response.noContent().build();
     }
 
-    public Response validateForm(HttpServletRequest request, ViewContext viewContext, Process process, MultipartBody body, String rawRequestId, String rawValidationId) throws StatusCodeError {
+    public Response validateForm(MessageContext context, Process process, MultipartBody body, String rawRequestId, String rawValidationId) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
         String validationId = sanitizer.sanitize(rawValidationId);
 
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        RequestDetails requestDetails = requestDetails(request);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
@@ -344,10 +346,6 @@ public class FormService {
         validationService.validate(process, instance, task, template, submission, true);
 
         return Response.noContent().build();
-    }
-
-    private RequestDetails requestDetails(HttpServletRequest request) {
-        return new RequestDetails.Builder(request, securitySettings).build();
     }
 
     private Response readStatic(Process process, String name) throws StatusCodeError {

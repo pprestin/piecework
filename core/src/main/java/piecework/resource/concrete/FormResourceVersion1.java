@@ -15,6 +15,7 @@
  */
 package piecework.resource.concrete;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,6 @@ import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.*;
 import java.util.List;
 
@@ -54,38 +54,38 @@ public class FormResourceVersion1 implements FormResource {
     Versions versions;
 
     @Override
-    public Response read(final String rawProcessDefinitionKey, final HttpServletRequest request) throws StatusCodeError {
+    public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.provideFormResponse(request, process, null);
+        return formService.provideFormResponse(context, process, null);
     }
 
     @Override
-    public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final HttpServletRequest request) throws StatusCodeError {
+    public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.provideFormResponse(request, process, pathSegments);
+        return formService.provideFormResponse(context, process, pathSegments);
     }
 
     @Override
-    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
+    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.saveForm(request, getViewContext(), process, rawRequestId, body);
+        return formService.saveForm(context, process, rawRequestId, body);
     }
 
     @Override
-    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
+    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.submitForm(request, process, rawRequestId, body);
+        return formService.submitForm(context, process, rawRequestId, body);
     }
 
     @Override
-    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final HttpServletRequest request, final MultipartBody body) throws StatusCodeError {
+    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.validateForm(request, getViewContext(), process, body, rawRequestId, rawValidationId);
+        return formService.validateForm(context, process, body, rawRequestId, rawValidationId);
     }
 
     @Override

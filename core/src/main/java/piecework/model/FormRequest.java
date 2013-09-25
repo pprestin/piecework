@@ -58,6 +58,8 @@ public class FormRequest {
 
     private final String submissionType;
 
+    private final String contentType;
+
     @Transient
     private final ProcessInstance instance;
 
@@ -83,6 +85,7 @@ public class FormRequest {
         this.interaction = builder.interaction;
         this.screen = builder.screen;
         this.submissionType = builder.submissionType;
+        this.contentType= builder.contentType;
         this.instance = builder.instance;
         this.task = builder.task;
     }
@@ -143,6 +146,10 @@ public class FormRequest {
         return submissionType;
     }
 
+    public String getContentType() {
+        return contentType;
+    }
+
     public ProcessInstance getInstance() {
         return instance;
     }
@@ -169,6 +176,7 @@ public class FormRequest {
         private Interaction interaction;
         private Screen screen;
         private String submissionType;
+        private String contentType;
 
         public Builder() {
             super();
@@ -189,6 +197,7 @@ public class FormRequest {
             this.interaction = request.interaction != null ? new Interaction.Builder(request.interaction, sanitizer).build() : null;
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.submissionType = sanitizer.sanitize(request.submissionType);
+            this.contentType = sanitizer.sanitize(request.contentType);
         }
 
         public FormRequest build() {
@@ -262,6 +271,11 @@ public class FormRequest {
 
         public Builder submissionType(String submissionType) {
             this.submissionType = submissionType;
+            return this;
+        }
+
+        public Builder contentType(String contentType) {
+            this.contentType = contentType;
             return this;
         }
 

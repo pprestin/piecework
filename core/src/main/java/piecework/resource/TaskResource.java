@@ -1,5 +1,6 @@
 package piecework.resource;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
@@ -38,7 +39,7 @@ public interface TaskResource extends ApplicationResource, ApiResource {
     @POST
     @Path("{processDefinitionKey}/{taskId}/{action}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.SYSTEM})
-    Response complete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @PathParam("action") String action, @Context HttpServletRequest request, Submission submission) throws StatusCodeError;
+    Response complete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @PathParam("action") String action, @Context MessageContext context, Submission submission) throws StatusCodeError;
 
     @GET
     @Path("")
