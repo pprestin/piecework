@@ -15,6 +15,7 @@
  */
 package piecework.handler;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,12 +64,15 @@ public class RequestHandlerTest {
     @Mock
     SecuritySettings securitySettings;
 
+    private MessageContext context;
     private HttpServletRequest servletRequest;
     private Process process;
 
     @Before
     public void setUp() throws Exception {
+        this.context = Mockito.mock(MessageContext.class);
         this.servletRequest = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(context.getHttpServletRequest()).thenReturn(servletRequest);
         this.process = ExampleFactory.exampleProcess();
         Mockito.when(identityHelper.hasRole(process, AuthorizationRole.INITIATOR)).thenReturn(true);
         Mockito.when(requestRepository.save(Mockito.any(FormRequest.class))).thenAnswer(new Answer<FormRequest>() {
@@ -88,7 +92,7 @@ public class RequestHandlerTest {
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester");
 
-        RequestDetails requestDetails = new RequestDetails.Builder(servletRequest, securitySettings).build();
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
         assertValid(formRequest);
 
@@ -105,13 +109,13 @@ public class RequestHandlerTest {
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester").thenReturn("somebodyelse");
 
-        RequestDetails firstRequest = new RequestDetails.Builder(servletRequest, securitySettings).build();
+        RequestDetails firstRequest = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(firstRequest, process);
         assertValid(formRequest);
 
         boolean isExceptionThrown = false;
         try {
-            RequestDetails secondRequest = new RequestDetails.Builder(servletRequest, securitySettings).build();
+            RequestDetails secondRequest = new RequestDetails.Builder(context, securitySettings).build();
             requestHandler.handle(secondRequest, formRequest.getRequestId());
         } catch (ForbiddenError error) {
             isExceptionThrown = true;

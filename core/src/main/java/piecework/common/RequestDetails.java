@@ -21,6 +21,8 @@ import piecework.security.SecuritySettings;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -34,7 +36,8 @@ public class RequestDetails {
     private final int remotePort;
     private final String remoteUser;
     private final String actAsUser;
-    private final String contentType;
+    private final MediaType contentType;
+    private final  List<MediaType> acceptableMediaTypes;
     private final boolean isServiceCall;
 
     private RequestDetails() {
@@ -50,6 +53,7 @@ public class RequestDetails {
         this.remoteUser = builder.remoteUser;
         this.actAsUser = builder.actAsUser;
         this.contentType = builder.contentType;
+        this.acceptableMediaTypes = builder.acceptableMediaTypes;
         this.isServiceCall = builder.isServiceCall;
     }
 
@@ -81,8 +85,12 @@ public class RequestDetails {
         return actAsUser;
     }
 
-    public String getContentType() {
+    public MediaType getContentType() {
         return contentType;
+    }
+
+    public List<MediaType> getAcceptableMediaTypes() {
+        return acceptableMediaTypes;
     }
 
     public boolean isServiceCall() {
@@ -99,7 +107,8 @@ public class RequestDetails {
         private String certificateIssuer;
         private String certificateSubject;
         private boolean isServiceCall;
-        private String contentType;
+        private MediaType contentType;
+        private List<MediaType> acceptableMediaTypes;
 
         public Builder() {
 
@@ -115,7 +124,8 @@ public class RequestDetails {
                 if (StringUtils.isNotEmpty(settings.getActAsUserHeader()))
                     this.actAsUser = headers.getHeaderString(settings.getActAsUserHeader());
 
-                this.contentType = headers.getMediaType() != null ? headers.getMediaType().toString() : "text/html";
+                this.acceptableMediaTypes = headers.getAcceptableMediaTypes();
+                this.contentType = headers.getMediaType();
 
                 HttpServletRequest request = context.getHttpServletRequest();
                 this.remoteAddr = request.getRemoteAddr();

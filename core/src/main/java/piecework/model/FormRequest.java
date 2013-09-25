@@ -21,6 +21,10 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.security.Sanitizer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author James Renfro
  */
@@ -60,6 +64,8 @@ public class FormRequest {
 
     private final String contentType;
 
+    private final List<String> acceptableMediaTypes;
+
     @Transient
     private final ProcessInstance instance;
 
@@ -86,6 +92,7 @@ public class FormRequest {
         this.screen = builder.screen;
         this.submissionType = builder.submissionType;
         this.contentType= builder.contentType;
+        this.acceptableMediaTypes = Collections.unmodifiableList(builder.acceptableMediaTypes);
         this.instance = builder.instance;
         this.task = builder.task;
     }
@@ -150,6 +157,10 @@ public class FormRequest {
         return contentType;
     }
 
+    public List<String> getAcceptableMediaTypes() {
+        return acceptableMediaTypes;
+    }
+
     public ProcessInstance getInstance() {
         return instance;
     }
@@ -177,9 +188,11 @@ public class FormRequest {
         private Screen screen;
         private String submissionType;
         private String contentType;
+        private List<String> acceptableMediaTypes;
 
         public Builder() {
             super();
+            this.acceptableMediaTypes = new ArrayList<String>();
         }
 
         public Builder(FormRequest request, Sanitizer sanitizer) {
@@ -198,6 +211,7 @@ public class FormRequest {
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.submissionType = sanitizer.sanitize(request.submissionType);
             this.contentType = sanitizer.sanitize(request.contentType);
+            this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
         }
 
         public FormRequest build() {
@@ -276,6 +290,13 @@ public class FormRequest {
 
         public Builder contentType(String contentType) {
             this.contentType = contentType;
+            return this;
+        }
+
+        public Builder acceptableMediaType(String acceptableMediaType) {
+            if (acceptableMediaType != null) {
+                this.acceptableMediaTypes.add(acceptableMediaType);
+            }
             return this;
         }
 

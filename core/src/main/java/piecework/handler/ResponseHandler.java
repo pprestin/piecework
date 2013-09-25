@@ -37,6 +37,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLConnection;
+import java.util.List;
 
 
 /**
@@ -67,16 +68,19 @@ public class ResponseHandler {
 
         if (form != null && form.getScreen() != null && !form.getScreen().isReadonly()) {
 
-            String contentType = formRequest != null && formRequest.getContentType() != null ? formRequest.getContentType() : "text/html";
+            List<String> acceptableMediaTypes = formRequest.getAcceptableMediaTypes();
+            boolean isJavascript = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains("text/javascript");
 
-            if (StringUtils.isNotEmpty(form.getScreen().getLocation()) && !contentType.equals("text/javascript")) {
-                String location = process.getBase() + "/" + form.getScreen().getLocation();
+            if (StringUtils.isNotEmpty(form.getScreen().getLocation()) && !isJavascript) {
+                String location = form.getScreen().getLocation();
 
                 if (location.startsWith("https://")) {
                     if (location.contains("{formRequestId}") && task != null)
                         location = location.replace("{formRequestId}", task.getTaskInstanceId());
                     return Response.seeOther(URI.create(location)).build();
                 }
+
+                location = process.getBase() + "/" + location;
 
                 Content content = content(location);
                 return Response.ok(new StreamingPageContent(process, form, content), content.getContentType()).build();

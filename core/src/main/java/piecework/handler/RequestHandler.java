@@ -33,6 +33,7 @@ import piecework.service.ProcessInstanceService;
 import piecework.service.TaskService;
 import piecework.util.ConstraintUtil;
 
+import javax.ws.rs.core.MediaType;
 import java.util.*;
 
 /**
@@ -157,6 +158,8 @@ public class RequestHandler {
                 .submissionType(submissionType);
 
         if (requestDetails != null) {
+            String contentType = requestDetails.getContentType() != null ? requestDetails.getContentType().toString() : null;
+
             formRequestBuilder.remoteAddr(requestDetails.getRemoteAddr())
                     .remoteHost(requestDetails.getRemoteHost())
                     .remotePort(requestDetails.getRemotePort())
@@ -164,7 +167,11 @@ public class RequestHandler {
                     .actAsUser(requestDetails.getActAsUser())
                     .certificateIssuer(requestDetails.getCertificateIssuer())
                     .certificateSubject(requestDetails.getCertificateSubject())
-                    .contentType(requestDetails.getContentType());
+                    .contentType(contentType);
+
+            for (MediaType acceptableMediaType : requestDetails.getAcceptableMediaTypes()) {
+                formRequestBuilder.acceptableMediaType(acceptableMediaType.toString());
+            }
         }
 
         return requestRepository.save(formRequestBuilder.build());
