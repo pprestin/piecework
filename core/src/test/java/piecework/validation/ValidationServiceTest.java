@@ -22,7 +22,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.internal.matchers.Any;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.exception.StatusCodeError;
@@ -34,6 +38,7 @@ import piecework.service.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.test.ExampleFactory;
+import piecework.util.ManyMap;
 
 import java.util.List;
 import java.util.Map;
@@ -67,7 +72,13 @@ public class ValidationServiceTest {
 
 	@Before
 	public void setUp() {
-
+        Mockito.when(encryptionService.decrypt(Mockito.any(Map.class))).then(new Answer<Map<String, List<String>>>() {
+            @Override
+            public Map<String, List<String>> answer(InvocationOnMock invocation) throws Throwable {
+                Map<String, List<String>> map = (Map<String, List<String>>) invocation.getArguments()[0];
+                return new ManyMap<String, String>(map);
+            }
+        });
 	}
 
 	@Test

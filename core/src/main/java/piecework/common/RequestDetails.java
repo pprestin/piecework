@@ -117,22 +117,25 @@ public class RequestDetails {
         public Builder(MessageContext context, SecuritySettings settings) {
             if (context != null) {
                 HttpHeaders headers = context.getHttpHeaders();
-                if (StringUtils.isNotEmpty(settings.getCertificateIssuerHeader()))
-                    this.certificateIssuer = headers.getHeaderString(settings.getCertificateIssuerHeader());
-                if (StringUtils.isNotEmpty(settings.getCertificateSubjectHeader()))
-                    this.certificateSubject = headers.getHeaderString(settings.getCertificateSubjectHeader());
-                if (StringUtils.isNotEmpty(settings.getActAsUserHeader()))
-                    this.actAsUser = headers.getHeaderString(settings.getActAsUserHeader());
+                    if (headers != null) {
+                    if (StringUtils.isNotEmpty(settings.getCertificateIssuerHeader()))
+                        this.certificateIssuer = headers.getHeaderString(settings.getCertificateIssuerHeader());
+                    if (StringUtils.isNotEmpty(settings.getCertificateSubjectHeader()))
+                        this.certificateSubject = headers.getHeaderString(settings.getCertificateSubjectHeader());
+                    if (StringUtils.isNotEmpty(settings.getActAsUserHeader()))
+                        this.actAsUser = headers.getHeaderString(settings.getActAsUserHeader());
 
-                this.acceptableMediaTypes = headers.getAcceptableMediaTypes();
-                this.contentType = headers.getMediaType();
+                    this.acceptableMediaTypes = headers.getAcceptableMediaTypes();
+                    this.contentType = headers.getMediaType();
+                }
 
                 HttpServletRequest request = context.getHttpServletRequest();
-                this.remoteAddr = request.getRemoteAddr();
-                this.remoteHost = request.getRemoteHost();
-                this.remotePort = request.getRemotePort();
-                this.remoteUser = request.getRemoteUser();
-
+                if (request != null) {
+                    this.remoteAddr = request.getRemoteAddr();
+                    this.remoteHost = request.getRemoteHost();
+                    this.remotePort = request.getRemotePort();
+                    this.remoteUser = request.getRemoteUser();
+                }
             }
             this.isServiceCall = StringUtils.isNotEmpty(this.certificateIssuer) && StringUtils.isNotEmpty(this.certificateSubject);
         }

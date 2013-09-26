@@ -169,8 +169,11 @@ public class RequestHandler {
                     .certificateSubject(requestDetails.getCertificateSubject())
                     .contentType(contentType);
 
-            for (MediaType acceptableMediaType : requestDetails.getAcceptableMediaTypes()) {
-                formRequestBuilder.acceptableMediaType(acceptableMediaType.toString());
+            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
+            if (acceptableMediaTypes != null) {
+                for (MediaType acceptableMediaType : acceptableMediaTypes) {
+                    formRequestBuilder.acceptableMediaType(acceptableMediaType.toString());
+                }
             }
         }
 
