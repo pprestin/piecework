@@ -90,7 +90,7 @@
             } else if (type == 'file') {
                 this.decorateFieldForm(field);
 
-                if ($variable.is("img")) {
+                if ($variable.is("img") && values != null && values.length > 0) {
                     $variable.attr('src', values[0].link);
                 }
             } else {
