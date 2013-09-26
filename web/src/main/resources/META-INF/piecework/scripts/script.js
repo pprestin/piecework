@@ -94,8 +94,15 @@
                     $variable.attr('src', values[0].link);
                 }
             } else {
-                if ($input.length > 0 && type != 'file')
-                    $input.val(values);
+                if ($input.length > 0 && type != 'file') {
+                    var isEmpty = true;
+                    for (var x=0;x<values.length;x++) {
+                        if (values[x] != null && values[x] != '')
+                            isEmpty = false;
+                    }
+                    if (!isEmpty)
+                        $input.val(values);
+                }
                 if ($variable.length > 0 && !$variable.is('form'))
                     $variable.text(values);
             }
