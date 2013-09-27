@@ -57,7 +57,6 @@ public class ResponseHandler {
     @Autowired
     Versions versions;
 
-
     public Response handle(FormRequest formRequest, Process process) throws StatusCodeError {
         return handle(formRequest, process, formRequest.getInstance(), formRequest.getTask(), null);
     }

@@ -17,6 +17,8 @@ package piecework.form;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -27,13 +29,10 @@ import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.security.EncryptionService;
 import piecework.validation.FormValidation;
-import piecework.service.ValidationService;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.service.ProcessInstanceService;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.service.TaskService;
 import piecework.util.ConstraintUtil;
 import piecework.util.ManyMap;
 
@@ -46,6 +45,8 @@ import java.util.*;
 public class FormFactory {
 
     private static final Logger LOG = Logger.getLogger(FormFactory.class);
+
+    private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
 
     @Autowired
     IdentityHelper helper;
@@ -70,8 +71,9 @@ public class FormFactory {
 
         ViewContext version = versions.getVersion1();
         String loggedInUserId = helper.getAuthenticatedSystemOrUserId();
+        User currentUser = helper.getCurrentUser();
         boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
-        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, version, loggedInUserId, hasOversight);
+        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, version, loggedInUserId, currentUser, hasOversight);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         ManyMap<String, Message> results = new ManyMap<String, Message>();
 
@@ -112,16 +114,6 @@ public class FormFactory {
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
 
-//    private Task task(Process process, FormRequest request) throws StatusCodeError {
-//        if (request.getTask() != null)
-//            return request.getTask();
-//
-//        if (StringUtils.isEmpty(request.getTaskId()))
-//            return null;
-//
-//        return taskService.allowedTask(process, request.getTaskId(), false);
-//    }
-
     public static Field getField(Process process, Screen screen, String fieldName) {
         if (process == null || screen == null || StringUtils.isEmpty(fieldName))
             return null;
@@ -158,6 +150,11 @@ public class FormFactory {
         fieldBuilder.defaultValue(defaultValue.replaceAll("\\{ConfirmationNumber\\}", confirmationNumber));
     }
 
+//    public static void replaceCurrentUser(Field.Builder fieldBuilder, String currentLoggedInUserId) {
+//        String defaultValue = fieldBuilder.getDefaultValue();
+//        if (defaultValue.contains("\\{CurrentUser\\}"))
+//            fieldBuilder.defaultValue(defaultValue.replaceAll("\\{CurrentUser\\}", currentLoggedInUserId));
+//    }
 
     private static void addStateOptions(Field.Builder fieldBuilder) {
         fieldBuilder.option(new Option.Builder().value("").name("").build())
@@ -227,9 +224,10 @@ public class FormFactory {
         private final Screen screen;
         private final ViewContext version;
         private final String loggedInUserId;
+        private final User currentUser;
         private final boolean hasOversight;
 
-        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext version, String loggedInUserId, boolean hasOversight) {
+        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext version, String loggedInUserId, User currentUser, boolean hasOversight) {
             this.process = process;
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
@@ -239,6 +237,7 @@ public class FormFactory {
             this.screen = screen;
             this.version = version;
             this.loggedInUserId = loggedInUserId;
+            this.currentUser = currentUser;
             this.hasOversight = hasOversight;
         }
 
@@ -272,9 +271,10 @@ public class FormFactory {
                     addConfirmationNumber(fieldBuilder, processInstanceId);
             }
             String fieldName = field.getName();
+            String defaultValue = field.getDefaultValue();
 
             if (StringUtils.isNotEmpty(fieldName)) {
-                List<Value> values = values(fieldName, data.get(fieldName));
+                List<Value> values = values(fieldName, data.get(fieldName), defaultValue);
                 List<Message> messages = results.get(fieldName);
 
                 formBuilder.variable(fieldName, values);
@@ -327,9 +327,20 @@ public class FormFactory {
         }
 
         // Rebuilds any values of type File so that their links are correct
-        private List<Value> values(String fieldName, List<? extends Value> values) {
-            if (values == null || values.isEmpty())
+        private List<Value> values(String fieldName, List<? extends Value> values, String defaultValue) {
+            if (values == null || values.isEmpty()) {
+                if (StringUtils.isNotEmpty(defaultValue)) {
+                    if (defaultValue.equals("{{CurrentUser}}"))
+                        return Collections.singletonList((Value)currentUser);
+                    if (defaultValue.equals("{{CurrentDate}}")) {
+                        Value currentDateValue = new Value(dateTimeFormatter.print(new Date().getTime()));
+                        return Collections.singletonList(currentDateValue);
+                    }
+                    return Collections.singletonList(new Value(defaultValue));
+                }
+
                 return Collections.emptyList();
+            }
 
             List<Value> list = new ArrayList<Value>(values.size());
             for (Value value : values) {

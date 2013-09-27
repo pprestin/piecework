@@ -37,9 +37,11 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
 import piecework.model.Process;
+import piecework.model.User;
 import piecework.persistence.ProcessRepository;
 
 import com.google.common.collect.Sets;
+import piecework.service.IdentityService;
 
 /**
  * @author James Renfro
@@ -49,6 +51,9 @@ public class IdentityHelper {
 
 	@Autowired
 	ProcessRepository processRepository;
+
+    @Autowired
+    IdentityService identityService;
 
     public String getAuthenticatedSystemOrUserId() {
         String userId = null;
@@ -68,6 +73,14 @@ public class IdentityHelper {
             }
         }
         return userId;
+    }
+
+    public User getCurrentUser() {
+        IdentityDetails principal = getAuthenticatedPrincipal();
+        if (principal == null)
+            return null;
+
+        return new User.Builder(principal).build();
     }
 
     public IdentityDetails getAuthenticatedPrincipal() {
