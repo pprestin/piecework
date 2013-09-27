@@ -16,6 +16,7 @@
 package piecework.ui;
 
 import org.htmlcleaner.*;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.model.Content;
 import piecework.model.Form;
 import piecework.model.Process;
@@ -33,11 +34,13 @@ public class StreamingPageContent implements StreamingOutput {
     private final Process process;
     private final Form form;
     private final Content content;
+    private final DataInjectionStrategy strategy;
 
-    public StreamingPageContent(Process process, Form form, Content content) {
+    public StreamingPageContent(Process process, Form form, Content content, DataInjectionStrategy strategy) {
         this.process = process;
         this.form = form;
         this.content = content;
+        this.strategy = strategy;
     }
 
     public void write(OutputStream output) throws IOException, WebApplicationException {
@@ -45,7 +48,15 @@ public class StreamingPageContent implements StreamingOutput {
         cleanerProperties.setOmitXmlDeclaration(true);
         HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
         TagNode node = cleaner.clean(content.getInputStream());
-        node.traverse(new DecoratingVisitor(form));
+        switch (strategy) {
+            case INCLUDE_SCRIPT:
+                node.traverse(new ScriptInjectingVisitor(form));
+                break;
+            case DECORATE_HTML:
+                node.traverse(new DecoratingVisitor(form));
+                break;
+        }
+
         SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
         serializer.writeToStream(node, output);
     }

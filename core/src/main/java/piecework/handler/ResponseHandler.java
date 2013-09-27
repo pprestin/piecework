@@ -82,7 +82,7 @@ public class ResponseHandler {
                 location = process.getBase() + "/" + location;
 
                 Content content = content(location);
-                return Response.ok(new StreamingPageContent(process, form, content), content.getContentType()).build();
+                return Response.ok(new StreamingPageContent(process, form, content, form.getScreen().getStrategy()), content.getContentType()).build();
             }
         }
 

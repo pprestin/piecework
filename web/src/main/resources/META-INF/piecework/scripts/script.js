@@ -90,8 +90,11 @@
             } else if (type == 'file') {
                 this.decorateFieldForm(field);
 
-                if ($variable.is("img") && values != null && values.length > 0) {
-                    $variable.attr('src', values[0].link);
+                var $images = $variable.filter('img');
+                var $others = $variable.filter(':not(img,form)');
+                if (values != null && values.length > 0) {
+                    $images.attr('src', values[0].link);
+                    $others.text(values[0].name);
                 }
             } else {
                 if ($input.length > 0 && type != 'file') {
@@ -198,7 +201,8 @@
             }
         },
         includeVariableButtons: function(field, $form) {
-            $form.find(':input.process-variable-file[type="file"]').change(function(event) {
+            var selector = ':input[type="file"][name="' + field.name + '"]';
+            $form.find(selector).change(function(event) {
                 var files = $(event.target)[0].files;
                 var data = new FormData();
 
@@ -293,6 +297,11 @@
         },
         onVariableItemAdded: function(field, $form, data) {
             utils.includeVariableItems(field, $form, data);
+            $.get(field.link + ".json", function(data) {
+                var fieldData = {};
+                fieldData[field.name] = data.list;
+                utils.decorateField(field, fieldData, $form.find(":input"), $(".process-variable"));
+            });
         },
         populate: function(model) {
             var data = model.data;

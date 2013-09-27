@@ -22,6 +22,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
@@ -54,6 +55,9 @@ public class Screen implements Serializable {
 	
 	@XmlElement
 	private final String type;
+
+    @XmlElement
+    private final DataInjectionStrategy strategy;
 	
 	@XmlElement
 	private final String location;
@@ -105,6 +109,7 @@ public class Screen implements Serializable {
 		this.processDefinitionKey = builder.processDefinitionKey;
 		this.title = builder.title;
 		this.type = builder.type;
+        this.strategy = builder.strategy;
 		this.location = builder.location;
 		this.ordinal = builder.ordinal;
 		this.isDeleted = builder.isDeleted;
@@ -139,7 +144,11 @@ public class Screen implements Serializable {
 		return type;
 	}
 
-	public String getLocation() {
+    public DataInjectionStrategy getStrategy() {
+        return strategy;
+    }
+
+    public String getLocation() {
 		return location;
 	}
 
@@ -190,6 +199,7 @@ public class Screen implements Serializable {
 		private String interactionId;
 		private String title;
 		private String type;
+        private DataInjectionStrategy strategy;
 		private String location;
         private boolean isAttachmentAllowed;
         private List<Grouping> groupings;
@@ -204,6 +214,7 @@ public class Screen implements Serializable {
 		
 		public Builder() {
 			super();
+            this.strategy = DataInjectionStrategy.NONE;
             this.groupings = new ArrayList<Grouping>();
             this.sections = new ArrayList<Section>();
             this.stylesheets = new ArrayList<File>();
@@ -220,6 +231,7 @@ public class Screen implements Serializable {
 			this.processDefinitionKey = sanitizer.sanitize(screen.processDefinitionKey);
 			this.title = sanitizer.sanitize(screen.title);
 			this.type = sanitizer.sanitize(screen.type);
+            this.strategy = screen.strategy;
             this.isAttachmentAllowed = screen.isAttachmentAllowed;
 			this.location = sanitizer.sanitize(screen.location);
             this.reviewIndex = screen.reviewIndex;
@@ -304,6 +316,11 @@ public class Screen implements Serializable {
 			this.type = type;
 			return this;
 		}
+
+        public Builder strategy(DataInjectionStrategy strategy) {
+            this.strategy = strategy;
+            return this;
+        }
 		
 		public Builder location(String location) {
 			this.location = location;
