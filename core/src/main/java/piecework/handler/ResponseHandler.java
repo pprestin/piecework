@@ -115,6 +115,7 @@ public class ResponseHandler {
                 }
                 content = new Content.Builder().inputStream(inputStream).contentType(contentType).build();
             } catch (IOException e) {
+                LOG.error("Could not retrieve content", e);
                 throw new InternalServerError();
             }
         } else if (location.startsWith("file:")) {
