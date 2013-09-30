@@ -3,22 +3,21 @@ define([ 'chaplin',
          'models/design/interaction',
          'models/design/screen',
          'models/design/screens',
+         'models/design/sidebar',
+         'views/design/process-list-view',
          'views/base/view',
          'views/design/interaction-list-view',
-         'text!templates/process-designer.hbs' ],
-         function(Chaplin, Process, Interaction, Screen, Screens, View, InteractionListView, template ) {
+         'views/design/sidebar-view',
+         'text!templates/design/process-designer.hbs' ],
+function(Chaplin, Process, Interaction, Screen, Screens, Sidebar, ProcessListView, View, InteractionListView,
+         SidebarView, template ) {
 	'use strict';
 
 	var ProcessDesignerView = View.extend({
 		autoRender: true,
-		container : '#main-screen',
+		container : '.main-content',
 		id: 'process-designer-view',
 		template: template,
-		regions : {
-			'#left-frame' : 'sidebar',
-			'.sidebar-content' : 'sidebar-content',
-			'.screen-list' : 'screen-list',
-		},
 	    listen: {
 	        'addedToDOM': '_onAddedToDOM',
 	    },
@@ -34,10 +33,12 @@ define([ 'chaplin',
 	   		'show .accordion-group': '_toggleSection',
 	   	},
 	   		    	
-//	   	initialize: function(options) {
-//	   		View.__super__.initialize.apply(this, options);
-//	   		this.model.fetch();
-//		},
+	   	initialize: function(options) {
+	   		View.__super__.initialize.apply(this, options);
+            var processes = this.model.get('collection');
+//            var sidebar = new Sidebar({collection: processes, title: 'PROCESSES', type: 'process', actions: { add: "#designer/edit" }});
+	   		this.subview('sidebar', new ProcessListView({container: '#left-frame', model: sidebar}));
+		},
 		
 //		render: function(options) {
 //	   		View.__super__.render.apply(this, options);

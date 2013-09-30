@@ -2,9 +2,10 @@
 <label for="{{fieldId}}">{{label}}</label>
 {{/if}}
 <textarea id="{{fieldId}}" class="form-control" name="{{name}}" maxlength="{{maxValueLength}}" rows="5" cols="80"
-{{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}}
+{{#if placeholder}}placeholder="{{placeholder}}"{{/if}}
 {{#if required}}class="required"{{/if}}
 {{#unless editable}}disabled{{/unless}}>
+{{value}}
 </textarea>
 {{#if messages}}
 {{#each messages}}

@@ -1,25 +1,18 @@
 {{#if label}}
 <label>{{label}}</label>
 {{/if}}
-<div>
 <input class="form-control"
-       id="{{fieldId}}"
-       type="text"
+       type="{{type}}"
+       name="{{name}}"
        maxlength="{{maxValueLength}}"
-       size="20"
+       size="{{displayValueLength}}"
        data-max-inputs="{{maxInputs}}"
        data-min-inputs="{{minInputs}}"
-       autocomplete="off"
 {{#if required}}class="required"{{/if}}
 {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
 {{#if pattern}}pattern="{{pattern}}"{{/if}}
-{{#if value}}value="{{value.displayName}}"{{/if}}
-{{#if placeholder}}placeholder="{{placeholder}}"{{else}}placeholder="Start typing name"{{/if}}
-{{#unless editable}}{{#unless readonly}}name="{{name}}"{{/unless}} disabled{{/unless}}/>
-{{#if editable}}
-<input type="hidden" name="{{name}}" {{#if value}}value="{{value.userId}}"{{/if}}/>
-{{/if}}
-</div>
+{{#if value}}value="{{date value}}"{{/if}}
+{{#unless editable}}disabled{{/unless}}/>
 {{#if messages}}
 {{#each messages}}
 <span class="help-inline generated">{{text}}</span>

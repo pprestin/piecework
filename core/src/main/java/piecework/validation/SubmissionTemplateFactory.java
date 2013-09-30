@@ -121,8 +121,11 @@ public class SubmissionTemplateFactory {
                 if (field.isRestricted())
                     builder.restricted(fieldName);
 
-                if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
+                if (field.getType().equals(Constants.FieldTypes.PERSON))
                     builder.userField(fieldName);
+
+//                if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
+//                    builder.userField(fieldName);
             }
         }
     }
@@ -149,8 +152,8 @@ public class SubmissionTemplateFactory {
                             .name(fieldName)
                             .constraint(constraint)
                             .build());
-                if (type.equals(Constants.ConstraintTypes.IS_VALID_USER))
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALID_USER).name(fieldName).build());
+//                if (type.equals(Constants.ConstraintTypes.IS_VALID_USER))
+//                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALID_USER).name(fieldName).build());
                 else if (type.equals(Constants.ConstraintTypes.IS_NUMERIC))
                     rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMERIC).name(fieldName).build());
                 else if (type.equals(Constants.ConstraintTypes.IS_EMAIL_ADDRESS))
@@ -181,6 +184,8 @@ public class SubmissionTemplateFactory {
                         .name(fieldName)
                         .options(options).build());
             }
+        } else if (fieldTag == FieldTag.PERSON) {
+            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALID_USER).name(fieldName).build());
         } else {
             Pattern pattern = field.getPattern() != null ? Pattern.compile(field.getPattern()) : null;
             if (pattern != null)

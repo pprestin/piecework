@@ -9,7 +9,7 @@ define([ 'chaplin',
 	var ProcessListView = CollectionView.extend({
 		autoRender: true,
 		className: "nav nav-list",
-		region: 'sidebar-content',
+//		region: 'sidebar-content',
 		itemView: ProcessItemView,
 		tagName: 'ul',
 //		initialize: function(options) {

@@ -47,9 +47,9 @@ public class ExampleFactory {
 
     public static Field supervisorIdField() {
         return new Field.Builder()
-                .type(Constants.FieldTypes.TEXT)
+                .type(Constants.FieldTypes.PERSON)
                 .name("supervisorId")
-                .constraint(new Constraint.Builder().type(Constants.ConstraintTypes.IS_VALID_USER).build())
+//                .constraint(new Constraint.Builder().type(Constants.ConstraintTypes.IS_VALID_USER).build())
                 .maxValueLength(40)
                 .editable()
                 .required()

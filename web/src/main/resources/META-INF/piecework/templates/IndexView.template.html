@@ -1,71 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title><% name %></title>
+<!doctype html>
+<html ng-app="myApp">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <title></title>
+    <link href="../static/css/vendor/bootstrap.min.css" rel="stylesheet"/>
 
-    <!-- Le styles -->
-    <link href="<% static %>/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <link href="<% static %>/css/index.css" rel="stylesheet">
-    <link href="<% static %>/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../static/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="../static/css/layout.css" rel="stylesheet"/>
+</head>
+</head>
+<body role="application">
+    <div class="navbar navbar-fixed-top main-navbar">
+        <div class="user-information">
+            <div id="user-information-name" class="user-information-name pull-right">
+            </div>
+        </div>
+    </div>
+    <div class="container" ng-controller="ProcessesController">
+        <div class="main-content row">
+            <div class="col-lg-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">Processes</div>
+                    <div class="panel-body">
+                    </div>
+                    <table class="table">
+                        <tr ng-repeat="process in processes">
+                            <td>
+                                <input type="checkbox" ng-model="process.selected">
+                                <span class="selected-{{todo.selected}}">{{process.processDefinitionLabel}}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-9">
+                <div>
+                    <form ng-submit="addProcess()">
+                        <div class="form-group">
+                            <label for="processDefinitionLabel">Process Name</label>
+                            <input ng-model="processDefinitionLabel" class="form-control" id="processDefinitionLabel" type="text" size="30" placeholder="Give your process a name">
+                        </div>
 
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="/js/vendor/html5shiv.js"></script>
-    <![endif]-->
+                        <div class="button-group">
+                            <button class="btn btn-primary" type="submit">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="main-footer navbar navbar-fixed-bottom">
+        <div class="navbar-inner">
+            <ul>
+                <li class="nav"></li>
+                <li class="nav pull-right"><h1 style="font-weight: normal">Workflow&nbsp;&nbsp;</h1></li>
+            </ul>
+        </div>
+    </div>
 
-  </head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
+    <script>
+        var myAppModule = angular.module('myApp', []);
 
-  <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<div class="container-fluid">
-				<div class="row-fluid">
-					<button type="button" class="btn btn-navbar" data-toggle="collapse"
-						data-target=".nav-collapse">
-						<span class="icon-bar"></span> <span class="icon-bar"></span> <span
-							class="icon-bar"></span>
-					</button>
-					<a class="brand" href="#"><% applicationName %></a>
-					<div class="nav-collapse collapse">
-						<p class="navbar-text pull-right">
-							<a href="#" class="navbar-link"><% user.displayName %></a>
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="container-fluid">
-		<!-- <div class="row-fluid">
-			<ul class="breadcrumb">
-				<li><a href="#">Processes</a> <span class="divider">/</span></li>
-				<li><a href="#designer/edit/{{ process.id }}">{{ process.shortName }}</a> <span class="divider">/</span></li>
-				<li class="active">{{ title }}</li>
-			</ul>
-		</div>-->
-		<div id="main-screen" class="row-fluid">
-			
-		</div>
-		<hr>
-		<footer>
-			
-		</footer>
-	</div>
-	
 
- 	<script type="text/javascript"> 
-		piecework = {};
-		piecework.context = <%& json %>;
-
-        if (piecework.context == null) {
-            piecework.context = {};
-        }
- 	</script>
-	<script data-main="<% static %>/js/index.js" src='<% static %>/js/vendor/require.js'></script>
-
-  </body>
+    </script>
+    <script src="../static/js/ng/designer.js"></script>
+</body>
 </html>

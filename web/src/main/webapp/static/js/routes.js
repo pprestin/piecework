@@ -1,7 +1,8 @@
-define(['controllers/form-controller'], function() {
+define(['controllers/form-controller', 'controllers/designer-controller'], function() {
   'use strict';
 
   return function(match) {
+//    match(':servlet/:access/designer', 'designer#index');
     match(':servlet/:access/form', 'form#search');
     match(':servlet/:access/form.html', 'form#search');
     match(':servlet/:access/form/', 'form#search');

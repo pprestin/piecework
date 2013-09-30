@@ -56,6 +56,7 @@ define([ 'chaplin',
             View.__super__.render.apply(this);
 
             var action = this.model.get("action");
+            var data = this.model.get("data");
 
             if (action != undefined) {
                 this.$el.attr('action', action + '.html');
@@ -96,6 +97,19 @@ define([ 'chaplin',
                     var isSelected = sectionMap[sectionId];
                     section.selected = isSelected != undefined ? isSelected : false;
                     section.readonly = readonly;
+
+                    var fields = section.fields;
+                    if (fields != null) {
+                        for (var j=0;j<fields.length;j++) {
+                            var field = fields[j];
+                            var values = data[field.name];
+
+                            if (values != null && values.length > 0) {
+                                field.value = values[0];
+                                field.values = values;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -191,46 +205,46 @@ define([ 'chaplin',
             });
 	    },
 	    _onAddedToDOM: function(event) {
-            var data = this.model.get('data');
-            if (data != undefined) {
-                for (var name in data) {
-                    if (name != undefined) {
-                        var values = data[name];
-                        var selector = ':input[name="' + name + '"]';
-                        var $element = $(selector);
-                        if (values != null && values.length > 0) {
-                            if (values.length > 1) {
-                                var $controlGroup = $element.closest('.control-group');
-                                var $input = $controlGroup.find(':input[type="text"]:last');
-                                var $clone = $input.clone();
-                                $clone.val();
-                                $controlGroup.append("<br/>");
-                                $controlGroup.append($clone);
-                            }
-
-                            if ($element.attr('data-pw-person-lookup') != null) {
-                                var inputSelector = '#' + $element.attr('data-pw-person-lookup');
-                                var value = values[0];
-                                $element.val(value.userId);
-                                $(inputSelector).val(value.displayName);
-
-                            } else if ($element.attr('type') != 'file') {
-                               $element.val(values);
-                            } else {
-                                var accept = $element.attr('accept');
-                                var re = RegExp("image/");
-                                $.each(values, function(index, value) {
-                                    if (accept != null && re.test(accept)) {
-                                        $element.before('<div><image style="width:300px" src="' + value.link + '" alt="' + value.name + '"/></div>');
-                                    } else {
-                                        $element.before('<div class="file"><a href="' + value.link + '">' + value.name + "</a></div>");
-                                    }
-                                });
-                            }
-                        }
-                    }
-                }
-            }
+//            var data = this.model.get('data');
+//            if (data != undefined) {
+//                for (var name in data) {
+//                    if (name != undefined) {
+//                        var values = data[name];
+//                        var selector = ':input[name="' + name + '"]';
+//                        var $element = $(selector);
+//                        if (values != null && values.length > 0) {
+//                            if (values.length > 1) {
+//                                var $controlGroup = $element.closest('.control-group');
+//                                var $input = $controlGroup.find(':input[type="text"]:last');
+//                                var $clone = $input.clone();
+//                                $clone.val();
+//                                $controlGroup.append("<br/>");
+//                                $controlGroup.append($clone);
+//                            }
+//
+//                            if ($element.attr('data-pw-person-lookup') != null) {
+//                                var inputSelector = '#' + $element.attr('data-pw-person-lookup');
+//                                var value = values[0];
+//                                $element.val(value.userId);
+//                                $(inputSelector).val(value.displayName);
+//
+//                            } else if ($element.attr('type') != 'file') {
+//                               $element.val(values);
+//                            } else {
+//                                var accept = $element.attr('accept');
+//                                var re = RegExp("image/");
+//                                $.each(values, function(index, value) {
+//                                    if (accept != null && re.test(accept)) {
+//                                        $element.before('<div><image style="width:300px" src="' + value.link + '" alt="' + value.name + '"/></div>');
+//                                    } else {
+//                                        $element.before('<div class="file"><a href="' + value.link + '">' + value.name + "</a></div>");
+//                                    }
+//                                });
+//                            }
+//                        }
+//                    }
+//                }
+//            }
 	    },
 	    _onLoaded: function(event) {
             Chaplin.mediator.publish('formAddedToDOM');

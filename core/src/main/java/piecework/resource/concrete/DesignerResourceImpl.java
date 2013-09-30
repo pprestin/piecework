@@ -15,13 +15,17 @@
  */
 package piecework.resource.concrete;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import piecework.Versions;
 import piecework.common.ViewContext;
+import piecework.model.Form;
 import piecework.resource.DesignerResource;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;
@@ -32,10 +36,13 @@ import piecework.exception.StatusCodeError;
 @Service
 public class DesignerResourceImpl implements DesignerResource {
 
+    @Autowired
+    Versions versions;
+
 	@Override
 	public Response root() throws StatusCodeError {
-		return Response.seeOther(UriBuilder.fromPath("designer").build()).build();
-	}
+		return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri("designer")).build();
+    }
 	
 	@Override
 	public IndexView index() throws StatusCodeError {

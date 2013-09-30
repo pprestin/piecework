@@ -10,10 +10,12 @@ import java.util.Map;
  */
 public enum FieldTag {
     CHECKBOX(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "checkbox"))),
+    DATE(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "date"))),
     EMAIL(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "email"))),
     FILE(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "file"))),
     HTML(new FieldTagDefinition("div")),
     NUMBER(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "number"))),
+    PERSON(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "text"))),
     RADIO(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "radio"))),
     SELECT_MULTIPLE(new FieldTagDefinition("select", new FieldAttributeDefinition("multiple"))),
     SELECT_ONE(new FieldTagDefinition("select")),

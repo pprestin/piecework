@@ -79,7 +79,7 @@ public class ExampleFactory {
                 .name("supervisorId")
                 .pattern("[a-z]{3}[0-9]{2}")
                 .customValidity("Must be three lower-case letters, followed by two digits")
-                .constraint(new Constraint.Builder().constraintId("c2").type(Constants.ConstraintTypes.IS_VALID_USER).build())
+//                .constraint(new Constraint.Builder().constraintId("c2").type(Constants.ConstraintTypes.IS_VALID_USER).build())
                 .constraint(new Constraint.Builder()
                         .constraintId("c3")
                         .type(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN)

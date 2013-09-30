@@ -10,8 +10,10 @@
        data-min-inputs="{{minInputs}}"
        {{#if required}}class="required"{{/if}}
        {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
+       {{#if placeholder}}placeholder={{placeholder}}{{/if}}
        {{#if pattern}}pattern="{{pattern}}"{{/if}}
        {{#if value}}value="{{value}}"{{/if}}
+       {{#if readonly}}readonly{{/if}}
        {{#unless editable}}disabled{{/unless}}/>
 {{#if messages}}
 {{#each messages}}

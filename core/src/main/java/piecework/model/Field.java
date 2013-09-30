@@ -79,6 +79,9 @@ public class Field implements Serializable {
     
 	@XmlAttribute
     private final boolean editable;
+
+    @XmlAttribute
+    private final boolean readonly;
 	
     @XmlAttribute
     private final boolean required;
@@ -91,6 +94,9 @@ public class Field implements Serializable {
 
     @XmlElement
     private final String defaultValue;
+
+    @XmlElement
+    private final String placeholder;
         
     @XmlAttribute
     private final int displayValueLength;
@@ -135,6 +141,7 @@ public class Field implements Serializable {
         this.name = builder.name;
         this.type = builder.type;
         this.editable = builder.editable;
+        this.readonly = builder.readonly;
         this.required = builder.required;
         this.restricted = builder.restricted;
         this.mask = builder.mask;
@@ -143,6 +150,7 @@ public class Field implements Serializable {
         this.customValidity = builder.customValidity;
         this.visible = builder.visible;
         this.defaultValue = builder.defaultValue;
+        this.placeholder = builder.placeholder;
         this.ordinal = builder.ordinal;
         this.displayValueLength = builder.displayValueLength;
         this.maxValueLength = builder.maxValueLength;
@@ -183,6 +191,10 @@ public class Field implements Serializable {
 		return editable;
 	}
 
+    public boolean isReadonly() {
+        return readonly;
+    }
+
     public String getAccept() {
         return accept;
     }
@@ -207,7 +219,11 @@ public class Field implements Serializable {
 		return defaultValue;
 	}
 
-	public int getOrdinal() {
+    public String getPlaceholder() {
+        return placeholder;
+    }
+
+    public int getOrdinal() {
 		return ordinal;
 	}
 
@@ -256,6 +272,7 @@ public class Field implements Serializable {
         private String name;
         private String type;
         private boolean editable;
+        private boolean readonly;
         private boolean required;
         private boolean restricted;
         private boolean visible;
@@ -264,6 +281,7 @@ public class Field implements Serializable {
         private String pattern;
         private String customValidity;
         private String defaultValue;
+        private String placeholder;
         private int displayValueLength;
         private int maxValueLength;
         private int minValueLength;
@@ -284,6 +302,7 @@ public class Field implements Serializable {
             this.maxValueLength = 255;
             this.ordinal = -1;
             this.editable = false;
+            this.readonly = false;
             this.constraints = new ArrayList<Constraint>();
             this.options = new ArrayList<Option>();
             this.visible = true;
@@ -295,6 +314,7 @@ public class Field implements Serializable {
             this.name = sanitizer.sanitize(field.name);
             this.type = sanitizer.sanitize(field.type);
             this.editable = field.editable;
+            this.readonly = field.readonly;
             this.required = field.required;
             this.restricted = field.restricted;
             this.accept = sanitizer.sanitize(field.accept);
@@ -305,6 +325,7 @@ public class Field implements Serializable {
                 this.defaultValue = field.defaultValue;
             else
                 this.defaultValue = sanitizer.sanitize(field.defaultValue);
+            this.placeholder = sanitizer.sanitize(field.placeholder);
             this.displayValueLength = field.displayValueLength;
             this.maxValueLength = field.maxValueLength;
             this.minValueLength = field.minValueLength;
@@ -376,6 +397,11 @@ public class Field implements Serializable {
             return this;
         }
 
+        public Builder readonly() {
+            this.readonly = true;
+            return this;
+        }
+
         public Builder uneditable() {
             this.editable = false;
             return this;
@@ -413,6 +439,11 @@ public class Field implements Serializable {
         
         public Builder defaultValue(String defaultValue) {
             this.defaultValue = defaultValue;
+            return this;
+        }
+
+        public Builder placeholder(String placeholder) {
+            this.placeholder = placeholder;
             return this;
         }
 

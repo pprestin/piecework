@@ -56,6 +56,12 @@ p.lead {
     color: #999;
 }
 
+ul {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+
 ul.attachments {
     list-style: none;
     margin: 0px;
@@ -70,6 +76,10 @@ ul.attachments li {
 
 ul.attachments li .attachment-footer {
     text-align: right;
+}
+
+ul.files li {
+    padding: 0px 0px 10px;
 }
 
 ul.sections {
@@ -141,7 +151,11 @@ div.screen-footer {
     white-space: nowrap;
 }
 
-input[type="text"].form-control {
+input.form-control {
+    width: auto;
+}
+
+select.form-control {
     width: auto;
 }
 

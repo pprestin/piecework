@@ -70,12 +70,11 @@ public interface Constants {
         public static final String OR = "OR";
 		public static final String IS_ALL_VALUES_MATCH = "IS_ALL_VALUES_MATCH";
         public static final String IS_CONFIRMATION_NUMBER = "IS_CONFIRMATION_NUMBER";
-        public static final String IS_DATE = "IS_DATE";
 		public static final String IS_EMAIL_ADDRESS = "IS_EMAIL_ADDRESS";
 		public static final String IS_NUMERIC = "IS_NUMERIC";
 		public static final String IS_ONLY_REQUIRED_WHEN = "IS_ONLY_REQUIRED_WHEN";
         public static final String IS_ONLY_VISIBLE_WHEN = "IS_ONLY_VISIBLE_WHEN";
-		public static final String IS_VALID_USER = "IS_VALID_USER";
+		//public static final String IS_VALID_USER = "IS_VALID_USER";
 		public static final String IS_LIMITED_TO = "IS_LIMITED_TO";
         public static final String IS_STATE = "IS_STATE";
         public static final String SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE = "SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE";
@@ -116,10 +115,12 @@ public interface Constants {
 
     public static class FieldTypes {
         public static final String CHECKBOX = "checkbox";
+        public static final String DATE = "date";
         public static final String EMAIL = "email";
         public static final String FILE = "file";
         public static final String HTML = "html";
         public static final String NUMBER = "number";
+        public static final String PERSON = "person";
         public static final String RADIO = "radio";
         public static final String SELECT_ONE = "select-one";
         public static final String SELECT_MULTIPLE = "select-multiple";

@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import piecework.ApiResource;
+import piecework.ApplicationResource;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.model.SearchResults;
@@ -37,7 +38,7 @@ import piecework.model.Process;
  * @author James Renfro
  */
 @Path("process")
-public interface ProcessResource extends ApiResource {
+public interface ProcessResource extends ApplicationResource, ApiResource {
 
 	@POST
 	@Path("")

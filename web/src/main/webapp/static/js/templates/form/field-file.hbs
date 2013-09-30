@@ -1,9 +1,31 @@
 {{#if label}}
 <label>{{label}}</label>
 {{/if}}
+<!--//                                var accept = $element.attr('accept');
+//                                var re = RegExp("image/");
+//                                $.each(values, function(index, value) {
+//                                    if (accept != null && re.test(accept)) {
+//                                        $element.before('<div><image style="width:300px" src="' + value.link + '" alt="' + value.name + '"/></div>');
+//                                    } else {
+//                                        $element.before('<div class="file"><a href="' + value.link + '">' + value.name + "</a></div>");
+//                                    }
+//                                });
+//-->
+<ul class="files">
+{{#if images}}
+    {{#each images}}
+        <li><a href="{{link}}" rel="external"><img class="img-thumbnail" style="width: 140px;" src="{{link}}" title="{{name}}" alt="{{description}}"/></a></li>
+    {{/each}}
+{{else}}
+    {{#each values}}
+        <li><a href="{{link}}">{{name}}</a></li>
+    {{/each}}
+{{/if}}
+</ul>
+
 {{#if editable}}
 <input class="form-control"
-       type="{{type}}"
+       type="file"
        name="{{name}}"
        maxlength="{{maxValueLength}}"
        size="{{displayValueLength}}"
@@ -13,7 +35,7 @@
 {{#if required}}class="required"{{/if}}
 {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
 {{#if pattern}}pattern="{{pattern}}"{{/if}}
-{{#if defaultValue}}placeholder="{{defaultValue}}"{{/if}} />
+{{#if placeholder}}placeholder="{{placeholder}}"{{/if}} />
 {{else}}
 <p class="text-muted">No files</p>
 {{/if}}

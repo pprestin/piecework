@@ -10,7 +10,11 @@ define([ 'views/form/base-field-view', 'text!templates/form/field-file.hbs'],
             var accept = this.model.get("accept");
             var re = RegExp("image/");
             if (accept != null && re.test(accept)) {
-                this.$el.before('<img class="file" src=""/>');
+                var values = this.model.get("values");
+                if (values != null) {
+                    this.model.set("images", values);
+                }
+                //this.$el.before('<img class="file" src=""/>');
             }
             return this;
         }

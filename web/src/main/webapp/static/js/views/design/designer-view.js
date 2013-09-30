@@ -1,12 +1,12 @@
 define([ 'models/design/process',
          'models/design/processes',
-         'models/sidebar',
+         'models/design/sidebar',
          'views/base/view',
          'views/intro-view',
          'views/design/field-list-view',
          'views/design/process-list-view',
          'views/design/process-detail-view',
-         'views/sidebar-view',
+         'views/design/sidebar-view',
          'text!templates/designer.hbs' ],
 		function(Process, Processes, Sidebar, View, IntroView, FieldListView, ProcessListView, ProcessDetailView, SidebarView, template) {
 	'use strict';
@@ -16,12 +16,12 @@ define([ 'models/design/process',
 		container : '#main-screen',
 		id : 'designer-view',
 		template : template,
-		regions : {
-			'#left-frame' : 'sidebar',
-			'#main-frame' : 'main',
-			'.sidebar-content' : 'sidebar-content',
-			'.screen-list' : 'screen-list',
-		},
+//		regions : {
+//			'#left-frame' : 'sidebar',
+//			'#main-frame' : 'main',
+//			'.sidebar-content' : 'sidebar-content',
+//			'.screen-list' : 'screen-list',
+//		},
 //	   	initialize: function(options) {
 //	   		View.__super__.initialize.apply(this, options);
 //	   	},

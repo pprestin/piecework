@@ -20,6 +20,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import piecework.ApplicationResource;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.designer.model.view.IndexView;
@@ -29,7 +30,7 @@ import piecework.exception.StatusCodeError;
  * @author James Renfro
  */
 @Path("")
-public interface DesignerResource extends Resource {
+public interface DesignerResource extends ApplicationResource {
 
 	@GET
 	@Path("")

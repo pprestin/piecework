@@ -18,7 +18,7 @@
 							{{/if}}
 							&nbsp;<span class="lead">Basic information</span>
 						</a>
-						<span class="pull-right"><button class="edit-button btn" type="button">Done</button></span>
+						<span class="pull-right"><button class="edit-button btn btn-default" type="button">Done</button></span>
 					</div>		
 				</div>
 				<div id="process-basic-information" class="accordion-body collapse {{#unless processDefinitionKey}}in{{/unless}}">
@@ -28,41 +28,41 @@
 							To get started, describe what your process is. Say as little or as much as you want.	
 						</div>
 						<fieldset>
-							<div class="control-group">
+							<div class="form-group">
 								<label>Key</label>
 								<div class="controls">
 									<div class="viewable process-short-name-readonly muted"></div>
-									<input class="editable process-short-name" type="text"
+									<input class="form-control editable process-short-name" type="text"
 										name="processDefinitionKey" maxlength="25" size="25"
 										placeholder="Letters/numbers, no spaces" required> <span
 										class="help-inline hide">Required</span>
 								</div>
 							</div>
-							<div class="control-group">
+							<div class="form-group">
 								<label>Label <span class="text-info">(optional)</span></label>
 								<div class="controls">
 									<div class="viewable process-short-name-readonly muted"></div>
-									<input class="editable process-formal-name span6" type="text"
+									<input class="form-control editable process-formal-name span6" type="text"
 										name="processDefinitionLabel" maxlength="80"
 										placeholder="How would you refer to it officially?">
 									<span class="help-inline hide">Required</span>
 								</div>
 							</div>
-							<div class="control-group">
+							<div class="form-group">
 								<label>Description <span class="text-info">(optional)</span></label>
 								<div class="controls">
 									<div class="viewable process-short-name-readonly muted"></div>
-									<textarea class="editable process-summary span8"
+									<textarea class="form-control editable process-summary span8"
 										name="processSummary"
 										placeholder="Provide some more details about how the process works"
 										rows="4"></textarea>
 								</div>
 							</div>
-							<div class="control-group">
+							<div class="form-group">
 								<label>Participants <span class="text-info">(optional)</span></label>
 								<div class="controls">
 									<div class="viewable process-short-name-readonly muted"></div>
-									<textarea class="editable process-participants span8"
+									<textarea class="form-control editable process-participants span8"
 										name="participantSummary"
 										placeholder="What people or groups have to take action?"></textarea>
 								</div>
@@ -78,7 +78,7 @@
 							data-target="#process-interactions">
 							<i class="section-open-indicator icon-chevron-right"></i>&nbsp;<span class="lead">User interactions</span>
 						</a>
-						<span class="pull-right"><button class="edit-button btn" type="button">Edit</button></span>
+						<span class="pull-right"><button class="edit-button btn btn-default" type="button">Edit</button></span>
 					</div>
 				</div>
 				<div id="process-interactions" class="accordion-body collapse">
@@ -95,11 +95,11 @@
 								</div>
 								<div class="pull-right">
 									<div class="btn-group">
-										<a class="btn accessible-btn add-screen-button" tabindex="100" autofocus="autofocus"><i class="icon-plus"></i> Add</a> 
-										<a class="btn accessible-btn dropdown-toggle" tabindex="101" data-toggle="dropdown" href="#"><span class="caret"></span></a>
+										<a class="btn btn-default accessible-btn add-screen-button" tabindex="100" autofocus="autofocus"><i class="icon-plus"></i> Add</a>
+										<a class="btn btn-default accessible-btn dropdown-toggle" tabindex="101" data-toggle="dropdown" href="#"><span class="caret"></span></a>
 										<ul class="dropdown-menu">
-											<li><a class="accessible-btn add-interaction-button" tabindex="-1"><i class="icon-list-alt"></i> Interaction</a></li>
-											<li><a class="accessible-btn add-screen-button"  tabindex="-1"><i class="icon-check"></i> Screen</a></li>
+											<li><a class="accessible-btn btn-default add-interaction-button" tabindex="-1"><i class="icon-list-alt"></i> Interaction</a></li>
+											<li><a class="accessible-btn btn-default add-screen-button"  tabindex="-1"><i class="icon-check"></i> Screen</a></li>
 										</ul>
 									</div>
 									<div class="btn-group">
