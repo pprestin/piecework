@@ -70,6 +70,7 @@ public interface Constants {
         public static final String OR = "OR";
 		public static final String IS_ALL_VALUES_MATCH = "IS_ALL_VALUES_MATCH";
         public static final String IS_CONFIRMATION_NUMBER = "IS_CONFIRMATION_NUMBER";
+        public static final String IS_DATE = "IS_DATE";
 		public static final String IS_EMAIL_ADDRESS = "IS_EMAIL_ADDRESS";
 		public static final String IS_NUMERIC = "IS_NUMERIC";
 		public static final String IS_ONLY_REQUIRED_WHEN = "IS_ONLY_REQUIRED_WHEN";

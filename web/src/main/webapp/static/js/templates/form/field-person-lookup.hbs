@@ -3,20 +3,20 @@
 {{/if}}
 <div>
 <input class="form-control"
+       id="{{fieldId}}"
        type="{{type}}"
        maxlength="{{maxValueLength}}"
        size="20"
        data-max-inputs="{{maxInputs}}"
        data-min-inputs="{{minInputs}}"
-       data-pw-person-lookup="{{name}}"
        autocomplete="off"
 {{#if required}}class="required"{{/if}}
 {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
 {{#if pattern}}pattern="{{pattern}}"{{/if}}
-{{#if defaultValue}}placeholder="{{defaultValue}}"{{else}}placeholder="Start typing name"{{/if}}
-{{#unless editable}}name="{{name}}" disabled{{/unless}}/>
+placeholder="Start typing name"
+{{#unless editable}}name="{{name}}" data-pw-person-lookup="{{fieldId}}" disabled{{/unless}}/>
 {{#if editable}}
-<input type="hidden" name="{{name}}"/>
+<input type="hidden" name="{{name}}" data-pw-person-lookup="{{fieldId}}"/>
 {{/if}}
 </div>
 {{#if messages}}

@@ -209,8 +209,11 @@ define([ 'chaplin',
                             }
 
                             if ($element.attr('data-pw-person-lookup') != null) {
+                                var inputSelector = '#' + $element.attr('data-pw-person-lookup');
                                 var value = values[0];
-                                $element.val(value.displayName);
+                                $element.val(value.userId);
+                                $(inputSelector).val(value.displayName);
+
                             } else if ($element.attr('type') != 'file') {
                                $element.val(values);
                             } else {
