@@ -1,12 +1,14 @@
 <!doctype html>
-<html ng-app="myApp">
+<html ng-app="ProcessDesigner">
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
-    <link href="../static/css/vendor/bootstrap.min.css" rel="stylesheet"/>
+    <!--link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet"/-->
 
+    <link href="../static/css/vendor/bootstrap.min.css" rel="stylesheet"/>
     <link href="../static/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
     <link href="../static/css/layout.css" rel="stylesheet"/>
 </head>
@@ -17,40 +19,12 @@
             <div id="user-information-name" class="user-information-name pull-right">
             </div>
         </div>
+        <h1><i class="icon-tasks icon-1x"></i> Processes</h1>
     </div>
-    <div class="container" ng-controller="ProcessesController">
-        <div class="main-content row">
-            <div class="col-lg-3">
-                <div class="panel panel-primary">
-                    <div class="panel-heading">Processes</div>
-                    <div class="panel-body">
-                    </div>
-                    <table class="table">
-                        <tr ng-repeat="process in processes">
-                            <td>
-                                <input type="checkbox" ng-model="process.selected">
-                                <span class="selected-{{todo.selected}}">{{process.processDefinitionLabel}}</span>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div class="col-lg-9">
-                <div>
-                    <form ng-submit="addProcess()">
-                        <div class="form-group">
-                            <label for="processDefinitionLabel">Process Name</label>
-                            <input ng-model="processDefinitionLabel" class="form-control" id="processDefinitionLabel" type="text" size="30" placeholder="Give your process a name">
-                        </div>
+    <div class="container">
+        <div ng-view class="main-content row"></div>
+    </div>
 
-                        <div class="button-group">
-                            <button class="btn btn-primary" type="submit">Add</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
     <div class="main-footer navbar navbar-fixed-bottom">
         <div class="navbar-inner">
             <ul>
@@ -61,11 +35,7 @@
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
-    <script>
-        var myAppModule = angular.module('myApp', []);
-
-
-    </script>
-    <script src="../static/js/ng/designer.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular-resource.min.js"></script>
+    <script src="../static/ng/js/designer.js"></script>
 </body>
 </html>

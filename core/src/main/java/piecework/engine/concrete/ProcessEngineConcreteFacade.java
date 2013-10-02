@@ -52,31 +52,36 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
 
     @Override
     public String start(piecework.model.Process process, String alias, Map<String, ?> data) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        ProcessDeployment deployment = processDeployment(process);
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         return proxy.start(process, alias, data);
     }
 
     @Override
     public boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        ProcessDeployment deployment = processDeployment(process);
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         return proxy.activate(process, instance);
     }
 
     @Override
     public boolean assign(Process process, String taskId, User user) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        ProcessDeployment deployment = processDeployment(process);
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         return proxy.assign(process, taskId, user);
     }
 
     @Override
     public boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        ProcessDeployment deployment = processDeployment(process);
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         return proxy.cancel(process, instance);
     }
 
     @Override
     public boolean suspend(Process process, ProcessInstance instance) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        ProcessDeployment deployment = processDeployment(process);
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         return proxy.suspend(process, instance);
     }
 
@@ -126,10 +131,11 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
                 if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
                     Set<String> engineSet = new HashSet<String>();
                     for (Process process : criteria.getProcesses()) {
-                        if (process.getEngine() == null || engineSet.contains(process.getEngine()))
+                        ProcessDeployment deployment = processDeployment(process);
+                        if (deployment.getEngine() == null || engineSet.contains(deployment.getEngine()))
                             continue;
-                        engineSet.add(process.getEngine());
-                        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+                        engineSet.add(deployment.getEngine());
+                        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
                         Task task = proxy.findTask(criteria);
 
                         if (task != null) {
@@ -165,11 +171,12 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
                 if (criteria.getProcesses() != null && !criteria.getProcesses().isEmpty()) {
                     Set<String> engineSet = new HashSet<String>();
                     for (Process process : criteria.getProcesses()) {
+                        ProcessDeployment deployment = processDeployment(process);
                         allowedProcessDefinitionKeys.add(process.getProcessDefinitionKey());
-                        if (process.getEngine() == null || engineSet.contains(process.getEngine()))
+                        if (deployment.getEngine() == null || engineSet.contains(deployment.getEngine()))
                             continue;
-                        engineSet.add(process.getEngine());
-                        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+                        engineSet.add(deployment.getEngine());
+                        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
 
                         TaskResults localResults = proxy.findTasks(criteria);
                         if (localResults == null)
@@ -254,17 +261,25 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
 
     @Override
     public boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+        ProcessDeployment deployment = processDeployment(process);
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
         return proxy.completeTask(process, taskId, action, validation);
     }
 
     @Override
-    public void deploy(Process process, String name, ProcessModelResource... resources) throws ProcessEngineException {
-        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, process.getEngine());
+    public void deploy(Process process, ProcessDeployment deployment, ProcessModelResource... resources) throws ProcessEngineException {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
-        proxy.deploy(process, name, resources);
+        proxy.deploy(process, deployment, resources);
+    }
+
+    private ProcessDeployment processDeployment(Process process) throws ProcessEngineException {
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new ProcessEngineException("Unable to retrieve deployment");
+        return deployment;
     }
 }

@@ -21,10 +21,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
-import piecework.exception.ForbiddenError;
-import piecework.exception.GoneError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
+import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.*;
@@ -44,6 +41,8 @@ import java.util.Set;
 @Service
 public class ProcessService {
 
+    @Autowired
+    DeploymentRepository deploymentRepository;
 
     @Autowired
     IdentityHelper helper;
@@ -76,38 +75,92 @@ public class ProcessService {
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         builder = new Process.Builder(process, passthroughSanitizer, false);
-        builder.clearInteractions();
 
-        if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
-            for (Interaction interaction : process.getInteractions()) {
-                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, passthroughSanitizer);
-                interactionBuilder.screens(null);
-                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
-                    for (Screen screen : interaction.getScreens()) {
-                        Screen persistedScreen = screenRepository.save(screen);
-                        interactionBuilder.screen(persistedScreen);
-                    }
-                }
-                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
-                builder.interaction(persistedInteraction);
-            }
-        }
-        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
-            for (Notification notification : rawProcess.getNotifications()) {
-                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
-                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
-                builder.notification(persistedNotification);
-            }
-        }
-        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
-            for (Section section : rawProcess.getSections()) {
-                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
-                Section persistedSection = sectionRepository.save(sectionBuilder.build());
-                builder.section(persistedSection);
-            }
-        }
+//        builder.clearInteractions();
+//
+//        if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
+//            for (Interaction interaction : process.getInteractions()) {
+//                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, passthroughSanitizer);
+//                interactionBuilder.screens(null);
+//                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
+//                    for (Screen screen : interaction.getScreens()) {
+//                        Screen persistedScreen = screenRepository.save(screen);
+//                        interactionBuilder.screen(persistedScreen);
+//                    }
+//                }
+//                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
+//                builder.interaction(persistedInteraction);
+//            }
+//        }
+//        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
+//            for (Notification notification : rawProcess.getNotifications()) {
+//                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
+//                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
+//                builder.notification(persistedNotification);
+//            }
+//        }
+//        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
+//            for (Section section : rawProcess.getSections()) {
+//                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
+//                Section persistedSection = sectionRepository.save(sectionBuilder.build());
+//                builder.section(persistedSection);
+//            }
+//        }
 
         return processRepository.save(builder.build());
+    }
+
+    public ProcessDeployment createDeployment(String rawProcessDefinitionKey) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+
+        ProcessDeployment deployment = new ProcessDeployment.Builder().build();
+        deployment = deploymentRepository.save(deployment);
+
+        List<ProcessDeploymentVersion> versions = process.getVersions();
+
+        String version = versions != null ? "" + (versions.size() + 1) : "1";
+
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        Process updated = new Process.Builder(process, passthroughSanitizer, true)
+                .version(new ProcessDeploymentVersion("", deployment.getDeploymentId(), version))
+                .build();
+
+        processRepository.save(updated);
+
+        return deployment;
+    }
+
+    public ProcessDeployment cloneDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        List<ProcessDeploymentVersion> deploymentVersions = process.getVersions();
+
+        String version = deploymentVersions != null ? "" + (deploymentVersions.size() + 1) : "1";
+
+        ProcessDeployment original = null;
+
+        for (ProcessDeploymentVersion deploymentVersion : deploymentVersions) {
+            if (deploymentVersion.getDeploymentId().equals(deploymentId)) {
+                original = deploymentRepository.findOne(deploymentId);
+                break;
+            }
+        }
+
+        if (original == null)
+            throw new NotFoundError();
+
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        ProcessDeployment deployment = new ProcessDeployment.Builder(original, null, passthroughSanitizer, true).deploymentId(null).build();
+        deployment = deploymentRepository.save(deployment);
+
+        Process updated = new Process.Builder(process, passthroughSanitizer, true)
+                .version(new ProcessDeploymentVersion("", deployment.getDeploymentId(), version))
+                .build();
+
+        processRepository.save(updated);
+
+        return deployment;
     }
 
     public Process delete(String rawProcessDefinitionKey) throws StatusCodeError {
@@ -120,6 +173,47 @@ public class ProcessService {
         Process.Builder builder = new Process.Builder(record, sanitizer, true);
         builder.delete();
         return processRepository.save(builder.build());
+    }
+
+    public void deleteDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        Process updated = new Process.Builder(process, sanitizer, true)
+                .deleteDeployment(deploymentId)
+                .build();
+
+        processRepository.save(updated);
+    }
+
+    public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        List<ProcessDeploymentVersion> deploymentVersions = process.getVersions();
+
+        String version = deploymentVersions != null ? "" + (deploymentVersions.size() + 1) : "1";
+
+        ProcessDeployment original = null;
+
+        for (ProcessDeploymentVersion deploymentVersion : deploymentVersions) {
+            if (deploymentVersion.getDeploymentId().equals(deploymentId)) {
+                original = deploymentRepository.findOne(deploymentId);
+                break;
+            }
+        }
+
+        if (original == null)
+            throw new NotFoundError();
+
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        Process updated = new Process.Builder(process, passthroughSanitizer, true)
+                .deploy(original)
+                .build();
+
+        processRepository.save(updated);
+
+        return original;
     }
 
     public Process read(String rawProcessDefinitionKey) throws StatusCodeError {
@@ -160,6 +254,28 @@ public class ProcessService {
         return resultsBuilder.build();
     }
 
+    public SearchResults searchDeployments(String rawProcessDefinitionKey, MultivaluedMap<String, String> queryParameters) throws StatusCodeError {
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceLabel("Deployments").resourceName(ProcessDeployment.Constants.ROOT_ELEMENT_NAME);
+
+        Process process = read(rawProcessDefinitionKey);
+        List<ProcessDeploymentVersion> versions = process.getVersions();
+
+        int count = 0;
+        if (versions != null) {
+            for (ProcessDeploymentVersion version : versions) {
+                if (!version.isDeleted()) {
+                    resultsBuilder.item(version);
+                    count++;
+                }
+            }
+        }
+
+        resultsBuilder.maxResults(count);
+        resultsBuilder.firstResult(1);
+        resultsBuilder.total(Long.valueOf(count));
+
+        return resultsBuilder.build();
+    }
 
     public Process update(String rawProcessDefinitionKey, Process rawProcess) throws StatusCodeError {
         // Sanitize all user input
@@ -168,7 +284,7 @@ public class ProcessService {
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
         // If the path param key is not the same as the one that's included in the process, then this put is a rename
-        // of the key -- this means we delete the old one and create a new one, assuming that the new one doesn't conflict
+        // of the key -- this means we delete the old one and createDeployment a new one, assuming that the new one doesn't conflict
         // with an existing key
         if (!processDefinitionKey.equals(includedKey)) {
 
@@ -187,37 +303,51 @@ public class ProcessService {
         }
 
         Process.Builder builder = new Process.Builder(rawProcess, sanitizer, false);
-        builder.clearInteractions();
-        if (rawProcess.getInteractions() != null && !rawProcess.getInteractions().isEmpty()) {
-            for (Interaction interaction : rawProcess.getInteractions()) {
-                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
-                interactionBuilder.clearScreens();
-                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
-                    for (Screen screen : interaction.getScreens()) {
-                        Screen persistedScreen = screenRepository.save(screen);
-                        interactionBuilder.screen(persistedScreen);
-                    }
-                }
-                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
-                builder.interaction(persistedInteraction);
-            }
-        }
-        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
-            for (Notification notification : rawProcess.getNotifications()) {
-                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
-                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
-                builder.notification(persistedNotification);
-            }
-        }
-        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
-            for (Section section : rawProcess.getSections()) {
-                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
-                Section persistedSection = sectionRepository.save(sectionBuilder.build());
-                builder.section(persistedSection);
-            }
-        }
+//        builder.clearInteractions();
+//        if (rawProcess.getInteractions() != null && !rawProcess.getInteractions().isEmpty()) {
+//            for (Interaction interaction : rawProcess.getInteractions()) {
+//                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
+//                interactionBuilder.clearScreens();
+//                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
+//                    for (Screen screen : interaction.getScreens()) {
+//                        Screen persistedScreen = screenRepository.save(screen);
+//                        interactionBuilder.screen(persistedScreen);
+//                    }
+//                }
+//                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
+//                builder.interaction(persistedInteraction);
+//            }
+//        }
+//        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
+//            for (Notification notification : rawProcess.getNotifications()) {
+//                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
+//                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
+//                builder.notification(persistedNotification);
+//            }
+//        }
+//        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
+//            for (Section section : rawProcess.getSections()) {
+//                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
+//                Section persistedSection = sectionRepository.save(sectionBuilder.build());
+//                builder.section(persistedSection);
+//            }
+//        }
 
         return processRepository.save(builder.build());
+    }
+
+
+    public ProcessDeployment updateDeployment(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeployment rawDeployment) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        ProcessDeployment deployment = new ProcessDeployment.Builder(rawDeployment, process.getProcessDefinitionKey(), sanitizer, true).build();
+        if (!deployment.getDeploymentId().equals(deploymentId))
+            throw new BadRequestError();
+
+        deployment = deploymentRepository.save(deployment);
+
+        return deployment;
     }
 
     public String getVersion() {

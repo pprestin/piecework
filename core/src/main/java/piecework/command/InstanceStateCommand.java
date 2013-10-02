@@ -87,6 +87,9 @@ public class InstanceStateCommand extends InstanceCommand {
             String applicationStatusExplanation = null;
 
             if (operation != OperationType.UPDATE) {
+                ProcessDeployment deployment = process.getDeployment();
+                if (deployment == null)
+                    throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
                 String defaultApplicationStatus;
                 switch(operation) {
                     case ACTIVATION:
@@ -104,14 +107,14 @@ public class InstanceStateCommand extends InstanceCommand {
                     case CANCELLATION:
                         if (!facade.cancel(process, instance))
                             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
-                        defaultApplicationStatus = process.getCancellationStatus();
+                        defaultApplicationStatus = deployment.getCancellationStatus();
                         processStatus = Constants.ProcessStatuses.CANCELLED;
                         applicationStatusExplanation = reason;
                         break;
                     case SUSPENSION:
                         if (!facade.suspend(process, instance))
                             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
-                        defaultApplicationStatus = process.getSuspensionStatus();
+                        defaultApplicationStatus = deployment.getSuspensionStatus();
                         modified.previousApplicationStatus(instance.getApplicationStatus());
                         processStatus = Constants.ProcessStatuses.SUSPENDED;
                         applicationStatusExplanation = reason;

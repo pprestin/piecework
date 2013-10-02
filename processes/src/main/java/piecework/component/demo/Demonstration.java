@@ -107,11 +107,9 @@ public class Demonstration implements TaskListener {
         } catch (NotFoundError e) {
             processService.create(demoProcess);
             demoProcess = processService.read(demoProcess.getProcessDefinitionKey());
+            ProcessDeployment deployment = processService.createDeployment(demoProcess.getProcessDefinitionKey());
+            processService.updateDeployment(demoProcess.getProcessDefinitionKey(), deployment.getDeploymentId(), demoProcessDeployment());
         }
-
-        ClassPathResource classPathResource = new ClassPathResource("META-INF/demo/Demonstration.bpmn20.xml");
-        ProcessModelResource processModelResource = new ProcessModelResource.Builder().name("bpmn").inputStream(classPathResource.getInputStream()).build();
-        facade.deploy(demoProcess, demoProcess.getEngineProcessDefinitionKey(), processModelResource);
     }
 
     public static Field approvedField() {
@@ -508,10 +506,8 @@ public class Demonstration implements TaskListener {
                 .build();
     }
 
-    public Process demoProcess() {
-        return new Process.Builder()
-                .processDefinitionKey("Demonstration")
-                .processDefinitionLabel("Demonstration Process")
+    public ProcessDeployment demoProcessDeployment() {
+        ProcessDeployment current = new ProcessDeployment.Builder()
                 .processInstanceLabelTemplate("{{Submitter.DisplayName}} likes {{FavoriteColor}}")
                 .engine("activiti")
                 .engineProcessDefinitionKey("DemonstrationProcess")
@@ -526,6 +522,14 @@ public class Demonstration implements TaskListener {
                 .section(APPROVED_MAIN_SECTION)
                 .section(REJECTED_MAIN_SECTION)
                 .allowAnonymousSubmission()
+                .build();
+        return current;
+    }
+
+    public static Process demoProcess() {
+        return new Process.Builder()
+                .processDefinitionKey("Demonstration")
+                .processDefinitionLabel("Demonstration Process")
                 .build();
     }
 

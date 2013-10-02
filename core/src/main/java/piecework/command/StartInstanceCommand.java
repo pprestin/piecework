@@ -15,15 +15,12 @@
  */
 package piecework.command;
 
-import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import piecework.Constants;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
+import piecework.exception.ConflictError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
@@ -36,8 +33,6 @@ import piecework.identity.IdentityHelper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -63,9 +58,13 @@ public class StartInstanceCommand extends InstanceCommand {
 
         ProcessInstance.Builder builder;
         try {
+            ProcessDeployment deployment = process.getDeployment();
+            if (deployment == null)
+                throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
+
             IdentityDetails user = helper.getAuthenticatedPrincipal();
             String initiatorId = user != null ? user.getInternalId() : null;
-            String initiationStatus = process.getInitiationStatus();
+            String initiationStatus = deployment.getInitiationStatus();
 
             if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(submission.getSubmitterId())) {
                 User submitter = identityService.getUserByAnyId(submission.getSubmitterId());
@@ -97,6 +96,7 @@ public class StartInstanceCommand extends InstanceCommand {
 
             builder.processInstanceId(stored.getProcessInstanceId());
             builder.engineProcessInstanceId(engineInstanceId);
+            builder.deploymentId(deployment.getDeploymentId());
 
             repository.update(stored.getProcessInstanceId(), engineInstanceId);
 

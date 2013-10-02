@@ -82,7 +82,6 @@ public class ProcessInstanceService {
     @Autowired
     Versions versions;
 
-
     public void activate(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
         InstanceStateCommand activation = new InstanceStateCommand(process, instance, OperationType.ACTIVATION);
         activation.reason(reason);
@@ -197,12 +196,16 @@ public class ProcessInstanceService {
         Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
-                executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey())
-                    .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
-                    .engine(allowedProcess.getEngine());
+                String allowedProcessDefinitionKey = allowedProcess.getProcessDefinitionKey();
+                ProcessDeployment deployment = allowedProcess.getDeployment();
 
-                resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer(), false)
-                        .interactions(null).build(version1));
+                if (deployment != null) {
+                    executionCriteriaBuilder.processDefinitionKey(allowedProcessDefinitionKey)
+                        .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
+                        .engine(deployment.getEngine());
+
+                    resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer(), false).build(version1));
+                }
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
 

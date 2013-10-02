@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.Versions;
 import piecework.form.FormFactory;
 import piecework.exception.InternalServerError;
@@ -79,7 +80,11 @@ public class ResponseHandler {
                     return Response.seeOther(URI.create(location)).build();
                 }
 
-                location = process.getBase() + "/" + location;
+                ProcessDeployment deployment = process.getDeployment();
+                if (deployment == null)
+                    throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+                location = deployment.getBase() + "/" + location;
 
                 Content content = content(location);
                 return Response.ok(new StreamingPageContent(process, form, content, form.getScreen().getStrategy()), content.getContentType()).build();

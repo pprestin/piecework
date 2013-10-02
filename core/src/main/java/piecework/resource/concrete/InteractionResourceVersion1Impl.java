@@ -29,16 +29,12 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Versions;
-import piecework.security.Sanitizer;
-import piecework.model.SearchResults;
-import piecework.common.ViewContext;
-import piecework.exception.BadRequestError;
-import piecework.exception.GoneError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
-import piecework.model.Interaction;
+import piecework.exception.*;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.Screen;
+import piecework.persistence.DeploymentRepository;
+import piecework.security.Sanitizer;
+import piecework.common.ViewContext;
 import piecework.persistence.InteractionRepository;
 import piecework.resource.InteractionResource;
 import piecework.persistence.ProcessRepository;
@@ -50,7 +46,10 @@ import piecework.security.concrete.PassthroughSanitizer;
  */
 @Service
 public class InteractionResourceVersion1Impl implements InteractionResource {
-		
+
+    @Autowired
+    DeploymentRepository deploymentRepository;
+
 	@Autowired
 	ProcessRepository processRepository;
 	
@@ -101,7 +100,7 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		
 		// Ensure that a reference to the interaction is added on the process
 		Process.Builder processBuilder = new Process.Builder(process, passthroughSanitizer, true);
-		processBuilder.interaction(result);
+//		processBuilder.interaction(result);
 		processRepository.save(processBuilder.build());
 		
 		ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(result, passthroughSanitizer).processDefinitionKey(processDefinitionKey).build(getViewContext()));
@@ -185,9 +184,12 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 		
 		Process process = getProcess(processDefinitionKey);
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
 		SearchResults.Builder builder = new SearchResults.Builder();
-		List<Interaction> existingInteractions = process.getInteractions();
+		List<Interaction> existingInteractions = deployment.getInteractions();
 		if (existingInteractions != null && !existingInteractions.isEmpty()) {
 			for (Interaction existingInteraction : existingInteractions) {
 				builder.item(new Interaction.Builder(existingInteraction, new PassthroughSanitizer()).processDefinitionKey(processDefinitionKey).build(getViewContext()));
@@ -221,9 +223,12 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 	
 	private Process verifyProcessOwnsInteraction(String processDefinitionKey, String interactionId) throws StatusCodeError {
 		Process process = getProcess(processDefinitionKey);
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
 		boolean hasInteraction = false;
-		List<Interaction> existingInteractions = process.getInteractions();
+		List<Interaction> existingInteractions = deployment.getInteractions();
 		if (interactionId != null && existingInteractions != null && !existingInteractions.isEmpty()) {
 			for (Interaction existingInteraction : existingInteractions) {
 				if (existingInteraction.getId().equals(interactionId)) {

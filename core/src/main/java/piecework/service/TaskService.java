@@ -32,6 +32,7 @@ import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
+import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
@@ -328,12 +329,15 @@ public class TaskService {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
             for (Process allowedProcess : allowedProcesses) {
-                executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey())
-                        .engineProcessDefinitionKey(allowedProcess.getEngineProcessDefinitionKey())
-                        .engine(allowedProcess.getEngine());
 
-                resultsBuilder.definition(new Process.Builder(allowedProcess, passthroughSanitizer, false)
-                        .interactions(null).build(version1));
+                ProcessDeployment deployment = allowedProcess.getDeployment();
+                if (deployment != null) {
+                    executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey())
+                            .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
+                            .engine(deployment.getEngine());
+
+                    resultsBuilder.definition(new Process.Builder(allowedProcess, passthroughSanitizer, false).build(version1));
+                }
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
             resultsBuilder.parameters(executionCriteria.getSanitizedParameters());

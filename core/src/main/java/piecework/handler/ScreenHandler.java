@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.enumeration.ActionType;
+import piecework.exception.ConflictError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
@@ -40,11 +41,11 @@ public class ScreenHandler {
     IdentityHelper identityHelper;
 
     public Screen firstScreen(Process process) throws StatusCodeError {
-//        // Ensure that this user has the right to initiate processes of this type
-//        if (!identityHelper.hasRole(process, AuthorizationRole.INITIATOR))
-//            throw new NotFoundError();
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-        List<Interaction> interactions = process.getInteractions();
+        List<Interaction> interactions = deployment.getInteractions();
 
         if (interactions == null || interactions.isEmpty())
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -53,10 +54,14 @@ public class ScreenHandler {
     }
 
     public Screen taskScreen(Process process, Task task) throws StatusCodeError {
-        List<Interaction> interactions = process.getInteractions();
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        List<Interaction> interactions = deployment.getInteractions();
 
         if (interactions == null || interactions.isEmpty())
-            throw new InternalServerError();
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
         Iterator<Interaction> interactionIterator = interactions.iterator();
 
@@ -71,38 +76,6 @@ public class ScreenHandler {
         }
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
-
-//    public Screen nextScreen(Interaction interaction, Screen currentScreen, ProcessInstance processInstance, ActionType action) throws StatusCodeError {
-//        if (interaction == null ||  interaction.getScreens() == null || interaction.getScreens().isEmpty())
-//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-//
-//        Map<String, FormValue> formValueMap = processInstance != null ? processInstance.getFormValueMap() : null;
-//
-//        Iterator<Screen> screenIterator = interaction.getScreens().iterator();
-//
-//        Screen nextScreen = null;
-//        boolean isFound = false;
-//        while (screenIterator.hasNext() && nextScreen == null) {
-//            Screen cursor = screenIterator.next();
-//
-//            if (currentScreen == null) {
-//                currentScreen = cursor;
-//                isFound = true;
-//            }
-//
-//            if (isFound) {
-//                // Once we've reached the current screen then we can start looking for the next screen
-//                if (satisfiesScreenConstraints(cursor, formValueMap, action))
-//                    nextScreen = cursor;
-//            } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
-//                isFound = true;
-//        }
-//
-////        if (screenIterator.hasNext())
-////            submissionType = Constants.SubmissionTypes.INTERIM;
-//
-//        return nextScreen;
-//    }
 
     private Screen firstScreen(Interaction interaction) throws StatusCodeError {
         if (interaction == null ||  interaction.getScreens() == null || interaction.getScreens().isEmpty())

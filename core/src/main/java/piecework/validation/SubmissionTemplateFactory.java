@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.enumeration.FieldTag;
+import piecework.exception.InternalServerError;
+import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.util.ConstraintUtil;
@@ -57,7 +59,7 @@ public class SubmissionTemplateFactory {
      * Takes a screen and generates the appropriate submission template for all
      * sections and fields used by all groupings
      */
-    public SubmissionTemplate submissionTemplate(Process process, Screen screen) {
+    public SubmissionTemplate submissionTemplate(Process process, Screen screen) throws StatusCodeError {
         return submissionTemplate(process, screen, null);
     }
 
@@ -65,9 +67,13 @@ public class SubmissionTemplateFactory {
      * Takes a screen and generates the appropriate submission template for it,
      * limiting to a specific section id
      */
-    public SubmissionTemplate submissionTemplate(Process process, Screen screen, String validationId) {
+    public SubmissionTemplate submissionTemplate(Process process, Screen screen, String validationId) throws StatusCodeError {
         List<Grouping> groupings = screen.getGroupings();
-        Map<String, Section> sectionMap = process.getSectionMap();
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        Map<String, Section> sectionMap = deployment.getSectionMap();
 
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
         if (groupings != null && sectionMap != null && !sectionMap.isEmpty()) {

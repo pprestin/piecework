@@ -29,6 +29,10 @@
     }
 }
 
+body {
+    margin: 0px;
+}
+
 input, .uneditable-input {
     width: auto;
 }
@@ -255,6 +259,10 @@ select.form-control {
 
 .menu-item-check {
     width: 20px;
+}
+
+.navbar h1 {
+    margin-left: 20px;
 }
 
 .nav.navbar-thin {

@@ -1,0 +1,14 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th>Process Name</th>
+            <th>Key</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="process in processes">
+            <td><a href="#/edit/{{process.processDefinitionKey}}">{{process.processDefinitionLabel}}</a></td>
+            <td>{{process.processDefinitionKey}}</td>
+        </tr>
+    </tbody>
+</table>

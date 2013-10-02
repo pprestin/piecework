@@ -43,6 +43,7 @@ import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 
+import javax.annotation.PostConstruct;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
@@ -226,42 +227,42 @@ public class GeneralUserTaskListener implements TaskListener {
         }
 
 
-        List<Notification> notifications = process.getNotifications();
-        if (notifications != null && !notifications.isEmpty()) {
-            Map<String, String> context = new HashMap<String, String>();
-            Map<String, List<Value>> formValueMap = processInstance.getData();
-            if (formValueMap != null && !formValueMap.isEmpty()) {
-                for (Map.Entry<String, List<Value>> entry : formValueMap.entrySet()) {
-                    String key = entry.getKey();
-                    List<Value> values = entry.getValue();
-
-                    if (StringUtils.isNotEmpty(key) && !values.isEmpty()) {
-                        context.put(key, values.iterator().next().getValue());
-                    }
-                }
-            }
-
-            for (Notification notification : notifications) {
-                if (notification == null)
-                    continue;
-
-                if (taskEventType != null && notification.getTaskEvents() != null && notification.getTaskEvents().contains(taskEventType)) {
-                    if (taskDefinitionKey != null && notification.getTaskDefinitionKeys() != null && notification.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
-                        Set<Candidate> candidates = new HashSet<Candidate>();
-                        if (notification.getCandidateRoles().isEmpty()) {
-                            candidates.addAll(approvers);
-                            candidates.addAll(watchers);
-                        } else if (notification.getCandidateRoles().contains(Constants.CandidateRoles.APPROVER)) {
-                            candidates.addAll(approvers);
-                        } else if (notification.getCandidateRoles().contains(Constants.CandidateRoles.APPROVER)) {
-                            candidates.addAll(watchers);
-                        }
-
-                        sendNotification(candidates, notification, context);
-                    }
-                }
-            }
-        }
+//        List<Notification> notifications = process.getNotifications();
+//        if (notifications != null && !notifications.isEmpty()) {
+//            Map<String, String> context = new HashMap<String, String>();
+//            Map<String, List<Value>> formValueMap = processInstance.getData();
+//            if (formValueMap != null && !formValueMap.isEmpty()) {
+//                for (Map.Entry<String, List<Value>> entry : formValueMap.entrySet()) {
+//                    String key = entry.getKey();
+//                    List<Value> values = entry.getValue();
+//
+//                    if (StringUtils.isNotEmpty(key) && !values.isEmpty()) {
+//                        context.put(key, values.iterator().next().getValue());
+//                    }
+//                }
+//            }
+//
+//            for (Notification notification : notifications) {
+//                if (notification == null)
+//                    continue;
+//
+//                if (taskEventType != null && notification.getTaskEvents() != null && notification.getTaskEvents().contains(taskEventType)) {
+//                    if (taskDefinitionKey != null && notification.getTaskDefinitionKeys() != null && notification.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
+//                        Set<Candidate> candidates = new HashSet<Candidate>();
+//                        if (notification.getCandidateRoles().isEmpty()) {
+//                            candidates.addAll(approvers);
+//                            candidates.addAll(watchers);
+//                        } else if (notification.getCandidateRoles().contains(Constants.CandidateRoles.APPROVER)) {
+//                            candidates.addAll(approvers);
+//                        } else if (notification.getCandidateRoles().contains(Constants.CandidateRoles.APPROVER)) {
+//                            candidates.addAll(watchers);
+//                        }
+//
+//                        sendNotification(candidates, notification, context);
+//                    }
+//                }
+//            }
+//        }
     }
 
     private void sendNotification(Set<Candidate> candidates, Notification notification, Map<String, String> context) {

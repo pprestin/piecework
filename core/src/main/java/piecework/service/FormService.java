@@ -43,8 +43,6 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
@@ -349,8 +347,11 @@ public class FormService {
     }
 
     private Response readStatic(Process process, String name) throws StatusCodeError {
+        ProcessDeployment detail = process.getDeployment();
+        if (detail == null)
+            throw new ConflictError();
 
-        String base = process.getBase();
+        String base = detail.getBase();
 
         if (StringUtils.isNotEmpty(base)) {
             Content content = responseHandler.content(base + "/" + name);

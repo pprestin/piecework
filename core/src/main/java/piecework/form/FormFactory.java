@@ -95,7 +95,10 @@ public class FormFactory {
 
     private Screen screen(Process process, Task task) throws StatusCodeError {
         Interaction selectedInteraction = null;
-        List<Interaction> interactions = process.getInteractions();
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        List<Interaction> interactions = deployment.getInteractions();
         if (interactions != null && !interactions.isEmpty()) {
             for (Interaction interaction : interactions) {
                 if (interaction == null)
@@ -114,11 +117,15 @@ public class FormFactory {
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
 
-    public static Field getField(Process process, Screen screen, String fieldName) {
+    public static Field getField(Process process, Screen screen, String fieldName) throws StatusCodeError  {
         if (process == null || screen == null || StringUtils.isEmpty(fieldName))
             return null;
 
-        Map<String, Section> sectionMap = process.getSectionMap();
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        Map<String, Section> sectionMap = deployment.getSectionMap();
         List<Grouping> groupings = screen.getGroupings();
 
         for (Grouping grouping : groupings) {
@@ -241,7 +248,7 @@ public class FormFactory {
             this.hasOversight = hasOversight;
         }
 
-        public Form form(String formInstanceId, ManyMap<String, Value> data, ManyMap<String, Message> results) {
+        public Form form(String formInstanceId, ManyMap<String, Value> data, ManyMap<String, Message> results) throws StatusCodeError {
             Form.Builder builder = new Form.Builder()
                     .formInstanceId(formInstanceId)
                     .processDefinitionKey(processDefinitionKey)
@@ -284,9 +291,13 @@ public class FormFactory {
             return fieldBuilder.build(version);
         }
 
-        private Screen screen(Form.Builder formBuilder, Screen screen, ManyMap<String, Value> data, ManyMap<String, Message> results) {
+        private Screen screen(Form.Builder formBuilder, Screen screen, ManyMap<String, Value> data, ManyMap<String, Message> results) throws StatusCodeError {
             Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
-            Map<String, Section> sectionMap = new HashMap<String, Section>(process.getSectionMap());
+            ProcessDeployment deployment = process.getDeployment();
+            if (deployment == null)
+                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+            Map<String, Section> sectionMap = new HashMap<String, Section>(deployment.getSectionMap());
             List<Grouping> groupings = screen.getGroupings();
 
             for (Grouping grouping : groupings) {

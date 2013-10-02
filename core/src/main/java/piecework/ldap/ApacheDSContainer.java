@@ -182,7 +182,7 @@ public class ApacheDSContainer {
 //                entry.add("dc",dc);
 //                service.getAdminSession().add( entry );
 //            } catch (Exception e1) {
-//                logger.error("Failed to create dc entry", e1);
+//                logger.error("Failed to createDeployment dc entry", e1);
 //            }
         } catch (Exception e) {
             logger.error("Lookup failed", e);

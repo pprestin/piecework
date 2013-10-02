@@ -102,6 +102,10 @@ public class ProcessInstance implements Serializable {
 
     @XmlTransient
     @JsonIgnore
+    private final String deploymentId;
+
+    @XmlTransient
+    @JsonIgnore
     private final Set<String> keywords;
 
     @XmlTransient
@@ -136,6 +140,7 @@ public class ProcessInstance implements Serializable {
     private ProcessInstance(Builder builder, ViewContext context) {
         this.processInstanceId = builder.processInstanceId;
         this.engineProcessInstanceId = builder.engineProcessInstanceId;
+        this.deploymentId = builder.deploymentId;
         this.alias = builder.alias;
         this.processDefinitionKey = builder.processDefinitionKey;
         this.processDefinitionLabel = builder.processDefinitionLabel;
@@ -202,6 +207,11 @@ public class ProcessInstance implements Serializable {
     @JsonIgnore
     public String getEngineProcessInstanceId() {
         return engineProcessInstanceId;
+    }
+
+    @JsonIgnore
+    public String getDeploymentId() {
+        return deploymentId;
     }
 
     public String getAlias() {
@@ -311,6 +321,7 @@ public class ProcessInstance implements Serializable {
 
         private String processInstanceId;
         private String engineProcessInstanceId;
+        private String deploymentId;
         private String alias;
         private String processDefinitionKey;
         private String processDefinitionLabel;
@@ -345,6 +356,7 @@ public class ProcessInstance implements Serializable {
         public Builder(ProcessInstance instance) {
             this.processInstanceId = instance.processInstanceId;
             this.engineProcessInstanceId = instance.engineProcessInstanceId;
+            this.deploymentId = instance.deploymentId;
             this.alias = instance.alias;
             this.processDefinitionKey = instance.processDefinitionKey;
             this.processDefinitionLabel = instance.processDefinitionLabel;
@@ -422,6 +434,11 @@ public class ProcessInstance implements Serializable {
             this.engineProcessInstanceId = engineProcessInstanceId;
             if (StringUtils.isNotEmpty(this.engineProcessInstanceId))
                 this.keywords.add(this.engineProcessInstanceId);
+            return this;
+        }
+
+        public Builder deploymentId(String deploymentId) {
+            this.deploymentId = deploymentId;
             return this;
         }
 

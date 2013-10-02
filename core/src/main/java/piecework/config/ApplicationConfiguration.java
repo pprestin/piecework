@@ -224,7 +224,7 @@ public class ApplicationConfiguration {
         try {
             return new KeyManagerCabinet.Builder(securitySettings).build();
         } catch (FileNotFoundException e) {
-            LOG.error("Could not create key manager cabinet because keystore file not found");
+            LOG.error("Could not createDeployment key manager cabinet because keystore file not found");
         }
 
         return null;

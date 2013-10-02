@@ -26,6 +26,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.model.Process;
+import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
@@ -61,9 +63,11 @@ public class GeneralExecutionListener implements ExecutionListener {
 
             ProcessInstance processInstance = processInstanceRepository.findOne(businessKey);
             if (processInstance != null) {
-                piecework.model.Process process = processRepository.findOne(processInstance.getProcessDefinitionKey());
+                Process process = processRepository.findOne(processInstance.getProcessDefinitionKey());
                 if (process != null) {
-                    completionStatus = process.getCompletionStatus();
+                    ProcessDeployment deployment = process.getDeployment();
+                    if (deployment != null)
+                        completionStatus = deployment.getCompletionStatus();
                 }
 
 //                ProcessInstance.Builder builder = new ProcessInstance.Builder(processInstance);

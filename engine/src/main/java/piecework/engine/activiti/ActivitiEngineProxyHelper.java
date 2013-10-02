@@ -66,8 +66,9 @@ public class ActivitiEngineProxyHelper {
     public ManyMap<String, Process> getProcessDefinitionIdMap(Set<Process> processes) {
         ManyMap<String, Process> processDefinitionKeyMap = new ManyMap<String, Process>();
         for (Process process : processes) {
-            if (process.getEngine() != null && getKey() != null && process.getEngine().equals(getKey()))
-                processDefinitionKeyMap.putOne(process.getEngineProcessDefinitionKey(), process);
+            ProcessDeployment deployment = process.getDeployment();
+            if (deployment != null && deployment.getEngine() != null && getKey() != null && deployment.getEngine().equals(getKey()))
+                processDefinitionKeyMap.putOne(deployment.getEngineProcessDefinitionKey(), process);
         }
 
         ManyMap<String, Process> map = new ManyMap<String, Process>();

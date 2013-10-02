@@ -28,6 +28,7 @@ import org.activiti.engine.task.TaskQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
@@ -75,7 +76,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-		String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        ProcessDeployment detail = process.getDeployment();
+
+        if (detail == null)
+            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
+
+		String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
 		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = processEngine.getRuntimeService().startProcessInstanceByKey(engineProcessDefinitionKey, processBusinessKey, engineData);
 		return activitiInstance.getId();
@@ -87,7 +93,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        ProcessDeployment detail = process.getDeployment();
+
+        if (detail == null)
+            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
+
+        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 
         if (activitiInstance != null) {
@@ -111,7 +122,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        ProcessDeployment detail = process.getDeployment();
+
+        if (detail == null)
+            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
+
+        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 		
 		if (activitiInstance != null) {
@@ -128,7 +144,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        ProcessDeployment detail = process.getDeployment();
+
+        if (detail == null)
+            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
+
+        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 
         if (activitiInstance != null) {
@@ -145,7 +166,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        String engineProcessDefinitionKey = process.getEngineProcessDefinitionKey();
+        ProcessDeployment detail = process.getDeployment();
+
+        if (detail == null)
+            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
+
+        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
 
         try {
             org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
@@ -195,13 +221,17 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public void deploy(Process process, String name, ProcessModelResource... resources) throws ProcessEngineException {
+    public void deploy(Process process, ProcessDeployment deployment, ProcessModelResource... resources) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        if (! process.getEngine().equals(getKey()))
+        if (!deployment.getEngine().equals(getKey()))
             return;
+
+        ClassPathResource classPathResource = new ClassPathResource(deployment.getEngineProcessDefinitionLocation());
+        ProcessModelResource processModelResource = new ProcessModelResource.Builder().name("bpmn").inputStream(classPathResource.getInputStream()).build();
+        facade.deploy(demoProcess, demoProcessDeployment(), processModelResource);
 
         DeploymentBuilder builder = processEngine.getRepositoryService().createDeployment();
 
@@ -587,11 +617,18 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         return query;
     }
 
-    private TaskQuery taskQuery(TaskCriteria criteria) {
+    private TaskQuery taskQuery(TaskCriteria criteria) throws ProcessEngineException {
         TaskQuery query = processEngine.getTaskService().createTaskQuery();
 
-        if (criteria.getProcesses() != null && criteria.getProcesses().size() == 1)
-            query.processDefinitionKey(criteria.getProcesses().iterator().next().getEngineProcessDefinitionKey());
+        if (criteria.getProcesses() != null && criteria.getProcesses().size() == 1) {
+            Process process = criteria.getProcesses().iterator().next();
+            ProcessDeployment detail = process.getDeployment();
+
+            if (detail == null)
+                throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
+
+            query.processDefinitionKey(detail.getEngineProcessDefinitionKey());
+        }
 
         List<String> taskIds = criteria.getTaskIds();
         if (taskIds != null && taskIds.size() == 1)
@@ -678,12 +715,19 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         return query;
     }
 
-    private HistoricTaskInstanceQuery historicTaskQuery(TaskCriteria criteria) {
+    private HistoricTaskInstanceQuery historicTaskQuery(TaskCriteria criteria) throws ProcessEngineException {
 
         HistoricTaskInstanceQuery query = processEngine.getHistoryService().createHistoricTaskInstanceQuery();
 
-        if (criteria.getProcesses() != null && criteria.getProcesses().size() == 1)
-            query.processDefinitionKey(criteria.getProcesses().iterator().next().getEngineProcessDefinitionKey());
+        if (criteria.getProcesses() != null && criteria.getProcesses().size() == 1) {
+            Process process = criteria.getProcesses().iterator().next();
+            ProcessDeployment detail = process.getDeployment();
+
+            if (detail == null)
+                throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
+
+            query.processDefinitionKey(detail.getEngineProcessDefinitionKey());
+        }
 
         if (StringUtils.isNotEmpty(criteria.getProcessStatus()) && !criteria.getProcessStatus().equals(Constants.ProcessStatuses.OPEN)) {
             if (criteria.getProcessStatus().equals(Constants.ProcessStatuses.COMPLETE)) {

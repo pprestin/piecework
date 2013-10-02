@@ -95,7 +95,10 @@ public class RequestHandler {
             interaction = previousFormRequest.getInteraction();
             currentScreen = previousFormRequest.getScreen();
         } else {
-            List<Interaction> interactions = process.getInteractions();
+            ProcessDeployment deployment = process.getDeployment();
+            if (deployment == null)
+                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+            List<Interaction> interactions = deployment.getInteractions();
 
             if (interactions == null || interactions.isEmpty())
                 throw new InternalServerError();

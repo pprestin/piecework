@@ -26,7 +26,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import piecework.Constants;
 import piecework.Versions;
+import piecework.model.ProcessDeployment;
 import piecework.service.FormService;
 import piecework.persistence.ProcessRepository;
 import piecework.security.Sanitizer;
@@ -90,8 +92,15 @@ public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = processRepository.findOne(processDefinitionKey);
 
+        if (process == null)
+            throw new NotFoundError();
+
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
         // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
-        if (process == null || !process.isAnonymousSubmissionAllowed())
+        if (!deployment.isAnonymousSubmissionAllowed())
             throw new NotFoundError();
 
         return process;

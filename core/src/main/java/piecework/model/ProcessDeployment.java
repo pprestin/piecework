@@ -1,0 +1,410 @@
+/*
+ * Copyright 2013 University of Washington
+ *
+ * Licensed under the Educational Community License, Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.opensource.org/licenses/ecl1.php
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package piecework.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.security.Sanitizer;
+
+import javax.xml.bind.annotation.*;
+import java.io.Serializable;
+import java.util.*;
+
+/**
+ * @author James Renfro
+ */
+@XmlRootElement(name = ProcessDeployment.Constants.ROOT_ELEMENT_NAME)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = ProcessDeployment.Constants.TYPE_NAME)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Document(collection = "deployment")
+public class ProcessDeployment implements Serializable {
+
+    @XmlAttribute
+    @XmlID
+    @Id
+    private final String deploymentId;
+
+    @XmlElement
+    private final String processInstanceLabelTemplate;
+
+    @XmlElement
+    private final String engine;
+
+    @XmlElement
+    private final String engineProcessDefinitionKey;
+
+    @XmlElement
+    private final String engineProcessDefinitionLocation;
+
+    @XmlElement
+    private final String initiationStatus;
+
+    @XmlElement
+    private final String cancellationStatus;
+
+    @XmlElement
+    private final String completionStatus;
+
+    @XmlElement
+    private final String suspensionStatus;
+
+    @XmlAttribute
+    private final String base;
+
+    @XmlElementWrapper(name="interactions")
+    @XmlElementRef
+    private final List<Interaction> interactions;
+
+    @XmlElementWrapper(name="sections")
+    @XmlElementRef
+    private final List<Section> sections;
+
+    @XmlElementWrapper(name="notifications")
+    @XmlElementRef
+    private final List<Notification> notifications;
+
+    @XmlElement
+    @DBRef
+    private final Screen defaultScreen;
+
+    @XmlAttribute
+    private final boolean isAnonymousSubmissionAllowed;
+
+    @XmlTransient
+    @JsonIgnore
+    private final boolean isDeleted;
+
+    @Version
+    private final long version;
+
+    private ProcessDeployment() {
+        this(new ProcessDeployment.Builder());
+    }
+
+    @SuppressWarnings("unchecked")
+    private ProcessDeployment(ProcessDeployment.Builder builder) {
+        this.deploymentId = builder.deploymentId;
+        this.processInstanceLabelTemplate = builder.processInstanceLabelTemplate;
+        this.engine = builder.engine;
+        this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
+        this.engineProcessDefinitionLocation = builder.engineProcessDefinitionLocation;
+        this.initiationStatus = builder.initiationStatus;
+        this.cancellationStatus = builder.cancellationStatus;
+        this.completionStatus = builder.completionStatus;
+        this.suspensionStatus = builder.suspensionStatus;
+        this.base = builder.base;
+        this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
+        this.sections = Collections.unmodifiableList(builder.sections);
+        this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
+        this.defaultScreen = builder.defaultScreen;
+        this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
+        this.isDeleted = builder.isDeleted;
+        this.version = builder.version;
+    }
+
+    public String getDeploymentId() {
+        return deploymentId;
+    }
+
+    public String getProcessInstanceLabelTemplate() {
+        return processInstanceLabelTemplate;
+    }
+
+    public String getEngine() {
+        return engine;
+    }
+
+    public String getBase() {
+        return base;
+    }
+
+    public String getEngineProcessDefinitionKey() {
+        return engineProcessDefinitionKey;
+    }
+
+    public String getEngineProcessDefinitionLocation() {
+        return engineProcessDefinitionLocation;
+    }
+
+    public String getCancellationStatus() {
+        return cancellationStatus;
+    }
+
+    public String getSuspensionStatus() {
+        return suspensionStatus;
+    }
+
+    public String getInitiationStatus() {
+        return initiationStatus;
+    }
+
+    public String getCompletionStatus() {
+        return completionStatus;
+    }
+
+    public List<Interaction> getInteractions() {
+        return interactions;
+    }
+
+    public List<Section> getSections() {
+        return sections;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    @JsonIgnore
+    public Map<String, Section> getSectionMap() {
+        Map<String, Section> sectionMap = new HashMap<String, Section>();
+        if (sections != null) {
+            for (Section section : sections) {
+                if (section == null)
+                    continue;
+
+                sectionMap.put(section.getSectionId(), section);
+            }
+        }
+        return sectionMap;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public Screen getDefaultScreen() {
+        return defaultScreen;
+    }
+
+    public boolean isAnonymousSubmissionAllowed() {
+        return isAnonymousSubmissionAllowed;
+    }
+
+    @JsonIgnore
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public boolean isEmpty() {
+        return StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
+    }
+
+    public final static class Builder {
+
+        private String deploymentId;
+        private String processInstanceLabelTemplate;
+        private String engine;
+        private String engineProcessDefinitionKey;
+        private String engineProcessDefinitionLocation;
+        private String base;
+        private String initiationStatus;
+        private String cancellationStatus;
+        private String completionStatus;
+        private String suspensionStatus;
+        private List<Interaction> interactions;
+        private List<Section> sections;
+        private List<Notification> notifications;
+        private Screen defaultScreen;
+        private boolean isAnonymousSubmissionAllowed;
+        private boolean isDeleted;
+        private long version;
+
+        public Builder() {
+            super();
+            this.interactions = new ArrayList<Interaction>();
+            this.sections = new ArrayList<Section>();
+            this.notifications = new ArrayList<Notification>();
+            this.version = 1;
+        }
+
+        public Builder(ProcessDeployment deployment, String processDefinitionKey, Sanitizer sanitizer, boolean includeDetails) {
+            this.deploymentId = deployment.deploymentId;
+            this.processInstanceLabelTemplate = sanitizer.sanitize(deployment.processInstanceLabelTemplate);
+            this.engine = sanitizer.sanitize(deployment.engine);
+            this.engineProcessDefinitionKey = sanitizer.sanitize(deployment.engineProcessDefinitionKey);
+            this.engineProcessDefinitionLocation = sanitizer.sanitize(deployment.engineProcessDefinitionLocation);
+            this.base = sanitizer.sanitize(deployment.base);
+            this.initiationStatus = sanitizer.sanitize(deployment.initiationStatus);
+            this.cancellationStatus = sanitizer.sanitize(deployment.cancellationStatus);
+            this.completionStatus = sanitizer.sanitize(deployment.completionStatus);
+            this.suspensionStatus = sanitizer.sanitize(deployment.suspensionStatus);
+            this.defaultScreen = deployment.defaultScreen != null ? new Screen.Builder(deployment.defaultScreen, sanitizer).processDefinitionKey(processDefinitionKey).build() : null;
+            if (includeDetails && deployment.interactions != null && !deployment.interactions.isEmpty()) {
+                this.interactions = new ArrayList<Interaction>(deployment.interactions.size());
+                for (Interaction interaction : deployment.interactions) {
+                    this.interactions.add(new Interaction.Builder(interaction, sanitizer).processDefinitionKey(processDefinitionKey).build());
+                }
+            } else {
+                this.interactions = new ArrayList<Interaction>();
+            }
+            if (includeDetails && deployment.notifications != null && !deployment.notifications.isEmpty()) {
+                this.notifications = new ArrayList<Notification>(deployment.notifications.size());
+                for (Notification notification : deployment.notifications) {
+                    if (notification != null)
+                        this.notifications.add(new Notification.Builder(notification, sanitizer).build());
+                }
+            } else {
+                this.notifications = new ArrayList<Notification>();
+            }
+            if (includeDetails && deployment.sections != null && !deployment.sections.isEmpty()) {
+                this.sections = new ArrayList<Section>(deployment.sections.size());
+                for (Section section : deployment.sections) {
+                    this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
+                }
+            } else {
+                this.sections = new ArrayList<Section>();
+            }
+            this.isAnonymousSubmissionAllowed = deployment.isAnonymousSubmissionAllowed;
+            this.isDeleted = deployment.isDeleted;
+            this.version = deployment.version;
+        }
+
+        public ProcessDeployment build() {
+            return new ProcessDeployment(this);
+        }
+
+        public Builder deploymentId(String deploymentId) {
+            this.deploymentId = deploymentId;
+            return this;
+        }
+
+        public Builder processInstanceLabelTemplate(String processInstanceLabelTemplate) {
+            this.processInstanceLabelTemplate = processInstanceLabelTemplate;
+            return this;
+        }
+
+        public Builder engine(String engine) {
+            this.engine = engine;
+            return this;
+        }
+
+        public Builder engineProcessDefinitionKey(String engineProcessDefinitionKey) {
+            this.engineProcessDefinitionKey = engineProcessDefinitionKey;
+            return this;
+        }
+
+        public Builder engineProcessDefinitionLocation(String engineProcessDefinitionLocation) {
+            this.engineProcessDefinitionLocation = engineProcessDefinitionLocation;
+            return this;
+        }
+
+        public Builder base(String base) {
+            this.base = base;
+            return this;
+        }
+
+        public Builder cancellationStatus(String cancellationStatus) {
+            this.cancellationStatus = cancellationStatus;
+            return this;
+        }
+
+        public Builder completionStatus(String completionStatus) {
+            this.completionStatus = completionStatus;
+            return this;
+        }
+
+        public Builder initiationStatus(String initiationStatus) {
+            this.initiationStatus = initiationStatus;
+            return this;
+        }
+
+        public Builder suspensionStatus(String suspensionStatus) {
+            this.suspensionStatus = suspensionStatus;
+            return this;
+        }
+
+        public Builder interaction(Interaction interaction) {
+            if (this.interactions == null)
+                this.interactions = new ArrayList<Interaction>();
+            this.interactions.add(interaction);
+            return this;
+        }
+
+        public Builder interactions(List<Interaction> interactions) {
+            this.interactions = interactions;
+            return this;
+        }
+
+        public Builder section(Section section) {
+            if (this.sections == null)
+                this.sections = new ArrayList<Section>();
+            this.sections.add(section);
+            return this;
+        }
+
+        public Builder notification(Notification notification) {
+            if (this.notifications == null)
+                this.notifications = new ArrayList<Notification>();
+            this.notifications.add(notification);
+            return this;
+        }
+
+        public Builder notifications(List<Notification> notifications) {
+            this.notifications = notifications;
+            return this;
+        }
+
+        public Builder defaultScreen(Screen defaultScreen) {
+            this.defaultScreen = defaultScreen;
+            return this;
+        }
+
+        public Builder allowAnonymousSubmission() {
+            this.isAnonymousSubmissionAllowed = true;
+            return this;
+        }
+
+        public Builder delete() {
+            this.isDeleted = true;
+            return this;
+        }
+
+        public Builder undelete() {
+            this.isDeleted = false;
+            return this;
+        }
+
+        public Builder clearInteractions() {
+            this.interactions = new ArrayList<Interaction>();
+            return this;
+        }
+
+        public Builder clearNotifications() {
+            this.notifications = new ArrayList<Notification>();
+            return this;
+        }
+
+        public Builder clearSections() {
+            this.sections = new ArrayList<Section>();
+            return this;
+        }
+    }
+
+    public static class Constants {
+        public static final String RESOURCE_LABEL = "Process Deployment";
+        public static final String ROOT_ELEMENT_NAME = "deployment";
+        public static final String TYPE_NAME = "ProcessDeploymentType";
+    }
+
+}

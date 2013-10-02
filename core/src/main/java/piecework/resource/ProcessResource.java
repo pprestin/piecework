@@ -30,6 +30,7 @@ import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
+import piecework.model.ProcessDeployment;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 import piecework.model.Process;
@@ -64,5 +65,38 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
 	SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
+
+    /*
+     * SUBRESOURCES
+     */
+    @POST
+    @Path("{processDefinitionKey}/deployment")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response createDeployment(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/deployment/{deploymentId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response cloneDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+
+    @PUT
+    @Path("{processDefinitionKey}/deployment/{deploymentId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response updateDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, ProcessDeployment deployment) throws StatusCodeError;
+
+    @DELETE
+    @Path("{processDefinitionKey}/deployment/{deploymentId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response deleteDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/deploy/{deploymentId}")
+    @RolesAllowed({AuthorizationRole.OWNER})
+    Response publishDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/deployment")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    SearchResults searchDeployments(@PathParam("processDefinitionKey") String processDefinitionKey,@Context UriInfo uriInfo) throws StatusCodeError;
 
 }

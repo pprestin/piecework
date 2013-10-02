@@ -77,6 +77,8 @@ public class Task implements Serializable, Comparable<Task> {
     @XmlElement
     private final String taskAction;
 
+
+
     @XmlElement
     @Transient
     private final User assignee;
