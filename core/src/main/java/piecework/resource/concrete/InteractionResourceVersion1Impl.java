@@ -24,7 +24,6 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
@@ -99,7 +98,7 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 				.build(getViewContext());
 		
 		// Ensure that a reference to the interaction is added on the process
-		Process.Builder processBuilder = new Process.Builder(process, passthroughSanitizer, true);
+		Process.Builder processBuilder = new Process.Builder(process, passthroughSanitizer);
 //		processBuilder.interaction(result);
 		processRepository.save(processBuilder.build());
 		

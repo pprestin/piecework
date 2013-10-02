@@ -100,16 +100,21 @@ public class Demonstration implements TaskListener {
 
     @PostConstruct
     public void configure() throws IOException, ProcessEngineException, StatusCodeError {
-        piecework.model.Process demoProcess = demoProcess();
+        Process process = demoProcess();
+        ProcessDeployment deployment = demoProcessDeployment();
 
         try {
-            processService.update(demoProcess.getProcessDefinitionKey(), demoProcess);
+            processService.read(process.getProcessDefinitionKey());
         } catch (NotFoundError e) {
-            processService.create(demoProcess);
-            demoProcess = processService.read(demoProcess.getProcessDefinitionKey());
-            ProcessDeployment deployment = processService.createDeployment(demoProcess.getProcessDefinitionKey());
-            processService.updateDeployment(demoProcess.getProcessDefinitionKey(), deployment.getDeploymentId(), demoProcessDeployment());
+            processService.createAndPublishDeployment(process, deployment);
         }
+    }
+
+    public void synchronize() throws IOException, ProcessEngineException, StatusCodeError {
+        Process process = demoProcess();
+        ProcessDeployment deployment = demoProcessDeployment();
+
+        processService.updateAndPublishDeployment(process, deployment);
     }
 
     public static Field approvedField() {
@@ -511,6 +516,7 @@ public class Demonstration implements TaskListener {
                 .processInstanceLabelTemplate("{{Submitter.DisplayName}} likes {{FavoriteColor}}")
                 .engine("activiti")
                 .engineProcessDefinitionKey("DemonstrationProcess")
+                .engineProcessDefinitionLocation("classpath:META-INF/demo/Demonstration.bpmn20.xml")
                 .base("classpath:META-INF/demo")
                 .interaction(initialInteraction())
                 .interaction(reviewInteraction())

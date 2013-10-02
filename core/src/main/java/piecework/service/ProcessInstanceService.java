@@ -197,14 +197,14 @@ public class ProcessInstanceService {
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
                 String allowedProcessDefinitionKey = allowedProcess.getProcessDefinitionKey();
-                ProcessDeployment deployment = allowedProcess.getDeployment();
+//                ProcessDeployment deployment = allowedProcess.getDeployment();
 
-                if (deployment != null) {
-                    executionCriteriaBuilder.processDefinitionKey(allowedProcessDefinitionKey)
-                        .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
-                        .engine(deployment.getEngine());
+                if (allowedProcessDefinitionKey != null) {
+                    executionCriteriaBuilder.processDefinitionKey(allowedProcessDefinitionKey);
+//                        .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
+//                        .engine(deployment.getEngine());
 
-                    resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer(), false).build(version1));
+                    resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).build(version1));
                 }
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();

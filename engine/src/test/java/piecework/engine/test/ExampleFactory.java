@@ -114,15 +114,25 @@ public class ExampleFactory {
                 .build();
     }
 
-    public static Process exampleProcess() {
-        return new Process.Builder()
-                .processDefinitionKey("Demonstration")
+    public static ProcessDeployment exampleProcessDeployment() {
+        return new ProcessDeployment.Builder()
                 .interaction(exampleInteractionWithTwoScreens())
-                .processDefinitionLabel("This is a demonstration process")
+//                .interaction(exampleInteractionForTaskReview())
+                .section(exampleSectionWithTwoFields())
+                .section(exampleSectionWithConfirmationNumber())
+                .section(exampleSectionWithOneField())
                 .engine("activiti")
                 .engineProcessDefinitionKey("example")
                 .build();
+    }
 
+    public static Process exampleProcess() {
+        ProcessDeployment deployment = exampleProcessDeployment();
+        return new Process.Builder()
+                .processDefinitionKey("Demonstration")
+                .processDefinitionLabel("This is a demonstration process")
+                .deploy(new ProcessDeploymentVersion(deployment), deployment)
+                .build();
     }
 
 

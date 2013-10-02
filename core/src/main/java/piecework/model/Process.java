@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
@@ -56,10 +55,22 @@ public class Process implements Serializable {
     @XmlElement
     private final String participantSummary;
 
+    @XmlElement
+    private final String deploymentId;
+
+    @XmlElement
+    private final String deploymentLabel;
+
+    @XmlElement
+    private final Date deploymentDate;
+
+    @XmlElement
+    private final String deploymentVersion;
+
     @XmlTransient
     @JsonIgnore
     @DBRef
-    private final ProcessDeployment current;
+    private final ProcessDeployment deployment;
 
     @XmlElementWrapper(name="versions")
     @XmlElement(name="version")
@@ -77,7 +88,8 @@ public class Process implements Serializable {
 	@JsonIgnore
 	private final boolean isDeleted;
 
-    @Version
+//    @Version
+    @XmlTransient
     private final long version;
 
 	private Process() {
@@ -88,9 +100,13 @@ public class Process implements Serializable {
 	private Process(Process.Builder builder, ViewContext context) {
 		this.processDefinitionKey = builder.processDefinitionKey;
         this.processDefinitionLabel = builder.processDefinitionLabel;
+        this.deploymentId = builder.deploymentId;
+        this.deploymentLabel = builder.deploymentLabel;
+        this.deploymentDate = builder.deploymentDate;
+        this.deploymentVersion = builder.deploymentVersion;
         this.processSummary = builder.processSummary;
         this.participantSummary = builder.participantSummary;
-		this.current = builder.current;
+		this.deployment = builder.current;
         this.versions = Collections.unmodifiableList(builder.versions);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
@@ -117,7 +133,23 @@ public class Process implements Serializable {
     @XmlTransient
     @JsonIgnore
     public ProcessDeployment getDeployment() {
-        return current;
+        return deployment;
+    }
+
+    public String getDeploymentId() {
+        return deploymentId;
+    }
+
+    public String getDeploymentLabel() {
+        return deploymentLabel;
+    }
+
+    public Date getDeploymentDate() {
+        return deploymentDate;
+    }
+
+    public String getDeploymentVersion() {
+        return deploymentVersion;
     }
 
     public List<ProcessDeploymentVersion> getVersions() {
@@ -125,7 +157,7 @@ public class Process implements Serializable {
     }
 
     public String getProcessInstanceLabelTemplate() {
-        return current != null ? current.getProcessInstanceLabelTemplate() : null;
+        return deployment != null ? deployment.getProcessInstanceLabelTemplate() : null;
     }
 
     public String getLink() {
@@ -168,6 +200,10 @@ public class Process implements Serializable {
 		
 		private String processDefinitionKey;
         private String processDefinitionLabel;
+        private String deploymentId;
+        private String deploymentLabel;
+        private Date deploymentDate;
+        private String deploymentVersion;
         private String processSummary;
         private String participantSummary;
 		private ProcessDeployment current;
@@ -181,12 +217,16 @@ public class Process implements Serializable {
             this.version = 1;
 		}
 				
-		public Builder(piecework.model.Process process, Sanitizer sanitizer, boolean includeDetails) {
+		public Builder(Process process, Sanitizer sanitizer) {
 			this.processDefinitionKey = sanitizer.sanitize(process.processDefinitionKey);
             this.processDefinitionLabel = sanitizer.sanitize(process.processDefinitionLabel);
+            this.deploymentId = sanitizer.sanitize(process.deploymentId);
+            this.deploymentLabel = sanitizer.sanitize(process.deploymentLabel);
+            this.deploymentDate = process.deploymentDate;
+            this.deploymentVersion = process.deploymentVersion;
             this.processSummary = sanitizer.sanitize(process.processSummary);
             this.participantSummary = sanitizer.sanitize(process.participantSummary);
-            this.current = new ProcessDeployment.Builder(process.current, process.processDefinitionKey, sanitizer, includeDetails).build();
+            this.current = process.deployment != null ? new ProcessDeployment.Builder(process.deployment, process.processDefinitionKey, sanitizer, true).build() : null;
             if (process.versions.isEmpty())
                 this.versions = new ArrayList<ProcessDeploymentVersion>();
             else
@@ -223,7 +263,11 @@ public class Process implements Serializable {
             return this;
         }
 
-        public Builder deploy(ProcessDeployment current) {
+        public Builder deploy(ProcessDeploymentVersion version, ProcessDeployment current) {
+            this.deploymentId = version.getDeploymentId();
+            this.deploymentLabel = version.getLabel();
+            this.deploymentVersion = version.getVersion();
+            this.deploymentDate = new Date();
             this.current = current;
             return this;
         }

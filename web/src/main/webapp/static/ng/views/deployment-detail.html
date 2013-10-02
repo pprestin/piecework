@@ -1,0 +1,51 @@
+<div ng-controller="DeploymentDetailController" class="panel panel-default">
+    <div class="panel-heading">
+        <span class="lead">Deployment Details</span>
+    </div>
+    <form id="deployment-detail-form" ng-submit="updateDeployment()">
+        <fieldset>
+            <div class="form-group col-lg-4 col-md-6 col-sm-8">
+                <label>Deployment Label</label>
+                <div class="controls">
+                    <div class="viewable process-short-name-readonly muted"></div>
+                    <input class="form-control span6" type="text"
+                           name="processDefinitionLabel" size="30" maxlength="80"
+                           placeholder="Provide an optional label for this deployment"
+                           ng-model="deployment.deploymentLabel">
+                    <span class="help-inline hide">Required</span>
+                </div>
+            </div>
+            <div class="form-group col-lg-3 col-md-6 col-sm-4">
+                <label>Created</label>
+                <div class="controls">
+                    <div class="viewable muted"></div>
+                    <input class="form-control" type="text"
+                           name="created" maxlength="18" size="18"
+                           placeholder="Created"
+                           value="{{deployment.created|date:'medium'}}" disabled> <span
+                        class="help-inline hide">Required</span>
+                </div>
+            </div>
+            <div class="form-group col-lg-2 col-md-6 col-sm-4">
+                <label>Version</label>
+                <div class="controls">
+                    <div class="viewable muted"></div>
+                    <input class="form-control text-right" type="text"
+                           name="deploymentVersion" maxlength="5" size="5"
+                           placeholder="Version"
+                           value="{{deployment.deploymentVersion}}" disabled> <span
+                        class="help-inline hide">Required</span>
+                </div>
+            </div>
+            <div class="form-group col-lg-12">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="deployment.isAnonymousSubmissionAllowed"> Allow anonymous form submission
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+        <button class="btn btn-primary pull-right" type="submit" role="button">Update</button>
+        <div class="clearfix"></div>
+    </form>
+</div>

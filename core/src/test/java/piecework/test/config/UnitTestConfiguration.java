@@ -234,6 +234,11 @@ public class UnitTestConfiguration {
     }
 
     @Bean
+    public DeploymentRepository deploymentRepository() {
+        return new DeploymentRepositoryStub();
+    }
+
+    @Bean
     public InteractionRepository interactionRepository() {
         return new InteractionRepositoryStub();
     }
@@ -317,7 +322,11 @@ public class UnitTestConfiguration {
     public class AuthorizationRepositoryStub extends MongoRepositoryStub<Authorization> implements AuthorizationRepository {
 
     }
-	
+
+    public class DeploymentRepositoryStub extends MongoRepositoryStub<ProcessDeployment> implements DeploymentRepository {
+
+    }
+
 	public class ProcessRepositoryStub extends MongoRepositoryStub<Process> implements ProcessRepository {
         @Override
         public List<Process> findAllBasic(Iterable<String> processDefinitionKeys) {

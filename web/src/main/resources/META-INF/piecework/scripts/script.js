@@ -73,19 +73,7 @@
             var $input = $inputs.filter(inputSelector);
             var $variable = $variables.filter(variableSelector);
 
-            var isValidUser = false;
-
-            if (field.constraints != null && field.constraints.length > 0) {
-                for (var c=0;c<field.constraints.length;c++) {
-                    var constraint = field.constraints[c];
-                    if (constraint.type == 'IS_VALID_USER') {
-                        isValidUser = true;
-                        break;
-                    }
-                }
-            }
-
-            if (isValidUser) {
+            if (type == 'person') {
                 this.decoratePersonFields(field, data, $inputs, $variables);
             } else if (type == 'file') {
                 this.decorateFieldForm(field);
@@ -93,21 +81,27 @@
                 var $images = $variable.filter('img');
                 var $others = $variable.filter(':not(img,form)');
                 if (values != null && values.length > 0) {
-                    $images.attr('src', values[0].link);
-                    $others.text(values[0].name);
+                    var first = values[0];
+                    if (typeof first === 'object') {
+                        $images.attr('src', first.link);
+                        $others.text(first.name);
+                    }
                 }
             } else {
-                if ($input.length > 0 && type != 'file') {
-                    var isEmpty = true;
-                    for (var x=0;x<values.length;x++) {
-                        if (values[x] != null && values[x] != '')
-                            isEmpty = false;
+                var isEmpty = true;
+                for (var x=0;x<values.length;x++) {
+                    if (values[x] != null && typeof values[x] == 'object' || values[x] != '') {
+                        isEmpty = false;
+                        break;
                     }
-                    if (!isEmpty)
-                        $input.val(values);
                 }
-                if ($variable.length > 0 && !$variable.is('form'))
-                    $variable.text(values);
+                if (!isEmpty) {
+                    if ($input.length > 0 && type != 'file')
+                        $input.val(values);
+
+                    if ($variable.length > 0 && !$variable.is('form'))
+                        $variable.text(values);
+                }
             }
 
         },

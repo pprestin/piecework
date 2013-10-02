@@ -40,29 +40,33 @@ public class ProcessDeploymentVersion {
     private final String version;
 
     @XmlElement
-    private final Date date;
+    private final Date created;
 
     @XmlTransient
     private final boolean deleted;
 
     private ProcessDeploymentVersion() {
-        this(null, null, null, new Date(), false);
+        this(null);
     }
 
-    public ProcessDeploymentVersion(String label, String deploymentId, String version) {
-        this(label, deploymentId, version, new Date(), false);
+    public ProcessDeploymentVersion(ProcessDeployment deployment) {
+        this(deployment, false);
     }
 
-    public ProcessDeploymentVersion(String label, String deploymentId, String version, Date date, boolean deleted) {
-        this.label = label;
-        this.deploymentId = deploymentId;
-        this.version = version;
-        this.date = date;
+    public ProcessDeploymentVersion(ProcessDeployment deployment, boolean deleted) {
+        this.label = deployment != null ? deployment.getDeploymentLabel() : null;
+        this.deploymentId = deployment != null ? deployment.getDeploymentId() : null;
+        this.version = deployment != null ? deployment.getDeploymentVersion() : null;
+        this.created = deployment != null ? deployment.getCreated() : null;
         this.deleted = deleted;
     }
 
     public ProcessDeploymentVersion(ProcessDeploymentVersion original, boolean deleted) {
-        this(original.getLabel(), original.getDeploymentId(), original.getVersion(), original.getDate(), deleted);
+        this.label = original.getLabel();
+        this.deploymentId = original.getDeploymentId();
+        this.version = original.getVersion();
+        this.created = original.getCreated();
+        this.deleted = deleted;
     }
 
     public String getLabel() {
@@ -77,8 +81,8 @@ public class ProcessDeploymentVersion {
         return version;
     }
 
-    public Date getDate() {
-        return date;
+    public Date getCreated() {
+        return created;
     }
 
     @JsonIgnore

@@ -50,7 +50,8 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
 	Response read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
-	
+
+    @POST
 	@PUT
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
@@ -78,6 +79,11 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @Path("{processDefinitionKey}/deployment/{deploymentId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response cloneDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/deployment/{deploymentId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response getDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}")

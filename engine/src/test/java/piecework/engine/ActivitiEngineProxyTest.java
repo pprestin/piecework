@@ -34,6 +34,7 @@ import piecework.engine.activiti.identity.LdapIdentitySessionFactory;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
 import piecework.model.Process;
+import piecework.model.ProcessDeployment;
 import piecework.model.ProcessExecution;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.util.ManyMap;
@@ -56,13 +57,15 @@ public class ActivitiEngineProxyTest {
     ProcessEngine processEngine;
 
     private Process process;
+    private ProcessDeployment deployment;
 
 	@Before
 	public void setup() throws IOException {
         process = ExampleFactory.exampleProcess();
+        deployment = ExampleFactory.exampleProcessDeployment();
 
 		ClassPathResource resource = new ClassPathResource("META-INF/example.bpmn20.xml");
-        processEngine.getRepositoryService().createDeployment().name(process.getEngineProcessDefinitionKey()).addInputStream("example.bpmn20.xml", resource.getInputStream()).deploy();
+        processEngine.getRepositoryService().createDeployment().name(deployment.getEngineProcessDefinitionKey()).addInputStream("example.bpmn20.xml", resource.getInputStream()).deploy();
     }
 	
 	@Test
@@ -71,8 +74,8 @@ public class ActivitiEngineProxyTest {
 		Assert.assertNotNull(instanceId);
 
         ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
-                .engine(process.getEngine())
-                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .engine(deployment.getEngine())
+                .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
                 .build();
 
@@ -88,8 +91,8 @@ public class ActivitiEngineProxyTest {
 		Assert.assertNotNull(instanceId);
 
         ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
-                .engine(process.getEngine())
-                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .engine(deployment.getEngine())
+                .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
                 .build();
 
@@ -109,8 +112,8 @@ public class ActivitiEngineProxyTest {
 
         // First, retrieve without including variables
         ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
-                .engine(process.getEngine())
-                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .engine(deployment.getEngine())
+                .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
                 .build();
 
@@ -123,8 +126,8 @@ public class ActivitiEngineProxyTest {
 
         // Then include variables in criteria
         criteria = new ProcessInstanceSearchCriteria.Builder()
-                .engine(process.getEngine())
-                .engineProcessDefinitionKey(process.getEngineProcessDefinitionKey())
+                .engine(deployment.getEngine())
+                .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
                 .includeVariables()
                 .build();

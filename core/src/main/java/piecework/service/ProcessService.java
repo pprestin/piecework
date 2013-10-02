@@ -16,7 +16,6 @@
 package piecework.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
@@ -69,12 +68,12 @@ public class ProcessService {
     Versions versions;
 
     public Process create(Process rawProcess) {
-        piecework.model.Process.Builder builder = new Process.Builder(rawProcess, sanitizer, true);
+        piecework.model.Process.Builder builder = new Process.Builder(rawProcess, sanitizer);
 
         Process process = builder.build();
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        builder = new Process.Builder(process, passthroughSanitizer, false);
+        builder = new Process.Builder(process, passthroughSanitizer);
 
 //        builder.clearInteractions();
 //
@@ -110,19 +109,42 @@ public class ProcessService {
         return processRepository.save(builder.build());
     }
 
+    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment) throws StatusCodeError {
+        Process process = create(rawProcess);
+        ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
+        publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        process = read(process.getProcessDefinitionKey());
+        return process;
+    }
+
     public ProcessDeployment createDeployment(String rawProcessDefinitionKey) throws StatusCodeError {
         Process process = read(rawProcessDefinitionKey);
+        List<ProcessDeploymentVersion> versions = process.getVersions();
+        String deploymentVersion = versions != null ? "" + (versions.size() + 1) : "1";
 
-        ProcessDeployment deployment = new ProcessDeployment.Builder().build();
+        ProcessDeployment deployment = new ProcessDeployment.Builder().deploymentVersion(deploymentVersion).build();
         deployment = deploymentRepository.save(deployment);
 
-        List<ProcessDeploymentVersion> versions = process.getVersions();
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        Process updated = new Process.Builder(process, passthroughSanitizer)
+                .version(new ProcessDeploymentVersion(deployment))
+                .build();
 
-        String version = versions != null ? "" + (versions.size() + 1) : "1";
+        processRepository.save(updated);
+
+        return deployment;
+    }
+
+    public ProcessDeployment createDeployment(String rawProcessDefinitionKey, ProcessDeployment rawDeployment) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+
+        List<ProcessDeploymentVersion> versions = process.getVersions();
+        String deploymentVersion = versions != null ? "" + (versions.size() + 1) : "1";
+        ProcessDeployment deployment = cascadeSave(rawDeployment, deploymentVersion);
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        Process updated = new Process.Builder(process, passthroughSanitizer, true)
-                .version(new ProcessDeploymentVersion("", deployment.getDeploymentId(), version))
+        Process updated = new Process.Builder(process, passthroughSanitizer)
+                .version(new ProcessDeploymentVersion(deployment))
                 .build();
 
         processRepository.save(updated);
@@ -134,14 +156,13 @@ public class ProcessService {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        List<ProcessDeploymentVersion> deploymentVersions = process.getVersions();
-
-        String version = deploymentVersions != null ? "" + (deploymentVersions.size() + 1) : "1";
+        List<ProcessDeploymentVersion> versions = process.getVersions();
+        String deploymentVersion = versions != null ? "" + (versions.size() + 1) : "1";
 
         ProcessDeployment original = null;
 
-        for (ProcessDeploymentVersion deploymentVersion : deploymentVersions) {
-            if (deploymentVersion.getDeploymentId().equals(deploymentId)) {
+        for (ProcessDeploymentVersion version : versions) {
+            if (version.getDeploymentId().equals(deploymentId)) {
                 original = deploymentRepository.findOne(deploymentId);
                 break;
             }
@@ -151,11 +172,10 @@ public class ProcessService {
             throw new NotFoundError();
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessDeployment deployment = new ProcessDeployment.Builder(original, null, passthroughSanitizer, true).deploymentId(null).build();
-        deployment = deploymentRepository.save(deployment);
+        ProcessDeployment deployment = cascadeSave(original, deploymentVersion);
 
-        Process updated = new Process.Builder(process, passthroughSanitizer, true)
-                .version(new ProcessDeploymentVersion("", deployment.getDeploymentId(), version))
+        Process updated = new Process.Builder(process, passthroughSanitizer)
+                .version(new ProcessDeploymentVersion(deployment))
                 .build();
 
         processRepository.save(updated);
@@ -170,7 +190,7 @@ public class ProcessService {
         if (record == null)
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 
-        Process.Builder builder = new Process.Builder(record, sanitizer, true);
+        Process.Builder builder = new Process.Builder(record, sanitizer);
         builder.delete();
         return processRepository.save(builder.build());
     }
@@ -179,25 +199,23 @@ public class ProcessService {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        Process updated = new Process.Builder(process, sanitizer, true)
+        Process updated = new Process.Builder(process, sanitizer)
                 .deleteDeployment(deploymentId)
                 .build();
 
         processRepository.save(updated);
     }
 
-    public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+    public ProcessDeployment getDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        List<ProcessDeploymentVersion> deploymentVersions = process.getVersions();
-
-        String version = deploymentVersions != null ? "" + (deploymentVersions.size() + 1) : "1";
+        List<ProcessDeploymentVersion> versions = process.getVersions();
 
         ProcessDeployment original = null;
 
-        for (ProcessDeploymentVersion deploymentVersion : deploymentVersions) {
-            if (deploymentVersion.getDeploymentId().equals(deploymentId)) {
+        for (ProcessDeploymentVersion version : versions) {
+            if (version.getDeploymentId().equals(deploymentId)) {
                 original = deploymentRepository.findOne(deploymentId);
                 break;
             }
@@ -207,8 +225,34 @@ public class ProcessService {
             throw new NotFoundError();
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        Process updated = new Process.Builder(process, passthroughSanitizer, true)
-                .deploy(original)
+
+        return new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true)
+                .build();
+    }
+
+    public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        List<ProcessDeploymentVersion> deploymentVersions = process.getVersions();
+
+        ProcessDeploymentVersion selectedDeploymentVersion = null;
+        ProcessDeployment original = null;
+
+        for (ProcessDeploymentVersion deploymentVersion : deploymentVersions) {
+            if (deploymentVersion.getDeploymentId().equals(deploymentId)) {
+                selectedDeploymentVersion = deploymentVersion;
+                original = deploymentRepository.findOne(deploymentId);
+                break;
+            }
+        }
+
+        if (original == null)
+            throw new NotFoundError();
+
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        Process updated = new Process.Builder(process, passthroughSanitizer)
+                .deploy(selectedDeploymentVersion, original)
                 .build();
 
         processRepository.save(updated);
@@ -236,7 +280,7 @@ public class ProcessService {
         if (processes != null && !processes.isEmpty()) {
             results = new ArrayList<Process>(processes.size());
             for (Process process : processes) {
-                results.add(new Process.Builder(process, sanitizer, false).build(versions.getVersion1()));
+                results.add(new Process.Builder(process, sanitizer).build(versions.getVersion1()));
             }
         } else {
             results = Collections.emptyList();
@@ -280,62 +324,21 @@ public class ProcessService {
     public Process update(String rawProcessDefinitionKey, Process rawProcess) throws StatusCodeError {
         // Sanitize all user input
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String includedKey = sanitizer.sanitize(rawProcess.getProcessDefinitionKey());
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-        // If the path param key is not the same as the one that's included in the process, then this put is a rename
-        // of the key -- this means we delete the old one and createDeployment a new one, assuming that the new one doesn't conflict
-        // with an existing key
-        if (!processDefinitionKey.equals(includedKey)) {
+        Process original = processRepository.findOne(processDefinitionKey);
+        Process update = new Process.Builder(rawProcess, sanitizer).build();
 
-            // Check for a process with the new key
-            Process record = processRepository.findOne(includedKey);
+        Process.Builder builder = new Process.Builder(original, passthroughSanitizer);
 
-            // This means that a process with that key already exists
-            if (record != null && !record.isDeleted())
-                throw new ForbiddenError(Constants.ExceptionCodes.process_change_key_duplicate, processDefinitionKey, includedKey);
-
-            record = processRepository.findOne(processDefinitionKey);
-            if (record != null) {
-                Process.Builder builder = new Process.Builder(record, passthroughSanitizer, true);
-                processRepository.delete(builder.build());
-            }
-        }
-
-        Process.Builder builder = new Process.Builder(rawProcess, sanitizer, false);
-//        builder.clearInteractions();
-//        if (rawProcess.getInteractions() != null && !rawProcess.getInteractions().isEmpty()) {
-//            for (Interaction interaction : rawProcess.getInteractions()) {
-//                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
-//                interactionBuilder.clearScreens();
-//                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
-//                    for (Screen screen : interaction.getScreens()) {
-//                        Screen persistedScreen = screenRepository.save(screen);
-//                        interactionBuilder.screen(persistedScreen);
-//                    }
-//                }
-//                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
-//                builder.interaction(persistedInteraction);
-//            }
-//        }
-//        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
-//            for (Notification notification : rawProcess.getNotifications()) {
-//                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
-//                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
-//                builder.notification(persistedNotification);
-//            }
-//        }
-//        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
-//            for (Section section : rawProcess.getSections()) {
-//                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
-//                Section persistedSection = sectionRepository.save(sectionBuilder.build());
-//                builder.section(persistedSection);
-//            }
-//        }
+        // Only certain fields can be updated through this method
+        builder.processDefinitionKey(update.getProcessDefinitionKey())
+               .processDefinitionLabel(update.getProcessDefinitionLabel())
+               .participantSummary(update.getParticipantSummary())
+               .processSummary(update.getProcessSummary());
 
         return processRepository.save(builder.build());
     }
-
 
     public ProcessDeployment updateDeployment(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeployment rawDeployment) throws StatusCodeError {
         Process process = read(rawProcessDefinitionKey);
@@ -350,8 +353,52 @@ public class ProcessService {
         return deployment;
     }
 
+    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment) throws StatusCodeError {
+        Process process = read(rawProcess.getProcessDefinitionKey());
+                //update(rawProcess.getProcessDefinitionKey(), rawProcess);
+        ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
+        publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        process = read(process.getProcessDefinitionKey());
+        return process;
+    }
+
     public String getVersion() {
         return "v1";
+    }
+
+    private ProcessDeployment cascadeSave(ProcessDeployment deployment, String deploymentVersion) {
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, null, sanitizer, false)
+                .deploymentVersion(deploymentVersion);
+
+        if (deployment.getInteractions() != null && !deployment.getInteractions().isEmpty()) {
+            for (Interaction interaction : deployment.getInteractions()) {
+                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
+                interactionBuilder.screens(null);
+                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
+                    for (Screen screen : interaction.getScreens()) {
+                        Screen persistedScreen = screenRepository.save(screen);
+                        interactionBuilder.screen(persistedScreen);
+                    }
+                }
+                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
+                builder.interaction(persistedInteraction);
+            }
+        }
+        if (deployment.getNotifications() != null && !deployment.getNotifications().isEmpty()) {
+            for (Notification notification : deployment.getNotifications()) {
+                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
+                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
+                builder.notification(persistedNotification);
+            }
+        }
+        if (deployment.getSections() != null && !deployment.getSections().isEmpty()) {
+            for (Section section : deployment.getSections()) {
+                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
+                Section persistedSection = sectionRepository.save(sectionBuilder.build());
+                builder.section(persistedSection);
+            }
+        }
+        return deploymentRepository.save(builder.build());
     }
 
 }

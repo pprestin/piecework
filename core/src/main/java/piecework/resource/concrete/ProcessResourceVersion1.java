@@ -15,8 +15,6 @@
  */
 package piecework.resource.concrete;
 
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -28,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import piecework.Versions;
 import piecework.model.ProcessDeployment;
-import piecework.model.ProcessDeploymentVersion;
 import piecework.service.ProcessService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
@@ -36,8 +33,6 @@ import piecework.exception.StatusCodeError;
 import piecework.model.Process;
 import piecework.resource.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
-
-import java.util.List;
 
 /**
  * @author James Renfro
@@ -54,7 +49,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	@Override
 	public Response create(Process rawProcess) throws StatusCodeError {
 		Process result = processService.create(rawProcess);
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(versions.getVersion1()));
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(versions.getVersion1()));
 		return responseBuilder.build();
 	}
 	
@@ -87,7 +82,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	public Response read(String rawProcessDefinitionKey) throws StatusCodeError {
         Process result = processService.read(rawProcessDefinitionKey);
 				
-		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer(), true).build(versions.getVersion1()));
+		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(versions.getVersion1()));
 		return responseBuilder.build();
 	}
 
@@ -112,6 +107,14 @@ public class ProcessResourceVersion1 implements ProcessResource {
         processService.deleteDeployment(rawProcessDefinitionKey, rawDeploymentId);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        return responseBuilder.build();
+    }
+
+    @Override
+    public Response getDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        ProcessDeployment result = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
+
+        ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, null, new PassthroughSanitizer(), true).build());
         return responseBuilder.build();
     }
 

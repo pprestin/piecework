@@ -15,6 +15,7 @@
  */
 package piecework.engine.activiti;
 
+import java.io.IOException;
 import java.util.*;
 
 import org.activiti.engine.*;
@@ -229,18 +230,20 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (!deployment.getEngine().equals(getKey()))
             return;
 
-        ClassPathResource classPathResource = new ClassPathResource(deployment.getEngineProcessDefinitionLocation());
-        ProcessModelResource processModelResource = new ProcessModelResource.Builder().name("bpmn").inputStream(classPathResource.getInputStream()).build();
-        facade.deploy(demoProcess, demoProcessDeployment(), processModelResource);
+        String location = deployment.getEngineProcessDefinitionLocation();
+        String classpathPrefix = "classpath:";
 
-        DeploymentBuilder builder = processEngine.getRepositoryService().createDeployment();
+        if (location.startsWith(classpathPrefix))
+            location = location.substring(classpathPrefix.length());
 
-        if (resources != null) {
-            for (ProcessModelResource resource : resources) {
-                builder.addInputStream(resource.getName(), resource.getInputStream());
-            }
+        ClassPathResource classPathResource = new ClassPathResource(location);
 
+        try {
+            DeploymentBuilder builder = processEngine.getRepositoryService().createDeployment();
+            builder.addInputStream(deployment.getEngineProcessDefinitionKey(), classPathResource.getInputStream());
             builder.deploy();
+        } catch (IOException ioe) {
+            throw new ProcessEngineException("Unable to deploy BPMN definition", ioe);
         }
     }
 

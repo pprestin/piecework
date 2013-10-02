@@ -1,0 +1,58 @@
+<ul class="breadcrumb well">
+    <li><a href="#">Processes</a></li>
+    <li class="active">{{process.processDefinitionLabel}}</li>
+</ul>
+<div ng-controller="ProcessEditController" class="panel panel-default">
+    <div class="panel-heading"><span class="lead">Process Details</span></div>
+    <div class="panel-body">
+        <form id="process-detail-form" ng-submit="updateProcess()">
+            <fieldset>
+                <div class="form-group">
+                    <label>Label</label>
+                    <div class="controls">
+                        <div class="viewable process-short-name-readonly muted"></div>
+                        <input class="form-control editable process-formal-name span6" type="text"
+                               name="processDefinitionLabel" size="60" maxlength="80"
+                               placeholder="How would you refer to it officially?"
+                               ng-model="process.processDefinitionLabel">
+                        <span class="help-inline hide">Required</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Key</label>
+                    <div class="controls">
+                        <div class="viewable process-short-name-readonly muted"></div>
+                        <input class="form-control editable process-short-name" type="text"
+                               name="processDefinitionKey" maxlength="25" size="25"
+                               placeholder="Letters/numbers, no spaces"
+                               ng-model="process.processDefinitionKey" required> <span
+                            class="help-inline hide">Required</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description <span class="text-info">(optional)</span></label>
+                    <div class="controls">
+                        <div class="viewable process-short-name-readonly muted"></div>
+                        <textarea class="form-control editable process-summary span8"
+                                  name="processSummary"
+                                  placeholder="Provide some more details about how the process works"
+                                  ng-model="process.processSummary"
+                                  rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Participants <span class="text-info">(optional)</span></label>
+                    <div class="controls">
+                        <div class="viewable process-short-name-readonly muted"></div>
+                        <textarea class="form-control editable process-participants span8"
+                                  name="participantSummary"
+                                  ng-model="process.participantSummary"
+                                  placeholder="What people or groups have to take action?"></textarea>
+                    </div>
+                </div>
+            </fieldset>
+            <button class="btn btn-primary pull-right" type="submit" role="button">Update</button>
+            <div class="clearfix"></div>
+        </form>
+    </div>
+</div>

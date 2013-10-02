@@ -44,6 +44,12 @@ public class ProcessDeployment implements Serializable {
     private final String deploymentId;
 
     @XmlElement
+    private final String deploymentLabel;
+
+    @XmlElement
+    private final String deploymentVersion;
+
+    @XmlElement
     private final String processInstanceLabelTemplate;
 
     @XmlElement
@@ -76,10 +82,12 @@ public class ProcessDeployment implements Serializable {
 
     @XmlElementWrapper(name="sections")
     @XmlElementRef
+    @DBRef
     private final List<Section> sections;
 
     @XmlElementWrapper(name="notifications")
     @XmlElementRef
+    @DBRef
     private final List<Notification> notifications;
 
     @XmlElement
@@ -93,8 +101,9 @@ public class ProcessDeployment implements Serializable {
     @JsonIgnore
     private final boolean isDeleted;
 
-    @Version
-    private final long version;
+    @XmlElement
+    private final Date created;
+
 
     private ProcessDeployment() {
         this(new ProcessDeployment.Builder());
@@ -103,6 +112,8 @@ public class ProcessDeployment implements Serializable {
     @SuppressWarnings("unchecked")
     private ProcessDeployment(ProcessDeployment.Builder builder) {
         this.deploymentId = builder.deploymentId;
+        this.deploymentLabel = builder.deploymentLabel;
+        this.deploymentVersion = builder.deploymentVersion;
         this.processInstanceLabelTemplate = builder.processInstanceLabelTemplate;
         this.engine = builder.engine;
         this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
@@ -118,11 +129,19 @@ public class ProcessDeployment implements Serializable {
         this.defaultScreen = builder.defaultScreen;
         this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
         this.isDeleted = builder.isDeleted;
-        this.version = builder.version;
+        this.created = builder.created;
     }
 
     public String getDeploymentId() {
         return deploymentId;
+    }
+
+    public String getDeploymentLabel() {
+        return deploymentLabel;
+    }
+
+    public String getDeploymentVersion() {
+        return deploymentVersion;
     }
 
     public String getProcessInstanceLabelTemplate() {
@@ -169,10 +188,6 @@ public class ProcessDeployment implements Serializable {
         return sections;
     }
 
-    public long getVersion() {
-        return version;
-    }
-
     @JsonIgnore
     public Map<String, Section> getSectionMap() {
         Map<String, Section> sectionMap = new HashMap<String, Section>();
@@ -204,6 +219,10 @@ public class ProcessDeployment implements Serializable {
         return isDeleted;
     }
 
+    public Date getCreated() {
+        return created;
+    }
+
     @XmlTransient
     @JsonIgnore
     public boolean isEmpty() {
@@ -213,6 +232,8 @@ public class ProcessDeployment implements Serializable {
     public final static class Builder {
 
         private String deploymentId;
+        private String deploymentLabel;
+        private String deploymentVersion;
         private String processInstanceLabelTemplate;
         private String engine;
         private String engineProcessDefinitionKey;
@@ -228,18 +249,20 @@ public class ProcessDeployment implements Serializable {
         private Screen defaultScreen;
         private boolean isAnonymousSubmissionAllowed;
         private boolean isDeleted;
-        private long version;
+        private Date created;
 
         public Builder() {
             super();
             this.interactions = new ArrayList<Interaction>();
             this.sections = new ArrayList<Section>();
             this.notifications = new ArrayList<Notification>();
-            this.version = 1;
+            this.created = new Date();
         }
 
         public Builder(ProcessDeployment deployment, String processDefinitionKey, Sanitizer sanitizer, boolean includeDetails) {
             this.deploymentId = deployment.deploymentId;
+            this.deploymentLabel = deployment.deploymentLabel;
+            this.deploymentVersion = deployment.deploymentVersion;
             this.processInstanceLabelTemplate = sanitizer.sanitize(deployment.processInstanceLabelTemplate);
             this.engine = sanitizer.sanitize(deployment.engine);
             this.engineProcessDefinitionKey = sanitizer.sanitize(deployment.engineProcessDefinitionKey);
@@ -270,14 +293,15 @@ public class ProcessDeployment implements Serializable {
             if (includeDetails && deployment.sections != null && !deployment.sections.isEmpty()) {
                 this.sections = new ArrayList<Section>(deployment.sections.size());
                 for (Section section : deployment.sections) {
-                    this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
+                    if (section != null)
+                        this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
                 }
             } else {
                 this.sections = new ArrayList<Section>();
             }
             this.isAnonymousSubmissionAllowed = deployment.isAnonymousSubmissionAllowed;
             this.isDeleted = deployment.isDeleted;
-            this.version = deployment.version;
+            this.created = deployment.created;
         }
 
         public ProcessDeployment build() {
@@ -286,6 +310,16 @@ public class ProcessDeployment implements Serializable {
 
         public Builder deploymentId(String deploymentId) {
             this.deploymentId = deploymentId;
+            return this;
+        }
+
+        public Builder deploymentLabel(String deploymentLabel) {
+            this.deploymentLabel = deploymentLabel;
+            return this;
+        }
+
+        public Builder deploymentVersion(String deploymentVersion) {
+            this.deploymentVersion = deploymentVersion;
             return this;
         }
 

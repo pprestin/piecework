@@ -1,73 +1,53 @@
 'use strict';
 
 angular.module('ProcessDesigner', ['ngResource'])
-//    .factory('Process', function($resource) {
-//        return $resource('../process/:processDefinitionKey', {}, {
-//            query: {method:'GET', params:{processDefinitionKey:''}, isArray:true},
-//            post: {method:'POST'},
-//            update: {method:'PUT'},
-//            remove: {method:'DELETE'}
-//        });
-//    })
-    .controller('ListController', ['$scope','$http',
-        function($scope, $http) {
-            $http.get('process.json').success(function(data) {
+    .controller('DeploymentDetailController', ['$scope','$resource','$routeParams',
+        function($scope, $resource, $routeParams) {
+            var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
+            $scope.deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId});
+            $scope.updateDeployment = function() {
+                $scope.deployment.$save();
+            };
+        }
+    ])
+    .controller('DeploymentListController', ['$scope','$resource',
+        function($scope, $resource) {
+            var Deployment = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+            Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey}, function(data) {
+                $scope.deployments = data.list;
+            });
+        }
+    ])
+    .controller('ProcessListController', ['$scope','$resource',
+        function($scope, $resource) {
+            var Process = $resource('process');
+
+            Process.get({}, function(data) {
                 $scope.processes = data.list;
             });
         }
     ])
-    .controller('DetailController', [
-        function($scope) {
-
+    .controller('ProcessDetailController', ['$scope','$resource','$routeParams',
+        function($scope, $resource, $routeParams) {
+            var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+            $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
+        }
+    ])
+    .controller('ProcessEditController', ['$scope','$resource','$routeParams',
+        function($scope, $resource, $routeParams) {
+            var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+            $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
+            $scope.updateProcess = function() {
+                $scope.process.$save();
+            };
         }
     ])
     .config(function($routeProvider) {
-       $routeProvider
-         .when('/', {controller: 'ListController', templateUrl:'../static/ng/views/process-list.html'})
-         .when('/edit/:processDefinitionKey', {controller: 'DetailController', templateUrl:'../static/ng/views/process-detail.html'})
-         .otherwise({redirectTo:'/'});
+        $routeProvider
+            .when('/', {controller: 'ProcessListController', templateUrl:'../static/ng/views/process-list.html'})
+            //.when('/detail/:processDefinitionKey', {controller: 'ProcessDetailController', templateUrl:'../static/ng/views/process-detail.html'})
+            .when('/process/:processDefinitionKey', {controller: 'ProcessEditController', templateUrl:'../static/ng/views/process-edit.html'})
+            .when('/deployment/:processDefinitionKey', {controller: 'DeploymentListController', templateUrl:'../static/ng/views/deployment-list.html'})
+            .when('/deployment/:processDefinitionKey/:deploymentId', {controller: 'DeploymentDetailController', templateUrl:'../static/ng/views/deployment-detail.html'})
+            .otherwise({redirectTo:'/'});
     });
-
-
-//    value('fbURL', '../process.json').
-//    factory('Processes', function(angularFireCollection, fbURL) {
-//        return angularFireCollection(fbURL);
-//    }).
-//  config(function($routeProvider) {
-//    $routeProvider.
-//      when('/', {controller:ListCtrl, templateUrl:'list.html'}).
-//      when('/edit/:projectId', {controller:EditCtrl, templateUrl:'detail.html'}).
-//      when('/new', {controller:CreateCtrl, templateUrl:'detail.html'}).
-//      otherwise({redirectTo:'/'});
-//  });
- 
-//function ListCtrl($scope, Projects) {
-//  $scope.projects = Projects;
-//}
-//
-//function CreateCtrl($scope, $location, $timeout, Projects) {
-//  $scope.save = function() {
-//    Projects.add($scope.project, function() {
-//      $timeout(function() { $location.path('/'); });
-//    });
-//  }
-//}
-//
-//function EditCtrl($scope, $location, $routeParams, angularFire, fbURL) {
-//  angularFire(fbURL + $routeParams.projectId, $scope, 'remote', {}).
-//  then(function() {
-//    $scope.project = angular.copy($scope.remote);
-//    $scope.project.$id = $routeParams.projectId;
-//    $scope.isClean = function() {
-//      return angular.equals($scope.remote, $scope.project);
-//    }
-//    $scope.destroy = function() {
-//      $scope.remote = null;
-//      $location.path('/');
-//    };
-//    $scope.save = function() {
-//      $scope.remote = angular.copy($scope.project);
-//      $location.path('/');
-//    };
-//  });
-//}
