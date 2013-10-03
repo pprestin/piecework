@@ -5,17 +5,22 @@ angular.module('ProcessDesigner', ['ngResource'])
         function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
             $scope.deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId});
+            var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+            $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
+
             $scope.updateDeployment = function() {
                 $scope.deployment.$save();
             };
         }
     ])
-    .controller('DeploymentListController', ['$scope','$resource',
-        function($scope, $resource) {
+    .controller('DeploymentListController', ['$scope','$resource','$routeParams',
+        function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
             Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey}, function(data) {
                 $scope.deployments = data.list;
             });
+            var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+            $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
         }
     ])
     .controller('ProcessListController', ['$scope','$resource',

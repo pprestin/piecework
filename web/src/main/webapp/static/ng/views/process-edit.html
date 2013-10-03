@@ -49,6 +49,13 @@
                                   ng-model="process.participantSummary"
                                   placeholder="What people or groups have to take action?"></textarea>
                     </div>
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" ng-model="process.isAnonymousSubmissionAllowed"> Allow anonymous form submission
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </fieldset>
             <button class="btn btn-primary pull-right" type="submit" role="button">Update</button>

@@ -527,7 +527,6 @@ public class Demonstration implements TaskListener {
                 .section(CONFIRMATION_MAIN_SECTION)
                 .section(APPROVED_MAIN_SECTION)
                 .section(REJECTED_MAIN_SECTION)
-                .allowAnonymousSubmission()
                 .build();
         return current;
     }
@@ -536,6 +535,7 @@ public class Demonstration implements TaskListener {
         return new Process.Builder()
                 .processDefinitionKey("Demonstration")
                 .processDefinitionLabel("Demonstration Process")
+                .allowAnonymousSubmission()
                 .build();
     }
 

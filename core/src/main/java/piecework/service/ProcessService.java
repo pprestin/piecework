@@ -344,6 +344,18 @@ public class ProcessService {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
+        ProcessDeployment original = deploymentRepository.findOne(deploymentId);
+        if (original == null)
+            throw new NotFoundError();
+
+        List<ProcessDeploymentVersion> versions = process.getVersions();
+        ProcessDeploymentVersion current = null;
+        if (versions != null) {
+            for (ProcessDeploymentVersion version : versions) {
+
+            }
+        }
+
         ProcessDeployment deployment = new ProcessDeployment.Builder(rawDeployment, process.getProcessDefinitionKey(), sanitizer, true).build();
         if (!deployment.getDeploymentId().equals(deploymentId))
             throw new BadRequestError();

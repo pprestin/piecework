@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.security.Sanitizer;
@@ -95,7 +94,7 @@ public class ProcessDeployment implements Serializable {
     private final Screen defaultScreen;
 
     @XmlAttribute
-    private final boolean isAnonymousSubmissionAllowed;
+    private final boolean published;
 
     @XmlTransient
     @JsonIgnore
@@ -127,7 +126,7 @@ public class ProcessDeployment implements Serializable {
         this.sections = Collections.unmodifiableList(builder.sections);
         this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
         this.defaultScreen = builder.defaultScreen;
-        this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
+        this.published = builder.published;
         this.isDeleted = builder.isDeleted;
         this.created = builder.created;
     }
@@ -210,8 +209,8 @@ public class ProcessDeployment implements Serializable {
         return defaultScreen;
     }
 
-    public boolean isAnonymousSubmissionAllowed() {
-        return isAnonymousSubmissionAllowed;
+    public boolean isPublished() {
+        return published;
     }
 
     @JsonIgnore
@@ -247,8 +246,8 @@ public class ProcessDeployment implements Serializable {
         private List<Section> sections;
         private List<Notification> notifications;
         private Screen defaultScreen;
-        private boolean isAnonymousSubmissionAllowed;
         private boolean isDeleted;
+        private boolean published;
         private Date created;
 
         public Builder() {
@@ -257,6 +256,7 @@ public class ProcessDeployment implements Serializable {
             this.sections = new ArrayList<Section>();
             this.notifications = new ArrayList<Notification>();
             this.created = new Date();
+            this.published = false;
         }
 
         public Builder(ProcessDeployment deployment, String processDefinitionKey, Sanitizer sanitizer, boolean includeDetails) {
@@ -299,8 +299,8 @@ public class ProcessDeployment implements Serializable {
             } else {
                 this.sections = new ArrayList<Section>();
             }
-            this.isAnonymousSubmissionAllowed = deployment.isAnonymousSubmissionAllowed;
             this.isDeleted = deployment.isDeleted;
+            this.published = deployment.published;
             this.created = deployment.created;
         }
 
@@ -404,8 +404,8 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
-        public Builder allowAnonymousSubmission() {
-            this.isAnonymousSubmissionAllowed = true;
+        public Builder publish() {
+            this.published = true;
             return this;
         }
 

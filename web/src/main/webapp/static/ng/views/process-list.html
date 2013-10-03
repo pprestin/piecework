@@ -3,15 +3,15 @@
         <tr>
             <th>Process Name</th>
             <th>Key</th>
-            <th>Deployment</th>
-            <th>Deployed</th>
+            <th>Published Deployment</th>
+            <th>Deployed On</th>
         </tr>
     </thead>
     <tbody>
         <tr ng-repeat="process in processes">
             <td><a href="#/process/{{process.processDefinitionKey}}">{{process.processDefinitionLabel}}</a></td>
             <td>{{process.processDefinitionKey}}</td>
-            <td><a href="#/deployment/{{process.processDefinitionKey}}/{{process.deploymentId}}">{{process.deploymentLabel}} - {{process.deploymentVersion}}</a></td>
+            <td><a href="#/deployment/{{process.processDefinitionKey}}/{{process.deploymentId}}" title="{{process.deploymentLabel}}" ng-if="process.deploymentVersion"><i class="icon-rocket"></i> {{"#" + process.deploymentVersion}} "{{process.deploymentLabel}}"</a></td>
             <td>{{process.deploymentDate | date:'medium' }}</td>
         </tr>
     </tbody>

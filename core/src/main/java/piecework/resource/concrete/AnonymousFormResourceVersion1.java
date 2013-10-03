@@ -95,12 +95,8 @@ public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
         if (process == null)
             throw new NotFoundError();
 
-        ProcessDeployment deployment = process.getDeployment();
-        if (deployment == null)
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
         // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
-        if (!deployment.isAnonymousSubmissionAllowed())
+        if (!process.isAnonymousSubmissionAllowed())
             throw new NotFoundError();
 
         return process;

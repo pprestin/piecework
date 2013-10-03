@@ -84,6 +84,9 @@ public class Process implements Serializable {
     @Transient
 	private final String uri;
 
+    @XmlAttribute
+    private final boolean isAnonymousSubmissionAllowed;
+
 	@XmlTransient
 	@JsonIgnore
 	private final boolean isDeleted;
@@ -110,6 +113,7 @@ public class Process implements Serializable {
         this.versions = Collections.unmodifiableList(builder.versions);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
+        this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
         this.isDeleted = builder.isDeleted;
         this.version = builder.version;
 	}
@@ -160,6 +164,10 @@ public class Process implements Serializable {
         return deployment != null ? deployment.getProcessInstanceLabelTemplate() : null;
     }
 
+    public boolean isAnonymousSubmissionAllowed() {
+        return isAnonymousSubmissionAllowed;
+    }
+
     public String getLink() {
         return link;
     }
@@ -208,6 +216,7 @@ public class Process implements Serializable {
         private String participantSummary;
 		private ProcessDeployment current;
         private List<ProcessDeploymentVersion> versions;
+        private boolean isAnonymousSubmissionAllowed;
 		private boolean isDeleted;
         private long version;
 		
@@ -231,6 +240,7 @@ public class Process implements Serializable {
                 this.versions = new ArrayList<ProcessDeploymentVersion>();
             else
                 this.versions = new ArrayList<ProcessDeploymentVersion>(process.versions);
+            this.isAnonymousSubmissionAllowed = process.isAnonymousSubmissionAllowed;
             this.isDeleted = process.isDeleted;
             this.version = process.version;
 		}
@@ -269,6 +279,11 @@ public class Process implements Serializable {
             this.deploymentVersion = version.getVersion();
             this.deploymentDate = new Date();
             this.current = current;
+            return this;
+        }
+
+        public Builder allowAnonymousSubmission() {
+            this.isAnonymousSubmissionAllowed = true;
             return this;
         }
 
