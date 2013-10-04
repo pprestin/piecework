@@ -22,6 +22,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
+import piecework.enumeration.InteractionStatus;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;

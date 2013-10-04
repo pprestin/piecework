@@ -69,6 +69,9 @@ public class Form {
     private final String link;
 
     @XmlAttribute
+    private final String src;
+
+    @XmlAttribute
     private final String activation;
 
     @XmlAttribute
@@ -108,11 +111,13 @@ public class Form {
         this.data = builder.data;
         this.validation = builder.validation;
         this.root = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME) : null;
+        //this.action = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.formInstanceId) : null;
         this.action = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
             this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
             this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
+        this.src =  context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.formInstanceId) : null;
         this.assignment = builder.assignment;
         this.activation = builder.activation;
         this.attachment = builder.attachment;
@@ -174,6 +179,10 @@ public class Form {
 
     public String getLink() {
         return link;
+    }
+
+    public String getSrc() {
+        return src;
     }
 
     public String getActivation() {

@@ -57,7 +57,7 @@ public class FormResourceVersion1 implements FormResource {
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.provideFormResponse(context, process, null);
+        return formService.startForm(context, process);
     }
 
     @Override

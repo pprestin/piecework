@@ -86,6 +86,10 @@ public class FormFactory {
             results.putAll(validation.getResults());
         }
 
+        if (request.getMessages() != null) {
+            results.putAll(request.getMessages());
+        }
+
         Form form = worker.form(formInstanceId, data, results);
 
         if (LOG.isDebugEnabled())

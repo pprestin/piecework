@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
@@ -30,15 +31,14 @@ import piecework.common.RequestDetails;
 import piecework.engine.activiti.config.TestConfiguration;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessDeployment;
-import piecework.model.ProcessExecution;
-import piecework.model.ProcessInstance;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.util.ManyMap;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -87,6 +87,7 @@ public class ActivitiEngineProxyTest {
 	@Test
 	public void testStartWithAliasAndNoData() throws ProcessEngineException {
         ProcessInstance instance = Mockito.mock(ProcessInstance.class);
+        Mockito.when(instance.getProcessInstanceId()).thenReturn("test1");
         String instanceId = engineProxy.start(process, instance);
 		Assert.assertNotNull(instanceId);
 
@@ -106,8 +107,9 @@ public class ActivitiEngineProxyTest {
 	@Test
 	public void testStartWithAliasAndSomeData() throws ProcessEngineException {
         ProcessInstance instance = Mockito.mock(ProcessInstance.class);
-        ManyMap<String, String> data = new ManyMap<String, String>();
-        data.putOne("EmployeeID", "testuser");
+        Map<String, List<Value>> data = new ManyMap<String, Value>();
+        ((ManyMap<String, Value>)data).putOne("EmployeeID", new Value("testuser"));
+        Mockito.when(instance.getData()).thenReturn(data);
         String instanceId = engineProxy.start(process, instance);
         Assert.assertNotNull(instanceId);
 
@@ -124,7 +126,6 @@ public class ActivitiEngineProxyTest {
         Assert.assertEquals(instanceId, execution.getExecutionId());
         Assert.assertNull(execution.getData());
 
-
         // Then include variables in criteria
         criteria = new ProcessInstanceSearchCriteria.Builder()
                 .engine(deployment.getEngine())
@@ -138,8 +139,8 @@ public class ActivitiEngineProxyTest {
         Assert.assertNotNull(execution);
         Assert.assertEquals(instanceId, execution.getExecutionId());
         @SuppressWarnings("unchecked")
-        List<String> employeeIDs = List.class.cast(execution.getData().get("EmployeeID"));
-        Assert.assertEquals("testuser", employeeIDs.get(0));
+        String employeeID = (String)execution.getData().get("EmployeeID");
+        Assert.assertEquals("testuser", employeeID);
 	}
 	
 }

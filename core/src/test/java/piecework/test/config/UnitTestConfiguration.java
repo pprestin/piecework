@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.ldap.core.support.LdapContextSource;
 import piecework.CommandExecutor;
 import piecework.Versions;
+import piecework.handler.ScreenHandler;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.service.*;
 import piecework.Registry;
@@ -131,6 +132,11 @@ public class UnitTestConfiguration {
     @Bean
     public ResponseHandler responseHandler() {
         return new ResponseHandler();
+    }
+
+    @Bean
+    public ScreenHandler screenHandler() {
+        return new ScreenHandler();
     }
 
     @Bean

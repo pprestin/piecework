@@ -16,6 +16,7 @@
 package piecework.test;
 
 import piecework.Constants;
+import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
 
@@ -40,7 +41,6 @@ public class ExampleFactory {
         return new FormRequest.Builder()
                 .requestId(formInstanceId)
                 .screen(exampleScreen(Constants.ScreenTypes.WIZARD))
-                .submissionType(Constants.SubmissionTypes.INTERIM)
                 .build();
     }
 
@@ -319,5 +319,69 @@ public class ExampleFactory {
                 .build();
     }
 
+    public static Process simpleThreeInteractionProcess() {
+
+        Screen startScreen = new Screen.Builder()
+                .screenId("1")
+                .title("Start Screen")
+                .build();
+
+        Screen startConfirmationScreen = new Screen.Builder()
+                .screenId("2")
+                .title("Start Confirmation Screen")
+                .build();
+
+        Interaction startInteraction = new Interaction.Builder()
+                .screen(startScreen)
+                .screen(startConfirmationScreen)
+                .build();
+
+        Screen task1Screen = new Screen.Builder()
+                .screenId("3")
+                .title("Task 1 Screen")
+                .build();
+
+        Screen task1ConfirmationScreen = new Screen.Builder()
+                .screenId("4")
+                .title("Task 1 Confirmation Screen")
+                .constraint(new Constraint.Builder()
+                        .type(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE)
+                        .value(ActionType.COMPLETE.name())
+                        .build())
+                .build();
+
+        Screen task1RejectionScreen = new Screen.Builder()
+                .screenId("5")
+                .title("Task 1 Rejection Screen")
+                .constraint(new Constraint.Builder()
+                        .type(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE)
+                        .value(ActionType.REJECT.name())
+                        .build())
+                .build();
+
+        Interaction task1Interaction = new Interaction.Builder()
+                .taskDefinitionKey("TASK1")
+                .screen(task1Screen)
+                .screen(task1ConfirmationScreen)
+                .screen(task1RejectionScreen)
+                .build();
+
+        Interaction task2Interaction = new Interaction.Builder()
+                .taskDefinitionKey("TASK2")
+                .build();
+
+        ProcessDeployment deployment = new ProcessDeployment.Builder()
+                .interaction(startInteraction)
+                .interaction(task1Interaction)
+//                .interaction(task2Interaction)
+                .build();
+
+        ProcessDeploymentVersion version = new ProcessDeploymentVersion(deployment);
+        return new Process.Builder()
+                .version(version)
+                .deploy(version, deployment)
+                .build();
+
+    }
 
 }

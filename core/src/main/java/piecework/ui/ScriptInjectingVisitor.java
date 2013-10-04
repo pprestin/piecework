@@ -90,7 +90,7 @@ public class ScriptInjectingVisitor implements TagNodeVisitor {
         public void decorate(TagNode tag) {
             TagNode scriptTag = new TagNode("script");
             scriptTag.addAttribute("type", "text/javascript");
-            scriptTag.addAttribute("src", form.getLink() + ".js");
+            scriptTag.addAttribute("src", form.getSrc() + ".js");
 
             tag.addChild(scriptTag);
         }

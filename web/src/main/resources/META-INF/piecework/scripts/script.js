@@ -41,38 +41,41 @@
                     $form.attr('action', model.action);
                     $form.attr('method', 'POST');
                     $form.attr('enctype', 'multipart/form-data');
-                    $form.submit(utils.submitMain);
+//                    $form.submit(utils.submitMain);
                 }
             })
         },
-        decorateScreen: function(screen, data) {
+        decorateScreen: function(screen, data, validation) {
             var $inputs = $(':input');
             var $variables = $('.process-variable');
             if (screen != undefined) {
                 var sections = screen.sections;
                 if (sections != undefined) {
                     for (var i=0;i<sections.length;i++) {
-                        this.decorateSection(sections[i], data, $inputs, $variables);
+                        this.decorateSection(sections[i], data, validation, $inputs, $variables);
                     }
                 }
             }
         },
-        decorateSection: function(section, data, $inputs, $variables) {
+        decorateSection: function(section, data, validation, $inputs, $variables) {
             var fields = section.fields;
             if (fields != undefined) {
                 for (var j=0;j<fields.length;j++) {
-                    this.decorateField(fields[j], data, $inputs, $variables);
+                    this.decorateField(fields[j], data, validation, $inputs, $variables);
                 }
             }
         },
-        decorateField: function(field, data, $inputs, $variables) {
+        decorateField: function(field, data, validation, $inputs, $variables) {
             var name = field.name;
             var type = field.type;
             var values = data[name];
+            var messages = validation != null ? validation[name] : null;
             var inputSelector = '[name="' + name + '"]';
             var variableSelector = '[data-element="' + name + '"]';
+            var alertSelector = '.process-alert[data-element="' + name + '"]';
             var $input = $inputs.filter(inputSelector);
             var $variable = $variables.filter(variableSelector);
+            var $alert = $(alertSelector);
 
             if (type == 'person') {
                 this.decoratePersonFields(field, data, $inputs, $variables);
@@ -105,6 +108,15 @@
                 }
             }
 
+            if (messages != null && messages.length > 0) {
+                var messageText = messages[0].text;
+                $alert.show();
+                $alert.text(messageText);
+            }
+
+            $input.on('change', function() {
+                $alert.hide();
+            });
         },
         decoratePersonFields: function(field, data, $inputs, $variables) {
             var name = field.name;
@@ -295,7 +307,7 @@
             $.get(field.link + ".json", function(data) {
                 var fieldData = {};
                 fieldData[field.name] = data.list;
-                utils.decorateField(field, fieldData, $form.find(":input"), $(".process-variable"));
+                utils.decorateField(field, fieldData, null, $form.find(":input"), $(".process-variable"));
             });
         },
         onValid: function($form) {
@@ -307,9 +319,10 @@
         populate: function(model) {
             var data = model.data;
             var screen = model.screen;
+            var validation = model.validation;
             this.model = model;
             this.decorateForms(model);
-            this.decorateScreen(screen, data);
+            this.decorateScreen(screen, data, validation);
             this.includeAttachments(model);
         },
         submitAttachment: function(event) {

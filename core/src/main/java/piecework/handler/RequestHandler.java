@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.identity.IdentityHelper;
@@ -31,7 +30,7 @@ import piecework.persistence.RequestRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.ProcessInstanceService;
 import piecework.service.TaskService;
-import piecework.util.ConstraintUtil;
+import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.MediaType;
 import java.util.*;
@@ -54,6 +53,9 @@ public class RequestHandler {
     ProcessInstanceService processInstanceService;
 
     @Autowired
+    ScreenHandler screenHandler;
+
+    @Autowired
     TaskService taskService;
 
     /*
@@ -73,8 +75,11 @@ public class RequestHandler {
         return create(requestDetails, process, processInstance, task, null, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, FormRequest previousFormRequest, ActionType action) throws StatusCodeError {
-        Interaction interaction = null;
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType action) throws StatusCodeError {
+        return create(requestDetails, process, processInstance, task, action, null);
+    }
+
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType action, FormValidation validation) throws StatusCodeError {
         Screen nextScreen = null;
         String submissionType = Constants.SubmissionTypes.FINAL;
 
@@ -83,82 +88,20 @@ public class RequestHandler {
 
         String processInstanceId = processInstance != null ? processInstance.getProcessInstanceId() : null;
 
-        Map<String, List<Value>> formValueMap = processInstance != null ? processInstance.getData() : null;
-
-        Screen currentScreen = null;
-
-        if (task != null) {
-            processInstanceId = task.getProcessInstanceId();
-        }
-
-        if (previousFormRequest != null) {
-            interaction = previousFormRequest.getInteraction();
-            currentScreen = previousFormRequest.getScreen();
+        //if (validation != null && !validation.getResults().isEmpty()) {
+        if (action == null) {
+            // If validation is provided then it's an error and we should return the original screen
+            nextScreen = screenHandler.currentScreen(process, task);
         } else {
-            ProcessDeployment deployment = process.getDeployment();
-            if (deployment == null)
-                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-            List<Interaction> interactions = deployment.getInteractions();
-
-            if (interactions == null || interactions.isEmpty())
-                throw new InternalServerError();
-
-            Iterator<Interaction> interactionIterator = interactions.iterator();
-
-            if (task != null) {
-
-                String taskDefinitionKey = task.getTaskDefinitionKey();
-                while (interactionIterator.hasNext()) {
-                    Interaction current = interactionIterator.next();
-                    if (current.getTaskDefinitionKeys() != null && current.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
-                        interaction = current;
-                        break;
-                    }
-                }
-
-            } else {
-                // Ensure that this user has the right to initiate processes of this type
-                if (!identityHelper.hasRole(process, AuthorizationRole.INITIATOR))
-                    throw new ForbiddenError();
-
-                // Pick the first interaction and the first screen
-                interaction = interactionIterator.next();
-            }
+            nextScreen = screenHandler.nextScreen(process, task, action);
         }
-
-        if (interaction != null && !interaction.getScreens().isEmpty()) {
-            Iterator<Screen> screenIterator = interaction.getScreens().iterator();
-
-            boolean isFound = false;
-            while (screenIterator.hasNext() && nextScreen == null) {
-                Screen cursor = screenIterator.next();
-
-                if (currentScreen == null) {
-                    currentScreen = cursor;
-                    isFound = true;
-                }
-
-                if (isFound) {
-                    // Once we've reached the current screen then we can start looking for the next screen
-                    if (satisfiesScreenConstraints(cursor, formValueMap, action))
-                        nextScreen = cursor;
-                } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
-                    isFound = true;
-            }
-
-            if (screenIterator.hasNext())
-                submissionType = Constants.SubmissionTypes.INTERIM;
-        }
-
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(processInstanceId)
                 .instance(processInstance)
                 .task(task)
-                .interaction(interaction)
-                .screen(nextScreen)
-                .submissionType(submissionType);
+                .screen(nextScreen);
 
         if (requestDetails != null) {
             String contentType = requestDetails.getContentType() != null ? requestDetails.getContentType().toString() : null;
@@ -180,6 +123,10 @@ public class RequestHandler {
             }
         }
 
+        if (validation != null) {
+            formRequestBuilder.messages(validation.getResults());
+        }
+
         return requestRepository.save(formRequestBuilder.build());
     }
 
@@ -196,16 +143,7 @@ public class RequestHandler {
             processInstance = processInstanceService.read(process, task.getProcessInstanceId(), false);
         }
 
-        return create(requestDetails, process, processInstance, task, previousFormRequest, null);
-    }
-
-    private boolean satisfiesScreenConstraints(Screen screen, Map<String, List<Value>> formValueMap, ActionType action) {
-        Constraint constraint = ConstraintUtil.getConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE, screen.getConstraints());
-        if (constraint != null && action != null) {
-            ActionType expected = ActionType.valueOf(constraint.getValue());
-            return expected == action;
-        }
-        return true;
+        return create(requestDetails, process, processInstance, task, null);
     }
 
     public FormRequest handle(RequestDetails request, String requestId) throws StatusCodeError {

@@ -26,9 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import piecework.Constants;
 import piecework.Versions;
-import piecework.model.ProcessDeployment;
 import piecework.service.FormService;
 import piecework.persistence.ProcessRepository;
 import piecework.security.Sanitizer;
@@ -63,7 +61,7 @@ public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.provideFormResponse(context, process, null);
+        return formService.startForm(context, process);
     }
 
     @Override

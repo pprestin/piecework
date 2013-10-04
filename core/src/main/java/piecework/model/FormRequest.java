@@ -20,10 +20,12 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.security.Sanitizer;
+import piecework.util.ManyMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -55,16 +57,13 @@ public class FormRequest {
     private final String certificateIssuer;
 
     @DBRef
-    private final Interaction interaction;
-
-    @DBRef
     private final Screen screen;
-
-    private final String submissionType;
 
     private final String contentType;
 
     private final List<String> acceptableMediaTypes;
+
+    private final Map<String, List<Message>> messages;
 
     @Transient
     private final ProcessInstance instance;
@@ -88,11 +87,10 @@ public class FormRequest {
         this.actAsUser = builder.actAsUser;
         this.certificateSubject = builder.certificateSubject;
         this.certificateIssuer = builder.certificateIssuer;
-        this.interaction = builder.interaction;
         this.screen = builder.screen;
-        this.submissionType = builder.submissionType;
         this.contentType= builder.contentType;
         this.acceptableMediaTypes = Collections.unmodifiableList(builder.acceptableMediaTypes);
+        this.messages = Collections.unmodifiableMap(builder.messages);
         this.instance = builder.instance;
         this.task = builder.task;
     }
@@ -141,16 +139,8 @@ public class FormRequest {
         return taskId;
     }
 
-    public Interaction getInteraction() {
-        return interaction;
-    }
-
     public Screen getScreen() {
         return screen;
-    }
-
-    public String getSubmissionType() {
-        return submissionType;
     }
 
     public String getContentType() {
@@ -159,6 +149,10 @@ public class FormRequest {
 
     public List<String> getAcceptableMediaTypes() {
         return acceptableMediaTypes;
+    }
+
+    public Map<String, List<Message>> getMessages() {
+        return messages;
     }
 
     public ProcessInstance getInstance() {
@@ -184,15 +178,15 @@ public class FormRequest {
         private String taskId;
         private ProcessInstance instance;
         private Task task;
-        private Interaction interaction;
         private Screen screen;
-        private String submissionType;
         private String contentType;
         private List<String> acceptableMediaTypes;
+        private ManyMap<String, Message> messages;
 
         public Builder() {
             super();
             this.acceptableMediaTypes = new ArrayList<String>();
+            this.messages = new ManyMap<String, Message>();
         }
 
         public Builder(FormRequest request, Sanitizer sanitizer) {
@@ -207,11 +201,10 @@ public class FormRequest {
             this.certificateSubject = sanitizer.sanitize(request.certificateSubject);
             this.certificateIssuer = sanitizer.sanitize(request.certificateIssuer);
             this.taskId = sanitizer.sanitize(request.taskId);
-            this.interaction = request.interaction != null ? new Interaction.Builder(request.interaction, sanitizer).build() : null;
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
-            this.submissionType = sanitizer.sanitize(request.submissionType);
             this.contentType = sanitizer.sanitize(request.contentType);
             this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
+            this.messages = new ManyMap<String, Message>(request.getMessages());
         }
 
         public FormRequest build() {
@@ -273,18 +266,8 @@ public class FormRequest {
             return this;
         }
 
-        public Builder interaction(Interaction interaction) {
-            this.interaction = interaction;
-            return this;
-        }
-
         public Builder screen(Screen screen) {
             this.screen = screen;
-            return this;
-        }
-
-        public Builder submissionType(String submissionType) {
-            this.submissionType = submissionType;
             return this;
         }
 
@@ -296,6 +279,13 @@ public class FormRequest {
         public Builder acceptableMediaType(String acceptableMediaType) {
             if (acceptableMediaType != null) {
                 this.acceptableMediaTypes.add(acceptableMediaType);
+            }
+            return this;
+        }
+
+        public Builder messages(Map<String, List<Message>> messages) {
+            if (messages != null) {
+                this.messages = new ManyMap<String, Message>(messages);
             }
             return this;
         }

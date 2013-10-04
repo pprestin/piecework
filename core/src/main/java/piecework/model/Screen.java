@@ -65,12 +65,6 @@ public class Screen implements Serializable {
     @XmlAttribute
     private final boolean isAttachmentAllowed;
 
-//    @XmlElementWrapper(name="stylesheets")
-//    private final List<File> stylesheets;
-//
-//    @XmlElementWrapper(name="scripts")
-//    private final List<File> scripts;
-
     @XmlElementWrapper(name="groupings")
     @XmlElementRef
     private final List<Grouping> groupings;
@@ -264,14 +258,14 @@ public class Screen implements Serializable {
 //                this.stylesheets = new ArrayList<File>();
 //            }
 
-            if (screen.constraints != null && !screen.constraints.isEmpty()) {
-                this.constraints = new ArrayList<Constraint>(screen.constraints.size());
-                for (Constraint constraint : screen.constraints) {
-                    this.constraints.add(new Constraint.Builder(constraint, sanitizer).build());
-                }
-            } else {
-                this.constraints = new ArrayList<Constraint>();
-            }
+//            if (screen.constraints != null && !screen.constraints.isEmpty()) {
+//                this.constraints = new ArrayList<Constraint>(screen.constraints.size());
+//                for (Constraint constraint : screen.constraints) {
+//                    this.constraints.add(new Constraint.Builder(constraint, sanitizer).build());
+//                }
+//            } else {
+//                this.constraints = new ArrayList<Constraint>();
+//            }
 
             if (includeSections && screen.sections != null && !screen.sections.isEmpty()) {
                 this.sections = new ArrayList<Section>(screen.sections.size());

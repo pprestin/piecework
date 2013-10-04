@@ -129,46 +129,63 @@ public class FormService {
         return Response.noContent().build();
     }
 
+    public Response startForm(MessageContext context, Process process) throws StatusCodeError {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+
+        FormRequest formRequest = requestHandler.create(requestDetails, process);
+
+        if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
+            throw new BadRequestError();
+
+        return responseHandler.handle(requestDetails, formRequest, process);
+    }
+
     public Response provideFormResponse(MessageContext context, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
-        String requestId = null;
+        if (pathSegments == null || pathSegments.isEmpty())
+            return startForm(context, process);
+
         boolean isStatic = false;
         boolean isSubmissionResource;
 
-        if (pathSegments != null && !pathSegments.isEmpty()) {
-            Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
-            requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+        Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
+        String requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
 
-            isSubmissionResource = StringUtils.isNotEmpty(requestId) && requestId.equals("submission");
+//        isSubmissionResource = StringUtils.isNotEmpty(requestId) && requestId.equals("submission");
+//
+//        if (isSubmissionResource && pathSegmentIterator.hasNext()) {
+//            requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+//        }
+        isStatic = StringUtils.isNotEmpty(requestId) && requestId.equals("static");
 
-            if (isSubmissionResource && pathSegmentIterator.hasNext()) {
-                requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
+        if (pathSegmentIterator.hasNext()) {
+            String staticResourceName = "";
+            while (pathSegmentIterator.hasNext()) {
+                staticResourceName += sanitizer.sanitize(pathSegmentIterator.next().getPath());
+                if (pathSegmentIterator.hasNext())
+                    staticResourceName += "/";
             }
-            isStatic = StringUtils.isNotEmpty(requestId) && requestId.equals("static");
-
-            if (pathSegmentIterator.hasNext()) {
-                String staticResourceName = "";
-                while (pathSegmentIterator.hasNext()) {
-                    staticResourceName += sanitizer.sanitize(pathSegmentIterator.next().getPath());
-                    if (pathSegmentIterator.hasNext())
-                        staticResourceName += "/";
-                }
-                if (isStatic)
-                    return readStatic(process, staticResourceName);
-            }
+            if (isStatic)
+                return readStatic(process, staticResourceName);
         }
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
+        if (StringUtils.isEmpty(requestId))
+            throw new BadRequestError(Constants.ExceptionCodes.request_id_required);
+
+
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 
         FormRequest formRequest = null;
 
-        if (StringUtils.isNotEmpty(requestId)) {
-            try {
-                formRequest = requestHandler.create(requestDetails, process, requestId, null);
-            } catch (NotFoundError e) {
-                formRequest = requestHandler.handle(requestDetails, requestId);
-            }
-        } else
-            formRequest = requestHandler.create(requestDetails, process);
+//        if (!isSubmissionResource)
+//            formRequest = requestHandler.create(requestDetails, process, requestId, null);
+//        else
+//            formRequest = requestHandler.handle(requestDetails, requestId);
+
+        try {
+            formRequest = requestHandler.create(requestDetails, process, requestId, null);
+        } catch (NotFoundError e) {
+            formRequest = requestHandler.handle(requestDetails, requestId);
+        }
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
@@ -263,40 +280,21 @@ public class FormService {
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
-        try {
-            ActionType action = submission.getAction();
-            if (action == null)
-                action = ActionType.COMPLETE;
+        ActionType action = submission.getAction();
+        if (action == null)
+            action = ActionType.COMPLETE;
 
+        try {
+            FormRequest nextFormRequest = null;
             switch (action) {
                 case COMPLETE:
                     ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
-
-                    FormRequest nextFormRequest = null;
-
-                    if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest, action);
-
-                    // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
-                    if (nextFormRequest == null) {
-                        return Response.noContent().build();
-                    }
-
+                    nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
                     return responseHandler.redirect(nextFormRequest);
 
                 case REJECT:
                     stored = processInstanceService.reject(process, instance, task, template, submission);
-
-                    nextFormRequest = null;
-
-                    if (!formRequest.getSubmissionType().equals(Constants.SubmissionTypes.FINAL))
-                        nextFormRequest = requestHandler.create(requestDetails, process, stored, Task.class.cast(null), formRequest, action);
-
-                    // FIXME: If the request handler doesn't have another request to process, then provide the generic thank you page back to the user
-                    if (nextFormRequest == null) {
-                        return Response.noContent().build();
-                    }
-
+                    nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
                     return responseHandler.redirect(nextFormRequest);
 
                 case SAVE:
@@ -324,7 +322,11 @@ public class FormService {
             if (isJSON)
                 throw e;
 
-            return responseHandler.handle(requestDetails, formRequest, process, instance, task, validation);
+            FormRequest invalidRequest = requestHandler.create(requestDetails, process, instance, task, null, validation);
+
+            return responseHandler.redirect(invalidRequest);
+
+            //return responseHandler.handle(requestDetails, invalidRequest, process, instance, task, validation);
         }
 
         return Response.noContent().build();
