@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('ProcessDesigner', ['ngResource'])
+angular.module('ProcessDesigner', ['ngResource','ui.bootstrap'])
     .controller('DeploymentDetailController', ['$scope','$resource','$routeParams',
         function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});

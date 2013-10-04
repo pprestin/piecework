@@ -23,6 +23,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
 import piecework.enumeration.DataInjectionStrategy;
+import piecework.enumeration.ScreenUsage;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
@@ -55,6 +56,9 @@ public class Screen implements Serializable {
 	
 	@XmlElement
 	private final String type;
+
+    @XmlAttribute
+    private final ScreenUsage usage;
 
     @XmlElement
     private final DataInjectionStrategy strategy;
@@ -103,6 +107,7 @@ public class Screen implements Serializable {
 		this.processDefinitionKey = builder.processDefinitionKey;
 		this.title = builder.title;
 		this.type = builder.type;
+        this.usage = builder.usage;
         this.strategy = builder.strategy;
 		this.location = builder.location;
 		this.ordinal = builder.ordinal;
@@ -137,6 +142,10 @@ public class Screen implements Serializable {
 	public String getType() {
 		return type;
 	}
+
+    public ScreenUsage getUsage() {
+        return usage;
+    }
 
     public DataInjectionStrategy getStrategy() {
         return strategy;
@@ -193,6 +202,7 @@ public class Screen implements Serializable {
 		private String interactionId;
 		private String title;
 		private String type;
+        private ScreenUsage usage;
         private DataInjectionStrategy strategy;
 		private String location;
         private boolean isAttachmentAllowed;
@@ -208,6 +218,7 @@ public class Screen implements Serializable {
 		
 		public Builder() {
 			super();
+            this.usage = ScreenUsage.DATA_ENTRY;
             this.strategy = DataInjectionStrategy.NONE;
             this.groupings = new ArrayList<Grouping>();
             this.sections = new ArrayList<Section>();
@@ -225,6 +236,7 @@ public class Screen implements Serializable {
 			this.processDefinitionKey = sanitizer.sanitize(screen.processDefinitionKey);
 			this.title = sanitizer.sanitize(screen.title);
 			this.type = sanitizer.sanitize(screen.type);
+            this.usage = screen.usage;
             this.strategy = screen.strategy;
             this.isAttachmentAllowed = screen.isAttachmentAllowed;
 			this.location = sanitizer.sanitize(screen.location);
@@ -361,6 +373,11 @@ public class Screen implements Serializable {
 
         public Builder reviewIndex(int reviewIndex) {
             this.reviewIndex = reviewIndex;
+            return this;
+        }
+
+        public Builder usage(ScreenUsage usage) {
+            this.usage = usage;
             return this;
         }
 

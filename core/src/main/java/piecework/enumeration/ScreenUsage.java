@@ -18,8 +18,8 @@ package piecework.enumeration;
 /**
  * @author James Renfro
  */
-public enum InteractionStatus {
+public enum ScreenUsage {
 
-    INCOMPLETE, FORBIDDEN, INVALID, INACTIVE, COMPLETE, REJECTED
+    DATA_ENTRY, CONFIRM_COMPLETE, CONFIRM_REJECT, ACCESS_DENIED, TASK_COMPLETED
 
 }
