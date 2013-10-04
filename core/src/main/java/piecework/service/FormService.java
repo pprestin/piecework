@@ -43,6 +43,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
@@ -172,7 +173,7 @@ public class FormService {
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
 
-        return responseHandler.handle(formRequest, process);
+        return responseHandler.handle(requestDetails, formRequest, process);
     }
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
@@ -317,7 +318,13 @@ public class FormService {
                 }
             }
 
-            return responseHandler.handle(formRequest, process, instance, task, validation);
+            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
+            boolean isJSON = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(MediaType.APPLICATION_JSON_TYPE);
+
+            if (isJSON)
+                throw e;
+
+            return responseHandler.handle(requestDetails, formRequest, process, instance, task, validation);
         }
 
         return Response.noContent().build();

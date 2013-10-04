@@ -23,6 +23,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.common.RequestDetails;
 import piecework.form.FormFactory;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
@@ -33,6 +34,7 @@ import piecework.ui.StreamingPageContent;
 import piecework.persistence.ContentRepository;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -58,18 +60,18 @@ public class ResponseHandler {
     @Autowired
     Versions versions;
 
-    public Response handle(FormRequest formRequest, Process process) throws StatusCodeError {
-        return handle(formRequest, process, formRequest.getInstance(), formRequest.getTask(), null);
+    public Response handle(RequestDetails requestDetails, FormRequest formRequest, Process process) throws StatusCodeError {
+        return handle(requestDetails, formRequest, process, formRequest.getInstance(), formRequest.getTask(), null);
     }
 
-    public Response handle(FormRequest formRequest, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
+    public Response handle(RequestDetails requestDetails, FormRequest formRequest, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
 
         Form form = formFactory.form(formRequest, process, instance, task, validation);
 
         if (form != null && form.getScreen() != null && !form.getScreen().isReadonly()) {
 
-            List<String> acceptableMediaTypes = formRequest.getAcceptableMediaTypes();
-            boolean isJavascript = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains("text/javascript");
+            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
+            boolean isJavascript = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(new MediaType("text", "javascript"));
 
             if (StringUtils.isNotEmpty(form.getScreen().getLocation()) && !isJavascript) {
                 String location = form.getScreen().getLocation();

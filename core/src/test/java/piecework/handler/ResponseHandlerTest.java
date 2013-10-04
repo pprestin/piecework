@@ -25,6 +25,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.common.RequestDetails;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormFactory;
@@ -83,14 +84,16 @@ public class ResponseHandlerTest {
 
     @Test
     public void testHandleInitial() throws StatusCodeError {
-        Response response = responseHandler.handle(formRequest, process);
+        RequestDetails requestDetails = Mockito.mock(RequestDetails.class);
+        Response response = responseHandler.handle(requestDetails, formRequest, process);
         Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         Assert.assertEquals(form.getFormInstanceId(), ((Form)response.getEntity()).getFormInstanceId());
     }
 
     @Test
     public void testHandleTask() throws StatusCodeError {
-        Response response = responseHandler.handle(formRequest, process, null, task, null);
+        RequestDetails requestDetails = Mockito.mock(RequestDetails.class);
+        Response response = responseHandler.handle(requestDetails, formRequest, process, null, task, null);
         Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         Assert.assertEquals(form.getFormInstanceId(), ((Form)response.getEntity()).getFormInstanceId());
     }

@@ -17,9 +17,11 @@ package piecework.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.CommandExecutor;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
+import piecework.command.PublicationCommand;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -27,18 +29,19 @@ import piecework.persistence.*;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.util.ProcessUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author James Renfro
  */
 @Service
 public class ProcessService {
+
+    @Autowired
+    CommandExecutor commandExecutor;
 
     @Autowired
     DeploymentRepository deploymentRepository;
@@ -210,17 +213,11 @@ public class ProcessService {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        List<ProcessDeploymentVersion> versions = process.getVersions();
+        ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
+        if (selectedDeploymentVersion == null)
+            throw new NotFoundError();
 
-        ProcessDeployment original = null;
-
-        for (ProcessDeploymentVersion version : versions) {
-            if (version.getDeploymentId().equals(deploymentId)) {
-                original = deploymentRepository.findOne(deploymentId);
-                break;
-            }
-        }
-
+        ProcessDeployment original = deploymentRepository.findOne(deploymentId);
         if (original == null)
             throw new NotFoundError();
 
@@ -234,30 +231,9 @@ public class ProcessService {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        List<ProcessDeploymentVersion> deploymentVersions = process.getVersions();
+        PublicationCommand publish = new PublicationCommand(process, deploymentId);
 
-        ProcessDeploymentVersion selectedDeploymentVersion = null;
-        ProcessDeployment original = null;
-
-        for (ProcessDeploymentVersion deploymentVersion : deploymentVersions) {
-            if (deploymentVersion.getDeploymentId().equals(deploymentId)) {
-                selectedDeploymentVersion = deploymentVersion;
-                original = deploymentRepository.findOne(deploymentId);
-                break;
-            }
-        }
-
-        if (original == null)
-            throw new NotFoundError();
-
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        Process updated = new Process.Builder(process, passthroughSanitizer)
-                .deploy(selectedDeploymentVersion, original)
-                .build();
-
-        processRepository.save(updated);
-
-        return original;
+        return commandExecutor.execute(publish);
     }
 
     public Process read(String rawProcessDefinitionKey) throws StatusCodeError {
@@ -306,9 +282,16 @@ public class ProcessService {
 
         int count = 0;
         if (versions != null) {
+            Set<String> deploymentIds = new HashSet<String>();
             for (ProcessDeploymentVersion version : versions) {
                 if (!version.isDeleted()) {
-                    resultsBuilder.item(version);
+                    deploymentIds.add(version.getDeploymentId());
+                }
+            }
+            Iterable<ProcessDeployment> deployments = deploymentRepository.findAll(deploymentIds);
+            if (deployments != null) {
+                for (ProcessDeployment deployment : deployments) {
+                    resultsBuilder.item(deployment);
                     count++;
                 }
             }
@@ -344,25 +327,23 @@ public class ProcessService {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
+        ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
+        if (selectedDeploymentVersion == null)
+            throw new NotFoundError();
+
         ProcessDeployment original = deploymentRepository.findOne(deploymentId);
         if (original == null)
             throw new NotFoundError();
 
-        List<ProcessDeploymentVersion> versions = process.getVersions();
-        ProcessDeploymentVersion current = null;
-        if (versions != null) {
-            for (ProcessDeploymentVersion version : versions) {
+        ProcessDeployment update = new ProcessDeployment.Builder(rawDeployment, process.getProcessDefinitionKey(), sanitizer, true).build();
 
-            }
-        }
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
 
-        ProcessDeployment deployment = new ProcessDeployment.Builder(rawDeployment, process.getProcessDefinitionKey(), sanitizer, true).build();
-        if (!deployment.getDeploymentId().equals(deploymentId))
-            throw new BadRequestError();
 
-        deployment = deploymentRepository.save(deployment);
 
-        return deployment;
+
+
+        return deploymentRepository.save(builder.build());
     }
 
     public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment) throws StatusCodeError {

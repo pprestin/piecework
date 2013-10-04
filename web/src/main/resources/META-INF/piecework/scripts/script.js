@@ -41,6 +41,7 @@
                     $form.attr('action', model.action);
                     $form.attr('method', 'POST');
                     $form.attr('enctype', 'multipart/form-data');
+                    $form.submit(utils.submitMain);
                 }
             })
         },
@@ -297,6 +298,12 @@
                 utils.decorateField(field, fieldData, $form.find(":input"), $(".process-variable"));
             });
         },
+        onValid: function($form) {
+            $form
+        },
+        onInvalid: function($form) {
+
+        },
         populate: function(model) {
             var data = model.data;
             var screen = model.screen;
@@ -321,6 +328,82 @@
                 contentType : false,
                 type : 'POST',
                 success: utils.onAttachmentAdded
+            });
+
+            return false;
+        },
+        submitMain: function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var $form = $(event.target);
+            var data = new FormData();
+            $('.process-alert').hide();
+            $form.find(':input')
+                .each(function(index, element) {
+                    var name = element.name;
+                    if (name == undefined || name == null || name == '')
+                        return;
+
+                    if (element.files !== undefined && element.files != null) {
+                        $.each(element.files, function(fileIndex, file) {
+                            if (file != null)
+                                data.append(name, file);
+                        });
+                    } else {
+                        var $element = $(element);
+                        var value = $(element).val();
+
+                        if (($element.is(':radio') || $element.is(':checkbox'))) {
+                            if ($element.is(":checked")) {
+                                if (value != undefined)
+                                    data.append(name, value);
+                            }
+                        } else {
+                            data.append(name, value);
+                        }
+                    }
+                });
+
+            var attachmentUrl = $form.attr('action') + '.json';
+            $.ajax({
+                url : attachmentUrl,
+                data : data,
+                processData : false,
+                contentType : false,
+                type : 'POST',
+                success: function() {
+                    utils.onValid($form);
+                },
+                failure: function() {
+                    utils.onInvalid($form);
+                },
+            })
+            .done(function(data, textStatus, errorThrown) {
+                $('html').load(data);
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                switch (jqXHR.status) {
+                case 303:
+                    var location = jqXHR.getResponseHeader('location');
+                    if (location != null)
+                        window.location.href = location;
+                    break;
+                case 400:
+                    var data = $.parseJSON(jqXHR.responseText);
+                    var items = data.items;
+                    if (items != null && items.length > 0) {
+                        for (var i=0;i<items.length;i++) {
+                            var item = items[i];
+                            var selector = '.process-alert[data-element="' + item.propertyName + '"]';
+                            var message = item.message;
+                            var $alert = $(selector);
+                            $alert.show();
+                            $alert.text(message);
+                        }
+                    }
+
+                    break;
+                }
             });
 
             return false;

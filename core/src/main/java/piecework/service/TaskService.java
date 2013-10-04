@@ -57,13 +57,7 @@ public class TaskService {
     private static final Logger LOG = Logger.getLogger(TaskService.class);
 
     @Autowired
-    Environment environment;
-
-    @Autowired
     IdentityHelper helper;
-
-    @Autowired
-    ProcessEngineFacade facade;
 
     @Autowired
     IdentityService identityService;

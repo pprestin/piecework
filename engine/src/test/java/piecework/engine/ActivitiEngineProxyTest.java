@@ -17,25 +17,23 @@ package piecework.engine;
 
 import junit.framework.Assert;
 import org.activiti.engine.ProcessEngine;
-import org.activiti.engine.RepositoryService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.mock.web.portlet.MockActionRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.engine.activiti.ActivitiEngineProxyHelper;
+import piecework.common.RequestDetails;
 import piecework.engine.activiti.config.TestConfiguration;
-import piecework.engine.activiti.identity.LdapIdentitySessionFactory;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessExecution;
+import piecework.model.ProcessInstance;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.util.ManyMap;
 
@@ -70,7 +68,8 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithNoData() throws ProcessEngineException {
-		String instanceId = engineProxy.start(process, null, null);
+        ProcessInstance instance = Mockito.mock(ProcessInstance.class);
+		String instanceId = engineProxy.start(process, instance);
 		Assert.assertNotNull(instanceId);
 
         ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
@@ -87,7 +86,8 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithAliasAndNoData() throws ProcessEngineException {
-        String instanceId = engineProxy.start(process, "test1", null);
+        ProcessInstance instance = Mockito.mock(ProcessInstance.class);
+        String instanceId = engineProxy.start(process, instance);
 		Assert.assertNotNull(instanceId);
 
         ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
@@ -105,9 +105,10 @@ public class ActivitiEngineProxyTest {
 	
 	@Test
 	public void testStartWithAliasAndSomeData() throws ProcessEngineException {
+        ProcessInstance instance = Mockito.mock(ProcessInstance.class);
         ManyMap<String, String> data = new ManyMap<String, String>();
         data.putOne("EmployeeID", "testuser");
-        String instanceId = engineProxy.start(process, "test1", data);
+        String instanceId = engineProxy.start(process, instance);
         Assert.assertNotNull(instanceId);
 
         // First, retrieve without including variables

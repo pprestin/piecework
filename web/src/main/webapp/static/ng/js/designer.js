@@ -15,7 +15,7 @@ angular.module('ProcessDesigner', ['ngResource'])
     ])
     .controller('DeploymentListController', ['$scope','$resource','$routeParams',
         function($scope, $resource, $routeParams) {
-            var Deployment = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+            var Deployment = $resource('process/:processDefinitionKey/deployment', {processDefinitionKey:'@processDefinitionKey'});
             Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey}, function(data) {
                 $scope.deployments = data.list;
             });
@@ -50,8 +50,7 @@ angular.module('ProcessDesigner', ['ngResource'])
     .config(function($routeProvider) {
         $routeProvider
             .when('/', {controller: 'ProcessListController', templateUrl:'../static/ng/views/process-list.html'})
-            //.when('/detail/:processDefinitionKey', {controller: 'ProcessDetailController', templateUrl:'../static/ng/views/process-detail.html'})
-            .when('/process/:processDefinitionKey', {controller: 'ProcessEditController', templateUrl:'../static/ng/views/process-edit.html'})
+            .when('/process/:processDefinitionKey', {controller: 'ProcessEditController', templateUrl:'../static/ng/views/process-detail.html'})
             .when('/deployment/:processDefinitionKey', {controller: 'DeploymentListController', templateUrl:'../static/ng/views/deployment-list.html'})
             .when('/deployment/:processDefinitionKey/:deploymentId', {controller: 'DeploymentDetailController', templateUrl:'../static/ng/views/deployment-detail.html'})
             .otherwise({redirectTo:'/'});

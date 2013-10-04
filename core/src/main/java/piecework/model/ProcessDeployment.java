@@ -96,6 +96,9 @@ public class ProcessDeployment implements Serializable {
     @XmlAttribute
     private final boolean published;
 
+    @XmlAttribute
+    private final boolean editable;
+
     @XmlTransient
     @JsonIgnore
     private final boolean isDeleted;
@@ -103,6 +106,8 @@ public class ProcessDeployment implements Serializable {
     @XmlElement
     private final Date created;
 
+    @XmlElement
+    private final Date deployed;
 
     private ProcessDeployment() {
         this(new ProcessDeployment.Builder());
@@ -127,8 +132,10 @@ public class ProcessDeployment implements Serializable {
         this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
         this.defaultScreen = builder.defaultScreen;
         this.published = builder.published;
+        this.editable = builder.editable;
         this.isDeleted = builder.isDeleted;
         this.created = builder.created;
+        this.deployed = builder.deployed;
     }
 
     public String getDeploymentId() {
@@ -222,6 +229,14 @@ public class ProcessDeployment implements Serializable {
         return created;
     }
 
+    public Date getDeployed() {
+        return deployed;
+    }
+
+    public boolean isEditable() {
+        return editable;
+    }
+
     @XmlTransient
     @JsonIgnore
     public boolean isEmpty() {
@@ -248,7 +263,9 @@ public class ProcessDeployment implements Serializable {
         private Screen defaultScreen;
         private boolean isDeleted;
         private boolean published;
+        private boolean editable;
         private Date created;
+        private Date deployed;
 
         public Builder() {
             super();
@@ -257,6 +274,7 @@ public class ProcessDeployment implements Serializable {
             this.notifications = new ArrayList<Notification>();
             this.created = new Date();
             this.published = false;
+            this.editable = true;
         }
 
         public Builder(ProcessDeployment deployment, String processDefinitionKey, Sanitizer sanitizer, boolean includeDetails) {
@@ -301,7 +319,9 @@ public class ProcessDeployment implements Serializable {
             }
             this.isDeleted = deployment.isDeleted;
             this.published = deployment.published;
+            this.editable = deployment.editable;
             this.created = deployment.created;
+            this.deployed = deployment.deployed;
         }
 
         public ProcessDeployment build() {
@@ -406,6 +426,8 @@ public class ProcessDeployment implements Serializable {
 
         public Builder publish() {
             this.published = true;
+            this.editable = false;
+            this.deployed = new Date();
             return this;
         }
 

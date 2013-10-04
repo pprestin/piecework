@@ -74,22 +74,6 @@ public class ProcessInstanceUtility {
                     String key = entry.getKey();
                     Value value = values.iterator().next();
                     scopes.put(key, value);
-//                    if (value instanceof File) {
-//                        File file = File.class.cast(value);
-//                        if (file != null && file.getName() != null)
-//                            scopes.put(key, file.getName());
-//                    } else if (value instanceof User) {
-//                        User user = User.class.cast(value);
-//                        if (user != null) {
-//                            scopes.put(key, user.getUserId());
-//                            if (user.getDisplayName() != null)
-//                                scopes.put(key + ".displayName", user.getDisplayName());
-//                            if (user.getVisibleId() != null)
-//                                scopes.put(key + ".visibleId", user.getVisibleId());
-//                        }
-//                    } else if (value.getValue() != null) {
-//                        scopes.put(key, value.getValue());
-//                    }
                 }
             }
         }

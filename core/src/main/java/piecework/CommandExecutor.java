@@ -22,6 +22,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.StatusCodeError;
+import piecework.persistence.DeploymentRepository;
+import piecework.persistence.ProcessRepository;
 import piecework.service.IdentityService;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.identity.IdentityHelper;
@@ -45,6 +47,12 @@ public class CommandExecutor {
 
     @Autowired
     IdentityService identityService;
+
+    @Autowired
+    DeploymentRepository deploymentRepository;
+
+    @Autowired
+    ProcessRepository processRepository;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
@@ -77,6 +85,14 @@ public class CommandExecutor {
 
     public IdentityService getIdentityService() {
         return identityService;
+    }
+
+    public DeploymentRepository getDeploymentRepository() {
+        return deploymentRepository;
+    }
+
+    public ProcessRepository getProcessRepository() {
+        return processRepository;
     }
 
     public ProcessInstanceRepository getProcessInstanceRepository() {

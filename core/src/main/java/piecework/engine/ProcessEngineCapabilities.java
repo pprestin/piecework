@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public interface ProcessEngineCapabilities {
 
-    String start(Process process, String alias, Map<String, ?> data) throws ProcessEngineException;
+    String start(Process process, ProcessInstance instance) throws ProcessEngineException;
 
     boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException;
 
@@ -36,6 +36,6 @@ public interface ProcessEngineCapabilities {
 
     boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException;
 
-    void deploy(Process process, ProcessDeployment deployment, ProcessModelResource... resources) throws ProcessEngineException;
+    void deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException;
 
 }

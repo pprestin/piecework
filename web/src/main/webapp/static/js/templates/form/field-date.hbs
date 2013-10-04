@@ -2,7 +2,7 @@
 <label>{{label}}</label>
 {{/if}}
 <input class="form-control"
-       type="{{type}}"
+       type="text"
        name="{{name}}"
        maxlength="{{maxValueLength}}"
        size="{{displayValueLength}}"
@@ -12,6 +12,7 @@
 {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
 {{#if pattern}}pattern="{{pattern}}"{{/if}}
 {{#if value}}value="{{date value}}"{{/if}}
+{{#unless readonly}}readonly{{/unless}}
 {{#unless editable}}disabled{{/unless}}/>
 {{#if messages}}
 {{#each messages}}

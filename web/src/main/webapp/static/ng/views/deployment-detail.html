@@ -17,33 +17,73 @@
                 <div class="form-group">
                     <label>Deployment Label</label>
                     <div class="controls">
-                        <div class="viewable process-short-name-readonly muted"></div>
-                        <input class="form-control span6" type="text"
+                        <input class="form-control" type="text"
                                name="processDefinitionLabel" size="30" maxlength="80"
                                placeholder="Provide an optional label for this deployment"
-                               ng-model="deployment.deploymentLabel">
-                        <span class="help-inline hide">Required</span>
+                               ng-model="deployment.deploymentLabel"
+                               ng-disabled="!deployment.editable">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Deployment Label</label>
+                    <label>BPMN Definition</label>
                     <div class="controls">
-                        <div class="viewable process-short-name-readonly muted"></div>
-                        <input class="form-control span6" type="text"
-                               name="processDefinitionLabel" size="30" maxlength="80"
-                               placeholder="Provide an optional label for this deployment"
-                               ng-model="deployment.deploymentLabel">
-                        <span class="help-inline hide">Required</span>
+                        <input class="form-control" type="file"
+                               name="processDefinitionFile"
+                               placeholder="Provide a file"
+                               ng-if="deployment.editable">
+                        <a href="" ng-if="!deployment.editable"><i class="icon-cloud-download"></i> <span>{{deployment.engineProcessDefinitionLocation}}</span></a>
                     </div>
                 </div>
+                <div>
+                    <!--div class="panel">
+                        <div class="panel-heading">
+                            <h4>User interactions</h4>
+                        </div>
+                        <div class="panel-body">
+                            <ul>
+                                <li ng-repeat="interaction in deployment.interactions" class="">
+                                    <h3><i class="icon-code-fork icon-1x"></i> <span class="label label-default">{{interaction.label}}</span></h3>
 
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Label</th>
+                                <th>Screens</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="interaction in deployment.interactions">
+                                <td>{{interaction.label}}</td>
+                                <td>{{interaction.screens.length}}</td>
+                            </tr>
+                        </tbody>
+                    </table-->
+                </div>
             </fieldset>
-            <div class="pull-right">
+            <div class="pull-right" ng-if="deployment.editable">
                 <button class="btn btn-default" type="submit" role="button">Update</button>
                 <button class="btn btn-danger" type="button" role="button">Publish</button>
             </div>
 
             <div class="clearfix"></div>
         </form>
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <span class="lead">User interactions</span>
+    </div>
+    <div class="panel-body">
+        <div class="list-group">
+            <div ng-repeat="interaction in deployment.interactions" class="list-group-item">
+                <h4 class="list-group-item-heading">{{interaction.label}}</h4>
+                <p class="list-group-item-text">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit.</p>
+            </div>
+        </div>
     </div>
 </div>

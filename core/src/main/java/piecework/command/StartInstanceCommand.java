@@ -24,6 +24,7 @@ import piecework.exception.ConflictError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
+import piecework.model.Process;
 import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.persistence.ProcessInstanceRepository;
@@ -31,17 +32,16 @@ import piecework.CommandExecutor;
 import piecework.identity.IdentityHelper;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
+ * Command to start a process instance
  * @author James Renfro
  */
 public class StartInstanceCommand extends InstanceCommand {
 
     private static final Logger LOG = Logger.getLogger(StartInstanceCommand.class);
 
-    public StartInstanceCommand(piecework.model.Process process) {
+    public StartInstanceCommand(Process process) {
         super(process);
     }
 
@@ -87,12 +87,7 @@ public class StartInstanceCommand extends InstanceCommand {
             // Save it before routing, then save again with the engine instance id
             ProcessInstance stored = repository.save(builder.build());
 
-            Map<String, String> variables = new HashMap<String, String>();
-            variables.put("PIECEWORK_PROCESS_DEFINITION_KEY", process.getProcessDefinitionKey());
-            variables.put("PIECEWORK_PROCESS_INSTANCE_ID", stored.getProcessInstanceId());
-            variables.put("PIECEWORK_PROCESS_INSTANCE_LABEL", label);
-
-            String engineInstanceId = facade.start(process, stored.getProcessInstanceId(), variables);
+            String engineInstanceId = facade.start(process, stored);
 
             builder.processInstanceId(stored.getProcessInstanceId());
             builder.engineProcessInstanceId(engineInstanceId);

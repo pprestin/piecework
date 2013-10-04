@@ -51,10 +51,10 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     ProcessInstanceRepository processInstanceRepository;
 
     @Override
-    public String start(piecework.model.Process process, String alias, Map<String, ?> data) throws ProcessEngineException {
+    public String start(Process process, ProcessInstance instance) throws ProcessEngineException {
         ProcessDeployment deployment = processDeployment(process);
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
-        return proxy.start(process, alias, data);
+        return proxy.start(process, instance);
     }
 
     @Override
@@ -269,11 +269,11 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public void deploy(Process process, ProcessDeployment deployment, ProcessModelResource... resources) throws ProcessEngineException {
+    public void deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
-        proxy.deploy(process, deployment, resources);
+        proxy.deploy(process, deployment);
     }
 
     private ProcessDeployment processDeployment(Process process) throws ProcessEngineException {

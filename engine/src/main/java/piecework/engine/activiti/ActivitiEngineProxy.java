@@ -72,7 +72,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     piecework.service.IdentityService userDetailsService;
 
 	@Override
-	public String start(Process process, String processBusinessKey, Map<String, ?> data) throws ProcessEngineException {
+	public String start(Process process, ProcessInstance instance) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
@@ -82,9 +82,15 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (detail == null)
             throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
 
+        // These variables are to tie this instance to the instance that piecework stored in Mongo
+        Map<String, Object> variables = new HashMap<String, Object>();
+        variables.put("PIECEWORK_PROCESS_DEFINITION_KEY", process.getProcessDefinitionKey());
+        variables.put("PIECEWORK_PROCESS_INSTANCE_ID", instance.getProcessInstanceId());
+        variables.put("PIECEWORK_PROCESS_INSTANCE_LABEL", instance.getProcessInstanceLabel());
+        variables(variables, instance.getData());
+
 		String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
-		Map<String, Object> engineData = data != null ? new HashMap<String, Object>(data) : null;
-		org.activiti.engine.runtime.ProcessInstance activitiInstance = processEngine.getRuntimeService().startProcessInstanceByKey(engineProcessDefinitionKey, processBusinessKey, engineData);
+		org.activiti.engine.runtime.ProcessInstance activitiInstance = processEngine.getRuntimeService().startProcessInstanceByKey(engineProcessDefinitionKey, instance.getProcessInstanceId(), variables);
 		return activitiInstance.getId();
 	}
 
@@ -178,7 +184,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
 
             if (activitiTask != null)  {
-                Map<String, String> variables = new HashMap<String, String>();
+                Map<String, Object> variables = new HashMap<String, Object>();
                 if (action != null) {
                     String variableName = activitiTask.getTaskDefinitionKey() + "_action";
                     variables.put(variableName, action.name());
@@ -189,21 +195,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 // just the first value here -- later, it may be necessary to include more complicated logic to
                 // determine which values should be passed to Activiti
                 Map<String, List<Value>> data = validation.getData();
-                if (data != null && !data.isEmpty()) {
-                    for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
-                        List<Value> values = entry.getValue();
-                        if (values != null) {
-                            for (Value value : values) {
-                                if (value == null || value.getValue() == null)
-                                    continue;
-
-                                // Only put the first value in, then break out of the loop
-                                variables.put(entry.getKey(), value.getValue());
-                                break;
-                            }
-                        }
-                    }
-                }
+                variables(variables, data);
                 processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
                 // Always assign the task to the user before completing it
                 if (StringUtils.isNotEmpty(userId))
@@ -222,7 +214,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public void deploy(Process process, ProcessDeployment deployment, ProcessModelResource... resources) throws ProcessEngineException {
+    public void deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
@@ -807,6 +799,24 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         }
 
         return query;
+    }
+
+    private static void variables(Map<String, Object> variables, Map<String, List<Value>> data) {
+        if (data != null && !data.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
+                List<Value> values = entry.getValue();
+                if (values != null) {
+                    for (Value value : values) {
+                        if (value == null || value.getValue() == null)
+                            continue;
+
+                        // Only put the first value in, then break out of the loop
+                        variables.put(entry.getKey(), value.getValue());
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     @Override
