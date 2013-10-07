@@ -18,6 +18,7 @@ package piecework.util;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import piecework.validation.FormValidation;
 import piecework.model.*;
@@ -54,7 +55,7 @@ public class ProcessInstanceUtility {
             Mustache mustache = mf.compile(new StringReader(processInstanceLabelTemplate), "processInstanceLabel");
             mustache.execute(writer, scopes);
 
-            processInstanceLabel = writer.toString();
+            processInstanceLabel = StringEscapeUtils.unescapeXml(writer.toString());
 
             if (StringUtils.isEmpty(processInstanceLabel))
                 processInstanceLabel = "Submission " + DateFormat.getDateTimeInstance(

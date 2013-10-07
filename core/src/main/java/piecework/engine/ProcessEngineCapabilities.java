@@ -36,6 +36,6 @@ public interface ProcessEngineCapabilities {
 
     boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException;
 
-    void deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException;
+    ProcessDeployment deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException;
 
 }

@@ -22,30 +22,26 @@ import piecework.Constants;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
-import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessDeployment;
-import piecework.model.ProcessDeploymentVersion;
 import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessUtility;
 
 /**
- * Command to publish deployment for a process
- *
  * @author James Renfro
  */
-public class PublicationCommand implements Command<ProcessDeployment> {
+public class DeploymentCommand implements Command<ProcessDeployment> {
 
     private static final Logger LOG = Logger.getLogger(PublicationCommand.class);
 
-    private final Process process;
+    private final piecework.model.Process process;
     private final String deploymentId;
 
-    public PublicationCommand(Process process, String deploymentId) {
+    public DeploymentCommand(Process process, String deploymentId) {
         this.process = process;
         this.deploymentId = deploymentId;
     }
@@ -71,26 +67,28 @@ public class PublicationCommand implements Command<ProcessDeployment> {
         if (original == null)
             throw new NotFoundError();
 
-        if (!original.isDeployed())
-            throw new ForbiddenError(Constants.ExceptionCodes.process_not_deployed);
+        ProcessDeployment persistedDeployment = null;
+        try {
+            // Try to deploy it in the engine -- this is the step that's most likely to fail because
+            // the artifact is not formatted correctly, etc..
+            persistedDeployment = facade.deploy(process, original);
 
-        // Update the deployment to indicate that it is published
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessDeployment updatedDeployment = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true)
-                .publish()
-                .build();
+            deploymentRepository.save(persistedDeployment);
 
-        // Make sure we persist that fact
-        ProcessDeployment persistedDeployment = deploymentRepository.save(updatedDeployment);
+            // Assuming that we didn't hit an exception in the step above, then we can update the deployment
+            // to indicated that it is deployed
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-        // And update the process definition to indicate that this is the officially published
-        // deployment for the process
-        Process updatedProcess = new Process.Builder(process, passthroughSanitizer)
-                .deploy(selectedDeploymentVersion, persistedDeployment)
-                .build();
-        // Persist that too
-        processRepository.save(updatedProcess);
-
+            // And update the process definition to indicate that this is the officially published
+            // deployment for the process
+            Process updatedProcess = new Process.Builder(process, passthroughSanitizer)
+                    .deploy(selectedDeploymentVersion, persistedDeployment)
+                    .build();
+            // Persist that too
+            processRepository.save(updatedProcess);
+        } catch (ProcessEngineException e) {
+            throw new BadRequestError(Constants.ExceptionCodes.process_is_misconfigured, e.getCause());
+        }
 
         return persistedDeployment;
     }

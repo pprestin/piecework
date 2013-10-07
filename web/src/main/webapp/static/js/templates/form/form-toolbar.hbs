@@ -1,54 +1,56 @@
-<div class="container visible-sm">
+<!--div class="container visible-sm">
     <div class="row col-lg-2 col-lg-offset-4 col-sm-2 col-sm-offset-4">
         <button class="btn btn-default navbar-btn" type="button" style="margin-bottom: 8px" data-toggle="collapse" data-target=".pw-navbar-collapse"><i class="icon-reorder"></i></button>
     </div>
-</div>
-<div class="container nav-collapse collapse navbar-responsive-collapse pw-navbar-collapse">
-    <div class="row">
-        <div class="col-lg-4 col-sm-4">
-            {{#if task}}
-                {{#if task.active}}
-                     <button class="btn btn-default navbar-btn" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
-                     <button class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
-                {{/if}}
-            {{else}}
-                &nbsp;
-            {{/if}}
-            {{#if suspended}}
-                <button class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
-            {{else}}
-                &nbsp;
-            {{/if}}
-        </div>
-        <div class="col-lg-8 col-sm-8">
-            <div class="responsive-pull-right">
-                {{#if task.active}}
-                    {{#if task.assignee}}
-                        <p class="navbar-text text-primary">Assigned to {{task.assignee.displayName}}</p>
+</div-->
+<nav class="navbar navbar-default pw-navbar-collapse" style="margin-bottom: 0px">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-sm-4">
+                {{#if task}}
+                    {{#if task.active}}
+                         <button class="btn btn-default navbar-btn" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="icon-pause icon-white"></i></button>
+                         <button class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="icon-trash icon-white"></i></button>
                     {{/if}}
-                    <div class="btn-group">
-                        <button class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
-                        {{#if task.candidateAssignees}}
-                            <button type="button" class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown">
-                                <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu">
-                                {{#each task.candidateAssignees}}
-                                    <li><a class="candidate-assignee" id="{{userId}}">Assign to {{displayName}}</a></li>
-                                {{/each}}
-                            </ul>
-                        {{/if}}
-                    </div>
-                    <a class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment-alt"></i></a>
-                    <button class="btn btn-default navbar-btn" id="file-button" title="Attach file"><i class="icon-paper-clip"></i></button>
-                    <input type="file" name="attachment" class="attach-file hide"/>
-                    <button class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i class="icon-folder-open"></i>&nbsp;<span id="attachment-count">{{attachmentCount}}</span></button>
+                {{else}}
+                    &nbsp;
                 {{/if}}
-                <a class="btn btn-default navbar-btn" href="{{root}}.html" rel="external" id="back-button" title="Return to task list"><i class="icon-arrow-left"></i></a>
+                {{#if suspended}}
+                    <button class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="icon-play icon-white"></i></button>
+                {{else}}
+                    &nbsp;
+                {{/if}}
+            </div>
+            <div class="col-lg-8 col-sm-8">
+                <div class="responsive-pull-right">
+                    {{#if task.active}}
+                        {{#if task.assignee}}
+                            <p class="navbar-text text-primary">Assigned to {{task.assignee.displayName}}</p>
+                        {{/if}}
+                        <div class="btn-group">
+                            <button class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
+                            {{#if task.candidateAssignees}}
+                                <button type="button" class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown">
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    {{#each task.candidateAssignees}}
+                                        <li><a class="candidate-assignee" id="{{userId}}">Assign to {{displayName}}</a></li>
+                                    {{/each}}
+                                </ul>
+                            {{/if}}
+                        </div>
+                        <a class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment-alt"></i></a>
+                        <button class="btn btn-default navbar-btn" id="file-button" title="Attach file"><i class="icon-paper-clip"></i></button>
+                        <input type="file" name="attachment" class="attach-file hide"/>
+                        <button class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i class="icon-folder-open"></i>&nbsp;<span id="attachment-count">{{attachmentCount}}</span></button>
+                    {{/if}}
+                    <a class="btn btn-default navbar-btn" href="{{root}}.html" rel="external" id="back-button" title="Return to task list"><i class="icon-arrow-left"></i></a>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</nav>
 
 <div id="activate-dialog" class="modal fade">
     <div class="modal-dialog">

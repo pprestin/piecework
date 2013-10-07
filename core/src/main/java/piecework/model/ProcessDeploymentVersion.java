@@ -57,7 +57,7 @@ public class ProcessDeploymentVersion {
         this.label = deployment != null ? deployment.getDeploymentLabel() : null;
         this.deploymentId = deployment != null ? deployment.getDeploymentId() : null;
         this.version = deployment != null ? deployment.getDeploymentVersion() : null;
-        this.created = deployment != null ? deployment.getCreated() : null;
+        this.created = deployment != null ? deployment.getDateCreated() : null;
         this.deleted = deleted;
     }
 

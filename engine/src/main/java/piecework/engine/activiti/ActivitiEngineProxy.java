@@ -22,7 +22,9 @@ import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
 import org.activiti.engine.query.Query;
+import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
 import org.activiti.engine.task.TaskQuery;
@@ -43,6 +45,7 @@ import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.identity.IdentityHelper;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.util.ManyMap;
@@ -90,7 +93,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         variables(variables, instance.getData());
 
 		String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
-		org.activiti.engine.runtime.ProcessInstance activitiInstance = processEngine.getRuntimeService().startProcessInstanceByKey(engineProcessDefinitionKey, instance.getProcessInstanceId(), variables);
+        String engineProcessDefinitionId = detail.getEngineProcessDefinitionId();
+		org.activiti.engine.runtime.ProcessInstance activitiInstance =
+                processEngine.getRuntimeService().startProcessInstanceById(engineProcessDefinitionId, instance.getProcessInstanceId(), variables);
+                        //.startProcessInstanceByKey(engineProcessDefinitionKey, instance.getProcessInstanceId(), variables);
 		return activitiInstance.getId();
 	}
 
@@ -214,13 +220,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public void deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException {
+    public ProcessDeployment deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         if (!deployment.getEngine().equals(getKey()))
-            return;
+            return null;
 
         String location = deployment.getEngineProcessDefinitionLocation();
         String classpathPrefix = "classpath:";
@@ -230,13 +236,25 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
         ClassPathResource classPathResource = new ClassPathResource(location);
 
-        try {
-            DeploymentBuilder builder = processEngine.getRepositoryService().createDeployment();
-            builder.addInputStream(deployment.getEngineProcessDefinitionKey(), classPathResource.getInputStream());
-            builder.deploy();
-        } catch (IOException ioe) {
-            throw new ProcessEngineException("Unable to deploy BPMN definition", ioe);
+
+        Deployment activitiDeployment = processEngine.getRepositoryService().createDeployment()
+                .addClasspathResource(location)
+                .deploy();
+
+        LOG.debug("Deployed new process definition to activiti: " + activitiDeployment.getId() + " : " + activitiDeployment.getName());
+
+        List<ProcessDefinition> processDefinitions = processEngine.getRepositoryService().createProcessDefinitionQuery().deploymentId(activitiDeployment.getId()).list();
+        ProcessDefinition deployedProcessDefinition = processDefinitions != null && !processDefinitions.isEmpty() ? processDefinitions.iterator().next() : null;
+
+        ProcessDeployment.Builder updated = new ProcessDeployment.Builder(deployment, null, new PassthroughSanitizer(), true);
+
+        if (deployedProcessDefinition != null && StringUtils.isNotEmpty(activitiDeployment.getId())) {
+            updated.engineProcessDefinitionId(deployedProcessDefinition != null ? deployedProcessDefinition.getId() : null)
+                .engineDeploymentId(activitiDeployment.getId())
+                .deploy();
         }
+
+        return updated.build();
     }
 
     @Override

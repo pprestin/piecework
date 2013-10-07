@@ -58,7 +58,13 @@ public class ProcessDeployment implements Serializable {
     private final String engineProcessDefinitionKey;
 
     @XmlElement
+    private final String engineProcessDefinitionId;
+
+    @XmlElement
     private final String engineProcessDefinitionLocation;
+
+    @XmlElement
+    private final String engineDeploymentId;
 
     @XmlElement
     private final String initiationStatus;
@@ -94,6 +100,9 @@ public class ProcessDeployment implements Serializable {
     private final Screen defaultScreen;
 
     @XmlAttribute
+    private final boolean deployed;
+
+    @XmlAttribute
     private final boolean published;
 
     @XmlAttribute
@@ -104,10 +113,13 @@ public class ProcessDeployment implements Serializable {
     private final boolean isDeleted;
 
     @XmlElement
-    private final Date created;
+    private final Date dateCreated;
 
     @XmlElement
-    private final Date deployed;
+    private final Date dateDeployed;
+
+    @XmlElement
+    private final Date datePublished;
 
     private ProcessDeployment() {
         this(new ProcessDeployment.Builder());
@@ -122,6 +134,8 @@ public class ProcessDeployment implements Serializable {
         this.engine = builder.engine;
         this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
         this.engineProcessDefinitionLocation = builder.engineProcessDefinitionLocation;
+        this.engineProcessDefinitionId = builder.engineProcessDefinitionId;
+        this.engineDeploymentId = builder.engineDeploymentId;
         this.initiationStatus = builder.initiationStatus;
         this.cancellationStatus = builder.cancellationStatus;
         this.completionStatus = builder.completionStatus;
@@ -131,11 +145,13 @@ public class ProcessDeployment implements Serializable {
         this.sections = Collections.unmodifiableList(builder.sections);
         this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
         this.defaultScreen = builder.defaultScreen;
-        this.published = builder.published;
         this.editable = builder.editable;
-        this.isDeleted = builder.isDeleted;
-        this.created = builder.created;
+        this.published = builder.published;
         this.deployed = builder.deployed;
+        this.isDeleted = builder.isDeleted;
+        this.dateCreated = builder.dateCreated;
+        this.dateDeployed = builder.dateDeployed;
+        this.datePublished = builder.datePublished;
     }
 
     public String getDeploymentId() {
@@ -166,8 +182,16 @@ public class ProcessDeployment implements Serializable {
         return engineProcessDefinitionKey;
     }
 
+    public String getEngineProcessDefinitionId() {
+        return engineProcessDefinitionId;
+    }
+
     public String getEngineProcessDefinitionLocation() {
         return engineProcessDefinitionLocation;
+    }
+
+    public String getEngineDeploymentId() {
+        return engineDeploymentId;
     }
 
     public String getCancellationStatus() {
@@ -225,12 +249,20 @@ public class ProcessDeployment implements Serializable {
         return isDeleted;
     }
 
-    public Date getCreated() {
-        return created;
+    public boolean isDeployed() {
+        return deployed;
     }
 
-    public Date getDeployed() {
-        return deployed;
+    public Date getDateCreated() {
+        return dateCreated;
+    }
+
+    public Date getDateDeployed() {
+        return dateDeployed;
+    }
+
+    public Date getDatePublished() {
+        return datePublished;
     }
 
     public boolean isEditable() {
@@ -251,7 +283,9 @@ public class ProcessDeployment implements Serializable {
         private String processInstanceLabelTemplate;
         private String engine;
         private String engineProcessDefinitionKey;
+        private String engineProcessDefinitionId;
         private String engineProcessDefinitionLocation;
+        private String engineDeploymentId;
         private String base;
         private String initiationStatus;
         private String cancellationStatus;
@@ -262,17 +296,20 @@ public class ProcessDeployment implements Serializable {
         private List<Notification> notifications;
         private Screen defaultScreen;
         private boolean isDeleted;
+        private boolean deployed;
         private boolean published;
         private boolean editable;
-        private Date created;
-        private Date deployed;
+        private Date dateCreated;
+        private Date dateDeployed;
+        private Date datePublished;
 
         public Builder() {
             super();
             this.interactions = new ArrayList<Interaction>();
             this.sections = new ArrayList<Section>();
             this.notifications = new ArrayList<Notification>();
-            this.created = new Date();
+            this.dateCreated = new Date();
+            this.deployed = false;
             this.published = false;
             this.editable = true;
         }
@@ -284,7 +321,9 @@ public class ProcessDeployment implements Serializable {
             this.processInstanceLabelTemplate = sanitizer.sanitize(deployment.processInstanceLabelTemplate);
             this.engine = sanitizer.sanitize(deployment.engine);
             this.engineProcessDefinitionKey = sanitizer.sanitize(deployment.engineProcessDefinitionKey);
+            this.engineProcessDefinitionId = sanitizer.sanitize(deployment.engineProcessDefinitionId);
             this.engineProcessDefinitionLocation = sanitizer.sanitize(deployment.engineProcessDefinitionLocation);
+            this.engineDeploymentId = sanitizer.sanitize(deployment.engineDeploymentId);
             this.base = sanitizer.sanitize(deployment.base);
             this.initiationStatus = sanitizer.sanitize(deployment.initiationStatus);
             this.cancellationStatus = sanitizer.sanitize(deployment.cancellationStatus);
@@ -320,7 +359,8 @@ public class ProcessDeployment implements Serializable {
             this.isDeleted = deployment.isDeleted;
             this.published = deployment.published;
             this.editable = deployment.editable;
-            this.created = deployment.created;
+            this.dateCreated = deployment.dateCreated;
+            this.dateDeployed = deployment.dateDeployed;
             this.deployed = deployment.deployed;
         }
 
@@ -358,8 +398,18 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
+        public Builder engineProcessDefinitionId(String engineProcessDefinitionId) {
+            this.engineProcessDefinitionId = engineProcessDefinitionId;
+            return this;
+        }
+
         public Builder engineProcessDefinitionLocation(String engineProcessDefinitionLocation) {
             this.engineProcessDefinitionLocation = engineProcessDefinitionLocation;
+            return this;
+        }
+
+        public Builder engineDeploymentId(String engineDeploymentId) {
+            this.engineDeploymentId = engineDeploymentId;
             return this;
         }
 
@@ -427,7 +477,13 @@ public class ProcessDeployment implements Serializable {
         public Builder publish() {
             this.published = true;
             this.editable = false;
-            this.deployed = new Date();
+            this.datePublished = new Date();
+            return this;
+        }
+
+        public Builder deploy() {
+            this.deployed = true;
+            this.dateDeployed = new Date();
             return this;
         }
 

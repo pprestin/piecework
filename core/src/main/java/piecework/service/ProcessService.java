@@ -21,6 +21,7 @@ import piecework.CommandExecutor;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
+import piecework.command.DeploymentCommand;
 import piecework.command.PublicationCommand;
 import piecework.exception.*;
 import piecework.model.*;
@@ -115,6 +116,7 @@ public class ProcessService {
     public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment) throws StatusCodeError {
         Process process = create(rawProcess);
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
+        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         process = read(process.getProcessDefinitionKey());
         return process;
@@ -225,6 +227,15 @@ public class ProcessService {
 
         return new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true)
                 .build();
+    }
+
+    public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        DeploymentCommand deploy = new DeploymentCommand(process, deploymentId);
+
+        return commandExecutor.execute(deploy);
     }
 
     public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
@@ -350,6 +361,7 @@ public class ProcessService {
         Process process = read(rawProcess.getProcessDefinitionKey());
                 //update(rawProcess.getProcessDefinitionKey(), rawProcess);
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
+        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         process = read(process.getProcessDefinitionKey());
         return process;
@@ -391,6 +403,7 @@ public class ProcessService {
                 builder.section(persistedSection);
             }
         }
+
         return deploymentRepository.save(builder.build());
     }
 

@@ -115,7 +115,7 @@ public class IdentityHelper {
         Process result = processRepository.findOne(processDefinitionKey);
 
         if (isBadRequest && (result == null || result.isDeleted()))
-            throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
+            throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist, processDefinitionKey);
 
         if (result == null)
             throw new NotFoundError(Constants.ExceptionCodes.process_does_not_exist);
