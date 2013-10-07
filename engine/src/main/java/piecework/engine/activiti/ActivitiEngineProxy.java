@@ -96,7 +96,6 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String engineProcessDefinitionId = detail.getEngineProcessDefinitionId();
 		org.activiti.engine.runtime.ProcessInstance activitiInstance =
                 processEngine.getRuntimeService().startProcessInstanceById(engineProcessDefinitionId, instance.getProcessInstanceId(), variables);
-                        //.startProcessInstanceByKey(engineProcessDefinitionKey, instance.getProcessInstanceId(), variables);
 		return activitiInstance.getId();
 	}
 
@@ -231,7 +230,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String location = deployment.getEngineProcessDefinitionLocation();
         String classpathPrefix = "classpath:";
 
-        if (location.startsWith(classpathPrefix))
+        if (location != null && location.startsWith(classpathPrefix))
             location = location.substring(classpathPrefix.length());
 
         ClassPathResource classPathResource = new ClassPathResource(location);

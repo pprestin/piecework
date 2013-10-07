@@ -116,6 +116,7 @@ public class ExampleFactory {
 
     public static ProcessDeployment exampleProcessDeployment() {
         return new ProcessDeployment.Builder()
+                .engineProcessDefinitionLocation("META-INF/example.bpmn20.xml")
                 .interaction(exampleInteractionWithTwoScreens())
 //                .interaction(exampleInteractionForTaskReview())
                 .section(exampleSectionWithTwoFields())

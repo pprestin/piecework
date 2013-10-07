@@ -17,6 +17,7 @@ package piecework.engine;
 
 import junit.framework.Assert;
 import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.repository.Deployment;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +35,7 @@ import piecework.engine.test.ExampleFactory;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 import java.io.IOException;
@@ -58,12 +60,13 @@ public class ActivitiEngineProxyTest {
     private ProcessDeployment deployment;
 
 	@Before
-	public void setup() throws IOException {
+	public void setup() throws ProcessEngineException {
         process = ExampleFactory.exampleProcess();
-        deployment = ExampleFactory.exampleProcessDeployment();
+        deployment = engineProxy.deploy(process, ExampleFactory.exampleProcessDeployment());
 
-		ClassPathResource resource = new ClassPathResource("META-INF/example.bpmn20.xml");
-        processEngine.getRepositoryService().createDeployment().name(deployment.getEngineProcessDefinitionKey()).addInputStream("example.bpmn20.xml", resource.getInputStream()).deploy();
+        process = new Process.Builder(process, new PassthroughSanitizer())
+                .deploy(new ProcessDeploymentVersion(deployment), deployment)
+                .build();
     }
 	
 	@Test
