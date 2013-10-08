@@ -20,18 +20,24 @@ import java.io.InputStream;
 /**
  * @author James Renfro
  */
-public class ProcessModelResource {
+public class ProcessDeploymentResource {
 
+    private final String contentType;
     private final String name;
     private final InputStream inputStream;
 
-    private ProcessModelResource() {
+    private ProcessDeploymentResource() {
         this(new Builder());
     }
 
-    private ProcessModelResource(Builder builder) {
+    private ProcessDeploymentResource(Builder builder) {
+        this.contentType = builder.contentType;
         this.name = builder.name;
         this.inputStream = builder.inputStream;
+    }
+
+    public String getContentType() {
+        return contentType;
     }
 
     public String getName() {
@@ -43,6 +49,7 @@ public class ProcessModelResource {
     }
 
     public static final class Builder {
+        private String contentType;
         private String name;
         private InputStream inputStream;
 
@@ -50,8 +57,13 @@ public class ProcessModelResource {
 
         }
 
-        public ProcessModelResource build() {
-            return new ProcessModelResource(this);
+        public ProcessDeploymentResource build() {
+            return new ProcessDeploymentResource(this);
+        }
+
+        public Builder contentType(String contentType) {
+            this.contentType = contentType;
+            return this;
         }
 
         public Builder name(String name) {

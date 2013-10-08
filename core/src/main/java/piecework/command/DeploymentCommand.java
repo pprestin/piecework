@@ -15,10 +15,13 @@
  */
 package piecework.command;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Command;
 import piecework.CommandExecutor;
 import piecework.Constants;
+import piecework.common.UuidGenerator;
+import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.BadRequestError;
@@ -26,6 +29,7 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ContentRepository;
 import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -40,10 +44,13 @@ public class DeploymentCommand implements Command<ProcessDeployment> {
 
     private final piecework.model.Process process;
     private final String deploymentId;
+    private final ProcessDeploymentResource resource;
 
-    public DeploymentCommand(Process process, String deploymentId) {
+
+    public DeploymentCommand(Process process, String deploymentId, ProcessDeploymentResource resource) {
         this.process = process;
         this.deploymentId = deploymentId;
+        this.resource = resource;
     }
 
     @Override
@@ -54,8 +61,10 @@ public class DeploymentCommand implements Command<ProcessDeployment> {
 
         // Instantiate local references to the service beans
         ProcessEngineFacade facade = commandExecutor.getFacade();
+        ContentRepository contentRepository = commandExecutor.getContentRepository();
         DeploymentRepository deploymentRepository = commandExecutor.getDeploymentRepository();
         ProcessRepository processRepository = commandExecutor.getProcessRepository();
+        UuidGenerator uuidGenerator = commandExecutor.getUuidGenerator();
 
         // Verify that this deployment belongs to this process
         ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
@@ -69,9 +78,26 @@ public class DeploymentCommand implements Command<ProcessDeployment> {
 
         ProcessDeployment persistedDeployment = null;
         try {
+            String directory = process.getProcessDefinitionKey();
+            String id = uuidGenerator.getNextId();
+            String location = "/" + directory + "/" + id;
+
+            if (resource.getInputStream() == null)
+                throw new BadRequestError();
+
+            Content content = new Content.Builder()
+                    .contentType(resource.getContentType())
+                    .filename(resource.getName())
+                    .location(location)
+                    .inputStream(resource.getInputStream())
+                    .build();
+
+            content = contentRepository.save(content);
+            content = contentRepository.findByLocation(location);
+
             // Try to deploy it in the engine -- this is the step that's most likely to fail because
             // the artifact is not formatted correctly, etc..
-            persistedDeployment = facade.deploy(process, original);
+            persistedDeployment = facade.deploy(process, original, content);
 
             deploymentRepository.save(persistedDeployment);
 

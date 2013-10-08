@@ -15,7 +15,7 @@
  */
 package piecework.engine.activiti;
 
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import org.activiti.engine.*;
@@ -23,7 +23,6 @@ import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.Deployment;
-import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.IdentityLinkType;
@@ -219,7 +218,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public ProcessDeployment deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException {
+    public ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
@@ -227,17 +226,16 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (!deployment.getEngine().equals(getKey()))
             return null;
 
-        String location = deployment.getEngineProcessDefinitionLocation();
-        String classpathPrefix = "classpath:";
-
-        if (location != null && location.startsWith(classpathPrefix))
-            location = location.substring(classpathPrefix.length());
-
-        ClassPathResource classPathResource = new ClassPathResource(location);
-
+//        String location = deployment.getEngineProcessDefinitionLocation();
+//        String classpathPrefix = "classpath:";
+//
+//        if (location != null && location.startsWith(classpathPrefix))
+//            location = location.substring(classpathPrefix.length());
+//
+//        ClassPathResource classPathResource = new ClassPathResource(location);
 
         Deployment activitiDeployment = processEngine.getRepositoryService().createDeployment()
-                .addClasspathResource(location)
+                .addInputStream(content.getFilename(), content.getInputStream())
                 .deploy();
 
         LOG.debug("Deployed new process definition to activiti: " + activitiDeployment.getId() + " : " + activitiDeployment.getName());
@@ -250,6 +248,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (deployedProcessDefinition != null && StringUtils.isNotEmpty(activitiDeployment.getId())) {
             updated.engineProcessDefinitionId(deployedProcessDefinition != null ? deployedProcessDefinition.getId() : null)
                 .engineDeploymentId(activitiDeployment.getId())
+                .engineProcessDefinitionLocation(content.getLocation())
                 .deploy();
         }
 

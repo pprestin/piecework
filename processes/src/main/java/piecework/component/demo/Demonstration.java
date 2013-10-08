@@ -22,8 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
-import piecework.engine.ProcessModelResource;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.exception.NotFoundError;
@@ -103,12 +103,19 @@ public class Demonstration implements TaskListener {
         Process process = demoProcess();
         ProcessDeployment deployment = demoProcessDeployment();
 
+        ClassPathResource classPathResource = new ClassPathResource("META-INF/demo/Demonstration.bpmn20.xml");
+        ProcessDeploymentResource resource = new ProcessDeploymentResource.Builder()
+                .contentType("application/xml")
+                .name("Demonstration.bpmn20.xml")
+                .inputStream(classPathResource.getInputStream())
+                .build();
+
         try {
             processService.read(process.getProcessDefinitionKey());
-            processService.updateAndPublishDeployment(process, deployment);
+            processService.updateAndPublishDeployment(process, deployment, resource);
         } catch (NotFoundError e) {
             processService.create(process);
-            processService.createAndPublishDeployment(process, deployment);
+            processService.createAndPublishDeployment(process, deployment, resource);
         }
     }
 
@@ -116,7 +123,14 @@ public class Demonstration implements TaskListener {
         Process process = demoProcess();
         ProcessDeployment deployment = demoProcessDeployment();
 
-        processService.updateAndPublishDeployment(process, deployment);
+        ClassPathResource classPathResource = new ClassPathResource("META-INF/demo/Demonstration.bpmn20.xml");
+        ProcessDeploymentResource resource = new ProcessDeploymentResource.Builder()
+                .contentType("application/xml")
+                .name("Demonstration.bpmn20.xml")
+                .inputStream(classPathResource.getInputStream())
+                .build();
+
+        processService.updateAndPublishDeployment(process, deployment, resource);
     }
 
     public static Field approvedField() {

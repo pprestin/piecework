@@ -9,6 +9,7 @@ import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.validation.FormValidation;
 
+import java.io.InputStream;
 import java.util.Map;
 
 /**
@@ -36,6 +37,6 @@ public interface ProcessEngineCapabilities {
 
     boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException;
 
-    ProcessDeployment deploy(Process process, ProcessDeployment deployment) throws ProcessEngineException;
+    ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
 
 }

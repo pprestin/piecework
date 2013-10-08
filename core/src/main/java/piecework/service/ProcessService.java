@@ -23,6 +23,7 @@ import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.DeploymentCommand;
 import piecework.command.PublicationCommand;
+import piecework.engine.ProcessDeploymentResource;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -79,44 +80,13 @@ public class ProcessService {
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         builder = new Process.Builder(process, passthroughSanitizer);
 
-//        builder.clearInteractions();
-//
-//        if (process.getInteractions() != null && !process.getInteractions().isEmpty()) {
-//            for (Interaction interaction : process.getInteractions()) {
-//                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, passthroughSanitizer);
-//                interactionBuilder.screens(null);
-//                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
-//                    for (Screen screen : interaction.getScreens()) {
-//                        Screen persistedScreen = screenRepository.save(screen);
-//                        interactionBuilder.screen(persistedScreen);
-//                    }
-//                }
-//                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
-//                builder.interaction(persistedInteraction);
-//            }
-//        }
-//        if (rawProcess.getNotifications() != null && !rawProcess.getNotifications().isEmpty()) {
-//            for (Notification notification : rawProcess.getNotifications()) {
-//                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
-//                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
-//                builder.notification(persistedNotification);
-//            }
-//        }
-//        if (rawProcess.getSections() != null && !rawProcess.getSections().isEmpty()) {
-//            for (Section section : rawProcess.getSections()) {
-//                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
-//                Section persistedSection = sectionRepository.save(sectionBuilder.build());
-//                builder.section(persistedSection);
-//            }
-//        }
-
         return processRepository.save(builder.build());
     }
 
-    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment) throws StatusCodeError {
+    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource) throws StatusCodeError {
         Process process = create(rawProcess);
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
-        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
         publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         process = read(process.getProcessDefinitionKey());
         return process;
@@ -229,11 +199,11 @@ public class ProcessService {
                 .build();
     }
 
-    public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+    public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws StatusCodeError {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        DeploymentCommand deploy = new DeploymentCommand(process, deploymentId);
+        DeploymentCommand deploy = new DeploymentCommand(process, deploymentId, resource);
 
         return commandExecutor.execute(deploy);
     }
@@ -351,17 +321,14 @@ public class ProcessService {
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
 
 
-
-
-
         return deploymentRepository.save(builder.build());
     }
 
-    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment) throws StatusCodeError {
+    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource) throws StatusCodeError {
         Process process = read(rawProcess.getProcessDefinitionKey());
                 //update(rawProcess.getProcessDefinitionKey(), rawProcess);
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
-        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
         publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         process = read(process.getProcessDefinitionKey());
         return process;

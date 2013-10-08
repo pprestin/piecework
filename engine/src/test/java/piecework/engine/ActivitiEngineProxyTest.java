@@ -17,18 +17,15 @@ package piecework.engine;
 
 import junit.framework.Assert;
 import org.activiti.engine.ProcessEngine;
-import org.activiti.engine.repository.Deployment;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.common.RequestDetails;
 import piecework.engine.activiti.config.TestConfiguration;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
@@ -60,9 +57,17 @@ public class ActivitiEngineProxyTest {
     private ProcessDeployment deployment;
 
 	@Before
-	public void setup() throws ProcessEngineException {
+	public void setup() throws ProcessEngineException, IOException {
         process = ExampleFactory.exampleProcess();
-        deployment = engineProxy.deploy(process, ExampleFactory.exampleProcessDeployment());
+
+        ClassPathResource classPathResource = new ClassPathResource("META-INF/example.bpmn20.xml");
+        Content content = new Content.Builder()
+                .contentType("application/xml")
+                .filename("AdvanceBudgetRequest.bpmn20.xml")
+                .inputStream(classPathResource.getInputStream())
+                .build();
+
+        deployment = engineProxy.deploy(process, ExampleFactory.exampleProcessDeployment(), content);
 
         process = new Process.Builder(process, new PassthroughSanitizer())
                 .deploy(new ProcessDeploymentVersion(deployment), deployment)

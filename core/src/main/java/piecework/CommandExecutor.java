@@ -20,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
+import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.StatusCodeError;
+import piecework.persistence.ContentRepository;
 import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.service.IdentityService;
@@ -49,6 +51,9 @@ public class CommandExecutor {
     IdentityService identityService;
 
     @Autowired
+    ContentRepository contentRepository;
+
+    @Autowired
     DeploymentRepository deploymentRepository;
 
     @Autowired
@@ -56,6 +61,9 @@ public class CommandExecutor {
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
+    UuidGenerator uuidGenerator;
 
     public <T> T execute(Command<T> command) throws StatusCodeError {
         long start = 0;
@@ -87,6 +95,10 @@ public class CommandExecutor {
         return identityService;
     }
 
+    public ContentRepository getContentRepository() {
+        return contentRepository;
+    }
+
     public DeploymentRepository getDeploymentRepository() {
         return deploymentRepository;
     }
@@ -97,5 +109,9 @@ public class CommandExecutor {
 
     public ProcessInstanceRepository getProcessInstanceRepository() {
         return processInstanceRepository;
+    }
+
+    public UuidGenerator getUuidGenerator() {
+        return uuidGenerator;
     }
 }
