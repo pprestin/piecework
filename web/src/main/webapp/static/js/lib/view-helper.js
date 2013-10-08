@@ -49,6 +49,12 @@ define([
         return moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
     });
 
+    Handlebars.registerHelper('datetime', function(datetime) {
+            if (datetime == null)
+                return '';
+            return moment(datetime).format('YYYY-MM-DDThh:mm:ss');
+    });
+
     Handlebars.registerHelper('datediff', function(a, b) {
         if (a == null || b == null)
           return '';

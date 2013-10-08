@@ -2,7 +2,7 @@
 <label>{{label}}</label>
 {{/if}}
 <input class="form-control"
-       type="text"
+       type="datetime-local"
        name="{{name}}"
        maxlength="{{maxValueLength}}"
        size="{{displayValueLength}}"
@@ -11,7 +11,7 @@
 {{#if required}}class="required"{{/if}}
 {{#if customValidity}}oninvalid="setCustomValidity('{{customValidity}}')"{{/if}}
 {{#if pattern}}pattern="{{pattern}}"{{/if}}
-{{#if value}}value="{{date value}}"{{/if}}
+{{#if value}}value="{{datetime value}}"{{/if}}
 {{#unless readonly}}readonly{{/unless}}
 {{#unless editable}}disabled{{/unless}}/>
 {{#if messages}}
