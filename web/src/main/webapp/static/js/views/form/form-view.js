@@ -72,6 +72,7 @@ define([ 'chaplin',
             if (screen == undefined)
                 return this;
 
+            var root = this.model.get("root");
             var readonly = screen.readonly;
             var pageLink = this.model.get("link");
             var groupings = screen.groupings;
@@ -104,6 +105,7 @@ define([ 'chaplin',
                             var field = fields[j];
                             var values = data[field.name];
 
+                            field.root = root;
                             if (values != null && values.length > 0) {
                                 field.value = values[0];
                                 field.values = values;

@@ -14,8 +14,15 @@ define([ 'views/form/base-field-view', 'text!templates/form/field-person-lookup.
 		},
 		render: function(options) {
             View.__super__.render.apply(this, options);
-            var url = '../person.json?displayNameLike=%QUERY';
+
             var editable = this.model.get('editable');
+            var root = this.model.get('root');
+            // strip off 'form' path param from root url
+            var indexOf = root.indexOf('/form');
+            if (indexOf != -1) {
+                root = root.substring(0, indexOf)
+            }
+            var url = root + '/person.json?displayNameLike=%QUERY';
 
             if (editable) {
                 var $textbox = this.$el.find('input[type="text"]');
