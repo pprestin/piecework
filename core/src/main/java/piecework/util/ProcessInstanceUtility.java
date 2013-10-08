@@ -20,6 +20,9 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -33,6 +36,8 @@ import java.util.*;
  * @author James Renfro
  */
 public class ProcessInstanceUtility {
+
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.mediumDateTime();
 
     public static String processInstanceLabel(Process process, ProcessInstance instance, FormValidation validation, String submissionLabel) {
         String processInstanceLabel = instance != null ? instance.getProcessInstanceLabel() : null;
@@ -58,10 +63,7 @@ public class ProcessInstanceUtility {
             processInstanceLabel = StringEscapeUtils.unescapeXml(writer.toString());
 
             if (StringUtils.isEmpty(processInstanceLabel))
-                processInstanceLabel = "Submission " + DateFormat.getDateTimeInstance(
-                        DateFormat.SHORT,
-                        DateFormat.SHORT,
-                        Locale.getDefault());
+                processInstanceLabel = "Submission " + dateTimeFormatter.print(System.currentTimeMillis());
         }
 
         return processInstanceLabel;
