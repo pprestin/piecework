@@ -52,6 +52,9 @@ public class ProcessService {
     IdentityHelper helper;
 
     @Autowired
+    ContentRepository contentRepository;
+
+    @Autowired
     ProcessRepository processRepository;
 
     @Autowired
@@ -197,6 +200,29 @@ public class ProcessService {
 
         return new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true)
                 .build();
+    }
+
+    public ProcessDeploymentResource getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        ProcessDeployment processDeployment = deploymentRepository.findOne(deploymentId);
+        Content content = contentRepository.findByLocation(processDeployment.getEngineProcessDefinitionLocation());
+        return new ProcessDeploymentResource.Builder(content).build();
+    }
+
+    public Interaction getInteraction(ProcessDeployment deployment, String rawInteractionId) throws StatusCodeError {
+        String interactionId = sanitizer.sanitize(rawInteractionId);
+
+        List<Interaction> interactions = deployment.getInteractions();
+        if (interactions != null) {
+            for (Interaction interaction : interactions) {
+                if (interaction != null && interaction.getId() != null && interaction.getId().equals(interactionId))
+                    return interaction;
+            }
+        }
+
+        return null;
     }
 
     public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws StatusCodeError {

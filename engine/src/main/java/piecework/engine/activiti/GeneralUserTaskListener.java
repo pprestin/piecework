@@ -213,17 +213,11 @@ public class GeneralUserTaskListener implements TaskListener {
                 }
             }
 
-            Query query =  new Query();
-            query.addCriteria(where("processInstanceId").is(processInstance.getProcessInstanceId()));
-
             Task updated = taskBuilder.build();
-            Update update = new Update();
-            update.set("tasks." + updated.getTaskInstanceId(), updated);
-            FindAndModifyOptions options = new FindAndModifyOptions();
-            options.returnNew(true);
-            ProcessInstance stored = mongoOperations.findAndModify(query, update, options, ProcessInstance.class);
-
-            LOG.debug("Stored process instance changes");
+            if (processInstanceRepository.update(processInstance.getProcessInstanceId(), updated))
+                LOG.debug("Stored task changes");
+            else
+                LOG.error("Failed to store task changes");
         }
 
 

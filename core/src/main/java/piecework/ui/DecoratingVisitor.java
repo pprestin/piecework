@@ -137,7 +137,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
             String screenType = screen.getType();
 
             if (screenType != null) {
-                if (screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE)) {
+                if (screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE) || screenType.equals(Constants.ScreenTypes.STAGED)) {
                     TagNode contextScriptTag = new TagNode("script");
 
                     ObjectMapper mapper = new ObjectMapper();

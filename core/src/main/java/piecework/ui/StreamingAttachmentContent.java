@@ -31,27 +31,30 @@ import java.io.StringReader;
 public class StreamingAttachmentContent implements StreamingOutput {
 
     private final Attachment attachment;
-    private final Content content;
+    private final Streamable content;
 
-    public StreamingAttachmentContent(Attachment attachment, Content content) {
+    public StreamingAttachmentContent(Streamable content) {
+        this(null, content);
+    }
+
+    public StreamingAttachmentContent(Attachment attachment, Streamable content) {
         this.attachment = attachment;
         this.content = content;
     }
 
     @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
-        if (content == null) {
-            IOUtils.copy(new StringReader(attachment.getDescription()), output);
-        } else {
+        if (content != null)
             IOUtils.copy(content.getInputStream(), output);
-        }
+        else if (attachment != null)
+            IOUtils.copy(new StringReader(attachment.getDescription()), output);
     }
 
     public Attachment getAttachment() {
         return attachment;
     }
 
-    public Content getContent() {
+    public Streamable getContent() {
         return content;
     }
 }

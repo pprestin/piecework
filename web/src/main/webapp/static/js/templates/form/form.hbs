@@ -1,29 +1,31 @@
 {{#if screen.readonly}}
     {{#if task}}
         {{#if task.active}}
-        <div class="alert">This form cannot be modified - it is assigned to {{task.assignee.displayName}}</div>
+        <div class="alert alert-info">This form cannot be modified - it is assigned to {{task.assignee.displayName}}</div>
         {{else}}
             {{#if task.endTime}}
-                <div class="alert">This form can no longer be modified - it was completed by {{task.assignee.displayName}} on {{date task.endTime}}</div>
+                <div class="alert alert-info">This form can no longer be modified - it was completed by {{task.assignee.displayName}} on {{date task.endTime}}</div>
             {{else}}
-                <div class="alert">This form can no longer be modified - it has been suspended</div>
+                <div class="alert alert-info">This form can no longer be modified - it has been suspended</div>
             {{/if}}
         {{/if}}
     {{/if}}
 {{/if}}
 {{#if screen}}
 {{#with screen}}
-
-    <h2>{{title}}</h2>
-    {{#breadcrumb groupings}}{{#url "step"}}{{/url}}{{/breadcrumb}}
     <div class="notifications"></div>
-    <div class="screen" id="{{screenId}}">
-        <div class="screen-header"></div>
-        <div class="screen-content">
+    <div class="container">
+        <div class="row">
+            <div class="crumbs col-lg-3">{{#breadcrumb this}}{{#url "step"}}{{/url}}{{/breadcrumb}}</div>
+            <div class="screen col-lg-9" id="{{screenId}}">
+                <div class="screen-header"><h2>{{title}}</h2></div>
+                <div class="screen-content">
 
-        </div>
-        <div class="screen-footer">
+                </div>
+                <div class="screen-footer">
 
+                </div>
+            </div>
         </div>
     </div>
 {{/with}}

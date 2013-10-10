@@ -15,6 +15,7 @@
  */
 package piecework.resource.concrete;
 
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.Versions;
+import piecework.model.Interaction;
 import piecework.model.ProcessDeployment;
 import piecework.service.ProcessService;
 import piecework.model.SearchResults;
@@ -33,6 +35,8 @@ import piecework.exception.StatusCodeError;
 import piecework.model.Process;
 import piecework.resource.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.ui.Streamable;
+import piecework.ui.StreamingAttachmentContent;
 
 /**
  * @author James Renfro
@@ -115,6 +119,24 @@ public class ProcessResourceVersion1 implements ProcessResource {
         ProcessDeployment result = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
 
         ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, null, new PassthroughSanitizer(), true).build());
+        return responseBuilder.build();
+    }
+
+    @Override
+    public Response getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Streamable result = processService.getDeploymentResource(rawProcessDefinitionKey, rawDeploymentId);
+
+        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(result);
+        String contentDisposition = new StringBuilder("attachment; filename=").append(result.getName()).toString();
+        return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
+    }
+
+    @Override
+    public Response getInteraction(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId) throws StatusCodeError {
+        ProcessDeployment deployment = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
+        Interaction interaction = processService.getInteraction(deployment, rawInteractionId);
+
+        ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(interaction, new PassthroughSanitizer()).build(versions.getVersion1()));
         return responseBuilder.build();
     }
 

@@ -67,6 +67,9 @@ public class Process implements Serializable {
     @XmlElement
     private final String deploymentVersion;
 
+    @XmlElement
+    private final ProcessCodeRepository repository;
+
     @XmlTransient
     @JsonIgnore
     @DBRef
@@ -109,7 +112,8 @@ public class Process implements Serializable {
         this.deploymentVersion = builder.deploymentVersion;
         this.processSummary = builder.processSummary;
         this.participantSummary = builder.participantSummary;
-		this.deployment = builder.current;
+        this.repository = builder.repository;
+		this.deployment = builder.deployment;
         this.versions = Collections.unmodifiableList(builder.versions);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
@@ -132,6 +136,10 @@ public class Process implements Serializable {
 
     public String getParticipantSummary() {
         return participantSummary;
+    }
+
+    public ProcessCodeRepository getRepository() {
+        return repository;
     }
 
     @XmlTransient
@@ -214,7 +222,8 @@ public class Process implements Serializable {
         private String deploymentVersion;
         private String processSummary;
         private String participantSummary;
-		private ProcessDeployment current;
+        private ProcessCodeRepository repository;
+		private ProcessDeployment deployment;
         private List<ProcessDeploymentVersion> versions;
         private boolean isAnonymousSubmissionAllowed;
 		private boolean isDeleted;
@@ -235,7 +244,8 @@ public class Process implements Serializable {
             this.deploymentVersion = process.deploymentVersion;
             this.processSummary = sanitizer.sanitize(process.processSummary);
             this.participantSummary = sanitizer.sanitize(process.participantSummary);
-            this.current = process.deployment != null ? new ProcessDeployment.Builder(process.deployment, process.processDefinitionKey, sanitizer, true).build() : null;
+            this.repository = process.repository != null ? new ProcessCodeRepository.Builder(process.repository, sanitizer).build() : null;
+            this.deployment = process.deployment != null ? new ProcessDeployment.Builder(process.deployment, process.processDefinitionKey, sanitizer, true).build() : null;
             if (process.versions.isEmpty())
                 this.versions = new ArrayList<ProcessDeploymentVersion>();
             else
@@ -273,12 +283,17 @@ public class Process implements Serializable {
             return this;
         }
 
-        public Builder deploy(ProcessDeploymentVersion version, ProcessDeployment current) {
+        public Builder repository(ProcessCodeRepository repository) {
+            this.repository = repository;
+            return this;
+        }
+
+        public Builder deploy(ProcessDeploymentVersion version, ProcessDeployment deployment) {
             this.deploymentId = version.getDeploymentId();
             this.deploymentLabel = version.getLabel();
             this.deploymentVersion = version.getVersion();
             this.deploymentDate = new Date();
-            this.current = current;
+            this.deployment = deployment;
             return this;
         }
 

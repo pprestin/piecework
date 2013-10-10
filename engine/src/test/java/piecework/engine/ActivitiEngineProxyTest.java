@@ -77,7 +77,7 @@ public class ActivitiEngineProxyTest {
 	@Test
 	public void testStartWithNoData() throws ProcessEngineException {
         ProcessInstance instance = Mockito.mock(ProcessInstance.class);
-		String instanceId = engineProxy.start(process, instance);
+		String instanceId = engineProxy.start(process, deployment, instance);
 		Assert.assertNotNull(instanceId);
 
         ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
@@ -96,7 +96,7 @@ public class ActivitiEngineProxyTest {
 	public void testStartWithAliasAndNoData() throws ProcessEngineException {
         ProcessInstance instance = Mockito.mock(ProcessInstance.class);
         Mockito.when(instance.getProcessInstanceId()).thenReturn("test1");
-        String instanceId = engineProxy.start(process, instance);
+        String instanceId = engineProxy.start(process, deployment, instance);
 		Assert.assertNotNull(instanceId);
 
         ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
@@ -118,7 +118,7 @@ public class ActivitiEngineProxyTest {
         Map<String, List<Value>> data = new ManyMap<String, Value>();
         ((ManyMap<String, Value>)data).putOne("EmployeeID", new Value("testuser"));
         Mockito.when(instance.getData()).thenReturn(data);
-        String instanceId = engineProxy.start(process, instance);
+        String instanceId = engineProxy.start(process, deployment, instance);
         Assert.assertNotNull(instanceId);
 
         // First, retrieve without including variables

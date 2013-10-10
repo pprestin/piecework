@@ -76,6 +76,7 @@ public class StartInstanceCommand extends InstanceCommand {
                     .processDefinitionKey(process.getProcessDefinitionKey())
                     .processDefinitionLabel(process.getProcessDefinitionLabel())
                     .processInstanceLabel(label)
+                    .deploymentId(deployment.getDeploymentId())
                     .data(data)
                     .submission(submission)
                     .startTime(new Date())
@@ -87,23 +88,18 @@ public class StartInstanceCommand extends InstanceCommand {
             // Save it before routing, then save again with the engine instance id
             ProcessInstance stored = repository.save(builder.build());
 
-            String engineInstanceId = facade.start(process, stored);
-
-            builder.processInstanceId(stored.getProcessInstanceId());
-            builder.engineProcessInstanceId(engineInstanceId);
-            builder.deploymentId(deployment.getDeploymentId());
-
+            String engineInstanceId = facade.start(process, deployment, stored);
             repository.update(stored.getProcessInstanceId(), engineInstanceId);
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Executed start instance command " + this.toString());
 
+            return stored;
+
         } catch (ProcessEngineException e) {
             LOG.error("Process engine unable to start instance ", e);
             throw new InternalServerError();
         }
-
-        return builder.build();
     }
 
     public String toString() {

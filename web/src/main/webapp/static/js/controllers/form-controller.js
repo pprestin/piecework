@@ -39,6 +39,7 @@ define([
         this.compose('userView', UserView, {model: userModel});
     },
     index: function(params, route) {
+        params.ordinal = -1;
         this.step(params, route);
     },
     search: function(params) {
@@ -138,8 +139,19 @@ define([
 
                 var groupingIndex = 0;
                 var currentScreen = params.ordinal;
-                if (currentScreen != undefined)
-                    groupingIndex = parseInt(currentScreen, 10) - 1;
+                if (currentScreen != undefined) {
+                    var screen = this.model.get("screen");
+                    var screenType = screen != null ? screen.type : 'standard';
+                    var groupingsLength = screen != null ? screen.groupings.length : null;
+                    var parsedOrdinal = parseInt(currentScreen, 10);
+                    if (parsedOrdinal == -1) {
+                        if (screenType == 'staged')
+                            parsedOrdinal = groupingsLength;
+                        else
+                            parsedOrdinal = 1;
+                    }
+                    groupingIndex = parsedOrdinal - 1;
+                }
                 this.model.set("groupingIndex", groupingIndex);
 
                 if (link != route) {

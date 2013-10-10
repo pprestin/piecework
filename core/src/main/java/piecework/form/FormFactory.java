@@ -28,6 +28,7 @@ import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.security.EncryptionService;
+import piecework.service.IdentityService;
 import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -55,6 +56,9 @@ public class FormFactory {
     EncryptionService encryptionService;
 
     @Autowired
+    IdentityService identityService;
+
+    @Autowired
     Versions versions;
 
     public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
@@ -73,6 +77,7 @@ public class FormFactory {
         String loggedInUserId = helper.getAuthenticatedSystemOrUserId();
         User currentUser = helper.getCurrentUser();
         boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
+
         FactoryWorker worker = new FactoryWorker(process, instance, task, screen, version, loggedInUserId, currentUser, hasOversight);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         ManyMap<String, Message> results = new ManyMap<String, Message>();

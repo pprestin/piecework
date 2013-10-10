@@ -15,12 +15,14 @@
  */
 package piecework.engine;
 
+import piecework.ui.Streamable;
+
 import java.io.InputStream;
 
 /**
  * @author James Renfro
  */
-public class ProcessDeploymentResource {
+public class ProcessDeploymentResource implements Streamable {
 
     private final String contentType;
     private final String name;
@@ -55,6 +57,12 @@ public class ProcessDeploymentResource {
 
         public Builder() {
 
+        }
+
+        public Builder(Streamable streamable) {
+            this.contentType = streamable.getContentType();
+            this.inputStream = streamable.getInputStream();
+            this.name = streamable.getName();
         }
 
         public ProcessDeploymentResource build() {

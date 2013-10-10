@@ -33,6 +33,14 @@ body {
     margin: 0px;
 }
 
+form.main-form.staged {
+
+}
+
+form.main-form h2 {
+    margin-left: 10px;
+}
+
 input, .uneditable-input {
     width: auto;
 }
@@ -80,6 +88,21 @@ ul.attachments li {
 
 ul.attachments li .attachment-footer {
     text-align: right;
+}
+
+ul.breadcrumb-stacked {
+    background-color: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    padding: 10px;
+    /*left: 0px;
+    padding: 10px;
+    position: fixed;
+    top: 75px;
+    z-index: 100;*/
+}
+
+ul.breadcrumb-stacked li {
+
 }
 
 ul.files li {

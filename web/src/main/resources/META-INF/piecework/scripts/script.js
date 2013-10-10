@@ -123,16 +123,19 @@
             var type = field.type;
             var values = data[name];
             var subfields = ['displayName', 'visibleId'];
-            for (var s=0;s<subfields.length;s++) {
-                var subfield = subfields[s];
-                var subfieldName = name + '.' + subfield;
-                var subfieldInputSelector = '[name="' + subfieldName + '"]';
-                var subfieldVariableSelector = '[data-element="' + subfieldName + '"]';
-                var subfieldValues = values[0][subfield];
-                var $subfieldInputs = $inputs.filter(subfieldInputSelector);
-                var $subfieldVariables = $variables.filter(subfieldVariableSelector);
-                $inputs.filter(subfieldInputSelector).val(subfieldValues);
-                $variables.filter(subfieldVariableSelector).text(subfieldValues);
+            if (values != null && values.length > 0) {
+                for (var s=0;s<subfields.length;s++) {
+                    var subfield = subfields[s];
+                    var subfieldName = name + '.' + subfield;
+                    var subfieldInputSelector = '[name="' + subfieldName + '"]';
+                    var subfieldVariableSelector = '[data-element="' + subfieldName + '"]';
+
+                    var subfieldValues = values[0][subfield];
+                    var $subfieldInputs = $inputs.filter(subfieldInputSelector);
+                    var $subfieldVariables = $variables.filter(subfieldVariableSelector);
+                    $inputs.filter(subfieldInputSelector).val(subfieldValues);
+                    $variables.filter(subfieldVariableSelector).text(subfieldValues);
+                }
             }
         },
         deleteAttachment: function(event) {
@@ -189,6 +192,7 @@
                         var $anchor = $li.find('.process-attachment-link');
                         $anchor.attr('href', attachment.link);
                         $anchor.text(attachment.label);
+                        $li.attr('data-process-attachment-modified', attachment.lastModified);
                         $li.find('.process-attachment-description').text(attachment.description);
                         $li.find('.process-attachment-date').text(moment(attachment.lastModified).format('MMMM Do YYYY, h:mm:ss a'));
                         $li.find('.process-attachment-owner').text(attachment.user.displayName);
@@ -311,7 +315,7 @@
             });
         },
         onValid: function($form) {
-            $form
+
         },
         onInvalid: function($form) {
 
@@ -319,6 +323,13 @@
         populate: function(model) {
             var data = model.data;
             var screen = model.screen;
+            var task = model.task;
+
+            if (task != null) {
+                var created = task.startTime;
+                $('body').attr('data-process-task-started', created);
+            }
+
             var validation = model.validation;
             this.model = model;
             this.decorateForms(model);

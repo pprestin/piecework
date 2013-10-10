@@ -58,6 +58,9 @@ public class ProcessDeployment implements Serializable {
     private final String engineProcessDefinitionKey;
 
     @XmlElement
+    private final String engineProcessDefinitionResource;
+
+    @XmlElement
     private final String engineProcessDefinitionId;
 
     @XmlElement
@@ -135,6 +138,7 @@ public class ProcessDeployment implements Serializable {
         this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
         this.engineProcessDefinitionLocation = builder.engineProcessDefinitionLocation;
         this.engineProcessDefinitionId = builder.engineProcessDefinitionId;
+        this.engineProcessDefinitionResource = builder.engineProcessDefinitionResource;
         this.engineDeploymentId = builder.engineDeploymentId;
         this.initiationStatus = builder.initiationStatus;
         this.cancellationStatus = builder.cancellationStatus;
@@ -192,6 +196,10 @@ public class ProcessDeployment implements Serializable {
 
     public String getEngineDeploymentId() {
         return engineDeploymentId;
+    }
+
+    public String getEngineProcessDefinitionResource() {
+        return engineProcessDefinitionResource;
     }
 
     public String getCancellationStatus() {
@@ -285,6 +293,7 @@ public class ProcessDeployment implements Serializable {
         private String engineProcessDefinitionKey;
         private String engineProcessDefinitionId;
         private String engineProcessDefinitionLocation;
+        private String engineProcessDefinitionResource;
         private String engineDeploymentId;
         private String base;
         private String initiationStatus;
@@ -323,6 +332,7 @@ public class ProcessDeployment implements Serializable {
             this.engineProcessDefinitionKey = sanitizer.sanitize(deployment.engineProcessDefinitionKey);
             this.engineProcessDefinitionId = sanitizer.sanitize(deployment.engineProcessDefinitionId);
             this.engineProcessDefinitionLocation = sanitizer.sanitize(deployment.engineProcessDefinitionLocation);
+            this.engineProcessDefinitionResource = sanitizer.sanitize(deployment.engineProcessDefinitionResource);
             this.engineDeploymentId = sanitizer.sanitize(deployment.engineDeploymentId);
             this.base = sanitizer.sanitize(deployment.base);
             this.initiationStatus = sanitizer.sanitize(deployment.initiationStatus);
@@ -405,6 +415,11 @@ public class ProcessDeployment implements Serializable {
 
         public Builder engineProcessDefinitionLocation(String engineProcessDefinitionLocation) {
             this.engineProcessDefinitionLocation = engineProcessDefinitionLocation;
+            return this;
+        }
+
+        public Builder engineProcessDefinitionResource(String engineProcessDefinitionResource) {
+            this.engineProcessDefinitionResource = engineProcessDefinitionResource;
             return this;
         }
 

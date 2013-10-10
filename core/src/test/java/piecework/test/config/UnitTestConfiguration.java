@@ -395,6 +395,11 @@ public class UnitTestConfiguration {
         public boolean update(String id, String engineProcessInstanceId) {
             return false;  //To change body of implemented methods use File | Settings | File Templates.
         }
+
+        @Override
+        public boolean update(String id, Task task) {
+            return false;  //To change body of implemented methods use File | Settings | File Templates.
+        }
     }
 	
 	public class InteractionRepositoryStub extends MongoRepositoryStub<Interaction> implements InteractionRepository {

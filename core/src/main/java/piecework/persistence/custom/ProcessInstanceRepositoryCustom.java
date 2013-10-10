@@ -26,4 +26,6 @@ public interface ProcessInstanceRepositoryCustom {
 
     boolean update(String id, String engineProcessInstanceId);
 
+    boolean update(String id, Task task);
+
 }

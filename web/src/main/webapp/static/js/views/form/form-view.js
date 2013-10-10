@@ -9,7 +9,7 @@ define([ 'chaplin',
 
 	var FormView = View.extend({
 		autoRender : false,
-		className: 'col-lg-12 col-sm-12',
+		className: 'main-form col-lg-12 col-sm-12',
 		container: '.main-content',
 		id: 'main-form',
 		tagName: 'form',
@@ -33,7 +33,9 @@ define([ 'chaplin',
             if (screen != undefined) {
                 var link = this.model.get("link");
                 var formInstanceId = this.model.get("formInstanceId");
-                var re = new RegExp(formInstanceId + "$");
+                var task = this.model.get('task');
+                var taskInstanceId = task != null ? task.taskInstanceId : null;
+                var re = new RegExp(taskInstanceId + "$");
 
                 // Strip off root if it exists, since absolute urls will mess up routing
                 var root = location.protocol + "//" + location.host;
@@ -48,7 +50,6 @@ define([ 'chaplin',
                 for (var i=0;i<groupings.length;i++) {
                     groupings[i].breadcrumbLink = link + '/step/' + groupings[i].ordinal;
                 }
-
             }
 	        return this;
 	    },
@@ -80,8 +81,13 @@ define([ 'chaplin',
             if (groupingIndex == undefined)
                 groupingIndex = 0;
             var grouping = groupings != undefined && groupings.length > groupingIndex ? groupings[groupingIndex] : { sectionIds : []};
-
+            var screenType = screen.type;
             var sectionList = screen.sections;
+            var isStaged = screenType != null && screenType == 'staged';
+
+            if (isStaged)
+                this.$el.addClass('staged');
+
             if (sectionList != undefined && sectionList.length > 0) {
                 var sectionMap = {};
                 if (grouping != undefined) {
@@ -92,7 +98,9 @@ define([ 'chaplin',
                         sectionMap[sectionId] = true;
                     }
                 }
-                for (var i=0;i<sectionList.length;i++) {
+
+                var numberOfSections = sectionList.length - 1;
+                for (var i=0;i<=numberOfSections;i++) {
                     var section = sectionList[i];
                     var sectionId = section.sectionId;
                     var isSelected = sectionMap[sectionId];
@@ -112,6 +120,10 @@ define([ 'chaplin',
                             }
                         }
                     }
+
+//                    if (isStaged && i < numberOfSections) {
+//                        section.hidden = true;
+//                    }
                 }
             }
 
@@ -207,46 +219,7 @@ define([ 'chaplin',
             });
 	    },
 	    _onAddedToDOM: function(event) {
-//            var data = this.model.get('data');
-//            if (data != undefined) {
-//                for (var name in data) {
-//                    if (name != undefined) {
-//                        var values = data[name];
-//                        var selector = ':input[name="' + name + '"]';
-//                        var $element = $(selector);
-//                        if (values != null && values.length > 0) {
-//                            if (values.length > 1) {
-//                                var $controlGroup = $element.closest('.control-group');
-//                                var $input = $controlGroup.find(':input[type="text"]:last');
-//                                var $clone = $input.clone();
-//                                $clone.val();
-//                                $controlGroup.append("<br/>");
-//                                $controlGroup.append($clone);
-//                            }
-//
-//                            if ($element.attr('data-pw-person-lookup') != null) {
-//                                var inputSelector = '#' + $element.attr('data-pw-person-lookup');
-//                                var value = values[0];
-//                                $element.val(value.userId);
-//                                $(inputSelector).val(value.displayName);
-//
-//                            } else if ($element.attr('type') != 'file') {
-//                               $element.val(values);
-//                            } else {
-//                                var accept = $element.attr('accept');
-//                                var re = RegExp("image/");
-//                                $.each(values, function(index, value) {
-//                                    if (accept != null && re.test(accept)) {
-//                                        $element.before('<div><image style="width:300px" src="' + value.link + '" alt="' + value.name + '"/></div>');
-//                                    } else {
-//                                        $element.before('<div class="file"><a href="' + value.link + '">' + value.name + "</a></div>");
-//                                    }
-//                                });
-//                            }
-//                        }
-//                    }
-//                }
-//            }
+
 	    },
 	    _onLoaded: function(event) {
             Chaplin.mediator.publish('formAddedToDOM');

@@ -105,4 +105,18 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     SearchResults searchDeployments(@PathParam("processDefinitionKey") String processDefinitionKey,@Context UriInfo uriInfo) throws StatusCodeError;
 
+    /*
+     * SUB-SUBRESOURCES
+     */
+    @GET
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response getDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response getInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId) throws StatusCodeError;
+
+
 }

@@ -142,6 +142,20 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         return true;
     }
 
+    @Override
+    public boolean update(String id, Task task) {
+        Query query =  new Query();
+        query.addCriteria(where("processInstanceId").is(id));
+
+        Update update = new Update();
+        update.set("tasks." + task.getTaskInstanceId(), task);
+        FindAndModifyOptions options = new FindAndModifyOptions();
+        options.returnNew(true);
+        ProcessInstance stored = mongoOperations.findAndModify(query, update, options, ProcessInstance.class);
+
+        return false;
+    }
+
     private ProcessInstance updateEfficiently(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
         Query query = new Query(where("_id").is(id));
         Update update = new Update();

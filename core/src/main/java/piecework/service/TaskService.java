@@ -19,7 +19,6 @@ import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +28,6 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.StatusCodeError;
@@ -88,9 +86,9 @@ public class TaskService {
     /*
      * Returns the first task for the passed instance that the user is allowed to access
      */
-    public Task allowedTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
+    public Task allowedTask(Process process, ProcessInstance instance, boolean limitToActive) throws StatusCodeError {
 
-        Set<Task> tasks = processInstance.getTasks();
+        Set<Task> tasks = instance.getTasks();
 
         boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
 
@@ -106,13 +104,13 @@ public class TaskService {
 
                 boolean isCandidate = !task.getCandidateAssigneeIds().isEmpty() && task.getCandidateAssigneeIds().contains(currentUserId);
                 if (isCandidate)
-                    return task;
+                    return rebuildTask(task, new PassthroughSanitizer());
 
                 boolean isAssignee = task.getAssigneeId() != null && task.getAssigneeId().equals(currentUserId);
                 if (isAssignee)
-                    return task;
+                    return rebuildTask(task, new PassthroughSanitizer());
             } else {
-                return task;
+                return rebuildTask(task, new PassthroughSanitizer());
             }
         }
 
@@ -128,9 +126,11 @@ public class TaskService {
         }
     }
 
-    public void completeIfTaskExists(Process process, Task task, ActionType action, FormValidation validation) throws StatusCodeError {
-        TaskCommand complete = new TaskCommand(process, task, action, validation);
-        commandExecutor.execute(complete);
+    public void completeIfTaskExists(Process process, ProcessInstance instance, Task task, ActionType action, FormValidation validation) throws StatusCodeError {
+        if (task != null) {
+            TaskCommand complete = new TaskCommand(process, instance, task, action, validation);
+            commandExecutor.execute(complete);
+        }
     }
 
     private Set<String> processDefinitionKeys(Set<Process> processes) {
@@ -294,6 +294,22 @@ public class TaskService {
         }
 
         return builder.build(versions.getVersion1());
+    }
+
+    public Task task(ProcessInstance instance, String taskId) {
+        if (instance != null && StringUtils.isNotEmpty(taskId)) {
+            if (instance != null) {
+                Set<Task> tasks = instance.getTasks();
+                if (tasks != null) {
+                    for (Task task : tasks) {
+                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId))
+                            return rebuildTask(task, new PassthroughSanitizer());
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     private TaskCriteria overseerCriteria(Set<Process> allowedProcesses, MultivaluedMap<String, String> rawQueryParameters) {

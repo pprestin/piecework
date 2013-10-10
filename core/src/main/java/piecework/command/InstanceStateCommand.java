@@ -15,12 +15,8 @@
  */
 package piecework.command;
 
-import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import piecework.Constants;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
@@ -28,6 +24,7 @@ import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.service.IdentityService;
 import piecework.model.*;
@@ -36,8 +33,6 @@ import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
 
 import java.util.*;
-
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -80,6 +75,7 @@ public class InstanceStateCommand extends InstanceCommand {
         IdentityHelper helper = commandExecutor.getHelper();
         IdentityService identityService = commandExecutor.getIdentityService();
         ProcessInstanceRepository processInstanceRepository = commandExecutor.getProcessInstanceRepository();
+        DeploymentRepository deploymentRepository = commandExecutor.getDeploymentRepository();
 
         try {
             ProcessInstance.Builder modified = new ProcessInstance.Builder(instance);
@@ -88,31 +84,35 @@ public class InstanceStateCommand extends InstanceCommand {
 
             if (operation != OperationType.UPDATE) {
                 ProcessDeployment deployment = process.getDeployment();
+                if (instance.getDeploymentId() != null && !instance.getDeploymentId().equals(process.getDeploymentId()))
+                    deployment = deploymentRepository.findOne(instance.getDeploymentId());
+
                 if (deployment == null)
                     throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
                 String defaultApplicationStatus;
                 switch(operation) {
                     case ACTIVATION:
-                        if (!facade.activate(process, instance))
+                        if (!facade.activate(process, deployment, instance))
                             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
                         defaultApplicationStatus = instance.getPreviousApplicationStatus();
                         processStatus = Constants.ProcessStatuses.OPEN;
                         applicationStatusExplanation = reason;
                         break;
                     case ASSIGNMENT:
-                        if (!facade.assign(process, task.getTaskInstanceId(), identityService.getUserByAnyId(reason)))
+                        if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUserByAnyId(reason)))
                             throw new ConflictError(Constants.ExceptionCodes.invalid_assignment);
                         defaultApplicationStatus = instance.getPreviousApplicationStatus();
                         break;
                     case CANCELLATION:
-                        if (!facade.cancel(process, instance))
+                        if (!facade.cancel(process, deployment, instance))
                             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
                         defaultApplicationStatus = deployment.getCancellationStatus();
                         processStatus = Constants.ProcessStatuses.CANCELLED;
                         applicationStatusExplanation = reason;
                         break;
                     case SUSPENSION:
-                        if (!facade.suspend(process, instance))
+                        if (!facade.suspend(process, deployment, instance))
                             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
                         defaultApplicationStatus = deployment.getSuspensionStatus();
                         modified.previousApplicationStatus(instance.getApplicationStatus());

@@ -9,13 +9,17 @@
         <th>#</th>
         <th>Label</th>
         <th>Created</th>
+        <th>Deployed</th>
+        <th>Published</th>
     </tr>
     </thead>
     <tbody>
     <tr ng-repeat="deployment in deployments">
         <td>{{deployment.deploymentVersion}} <span ng-if="deployment.published" title="Deployed on {{deployment.deployed | date:'medium' }}"><i class="icon-rocket"></i></span></td>
         <td><a href="#/deployment/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" title="{{deployment.deploymentLabel}}">{{deployment.deploymentLabel}}</a></td>
-        <td>{{deployment.created | date:'medium' }}</td>
+        <td>{{deployment.dateCreated | date:'medium' }}</td>
+        <td>{{deployment.dateDeployed | date:'medium' }}</td>
+        <td>{{deployment.datePublished | date:'medium' }}</td>
     </tr>
     </tbody>
 </table>

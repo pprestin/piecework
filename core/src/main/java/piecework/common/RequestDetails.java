@@ -38,6 +38,8 @@ public class RequestDetails {
     private final String actAsUser;
     private final MediaType contentType;
     private final  List<MediaType> acceptableMediaTypes;
+    private final String referrer;
+    private final String userAgent;
     private final boolean isServiceCall;
 
     private RequestDetails() {
@@ -55,6 +57,8 @@ public class RequestDetails {
         this.contentType = builder.contentType;
         this.acceptableMediaTypes = builder.acceptableMediaTypes;
         this.isServiceCall = builder.isServiceCall;
+        this.referrer = builder.referrer;
+        this.userAgent = builder.userAgent;
     }
 
     public String getCertificateIssuer() {
@@ -93,6 +97,14 @@ public class RequestDetails {
         return acceptableMediaTypes;
     }
 
+    public String getReferrer() {
+        return referrer;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
     public boolean isServiceCall() {
         return isServiceCall;
     }
@@ -109,6 +121,8 @@ public class RequestDetails {
         private boolean isServiceCall;
         private MediaType contentType;
         private List<MediaType> acceptableMediaTypes;
+        private String referrer;
+        private String userAgent;
 
         public Builder() {
 
@@ -117,7 +131,7 @@ public class RequestDetails {
         public Builder(MessageContext context, SecuritySettings settings) {
             if (context != null) {
                 HttpHeaders headers = context.getHttpHeaders();
-                    if (headers != null) {
+                if (headers != null) {
                     if (StringUtils.isNotEmpty(settings.getCertificateIssuerHeader()))
                         this.certificateIssuer = headers.getHeaderString(settings.getCertificateIssuerHeader());
                     if (StringUtils.isNotEmpty(settings.getCertificateSubjectHeader()))
@@ -127,6 +141,8 @@ public class RequestDetails {
 
                     this.acceptableMediaTypes = headers.getAcceptableMediaTypes();
                     this.contentType = headers.getMediaType();
+                    this.referrer = headers.getHeaderString("Referer");
+                    this.userAgent = headers.getHeaderString("User-Agent");
                 }
 
                 HttpServletRequest request = context.getHttpServletRequest();

@@ -15,7 +15,6 @@
  */
 package piecework.engine.activiti;
 
-import java.io.InputStream;
 import java.util.*;
 
 import org.activiti.engine.*;
@@ -30,7 +29,6 @@ import org.activiti.engine.task.TaskQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
@@ -74,7 +72,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     piecework.service.IdentityService userDetailsService;
 
 	@Override
-	public String start(Process process, ProcessInstance instance) throws ProcessEngineException {
+	public String start(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
@@ -99,7 +97,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
-    public boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException {
+    public boolean activate(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
@@ -121,24 +119,22 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public boolean assign(Process process, String taskId, User user) throws ProcessEngineException {
+    public boolean assign(Process process, ProcessDeployment deployment, String taskId, User user) throws ProcessEngineException {
         if (user != null && user.getUserId() != null)
             processEngine.getTaskService().setAssignee(taskId, user.getUserId());
         return true;
     }
 
     @Override
-	public boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException {
+	public boolean cancel(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        ProcessDeployment detail = process.getDeployment();
+        if (deployment == null)
+            throw new ProcessEngineException("Deployment missing for " + process.getProcessDefinitionKey());
 
-        if (detail == null)
-            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
-
-        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
+        String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 		
 		if (activitiInstance != null) {
@@ -150,17 +146,15 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
-    public boolean suspend(Process process, ProcessInstance instance) throws ProcessEngineException {
+    public boolean suspend(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        ProcessDeployment detail = process.getDeployment();
+        if (deployment == null)
+            throw new ProcessEngineException("Deployment missing for " + process.getProcessDefinitionKey());
 
-        if (detail == null)
-            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
-
-        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
+        String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 
         if (activitiInstance != null) {
@@ -172,17 +166,15 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException {
+    public boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException {
         IdentityDetails principal = helper.getAuthenticatedPrincipal();
         String userId = principal != null ? principal.getInternalId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        ProcessDeployment detail = process.getDeployment();
+        if (deployment == null)
+            throw new ProcessEngineException("Deployment missing for " + process.getProcessDefinitionKey());
 
-        if (detail == null)
-            throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
-
-        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
+        String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
 
         try {
             org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
@@ -226,16 +218,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (!deployment.getEngine().equals(getKey()))
             return null;
 
-//        String location = deployment.getEngineProcessDefinitionLocation();
-//        String classpathPrefix = "classpath:";
-//
-//        if (location != null && location.startsWith(classpathPrefix))
-//            location = location.substring(classpathPrefix.length());
-//
-//        ClassPathResource classPathResource = new ClassPathResource(location);
-
         Deployment activitiDeployment = processEngine.getRepositoryService().createDeployment()
-                .addInputStream(content.getFilename(), content.getInputStream())
+                .addInputStream(content.getName(), content.getInputStream())
                 .deploy();
 
         LOG.debug("Deployed new process definition to activiti: " + activitiDeployment.getId() + " : " + activitiDeployment.getName());
@@ -249,6 +233,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             updated.engineProcessDefinitionId(deployedProcessDefinition != null ? deployedProcessDefinition.getId() : null)
                 .engineDeploymentId(activitiDeployment.getId())
                 .engineProcessDefinitionLocation(content.getLocation())
+                .engineProcessDefinitionResource(content.getFilename())
                 .deploy();
         }
 
@@ -338,36 +323,59 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
     @Override
-    public Task findTask(TaskCriteria ... criterias) throws ProcessEngineException {
-        TaskCriteria criteria = criterias[0];
+    public Task findTask(Process process, ProcessDeployment deployment, String taskId, boolean limitToActive) throws ProcessEngineException {
+        org.activiti.engine.task.Task activitiTask = processEngine.getTaskService()
+                .createTaskQuery()
+//                .processDefinitionKey(deployment.getEngineProcessDefinitionKey())
+                .taskId(taskId)
+                .singleResult();
+        if (activitiTask != null)
+            return convert(activitiTask, process, true);
 
-        if (criteria.getProcesses() == null)
-            return null;
-
-        for (Process process : criteria.getProcesses()) {
-            org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
-            HistoricTaskInstance historicTask = null;
-
-            Task task;
-
-            String engineProcessInstanceId;
-            if (activitiTask != null) {
-                engineProcessInstanceId = activitiTask.getProcessInstanceId();
-                task = convert(activitiTask, process, true);
-            } else {
-                historicTask = historicTaskQuery(criteria).singleResult();
-                if (historicTask == null)
-                    continue;
-
-                engineProcessInstanceId = historicTask.getProcessInstanceId();
-                task = convert(historicTask, process, true);
-            }
-
-            return task;
+        if (!limitToActive) {
+            HistoricTaskInstance historicTask = processEngine.getHistoryService()
+                    .createHistoricTaskInstanceQuery()
+//                    .processDefinitionKey(deployment.getEngineProcessDefinitionKey())
+                    .taskId(taskId)
+                    .singleResult();
+            if (historicTask != null)
+                return convert(historicTask, process, true);
         }
 
         return null;
     }
+
+//    @Override
+//    public Task findTask(TaskCriteria ... criterias) throws ProcessEngineException {
+//        TaskCriteria criteria = criterias[0];
+//
+//        if (criteria.getProcesses() == null)
+//            return null;
+//
+//        for (Process process : criteria.getProcesses()) {
+//            org.activiti.engine.task.Task activitiTask = taskQuery(criteria).singleResult();
+//            HistoricTaskInstance historicTask = null;
+//
+//            Task task;
+//
+//            String engineProcessInstanceId;
+//            if (activitiTask != null) {
+//                engineProcessInstanceId = activitiTask.getProcessInstanceId();
+//                task = convert(activitiTask, process, true);
+//            } else {
+//                historicTask = historicTaskQuery(criteria).singleResult();
+//                if (historicTask == null)
+//                    continue;
+//
+//                engineProcessInstanceId = historicTask.getProcessInstanceId();
+//                task = convert(historicTask, process, true);
+//            }
+//
+//            return task;
+//        }
+//
+//        return null;
+//    }
 
     public TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException {
         TaskCriteria criteria = criterias[0];

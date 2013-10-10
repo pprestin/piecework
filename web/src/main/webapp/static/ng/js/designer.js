@@ -23,6 +23,18 @@ angular.module('ProcessDesigner', ['ngResource','ui.bootstrap'])
             $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
         }
     ])
+    .controller('InteractionDetailController', ['$scope','$resource','$routeParams',
+         function($scope, $resource, $routeParams) {
+             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
+             $scope.deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId});
+
+             var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+             $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
+
+             var Interaction = $resource('process/:processDefinitionKey/deployment/:deploymentId/interaction/:interactionId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId',interactionId:'@interactionId'})
+             $scope.interaction = Interaction.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId, interactionId:$routeParams.interactionId})
+         }
+     ])
     .controller('ProcessListController', ['$scope','$resource',
         function($scope, $resource) {
             var Process = $resource('process');
@@ -53,5 +65,7 @@ angular.module('ProcessDesigner', ['ngResource','ui.bootstrap'])
             .when('/process/:processDefinitionKey', {controller: 'ProcessEditController', templateUrl:'../static/ng/views/process-detail.html'})
             .when('/deployment/:processDefinitionKey', {controller: 'DeploymentListController', templateUrl:'../static/ng/views/deployment-list.html'})
             .when('/deployment/:processDefinitionKey/:deploymentId', {controller: 'DeploymentDetailController', templateUrl:'../static/ng/views/deployment-detail.html'})
+            .when('/interaction/:processDefinitionKey/:deploymentId/:interactionId', {controller: 'InteractionDetailController', templateUrl:'../static/ng/views/interaction-detail.html'})
+
             .otherwise({redirectTo:'/'});
     });

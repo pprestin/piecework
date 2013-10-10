@@ -16,6 +16,7 @@
 package piecework.ui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -60,7 +61,10 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
     @Autowired
     private Environment environment;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+//    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -115,6 +119,8 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
                     .assetsUrl(assetsUrl)
                     .user(user)
                     .build();
+
+            ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
 
             final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
             final String modelAsJson = objectMapper.writer().writeValueAsString(t);

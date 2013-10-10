@@ -15,6 +15,8 @@
  */
 package piecework.model;
 
+import piecework.ui.Streamable;
+
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Date;
@@ -25,7 +27,7 @@ import java.util.Date;
  *
  * @author James Renfro
  */
-public class Content implements Serializable {
+public class Content implements Serializable, Streamable {
 
     private final String contentId;
     private final String contentType;
@@ -57,6 +59,10 @@ public class Content implements Serializable {
 
     public String getContentType() {
         return contentType;
+    }
+
+    public String getName() {
+        return filename;
     }
 
     public String getFilename() {

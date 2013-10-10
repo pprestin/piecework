@@ -10,7 +10,10 @@ define([ 'models/base/collection', 'models/design/fields', 'views/form/fields-vi
 		render: function() {
             View.__super__.render.apply(this);
             var sectionId = this.model.get("sectionId");
+            var isHidden = this.model.get("hidden");
             this.$el.attr('id', sectionId);
+            if (isHidden)
+                this.$el.hide();
             var view = this.subview('fieldsView');
             if (!view) {
                 var readonly = this.model.get("readonly");

@@ -74,7 +74,7 @@ public class ValuesService {
                     Content content = contentRepository.findByLocation(file.getLocation());
                     if (content != null) {
                         StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
-                        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
+                        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getName()).toString();
                         return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
                     }
                 }

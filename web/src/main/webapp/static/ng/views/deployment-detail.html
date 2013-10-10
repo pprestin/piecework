@@ -31,7 +31,7 @@
                                    name="processDefinitionFile"
                                    placeholder="Provide a file"
                                    ng-if="deployment.editable">
-                            <a href="" ng-if="!deployment.editable"><i class="icon-cloud-download"></i> <span>{{deployment.engineProcessDefinitionLocation}}</span></a>
+                            <a href="{{process.link}}/deployment/{{deployment.deploymentId}}/resource" ng-if="!deployment.editable"><i class="icon-cloud-download"></i> <span>{{deployment.engineProcessDefinitionResource}}</span></a>
                         </div>
                     </div>
                     <div>
@@ -65,32 +65,7 @@
             <div class="list-group">
                 <div ng-repeat="interaction in deployment.interactions" class="list-group-item">
                     <button ng-if="deployment.editable" type="button" class="close" aria-hidden="true">&times;</button>
-                    <h4>{{interaction.label}} <i class="icon-long-arrow-right"></i> <span class="label label-success" ng-repeat="taskDefinitionKey in interaction.taskDefinitionKeys">{{taskDefinitionKey}}</span></h4>
-
-
-                    <!--div class="list-group-item-heading">
-                        <button type="button" class="close" aria-hidden="true">&times;</button>
-                        <h4>{{interaction.label}}</h4>
-
-                    </div>
-                    <div class="list-group-item-text">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Location</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat="screen in interaction.screens">
-                                    <td>{{screen.title}}</td>
-                                    <td>{{screen.location}}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <span class="label label-success" ng-repeat="taskDefinitionKey in interaction.taskDefinitionKeys">{{taskDefinitionKey}}</span>
-                        <div class="clearfix"></div>
-                    </div-->
+                    <h4><a href="#/interaction/{{process.processDefinitionKey}}/{{deployment.deploymentId}}/{{interaction.id}}">{{interaction.label}}</a> <i class="icon-long-arrow-right"></i> <span class="label label-success" ng-repeat="taskDefinitionKey in interaction.taskDefinitionKeys">{{taskDefinitionKey}}</span></h4>
                 </div>
             </div>
         </div>

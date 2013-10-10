@@ -99,6 +99,13 @@ public class ProcessInstanceService {
         commandExecutor.execute(cancellation);
     }
 
+    public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {
+        if (process == null)
+            throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
+
+        return processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
+    }
+
     public ProcessInstance read(String processDefinitionKey, String processInstanceId, boolean full) throws StatusCodeError {
         Process process = processService.read(processDefinitionKey);
         return read(process, processInstanceId, full);
@@ -318,7 +325,7 @@ public class ProcessInstanceService {
 
     public ProcessInstance reject(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validationService.validate(process, instance, task, template, submission, false);
-        taskService.completeIfTaskExists(process, task, submission.getAction(), validation);
+        taskService.completeIfTaskExists(process, instance, task, submission.getAction(), validation);
         return store(process, submission, validation, instance, false);
     }
 
@@ -329,7 +336,7 @@ public class ProcessInstanceService {
 
     public ProcessInstance submit(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
         FormValidation validation = validationService.validate(process, instance, task, template, submission, true);
-        taskService.completeIfTaskExists(process, task, submission.getAction(), validation);
+        taskService.completeIfTaskExists(process, instance, task, submission.getAction(), validation);
         return store(process, submission, validation, instance, false);
     }
 

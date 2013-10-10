@@ -65,6 +65,10 @@ public class FormRequest {
 
     private final Map<String, List<Message>> messages;
 
+    private final String referrer;
+
+    private final String userAgent;
+
     @Transient
     private final ProcessInstance instance;
 
@@ -92,6 +96,8 @@ public class FormRequest {
         this.acceptableMediaTypes = Collections.unmodifiableList(builder.acceptableMediaTypes);
         this.messages = Collections.unmodifiableMap(builder.messages);
         this.instance = builder.instance;
+        this.referrer = builder.referrer;
+        this.userAgent = builder.userAgent;
         this.task = builder.task;
     }
 
@@ -151,6 +157,10 @@ public class FormRequest {
         return acceptableMediaTypes;
     }
 
+    public String getReferrer() {
+        return referrer;
+    }
+
     public Map<String, List<Message>> getMessages() {
         return messages;
     }
@@ -182,6 +192,8 @@ public class FormRequest {
         private String contentType;
         private List<String> acceptableMediaTypes;
         private ManyMap<String, Message> messages;
+        private String referrer;
+        private String userAgent;
 
         public Builder() {
             super();
@@ -205,6 +217,8 @@ public class FormRequest {
             this.contentType = sanitizer.sanitize(request.contentType);
             this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
             this.messages = new ManyMap<String, Message>(request.getMessages());
+            this.referrer = sanitizer.sanitize(request.referrer);
+            this.userAgent = sanitizer.sanitize(request.userAgent);
         }
 
         public FormRequest build() {
@@ -301,6 +315,16 @@ public class FormRequest {
             this.task = task;
             if (task != null)
                 this.taskId = task.getTaskInstanceId();
+            return this;
+        }
+
+        public Builder referrer(String referrer) {
+            this.referrer = referrer;
+            return this;
+        }
+
+        public Builder userAgent(String userAgent) {
+            this.userAgent = userAgent;
             return this;
         }
     }

@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import piecework.exception.NotFoundError;
 import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -68,6 +69,22 @@ public class ProcessInstanceUtility {
 
         return processInstanceLabel;
     }
+
+//    public static Task task(ProcessInstance instance, String taskId) {
+//        if (instance != null && StringUtils.isNotEmpty(taskId)) {
+//            if (instance != null) {
+//                Set<Task> tasks = instance.getTasks();
+//                if (tasks != null) {
+//                    for (Task task : tasks) {
+//                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId))
+//                            return task;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return null;
+//    }
 
     private static void scopes(Map<String, Value> scopes, Map<String, List<Value>> data) {
         if (data != null) {

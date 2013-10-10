@@ -21,11 +21,14 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.CommandExecutor;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.command.InstanceStateCommand;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.OperationType;
 import piecework.handler.SubmissionHandler;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
@@ -60,7 +63,7 @@ public class FormService {
     private static final Logger LOG = Logger.getLogger(FormService.class);
 
     @Autowired
-    ProcessEngineFacade facade;
+    CommandExecutor commandExecutor;
 
     @Autowired
     IdentityHelper helper;
@@ -96,38 +99,41 @@ public class FormService {
     Versions versions;
 
 
-    public Response delete(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
-        String requestId = sanitizer.sanitize(rawRequestId);
-
-        if (StringUtils.isEmpty(requestId))
-            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-
-        String taskId;
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
-        try {
-            FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-            taskId = formRequest.getTaskId();
-        } catch (NotFoundError e) {
-            taskId = requestId;
-        }
-
-        if (StringUtils.isEmpty(taskId))
-            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
-
-        IdentityDetails user = helper.getAuthenticatedPrincipal();
-        String participantId = user != null ? user.getInternalId() : null;
-
-        try {
-            Task task = taskService.allowedTask(process, taskId, true);
-            ProcessInstance processInstance = processInstanceService.read(process, task.getProcessInstanceId(), false);
-            facade.cancel(process, processInstance);
-
-        } catch (ProcessEngineException e) {
-            LOG.error("Could not delete task", e);
-        }
-
-        return Response.noContent().build();
-    }
+//    public Response delete(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+//        String requestId = sanitizer.sanitize(rawRequestId);
+//
+//        if (StringUtils.isEmpty(requestId))
+//            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+//
+//        ProcessInstance instance = null;
+//        Task task = null;
+//        String taskId;
+//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
+//        try {
+//            FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//            taskId = formRequest.getTaskId();
+//            instance = formRequest.getInstance();
+//            task = formRequest.getTask();
+//        } catch (NotFoundError e) {
+//            taskId = requestId;
+//        }
+//
+//        if (StringUtils.isEmpty(taskId))
+//            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
+//
+//        IdentityDetails user = helper.getAuthenticatedPrincipal();
+//        String participantId = user != null ? user.getInternalId() : null;
+//
+//        if (task == null)
+//            task = taskService.allowedTask(process, taskId, true);
+//        if (instance == null)
+//            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
+//
+//        InstanceStateCommand cancellation = new InstanceStateCommand(process, instance, OperationType.CANCELLATION);
+//        commandExecutor.execute(cancellation);
+//
+//        return Response.noContent().build();
+//    }
 
     public Response startForm(MessageContext context, Process process) throws StatusCodeError {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
@@ -174,18 +180,14 @@ public class FormService {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 
-        FormRequest formRequest = null;
+        // Assume that we've been provided with a form request identifier
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
 
-//        if (!isSubmissionResource)
-//            formRequest = requestHandler.create(requestDetails, process, requestId, null);
-//        else
-//            formRequest = requestHandler.handle(requestDetails, requestId);
-
-        try {
+        // But if it's null, then try to create a new form request -- this will assume that the requestId
+        // is a taskId, and check to make sure that the user is authorized to create form requests for
+        // that task
+        if (formRequest == null)
             formRequest = requestHandler.create(requestDetails, process, requestId, null);
-        } catch (NotFoundError e) {
-            formRequest = requestHandler.handle(requestDetails, requestId);
-        }
 
         if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
             throw new BadRequestError();
@@ -241,6 +243,11 @@ public class FormService {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        if (formRequest == null) {
+            LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        }
+
         Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
@@ -263,6 +270,10 @@ public class FormService {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        if (formRequest == null) {
+            LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        }
 
         Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         String processInstanceId = null;
@@ -341,6 +352,11 @@ public class FormService {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        if (formRequest == null) {
+            LOG.error("Forbidden: Attempting to validate a form for a request id that doesn't exist");
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        }
+
         Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 

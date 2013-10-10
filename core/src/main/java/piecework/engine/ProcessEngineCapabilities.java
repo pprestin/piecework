@@ -17,25 +17,25 @@ import java.util.Map;
  */
 public interface ProcessEngineCapabilities {
 
-    String start(Process process, ProcessInstance instance) throws ProcessEngineException;
+    String start(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException;
 
-    boolean activate(Process process, ProcessInstance instance) throws ProcessEngineException;
+    boolean activate(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException;
 
-    boolean assign(Process process, String taskId, User user) throws ProcessEngineException;
+    boolean assign(Process process, ProcessDeployment deployment, String taskId, User user) throws ProcessEngineException;
 
-    boolean cancel(Process process, ProcessInstance instance) throws ProcessEngineException;
+    boolean cancel(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException;
 
-    boolean suspend(Process process, ProcessInstance instance) throws ProcessEngineException;
+    boolean suspend(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException;
 
     ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException;
 
     ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException;
 
-    Task findTask(TaskCriteria ... criterias) throws ProcessEngineException;
+    Task findTask(Process process, ProcessDeployment deployment, String taskId, boolean limitToActive) throws ProcessEngineException;
 
     TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException;
 
-    boolean completeTask(Process process, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException;
+    boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException;
 
     ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
 
