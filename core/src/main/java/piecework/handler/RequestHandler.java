@@ -199,7 +199,7 @@ public class RequestHandler {
                 throw new ForbiddenError();
             }
 
-            if (task.getAssigneeId() == null || !task.getAssigneeId().equals(currentUser.getUserId())) {
+            if (task != null && (task.getAssigneeId() == null || !task.getAssigneeId().equals(currentUser.getUserId()))) {
                 // If the user is not the assignee then she or he needs to be a candidate assignee
                 Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
                 if (candidateAssigneeIds == null || !candidateAssigneeIds.contains(currentUser.getUserId())) {

@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import piecework.CommandExecutor;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.authorization.AuthorizationRole;
 import piecework.command.InstanceStateCommand;
 import piecework.common.RequestDetails;
 import piecework.engine.ProcessEngineFacade;
@@ -205,11 +206,10 @@ public class FormService {
                 .link(viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME))
                 .parameters(results.getParameters());
 
-        List<?> definitions = results.getDefinitions();
+        Set<Process> definitions = helper.findProcesses(AuthorizationRole.INITIATOR);
         if (definitions != null) {
-            for (Object definition : definitions) {
-                Process allowedProcess = Process.class.cast(definition);
-                resultsBuilder.definition(new Form.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(allowedProcess.getProcessDefinitionKey()).processDefinitionLabel(allowedProcess.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
+            for (Process definition : definitions) {
+                resultsBuilder.definition(new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
             }
         }
 

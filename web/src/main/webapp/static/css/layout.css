@@ -145,6 +145,11 @@ ul.tasks li {
     padding: 15px 15px 5px 15px;
 }
 
+div.crumbs {
+    margin: 0px;
+    padding: 0px;
+}
+
 div.screen-footer {
     padding: 20px 0px 0px;
     height: 30px;

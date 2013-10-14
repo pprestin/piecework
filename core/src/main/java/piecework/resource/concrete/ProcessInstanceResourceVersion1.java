@@ -137,8 +137,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
         Submission submission = submissionHandler.handle(process, template, formData);
 
-        attachmentService.attach(process, instance, task, template, submission);
-        return Response.noContent().build();
+        ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
+
+        SearchResults searchResults = attachmentService.search(process, persisted, new AttachmentQueryParameters());
+        return Response.ok(searchResults).build();
     }
 
     @Override
@@ -153,8 +155,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
         Submission submission = submissionHandler.handle(process, template, body);
 
-        attachmentService.attach(process, instance, task, template, submission);
-        return Response.noContent().build();
+        ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
+
+        SearchResults searchResults = attachmentService.search(process, persisted, new AttachmentQueryParameters());
+        return Response.ok(searchResults).build();
     }
 
     @Override

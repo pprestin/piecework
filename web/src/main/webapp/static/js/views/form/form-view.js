@@ -83,10 +83,6 @@ define([ 'chaplin',
             var grouping = groupings != undefined && groupings.length > groupingIndex ? groupings[groupingIndex] : { sectionIds : []};
             var screenType = screen.type;
             var sectionList = screen.sections;
-            var isStaged = screenType != null && screenType == 'staged';
-
-            if (isStaged)
-                this.$el.addClass('staged');
 
             if (sectionList != undefined && sectionList.length > 0) {
                 var sectionMap = {};
@@ -120,10 +116,6 @@ define([ 'chaplin',
                             }
                         }
                     }
-
-//                    if (isStaged && i < numberOfSections) {
-//                        section.hidden = true;
-//                    }
                 }
             }
 
@@ -219,7 +211,15 @@ define([ 'chaplin',
             });
 	    },
 	    _onAddedToDOM: function(event) {
+	        var screen = this.model.get("screen");
+	        var screenType = screen.type;
+            var isStaged = screenType != null && screenType == 'staged';
 
+            if (isStaged) {
+              this.$el.addClass('staged');
+              this.$el.find(".crumbs").addClass("col-lg-3");
+              this.$el.find(".screen").addClass("col-lg-9");
+            }
 	    },
 	    _onLoaded: function(event) {
             Chaplin.mediator.publish('formAddedToDOM');

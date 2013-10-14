@@ -16,6 +16,7 @@
 package piecework;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -25,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.persistence.AttachmentRepository;
 import piecework.process.AttachmentQueryParameters;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ValidationService;
@@ -39,9 +41,7 @@ import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.StreamingAttachmentContent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -50,6 +50,11 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  */
 @Service
 public class AttachmentService {
+
+    private static final Logger LOG = Logger.getLogger(AttachmentService.class);
+
+    @Autowired
+    AttachmentRepository attachmentRepository;
 
     @Autowired
     ContentRepository contentRepository;
@@ -133,6 +138,21 @@ public class AttachmentService {
         int count = 0;
         Map<String, User> userMap = new HashMap<String, User>();
         Set<Attachment> storedAttachments = processInstance.getAttachments();
+        Set<String> attachmentIds = processInstance.getAttachmentIds();
+        if ((attachmentIds != null || !attachmentIds.isEmpty()) && (storedAttachments == null || storedAttachments.isEmpty())) {
+            storedAttachments = new TreeSet<Attachment>();
+            if (attachmentIds != null && !attachmentIds.isEmpty()) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Retrieving all attachments for instance " + processInstance.getProcessInstanceId());
+
+                Iterable<Attachment> attachments = attachmentRepository.findAll(attachmentIds);
+
+                for (Attachment attachment : attachments) {
+                    storedAttachments.add(new Attachment.Builder(attachment).build(versions.getVersion1()));
+                }
+            }
+        }
+
         if (storedAttachments != null && !storedAttachments.isEmpty()) {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
             for (Attachment storedAttachment : storedAttachments) {

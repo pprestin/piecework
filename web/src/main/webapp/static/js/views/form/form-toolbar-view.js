@@ -77,11 +77,10 @@ define([ 'backbone', 'chaplin', 'models/notification', 'views/base/view', 'views
                     type: 'POST',
                     url: url,
                     data: data,
-                    success: function(data, textStatus, jqXHR) {
-                        $('#assign-dialog').modal('hide');
-                        window.location.reload();
-                    },
                     contentType: "application/json"
+                }).done(function(data, textStatus, jqXHR) {
+                    $('#assign-dialog').modal('hide');
+                    window.location.reload();
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                      var explanation = $.parseJSON(jqXHR.responseText);
                      var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
@@ -243,11 +242,11 @@ define([ 'backbone', 'chaplin', 'models/notification', 'views/base/view', 'views
                 data : data,
                 processData : false,
                 contentType : false,
-                type : 'POST',
-                success : function() {
-                    Chaplin.mediator.publish('refreshAttachments');
-                    $('#comment-dialog').modal('hide');
-                }
+                type : 'POST'
+            }).done(function(data) {
+                Chaplin.mediator.publish('refreshAttachments');
+                Chaplin.mediator.publish('attachmentCountChanged', data.list.length);
+                $('#comment-dialog').modal('hide');
             }).fail(function() {
 
             });

@@ -109,11 +109,10 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
                     type: 'POST',
                     url: url,
                     data: data,
-                    success: function(data, textStatus, jqXHR) {
-                        $('#assign-dialog').modal('hide');
-                        Chaplin.mediator.publish("search", {processStatus:"open"});
-                    },
                     contentType: "application/json"
+                }).done(function(data, textStatus, jqXHR) {
+                   $('#assign-dialog').modal('hide');
+                   Chaplin.mediator.publish("search", {processStatus:"open"});
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                      var explanation = $.parseJSON(jqXHR.responseText);
                      var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
@@ -175,11 +174,10 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
             $.ajax({
                 url : url,
                 contentType : 'application/json',
-                type : 'GET',
-                success : function(data, textStatus, jqXHR) {
-                    var history = new History(data);
-                    toolbar.subview('historyView', new HistoryView({model: history}));
-                }
+                type : 'GET'
+            }).done(function(data, textStatus, jqXHR) {
+                var history = new History(data);
+                toolbar.subview('historyView', new HistoryView({model: history}));
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 var explanation = $.parseJSON(jqXHR.responseText);
                 var notification = new Notification({title: explanation.message, message: explanation.messageDetail, permanent: true})
@@ -223,21 +221,6 @@ define([ 'backbone', 'chaplin', 'models/history', 'models/notification', 'models
 	    },
 	    _onSearched: function(data) {
 	        $('#instanceSearchButton').button('reset');
-
-//            var processDefinitionKey = null;
-//            var processStatus = 'open';
-//
-//            if (data.parameters != null && data.parameters.processStatus != null)
-//                processStatus = data.processStatus[0];
-//
-//            $('[name="processStatus"]').val(processStatus);
-//            $('.status-filter-container').find('.dropdown-toggle-text').text($('[name="processStatus"]').find(':selected').label);
-//
-//            if (data.parameters != null && data.parameters.processDefinitionKey != null)
-//                processDefinitionKey = data.processDefinitionKey[0];
-//
-//            $('[name="processDefinitionKey"]').val(processDefinitionKey);
-
 	    },
 	    _onShowAssignDialog: function() {
 	        var url = this.model.get("link");
