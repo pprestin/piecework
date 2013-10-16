@@ -15,6 +15,7 @@
  */
 package piecework.service;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.CommandExecutor;
@@ -24,6 +25,8 @@ import piecework.authorization.AuthorizationRole;
 import piecework.command.DeploymentCommand;
 import piecework.command.PublicationCommand;
 import piecework.engine.ProcessDeploymentResource;
+import piecework.engine.ProcessEngineFacade;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.model.*;
@@ -32,9 +35,11 @@ import piecework.persistence.*;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.ui.Streamable;
 import piecework.util.ProcessUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -43,11 +48,16 @@ import java.util.*;
 @Service
 public class ProcessService {
 
+    private static final Logger LOG = Logger.getLogger(ProcessService.class);
+
     @Autowired
     CommandExecutor commandExecutor;
 
     @Autowired
     DeploymentRepository deploymentRepository;
+
+    @Autowired
+    ProcessEngineFacade facade;
 
     @Autowired
     IdentityHelper helper;
@@ -201,6 +211,27 @@ public class ProcessService {
 
         return new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true)
                 .build();
+    }
+
+    public Streamable getDiagram(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+
+        ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
+        if (selectedDeploymentVersion == null)
+            throw new NotFoundError();
+
+        ProcessDeployment deployment = deploymentRepository.findOne(deploymentId);
+        if (deployment == null)
+            throw new NotFoundError();
+
+        try {
+            ProcessDeploymentResource resource = facade.resource(process, deployment, "image/png");
+            return resource;
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not generate diagram", e);
+            throw new InternalServerError(e);
+        }
     }
 
     public ProcessDeploymentResource getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {

@@ -257,6 +257,14 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
         return proxy.deploy(process, deployment, content);
     }
 
+    @Override
+    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
+        if (proxy == null)
+            throw new ProcessEngineException("Not found");
+        return proxy.resource(process, deployment, contentType);
+    }
+
     private ProcessDeployment processDeployment(Process process) throws ProcessEngineException {
         ProcessDeployment deployment = process.getDeployment();
         if (deployment == null)

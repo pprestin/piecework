@@ -15,8 +15,10 @@
  */
 package piecework.engine.activiti;
 
+import java.io.InputStream;
 import java.util.*;
 
+import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
@@ -441,6 +443,15 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         resultsBuilder.total(size);
 
         return resultsBuilder.build();
+    }
+
+    @Override
+    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
+        InputStream inputStream = processEngine.getRepositoryService().getProcessDiagram(deployment.getEngineProcessDefinitionId());
+
+        //BpmnModel model = processEngine.getRepositoryService().getBpmnModel(deployment.getEngineProcessDefinitionId());
+
+        return new ProcessDeploymentResource.Builder().name("").inputStream(inputStream).contentType("image/png").build();
     }
 
     private Task convert(org.activiti.engine.task.Task instance, Process process, boolean includeDetails) {

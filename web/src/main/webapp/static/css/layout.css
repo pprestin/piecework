@@ -348,6 +348,13 @@ select.form-control {
     font-size: 90%;
 }
 
+.pw-sidebar .nav .nav .nav > li > a {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 70px;
+    font-size: 90%;
+}
+
 .pw-sidebar .nav > .active > a,
 .pw-sidebar .nav > .active:hover > a,
 .pw-sidebar .nav > .active:focus > a {

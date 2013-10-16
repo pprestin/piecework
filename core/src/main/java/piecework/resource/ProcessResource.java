@@ -16,12 +16,7 @@
 package piecework.resource;
 
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -112,6 +107,12 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response getDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/diagram")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    @Produces({"image/png"})
+    Response getDiagram(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
     @GET
     @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
