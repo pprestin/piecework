@@ -113,7 +113,7 @@ public class Demonstration implements TaskListener {
         try {
             processService.read(process.getProcessDefinitionKey());
             processService.updateAndPublishDeployment(process, deployment, resource);
-        } catch (NotFoundError e) {
+        } catch (Exception e) {
             processService.create(process);
             processService.createAndPublishDeployment(process, deployment, resource);
         }
