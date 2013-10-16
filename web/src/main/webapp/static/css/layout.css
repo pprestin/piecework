@@ -187,6 +187,10 @@ input.form-control {
     width: auto;
 }
 
+.interaction-screen {
+
+}
+
 select.form-control {
     width: auto;
 }
@@ -306,6 +310,51 @@ select.form-control {
 
 .navbar-ex1-collapse .row .navbar-form {
     margin: 0px;
+}
+
+.pw-header {
+    padding-left: 10px;
+    padding-bottom: 30px;
+}
+
+.pw-sidenav {
+    margin-top: 0px;
+    margin-bottom: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-shadow: 0 1px 0 #fff;
+    background-color: #f7f5fa;
+    border-radius: 5px;
+}
+
+.pw-sidebar li.lead {
+    padding-left: 10px;
+}
+
+.pw-sidebar .nav > li > a {
+    display: block;
+    color: #716b7a;
+    padding: 5px 20px;
+}
+
+.pw-sidebar .nav > .active > ul {
+    display: block;
+}
+
+.pw-sidebar .nav .nav > li > a {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 40px;
+    font-size: 90%;
+}
+
+.pw-sidebar .nav > .active > a,
+.pw-sidebar .nav > .active:hover > a,
+.pw-sidebar .nav > .active:focus > a {
+    font-weight: bold;
+    color: #563d7c;
+    background-color: transparent;
+    border-right: 1px solid #563d7c;
 }
 
 .toolbar-items .nav.btn-group .dropdown span {

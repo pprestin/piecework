@@ -24,6 +24,7 @@ import piecework.authorization.AuthorizationRole;
 import piecework.command.DeploymentCommand;
 import piecework.command.PublicationCommand;
 import piecework.engine.ProcessDeploymentResource;
+import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -215,10 +216,36 @@ public class ProcessService {
         String interactionId = sanitizer.sanitize(rawInteractionId);
 
         List<Interaction> interactions = deployment.getInteractions();
+        Map<String, Section> sectionMap = deployment.getSectionMap();
         if (interactions != null) {
             for (Interaction interaction : interactions) {
-                if (interaction != null && interaction.getId() != null && interaction.getId().equals(interactionId))
-                    return interaction;
+                if (interaction != null && interaction.getId() != null && interaction.getId().equals(interactionId)) {
+                    Map<ActionType, Screen> screenMap = interaction.getScreens();
+
+                    if (screenMap == null)
+                        continue;
+
+                    Interaction.Builder builder = new Interaction.Builder(interaction, new PassthroughSanitizer());
+                    for (Map.Entry<ActionType, Screen> entry : screenMap.entrySet()) {
+                        Screen screen = entry.getValue();
+                        Screen.Builder screenBuilder = new Screen.Builder(screen, new PassthroughSanitizer());
+                        List<Grouping> groupings = screen.getGroupings();
+
+                        if (groupings != null) {
+                            for (Grouping grouping : groupings) {
+                                List<String> sectionIds = grouping.getSectionIds();
+                                if (sectionIds != null) {
+                                    for (String sectionId : sectionIds) {
+                                        screenBuilder.section(sectionMap.get(sectionId));
+                                    }
+                                }
+                            }
+                        }
+
+                        builder.screen(entry.getKey(), screenBuilder.build(versions.getVersion1()));
+                    }
+                    return builder.build(versions.getVersion1());
+                }
             }
         }
 
@@ -371,11 +398,12 @@ public class ProcessService {
         if (deployment.getInteractions() != null && !deployment.getInteractions().isEmpty()) {
             for (Interaction interaction : deployment.getInteractions()) {
                 Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
-                interactionBuilder.screens(null);
-                if (interaction.getScreens() != null && !interaction.getScreens().isEmpty()) {
-                    for (Screen screen : interaction.getScreens()) {
-                        Screen persistedScreen = screenRepository.save(screen);
-                        interactionBuilder.screen(persistedScreen);
+
+                Map<ActionType, Screen> screens = interaction.getScreens();
+                if (screens != null && !screens.isEmpty()) {
+                    for (Map.Entry<ActionType, Screen> entry : screens.entrySet()) {
+                        Screen persistedScreen = screenRepository.save(entry.getValue());
+                        interactionBuilder.screen(entry.getKey(), persistedScreen);
                     }
                 }
                 Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());

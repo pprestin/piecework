@@ -22,9 +22,12 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
+import piecework.enumeration.ActionType;
+import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.Serializable;
 import java.util.*;
 
@@ -57,11 +60,13 @@ public class Interaction implements Serializable {
 
     @XmlElement
     private final String completionStatus;
-	
-	@XmlElementWrapper(name="screens")
-	@XmlElementRef
-	@DBRef
-	private final List<Screen> screens;
+
+    private final Map<ActionType, Screen> screens;
+
+//	@XmlElementWrapper(name="screens")
+//	@XmlElementRef
+//	@DBRef
+//	private final List<Screen> screens;
 
     @XmlElementWrapper(name="taskDefinitionKeys")
     private final Set<String> taskDefinitionKeys;
@@ -88,7 +93,7 @@ public class Interaction implements Serializable {
 		this.label = builder.label;
         this.completionStatus = builder.completionStatus;
 		this.link = context != null ? context.getApplicationUri(builder.processDefinitionKey, builder.id) : null;
-		this.screens = Collections.unmodifiableList(builder.screens);
+        this.screens = Collections.unmodifiableMap(builder.screens);
         this.taskDefinitionKeys = (Set<String>) (builder.taskDefinitionKeys != null ? Collections.unmodifiableSet(builder.taskDefinitionKeys) : Collections.emptySet());
 		this.candidates = (List<Candidate>) (builder.candidates != null ? Collections.unmodifiableList(builder.candidates) : Collections.emptyList());
         this.ordinal = builder.ordinal;
@@ -107,9 +112,9 @@ public class Interaction implements Serializable {
 		return label;
 	}
 
-	public List<Screen> getScreens() {
-		return screens;
-	}
+    public Map<ActionType, Screen> getScreens() {
+        return screens;
+    }
 
     public Set<String> getTaskDefinitionKeys() {
         return taskDefinitionKeys;
@@ -141,7 +146,7 @@ public class Interaction implements Serializable {
 		private String processDefinitionKey;
 		private String id;
 		private String label;
-		private List<Screen> screens;
+        private Map<ActionType, Screen> screens;
         private Set<String> taskDefinitionKeys;
         private String completionStatus;
         private List<Candidate> candidates;
@@ -150,7 +155,7 @@ public class Interaction implements Serializable {
 		
 		public Builder() {
 			super();
-            this.screens = new ArrayList<Screen>();
+            this.screens = new HashMap<ActionType, Screen>();
 		}
 
 		public Builder(Interaction interaction, Sanitizer sanitizer) {
@@ -158,13 +163,10 @@ public class Interaction implements Serializable {
 			this.label = sanitizer.sanitize(interaction.label);
 			this.processDefinitionKey = sanitizer.sanitize(interaction.processDefinitionKey);
 			this.completionStatus = sanitizer.sanitize(interaction.completionStatus);
-			if (interaction.screens != null && !interaction.screens.isEmpty()) {
-				this.screens = new ArrayList<Screen>(interaction.screens.size());
-				for (Screen screen : interaction.screens) {
-					this.screens.add(new Screen.Builder(screen, sanitizer).processDefinitionKey(processDefinitionKey).build());
-				}
-			}  else {
-                this.screens = new ArrayList<Screen>();
+            if (interaction.screens != null && !interaction.screens.isEmpty()) {
+				this.screens = new HashMap<ActionType, Screen>(interaction.screens);
+			} else {
+                this.screens = new HashMap<ActionType, Screen>();
             }
             if (interaction.taskDefinitionKeys != null && !interaction.taskDefinitionKeys.isEmpty()) {
                 this.taskDefinitionKeys = new HashSet<String>(interaction.taskDefinitionKeys.size());
@@ -220,16 +222,14 @@ public class Interaction implements Serializable {
             this.completionStatus = completionStatus;
             return this;
         }
-		
-		public Builder screen(Screen screen) {
-			if (this.screens == null)
-				this.screens = new ArrayList<Screen>();
-			this.screens.add(screen);
-			return this;
-		}
-		
-		public Builder screens(List<Screen> screens) {
-			this.screens = screens;
+
+        public Builder screen(Screen screen) {
+            this.screens.put(ActionType.CREATE, screen);
+            return this;
+        }
+
+		public Builder screen(ActionType actionType, Screen screen) {
+			this.screens.put(actionType, screen);
 			return this;
 		}
 
@@ -255,18 +255,10 @@ public class Interaction implements Serializable {
 			return this;
 		}
 
-		public List<Screen> getScreens() {
-			return screens;
-		}
-
 		public String getId() {
 			return id;
 		}
 
-        public Builder clearScreens() {
-            this.screens = new ArrayList<Screen>();
-            return this;
-        }
 	}
 	
 	public static class Constants {

@@ -15,15 +15,12 @@
  */
 package piecework.handler;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.identity.IdentityHelper;
 import piecework.util.ConstraintUtil;
 
 import java.util.Iterator;
@@ -58,35 +55,39 @@ public class ScreenHandler {
     }
 
     private Screen firstScreen(Interaction interaction) throws InternalServerError {
-        if (interaction == null ||  interaction.getScreens() == null || interaction.getScreens().isEmpty())
+        if (interaction == null ||  interaction.getScreens() == null || !interaction.getScreens().containsKey(ActionType.CREATE))
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-        return interaction.getScreens().iterator().next();
+        return interaction.getScreens().get(ActionType.CREATE);
     }
 
     private Screen nextScreen(Process process, Interaction interaction, Screen currentScreen, ActionType action) throws InternalServerError {
         if (interaction != null && interaction.getScreens().isEmpty())
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-        Screen nextScreen = null;
-        Iterator<Screen> screenIterator = interaction.getScreens().iterator();
+        Screen nextScreen = interaction.getScreens().get(action);
 
-        boolean isFound = false;
-        while (screenIterator.hasNext() && nextScreen == null) {
-            Screen cursor = screenIterator.next();
+        if (nextScreen == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-            if (currentScreen == null) {
-                currentScreen = cursor;
-                isFound = true;
-            }
-
-            if (isFound) {
-                // Once we've reached the current screen then we can start looking for the next screen
-                if (satisfiesScreenConstraints(cursor, action))
-                    nextScreen = cursor;
-            } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
-                isFound = true;
-        }
+//        Iterator<Screen> screenIterator = interaction.getScreens().iterator();
+//
+//        boolean isFound = false;
+//        while (screenIterator.hasNext() && nextScreen == null) {
+//            Screen cursor = screenIterator.next();
+//
+//            if (currentScreen == null) {
+//                currentScreen = cursor;
+//                isFound = true;
+//            }
+//
+//            if (isFound) {
+//                // Once we've reached the current screen then we can start looking for the next screen
+//                if (satisfiesScreenConstraints(cursor, action))
+//                    nextScreen = cursor;
+//            } else if (cursor.getScreenId().equals(currentScreen.getScreenId()))
+//                isFound = true;
+//        }
 
         return nextScreen;
     }

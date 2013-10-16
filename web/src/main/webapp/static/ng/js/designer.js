@@ -1,16 +1,24 @@
 'use strict';
 
-angular.module('ProcessDesigner', ['ngResource','ui.bootstrap'])
+angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap'])
     .controller('DeploymentDetailController', ['$scope','$resource','$routeParams',
         function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
-            $scope.deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId});
+            Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId}, function(data) {
+                /*for (var i=0;i<data.sections.length;i++) {
+                    if (data.sections[i].title == null)
+                        data.sections[i].title = 'Untitled';
+                }*/
+                $scope.deployment = data;
+            });
             var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
             $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
 
             $scope.updateDeployment = function() {
                 $scope.deployment.$save();
             };
+
+
         }
     ])
     .controller('DeploymentListController', ['$scope','$resource','$routeParams',
@@ -25,14 +33,30 @@ angular.module('ProcessDesigner', ['ngResource','ui.bootstrap'])
     ])
     .controller('InteractionDetailController', ['$scope','$resource','$routeParams',
          function($scope, $resource, $routeParams) {
-             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
-             $scope.deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId});
+            var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
+            $scope.deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId});
 
-             var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
-             $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
+            var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
+            $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
 
-             var Interaction = $resource('process/:processDefinitionKey/deployment/:deploymentId/interaction/:interactionId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId',interactionId:'@interactionId'})
-             $scope.interaction = Interaction.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId, interactionId:$routeParams.interactionId})
+            var Interaction = $resource('process/:processDefinitionKey/deployment/:deploymentId/interaction/:interactionId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId',interactionId:'@interactionId'})
+            Interaction.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId, interactionId:$routeParams.interactionId}, function(interaction) {
+
+                if (interaction.screens != null) {
+                    var createScreen = interaction.screens['CREATE'];
+                    if (createScreen != null)
+                        createScreen.cssClass='active';
+                }
+
+                $scope.interaction = interaction;
+            })
+
+            $scope.onSelectScreen = function(selected, screens) {
+                angular.forEach(screens, function(screen, action) {
+                    screen.cssClass = 'inactive';
+                });
+                selected.cssClass='active';
+            }
          }
      ])
     .controller('ProcessListController', ['$scope','$resource',
@@ -68,4 +92,22 @@ angular.module('ProcessDesigner', ['ngResource','ui.bootstrap'])
             .when('/interaction/:processDefinitionKey/:deploymentId/:interactionId', {controller: 'InteractionDetailController', templateUrl:'../static/ng/views/interaction-detail.html'})
 
             .otherwise({redirectTo:'/'});
+    })
+    .filter('orderActionType', function() {
+        return function(input, attribute) {
+            if (!angular.isObject(input)) return input;
+
+            var keys = ['CREATE','COMPLETE','REJECT'];
+            var array = [];
+            for(var i=0;i<keys.length;i++) {
+                var action = keys[i];
+                var screen = input[action];
+                if (screen != null) {
+                    screen.action = action;
+                    array.push(screen);
+                }
+            }
+
+            return array;
+        }
     });
