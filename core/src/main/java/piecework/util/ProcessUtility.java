@@ -15,11 +15,14 @@
  */
 package piecework.util;
 
+import piecework.common.ViewContext;
+import piecework.enumeration.ActionType;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessDeployment;
-import piecework.model.ProcessDeploymentVersion;
+import piecework.security.concrete.PassthroughSanitizer;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -33,6 +36,37 @@ public class ProcessUtility {
             if (deploymentVersion.getDeploymentId().equals(deploymentId)) {
                 return deploymentVersion;
             }
+        }
+        return null;
+    }
+
+    public static Interaction interaction(Interaction interaction, Map<String, Section> sectionMap, ViewContext context) {
+        if (interaction != null && interaction.getId() != null) {
+            Map<ActionType, Screen> screenMap = interaction.getScreens();
+
+            if (screenMap == null)
+                return interaction;
+
+            Interaction.Builder builder = new Interaction.Builder(interaction, new PassthroughSanitizer());
+            for (Map.Entry<ActionType, Screen> entry : screenMap.entrySet()) {
+                Screen screen = entry.getValue();
+                Screen.Builder screenBuilder = new Screen.Builder(screen, new PassthroughSanitizer());
+                List<Grouping> groupings = screen.getGroupings();
+
+                if (groupings != null) {
+                    for (Grouping grouping : groupings) {
+                        List<String> sectionIds = grouping.getSectionIds();
+                        if (sectionIds != null) {
+                            for (String sectionId : sectionIds) {
+                                screenBuilder.section(sectionMap.get(sectionId));
+                            }
+                        }
+                    }
+                }
+
+                builder.screen(entry.getKey(), screenBuilder.build(context));
+            }
+            return builder.build(context);
         }
         return null;
     }

@@ -496,6 +496,13 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
+        public Builder published(boolean published) {
+            this.published = published;
+            this.editable = !published;
+            this.datePublished = null;
+            return this;
+        }
+
         public Builder deploy() {
             this.deployed = true;
             this.dateDeployed = new Date();

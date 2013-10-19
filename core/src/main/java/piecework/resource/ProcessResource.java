@@ -119,5 +119,9 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response getInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId) throws StatusCodeError;
 
+    @DELETE
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response deleteInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId) throws StatusCodeError;
 
 }

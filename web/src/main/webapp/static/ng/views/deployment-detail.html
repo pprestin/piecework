@@ -27,26 +27,29 @@
                     <div class="form-group">
                         <label>BPMN Definition</label>
                         <div class="controls">
+                            <a href="{{process.link}}/deployment/{{deployment.deploymentId}}/resource"><i class="icon-cloud-download"></i> <span>{{deployment.engineProcessDefinitionResource}}</span></a>
+
                             <input class="form-control" type="file"
                                    name="processDefinitionFile"
                                    placeholder="Provide a file"
                                    ng-if="deployment.editable">
-                            <a href="{{process.link}}/deployment/{{deployment.deploymentId}}/resource" ng-if="!deployment.editable"><i class="icon-cloud-download"></i> <span>{{deployment.engineProcessDefinitionResource}}</span></a>
                         </div>
                     </div>
                     <div>
+                        <img src="{{process.link}}/deployment/{{deployment.deploymentId}}/diagram"/>
                     </div>
                 </fieldset>
-                <div class="pull-right" ng-if="deployment.editable">
-                    <button class="btn btn-default" type="submit" role="button">Update</button>
-                    <button class="btn btn-danger" type="button" role="button">Publish</button>
+                <div class="pull-right">
+                    <a href="#/interaction/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" class="btn btn-default" type="submit" role="button">Interactions</a>
+                    <button ng-if="deployment.editable" class="btn btn-default" type="submit" role="button">Update</button>
+                    <button ng-if="deployment.editable" class="btn btn-danger" type="button" role="button">Publish</button>
                 </div>
 
                 <div class="clearfix"></div>
             </form>
         </div>
     </div>
-    <div class="row">
+    <!--div class="row">
         <div class="col-lg-4">
             <div class="panel panel-default">
                 <div class="panel-heading"><span class="lead">Sections</span></div>
@@ -145,27 +148,12 @@
                                         </div>
                                     </div>
                                 </li>
-                                <!--li class="interaction-screen col-sm-12">
-                                    <div class="well">
-                                        <i class="icon-thumbs-up icon-1x"></i>
-                                        <div class="caption">
 
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="interaction-screen col-sm-12">
-                                    <div class="well">
-                                        <i class="icon-thumbs-down icon-1x"></i>
-                                        <div class="caption">
-
-                                        </div>
-                                    </div>
-                                </li-->
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </div-->
 </div>

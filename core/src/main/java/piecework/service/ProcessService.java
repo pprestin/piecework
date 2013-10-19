@@ -15,6 +15,7 @@
  */
 package piecework.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,6 @@ import piecework.ui.Streamable;
 import piecework.util.ProcessUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
-import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -129,7 +129,7 @@ public class ProcessService {
 
         List<ProcessDeploymentVersion> versions = process.getVersions();
         String deploymentVersion = versions != null ? "" + (versions.size() + 1) : "1";
-        ProcessDeployment deployment = cascadeSave(rawDeployment, deploymentVersion);
+        ProcessDeployment deployment = cascadeSave(rawDeployment, deploymentVersion, true);
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         Process updated = new Process.Builder(process, passthroughSanitizer)
@@ -161,7 +161,7 @@ public class ProcessService {
             throw new NotFoundError();
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessDeployment deployment = cascadeSave(original, deploymentVersion);
+        ProcessDeployment deployment = cascadeSave(original, deploymentVersion, true);
 
         Process updated = new Process.Builder(process, passthroughSanitizer)
                 .version(new ProcessDeploymentVersion(deployment))
@@ -209,8 +209,20 @@ public class ProcessService {
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-        return new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true)
-                .build();
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true);
+        builder.clearInteractions();
+
+        List<Interaction> interactions = original.getInteractions();
+        if (interactions != null) {
+            Map<String, Section> sectionMap = original.getSectionMap();
+            for (Interaction interaction : interactions) {
+                Interaction decorated = ProcessUtility.interaction(interaction, sectionMap, versions.getVersion1());
+                if (decorated != null)
+                    builder.interaction(decorated);
+            }
+        }
+
+        return builder.build();
     }
 
     public Streamable getDiagram(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
@@ -251,36 +263,36 @@ public class ProcessService {
         if (interactions != null) {
             for (Interaction interaction : interactions) {
                 if (interaction != null && interaction.getId() != null && interaction.getId().equals(interactionId)) {
-                    Map<ActionType, Screen> screenMap = interaction.getScreens();
-
-                    if (screenMap == null)
-                        continue;
-
-                    Interaction.Builder builder = new Interaction.Builder(interaction, new PassthroughSanitizer());
-                    for (Map.Entry<ActionType, Screen> entry : screenMap.entrySet()) {
-                        Screen screen = entry.getValue();
-                        Screen.Builder screenBuilder = new Screen.Builder(screen, new PassthroughSanitizer());
-                        List<Grouping> groupings = screen.getGroupings();
-
-                        if (groupings != null) {
-                            for (Grouping grouping : groupings) {
-                                List<String> sectionIds = grouping.getSectionIds();
-                                if (sectionIds != null) {
-                                    for (String sectionId : sectionIds) {
-                                        screenBuilder.section(sectionMap.get(sectionId));
-                                    }
-                                }
-                            }
-                        }
-
-                        builder.screen(entry.getKey(), screenBuilder.build(versions.getVersion1()));
-                    }
-                    return builder.build(versions.getVersion1());
+                    return ProcessUtility.interaction(interaction, sectionMap, versions.getVersion1());
                 }
             }
         }
 
         return null;
+    }
+
+    public Interaction deleteInteraction(ProcessDeployment deployment, String rawInteractionId) throws StatusCodeError {
+        String interactionId = sanitizer.sanitize(rawInteractionId);
+
+        ProcessDeployment.Builder updated = new ProcessDeployment.Builder(deployment, null, sanitizer, true);
+        updated.clearInteractions();
+
+        Interaction deleted = null;
+        List<Interaction> interactions = deployment.getInteractions();
+        Map<String, Section> sectionMap = deployment.getSectionMap();
+        if (interactions != null) {
+            for (Interaction interaction : interactions) {
+                if (interaction != null && interaction.getId() != null && !interaction.getId().equals(interactionId)) {
+                    updated.interaction(interaction);
+                } else {
+                    deleted = interaction;
+                }
+            }
+        }
+
+        deploymentRepository.save(updated.build());
+
+        return deleted;
     }
 
     public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws StatusCodeError {
@@ -404,8 +416,10 @@ public class ProcessService {
 
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
 
+        // FIXME -- currently doesn't make any changes
 
-        return deploymentRepository.save(builder.build());
+
+        return cascadeSave(builder.build(), selectedDeploymentVersion.getVersion(), false);
     }
 
     public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource) throws StatusCodeError {
@@ -422,18 +436,61 @@ public class ProcessService {
         return "v1";
     }
 
-    private ProcessDeployment cascadeSave(ProcessDeployment deployment, String deploymentVersion) {
+    private ProcessDeployment cascadeSave(ProcessDeployment deployment, String deploymentVersion, boolean createNew) {
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, null, sanitizer, false)
                 .deploymentVersion(deploymentVersion);
 
+        builder.clearInteractions();
+        builder.clearNotifications();
+        builder.clearSections();
+
+        if (createNew)
+            builder.deploymentId(null);
+        builder.published(false);
+
+        Map<String, String> sectionIdMap = new HashMap<String, String>();
+        if (deployment.getSections() != null && !deployment.getSections().isEmpty()) {
+            for (Section section : deployment.getSections()) {
+                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
+                if (createNew)
+                    sectionBuilder.sectionId(null);
+                Section persistedSection = sectionRepository.save(sectionBuilder.build());
+                builder.section(persistedSection);
+                if (StringUtils.isNotEmpty(section.getSectionId()))
+                    sectionIdMap.put(section.getSectionId(), persistedSection.getSectionId());
+            }
+        }
         if (deployment.getInteractions() != null && !deployment.getInteractions().isEmpty()) {
             for (Interaction interaction : deployment.getInteractions()) {
                 Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
+                if (createNew)
+                    interactionBuilder.id(null);
 
                 Map<ActionType, Screen> screens = interaction.getScreens();
                 if (screens != null && !screens.isEmpty()) {
                     for (Map.Entry<ActionType, Screen> entry : screens.entrySet()) {
-                        Screen persistedScreen = screenRepository.save(entry.getValue());
+                        Screen screen = entry.getValue();
+                        Screen.Builder screenBuilder = new Screen.Builder(screen, sanitizer, false);
+                        if (createNew)
+                            screenBuilder.screenId(null);
+
+                        List<Grouping> groupings = screen.getGroupings();
+                        if (groupings != null) {
+                            for (Grouping grouping : groupings) {
+                                Grouping.Builder groupingBuilder = new Grouping.Builder(grouping, sanitizer, false);
+                                List<String> sectionIds = grouping.getSectionIds();
+                                if (sectionIds != null) {
+                                    for (String sectionId : sectionIds) {
+                                        String persistedSectionId = sectionIdMap.get(sectionId);
+                                        if (StringUtils.isNotEmpty(persistedSectionId))
+                                            groupingBuilder.sectionId(persistedSectionId);
+                                    }
+                                }
+                                screenBuilder.grouping(groupingBuilder.build());
+                            }
+                        }
+
+                        Screen persistedScreen = screenRepository.save(screenBuilder.build());
                         interactionBuilder.screen(entry.getKey(), persistedScreen);
                     }
                 }
@@ -444,17 +501,13 @@ public class ProcessService {
         if (deployment.getNotifications() != null && !deployment.getNotifications().isEmpty()) {
             for (Notification notification : deployment.getNotifications()) {
                 Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
+                if (createNew)
+                    notificationBuilder.notificationId(null);
                 Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
                 builder.notification(persistedNotification);
             }
         }
-        if (deployment.getSections() != null && !deployment.getSections().isEmpty()) {
-            for (Section section : deployment.getSections()) {
-                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
-                Section persistedSection = sectionRepository.save(sectionBuilder.build());
-                builder.section(persistedSection);
-            }
-        }
+
 
         return deploymentRepository.save(builder.build());
     }

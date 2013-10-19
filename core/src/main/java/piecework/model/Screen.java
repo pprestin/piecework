@@ -17,7 +17,6 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -243,41 +242,14 @@ public class Screen implements Serializable {
             this.reviewIndex = screen.reviewIndex;
 			this.ordinal = screen.ordinal;
 
-            if (screen.groupings != null && !screen.groupings.isEmpty()) {
+            if (includeSections && screen.groupings != null && !screen.groupings.isEmpty()) {
                 this.groupings = new ArrayList<Grouping>(screen.groupings.size());
                 for (Grouping grouping : screen.groupings) {
-                    this.groupings.add(new Grouping.Builder(grouping, sanitizer).build());
+                    this.groupings.add(new Grouping.Builder(grouping, sanitizer, true).build());
                 }
             } else {
                 this.groupings = new ArrayList<Grouping>();
             }
-
-//            if (screen.stylesheets != null && !screen.stylesheets.isEmpty()) {
-//                this.stylesheets = new ArrayList<File>(screen.stylesheets.size());
-//                for (File stylesheet : screen.stylesheets) {
-//                    this.stylesheets.add(new File.Builder(stylesheet, sanitizer).build());
-//                }
-//            } else {
-//                this.stylesheets = new ArrayList<File>();
-//            }
-//
-//            if (screen.scripts != null && !screen.scripts.isEmpty()) {
-//                this.scripts = new ArrayList<File>(screen.scripts.size());
-//                for (File script : screen.scripts) {
-//                    this.scripts.add(new File.Builder(script, sanitizer).build());
-//                }
-//            } else {
-//                this.stylesheets = new ArrayList<File>();
-//            }
-
-//            if (screen.constraints != null && !screen.constraints.isEmpty()) {
-//                this.constraints = new ArrayList<Constraint>(screen.constraints.size());
-//                for (Constraint constraint : screen.constraints) {
-//                    this.constraints.add(new Constraint.Builder(constraint, sanitizer).build());
-//                }
-//            } else {
-//                this.constraints = new ArrayList<Constraint>();
-//            }
 
             if (includeSections && screen.sections != null && !screen.sections.isEmpty()) {
                 this.sections = new ArrayList<Section>(screen.sections.size());
@@ -297,7 +269,12 @@ public class Screen implements Serializable {
 		public Screen build(ViewContext context) {
 			return new Screen(this, context);
 		}
-		
+
+        public Builder clearSections() {
+            this.sections = new ArrayList<Section>();
+            return this;
+        }
+
 		public Builder screenId(String screenId) {
 			this.screenId = screenId;
 			return this;

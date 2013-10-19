@@ -155,6 +155,12 @@ div.screen-footer {
     height: 30px;
 }
 
+.breadcrumb {
+    background-color: transparent;
+    padding: 0px;
+    margin-bottom: 20px;
+}
+
 .checkbox-menu-item label {
     font-weight: normal;
 }
@@ -308,13 +314,43 @@ select.form-control {
     color: white;
 }
 
+.navbar h2 {
+    margin-top: 10px;
+}
+
 .navbar-ex1-collapse .row .navbar-form {
     margin: 0px;
+}
+
+.pw-field {
+    border: 1px solid transparent;
+}
+
+.editing .pw-field.editing {
+    background-color: #FFF8DC;
+    border: 1px solid #AAAAAA;
+    padding: 10px;
+}
+
+.pw-field .edit-only {
+    display: none;
+}
+
+.editing .pw-field.editing .edit-only {
+    display: block;
+}
+
+.editing .pw-field.editing .view-only {
+    display: none;
 }
 
 .pw-header {
     padding-left: 10px;
     padding-bottom: 30px;
+}
+
+.pw-interaction-navbar .navbar-right {
+    line-height: 40px;
 }
 
 .pw-sidenav {
@@ -332,6 +368,7 @@ select.form-control {
 }
 
 .pw-sidebar .nav > li > a {
+    cursor: pointer;
     display: block;
     color: #716b7a;
     padding: 5px 20px;
@@ -355,13 +392,33 @@ select.form-control {
     font-size: 90%;
 }
 
+.pw-sidebar .nav .nav .nav .nav > li > a {
+    cursor: default;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 100px;
+    font-size: 90%;
+}
+
 .pw-sidebar .nav > .active > a,
 .pw-sidebar .nav > .active:hover > a,
 .pw-sidebar .nav > .active:focus > a {
     font-weight: bold;
     color: #563d7c;
     background-color: transparent;
+
+}
+
+.pw-sidebar .nav .nav > li.active,
+.pw-sidebar .nav .nav > li.active:hover,
+.pw-sidebar .nav .nav > li.active:focus {
     border-right: 1px solid #563d7c;
+}
+
+.pw-sidebar .nav .nav .nav > li.active,
+.pw-sidebar .nav .nav .nav > li.active:hover,
+.pw-sidebar .nav .nav .nav > li.active:focus {
+    border-right: 1px solid transparent;
 }
 
 .toolbar-items .nav.btn-group .dropdown span {

@@ -1,0 +1,14 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>{{entityToDelete.title}}</h3>
+        </div>
+        <div class="modal-body">
+            <span ng-bind-html="entityToDelete.text"></span>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" ng-click="ok()">Yes, delete it</button>
+            <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+        </div>
+    </div>
+</div>

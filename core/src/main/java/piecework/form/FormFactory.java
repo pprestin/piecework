@@ -302,7 +302,8 @@ public class FormFactory {
         }
 
         private Screen screen(Form.Builder formBuilder, Screen screen, ManyMap<String, Value> data, ManyMap<String, Message> results) throws StatusCodeError {
-            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
+            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, true);
+            screenBuilder.clearSections();
             ProcessDeployment deployment = process.getDeployment();
             if (deployment == null)
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
