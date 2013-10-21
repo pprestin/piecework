@@ -145,9 +145,10 @@ define([
                     var groupingsLength = screen != null ? screen.groupings.length : null;
                     var parsedOrdinal = parseInt(currentScreen, 10);
                     if (parsedOrdinal == -1) {
-                        if (screenType == 'staged')
-                            parsedOrdinal = groupingsLength;
-                        else
+                        if (screenType == 'staged') {
+                            var magi = screen.maxActiveGroupingIndex;
+                            parsedOrdinal = magi >= 0 && magi < groupingsLength ? magi + 1 : groupingsLength;
+                        } else
                             parsedOrdinal = 1;
                     }
                     groupingIndex = parsedOrdinal - 1;

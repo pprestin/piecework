@@ -20,6 +20,7 @@ define([
     Handlebars.registerHelper('breadcrumb', function(screen, options) {
         var items = screen.groupings;
         var isStaged = screen.type != null && screen.type == 'staged';
+        var maxActiveGroupingIndex = screen.maxActiveGroupingIndex >=0 ? screen.maxActiveGroupingIndex : 0;
         var ignore = true;
         var out = '<ul class="'
         if (isStaged)
@@ -37,6 +38,8 @@ define([
 
                 if (i > 0 && !isStaged)
                     out += '<li><a class="hide" href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a><span class="inactive-text">' + item.breadcrumb + '</span>';
+                else if ( i > maxActiveGroupingIndex ) 
+                    out += '<li>' + item.breadcrumb;
                 else
                     out += '<li><a href="' + item.breadcrumbLink + '">' + item.breadcrumb + '</a>';
             }

@@ -83,7 +83,7 @@ public class Screen implements Serializable {
     private final List<Section> sections;
 
     @XmlAttribute
-    private final int reviewIndex;
+    private final int maxActiveGroupingIndex;
 
 	@XmlAttribute
     private final int ordinal;
@@ -119,7 +119,7 @@ public class Screen implements Serializable {
 		this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.sections = Collections.unmodifiableList(builder.sections);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.interactionId, builder.screenId) : null;
-	    this.reviewIndex = builder.reviewIndex;
+	    this.maxActiveGroupingIndex = builder.maxActiveGroupingIndex;
         this.readonly = builder.readonly;
     }
 	
@@ -179,8 +179,8 @@ public class Screen implements Serializable {
         return constraints;
     }
 
-    public int getReviewIndex() {
-        return reviewIndex;
+    public int getMaxActiveGroupingIndex() {
+        return maxActiveGroupingIndex;
     }
 
     public int getOrdinal() {
@@ -211,7 +211,7 @@ public class Screen implements Serializable {
         private List<File> scripts;
         private List<Constraint> constraints;
         private List<Section> sections;
-        private int reviewIndex;
+        private int maxActiveGroupingIndex;
 		private int ordinal;
         private boolean readonly;
 		private boolean isDeleted;
@@ -240,7 +240,7 @@ public class Screen implements Serializable {
             this.strategy = screen.strategy;
             this.isAttachmentAllowed = screen.isAttachmentAllowed;
 			this.location = sanitizer.sanitize(screen.location);
-            this.reviewIndex = screen.reviewIndex;
+            this.maxActiveGroupingIndex = screen.maxActiveGroupingIndex;
 			this.ordinal = screen.ordinal;
 
             if (screen.groupings != null && !screen.groupings.isEmpty()) {
@@ -371,8 +371,8 @@ public class Screen implements Serializable {
             return this;
         }
 
-        public Builder reviewIndex(int reviewIndex) {
-            this.reviewIndex = reviewIndex;
+        public Builder maxActiveGroupingIndex(int maxActiveGroupingIndex) {
+            this.maxActiveGroupingIndex = maxActiveGroupingIndex;
             return this;
         }
 

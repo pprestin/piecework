@@ -158,6 +158,7 @@ public class Grouping {
                 this.buttons = new ArrayList<Button>();
             }
             this.ordinal = grouping.ordinal;
+            this.readonly = grouping.readonly;
         }
 
         public Builder groupingId(String groupingId) {
