@@ -135,12 +135,12 @@ public class Grouping {
             this.buttons = new ArrayList<Button>();
         }
 
-        public Builder(Grouping grouping, Sanitizer sanitizer) {
+        public Builder(Grouping grouping, Sanitizer sanitizer, boolean includeSectionIds) {
             this.groupingId = grouping.groupingId != null ? sanitizer.sanitize(grouping.groupingId) : UUID.randomUUID().toString();
             this.title = sanitizer.sanitize(grouping.title);
             this.description = sanitizer.sanitize(grouping.description);
             this.breadcrumb = sanitizer.sanitize(grouping.breadcrumb);
-            if (grouping.sectionIds != null && !grouping.sectionIds.isEmpty()) {
+            if (includeSectionIds && grouping.sectionIds != null && !grouping.sectionIds.isEmpty()) {
                 this.sectionIds = new ArrayList<String>(grouping.sectionIds.size());
                 for (String sectionId : grouping.sectionIds) {
                     this.sectionIds.add(sanitizer.sanitize(sectionId));

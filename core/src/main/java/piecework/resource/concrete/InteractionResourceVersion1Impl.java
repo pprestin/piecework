@@ -16,6 +16,7 @@
 package piecework.resource.concrete;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import piecework.Constants;
 import piecework.Versions;
+import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -82,9 +84,13 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 		Interaction.Builder builder = new Interaction.Builder(interaction, sanitizer);
 		
 		// Need to save screens to screen repository because Spring Data doesn't auto cascade saves
-		List<Screen> screens = builder.getScreens();
-		if (screens != null && !screens.isEmpty()) 
-			builder.screens(screenRepository.save(screens));
+        Map<ActionType, Screen> screens = interaction.getScreens();
+        if (screens != null && !screens.isEmpty()) {
+            for (Map.Entry<ActionType, Screen> entry : screens.entrySet()) {
+                Screen persistedScreen = screenRepository.save(entry.getValue());
+                builder.screen(entry.getKey(), persistedScreen);
+            }
+        }
 		
 		Interaction record = builder.build();
 		
@@ -138,9 +144,13 @@ public class InteractionResourceVersion1Impl implements InteractionResource {
 			throw new BadRequestError(Constants.ExceptionCodes.interaction_invalid, processDefinitionKey);
 		
 		// Need to save screens to screen repository because Spring Data doesn't auto cascade saves
-		List<Screen> screens = builder.getScreens();
-		if (screens != null && !screens.isEmpty())
-			builder.screens(screenRepository.save(screens));
+        Map<ActionType, Screen> screens = interaction.getScreens();
+        if (screens != null && !screens.isEmpty()) {
+            for (Map.Entry<ActionType, Screen> entry : screens.entrySet()) {
+                Screen persistedScreen = screenRepository.save(entry.getValue());
+                builder.screen(entry.getKey(), persistedScreen);
+            }
+        }
 
 		Interaction record = builder.build();
 		Interaction result = interactionRepository.save(record);

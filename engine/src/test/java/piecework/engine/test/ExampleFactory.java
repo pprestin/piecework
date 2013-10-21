@@ -16,6 +16,7 @@
 package piecework.engine.test;
 
 import piecework.Constants;
+import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
 
@@ -110,7 +111,7 @@ public class ExampleFactory {
         return new Interaction.Builder()
                 .label("Example Interaction")
                 .screen(exampleScreenWithTwoSections())
-                .screen(exampleThankYouScreen())
+                .screen(ActionType.COMPLETE, exampleThankYouScreen())
                 .build();
     }
 

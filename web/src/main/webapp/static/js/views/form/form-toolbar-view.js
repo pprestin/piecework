@@ -117,7 +117,12 @@ define([ 'backbone', 'chaplin', 'models/notification', 'views/base/view', 'views
             }
         },
 	    _onAttachmentCountChanged: function(count) {
-	        this.$el.find('#attachment-count').text(count);
+	        if (count < 0) {
+	            var current = parseInt(this.$el.find('#attachment-count').text(), 10);
+	            this.$el.find('#attachment-count').text(current + count);
+	        } else {
+	            this.$el.find('#attachment-count').text(count);
+            }
 	    },
 	    _onAttachmentsButton: function(event) {
             Chaplin.mediator.publish('showAttachments');
@@ -127,7 +132,7 @@ define([ 'backbone', 'chaplin', 'models/notification', 'views/base/view', 'views
 
             var comment = $('#attach-comment').val();
             data.append("comment", comment);
-
+            $('#attach-comment').val('');
             this._uploadAttachments(data);
 	    },
 	    _onAttachFile: function(event) {

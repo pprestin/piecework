@@ -504,7 +504,7 @@ public class Demonstration implements TaskListener {
         return new Interaction.Builder()
                 .label("Initial Data Submission")
                 .screen(initialScreen())
-                .screen(genericTaskCompletedScreen())
+                .screen(ActionType.COMPLETE, genericTaskCompletedScreen())
                 .build();
     }
 
@@ -512,7 +512,7 @@ public class Demonstration implements TaskListener {
         return new Interaction.Builder()
                 .label("Review")
                 .screen(reviewFormScreen())
-                .screen(genericTaskCompletedScreen())
+                .screen(ActionType.COMPLETE, genericTaskCompletedScreen())
                 .taskDefinitionKey("demonstrationReviewTask")
                 .build();
     }
@@ -521,8 +521,8 @@ public class Demonstration implements TaskListener {
         return new Interaction.Builder()
                 .label("Approval")
                 .screen(approvalFormScreen())
-                .screen(approvedScreen())
-                .screen(rejectedScreen())
+                .screen(ActionType.COMPLETE, approvedScreen())
+                .screen(ActionType.REJECT, rejectedScreen())
                 .taskDefinitionKey("demonstrationApprovalTask")
                 .build();
     }

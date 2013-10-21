@@ -15,6 +15,7 @@ define([ 'chaplin', 'models/notification', 'views/base/view', 'views/form/notifi
 	        Backbone.sync('delete', this.model, {
 	            success: function() {
 	                Chaplin.mediator.publish('refreshAttachments');
+	                Chaplin.mediator.publish('attachmentCountChanged', -1);
 	            },
 	            error: function() {
                     var notification = new Notification({title: 'Unable to delete', message: 'This attachment cannot be deleted or you are not authorized to delete it', permanent: true})

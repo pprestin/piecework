@@ -132,9 +132,26 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
+    public Response getDiagram(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+        Streamable diagram = processService.getDiagram(rawProcessDefinitionKey, rawDeploymentId);
+        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(diagram);
+        ResponseBuilder responseBuilder = Response.ok(streamingAttachmentContent);
+        return responseBuilder.build();
+    }
+
+    @Override
     public Response getInteraction(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId) throws StatusCodeError {
         ProcessDeployment deployment = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
         Interaction interaction = processService.getInteraction(deployment, rawInteractionId);
+
+        ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(interaction, new PassthroughSanitizer()).build(versions.getVersion1()));
+        return responseBuilder.build();
+    }
+
+    @Override
+    public Response deleteInteraction(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId) throws StatusCodeError {
+        ProcessDeployment deployment = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
+        Interaction interaction = processService.deleteInteraction(deployment, rawInteractionId);
 
         ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(interaction, new PassthroughSanitizer()).build(versions.getVersion1()));
         return responseBuilder.build();

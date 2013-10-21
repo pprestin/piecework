@@ -254,7 +254,7 @@ public class ExampleFactory {
         return new Interaction.Builder()
                 .label("Example Interaction")
                 .screen(exampleScreen(Constants.ScreenTypes.WIZARD))
-                .screen(exampleThankYouScreen())
+                .screen(ActionType.COMPLETE, exampleThankYouScreen())
                 .build();
     }
 
@@ -262,7 +262,7 @@ public class ExampleFactory {
         return new Interaction.Builder()
                 .label("Example Interaction for Review")
                 .screen(exampleScreenForReview(Constants.ScreenTypes.WIZARD))
-                .screen(exampleThankYouScreen())
+                .screen(ActionType.COMPLETE, exampleThankYouScreen())
                 .taskDefinitionKey("Review")
                 .build();
     }
@@ -333,7 +333,7 @@ public class ExampleFactory {
 
         Interaction startInteraction = new Interaction.Builder()
                 .screen(startScreen)
-                .screen(startConfirmationScreen)
+                .screen(ActionType.COMPLETE, startConfirmationScreen)
                 .build();
 
         Screen task1Screen = new Screen.Builder()
@@ -362,8 +362,8 @@ public class ExampleFactory {
         Interaction task1Interaction = new Interaction.Builder()
                 .taskDefinitionKey("TASK1")
                 .screen(task1Screen)
-                .screen(task1ConfirmationScreen)
-                .screen(task1RejectionScreen)
+                .screen(ActionType.COMPLETE, task1ConfirmationScreen)
+                .screen(ActionType.REJECT, task1RejectionScreen)
                 .build();
 
         Interaction task2Interaction = new Interaction.Builder()

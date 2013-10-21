@@ -25,6 +25,7 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
+import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.security.EncryptionService;
@@ -120,8 +121,8 @@ public class FormFactory {
             }
         }
 
-        if (selectedInteraction != null && !selectedInteraction.getScreens().isEmpty())
-            return selectedInteraction.getScreens().iterator().next();
+        if (selectedInteraction != null && selectedInteraction.getScreens() != null && selectedInteraction.getScreens().containsKey(ActionType.CREATE))
+            return selectedInteraction.getScreens().get(ActionType.CREATE);
 
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
@@ -301,7 +302,8 @@ public class FormFactory {
         }
 
         private Screen screen(Form.Builder formBuilder, Screen screen, ManyMap<String, Value> data, ManyMap<String, Message> results) throws StatusCodeError {
-            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
+            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, true);
+            screenBuilder.clearSections();
             ProcessDeployment deployment = process.getDeployment();
             if (deployment == null)
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);

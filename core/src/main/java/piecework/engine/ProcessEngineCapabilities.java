@@ -39,4 +39,6 @@ public interface ProcessEngineCapabilities {
 
     ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
 
+    ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException;
+
 }
