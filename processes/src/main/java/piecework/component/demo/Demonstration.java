@@ -354,7 +354,7 @@ public class Demonstration implements TaskListener {
                         .ordinal(1)
                         .build())
                 .attachmentAllowed(true)
-                .reviewIndex(-1)
+                .maxActiveGroupingIndex(-1)
                 .build();
     }
 
@@ -371,7 +371,7 @@ public class Demonstration implements TaskListener {
                         .ordinal(1)
                         .build())
                 .attachmentAllowed(true)
-                .reviewIndex(-1)
+                .maxActiveGroupingIndex(-1)
                 .build();
     }
 
@@ -466,7 +466,7 @@ public class Demonstration implements TaskListener {
                         .ordinal(1)
                         .build())
                 .attachmentAllowed(true)
-                .reviewIndex(-1)
+                .maxActiveGroupingIndex(-1)
                 .build();
     }
 
