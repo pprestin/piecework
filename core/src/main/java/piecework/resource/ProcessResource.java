@@ -25,8 +25,7 @@ import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
-import piecework.model.ProcessDeployment;
-import piecework.model.SearchResults;
+import piecework.model.*;
 import piecework.exception.StatusCodeError;
 import piecework.model.Process;
 
@@ -123,5 +122,34 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response deleteInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId) throws StatusCodeError;
+
+    @DELETE
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}/screen/{actionTypeId}/grouping/{groupingId}/section/{sectionId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response deleteSection(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, @PathParam("actionTypeId") String actionTypeId, @PathParam("groupingId") String groupingId, @PathParam("sectionId") String sectionId) throws StatusCodeError;
+
+    @DELETE
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}/field/{fieldId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response deleteField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, @PathParam("sectionId") String sectionId, @PathParam("fieldId") String fieldId) throws StatusCodeError;
+
+    @POST
+    @PUT
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response updateInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, Interaction interaction) throws StatusCodeError;
+
+    @POST
+    @PUT
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response updateSection(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("sectionId") String sectionId, Section section) throws StatusCodeError;
+
+    @POST
+    @PUT
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}/field/{fieldId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    Response updateField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, @PathParam("sectionId") String sectionId, @PathParam("fieldId") String fieldId, Field field) throws StatusCodeError;
+
 
 }

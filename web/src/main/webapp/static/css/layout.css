@@ -326,7 +326,7 @@ select.form-control {
     border: 1px solid transparent;
 }
 
-.editing .pw-field.editing {
+.pw-field.editing {
     background-color: #FFF8DC;
     border: 1px solid #AAAAAA;
     padding: 10px;
@@ -336,12 +336,42 @@ select.form-control {
     display: none;
 }
 
+.pw-field .edit-only .focus-only {
+    display: none;
+}
+
+.pw-field .view-only .focus-only {
+    display: none;
+}
+
+.editing .pw-field.hasFocus .view-only {
+    border: 1px dashed #AAAAAA;
+    padding: 10px;
+}
+
+.editing .pw-field.hasFocus .view-only .focus-only {
+    display: block;
+}
+
 .editing .pw-field.editing .edit-only {
     display: block;
 }
 
 .editing .pw-field.editing .view-only {
     display: none;
+}
+
+.editing .pw-field.editing .edit-only .advanced {
+    margin: 10px;
+    padding: 10px;
+}
+
+.editing .pw-field.editing .edit-only .options {
+    margin: 0px;
+}
+
+.editing .pw-field.editing .edit-only .options ul li {
+    padding: 3px 0px;
 }
 
 .pw-header {

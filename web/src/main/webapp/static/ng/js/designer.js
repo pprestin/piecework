@@ -34,7 +34,7 @@ var utils = {
 };
 
 
-angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.bootstrap.alert','ui.bootstrap.modal'])
+angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.bootstrap.alert','ui.bootstrap.modal','ui.sortable'])
     .controller('DeploymentDetailController', ['$scope','$resource','$routeParams',
         function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
@@ -213,9 +213,79 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
                     $scope.onSelectInteraction(interaction, interactions);
 
                 $scope.deployment = deployment;
+                if (deployment.editable) {
+                    $scope.editing = true;
+                    $scope.cssClass = 'editing';
+                    $scope.sortableOptions = {
+                        disabled: false
+                    };
+                }
             }
 
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
+
+            $scope.addConstraint = function(field) {
+                field.constraints.push({});
+            }
+
+            $scope.addInteraction = function(deployment) {
+                var interaction = {label:"", screens:{}};
+                deployment.interactions.push(interaction);
+                return interaction;
+            }
+
+            $scope.addOption = function(field) {
+                field.options.push({});
+            }
+
+            $scope.addScreen = function(deployment) {
+                var interaction = $scope.selectedInteraction;
+                if (interaction == null)
+                    interaction = $scope.addInteraction(deployment);
+                if (interaction.screens == null)
+                    interaction.screens = {};
+                interaction.screens['CREATE'] = {};
+            }
+
+            $scope.confirmDeleteField = function(processDefinitionKey, deploymentId, interactionId, sectionId, fieldId) {
+                var fieldToDelete = {
+                    title:'Are you sure you want to delete this field?',
+                    text: 'Deleting a field will remove it from the section',
+                    processDefinitionKey: processDefinitionKey,
+                    deploymentId: deploymentId,
+                    interactionId: interactionId,
+                    sectionId: sectionId,
+                    fieldId: fieldId
+                };
+                var deleteField = function(fieldToDelete) {
+                    var Field = $resource('process/:processDefinitionKey/deployment/:deploymentId/section/:sectionId/field/:fieldId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId',interactionId:'@interactionId'})
+                    Field.remove({processDefinitionKey:fieldToDelete.processDefinitionKey, deploymentId:fieldToDelete.deploymentId, sectionId:fieldToDelete.sectionId, fieldId:fieldToDelete.fieldId}, function() {
+                        Deployment.get({processDefinitionKey:fieldToDelete.processDefinitionKey, deploymentId:fieldToDelete.deploymentId}, $scope.onGetDeployment);
+                    });
+                }
+                utils.openDeleteModal(fieldToDelete, $scope, $modal, deleteField);
+            }
+
+            $scope.confirmDeleteSection = function(processDefinitionKey, deploymentId, interactionId, actionTypeId, groupingId, sectionId) {
+                var sectionToDelete = {
+                    title:'Are you sure you want to delete this section?',
+                    text: 'Deleting a section will remove it from the interaction',
+                    processDefinitionKey: processDefinitionKey,
+                    deploymentId: deploymentId,
+                    interactionId: interactionId,
+                    actionTypeId: actionTypeId,
+                    groupingId: groupingId,
+                    sectionId: sectionId
+                };
+                var deleteSection = function(sectionToDelete) {
+                    var Section = $resource('process/:processDefinitionKey/deployment/:deploymentId/interaction/:interactionId/screen/:actionTypeId/grouping/:groupingId/section/:sectionId',
+                        {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId',interactionId:'@interactionId',actionTypeId:'@actionTypeId',groupingId:'@groupingId',sectionId:'@sectionId'})
+                    Section.remove({processDefinitionKey:sectionToDelete.processDefinitionKey, deploymentId:sectionToDelete.deploymentId, interactionId:sectionToDelete.interactionId, actionTypeId:sectionToDelete.actionTypeId, groupingId:sectionToDelete.groupingId,sectionId:sectionToDelete.sectionId}, function() {
+                        Deployment.get({processDefinitionKey:sectionToDelete.processDefinitionKey, deploymentId:sectionToDelete.deploymentId}, $scope.onGetDeployment);
+                    });
+                }
+                utils.openDeleteModal(sectionToDelete, $scope, $modal, deleteSection);
+            }
 
             $scope.confirmDeleteInteraction = function(processDefinitionKey, deploymentId, interactionId) {
                 var interactionToDelete = {
@@ -237,20 +307,37 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
             $scope.edit = function() {
                 $scope.editing = true;
                 $scope.cssClass = 'editing';
+                $scope.sortableOptions = {
+                    disabled: false
+                };
+            }
+
+            $scope.onFieldBlur = function(field) {
+
             }
 
             $scope.onFieldCancel = function(field) {
                 field.cssClass = 'viewing';
             }
 
-            $scope.onFieldFocus = function(field) {
+            $scope.onFieldEdit = function(field) {
                 field.cssClass = 'editing';
+            }
+
+            $scope.onFieldFocus = function(field, fields) {
+                if (field.cssClass == null || field.cssClass == 'viewing') {
+                    angular.forEach(fields, function(current) {
+                        current.cssClass = null;
+                    })
+
+                    field.cssClass = 'hasFocus';
+                }
             }
 
             $scope.onFieldKeyUp = function(field, $event) {
                 switch ($event.keyCode) {
                 case 13:
-                    $scope.onFieldFocus();
+                    $scope.onFieldEdit();
                     break;
                 }
             }
@@ -260,6 +347,7 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
                     grouping.cssClass = 'inactive';
                 });
                 selected.cssClass='active';
+                $scope.activeGrouping = selected;
             }
 
             $scope.onSelectScreen = function(screen, screens) {
@@ -269,7 +357,7 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
                     selected.cssClass = 'inactive';
                 });
                 screen.cssClass='active';
-
+                $scope.activeScreen = screen;
                 if (groupings != null && groupings.length > 0) {
                     var grouping = groupings[0];
                     $scope.onSelectGrouping(grouping, groupings);
@@ -281,10 +369,18 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
                     selected.cssClass = 'inactive';
                 });
                 interaction.cssClass= 'active';
+                $scope.activeInteraction = interaction;
                 var screens = interaction.screens;
                 var screen = screens != null ? screens['CREATE'] : null;
                 if (screen != null)
                     $scope.onSelectScreen(screen, screens);
+            }
+
+            $scope.removeOption = function(option, field) {
+                var index = field.options.indexOf(option);
+                if (index > -1) {
+                    field.options.splice(index, 1);
+                }
             }
 
             $scope.scrollTo = function(id) {
@@ -294,6 +390,9 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
             $scope.view = function() {
                 $scope.editing = false;
                 $scope.cssClass = '';
+                $scope.sortableOptions = {
+                    disabled: true
+                };
             }
 
             Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId}, $scope.onGetDeployment);

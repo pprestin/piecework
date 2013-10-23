@@ -24,17 +24,17 @@
                 </button>
             </div>
             <button ng-if="editing" ng-click="view()" type="button" class="btn btn-success">
-                <i class="icon-eye-open icon-1x"></i> View</span>
+                <i class="icon-eye-open icon-1x"></i> Preview</span>
             </button>
             <div ng-if="editing" class="btn-group">
                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                     <i class="icon-building icon-1x"></i> Build <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a href="#">Add interaction</a></li>
-                    <li><a href="#">Add screen</a></li>
-                    <li><a href="#">Add grouping</a></li>
-                    <li><a href="#">Add field</a></li>
+                    <li><a ng-click="addInteraction(deployment)">Add interaction</a></li>
+                    <li><a ng-click="addScreen(deployment)">Add screen</a></li>
+                    <li><a ng-click="addGrouping(deployment)">Add grouping</a></li>
+                    <li><a ng-click="addField(deployment)">Add field</a></li>
                 </ul>
             </div>
         </form>
@@ -45,7 +45,7 @@
         <ul class="pw-sidenav nav">
             <li class="lead">Interactions</li>
             <li ng-class="interaction.cssClass" ng-repeat="interaction in deployment.interactions">
-                <a ng-click="onSelectInteraction(interaction, deployment.interactions)">{{interaction.label}}</a>
+                <a ng-click="onSelectInteraction(interaction, deployment.interactions)"><span ng-if="interaction.label">{{interaction.label}}</span><span ng-if="!interaction.label" class="text-muted">Untitled</span></a>
                 <ul class="nav" ng-show="interaction.cssClass=='active'">
                     <li ng-class="screen.cssClass" ng-repeat="(action, screen) in interaction.screens | orderActionType">
                         <a ng-click="onSelectScreen(screen, interaction.screens)">
@@ -79,14 +79,14 @@
             <div class="pull-right">
                 <a ng-if="editing" ng-click="confirmDeleteInteraction(process.processDefinitionKey, deployment.deploymentId, interaction.id)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete interaction"><i class="icon-remove icon-2x text-danger"></i></a>
             </div>
-            <h2>{{interaction.label}}</h2>
+            <h2><span ng-if="interaction.label">{{interaction.label}}</span><span ng-if="!interaction.label" class="text-muted">Untitled</span></h2>
             <hr/>
             <div ng-repeat="(action, screen) in interaction.screens | orderActionType" ng-show="screen.cssClass=='active'" class="screen">
                 <div ng-repeat="grouping in screen.groupings" ng-show="grouping.cssClass=='active'" class="grouping">
                     <div ng-repeat="section in grouping.sections" class="panel panel-default">
                         <div class="panel-heading lead">
                             <div class="pull-right">
-                                <a ng-if="editing" ng-click="confirmDeleteSection(process.processDefinitionKey, deployment.deploymentId, interaction.id, section.sectionId)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete section"><i class="icon-remove icon-1x text-danger"></i></a>
+                                <a ng-if="editing" ng-click="confirmDeleteSection(process.processDefinitionKey, deployment.deploymentId, interaction.id, screen.action, grouping.groupingId, section.sectionId)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete section"><i class="icon-remove icon-1x text-danger"></i></a>
                             </div>
                             <span ng-if="section.title">{{section.title}}</span>
                             <span class="text-muted" ng-if="!section.title">Untitled</span>
@@ -94,9 +94,12 @@
                         <div class="panel-body ng-hide">
                             <form role="form" id="{{section.sectionId}}">
                                 <fieldset>
-                                    <div>
-                                        <div ng-class="field.cssClass" ng-repeat="field in section.fields" class="form-group pw-field" tabindex="0">
-                                            <div class="view-only" ng-click="onFieldFocus(field)" ng-key-up="onFieldKeyUp(field, $event)">
+                                    <ul ui-sortable="sortableOptions" ng-model="section.fields">
+                                        <li ng-class="field.cssClass" ng-repeat="field in section.fields" class="form-group pw-field" tabindex="0">
+                                            <div class="view-only" ng-click="editing && onFieldFocus(field, section.fields)" ng-dblclick="editing && onFieldEdit(field)">
+                                                <div class="focus-only pull-right">
+                                                    <button class="btn btn-success" ng-click="onFieldEdit(field)" ng-key-up="onFieldKeyUp(field, $event)"><i class="icon-edit"></i> Edit</button>
+                                                </div>
                                                 <label ng-if="field.label">{{field.label}}</label>
                                                 <div ng-switch on="field.type">
                                                     <div ng-switch-when="html" ng-bind-html="field.defaultValue">{{field.defaultValue}}</div>
@@ -126,40 +129,116 @@
                                                     <input ng-switch-default class="form-control" type="{{field.type}}" name="{{field.name}}" size="{{field.displayValueLength}}" maxlength="{{field.maxValueLength}}"/>
                                                 </div>
                                             </div>
-                                            <div class="edit-only">
-                                                <div class="pull-right">
-                                                    <a ng-if="editing" ng-click="confirmDeleteField(process.processDefinitionKey, deployment.deploymentId, interaction.id, section.sectionId, field.fieldId)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete field"><i class="icon-remove icon-1x text-danger"></i></a>
+
+                                            <div class="edit-only container">
+                                                <div class="row">
+                                                    <div class="pull-right">
+                                                        <a ng-if="editing" ng-click="confirmDeleteField(process.processDefinitionKey, deployment.deploymentId, interaction.id, section.sectionId, field.fieldId)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete field"><i class="icon-remove icon-1x text-danger"></i></a>
+                                                    </div>
+                                                    <div ng-show="field.type != 'html'">
+                                                        <div class="form-group col-md-6">
+                                                            <label>Label</label>
+                                                            <input class="form-control" type="text" size="40" value="{{field.label}}"/>
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label>Type</label>
+                                                            <select ng-model="field.type" class="form-control">
+                                                                <option value="checkbox">Checkbox</option>
+                                                                <option value="person">Person</option>
+                                                                <option value="radio">Radio</option>
+                                                                <option value="select-one">Select</option>
+                                                                <option value="select-multiple">Select Multiple</option>
+                                                                <option value="textarea">Textarea</option>
+                                                                <option value="text">Textbox</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group col-md-2">
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" ng-model="field.editable"> Editable
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" ng-model="field.required"> Required
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" ng-model="field.restricted"> Restricted
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="field.type == 'html'">
+                                                        <textarea ng-model="field.defaultValue" class="form-control" rows="14"></textarea>
+                                                    </div>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label>Label</label>
-                                                    <input class="form-control" type="text" size="40" value="{{field.label}}"/>
+                                                <div class="row options" ng-show="field.type == 'select-one' || field.type == 'select-multiple' || field.type == 'radio' || field.type == 'checkbox'">
+                                                    <h5>Options</h5>
+                                                    <ul ng-repeat="option in field.options">
+                                                        <li class="form-inline">
+                                                            <input ng-model="option.value" type="text" class="form-control" placeholder="value"/>
+                                                            <input ng-model="option.label" type="text" class="form-control" placeholder="label"/>
+                                                            <button class="btn btn-link" type="button" aria-hidden="true"><i ng-click="removeOption(option, field)" class="icon-remove text-danger"></i></button>
+                                                        </li>
+                                                    </ul>
+                                                    <button ng-click="addOption(field)" class="btn btn-default">Add Option</button>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label>Label</label>
-                                                    <select ng-model="field.type" class="form-control">
-                                                        <option value="checkbox">Checkbox</option>
-                                                        <option value="person">Person</option>
-                                                        <option value="radio">Radio</option>
-                                                        <option value="textarea">Textarea</option>
-                                                        <option value="text">Textbox</option>
-                                                    </select>
+                                                <div class="row">
+                                                    <button ng-click="field.advanced = !field.advanced" class="btn btn-link"><i ng-class="{'icon-chevron-down':field.advanced, 'icon-chevron-right':!field.advanced}"></i> Advanced</button>
+                                                    <div class="advanced col-md-12" ng-if="field.advanced">
+                                                        <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                                                            <label>Display length</label>
+                                                            <input type="number" ng-model="field.displayValueLength" class="form-control"/>
+                                                        </div>
+                                                        <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                                                            <label>Max length</label>
+                                                            <input type="number" ng-model="field.maxValueLength" class="form-control"/>
+                                                        </div>
+                                                        <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                                                            <label>Pattern</label>
+                                                            <input type="text" ng-model="field.pattern" class="form-control"/>
+                                                        </div>
+                                                        <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                                                            <label>Mask</label>
+                                                            <input type="text" ng-model="field.mask" class="form-control"/>
+                                                        </div>
+                                                        <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                                                            <label>Placeholder</label>
+                                                            <input type="text" ng-model="field.placeholder" class="form-control"/>
+                                                        </div>
+                                                        <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                                                            <label>Default value</label>
+                                                            <input type="text" ng-model="field.defaultValue" class="form-control"/>
+                                                        </div>
+                                                        <h5>Constraints</h5>
+                                                        <div class="constraints">
+                                                            <ul ng-repeat="constraint in field.constraints" class="form-inline col-md-12">
+                                                                <li>
+                                                                    <select ng-model="constraint.type" class="form-control">
+                                                                        <option></option>
+                                                                        <option value="IS_ONLY_REQUIRED_WHEN">Required when</option>
+                                                                        <option value="IS_ONLY_VISIBLE_WHEN">Visible when</option>
+                                                                    </select>
+                                                                    <input ng-model="constraint.name" type="text" class="form-control" placeholder="name"/>
+                                                                    <input ng-model="constraint.value" type="text" class="form-control" placeholder="value" size="30"/>
+                                                                </li>
+                                                            </ul>
+                                                            <div class="clearfix"></div>
+                                                            <button ng-click="addConstraint(field)" class="btn btn-default">Add Constraint</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="clearfix"></div>
+                                                    <div class="pull-right">
+                                                        <button class="btn btn-primary" type="button">Save</button>
+                                                        <button ng-click="onFieldCancel(field)" class="btn btn-default" type="button">Cancel</button>
+                                                    </div>
+                                                    <div class="clearfix"></div>
                                                 </div>
-                                                <div class="form-group" ng-if="field.type == 'text'">
-                                                    <label>Display length</label>
-                                                    <input type="number" ng-model="field.displayValueLength" class="form-control"/>
-                                                </div>
-                                                <div class="form-group" ng-if="field.type == 'text'">
-                                                    <label>Max length</label>
-                                                    <input type="number" ng-model="field.maxValueLength" class="form-control"/>
-                                                </div>
-                                                <div class="pull-right">
-                                                    <button class="btn btn-primary" type="button">Save</button>
-                                                    <button ng-click="onFieldCancel(field)" class="btn btn-default" type="button">Cancel</button>
-                                                </div>
-                                                <div class="clearfix"></div>
                                             </div>
-                                        </div>
-                                    </div>
+                                        </li>
+                                    </ul>
                                 </fieldset>
                             </form>
                         </div>

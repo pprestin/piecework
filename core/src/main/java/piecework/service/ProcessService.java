@@ -195,6 +195,28 @@ public class ProcessService {
         processRepository.save(updated);
     }
 
+    public void deleteSection(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawActionTypeId, String rawGroupingId, String rawSectionId) throws StatusCodeError {
+        ProcessDeployment deployment = getDeployment(rawProcessDefinitionKey, rawDeploymentId);
+        String interactionId = sanitizer.sanitize(rawInteractionId);
+        String actionTypeId = sanitizer.sanitize(rawActionTypeId);
+        String groupingId = sanitizer.sanitize(rawGroupingId);
+        String sectionId = sanitizer.sanitize(rawSectionId);
+
+        if (StringUtils.isEmpty(interactionId) || StringUtils.isEmpty(sectionId) || StringUtils.isEmpty(actionTypeId))
+            throw new BadRequestError();
+
+        if (!deployment.isEditable())
+            throw new ForbiddenError(Constants.ExceptionCodes.not_editable);
+
+        ActionType actionType = ActionType.valueOf(actionTypeId);
+
+        ProcessDeployment updated = new ProcessDeployment.Builder(deployment, null, sanitizer, true)
+                .deleteScreenGroupingSection(interactionId, actionType, groupingId, sectionId)
+                .build();
+
+        deploymentRepository.save(updated);
+    }
+
     public ProcessDeployment getDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);

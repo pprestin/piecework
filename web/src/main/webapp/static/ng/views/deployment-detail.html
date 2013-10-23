@@ -13,6 +13,9 @@
         </div>
         <div class="panel-body">
             <form id="deployment-detail-form" ng-submit="updateDeployment()">
+                <div class="pull-right">
+                    <a href="#/interaction/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" class="btn btn-default" type="submit" role="button"><i class="icon-desktop"></i> User Interface</a>
+                </div>
                 <fieldset>
                     <div class="form-group">
                         <label>Deployment Label</label>
@@ -40,9 +43,8 @@
                     </div>
                 </fieldset>
                 <div class="pull-right">
-                    <a href="#/interaction/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" class="btn btn-default" type="submit" role="button">Interactions</a>
                     <button ng-if="deployment.editable" class="btn btn-default" type="submit" role="button">Update</button>
-                    <button ng-if="deployment.editable" class="btn btn-danger" type="button" role="button">Publish</button>
+                    <button ng-if="deployment.editable" class="btn btn-danger" type="button" role="button"><i class="icon-rocket"></i> Release</button>
                 </div>
 
                 <div class="clearfix"></div>

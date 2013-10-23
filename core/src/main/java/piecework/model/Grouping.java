@@ -206,6 +206,13 @@ public class Grouping {
             return this;
         }
 
+        public Builder deleteSection(String sectionId) {
+            if (this.sectionIds != null) {
+                this.sectionIds.remove(sectionId);
+            }
+            return this;
+        }
+
         public int numberOfButtons() {
             return buttons != null ? buttons.size() : 0;
         }

@@ -26,13 +26,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.Versions;
-import piecework.model.Interaction;
-import piecework.model.ProcessDeployment;
+import piecework.exception.BadRequestError;
+import piecework.model.*;
+import piecework.model.Process;
 import piecework.service.ProcessService;
-import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
-import piecework.model.Process;
 import piecework.resource.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.Streamable;
@@ -115,6 +114,25 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
+    public Response deleteSection(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawActionTypeId, String rawGroupingId, String rawSectionId) throws StatusCodeError {
+        if (rawProcessDefinitionKey == null || rawDeploymentId == null || rawInteractionId == null || rawActionTypeId == null|| rawSectionId == null)
+            throw new BadRequestError();
+
+        processService.deleteSection(rawProcessDefinitionKey, rawDeploymentId, rawInteractionId, rawActionTypeId, rawGroupingId, rawSectionId);
+
+        ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        return responseBuilder.build();
+    }
+
+    @Override
+    public Response deleteField(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawSectionId, String rawFieldId) throws StatusCodeError {
+//        processService.deleteField(rawProcessDefinitionKey, rawDeploymentId, rawInteractionId, rawSectionId, rawFieldId);
+
+        ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        return responseBuilder.build();
+    }
+
+    @Override
     public Response getDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
         ProcessDeployment result = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
 
@@ -178,6 +196,30 @@ public class ProcessResourceVersion1 implements ProcessResource {
     @Override
     public Response updateDeployment(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeployment rawDeployment) throws StatusCodeError {
         processService.updateDeployment(rawProcessDefinitionKey, rawDeploymentId, rawDeployment);
+
+        ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        return responseBuilder.build();
+    }
+
+    @Override
+    public Response updateInteraction(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, Interaction rawInteraction) throws StatusCodeError {
+//        processService.updateInteraction(rawProcessDefinitionKey, rawDeploymentId, rawInteractionId, rawInteraction);
+
+        ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        return responseBuilder.build();
+    }
+
+    @Override
+    public Response updateSection(String rawProcessDefinitionKey, String rawDeploymentId, String rawSectionId, Section rawSection) throws StatusCodeError {
+//        processService.updateSection(rawProcessDefinitionKey, rawDeploymentId, rawSectionId, rawSection);
+
+        ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
+        return responseBuilder.build();
+    }
+
+    @Override
+    public Response updateField(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawSectionId, String rawFieldId, Field rawField) throws StatusCodeError {
+//        processService.updateField(rawProcessDefinitionKey, rawDeploymentId, rawSectionId, rawFieldId, rawField);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         return responseBuilder.build();

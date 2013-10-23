@@ -21,7 +21,10 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.enumeration.ActionType;
 import piecework.security.Sanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
+import piecework.util.ProcessUtility;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
@@ -531,6 +534,23 @@ public class ProcessDeployment implements Serializable {
 
         public Builder clearSections() {
             this.sections = new ArrayList<Section>();
+            return this;
+        }
+
+        public Builder deleteScreenGroupingSection(String interactionId, ActionType actionType, String groupingId, String sectionId) {
+            if (this.interactions != null && !this.interactions.isEmpty()) {
+                List<Interaction> modifiedInteractions = new ArrayList<Interaction>();
+                boolean isInteractionDelete = actionType == null && groupingId == null && sectionId == null;
+                for (Interaction interaction : this.interactions) {
+                    if (interactionId != null && interaction.getId() != null && interactionId.equals(interaction.getId())) {
+                        Interaction modified = ProcessUtility.delete(interaction, actionType, groupingId, sectionId);
+                        if (modified != null)
+                            modifiedInteractions.add(modified);
+                    } else
+                        modifiedInteractions.add(interaction);
+                }
+                this.interactions = modifiedInteractions;
+            }
             return this;
         }
     }

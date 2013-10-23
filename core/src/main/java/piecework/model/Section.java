@@ -278,6 +278,19 @@ public class Section {
         public int numberOfFields() {
             return fields != null ? fields.size() : 0;
         }
+
+        public Builder deleteField(String fieldId) {
+            if (this.fields != null && fieldId != null) {
+                List<Field> modifiedFields = new ArrayList<Field>();
+                for (Field field : this.fields) {
+                    if (field.getFieldId() != null && field.getFieldId().equals(fieldId))
+                        continue;
+                    modifiedFields.add(field);
+                }
+                this.fields = modifiedFields;
+            }
+            return this;
+        }
 	}
 	
 	public static class Constants {

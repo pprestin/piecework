@@ -63,11 +63,6 @@ public class Interaction implements Serializable {
 
     private final Map<ActionType, Screen> screens;
 
-//	@XmlElementWrapper(name="screens")
-//	@XmlElementRef
-//	@DBRef
-//	private final List<Screen> screens;
-
     @XmlElementWrapper(name="taskDefinitionKeys")
     private final Set<String> taskDefinitionKeys;
 
@@ -258,6 +253,13 @@ public class Interaction implements Serializable {
 		public String getId() {
 			return id;
 		}
+
+        public Builder deleteScreen(ActionType actionType) {
+            if (this.screens != null && actionType != null) {
+                this.screens.remove(actionType);
+            }
+            return this;
+        }
 
 	}
 	
