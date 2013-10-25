@@ -23,11 +23,8 @@ import org.springframework.stereotype.Service;
 import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.StatusCodeError;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.persistence.*;
 import piecework.service.IdentityService;
-import piecework.persistence.ProcessInstanceRepository;
 import piecework.identity.IdentityHelper;
 
 /**
@@ -51,16 +48,25 @@ public class CommandExecutor {
     IdentityService identityService;
 
     @Autowired
+    ActivityRepository activityRepository;
+
+    @Autowired
     ContentRepository contentRepository;
 
     @Autowired
     DeploymentRepository deploymentRepository;
 
     @Autowired
+    InteractionRepository interactionRepository;
+
+    @Autowired
     ProcessRepository processRepository;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
+    SectionRepository sectionRepository;
 
     @Autowired
     UuidGenerator uuidGenerator;
@@ -109,6 +115,18 @@ public class CommandExecutor {
 
     public ProcessInstanceRepository getProcessInstanceRepository() {
         return processInstanceRepository;
+    }
+
+    public ActivityRepository getActivityRepository() {
+        return activityRepository;
+    }
+
+    public InteractionRepository getInteractionRepository() {
+        return interactionRepository;
+    }
+
+    public SectionRepository getSectionRepository() {
+        return sectionRepository;
     }
 
     public UuidGenerator getUuidGenerator() {

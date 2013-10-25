@@ -24,7 +24,12 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
 import piecework.enumeration.ActionType;
+import piecework.exception.BadRequestError;
 import piecework.exception.InternalServerError;
+import piecework.exception.MaxSizeExceededException;
+import piecework.exception.StatusCodeError;
+import piecework.persistence.ActivityRepository;
+import piecework.security.MaxSizeInputStream;
 import piecework.validation.SubmissionTemplate;
 import piecework.service.IdentityService;
 import piecework.model.*;
@@ -49,6 +54,9 @@ public class SubmissionHandler {
     private static final Logger LOG = Logger.getLogger(SubmissionHandler.class);
 
     @Autowired
+    ActivityRepository activityRepository;
+
+    @Autowired
     ContentRepository contentRepository;
 
     @Autowired
@@ -69,7 +77,7 @@ public class SubmissionHandler {
     @Autowired
     UuidGenerator uuidGenerator;
 
-    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest, ActionType action) throws InternalServerError {
+    public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest, ActionType action) throws StatusCodeError {
         String submitterId = helper.getAuthenticatedSystemOrUserId();
 
         if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(formRequest.getActAsUser()))
@@ -108,14 +116,30 @@ public class SubmissionHandler {
             }
         }
 
+        if (process.isAllowPerInstanceActivities() && rawSubmission != null && rawSubmission.getActivityMap() != null) {
+            Map<String, Activity> rawActivityMap = rawSubmission.getActivityMap();
+
+            HashMap<String, Activity> activityMap = new HashMap<String, Activity>();
+            for (Map.Entry<String, Activity> entry : rawActivityMap.entrySet()) {
+                String key = sanitizer.sanitize(entry.getKey());
+                if (key == null)
+                    continue;
+                if (entry.getValue() == null)
+                    continue;
+
+                Activity activity = activityRepository.save(new Activity.Builder(entry.getValue(), sanitizer).build());
+                activityMap.put(key, activity);
+            }
+        }
+
         return submissionRepository.save(submissionBuilder.build());
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap) throws InternalServerError {
+    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap) throws StatusCodeError {
         return handle(process, template, formValueContentMap, null);
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap, FormRequest formRequest) throws InternalServerError {
+    public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap, FormRequest formRequest) throws StatusCodeError {
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
@@ -144,11 +168,11 @@ public class SubmissionHandler {
         return submissionRepository.save(submissionBuilder.build());
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body) throws InternalServerError {
+    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body) throws StatusCodeError {
         return handle(process, template, body, null);
     }
 
-    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body, FormRequest formRequest) throws InternalServerError {
+    public Submission handle(Process process, SubmissionTemplate template, MultipartBody body, FormRequest formRequest) throws StatusCodeError {
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
@@ -172,7 +196,7 @@ public class SubmissionHandler {
         return submissionRepository.save(submissionBuilder.build());
     }
 
-    private void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws InternalServerError {
+    private void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws StatusCodeError {
         String contentType = MediaType.TEXT_PLAIN;
         if (LOG.isDebugEnabled())
             LOG.debug("Processing multipart with content type " + contentType + " and content id " + attachment.getContentId());
@@ -185,7 +209,7 @@ public class SubmissionHandler {
         }
     }
 
-    private void handleAllContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws InternalServerError {
+    private void handleAllContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws StatusCodeError {
         ContentDisposition contentDisposition = attachment.getContentDisposition();
         MediaType mediaType = attachment.getContentType();
 
@@ -209,11 +233,11 @@ public class SubmissionHandler {
         }
     }
 
-    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId) throws InternalServerError {
+    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId) throws StatusCodeError {
         return handleStorage(template, submissionBuilder, name, value, userId, null, MediaType.TEXT_PLAIN);
     }
 
-    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId, InputStream inputStream, String contentType) throws InternalServerError {
+    private boolean handleStorage(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId, InputStream inputStream, String contentType) throws StatusCodeError {
         boolean isAcceptable = template.isAcceptable(name);
         boolean isButton = template.isButton(name);
         boolean isRestricted = !isAcceptable && template.isRestricted(name);
@@ -230,6 +254,7 @@ public class SubmissionHandler {
             submissionBuilder.action(button.getAction());
             return true;
         } else if (isAcceptable || isRestricted || isAttachment) {
+            Field field = template.getField(name);
             String location = null;
             File file = null;
 
@@ -238,6 +263,9 @@ public class SubmissionHandler {
                 String id = uuidGenerator.getNextId();
                 location = "/" + directory + "/" + id;
 
+                if (field.getMaxValueLength() > 0)
+                    inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(field.getMaxValueLength()).longValue() * 1024l);
+
                 Content content = new Content.Builder()
                         .contentType(contentType)
                         .filename(value)
@@ -245,7 +273,15 @@ public class SubmissionHandler {
                         .inputStream(inputStream)
                         .build();
 
-                content = contentRepository.save(content);
+                try {
+                    content = contentRepository.save(content);
+
+                } catch (MaxSizeExceededException sizeException) {
+                    throw new BadRequestError(Constants.ExceptionCodes.attachment_is_too_large, Long.valueOf(sizeException.getMaxSize()));
+                } catch (IOException ioe) {
+                    LOG.error(ioe);
+                    throw new InternalServerError();
+                }
                 location = content.getLocation();
                 file = new File.Builder()
                         .id(id)

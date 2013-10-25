@@ -38,18 +38,21 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
     .controller('DeploymentDetailController', ['$scope','$resource','$routeParams',
         function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
-            Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId}, function(data) {
-                /*for (var i=0;i<data.sections.length;i++) {
-                    if (data.sections[i].title == null)
-                        data.sections[i].title = 'Untitled';
-                }*/
+            var deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId}, function(data) {
                 $scope.deployment = data;
             });
             var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
             $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
 
             $scope.updateDeployment = function() {
-                $scope.deployment.$save();
+                deployment.$save({processDefinitionKey:$routeParams.processDefinitionKey});
+
+//                var url = '/process/' + $routeParams.processDefinitionKey + '/deployment/' + deployment.deploymentId + '/resource';
+//                var data = new FormData();
+//                angular.forEach($scope.deploymentResource.files, function(file) {
+//                    data.append(file);
+//                });
+//                $http.post(url, data).success(function() { alert('worked!'); });
             };
         }
     ])
@@ -73,7 +76,7 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
             $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
 
             $scope.copyDeployment = function(processDefinitionKey, deploymentId) {
-                var DeploymentClone = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
+                var DeploymentClone = $resource('process/:processDefinitionKey/deployment/:deploymentId/clone', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
                 DeploymentClone.save({processDefinitionKey:processDefinitionKey, deploymentId:deploymentId}, function(data) {
                     $scope.deployments.push(data);
                 });
@@ -102,7 +105,7 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
             }
         }
     ])
-    .controller('InteractionDetailController', ['$scope','$resource','$routeParams','$location','$anchorScroll',
+    .controller('ActivityDetailController', ['$scope','$resource','$routeParams','$location','$anchorScroll',
          function($scope, $resource, $routeParams, $location, $anchorScroll) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
             $scope.deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId});
@@ -172,45 +175,41 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
             }
          }
      ])
-     .controller('InteractionListController', ['$scope','$resource','$routeParams','$location','$anchorScroll','$modal',
+     .controller('ActivityListController', ['$scope','$resource','$routeParams','$location','$anchorScroll','$modal',
         function($scope, $resource, $routeParams, $location, $anchorScroll, $modal) {
             $scope.onGetDeployment = function(deployment) {
-              var interactions = deployment.interactions;
-              angular.forEach(interactions, function(interaction) {
-                  if (interaction.screens != null) {
-                      var createScreen = interaction.screens['CREATE'];
-                      if (createScreen != null)
-                          createScreen.cssClass='active';
+                var activityMap = deployment.activityMap;
+                var startActivityKey = deployment.startActivityKey;
+                deployment.activities = new Array();
 
-                      angular.forEach(interaction.screens, function(screen) {
-                          var sections = screen.sections;
-                          if (sections != null) {
-                              var sectionMap = {};
-                              for (var n=0;n<sections.length;n++) {
-                                  var section = sections[n];
-                                  sectionMap[section.sectionId] = section;
-                              }
-                              angular.forEach(screen.groupings, function(grouping, index) {
-                                  if (screen.cssClass == 'active' && index == 0)
-                                      grouping.cssClass = 'active';
-                                  grouping.sections = [];
-                                  if (grouping.sectionIds != null) {
-                                      for (var m=0;m<grouping.sectionIds.length;m++) {
-                                          var sectionId = grouping.sectionIds[m];
-                                          var section = sectionMap[sectionId];
-                                          if (section != null) {
-                                              grouping.sections.push(section);
-                                          }
-                                      }
-                                  }
-                              });
-                          }
-                      });
-                  }
+                if (activityMap == null)
+                    return;
+
+                angular.forEach(deployment.flowElements, function(flowElement) {
+                    if (flowElement.id == null)
+                        return;
+
+                    var activity = activityMap[flowElement.id];
+                    var responseMap = activity.responseMap;
+
+                    activity.activityKey = flowElement.id;
+                    activity.flowElementLabel = flowElement.label;
+                    if (startActivityKey == activity.activityKey)
+                        $scope.onSelectActivity(activity);
+
+                    activity.accept = responseMap['COMPLETE'];
+                    activity.reject = responseMap['REJECT'];
+
+                    activity.containers = new Array();
+                    if (activity.container)
+                        activity.containers.push(activity.container);
+                    if (activity.accept && activity.accept.container)
+                        activity.containers.push(activity.accept.container);
+                    if (activity.reject && activity.reject.container)
+                        activity.containers.push(activity.reject.container);
+
+                    deployment.activities.push(activity);
                 });
-                var interaction = interactions != null && interactions.length > 0 ? interactions[0] : null;
-                if (interaction != null)
-                    $scope.onSelectInteraction(interaction, interactions);
 
                 $scope.deployment = deployment;
                 if (deployment.editable) {
@@ -247,14 +246,34 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
                 interaction.screens['CREATE'] = {};
             }
 
-            $scope.confirmDeleteField = function(processDefinitionKey, deploymentId, interactionId, sectionId, fieldId) {
-                var fieldToDelete = {
-                    title:'Are you sure you want to delete this field?',
-                    text: 'Deleting a field will remove it from the section',
+            $scope.confirmDeleteConstraint = function(processDefinitionKey, deploymentId, activityKey, fieldId, constraintId) {
+                var constraintToDelete = {
+                    title:'Are you sure you want to delete this constraint?',
+                    text: 'Deleting a constraint will remove it from the field permanently',
                     processDefinitionKey: processDefinitionKey,
                     deploymentId: deploymentId,
                     interactionId: interactionId,
                     sectionId: sectionId,
+                    fieldId: fieldId,
+                    constraintId: constraintId
+                };
+                var deleteConstraint = function(constraintToDelete) {
+                    var Field = $resource('process/:processDefinitionKey/deployment/:deploymentId/section/:sectionId/field/:fieldId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId',activityKey:'@activityKey',fieldId:'@fieldId',constraintId:'@constraintId'})
+                    Field.remove(constraintToDelete, function() {
+                        Deployment.get({processDefinitionKey:constraintToDelete.processDefinitionKey, deploymentId:constraintToDelete.deploymentId}, $scope.onGetDeployment);
+                    });
+                }
+                utils.openDeleteModal(constraintToDelete, $scope, $modal, deleteConstraint);
+            }
+
+            $scope.confirmDeleteField = function(processDefinitionKey, deploymentId, activityKey, containerId, fieldId) {
+                var fieldToDelete = {
+                    title:'Are you sure you want to delete this field?',
+                    text: 'Deleting a field will remove it from the container',
+                    processDefinitionKey: processDefinitionKey,
+                    deploymentId: deploymentId,
+                    activityKey: activityKey,
+                    containerId: containerId,
                     fieldId: fieldId
                 };
                 var deleteField = function(fieldToDelete) {
@@ -350,30 +369,29 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
                 $scope.activeGrouping = selected;
             }
 
-            $scope.onSelectScreen = function(screen, screens) {
-                var groupings = screen.groupings;
-
-                angular.forEach(screens, function(selected, action) {
-                    selected.cssClass = 'inactive';
-                });
-                screen.cssClass='active';
-                $scope.activeScreen = screen;
-                if (groupings != null && groupings.length > 0) {
-                    var grouping = groupings[0];
-                    $scope.onSelectGrouping(grouping, groupings);
+            $scope.onSelectContainer = function(container, containers) {
+                if (container.cssClass == 'active') {
+                    container.cssClass = null;
+                    $scope.container = null;
+                } else {
+                    angular.forEach(containers, function(selected) {
+                        selected.cssClass = 'inactive';
+                    });
+                    container.cssClass = 'active';
+                    $scope.container = container;
                 }
             }
 
-            $scope.onSelectInteraction = function(interaction, interactions) {
-                angular.forEach(interactions, function(selected, action) {
+            $scope.onSelectActivity = function(activity, activities) {
+                angular.forEach(activities, function(selected) {
                     selected.cssClass = 'inactive';
                 });
-                interaction.cssClass= 'active';
-                $scope.activeInteraction = interaction;
-                var screens = interaction.screens;
-                var screen = screens != null ? screens['CREATE'] : null;
-                if (screen != null)
-                    $scope.onSelectScreen(screen, screens);
+                activity.cssClass= 'active';
+                if (activity.container)
+                    activity.container.cssClass = null;
+
+                $scope.activity = activity;
+                $scope.container = null;
             }
 
             $scope.removeOption = function(option, field) {
@@ -431,10 +449,27 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
             .when('/process/:processDefinitionKey', {controller: 'ProcessEditController', templateUrl:'../static/ng/views/process-detail.html'})
             .when('/deployment/:processDefinitionKey', {controller: 'DeploymentListController', templateUrl:'../static/ng/views/deployment-list.html'})
             .when('/deployment/:processDefinitionKey/:deploymentId', {controller: 'DeploymentDetailController', templateUrl:'../static/ng/views/deployment-detail.html'})
-            .when('/interaction/:processDefinitionKey/:deploymentId', {controller: 'InteractionListController', templateUrl:'../static/ng/views/interaction-list.html'})
-            .when('/interaction/:processDefinitionKey/:deploymentId/:interactionId', {controller: 'InteractionDetailController', templateUrl:'../static/ng/views/interaction-detail.html'})
+            .when('/activity/:processDefinitionKey/:deploymentId', {controller: 'ActivityListController', templateUrl:'../static/ng/views/activity-list.html'})
+            .when('/activity/:processDefinitionKey/:deploymentId/:interactionId', {controller: 'ActivityDetailController', templateUrl:'../static/ng/views/activity-detail.html'})
 
             .otherwise({redirectTo:'/'});
+    })
+    .directive('container', function($compile){
+      return{
+        restrict: 'A',
+        replace: true,
+        link: function(scope, element, attributes){
+          if (scope.container.children && angular.isArray(scope.container.children)) {
+    				$compile('<ul><li ng-repeat="child in container.children" person="child"></li></ul>')(scope, function(cloned, scope){
+                        element.append(cloned);
+    				});
+    			}
+        },
+        scope:{
+          container:'='
+        },
+        template: '<li><span ng-click="$emit(\'clicked\', person)">{{person.name}}</span></li>'
+      }
     })
     .filter('orderActionType', function() {
         return function(input, attribute) {

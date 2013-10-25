@@ -324,12 +324,21 @@ select.form-control {
 
 .pw-field {
     border: 1px solid transparent;
+    padding: 10px;
 }
 
 .pw-field.editing {
     background-color: #FFF8DC;
     border: 1px solid #AAAAAA;
     padding: 10px;
+}
+
+.pw-field .constraints {
+
+}
+
+.pw-field .constraints ul li {
+    padding: 10px 0px;
 }
 
 .pw-field .edit-only {

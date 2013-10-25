@@ -81,6 +81,8 @@ public class ProcessInstance implements Serializable {
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
     private final Map<String, List<Value>> data;
 
+    private final Map<String, Activity> activityMap;
+
     @XmlElement
     private final Date startTime;
 
@@ -152,6 +154,7 @@ public class ProcessInstance implements Serializable {
         this.attachmentIds = Collections.unmodifiableSet(builder.attachmentIds);
         this.keywords = builder.keywords;
         this.tasks = Collections.unmodifiableMap(builder.tasks);
+        this.activityMap = builder.activityMap != null ? Collections.unmodifiableMap(builder.activityMap) : null;
 
         if (context != null) {
             if (builder.data != null && !builder.data.isEmpty()) {
@@ -262,6 +265,10 @@ public class ProcessInstance implements Serializable {
         return data;
     }
 
+    public Map<String, Activity> getActivityMap() {
+        return activityMap;
+    }
+
     @JsonIgnore
     public Set<Task> getTasks() {
         return new TreeSet<Task>(tasks.values());
@@ -331,6 +338,7 @@ public class ProcessInstance implements Serializable {
         private String applicationStatusExplanation;
         private String previousApplicationStatus;
         private ManyMap<String, Value> data;
+        private Map<String, Activity> activityMap;
         private Set<String> keywords;
         private Set<Attachment> attachments;
         private Set<String> attachmentIds;
@@ -404,6 +412,19 @@ public class ProcessInstance implements Serializable {
                 this.tasks = new HashMap<String, Task>(instance.tasks);
             else
                 this.tasks = new HashMap<String, Task>();
+
+            if (instance.activityMap != null && !instance.activityMap.isEmpty()) {
+                this.activityMap = new HashMap<String, Activity>(instance.activityMap.size());
+                for (Map.Entry<String, Activity> entry : instance.activityMap.entrySet()) {
+                    String key = entry.getKey();
+                    if (key == null)
+                        continue;
+                    if (entry.getValue() == null)
+                        continue;
+
+                    this.activityMap.put(key, entry.getValue());
+                }
+            }
 
             if (StringUtils.isNotEmpty(this.processInstanceLabel))
                 this.keywords.add(this.processInstanceLabel.toLowerCase());
@@ -579,6 +600,11 @@ public class ProcessInstance implements Serializable {
             }
 
         	return this;
+        }
+
+        public Builder activityMap(Map<String, Activity> activityMap) {
+            this.activityMap = activityMap;
+            return this;
         }
 
         public Builder submission(Submission submission) {

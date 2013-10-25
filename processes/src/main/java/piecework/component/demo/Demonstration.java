@@ -20,6 +20,7 @@ import org.activiti.engine.delegate.TaskListener;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.engine.ProcessDeploymentResource;
@@ -113,6 +114,8 @@ public class Demonstration implements TaskListener {
         try {
             processService.read(process.getProcessDefinitionKey());
             processService.updateAndPublishDeployment(process, deployment, resource);
+        } catch (MappingException mappingException) {
+            LOG.fatal("Could not create Demonstration process because of a spring mapping exception", mappingException);
         } catch (Exception e) {
             processService.create(process);
             processService.createAndPublishDeployment(process, deployment, resource);
@@ -171,10 +174,6 @@ public class Demonstration implements TaskListener {
                         .ordinal(1)
                         .build())
                 .attachmentAllowed(false)
-                .constraint(new Constraint.Builder()
-                        .type(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE)
-                        .value(ActionType.COMPLETE.name())
-                        .build())
                 .build();
     }
 
@@ -186,10 +185,6 @@ public class Demonstration implements TaskListener {
                         .ordinal(1)
                         .build())
                 .attachmentAllowed(false)
-                .constraint(new Constraint.Builder()
-                        .type(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE)
-                        .value(ActionType.REJECT.name())
-                        .build())
                 .build();
     }
 

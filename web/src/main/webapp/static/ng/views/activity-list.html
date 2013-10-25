@@ -1,0 +1,107 @@
+<ul class="breadcrumb">
+    <li><a href="#">Processes</a></li>
+    <li><a href="#/process/{{process.processDefinitionKey}}">{{process.processDefinitionLabel}}</a></li>
+    <li><a href="#/deployment/{{process.processDefinitionKey}}">Deployments</a></li>
+    <li><a href="#/deployment/{{process.processDefinitionKey}}/{{deployment.deploymentId}}">#{{deployment.deploymentVersion}}</a></li>
+    <li class="active">Activities</li>
+</ul>
+<div>
+    <nav class="navbar pw-interaction-navbar" role="navigation">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <h2>{{process.processDefinitionLabel}} Activities</h2>
+        </div>
+        <form class="navbar-form navbar-right" role="action">
+            <button ng-if="process.anonymousSubmissionAllowed" class="btn btn-default" title="Can be started by anyone and requires no authorization"><i class="icon-unlock"></i> Public</button>
+            <div ng-if="deployment.editable && !editing" class="btn-group">
+                <button ng-click="edit()" type="button" class="btn btn-success">
+                    <i class="icon-edit-sign icon-1x"></i> Edit</span>
+                </button>
+            </div>
+            <button ng-if="editing" ng-click="view()" type="button" class="btn btn-success">
+                <i class="icon-eye-open icon-1x"></i> Preview</span>
+            </button>
+            <div ng-if="editing" class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <i class="icon-building icon-1x"></i> Build <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a ng-click="addInteraction(deployment)">Add interaction</a></li>
+                    <li><a ng-click="addScreen(deployment)">Add screen</a></li>
+                    <li><a ng-click="addGrouping(deployment)">Add grouping</a></li>
+                    <li><a ng-click="addField(deployment)">Add field</a></li>
+                </ul>
+            </div>
+        </form>
+    </nav>
+</div>
+<div ng-class="cssClass" class="row">
+    <div class="pw-sidebar col-md-3">
+        <ul class="pw-sidenav nav">
+            <li class="lead">Activities</li>
+            <li ng-class="activity.cssClass" ng-repeat="activity in deployment.activities">
+                <a ng-click="onSelectActivity(activity, deployment.activityMap)">
+                    {{activity.flowElementLabel}}
+                </a>
+                <ul class="nav" ng-show="activity.cssClass=='active'">
+                    <li ng-class="activity.container.cssClass"><a ng-click="onSelectContainer(activity.container, activity.containers)"><i class="icon-edit icon-1x"></i> Form</a></li>
+                    <li ng-class="activity.accept.container.cssClass" ng-if="activity.accept"><a ng-click="onSelectContainer(activity.accept.container, activity.containers)"><i class="icon-thumbs-up icon-1x"></i> Accepted</a></li>
+                    <li ng-class="activity.reject.container.cssClass" ng-if="activity.reject"><a ng-click="onSelectContainer(activity.reject.container, activity.containers)"><i class="icon-thumbs-down icon-1x"></i> Rejected</a></li>
+                </ul>
+                <!--ul class="nav" ng-show="activity.cssClass=='active'">
+                    <li ng-class="screen.cssClass" ng-repeat="container in activity.container.children | orderActionType">
+                        <a ng-click="onSelectScreen(screen, interaction.screens)">
+                            <span ng-switch on="screen.action">
+                                <span ng-switch-when="CREATE"><i class="icon-edit icon-1x"></i> </span>
+                                <span ng-switch-when="COMPLETE"><i class="icon-ok icon-1x"></i> </span>
+                                <span ng-switch-when="REJECT"><i class="icon-thumbs-down icon-1x"></i> </span>
+                            </span>
+                            {{screen.title}}
+                        </a>
+                        <ul class="nav" ng-show="screen.cssClass=='active'  && screen.groupings.length > 1">
+                            <li ng-repeat="grouping in screen.groupings" ng-class="grouping.cssClass">
+                                <a ng-click="onSelectGrouping(grouping, screen.groupings)">
+                                    <span ng-if="grouping.title">{{grouping.title}}</span>
+                                    <span class="text-muted" ng-if="!grouping.title">Untitled screen</span>
+                                </a>
+                                <ul class="nav" ng-show="grouping.cssClass=='active' && grouping.sections.length > 1">
+                                    <li ng-repeat="section in grouping.sections">
+                                        <a ng-click="scrollTo(section.sectionId)"><span ng-if="section.title">{{section.title}}</span><span ng-if="!section.title" class="text-muted">Untitled</span></a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul-->
+            </li>
+        </ul>
+    </div>
+    <div class="col-md-9">
+        <div ng-show="activity" class="activity">
+            <div class="pull-right">
+                <a ng-if="editing" ng-click="confirmDeleteActivity(process.processDefinitionKey, deployment.deploymentId, activity.activityKey)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete activity"><i class="icon-remove icon-2x text-danger"></i></a>
+            </div>
+            <div ng-if="!container" class="activity-details">
+                <div class="form-inline">
+                    <label>Web page</label>
+                    <input ng-model="activity.location" class="form-control" type="text" size="80"/>
+                </div>
+            </div>
+            <div ng-if="container" class="activity-container">
+                <h2><span ng-if="container.title">{{container.title}}</span><span ng-if="!container.title" class="text-muted">Untitled</span></h2>
+                <hr/>
+
+                <ul ui-sortable="sortableOptions" ng-model="container.fields">
+                    <li ng-class="field.cssClass" ng-repeat="field in container.fields" ng-include="'../static/ng/views/field-edit.html'" class="pw-field" tabindex="0">
+
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

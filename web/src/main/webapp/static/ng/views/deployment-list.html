@@ -33,7 +33,7 @@
         <td>{{deployment.dateDeployed | date:'medium' }}</td>
         <td>{{deployment.datePublished | date:'medium' }}</td>
         <td>
-            <a href="#/interaction/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" role="button" title="Configure user interfaces"><i class="icon-desktop"></i></a>
+            <a href="#/activity/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" role="button" title="Configure user interfaces"><i class="icon-desktop"></i></a>
             &nbsp;
             <a ng-click="copyDeployment(process.processDefinitionKey, deployment.deploymentId)" style="cursor:pointer" role="button" title="Clone this deployment"><i class="icon-copy"></i></a>
             &nbsp;

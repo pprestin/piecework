@@ -16,19 +16,25 @@
 package piecework.resource.concrete;
 
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.cxf.jaxrs.ext.multipart.*;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.Versions;
+import piecework.engine.ProcessDeploymentResource;
 import piecework.exception.BadRequestError;
+import piecework.exception.NotFoundError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.security.Sanitizer;
 import piecework.service.ProcessService;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
@@ -37,14 +43,22 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.Streamable;
 import piecework.ui.StreamingAttachmentContent;
 
+import java.io.IOException;
+import java.util.List;
+
 /**
  * @author James Renfro
  */
 @Service
 public class ProcessResourceVersion1 implements ProcessResource {
 
+    private static final Logger LOG = Logger.getLogger(ProcessResourceVersion1.class);
+
 	@Autowired
     ProcessService processService;
+
+    @Autowired
+    Sanitizer sanitizer;
 
     @Autowired
     Versions versions;
@@ -98,6 +112,37 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
+    public Response createDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId, MultipartBody body) throws StatusCodeError {
+        ProcessDeploymentResource.Builder builder = new ProcessDeploymentResource.Builder();
+
+        List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
+        if (attachments != null && !attachments.isEmpty()) {
+            for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
+                MediaType mediaType = attachment.getContentType();
+                ContentDisposition contentDisposition = attachment.getContentDisposition();
+
+                // Don't process if there's no content type
+                if (mediaType == null)
+                    continue;
+                if (contentDisposition == null)
+                    continue;
+
+                builder.contentType(mediaType.toString());
+                builder.name(sanitizer.sanitize(contentDisposition.getParameter("name")));
+
+                try {
+                    builder.inputStream(attachment.getDataHandler().getInputStream());
+                } catch (IOException ioe) {
+                    LOG.error("Unable to process deployment resource", ioe);
+                }
+            }
+        }
+
+        ProcessDeployment deployment = processService.deploy(rawProcessDefinitionKey, rawDeploymentId, builder.build());
+        return Response.ok(deployment).build();
+    }
+
+    @Override
     public Response cloneDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
         ProcessDeployment result = processService.cloneDeployment(rawProcessDefinitionKey, rawDeploymentId);
 
@@ -114,11 +159,11 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
-    public Response deleteSection(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawActionTypeId, String rawGroupingId, String rawSectionId) throws StatusCodeError {
-        if (rawProcessDefinitionKey == null || rawDeploymentId == null || rawInteractionId == null || rawActionTypeId == null|| rawSectionId == null)
+    public Response deleteContainer(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey, String rawContainerId) throws StatusCodeError {
+        if (rawProcessDefinitionKey == null || rawDeploymentId == null || rawActivityKey == null || rawContainerId == null)
             throw new BadRequestError();
 
-        processService.deleteSection(rawProcessDefinitionKey, rawDeploymentId, rawInteractionId, rawActionTypeId, rawGroupingId, rawSectionId);
+        processService.deleteContainer(rawProcessDefinitionKey, rawDeploymentId, rawActivityKey, rawContainerId);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         return responseBuilder.build();
@@ -158,21 +203,22 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
-    public Response getInteraction(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId) throws StatusCodeError {
-        ProcessDeployment deployment = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
-        Interaction interaction = processService.getInteraction(deployment, rawInteractionId);
+    public Response getActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey) throws StatusCodeError {
+        Activity activity = processService.getActivity(rawProcessDefinitionKey, rawDeploymentId, rawActivityKey);
+        if (activity == null)
+            throw new NotFoundError();
 
-        ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(interaction, new PassthroughSanitizer()).build(versions.getVersion1()));
-        return responseBuilder.build();
+        return Response.ok(activity).build();
     }
 
     @Override
-    public Response deleteInteraction(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId) throws StatusCodeError {
+    public Response deleteActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey) throws StatusCodeError {
         ProcessDeployment deployment = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
-        Interaction interaction = processService.deleteInteraction(deployment, rawInteractionId);
+        Activity activity = processService.deleteActivity(deployment, rawActivityKey);
+        if (activity == null)
+            throw new NotFoundError();
 
-        ResponseBuilder responseBuilder = Response.ok(new Interaction.Builder(interaction, new PassthroughSanitizer()).build(versions.getVersion1()));
-        return responseBuilder.build();
+        return Response.ok(activity).build();
     }
 
     @Override
@@ -202,7 +248,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
-    public Response updateInteraction(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, Interaction rawInteraction) throws StatusCodeError {
+    public Response updateActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, Activity rawInteraction) throws StatusCodeError {
 //        processService.updateInteraction(rawProcessDefinitionKey, rawDeploymentId, rawInteractionId, rawInteraction);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
@@ -210,7 +256,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
-    public Response updateSection(String rawProcessDefinitionKey, String rawDeploymentId, String rawSectionId, Section rawSection) throws StatusCodeError {
+    public Response updateContainer(String rawProcessDefinitionKey, String rawDeploymentId, String rawSectionId, String containerId, Container rawSection) throws StatusCodeError {
 //        processService.updateSection(rawProcessDefinitionKey, rawDeploymentId, rawSectionId, rawSection);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
@@ -218,7 +264,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
-    public Response updateField(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawSectionId, String rawFieldId, Field rawField) throws StatusCodeError {
+    public Response updateField(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawFieldId, Field rawField) throws StatusCodeError {
 //        processService.updateField(rawProcessDefinitionKey, rawDeploymentId, rawSectionId, rawFieldId, rawField);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);

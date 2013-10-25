@@ -19,6 +19,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.enumeration.ActionType;
 import piecework.security.Sanitizer;
 import piecework.util.ManyMap;
 
@@ -57,6 +58,11 @@ public class FormRequest {
     private final String certificateIssuer;
 
     @DBRef
+    private final Activity activity;
+
+    private final ActionType action;
+
+    @DBRef
     private final Screen screen;
 
     private final String contentType;
@@ -91,6 +97,8 @@ public class FormRequest {
         this.actAsUser = builder.actAsUser;
         this.certificateSubject = builder.certificateSubject;
         this.certificateIssuer = builder.certificateIssuer;
+        this.action = builder.action;
+        this.activity = builder.activity;
         this.screen = builder.screen;
         this.contentType= builder.contentType;
         this.acceptableMediaTypes = Collections.unmodifiableList(builder.acceptableMediaTypes);
@@ -145,6 +153,14 @@ public class FormRequest {
         return taskId;
     }
 
+    public ActionType getAction() {
+        return action;
+    }
+
+    public Activity getActivity() {
+        return activity;
+    }
+
     public Screen getScreen() {
         return screen;
     }
@@ -173,6 +189,10 @@ public class FormRequest {
         return task;
     }
 
+    public String getUserAgent() {
+        return userAgent;
+    }
+
     public final static class Builder {
 
         private String requestId;
@@ -188,6 +208,8 @@ public class FormRequest {
         private String taskId;
         private ProcessInstance instance;
         private Task task;
+        private Activity activity;
+        private ActionType action;
         private Screen screen;
         private String contentType;
         private List<String> acceptableMediaTypes;
@@ -213,6 +235,8 @@ public class FormRequest {
             this.certificateSubject = sanitizer.sanitize(request.certificateSubject);
             this.certificateIssuer = sanitizer.sanitize(request.certificateIssuer);
             this.taskId = sanitizer.sanitize(request.taskId);
+            this.action = request.action;
+            this.activity = request.activity != null ? new Activity.Builder(request.activity, sanitizer).build() : null;
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.contentType = sanitizer.sanitize(request.contentType);
             this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
@@ -280,6 +304,11 @@ public class FormRequest {
             return this;
         }
 
+        public Builder activity(Activity activity) {
+            this.activity = activity;
+            return this;
+        }
+
         public Builder screen(Screen screen) {
             this.screen = screen;
             return this;
@@ -301,6 +330,11 @@ public class FormRequest {
             if (messages != null) {
                 this.messages = new ManyMap<String, Message>(messages);
             }
+            return this;
+        }
+
+        public Builder action(ActionType action) {
+            this.action = action;
             return this;
         }
 

@@ -14,6 +14,6 @@ public interface ContentRepository {
 
     List<Content> findByLocationPattern(String locationPattern) throws IOException;
 
-    Content save(Content content);
+    Content save(Content content) throws IOException;
 
 }

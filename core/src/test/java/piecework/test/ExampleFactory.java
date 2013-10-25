@@ -344,19 +344,11 @@ public class ExampleFactory {
         Screen task1ConfirmationScreen = new Screen.Builder()
                 .screenId("4")
                 .title("Task 1 Confirmation Screen")
-                .constraint(new Constraint.Builder()
-                        .type(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE)
-                        .value(ActionType.COMPLETE.name())
-                        .build())
                 .build();
 
         Screen task1RejectionScreen = new Screen.Builder()
                 .screenId("5")
                 .title("Task 1 Rejection Screen")
-                .constraint(new Constraint.Builder()
-                        .type(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE)
-                        .value(ActionType.REJECT.name())
-                        .build())
                 .build();
 
         Interaction task1Interaction = new Interaction.Builder()

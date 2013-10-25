@@ -92,15 +92,6 @@ public class ScreenHandler {
         return nextScreen;
     }
 
-    private boolean satisfiesScreenConstraints(Screen screen, ActionType action) {
-        Constraint constraint = ConstraintUtil.getConstraint(Constants.ConstraintTypes.SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE, screen.getConstraints());
-        if (constraint != null) {
-            ActionType expected = ActionType.valueOf(constraint.getValue());
-            return expected == action;
-        }
-        return true;
-    }
-
     private Interaction startInteraction(Process process) throws InternalServerError {
         ProcessDeployment deployment = process.getDeployment();
         if (deployment == null)

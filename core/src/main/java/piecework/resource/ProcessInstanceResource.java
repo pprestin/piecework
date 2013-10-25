@@ -150,6 +150,12 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("text/plain")
+    Response value(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, String value) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("multipart/form-data")
     Response value(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, MultipartBody body) throws StatusCodeError;
 

@@ -47,7 +47,7 @@ import piecework.common.ViewContext;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = Field.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Field implements Serializable {
+public class Field implements Serializable, Comparable<Field> {
 
 	private static final long serialVersionUID = -8642937056889667692L;
 
@@ -261,6 +261,30 @@ public class Field implements Serializable {
 
     public boolean isVisible() {
         return visible;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        Field other = Field.class.cast(o);
+        return fieldId != null && other.fieldId != null ? other.fieldId.equals(fieldId) : false;
+    }
+
+    @Override
+    public int hashCode() {
+        return fieldId != null ? fieldId.hashCode() : 0;
+    }
+
+    @Override
+    public int compareTo(Field o) {
+        int result = ordinal - o.ordinal;
+
+        if (result == 0 && fieldId != null && o.fieldId != null)
+            return fieldId.compareTo(o.fieldId);
+
+        if (result == 0 && name != null && o.name != null)
+            return name.compareTo(o.name);
+
+        return 0;
     }
 
     public final static class Builder {

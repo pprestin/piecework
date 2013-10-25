@@ -81,7 +81,7 @@ public class FormFactory {
 
         FactoryWorker worker = new FactoryWorker(process, instance, task, screen, version, loggedInUserId, currentUser, hasOversight);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
-        ManyMap<String, Message> results = new ManyMap<String, Message>();
+        ManyMap<String, Message> messages = new ManyMap<String, Message>();
 
         if (instance != null) {
             data.putAll(encryptionService.decrypt(instance.getData()));
@@ -89,14 +89,14 @@ public class FormFactory {
 
         if (validation != null) {
             data.putAll(encryptionService.decrypt(validation.getData()));
-            results.putAll(validation.getResults());
+            messages.putAll(validation.getResults());
         }
 
         if (request.getMessages() != null) {
-            results.putAll(request.getMessages());
+            messages.putAll(request.getMessages());
         }
 
-        Form form = worker.form(formInstanceId, data, results);
+        Form form = worker.form(formInstanceId, data, messages);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Constructed form in " + (System.currentTimeMillis() - start) + " ms");

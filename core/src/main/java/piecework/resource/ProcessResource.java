@@ -21,6 +21,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.Resource;
@@ -70,7 +71,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     Response createDeployment(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
 
     @POST
-    @Path("{processDefinitionKey}/deployment/{deploymentId}")
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/clone")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response cloneDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
@@ -79,6 +80,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response getDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
+    @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
@@ -105,6 +107,12 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @GET
     @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    @Consumes({"multipart/form-data"})
+    Response createDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, MultipartBody body) throws StatusCodeError;
+
+    @GET
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response getDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
     @GET
@@ -114,42 +122,41 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     Response getDiagram(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
     @GET
-    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response getInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId) throws StatusCodeError;
+    Response getActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey) throws StatusCodeError;
 
     @DELETE
-    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response deleteInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId) throws StatusCodeError;
+    Response deleteActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey) throws StatusCodeError;
 
     @DELETE
-    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}/screen/{actionTypeId}/grouping/{groupingId}/section/{sectionId}")
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}/container/{containerId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response deleteSection(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, @PathParam("actionTypeId") String actionTypeId, @PathParam("groupingId") String groupingId, @PathParam("sectionId") String sectionId) throws StatusCodeError;
+    Response deleteContainer(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId) throws StatusCodeError;
 
     @DELETE
-    @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}/field/{fieldId}")
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}/container/{containerId}/field/{fieldId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response deleteField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, @PathParam("sectionId") String sectionId, @PathParam("fieldId") String fieldId) throws StatusCodeError;
+    Response deleteField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId, @PathParam("fieldId") String fieldId) throws StatusCodeError;
 
     @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response updateInteraction(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, Interaction interaction) throws StatusCodeError;
+    Response updateActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, Activity activity) throws StatusCodeError;
 
     @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response updateSection(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("sectionId") String sectionId, Section section) throws StatusCodeError;
+    Response updateContainer(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId, Container container) throws StatusCodeError;
 
     @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}/field/{fieldId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response updateField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("interactionId") String interactionId, @PathParam("sectionId") String sectionId, @PathParam("fieldId") String fieldId, Field field) throws StatusCodeError;
-
+    Response updateField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("fieldId") String fieldId, Field field) throws StatusCodeError;
 
 }

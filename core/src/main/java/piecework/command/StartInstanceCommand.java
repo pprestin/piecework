@@ -85,6 +85,9 @@ public class StartInstanceCommand extends InstanceCommand {
                     .attachments(attachments)
                     .applicationStatus(initiationStatus);
 
+            if (process.isAllowPerInstanceActivities())
+                builder.activityMap(submission.getActivityMap());
+
             // Save it before routing, then save again with the engine instance id
             ProcessInstance stored = repository.save(builder.build());
 

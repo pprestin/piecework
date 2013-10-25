@@ -51,6 +51,9 @@ public class ProcessService {
     private static final Logger LOG = Logger.getLogger(ProcessService.class);
 
     @Autowired
+    ActivityRepository activityRepository;
+
+    @Autowired
     CommandExecutor commandExecutor;
 
     @Autowired
@@ -184,6 +187,16 @@ public class ProcessService {
         return processRepository.save(builder.build());
     }
 
+    public Activity deleteActivity(ProcessDeployment deployment, String rawActivityKey) throws StatusCodeError {
+        String activityKey = sanitizer.sanitize(rawActivityKey);
+        Activity deleted = deployment.getActivity(activityKey);
+        if (deleted == null)
+            return null;
+
+        deploymentRepository.save(new ProcessDeployment.Builder(deployment, null, sanitizer, true).deleteActivity(activityKey).build());
+        return deleted;
+    }
+
     public void deleteDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
@@ -195,26 +208,29 @@ public class ProcessService {
         processRepository.save(updated);
     }
 
-    public void deleteSection(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, String rawActionTypeId, String rawGroupingId, String rawSectionId) throws StatusCodeError {
+    public void deleteContainer(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey, String rawContainerId) throws StatusCodeError {
         ProcessDeployment deployment = getDeployment(rawProcessDefinitionKey, rawDeploymentId);
-        String interactionId = sanitizer.sanitize(rawInteractionId);
-        String actionTypeId = sanitizer.sanitize(rawActionTypeId);
-        String groupingId = sanitizer.sanitize(rawGroupingId);
-        String sectionId = sanitizer.sanitize(rawSectionId);
+        String activityKey = sanitizer.sanitize(rawActivityKey);
+        String containerId = sanitizer.sanitize(rawContainerId);
 
-        if (StringUtils.isEmpty(interactionId) || StringUtils.isEmpty(sectionId) || StringUtils.isEmpty(actionTypeId))
+        if (StringUtils.isEmpty(activityKey) || StringUtils.isEmpty(containerId))
             throw new BadRequestError();
 
         if (!deployment.isEditable())
             throw new ForbiddenError(Constants.ExceptionCodes.not_editable);
 
-        ActionType actionType = ActionType.valueOf(actionTypeId);
-
         ProcessDeployment updated = new ProcessDeployment.Builder(deployment, null, sanitizer, true)
-                .deleteScreenGroupingSection(interactionId, actionType, groupingId, sectionId)
+                .deleteContainer(activityKey, containerId)
                 .build();
 
         deploymentRepository.save(updated);
+    }
+
+    public Activity getActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityId) throws StatusCodeError {
+        ProcessDeployment deployment = getDeployment(rawProcessDefinitionKey, rawDeploymentId);
+        String activityKey = sanitizer.sanitize(rawActivityId);
+
+        return deployment.getActivity(activityKey);
     }
 
     public ProcessDeployment getDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
@@ -275,46 +291,6 @@ public class ProcessService {
         ProcessDeployment processDeployment = deploymentRepository.findOne(deploymentId);
         Content content = contentRepository.findByLocation(processDeployment.getEngineProcessDefinitionLocation());
         return new ProcessDeploymentResource.Builder(content).build();
-    }
-
-    public Interaction getInteraction(ProcessDeployment deployment, String rawInteractionId) throws StatusCodeError {
-        String interactionId = sanitizer.sanitize(rawInteractionId);
-
-        List<Interaction> interactions = deployment.getInteractions();
-        Map<String, Section> sectionMap = deployment.getSectionMap();
-        if (interactions != null) {
-            for (Interaction interaction : interactions) {
-                if (interaction != null && interaction.getId() != null && interaction.getId().equals(interactionId)) {
-                    return ProcessUtility.interaction(interaction, sectionMap, versions.getVersion1());
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public Interaction deleteInteraction(ProcessDeployment deployment, String rawInteractionId) throws StatusCodeError {
-        String interactionId = sanitizer.sanitize(rawInteractionId);
-
-        ProcessDeployment.Builder updated = new ProcessDeployment.Builder(deployment, null, sanitizer, true);
-        updated.clearInteractions();
-
-        Interaction deleted = null;
-        List<Interaction> interactions = deployment.getInteractions();
-        Map<String, Section> sectionMap = deployment.getSectionMap();
-        if (interactions != null) {
-            for (Interaction interaction : interactions) {
-                if (interaction != null && interaction.getId() != null && !interaction.getId().equals(interactionId)) {
-                    updated.interaction(interaction);
-                } else {
-                    deleted = interaction;
-                }
-            }
-        }
-
-        deploymentRepository.save(updated.build());
-
-        return deleted;
     }
 
     public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws StatusCodeError {
@@ -437,8 +413,8 @@ public class ProcessService {
         ProcessDeployment update = new ProcessDeployment.Builder(rawDeployment, process.getProcessDefinitionKey(), sanitizer, true).build();
 
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
+        builder.deploymentLabel(update.getDeploymentLabel());
 
-        // FIXME -- currently doesn't make any changes
 
 
         return cascadeSave(builder.build(), selectedDeploymentVersion.getVersion(), false);
@@ -462,6 +438,7 @@ public class ProcessService {
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, null, sanitizer, false)
                 .deploymentVersion(deploymentVersion);
 
+        builder.clearActivities();
         builder.clearInteractions();
         builder.clearNotifications();
         builder.clearSections();
@@ -469,6 +446,19 @@ public class ProcessService {
         if (createNew)
             builder.deploymentId(null);
         builder.published(false);
+
+        Map<String, Activity> activityMap = deployment.getActivityMap();
+        if (activityMap != null) {
+            for (Map.Entry<String, Activity> entry : deployment.getActivityMap().entrySet()) {
+                String key = sanitizer.sanitize(entry.getKey());
+                if (key == null)
+                    continue;
+                if (entry.getValue() == null)
+                    continue;
+
+                builder.activity(key, activityRepository.save(new Activity.Builder(entry.getValue(), sanitizer).build()));
+            }
+        }
 
         Map<String, String> sectionIdMap = new HashMap<String, String>();
         if (deployment.getSections() != null && !deployment.getSections().isEmpty()) {
@@ -529,7 +519,6 @@ public class ProcessService {
                 builder.notification(persistedNotification);
             }
         }
-
 
         return deploymentRepository.save(builder.build());
     }

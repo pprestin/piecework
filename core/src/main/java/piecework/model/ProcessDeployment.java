@@ -22,8 +22,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.FlowElementType;
+import piecework.enumeration.State;
 import piecework.security.Sanitizer;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessUtility;
 
 import javax.xml.bind.annotation.*;
@@ -73,16 +74,14 @@ public class ProcessDeployment implements Serializable {
     private final String engineDeploymentId;
 
     @XmlElement
-    private final String initiationStatus;
+    private final String startActivityKey;
 
-    @XmlElement
-    private final String cancellationStatus;
+    @DBRef
+    private final Map<String, Activity> activityMap;
 
-    @XmlElement
-    private final String completionStatus;
+    private final List<FlowElement> flowElements;
 
-    @XmlElement
-    private final String suspensionStatus;
+    private Map<State, String> applicationStatus;
 
     @XmlAttribute
     private final String base;
@@ -143,10 +142,9 @@ public class ProcessDeployment implements Serializable {
         this.engineProcessDefinitionId = builder.engineProcessDefinitionId;
         this.engineProcessDefinitionResource = builder.engineProcessDefinitionResource;
         this.engineDeploymentId = builder.engineDeploymentId;
-        this.initiationStatus = builder.initiationStatus;
-        this.cancellationStatus = builder.cancellationStatus;
-        this.completionStatus = builder.completionStatus;
-        this.suspensionStatus = builder.suspensionStatus;
+        this.startActivityKey = builder.startActivityKey;
+        this.activityMap = Collections.unmodifiableMap(builder.activityMap);
+        this.flowElements = Collections.unmodifiableList(builder.flowElements);
         this.base = builder.base;
         this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
         this.sections = Collections.unmodifiableList(builder.sections);
@@ -205,20 +203,47 @@ public class ProcessDeployment implements Serializable {
         return engineProcessDefinitionResource;
     }
 
+    public String getStartActivityKey() {
+        return startActivityKey;
+    }
+
+    @JsonIgnore
+    public Activity getActivity(String activityKey) {
+        if (activityMap != null && activityKey != null)
+            return activityMap.get(activityKey);
+        return null;
+    }
+
+    public Map<String, Activity> getActivityMap() {
+        return activityMap;
+    }
+
+    public Map<State, String> getApplicationStatus() {
+        return applicationStatus;
+    }
+
+    @JsonIgnore
     public String getCancellationStatus() {
-        return cancellationStatus;
+        return applicationStatus != null ? applicationStatus.get(State.CANCELLATION) : null;
     }
 
+    @JsonIgnore
     public String getSuspensionStatus() {
-        return suspensionStatus;
+        return applicationStatus != null ? applicationStatus.get(State.SUSPENSION) : null;
     }
 
+    @JsonIgnore
     public String getInitiationStatus() {
-        return initiationStatus;
+        return applicationStatus != null ? applicationStatus.get(State.INITIATION) : null;
     }
 
+    @JsonIgnore
     public String getCompletionStatus() {
-        return completionStatus;
+        return applicationStatus != null ? applicationStatus.get(State.COMPLETION) : null;
+    }
+
+    public List<FlowElement> getFlowElements() {
+        return flowElements;
     }
 
     public List<Interaction> getInteractions() {
@@ -299,10 +324,10 @@ public class ProcessDeployment implements Serializable {
         private String engineProcessDefinitionResource;
         private String engineDeploymentId;
         private String base;
-        private String initiationStatus;
-        private String cancellationStatus;
-        private String completionStatus;
-        private String suspensionStatus;
+        private String startActivityKey;
+        private Map<String, Activity> activityMap;
+        private List<FlowElement> flowElements;
+        private Map<State, String> applicationStatus;
         private List<Interaction> interactions;
         private List<Section> sections;
         private List<Notification> notifications;
@@ -317,6 +342,9 @@ public class ProcessDeployment implements Serializable {
 
         public Builder() {
             super();
+            this.activityMap = new HashMap<String, Activity>();
+            this.flowElements = new ArrayList<FlowElement>();
+            this.applicationStatus = new HashMap<State, String>();
             this.interactions = new ArrayList<Interaction>();
             this.sections = new ArrayList<Section>();
             this.notifications = new ArrayList<Notification>();
@@ -338,10 +366,40 @@ public class ProcessDeployment implements Serializable {
             this.engineProcessDefinitionResource = sanitizer.sanitize(deployment.engineProcessDefinitionResource);
             this.engineDeploymentId = sanitizer.sanitize(deployment.engineDeploymentId);
             this.base = sanitizer.sanitize(deployment.base);
-            this.initiationStatus = sanitizer.sanitize(deployment.initiationStatus);
-            this.cancellationStatus = sanitizer.sanitize(deployment.cancellationStatus);
-            this.completionStatus = sanitizer.sanitize(deployment.completionStatus);
-            this.suspensionStatus = sanitizer.sanitize(deployment.suspensionStatus);
+            this.applicationStatus = new HashMap<State, String>();
+            this.startActivityKey = sanitizer.sanitize(deployment.startActivityKey);
+            this.activityMap = new HashMap<String, Activity>();
+            if (includeDetails && deployment.getActivityMap() != null) {
+                for (Map.Entry<String, Activity> entry : deployment.getActivityMap().entrySet()) {
+                    String key = sanitizer.sanitize(entry.getKey());
+                    if (key == null)
+                        continue;
+                    if (entry.getValue() == null)
+                        continue;
+
+                    this.activityMap.put(key, new Activity.Builder(entry.getValue(), sanitizer).build());
+                }
+            }
+            this.flowElements = new ArrayList<FlowElement>();
+            if (deployment.getFlowElements() != null) {
+                for (FlowElement flowElement : deployment.getFlowElements()) {
+                    String taskDefinitionKey = sanitizer.sanitize(flowElement.getId());
+                    String label = sanitizer.sanitize(flowElement.getLabel());
+                    FlowElementType type = flowElement.getType();
+                    this.flowElements.add(new FlowElement(taskDefinitionKey, label, type));
+                }
+            }
+            if (deployment.getApplicationStatus() != null) {
+                for (Map.Entry<State, String> entry : deployment.getApplicationStatus().entrySet()) {
+                    State key = entry.getKey();
+                    if (key == null)
+                        continue;
+                    String value = sanitizer.sanitize(entry.getValue());
+                    if (value == null)
+                        continue;
+                    this.applicationStatus.put(key, value);
+                }
+            }
             this.defaultScreen = deployment.defaultScreen != null ? new Screen.Builder(deployment.defaultScreen, sanitizer).processDefinitionKey(processDefinitionKey).build() : null;
             if (includeDetails && deployment.interactions != null && !deployment.interactions.isEmpty()) {
                 this.interactions = new ArrayList<Interaction>(deployment.interactions.size());
@@ -431,28 +489,23 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
+        public Builder startActivityKey(String startActivityKey) {
+            this.startActivityKey = startActivityKey;
+            return this;
+        }
+
+        public Builder activity(String activityKey, Activity activity) {
+            this.activityMap.put(activityKey, activity);
+            return this;
+        }
+
         public Builder base(String base) {
             this.base = base;
             return this;
         }
 
-        public Builder cancellationStatus(String cancellationStatus) {
-            this.cancellationStatus = cancellationStatus;
-            return this;
-        }
-
-        public Builder completionStatus(String completionStatus) {
-            this.completionStatus = completionStatus;
-            return this;
-        }
-
-        public Builder initiationStatus(String initiationStatus) {
-            this.initiationStatus = initiationStatus;
-            return this;
-        }
-
-        public Builder suspensionStatus(String suspensionStatus) {
-            this.suspensionStatus = suspensionStatus;
+        public Builder flowElement(String taskDefinitionKey, String label, FlowElementType type) {
+            this.flowElements.add(new FlowElement(taskDefinitionKey, label, type));
             return this;
         }
 
@@ -522,6 +575,11 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
+        public Builder clearActivities() {
+            this.activityMap = new HashMap<String, Activity>();
+            return this;
+        }
+
         public Builder clearInteractions() {
             this.interactions = new ArrayList<Interaction>();
             return this;
@@ -537,22 +595,21 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
-        public Builder deleteScreenGroupingSection(String interactionId, ActionType actionType, String groupingId, String sectionId) {
-            if (this.interactions != null && !this.interactions.isEmpty()) {
-                List<Interaction> modifiedInteractions = new ArrayList<Interaction>();
-                boolean isInteractionDelete = actionType == null && groupingId == null && sectionId == null;
-                for (Interaction interaction : this.interactions) {
-                    if (interactionId != null && interaction.getId() != null && interactionId.equals(interaction.getId())) {
-                        Interaction modified = ProcessUtility.delete(interaction, actionType, groupingId, sectionId);
-                        if (modified != null)
-                            modifiedInteractions.add(modified);
-                    } else
-                        modifiedInteractions.add(interaction);
-                }
-                this.interactions = modifiedInteractions;
+        public Builder deleteActivity(String activityKey) {
+            this.activityMap.remove(activityKey);
+            return this;
+        }
+
+        public Builder deleteContainer(String activityKey, String containerId) {
+            Activity activity = this.activityMap.get(activityKey);
+            if (activity != null) {
+                activity = activity.withoutContainer(containerId);
+                if (activity != null)
+                    this.activityMap.put(activityKey, activity);
             }
             return this;
         }
+
     }
 
     public static class Constants {

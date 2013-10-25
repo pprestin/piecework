@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.enumeration.ActionType;
@@ -71,6 +72,9 @@ public class Submission {
     @XmlElementRef
     private final List<Attachment> attachments;
 
+    @DBRef
+    private final Map<String, Activity> activityMap;
+
     @XmlTransient
     private final Date submissionDate;
 
@@ -92,6 +96,7 @@ public class Submission {
         this.taskId = builder.taskId;
         this.processInstanceLabel = builder.processInstanceLabel;
         this.attachments = Collections.unmodifiableList(builder.attachments);
+        this.activityMap = builder.activityMap != null ? Collections.unmodifiableMap(builder.activityMap) : null;
         this.action = builder.action;
         this.data = builder.data;
         this.submissionDate = builder.submissionDate;
@@ -143,6 +148,10 @@ public class Submission {
         return assignee;
     }
 
+    public Map<String, Activity> getActivityMap() {
+        return activityMap;
+    }
+
     @JsonIgnore
 	public Date getSubmissionDate() {
         return submissionDate;
@@ -163,6 +172,7 @@ public class Submission {
         private ActionType action;
         private ManyMap<String, Value> data;
         private List<Attachment> attachments;
+        private Map<String, Activity> activityMap;
         private Date submissionDate;
         private String submitterId;
         private String assignee;
@@ -218,6 +228,19 @@ public class Submission {
                 }
             } else {
                 this.attachments = new ArrayList<Attachment>();
+            }
+
+            if (submission.activityMap != null && !submission.activityMap.isEmpty()) {
+                this.activityMap = new HashMap<String, Activity>(submission.activityMap.size());
+                for (Map.Entry<String, Activity> entry : submission.activityMap.entrySet()) {
+                    String key = sanitizer.sanitize(entry.getKey());
+                    if (key == null)
+                        continue;
+                    if (entry.getValue() == null)
+                        continue;
+
+                    this.activityMap.put(key, new Activity.Builder(entry.getValue(), sanitizer).build());
+                }
             }
             this.assignee = submission.assignee;
         }

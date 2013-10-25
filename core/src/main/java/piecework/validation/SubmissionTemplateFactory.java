@@ -16,6 +16,7 @@
 package piecework.validation;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -27,6 +28,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.util.ConstraintUtil;
 import piecework.util.OptionResolver;
+import piecework.util.ProcessUtility;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -61,6 +63,63 @@ public class SubmissionTemplateFactory {
      */
     public SubmissionTemplate submissionTemplate(Process process, Screen screen) throws StatusCodeError {
         return submissionTemplate(process, screen, null);
+    }
+
+    /*
+     * Takes an activity and generates the appropriate submission template for it,
+     * limiting to a specific section id
+     */
+    public SubmissionTemplate submissionTemplate(Process process, Activity activity, String validationId) throws StatusCodeError {
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        Set<Field> fields = null;
+
+        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+        Container container = activity.getContainer();
+        if (container != null) {
+            if (StringUtils.isNotEmpty(validationId))
+                container = ProcessUtility.container(activity.getContainer(), validationId);
+
+            if (container != null) {
+                Map<String, Field> fieldMap = activity.getFieldMap();
+                List<String> fieldIds = container.getFieldIds();
+
+                if (fieldIds != null) {
+                    fields = new TreeSet<Field>();
+                    for (String fieldId : fieldIds) {
+                        Field field = fieldMap.get(fieldId);
+                        if (field != null)
+                            fields.add(field);
+                    }
+                }
+
+                // Only add buttons to the validation from the top-level container, or from
+                // the particular validation container that is selected
+                List<Button> buttons = container.getButtons();
+                if (buttons != null) {
+                    for (Button button : buttons) {
+                        if (button == null)
+                            continue;
+                        builder.button(button);
+                    }
+                }
+            }
+        }
+
+        // If we're not validating a single container, or if we weren't able to find the container to validate,
+        // then simply validate all fields for this activity
+        if (fields == null)
+            fields = activity.getFields();
+
+        if (fields != null) {
+            for (Field field : fields) {
+                addField(builder, field);
+            }
+        }
+
+        return builder.build();
     }
 
     /*
@@ -130,8 +189,7 @@ public class SubmissionTemplateFactory {
                 if (field.getType().equals(Constants.FieldTypes.PERSON))
                     builder.userField(fieldName);
 
-//                if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
-//                    builder.userField(fieldName);
+                builder.field(field);
             }
         }
     }

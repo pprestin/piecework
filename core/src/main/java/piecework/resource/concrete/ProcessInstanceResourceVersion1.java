@@ -35,6 +35,7 @@ import piecework.service.ProcessHistoryService;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.service.ValuesService;
+import piecework.util.ManyMap;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
 import piecework.exception.*;
@@ -366,6 +367,37 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         return valuesService.read(process, instance, fieldName, valueId);
+    }
+
+    @Override
+    public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String value) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+        String fieldName = sanitizer.sanitize(rawFieldName);
+
+        Task task = taskService.allowedTask(process, instance, true);
+        if (task == null && !helper.isAuthenticatedSystem())
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
+
+        Screen screen = formRequest.getScreen();
+
+        if (screen == null)
+            throw new ConflictError();
+
+        Field field = FormFactory.getField(process, screen, fieldName);
+        if (field == null)
+            throw new NotFoundError();
+
+        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
+        formValueMap.putOne(fieldName, value);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(field);
+        Submission submission = submissionHandler.handle(process, template, formValueMap);
+        processInstanceService.save(process, instance, task, template, submission);
+
+        return Response.noContent().build();
     }
 
     @Override

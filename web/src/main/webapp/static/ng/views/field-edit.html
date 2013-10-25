@@ -1,0 +1,146 @@
+<div class="view-only" ng-click="editing && onFieldFocus(field, container.fields)" ng-dblclick="editing && onFieldEdit(field)">
+    <div class="focus-only pull-right">
+        <button class="btn btn-success" ng-click="onFieldEdit(field)" ng-key-up="onFieldKeyUp(field, $event)"><i class="icon-edit"></i> Edit</button>
+    </div>
+    <label ng-if="field.label">{{field.label}}</label>
+    <div ng-switch on="field.type">
+        <div ng-switch-when="html" ng-bind-html="field.defaultValue">{{field.defaultValue}}</div>
+        <textarea ng-switch-when="textarea" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
+        <div ng-switch-when="checkbox">
+            <div class="checkbox" ng-repeat="option in field.options">
+                <label>
+                    <input type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+                </label>
+            </div>
+        </div>
+        <input ng-switch-when="date" class="form-control" type="datetime-local" name="{{field.name}}"/>
+        <div ng-switch-when="radio">
+            <div class="radio" ng-repeat="option in field.options">
+                <label>
+                    <input type="radio" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+                </label>
+            </div>
+        </div>
+        <div ng-switch-when="select-one">
+            <select class="form-control" name="{{field.name}}" >
+                <option ng-repeat="option in field.options" value="{{option.value}}">
+                    {{option.label!='' && option.label || option.value}}
+                </option>
+            </select>
+        </div>
+        <input ng-switch-default class="form-control" type="{{field.type}}" name="{{field.name}}" size="{{field.displayValueLength}}" maxlength="{{field.maxValueLength}}"/>
+    </div>
+</div>
+
+<div class="edit-only container">
+    <div class="row">
+        <div class="pull-right">
+            <a ng-if="editing" ng-click="confirmDeleteField(process.processDefinitionKey, deployment.deploymentId, activity.activityKey, container.containerId, field.fieldId)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete field"><i class="icon-remove icon-1x text-danger"></i></a>
+        </div>
+        <div ng-show="field.type != 'html'">
+            <div class="form-group col-md-6">
+                <label>Label</label>
+                <input class="form-control" type="text" size="40" value="{{field.label}}"/>
+            </div>
+            <div class="form-group col-md-4">
+                <label>Type</label>
+                <select ng-model="field.type" class="form-control">
+                    <option value="checkbox">Checkbox</option>
+                    <option value="person">Person</option>
+                    <option value="radio">Radio</option>
+                    <option value="select-one">Select</option>
+                    <option value="select-multiple">Select Multiple</option>
+                    <option value="textarea">Textarea</option>
+                    <option value="text">Textbox</option>
+                </select>
+            </div>
+            <div class="form-group col-md-2">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="field.editable"> Editable
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="field.required"> Required
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="field.restricted"> Restricted
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div ng-show="field.type == 'html'">
+            <textarea ng-model="field.defaultValue" class="form-control" rows="14"></textarea>
+        </div>
+    </div>
+    <div class="row options" ng-show="field.type == 'select-one' || field.type == 'select-multiple' || field.type == 'radio' || field.type == 'checkbox'">
+        <h5>Options</h5>
+        <ul ng-repeat="option in field.options">
+            <li class="form-inline">
+                <input ng-model="option.value" type="text" class="form-control" placeholder="value"/>
+                <input ng-model="option.label" type="text" class="form-control" placeholder="label"/>
+                <button class="btn btn-link" type="button" aria-hidden="true"><i ng-click="removeOption(option, field)" class="icon-remove text-danger"></i></button>
+            </li>
+        </ul>
+        <button ng-click="addOption(field)" class="btn btn-default">Add Option</button>
+    </div>
+    <div class="row">
+        <button ng-click="field.advanced = !field.advanced" class="btn btn-link"><i ng-class="{'icon-chevron-down':field.advanced, 'icon-chevron-right':!field.advanced}"></i> Advanced</button>
+        <div class="advanced col-md-12" ng-if="field.advanced">
+            <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                <label>Display length</label>
+                <input type="number" ng-model="field.displayValueLength" class="form-control"/>
+            </div>
+            <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                <label>Max length</label>
+                <input type="number" ng-model="field.maxValueLength" class="form-control"/>
+            </div>
+            <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                <label>Pattern</label>
+                <input type="text" ng-model="field.pattern" class="form-control"/>
+            </div>
+            <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                <label>Mask</label>
+                <input type="text" ng-model="field.mask" class="form-control"/>
+            </div>
+            <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                <label>Placeholder</label>
+                <input type="text" ng-model="field.placeholder" class="form-control"/>
+            </div>
+            <div class="form-group col-md-4" ng-if="field.type == 'text'">
+                <label>Default value</label>
+                <input type="text" ng-model="field.defaultValue" class="form-control"/>
+            </div>
+            <h5>Constraints</h5>
+            <div class="constraints row">
+                <ul ng-repeat="constraint in field.constraints" class="form-inline col-md-12">
+                    <li>
+                        <div class="pull-right">
+                            <a ng-if="editing" ng-click="confirmDeleteConstraint(process.processDefinitionKey, deployment.deploymentId, activity.activityKey, field.fieldId, constraint.constraintId)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete activity"><i class="icon-remove icon-2x text-danger"></i></a>
+                        </div>
+                        <select ng-model="constraint.type" class="form-control">
+                            <option></option>
+                            <option value="IS_ONLY_REQUIRED_WHEN">Required when</option>
+                            <option value="IS_ONLY_VISIBLE_WHEN">Visible when</option>
+                        </select>
+                        <input ng-model="constraint.name" type="text" class="form-control" placeholder="name"/>
+                        <input ng-model="constraint.value" type="text" class="form-control" placeholder="value" size="30"/>
+                    </li>
+                </ul>
+                <div class="clearfix"></div>
+                <div class="col-md-12">
+                    <button ng-click="addConstraint(field)" class="btn btn-default">Add Constraint</button>
+                </div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div class="pull-right">
+            <button class="btn btn-primary" type="button">Save</button>
+            <button ng-click="onFieldCancel(field)" class="btn btn-default" type="button">Cancel</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>

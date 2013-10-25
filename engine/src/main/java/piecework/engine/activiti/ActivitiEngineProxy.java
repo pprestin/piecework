@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.engine.exception.TaskAlreadyClaimedException;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.FlowElementType;
 import piecework.identity.*;
 import piecework.model.*;
 import piecework.engine.*;
@@ -232,6 +234,34 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         ProcessDeployment.Builder updated = new ProcessDeployment.Builder(deployment, null, new PassthroughSanitizer(), true);
 
         if (deployedProcessDefinition != null && StringUtils.isNotEmpty(activitiDeployment.getId())) {
+
+            Map<String, Activity> activityMap = deployment.getActivityMap();
+
+            BpmnModel bpmnModel = processEngine.getRepositoryService().getBpmnModel(deployedProcessDefinition.getId());
+
+            Collection<FlowElement> flowElements = bpmnModel.getMainProcess().getFlowElements();
+
+            if (flowElements != null) {
+                for (FlowElement flowElement : flowElements) {
+                    String flowElementId = flowElement.getId();
+                    FlowElementType elementType = null;
+                    if (flowElement instanceof org.activiti.bpmn.model.StartEvent) {
+                        elementType = FlowElementType.START_EVENT;
+                        updated.startActivityKey(flowElementId);
+                    } else if (flowElement instanceof org.activiti.bpmn.model.ServiceTask)
+                        elementType = FlowElementType.SERVICE_TASK;
+                    else if (flowElement instanceof org.activiti.bpmn.model.UserTask)
+                        elementType = FlowElementType.USER_TASK;
+
+                    if (elementType != null) {
+                        updated.flowElement(flowElementId, flowElement.getName(), elementType);
+
+                        if (!activityMap.containsKey(flowElementId))
+                            updated.activity(flowElementId, new Activity.Builder().elementType(elementType).build());
+                    }
+                }
+            }
+
             updated.engineProcessDefinitionId(deployedProcessDefinition != null ? deployedProcessDefinition.getId() : null)
                 .engineDeploymentId(activitiDeployment.getId())
                 .engineProcessDefinitionLocation(content.getLocation())

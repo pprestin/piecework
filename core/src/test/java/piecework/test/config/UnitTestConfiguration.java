@@ -225,6 +225,11 @@ public class UnitTestConfiguration {
     }
 
     @Bean
+    public ActivityRepository activityRepository() {
+        return new ActivityRepositoryStub();
+    }
+
+    @Bean
     public AttachmentRepository attachmentRepository() {
         return new AttachmentRepositoryStub();
     }
@@ -319,6 +324,10 @@ public class UnitTestConfiguration {
     @Bean
     public UuidGenerator uuidGenerator() {
         return new UuidGenerator();
+    }
+
+    public class ActivityRepositoryStub extends MongoRepositoryStub<Activity> implements ActivityRepository {
+
     }
 
     public class AttachmentRepositoryStub extends MongoRepositoryStub<Attachment> implements AttachmentRepository {

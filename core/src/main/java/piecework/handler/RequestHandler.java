@@ -31,7 +31,6 @@ import piecework.persistence.RequestRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.ProcessInstanceService;
 import piecework.service.TaskService;
-import piecework.util.ProcessInstanceUtility;
 import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.MediaType;
@@ -76,7 +75,7 @@ public class RequestHandler {
         verifyCurrentUserIsAuthorized(process, task);
 
         Screen nextScreen = null;
-
+        Activity activity = null;
         if (action == null) {
             // If validation is provided then it's an error and we should return the original screen
             nextScreen = screenHandler.currentScreen(process, task);
@@ -84,10 +83,31 @@ public class RequestHandler {
             nextScreen = screenHandler.nextScreen(process, task, action);
         }
 
+        if (process.isAllowPerInstanceActivities() && task != null && task.getTaskDefinitionKey() != null) {
+            Map<String, Activity> activityMap = processInstance.getActivityMap();
+            if (activityMap != null)
+                activity = activityMap.get(task.getTaskDefinitionKey());
+        }
+
+        if (activity == null) {
+            ProcessDeployment deployment = process.getDeployment();
+            if (deployment == null)
+                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+            String activityKey = deployment.getStartActivityKey();
+            if (task != null)
+                activityKey = task.getTaskDefinitionKey();
+
+            if (activityKey != null)
+                activity = deployment.getActivity(task.getTaskDefinitionKey());
+        }
+
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .instance(processInstance)
                 .task(task)
+                .activity(activity)
+                .action(action)
                 .screen(nextScreen);
 
         if (requestDetails != null) {

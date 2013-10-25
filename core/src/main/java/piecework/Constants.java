@@ -85,8 +85,10 @@ public interface Constants {
     }
 
 	public static class ExceptionCodes {
+        public static final String attachment_could_not_be_saved = "attachment_could_not_be_saved";
         public static final String active_task_required = "active_task_required";
         public static final String attachment_does_not_exist = "attachment_does_not_exist";
+        public static final String attachment_is_too_large = "attachment_is_too_large";
         public static final String certificate_does_not_match = "certificate_does_not_match";
         public static final String encryption_error = "encryption_error";
         public static final String form_access_forbidden = "form_access_forbidden";

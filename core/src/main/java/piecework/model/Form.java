@@ -53,6 +53,9 @@ public class Form {
     @XmlElement
     private final Screen screen;
 
+    @XmlElement
+    private final Activity activity;
+
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
     private final Map<String, List<Value>> data;
 
@@ -108,6 +111,7 @@ public class Form {
         this.submissionType = builder.submissionType;
         this.task = builder.task;
         this.screen = builder.screen;
+        this.activity = builder.activity;
         this.data = builder.data;
         this.validation = builder.validation;
         this.root = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME) : null;
@@ -139,6 +143,10 @@ public class Form {
 
     public Screen getScreen() {
         return screen;
+    }
+
+    public Activity getActivity() {
+        return activity;
     }
 
     public Task getTask() {
@@ -223,6 +231,7 @@ public class Form {
         private String processDefinitionKey;
         private String submissionType;
         private Task task;
+        private Activity activity;
         private Screen screen;
         private ManyMap<String, Value> data;
         private ManyMap<String, Message> validation;
@@ -247,6 +256,7 @@ public class Form {
         public Builder(Form form, Sanitizer sanitizer) {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
+            this.activity = form.activity != null ? new Activity.Builder(form.activity, sanitizer).build() : null;
             this.screen = form.screen != null ? new Screen.Builder(form.screen, sanitizer).build() : null;
             this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
             if (form.data != null && !form.data.isEmpty())

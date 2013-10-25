@@ -24,7 +24,9 @@ import piecework.common.UuidGenerator;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
+import piecework.enumeration.ActionType;
 import piecework.exception.BadRequestError;
+import piecework.exception.InternalServerError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
@@ -34,6 +36,11 @@ import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessUtility;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -92,14 +99,20 @@ public class DeploymentCommand implements Command<ProcessDeployment> {
                     .inputStream(resource.getInputStream())
                     .build();
 
-            content = contentRepository.save(content);
+            try {
+                contentRepository.save(content);
+            } catch (IOException ioe) {
+                LOG.error("Error saving to content repo", ioe);
+                throw new InternalServerError(Constants.ExceptionCodes.attachment_could_not_be_saved);
+            }
+
             content = contentRepository.findByLocation(location);
 
             // Try to deploy it in the engine -- this is the step that's most likely to fail because
             // the artifact is not formatted correctly, etc..
             persistedDeployment = facade.deploy(process, original, content);
 
-            deploymentRepository.save(persistedDeployment);
+            persistedDeployment = cascadeSave(commandExecutor, persistedDeployment);
 
             // Assuming that we didn't hit an exception in the step above, then we can update the deployment
             // to indicated that it is deployed
@@ -117,6 +130,29 @@ public class DeploymentCommand implements Command<ProcessDeployment> {
         }
 
         return persistedDeployment;
+    }
+
+    private ProcessDeployment cascadeSave(CommandExecutor commandExecutor, ProcessDeployment deployment) {
+        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, null, passthroughSanitizer, false);
+
+        builder.clearActivities();
+        builder.published(false);
+
+        Map<String, Activity> activityMap = deployment.getActivityMap();
+        if (activityMap != null) {
+            for (Map.Entry<String, Activity> entry : deployment.getActivityMap().entrySet()) {
+                String key = passthroughSanitizer.sanitize(entry.getKey());
+                if (key == null)
+                    continue;
+                if (entry.getValue() == null)
+                    continue;
+
+                builder.activity(key, commandExecutor.getActivityRepository().save(new Activity.Builder(entry.getValue(), passthroughSanitizer).build()));
+            }
+        }
+
+        return commandExecutor.getDeploymentRepository().save(builder.build());
     }
 
 }

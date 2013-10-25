@@ -17,6 +17,7 @@ package piecework.util;
 
 import org.apache.commons.lang.StringUtils;
 import piecework.common.ViewContext;
+import piecework.decorator.ContainerDecorator;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
@@ -38,6 +39,23 @@ public class ProcessUtility {
                 return deploymentVersion;
             }
         }
+        return null;
+    }
+
+    public static Container container(Container container, String containerId) {
+        if (container != null) {
+            if (container.getContainerId() != null && container.getContainerId().equals(containerId))
+                return container;
+
+            if (container.getChildren() != null) {
+                for (Container child : container.getChildren()) {
+                    Container found = container(child, containerId);
+                    if (found != null)
+                        return found;
+                }
+            }
+        }
+
         return null;
     }
 

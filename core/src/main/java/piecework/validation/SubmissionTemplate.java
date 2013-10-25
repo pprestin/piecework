@@ -32,6 +32,7 @@ public class SubmissionTemplate {
     private final Set<String> restricted;
     private final Set<String> userFields;
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
+    private final Map<String, Field> fieldMap;
     private final boolean isAttachmentAllowed;
 
     private SubmissionTemplate() {
@@ -42,6 +43,7 @@ public class SubmissionTemplate {
         this.acceptable = Collections.unmodifiableSet(builder.acceptable);
         this.buttonNames = Collections.unmodifiableSet(builder.buttonNames);
         this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
+        this.fieldMap = Collections.unmodifiableMap(builder.fieldMap);
         this.restricted = Collections.unmodifiableSet(builder.restricted);
         this.userFields = Collections.unmodifiableSet(builder.userFields);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
@@ -54,6 +56,14 @@ public class SubmissionTemplate {
 
     public Button getButton(String value) {
         return buttonValueMap.get(value);
+    }
+
+    public Field getField(String name) {
+        return fieldMap != null && name != null ? fieldMap.get(name) : null;
+    }
+
+    public Map<String, Field> getFieldMap() {
+        return fieldMap;
     }
 
     public Set<String> getRestricted() {
@@ -103,6 +113,7 @@ public class SubmissionTemplate {
         private Set<String> userFields;
         private Map<String, Button> buttonValueMap;
         private ManyMap<Field, ValidationRule> fieldRuleMap;
+        private Map<String, Field> fieldMap;
         private boolean isAttachmentAllowed;
 
         public Builder() {
@@ -112,6 +123,7 @@ public class SubmissionTemplate {
             this.restricted = new HashSet<String>();
             this.userFields = new HashSet<String>();
             this.fieldRuleMap = new ManyMap<Field, ValidationRule>();
+            this.fieldMap = new HashMap<String, Field>();
         }
 
         public SubmissionTemplate build() {
@@ -126,6 +138,11 @@ public class SubmissionTemplate {
         public Builder button(Button button) {
             this.buttonNames.add(button.getName());
             this.buttonValueMap.put(button.getValue(), button);
+            return this;
+        }
+
+        public Builder field(Field field) {
+            this.fieldMap.put(field.getName(), field);
             return this;
         }
 

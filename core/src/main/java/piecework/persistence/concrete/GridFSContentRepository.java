@@ -71,9 +71,10 @@ public class GridFSContentRepository implements ContentRepository {
     }
 
     @Override
-    public Content save(Content content) {
+    public Content save(Content content) throws IOException {
         BasicDBObject metadata = new BasicDBObject();
         metadata.put("originalFilename", content.getName());
+
         GridFSFile file = gridFsOperations.store(content.getInputStream(), content.getLocation(), content.getContentType(), metadata);
         String contentId = file.getId().toString();
 

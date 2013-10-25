@@ -90,6 +90,9 @@ public class Process implements Serializable {
     @XmlAttribute
     private final boolean isAnonymousSubmissionAllowed;
 
+    @XmlAttribute
+    private final boolean allowPerInstanceActivities;
+
 	@XmlTransient
 	@JsonIgnore
 	private final boolean isDeleted;
@@ -118,6 +121,7 @@ public class Process implements Serializable {
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
         this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
+        this.allowPerInstanceActivities = builder.allowPerInstanceActivities;
         this.isDeleted = builder.isDeleted;
         this.version = builder.version;
 	}
@@ -176,6 +180,10 @@ public class Process implements Serializable {
         return isAnonymousSubmissionAllowed;
     }
 
+    public boolean isAllowPerInstanceActivities() {
+        return allowPerInstanceActivities;
+    }
+
     public String getLink() {
         return link;
     }
@@ -227,6 +235,7 @@ public class Process implements Serializable {
         private List<ProcessDeploymentVersion> versions;
         private boolean isAnonymousSubmissionAllowed;
 		private boolean isDeleted;
+        private boolean allowPerInstanceActivities;
         private long version;
 		
 		public Builder() {
@@ -252,6 +261,7 @@ public class Process implements Serializable {
                 this.versions = new ArrayList<ProcessDeploymentVersion>(process.versions);
             this.isAnonymousSubmissionAllowed = process.isAnonymousSubmissionAllowed;
             this.isDeleted = process.isDeleted;
+            this.allowPerInstanceActivities = process.allowPerInstanceActivities;
             this.version = process.version;
 		}
 
@@ -316,6 +326,11 @@ public class Process implements Serializable {
 
         public Builder version(ProcessDeploymentVersion version) {
             this.versions.add(version);
+            return this;
+        }
+
+        public Builder allowPerInstanceActivities() {
+            this.allowPerInstanceActivities = true;
             return this;
         }
 
