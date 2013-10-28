@@ -33,26 +33,35 @@ var utils = {
 
 };
 
-
-angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.bootstrap.alert','ui.bootstrap.modal','ui.sortable'])
+angular
+.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.bootstrap.alert','ui.bootstrap.modal','ui.sortable','blueimp.fileupload'])
+    .config([
+        '$httpProvider', 'fileUploadProvider',
+        function ($httpProvider, fileUploadProvider) {
+            angular.extend(fileUploadProvider.defaults, {
+                maxFileSize: 5000000,
+                acceptFileTypes: /(\.|\/)(xml)$/i
+            });
+        }
+    ])
     .controller('DeploymentDetailController', ['$scope','$resource','$routeParams',
         function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
             var deployment = Deployment.get({processDefinitionKey:$routeParams.processDefinitionKey, deploymentId:$routeParams.deploymentId}, function(data) {
                 $scope.deployment = data;
+                $scope.deployment.processDefinitionKey = $routeParams.processDefinitionKey;
             });
             var Process = $resource('process/:processDefinitionKey', {processDefinitionKey:'@processDefinitionKey'});
-            $scope.process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey});
+            var process = Process.get({processDefinitionKey:$routeParams.processDefinitionKey}, function(data) {
+                $scope.process = data;
+            });
 
-            $scope.updateDeployment = function() {
+            $scope.$on('fileuploaddone', function(event, data) {
+               $scope.deployment = data.result;
+            });
+
+            $scope.updateDeployment = function($element) {
                 deployment.$save({processDefinitionKey:$routeParams.processDefinitionKey});
-
-//                var url = '/process/' + $routeParams.processDefinitionKey + '/deployment/' + deployment.deploymentId + '/resource';
-//                var data = new FormData();
-//                angular.forEach($scope.deploymentResource.files, function(file) {
-//                    data.append(file);
-//                });
-//                $http.post(url, data).success(function() { alert('worked!'); });
             };
         }
     ])
@@ -103,6 +112,8 @@ angular.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.
                 }
                 utils.openDeleteModal(deploymentToDelete, $scope, $modal, deleteDeployment);
             }
+
+
         }
     ])
     .controller('ActivityDetailController', ['$scope','$resource','$routeParams','$location','$anchorScroll',

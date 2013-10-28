@@ -12,32 +12,65 @@
             <span class="lead">Deployment #{{deployment.deploymentVersion}} Details</span>
         </div>
         <div class="panel-body">
-            <form id="deployment-detail-form" ng-submit="updateDeployment()">
+
                 <div class="pull-right">
                     <a href="#/activity/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" class="btn btn-default" type="submit" role="button"><i class="icon-desktop"></i> User Interface</a>
                 </div>
                     <div class="row">
                         <div class="col-md-6">
                             <fieldset>
-                                <div class="form-group">
-                                    <label>Deployment Label</label>
-                                    <div class="controls">
-                                        <input class="form-control" type="text"
-                                               name="processDefinitionLabel" size="30" maxlength="80"
-                                               placeholder="Provide an optional label for this deployment"
-                                               ng-model="deployment.deploymentLabel"
-                                               ng-disabled="!deployment.editable">
+                                <form id="deployment-detail-form" ng-submit="updateDeployment()">
+                                    <div class="form-group">
+                                        <label>Deployment Label</label>
+                                        <div class="controls">
+                                            <input class="form-control" type="text"
+                                                   name="processDefinitionLabel" size="30" maxlength="80"
+                                                   placeholder="Provide an optional label for this deployment"
+                                                   ng-model="deployment.deploymentLabel"
+                                                   ng-disabled="!deployment.editable">
+                                        </div>
                                     </div>
-                                </div>
+                                </form>
                                 <div class="form-group">
                                     <div class="controls">
                                         <a href="{{process.link}}/deployment/{{deployment.deploymentId}}/resource"><i class="icon-cloud-download"></i> <span>{{deployment.engineProcessDefinitionResource}}</span></a>
-
-                                        <input class="form-control" type="file"
-                                               name="processDefinitionFile"
-                                               placeholder="Provide a file"
-                                               ng-model="deploymentResource"
-                                               ng-if="deployment.editable">
+                                        <p/>
+                                        <form id="fileupload" action="process/{{deployment.processDefinitionKey}}/deployment/{{deployment.deploymentId}}/resource" method="POST" enctype="multipart/form-data" data-file-upload="options" data-ng-class="{'fileupload-processing': processing() || loadingFiles}" class="ng-scope ng-pristine ng-valid">
+                                            <!-- Redirect browsers with JavaScript disabled to the origin page -->
+                                            <noscript></noscript>
+                                            <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+                                            <div class="row fileupload-buttonbar">
+                                                <div class="col-lg-7">
+                                                    <!-- The fileinput-button span is used to style the file input field as button -->
+                                                    <span class="btn btn-success fileinput-button" ng-class="{disabled: disabled}">
+                                                        <i class="icon-plus"></i>
+                                                        <span>Choose process file</span>
+                                                        <input type="file" name="files[]" multiple="" accept="application/xml" ng-disabled="disabled">
+                                                    </span>
+                                                    <button type="button" class="btn btn-primary start" data-ng-click="submit()">
+                                                        <i class="icon-upload"></i>
+                                                        <span>Upload</span>
+                                                    </button>
+                                                    <!--button type="button" class="btn btn-warning cancel" data-ng-click="cancel()">
+                                                        <i class="icon-ban-circle"></i>
+                                                        <span>Cancel upload</span>
+                                                    </button-->
+                                                    <!-- The global file processing state -->
+                                                    <span class="fileupload-process"></span>
+                                                </div>
+                                                <!-- The global progress state -->
+                                                <div class="col-lg-5 fade" data-ng-class="{in: active()}">
+                                                    <!-- The global progress bar -->
+                                                    <div class="progress progress-striped active ng-scope" data-file-upload-progress="progress()"><div class="progress-bar progress-bar-success" data-ng-style="{width: num + '%'}"></div></div>
+                                                    <!-- The extended global progress state -->
+                                                    <div class="progress-extended">&nbsp;</div>
+                                                </div>
+                                            </div>
+                                            <!-- The table listing the files available for upload/download -->
+                                            <table class="table table-striped files">
+                                                <tbody><!-- ngRepeat: file in queue -->
+                                                </tbody></table>
+                                        </form>
                                     </div>
                                 </div>
                                 <!--div class="form-group">
@@ -81,8 +114,8 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="pull-right">
-                            <button ng-if="deployment.editable" ng-click="updateDeployment(deployment)" class="btn btn-default" type="submit" role="button">Update</button>
-                            <button ng-if="deployment.editable" ng-click="releaseDeployment(deployment)" class="btn btn-danger" type="button" role="button"><i class="icon-rocket"></i> Release</button>
+                            <button ng-if="deployment.editable" ng-click="updateDeployment($element)" class="btn btn-default" type="submit" role="button">Update</button>
+                            <button ng-if="deployment.editable" ng-click="releaseDeployment($element)" class="btn btn-danger" type="button" role="button"><i class="icon-rocket"></i> Release</button>
                         </div>
 
                         <div class="clearfix"></div>

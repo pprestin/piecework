@@ -104,7 +104,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     /*
      * SUB-SUBRESOURCES
      */
-    @GET
+    @POST
     @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     @Consumes({"multipart/form-data"})

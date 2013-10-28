@@ -128,7 +128,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
                     continue;
 
                 builder.contentType(mediaType.toString());
-                builder.name(sanitizer.sanitize(contentDisposition.getParameter("name")));
+                builder.name(sanitizer.sanitize(contentDisposition.getParameter("filename")));
 
                 try {
                     builder.inputStream(attachment.getDataHandler().getInputStream());
