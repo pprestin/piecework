@@ -9,8 +9,8 @@
                        name="{{name}}"
                        value="{{value}}"
                         {{#if ../required}}class="required"{{/if}}
-                        {{#unless ../editable}}disabled{{/unless}}/> {{label}}
-                        {{#if selected}}checked{{/if}}
+                        {{#unless ../editable}}disabled{{/unless}}
+                        {{#if selected}} checked{{/if}}/> {{label}}
             </label>
         </div>
     {{/each}}
