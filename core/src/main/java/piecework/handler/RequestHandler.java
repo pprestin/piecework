@@ -23,6 +23,7 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.enumeration.ActionType;
+import piecework.form.FormFactory;
 import piecework.identity.IdentityHelper;
 import piecework.exception.*;
 import piecework.model.*;
@@ -60,55 +61,28 @@ public class RequestHandler {
     TaskService taskService;
 
     public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {
-        return create(requestDetails, process, null, (Task)null, null, null);
+        return create(requestDetails, process, null, (Task)null, ActionType.CREATE, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task) throws StatusCodeError {
-        return create(requestDetails, process, processInstance, task, null, null);
+//    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task) throws StatusCodeError {
+//        return create(requestDetails, process, processInstance, task, null, null);
+//    }
+
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType) throws StatusCodeError {
+        return create(requestDetails, process, processInstance, task, actionType, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType action) throws StatusCodeError {
-        return create(requestDetails, process, processInstance, task, action, null);
-    }
-
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType action, FormValidation validation) throws StatusCodeError {
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, FormValidation validation) throws StatusCodeError {
         verifyCurrentUserIsAuthorized(process, task);
 
-        Screen nextScreen = null;
-        Activity activity = null;
-        if (action == null) {
-            // If validation is provided then it's an error and we should return the original screen
-            nextScreen = screenHandler.currentScreen(process, task);
-        } else {
-            nextScreen = screenHandler.nextScreen(process, task, action);
-        }
-
-        if (process.isAllowPerInstanceActivities() && task != null && task.getTaskDefinitionKey() != null) {
-            Map<String, Activity> activityMap = processInstance.getActivityMap();
-            if (activityMap != null)
-                activity = activityMap.get(task.getTaskDefinitionKey());
-        }
-
-        if (activity == null) {
-            ProcessDeployment deployment = process.getDeployment();
-            if (deployment == null)
-                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
-            String activityKey = deployment.getStartActivityKey();
-            if (task != null)
-                activityKey = task.getTaskDefinitionKey();
-
-            if (activityKey != null)
-                activity = deployment.getActivity(task.getTaskDefinitionKey());
-        }
+        Activity activity = FormFactory.activity(process, processInstance, task);
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .instance(processInstance)
                 .task(task)
                 .activity(activity)
-                .action(action)
-                .screen(nextScreen);
+                .action(actionType);
 
         if (requestDetails != null) {
             String contentType = requestDetails.getContentType() != null ? requestDetails.getContentType().toString() : null;
@@ -190,7 +164,7 @@ public class RequestHandler {
         if (instance == null && StringUtils.isNotEmpty(formRequest.getProcessDefinitionKey()) && StringUtils.isNotEmpty(formRequest.getProcessInstanceId()))
             instance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId(), false);
 
-        FormRequest.Builder builder = new FormRequest.Builder(formRequest, new PassthroughSanitizer())
+        FormRequest.Builder builder = new FormRequest.Builder(formRequest)
                 .instance(instance)
                 .task(taskService.task(instance, formRequest.getTaskId()));
 

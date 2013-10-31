@@ -45,23 +45,21 @@
                 }
             })
         },
-        decorateScreen: function(screen, data, validation) {
-            var $inputs = $(':input');
-            var $variables = $('.process-variable');
-            if (screen != undefined) {
-                var sections = screen.sections;
-                if (sections != undefined) {
-                    for (var i=0;i<sections.length;i++) {
-                        this.decorateSection(sections[i], data, validation, $inputs, $variables);
+        decorateContainer: function(container, data, validation, $arg_inputs, $arg_variables) {
+            var $inputs = typeof($arg_inputs) == 'undefined' ? $(':input') : $arg_inputs;
+            var $variables = typeof($arg_variables) == 'undefined' ? $('.process-variable') : $arg_variables;
+            if (typeof(container) != 'undefined') {
+                var children = container.children;
+                var fields = container.fields;
+                if (typeof(children) != 'undefined') {
+                    for (var i=0;i<children.length;i++) {
+                        this.decorateContainer(children[i], data, validation, $inputs, $variables);
                     }
                 }
-            }
-        },
-        decorateSection: function(section, data, validation, $inputs, $variables) {
-            var fields = section.fields;
-            if (fields != undefined) {
-                for (var j=0;j<fields.length;j++) {
-                    this.decorateField(fields[j], data, validation, $inputs, $variables);
+                if (typeof(fields) != 'undefined') {
+                    for (var i=0;i<fields.length;i++) {
+                        this.decorateField(fields[i], data, validation, $inputs, $variables);
+                    }
                 }
             }
         },
@@ -322,7 +320,7 @@
         },
         populate: function(model) {
             var data = model.data;
-            var screen = model.screen;
+            var container = model.container;
             var task = model.task;
 
             if (task != null) {
@@ -333,7 +331,7 @@
             var validation = model.validation;
             this.model = model;
             this.decorateForms(model);
-            this.decorateScreen(screen, data, validation);
+            this.decorateContainer(container, data, validation);
             this.includeAttachments(model);
         },
         submitAttachment: function(event) {

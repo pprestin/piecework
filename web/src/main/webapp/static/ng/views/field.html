@@ -1,0 +1,39 @@
+<label ng-if="field.label">{{field.label}}</label>
+<div ng-switch on="field.type">
+    <div ng-switch-when="html" ng-bind-html="field.defaultValue">{{field.defaultValue}}</div>
+    <div ng-switch-when="checkbox">
+        <div class="checkbox" ng-repeat="option in field.options">
+            <label>
+                <input ng-disabled="{{!field.editable}}" ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+            </label>
+        </div>
+    </div>
+    <input ng-switch-when="date" ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}"/>
+    <div ng-switch-when="radio">
+        <div class="radio" ng-repeat="option in field.options">
+            <label>
+                <input ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" type="radio" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+            </label>
+        </div>
+    </div>
+    <div ng-switch-when="select-one">
+        <select ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" name="{{field.name}}" >
+            <option ng-repeat="option in field.options" value="{{option.value}}">
+                {{option.label!='' && option.label || option.value}}
+            </option>
+        </select>
+    </div>
+    <div data-ng-switch-when="file" data-ng-show="field.value">
+        <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}"/>
+        <input ng-show="{{!field.readonly}}" class="form-control" name="{{field.name}}" type="file"/>
+    </div>
+    <div data-ng-switch-when="person">
+        <input ng-model="field.value.displayName" ng-show="field.readonly" class="form-control" type="text" disabled/>
+        <input ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-show="!field.readonly" ng-required="field.required" class="form-control" placeholder="{{field.placeholder ? field.placeholder : 'Enter name'}}" type="text" typeahead="person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8" typeahead-wait-ms="300" />
+        <input ng-show="!field.readonly" value="{{field.value.userId ? field.value.userId : field.value}}" name="{{field.name}}" type="hidden"/>
+    </div>
+    <textarea ng-switch-when="textarea" ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-readonly="{{field.readonly}}" ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
+    <input data-ng-switch-default ng-disabled="!field.editable" ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+</div>
+<span data-ng-repeat="message in field.messages" class="text-danger">{{message.text}}</span>
+

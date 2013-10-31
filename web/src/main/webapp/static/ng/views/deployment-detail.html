@@ -115,7 +115,7 @@
                     <div class="col-md-12">
                         <div class="pull-right">
                             <button ng-if="deployment.editable" ng-click="updateDeployment($element)" class="btn btn-default" type="submit" role="button">Update</button>
-                            <button ng-if="deployment.editable" ng-click="releaseDeployment($element)" class="btn btn-danger" type="button" role="button"><i class="icon-rocket"></i> Release</button>
+                            <button ng-if="deployment.editable" ng-click="releaseDeployment(process, deployment)" class="btn btn-danger" type="button" role="button"><i class="icon-rocket"></i> Release</button>
                         </div>
 
                         <div class="clearfix"></div>

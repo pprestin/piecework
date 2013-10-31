@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.common.RequestDetails;
+import piecework.enumeration.ActionType;
 import piecework.form.FormFactory;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
@@ -66,15 +67,19 @@ public class ResponseHandler {
 
     public Response handle(RequestDetails requestDetails, FormRequest formRequest, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
 
-        Form form = formFactory.form(formRequest, process, instance, task, validation);
+        ActionType actionType = formRequest.getAction() != null ? formRequest.getAction() : ActionType.CREATE;
+        Activity activity = formRequest.getActivity();
+        Action action = activity.action(actionType);
 
-        if (form != null && form.getScreen() != null && !form.getScreen().isReadonly()) {
+        Form form = formFactory.form(formRequest, process, instance, task, validation, actionType);
+
+        if (form != null && action != null && form.getContainer() != null && !form.getContainer().isReadonly()) {
 
             List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
             boolean isJavascript = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(new MediaType("text", "javascript"));
 
-            if (StringUtils.isNotEmpty(form.getScreen().getLocation()) && !isJavascript) {
-                String location = form.getScreen().getLocation();
+            if (StringUtils.isNotEmpty(action.getLocation()) && !isJavascript) {
+                String location = action.getLocation();
 
                 if (location.startsWith("https://")) {
                     if (location.contains("{formRequestId}") && task != null)
@@ -89,7 +94,7 @@ public class ResponseHandler {
                 location = deployment.getBase() + "/" + location;
 
                 Content content = content(location);
-                return Response.ok(new StreamingPageContent(process, form, content, form.getScreen().getStrategy()), content.getContentType()).build();
+                return Response.ok(new StreamingPageContent(process, form, content, action.getStrategy()), content.getContentType()).build();
             }
         }
 

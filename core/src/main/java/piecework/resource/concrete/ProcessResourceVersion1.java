@@ -248,8 +248,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
-    public Response updateActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawInteractionId, Activity rawInteraction) throws StatusCodeError {
-//        processService.updateInteraction(rawProcessDefinitionKey, rawDeploymentId, rawInteractionId, rawInteraction);
+    public Response updateActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey, Activity rawActivity) throws StatusCodeError {
+        processService.updateActivity(rawProcessDefinitionKey, rawDeploymentId, rawActivityKey, rawActivity);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         return responseBuilder.build();

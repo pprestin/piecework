@@ -99,43 +99,6 @@ public class FormService {
     @Autowired
     Versions versions;
 
-
-//    public Response delete(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
-//        String requestId = sanitizer.sanitize(rawRequestId);
-//
-//        if (StringUtils.isEmpty(requestId))
-//            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-//
-//        ProcessInstance instance = null;
-//        Task task = null;
-//        String taskId;
-//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
-//        try {
-//            FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
-//            taskId = formRequest.getTaskId();
-//            instance = formRequest.getInstance();
-//            task = formRequest.getTask();
-//        } catch (NotFoundError e) {
-//            taskId = requestId;
-//        }
-//
-//        if (StringUtils.isEmpty(taskId))
-//            throw new ForbiddenError(Constants.ExceptionCodes.task_id_required);
-//
-//        IdentityDetails user = helper.getAuthenticatedPrincipal();
-//        String participantId = user != null ? user.getInternalId() : null;
-//
-//        if (task == null)
-//            task = taskService.allowedTask(process, taskId, true);
-//        if (instance == null)
-//            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
-//
-//        InstanceStateCommand cancellation = new InstanceStateCommand(process, instance, OperationType.CANCELLATION);
-//        commandExecutor.execute(cancellation);
-//
-//        return Response.noContent().build();
-//    }
-
     public Response startForm(MessageContext context, Process process) throws StatusCodeError {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 
@@ -151,18 +114,10 @@ public class FormService {
         if (pathSegments == null || pathSegments.isEmpty())
             return startForm(context, process);
 
-        boolean isStatic = false;
-        boolean isSubmissionResource;
-
         Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
         String requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
 
-//        isSubmissionResource = StringUtils.isNotEmpty(requestId) && requestId.equals("submission");
-//
-//        if (isSubmissionResource && pathSegmentIterator.hasNext()) {
-//            requestId = sanitizer.sanitize(pathSegmentIterator.next().getPath());
-//        }
-        isStatic = StringUtils.isNotEmpty(requestId) && requestId.equals("static");
+        boolean isStatic = StringUtils.isNotEmpty(requestId) && requestId.equals("static");
 
         if (pathSegmentIterator.hasNext()) {
             String staticResourceName = "";
@@ -254,7 +209,7 @@ public class FormService {
         if (task != null && task.getProcessInstanceId() != null)
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
         processInstanceService.save(process, instance, task, template, submission);
@@ -288,7 +243,7 @@ public class FormService {
         if (StringUtils.isNotEmpty(processInstanceId))
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
 
         ActionType action = submission.getAction();
@@ -333,7 +288,7 @@ public class FormService {
             if (isJSON)
                 throw e;
 
-            FormRequest invalidRequest = requestHandler.create(requestDetails, process, instance, task, null, validation);
+            FormRequest invalidRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE, validation);
 
             return responseHandler.redirect(invalidRequest);
 

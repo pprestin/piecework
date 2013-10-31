@@ -21,6 +21,7 @@ package piecework.identity;
 public class PersonSearchCriteria {
 
     private String displayNameLike;
+    private Long maxResults;
 
     public String getDisplayNameLike() {
         return displayNameLike;
@@ -28,5 +29,13 @@ public class PersonSearchCriteria {
 
     public void setDisplayNameLike(String displayNameLike) {
         this.displayNameLike = displayNameLike;
+    }
+
+    public Long getMaxResults() {
+        return maxResults;
+    }
+
+    public void setMaxResults(Long maxResults) {
+        this.maxResults = maxResults;
     }
 }

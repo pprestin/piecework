@@ -142,7 +142,7 @@ public class RequestHandlerTest {
 //        Assert.assertEquals(expectedInteraction.getLabel(), actualInteraction.getLabel());
 
 //        Screen actualScreen = formRequest.getScreen();
-//        Screen expectedScreen = ExampleFactory.exampleScreen(Constants.ScreenTypes.WIZARD);
+//        Screen expectedScreen = ExampleFactory.exampleContainer(Constants.ScreenTypes.WIZARD);
 //        Assert.assertEquals(expectedScreen.getTitle(), actualScreen.getTitle());
     }
 

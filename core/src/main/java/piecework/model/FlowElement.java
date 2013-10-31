@@ -20,7 +20,7 @@ import piecework.enumeration.FlowElementType;
 /**
  * @author James Renfro
  */
-public class FlowElement {
+public class FlowElement implements Comparable<FlowElement> {
 
     private final String id;
     private final String label;
@@ -46,5 +46,22 @@ public class FlowElement {
 
     public FlowElementType getType() {
         return type;
+    }
+
+    @Override
+    public int compareTo(FlowElement o) {
+        return id.compareTo(o.id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        FlowElement other = FlowElement.class.cast(o);
+
+        return id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 }

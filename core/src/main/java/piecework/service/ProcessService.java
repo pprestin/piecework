@@ -29,6 +29,7 @@ import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -396,6 +397,49 @@ public class ProcessService {
                .processSummary(update.getProcessSummary());
 
         return processRepository.save(builder.build());
+    }
+
+    public ProcessDeployment updateActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey, Activity rawActivity) throws StatusCodeError {
+        Process process = read(rawProcessDefinitionKey);
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+        String activityKey = sanitizer.sanitize(rawActivityKey);
+
+        ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
+        if (selectedDeploymentVersion == null)
+            throw new NotFoundError();
+
+        ProcessDeployment original = deploymentRepository.findOne(deploymentId);
+        if (original == null)
+            throw new NotFoundError();
+
+        Activity originalActivity = original.getActivity(activityKey);
+        Activity.Builder modified = new Activity.Builder(originalActivity, new PassthroughSanitizer());
+        Activity update = new Activity.Builder(rawActivity, sanitizer).build();
+        modified.usageType(update.getUsageType());
+
+        Map<ActionType, Action> originalActionMap =  originalActivity.getActionMap();
+        Map<ActionType, Action> updateActionMap = update.getActionMap();
+
+        if (originalActionMap != null && updateActionMap != null) {
+            for (Map.Entry<ActionType, Action> entry : originalActionMap.entrySet()) {
+                ActionType type = entry.getKey();
+                Action action = entry.getValue();
+
+                Action updateAction = updateActionMap.get(type);
+
+                // Only replace the update location and not the container -- container changes must
+                // use the updateContainer method
+                Container originalContainer = action.getContainer();
+                String updateLocation = updateAction != null ? updateAction.getLocation() : null;
+                DataInjectionStrategy updateStrategy = updateAction != null ? updateAction.getStrategy() : DataInjectionStrategy.NONE;
+                modified.action(type, new Action(originalContainer, updateLocation, updateStrategy));
+            }
+        }
+
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
+        builder.activity(activityKey, modified.build());
+
+        return cascadeSave(builder.build(), selectedDeploymentVersion.getVersion(), false);
     }
 
     public ProcessDeployment updateDeployment(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeployment rawDeployment) throws StatusCodeError {

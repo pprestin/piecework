@@ -62,24 +62,24 @@ public class FormFactory {
     @Autowired
     Versions versions;
 
-    public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
+    public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation, ActionType actionType) throws StatusCodeError {
         long start = 0;
 
         if (LOG.isDebugEnabled())
             start = System.currentTimeMillis();
 
-        Screen screen = request.getScreen();
+        Activity activity = request.getActivity();
         String formInstanceId = request.getRequestId();
 
-        if (screen == null)
-            screen = screen(process, task);
+        if (activity == null)
+            activity = activity(process, instance, task);
 
         ViewContext version = versions.getVersion1();
         String loggedInUserId = helper.getAuthenticatedSystemOrUserId();
         User currentUser = helper.getCurrentUser();
         boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
 
-        FactoryWorker worker = new FactoryWorker(process, instance, task, screen, version, loggedInUserId, currentUser, hasOversight);
+        FactoryWorker worker = new FactoryWorker(process, instance, task, activity, actionType, version, loggedInUserId, currentUser, hasOversight);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         ManyMap<String, Message> messages = new ManyMap<String, Message>();
 
@@ -103,29 +103,58 @@ public class FormFactory {
         return form;
     }
 
-    private Screen screen(Process process, Task task) throws StatusCodeError {
-        Interaction selectedInteraction = null;
+    public static Activity activity(Process process, ProcessInstance instance, Task task) throws StatusCodeError {
+        Activity activity = null;
+        if (process.isAllowPerInstanceActivities() && task != null && task.getTaskDefinitionKey() != null && instance != null) {
+            Map<String, Activity> activityMap = instance.getActivityMap();
+            if (activityMap != null)
+                activity = activityMap.get(task.getTaskDefinitionKey());
+
+            if (activity != null)
+                return activity;
+        }
+
         ProcessDeployment deployment = process.getDeployment();
         if (deployment == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-        List<Interaction> interactions = deployment.getInteractions();
-        if (interactions != null && !interactions.isEmpty()) {
-            for (Interaction interaction : interactions) {
-                if (interaction == null)
-                    continue;
-                if ((task == null && interaction.getTaskDefinitionKeys().isEmpty()) ||
-                    interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
-                    selectedInteraction = interaction;
-                    break;
-                }
-            }
-        }
 
-        if (selectedInteraction != null && selectedInteraction.getScreens() != null && selectedInteraction.getScreens().containsKey(ActionType.CREATE))
-            return selectedInteraction.getScreens().get(ActionType.CREATE);
+        String activityKey = deployment.getStartActivityKey();
+        if (task != null)
+            activityKey = task.getTaskDefinitionKey();
+
+
+        if (activityKey != null)
+            activity = deployment.getActivity(activityKey);
+
+        if (activity != null)
+            return activity;
 
         throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
     }
+
+//    private Screen screen(Process process, Task task) throws StatusCodeError {
+//        Interaction selectedInteraction = null;
+//        ProcessDeployment deployment = process.getDeployment();
+//        if (deployment == null)
+//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+//        List<Interaction> interactions = deployment.getInteractions();
+//        if (interactions != null && !interactions.isEmpty()) {
+//            for (Interaction interaction : interactions) {
+//                if (interaction == null)
+//                    continue;
+//                if ((task == null && interaction.getTaskDefinitionKeys().isEmpty()) ||
+//                    interaction.getTaskDefinitionKeys().contains(task.getTaskDefinitionKey())) {
+//                    selectedInteraction = interaction;
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if (selectedInteraction != null && selectedInteraction.getScreens() != null && selectedInteraction.getScreens().containsKey(ActionType.CREATE))
+//            return selectedInteraction.getScreens().get(ActionType.CREATE);
+//
+//        throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+//    }
 
     public static Field getField(Process process, Screen screen, String fieldName) throws StatusCodeError  {
         if (process == null || screen == null || StringUtils.isEmpty(fieldName))
@@ -238,20 +267,22 @@ public class FormFactory {
         private final int attachmentCount;
         private final Task task;
         private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        private final Screen screen;
+        private final Activity activity;
+        private final ActionType actionType;
         private final ViewContext version;
         private final String loggedInUserId;
         private final User currentUser;
         private final boolean hasOversight;
 
-        public FactoryWorker(Process process, ProcessInstance instance, Task task, Screen screen, ViewContext version, String loggedInUserId, User currentUser, boolean hasOversight) {
+        public FactoryWorker(Process process, ProcessInstance instance, Task task, Activity activity, ActionType actionType, ViewContext version, String loggedInUserId, User currentUser, boolean hasOversight) {
             this.process = process;
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
             this.attachments = instance != null ? instance.getAttachments() : Collections.<Attachment>emptySet();
             this.attachmentCount = instance != null && instance.getAttachmentIds() != null ? instance.getAttachmentIds().size() : 0;
             this.task = task;
-            this.screen = screen;
+            this.activity = activity;
+            this.actionType = actionType;
             this.version = version;
             this.loggedInUserId = loggedInUserId;
             this.currentUser = currentUser;
@@ -265,7 +296,7 @@ public class FormFactory {
                     .taskSubresources(processDefinitionKey, task, version);
 
             if (hasOversight || task == null || task.getAssigneeId() == null || task.getAssigneeId().equals(loggedInUserId))
-                builder.screen(screen(builder, screen, data, results));
+                builder.container(container(builder, activity, actionType, data, results));
 
             if (processInstanceId != null)
                 builder.instanceSubresources(processDefinitionKey, processInstanceId, attachments, attachmentCount, this.version);
@@ -273,7 +304,7 @@ public class FormFactory {
             return builder.build(version);
         }
 
-        private Field field(Form.Builder formBuilder, Field field, ManyMap<String, Value> data, ManyMap<String, Message> results) {
+        private Field field(Form.Builder formBuilder, Field field, ManyMap<String, Value> data, ManyMap<String, Message> results, boolean readonly) {
             Field.Builder fieldBuilder = new Field.Builder(field, passthroughSanitizer)
                     .processDefinitionKey(processDefinitionKey)
                     .processInstanceId(processInstanceId);
@@ -298,54 +329,31 @@ public class FormFactory {
                 formBuilder.validation(fieldName, messages);
             }
 
+            if (readonly)
+                fieldBuilder.readonly();
+
             return fieldBuilder.build(version);
         }
 
-        private Screen screen(Form.Builder formBuilder, Screen screen, ManyMap<String, Value> data, ManyMap<String, Message> results) throws StatusCodeError {
-            Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, true);
-            screenBuilder.clearSections();
-            ProcessDeployment deployment = process.getDeployment();
-            if (deployment == null)
-                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        private Container container(Form.Builder formBuilder, Activity activity, ActionType actionType, ManyMap<String, Value> data, ManyMap<String, Message> results) throws StatusCodeError {
+            boolean readonly = false;
+            if (task != null) {
+                if (!task.isActive())
+                    readonly = true;
+                else if (task.getAssignee() != null && !task.getAssignee().getUserId().equals(loggedInUserId))
+                    readonly = true;
+            }
 
-            Map<String, Section> sectionMap = new HashMap<String, Section>(deployment.getSectionMap());
-            List<Grouping> groupings = screen.getGroupings();
-
-            for (Grouping grouping : groupings) {
-                if (grouping == null)
-                    continue;
-                List<String> sectionsIds = grouping.getSectionIds();
-                if (sectionsIds == null)
-                    continue;
-
-                for (String sectionId : sectionsIds) {
-                    Section section = sectionMap.remove(sectionId);
-                    if (section == null)
-                        continue;
-
-                    screenBuilder.section(section(formBuilder, section, data, results));
+            Action action = activity.action(actionType);
+            Map<String, Field> fieldMap = activity.getFieldMap();
+            Map<String, Field> decoratedFieldMap = new HashMap<String, Field>();
+            if (fieldMap != null) {
+                for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
+                    decoratedFieldMap.put(entry.getKey(), field(formBuilder, entry.getValue(), data, results, readonly));
                 }
             }
 
-            if (task != null) {
-                if (!task.isActive())
-                    screenBuilder.readonly();
-                else if (task.getAssignee() != null && !task.getAssignee().getUserId().equals(loggedInUserId))
-                    screenBuilder.readonly();
-            }
-
-            return screenBuilder.build();
-        }
-
-        private Section section(Form.Builder formBuilder, Section section, ManyMap<String, Value> data, ManyMap<String, Message> results) {
-
-            Section.Builder sectionBuilder = new Section.Builder(section, passthroughSanitizer, false);
-
-            for (Field field : section.getFields()) {
-                sectionBuilder.field(field(formBuilder, field, data, results));
-            }
-
-            return sectionBuilder.build();
+            return new Container.Builder(action.getContainer(), passthroughSanitizer, decoratedFieldMap).readonly(readonly).build();
         }
 
         // Rebuilds any values of type File so that their links are correct

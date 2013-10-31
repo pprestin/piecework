@@ -60,7 +60,13 @@ angular
                $scope.deployment = data.result;
             });
 
-            $scope.updateDeployment = function($element) {
+            $scope.releaseDeployment = function(process, deployment) {
+                var Release = $resource('process/:processDefinitionKey/release/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
+                var release = new Release({processDefinitionKey:process.processDefinitionKey, deploymentId:deployment.deploymentId});
+                release.$save();
+            }
+
+            $scope.updateDeployment = function() {
                 deployment.$save({processDefinitionKey:$routeParams.processDefinitionKey});
             };
         }
@@ -201,19 +207,20 @@ angular
                         return;
 
                     var activity = activityMap[flowElement.id];
-                    var responseMap = activity.responseMap;
+                    var actionMap = activity.actionMap;
 
                     activity.activityKey = flowElement.id;
                     activity.flowElementLabel = flowElement.label;
                     if (startActivityKey == activity.activityKey)
                         $scope.onSelectActivity(activity);
 
-                    activity.accept = responseMap['COMPLETE'];
-                    activity.reject = responseMap['REJECT'];
+                    activity.form = actionMap['CREATE'];
+                    activity.accept = actionMap['COMPLETE'];
+                    activity.reject = actionMap['REJECT'];
 
                     activity.containers = new Array();
-                    if (activity.container)
-                        activity.containers.push(activity.container);
+                    if (activity.form && activity.form.container)
+                        activity.containers.push(activity.form.container);
                     if (activity.accept && activity.accept.container)
                         activity.containers.push(activity.accept.container);
                     if (activity.reject && activity.reject.container)
@@ -238,9 +245,9 @@ angular
                 field.constraints.push({});
             }
 
-            $scope.addInteraction = function(deployment) {
-                var interaction = {label:"", screens:{}};
-                deployment.interactions.push(interaction);
+            $scope.addActivity = function(deployment) {
+                var activity = {};
+                deployment.activity.push(activities);
                 return interaction;
             }
 
@@ -372,12 +379,17 @@ angular
                 }
             }
 
-            $scope.onSelectGrouping = function(selected, groupings) {
-                angular.forEach(groupings, function(grouping) {
-                    grouping.cssClass = 'inactive';
+            $scope.onSelectActivity = function(activity, activities) {
+                angular.forEach(activities, function(selected) {
+                    selected.cssClass = 'inactive';
                 });
-                selected.cssClass='active';
-                $scope.activeGrouping = selected;
+                activity.cssClass= 'active';
+                angular.forEach(activity.containers, function(selected) {
+                    selected.cssClass = 'inactive';
+                });
+
+                $scope.activity = activity;
+                $scope.container = null;
             }
 
             $scope.onSelectContainer = function(container, containers) {
@@ -393,23 +405,22 @@ angular
                 }
             }
 
-            $scope.onSelectActivity = function(activity, activities) {
-                angular.forEach(activities, function(selected) {
-                    selected.cssClass = 'inactive';
-                });
-                activity.cssClass= 'active';
-                if (activity.container)
-                    activity.container.cssClass = null;
-
-                $scope.activity = activity;
-                $scope.container = null;
-            }
-
             $scope.removeOption = function(option, field) {
                 var index = field.options.indexOf(option);
                 if (index > -1) {
                     field.options.splice(index, 1);
                 }
+            }
+
+            $scope.saveActivity = function(process, deployment, activity) {
+                var Activity = $resource('process/:processDefinitionKey/deployment/:deploymentId/activity/:activityKey',
+                        {processDefinitionKey:'@processDefinitionKey', deploymentId:'@deploymentId', activityKey:'@activityKey'});
+                var activityResource = new Activity({processDefinitionKey:process.processDefinitionKey, deploymentId:deployment.deploymentId, activityKey: activity.activityKey});
+                activityResource.usageType = activity.usageType;
+                activityResource['CREATE'] = activity.form;
+                activityResource['ACCEPT'] = activity.accept;
+                activityResource['REJECT'] = activity.reject;
+                activityResource.$save();
             }
 
             $scope.scrollTo = function(id) {

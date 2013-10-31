@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.exception.StatusCodeError;
 import piecework.service.IdentityService;
-import piecework.identity.IdentityDetails;
 import piecework.identity.PersonSearchCriteria;
 import piecework.model.ProcessInstance;
 import piecework.model.SearchResults;
@@ -49,7 +48,7 @@ public class PersonResourceVersion1 implements PersonResource {
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
                 .link(versions.getVersion1().getApplicationUri(User.Constants.ROOT_ELEMENT_NAME));
 
-        List<User> users = userDetailsService.findUsersByDisplayName(criteria.getDisplayNameLike());
+        List<User> users = userDetailsService.findUsersByDisplayName(criteria.getDisplayNameLike(), criteria.getMaxResults());
         resultsBuilder.items(users);
         return resultsBuilder.build();
     }

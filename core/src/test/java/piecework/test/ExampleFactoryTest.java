@@ -28,16 +28,16 @@ import org.springframework.core.io.ClassPathResource;
 @Ignore
 public class ExampleFactoryTest {
 
-    @Test
-    public void testForm() throws Exception {
-        ClassPathResource expectedResource = new ClassPathResource("piecework/test/ExampleForm.json");
-        ObjectMapper mapper = new ObjectMapper();
-        String expected = IOUtils.toString(expectedResource.getInputStream());
-        String actual = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ExampleFactory.exampleForm());
-
-//        System.out.println(actual);
-//        Assert.assertEquals(expected, actual);
-    }
+//    @Test
+//    public void testForm() throws Exception {
+//        ClassPathResource expectedResource = new ClassPathResource("piecework/test/ExampleForm.json");
+//        ObjectMapper mapper = new ObjectMapper();
+//        String expected = IOUtils.toString(expectedResource.getInputStream());
+//        String actual = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ExampleFactory.exampleForm());
+//
+////        System.out.println(actual);
+////        Assert.assertEquals(expected, actual);
+//    }
 
 
 }

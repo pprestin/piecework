@@ -46,6 +46,6 @@ public interface IdentityService extends UserDetailsService {
 
     User getUserByAnyId(String id);
 
-    List<User> findUsersByDisplayName(String displayNameLike);
+    List<User> findUsersByDisplayName(String displayNameLike, Long maxResults);
 
 }

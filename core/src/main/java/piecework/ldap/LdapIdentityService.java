@@ -17,10 +17,8 @@ package piecework.ldap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.ldap.SizeLimitExceededException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
@@ -36,7 +34,7 @@ import piecework.identity.IdentityDetails;
 import piecework.model.User;
 import piecework.service.IdentityService;
 
-import javax.annotation.PostConstruct;
+import javax.naming.directory.SearchControls;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -80,7 +78,7 @@ public class LdapIdentityService implements IdentityService {
         this.cacheManager = cacheManager;
     }
 
-    public List<User> findUsersByDisplayName(String displayNameLike) {
+    public List<User> findUsersByDisplayName(String displayNameLike, Long maxResults) {
         if (LOG.isDebugEnabled())
             LOG.debug("Looking for users by display name " + displayNameLike);
 
@@ -95,7 +93,13 @@ public class LdapIdentityService implements IdentityService {
         String ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
         SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
 
-        template.setSearchControls(ldapSettings.getSearchControls());
+        long countLimit = maxResults != null ? maxResults.longValue() : 100l;
+        SearchControls defaultSearchControls = ldapSettings.getSearchControls();
+        SearchControls searchControls = new SearchControls(defaultSearchControls.getSearchScope(),
+            countLimit, defaultSearchControls.getTimeLimit(), defaultSearchControls.getReturningAttributes(),
+            defaultSearchControls.getReturningObjFlag(), defaultSearchControls.getDerefLinkFlag());
+
+        template.setSearchControls(searchControls);
 
         displayNameLike = displayNameLike.replaceAll(" ", "*");
 

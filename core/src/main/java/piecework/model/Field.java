@@ -276,15 +276,15 @@ public class Field implements Serializable, Comparable<Field> {
 
     @Override
     public int compareTo(Field o) {
-        int result = ordinal - o.ordinal;
+        int result = Integer.compare(ordinal, o.ordinal);
 
         if (result == 0 && fieldId != null && o.fieldId != null)
-            return fieldId.compareTo(o.fieldId);
+            result = fieldId.compareTo(o.fieldId);
 
         if (result == 0 && name != null && o.name != null)
-            return name.compareTo(o.name);
+            result = name.compareTo(o.name);
 
-        return 0;
+        return result;
     }
 
     public final static class Builder {

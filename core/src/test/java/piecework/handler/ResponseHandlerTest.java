@@ -23,10 +23,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import piecework.Constants;
 import piecework.Versions;
 import piecework.common.RequestDetails;
 import piecework.common.ViewContext;
+import piecework.enumeration.ActionType;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormFactory;
 import piecework.model.*;
@@ -72,14 +72,14 @@ public class ResponseHandlerTest {
         process = ExampleFactory.exampleProcess();
         formRequest = new FormRequest.Builder()
                 .requestId("1")
-                .screen(ExampleFactory.exampleScreen(Constants.ScreenTypes.WIZARD))
+//                .screen(ExampleFactory.exampleContainer(Constants.ScreenTypes.WIZARD))
                 .build();
         form = new Form.Builder().formInstanceId("123").build();
         task = new Task.Builder().taskInstanceId("456").build();
 
         ViewContext version1 = new ViewContext("http://localhost:8000", "/secure", "/api", "/v1");
         Mockito.when(versions.getVersion1()).thenReturn(version1);
-        Mockito.when(formFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class))).thenReturn(form);
+        Mockito.when(formFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class), ActionType.CREATE)).thenReturn(form);
     }
 
     @Test

@@ -174,14 +174,17 @@ public class Container implements Serializable {
                     field(new Field.Builder(field, sanitizer).build());
                 }
             } else if (container.fieldIds != null && !container.fieldIds.isEmpty()) {
+                TreeSet<Field> orderedSet = new TreeSet<Field>();
                 for (String fieldId : container.fieldIds) {
                     if (fieldMap != null) {
                         Field field = fieldMap.get(fieldId);
                         if (field != null)
-                            this.fields.add(field);
+                            orderedSet.add(field);
                     }
                     this.fieldIds.add(sanitizer.sanitize(fieldId));
                 }
+                if (!orderedSet.isEmpty())
+                    fields = new ArrayList<Field>(orderedSet);
             }
             if (container.children != null && !container.children.isEmpty()) {
                 for (Container child : container.children) {
@@ -258,6 +261,11 @@ public class Container implements Serializable {
 
         public Builder readonly() {
             this.readonly = true;
+            return this;
+        }
+
+        public Builder readonly(boolean readonly) {
+            this.readonly = readonly;
             return this;
         }
 

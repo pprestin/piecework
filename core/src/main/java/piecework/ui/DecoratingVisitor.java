@@ -61,40 +61,35 @@ public class DecoratingVisitor implements TagNodeVisitor {
         decoratorMap.putOne("span", variableDecorator);
         decoratorMap.putOne("input", variableDecorator);
 
-        Screen screen = form.getScreen();
+        Container container = form.getContainer();
         Map<String, List<Value>> data = variableDecorator.getData();
         Map<String, List<Message>> results = variableDecorator.getResults();
-        if (screen != null) {
-            boolean readonly = screen.isReadonly();
+        if (container != null) {
+            boolean readonly = container.isReadonly();
             if (readonly)
                 decoratorMap.putOne("button", new ButtonDecorator(readonly));
-            List<Section> sections = screen.getSections();
-            if (sections != null && !sections.isEmpty()) {
-                for (Section section : sections) {
-                    if (section.getTagId() != null)
-                        decoratorMap.putOne("div", new SectionDecorator(section));
 
-                    List<Field> fields = section.getFields();
-                    if (fields == null || fields.isEmpty())
-                        continue;
 
-                    for (Field field : fields) {
-                        List<Value> values = data.get(field.getName());
-                        List<Message> messages = results.get(field.getName());
-                        FieldDecorator fieldDecorator = new FieldDecorator(field, values, messages, readonly);
-                        FieldTag fieldTag = fieldDecorator.getFieldTag();
-                        decoratorMap.putOne(fieldTag.getTagName(), fieldDecorator);
+            List<Field> fields = container.getFields();
+            if (fields != null && !fields.isEmpty()) {
 
-                        switch (fieldTag) {
-                            case FILE:
-                                decoratorMap.putOne("form", new FileFieldFormDecorator(field, readonly));
+                for (Field field : fields) {
+                    List<Value> values = data.get(field.getName());
+                    List<Message> messages = results.get(field.getName());
+                    FieldDecorator fieldDecorator = new FieldDecorator(field, values, messages, readonly);
+                    FieldTag fieldTag = fieldDecorator.getFieldTag();
+                    decoratorMap.putOne(fieldTag.getTagName(), fieldDecorator);
 
-                                if (StringUtils.isNotEmpty(field.getAccept()) && field.getAccept().contains("image/"))
-                                    decoratorMap.putOne("img", new ImageFieldDecorator(field, values));
+                    switch (fieldTag) {
+                        case FILE:
+                            decoratorMap.putOne("form", new FileFieldFormDecorator(field, readonly));
 
-                                break;
-                        }
+                            if (StringUtils.isNotEmpty(field.getAccept()) && field.getAccept().contains("image/"))
+                                decoratorMap.putOne("img", new ImageFieldDecorator(field, values));
+
+                            break;
                     }
+
                 }
             }
         }
@@ -133,47 +128,48 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public void decorate(TagNode tag, String id, String cls, String name, String variable) {
-            Screen screen = form.getScreen();
-            String screenType = screen.getType();
+            Container container = form.getContainer();
 
-            if (screenType != null) {
-                if (screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE) || screenType.equals(Constants.ScreenTypes.STAGED)) {
-                    TagNode contextScriptTag = new TagNode("script");
 
-                    ObjectMapper mapper = new ObjectMapper();
-
-                    try {
-                        StringBuilder content = new StringBuilder(NEWLINE);
-                        content.append("\t\tpiecework = {};").append(NEWLINE)
-                               .append("\t\tpiecework.context = {};").append(NEWLINE)
-                               .append("\t\tpiecework.context.resource = ").append(mapper.writer().writeValueAsString(form))
-                               .append(";").append(NEWLINE);
-
-                        contextScriptTag.addAttribute("type", "text/javascript");
-                        contextScriptTag.addChild(new ContentNode(content.toString()));
-                        tag.addChild(contextScriptTag);
-                    } catch (JsonMappingException e) {
-                        LOG.error("Unable to add script tag with form resource", e);
-                    } catch (JsonGenerationException e) {
-                        LOG.error("Unable to add script tag with form resource", e);
-                    } catch (IOException e) {
-                        LOG.error("Unable to add script tag with form resource", e);
-                    }
-
-                    TagNode requirejsScriptTag = new TagNode("script");
-                    requirejsScriptTag.addAttribute("type", "text/javascript");
-                    requirejsScriptTag.addAttribute("data-main", "../static/js/form.js");
-                    requirejsScriptTag.addAttribute("src", "../static/js/vendor/require.js");
-                }
-            }
+//            if (screenType != null) {
+//                if (screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE) || screenType.equals(Constants.ScreenTypes.STAGED)) {
+//                    TagNode contextScriptTag = new TagNode("script");
+//
+//                    ObjectMapper mapper = new ObjectMapper();
+//
+//                    try {
+//                        StringBuilder content = new StringBuilder(NEWLINE);
+//                        content.append("\t\tpiecework = {};").append(NEWLINE)
+//                               .append("\t\tpiecework.context = {};").append(NEWLINE)
+//                               .append("\t\tpiecework.context.resource = ").append(mapper.writer().writeValueAsString(form))
+//                               .append(";").append(NEWLINE);
+//
+//                        contextScriptTag.addAttribute("type", "text/javascript");
+//                        contextScriptTag.addChild(new ContentNode(content.toString()));
+//                        tag.addChild(contextScriptTag);
+//                    } catch (JsonMappingException e) {
+//                        LOG.error("Unable to add script tag with form resource", e);
+//                    } catch (JsonGenerationException e) {
+//                        LOG.error("Unable to add script tag with form resource", e);
+//                    } catch (IOException e) {
+//                        LOG.error("Unable to add script tag with form resource", e);
+//                    }
+//
+//                    TagNode requirejsScriptTag = new TagNode("script");
+//                    requirejsScriptTag.addAttribute("type", "text/javascript");
+//                    requirejsScriptTag.addAttribute("data-main", "../static/js/form.js");
+//                    requirejsScriptTag.addAttribute("src", "../static/js/vendor/require.js");
+//                }
+//            }
         }
 
         @Override
         public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            Screen screen = form.getScreen();
-            String screenType = screen.getType();
-
-            return screenType != null && screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE);
+//            Screen screen = form.getScreen();
+//            String screenType = screen.getType();
+//
+//            return screenType != null && screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE);
+            return false;
         }
 
         public boolean isReusable() {

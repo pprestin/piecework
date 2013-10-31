@@ -1,0 +1,41 @@
+<div class="navbar navbar-fixed-top main-navbar">
+    <div class="user-information">
+        <div id="user-information-name" class="user-information-name pull-right">
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <h1><i class="fa fa-tasks fa-lg"></i> {{form.container.title}}</h1>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div  class="main-content row">
+        <div data-ng-show="form.container.readonly">
+            <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
+            <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime}}</div>
+            <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
+        </div>
+        <div class="notifications"></div>
+        <div class="container">
+            <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="crumbs"></div>
+                    <div class="screen" id="{{form.container.containerId}}">
+                        <div class="screen-header"></div>
+                        <div class="screen-content">
+                            <ul data-ng-model="form.container.fields">
+                                <li data-ng-class="field.cssClass" data-ng-repeat="field in form.container.fields" data-ng-include="'/piecework/static/ng/views/field.html'" class="pw-field"></li>
+                            </ul>
+                        </div>
+                        <div class="screen-footer">
+                            <div class="pull-right">
+                                <button data-ng-repeat="button in form.container.buttons" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

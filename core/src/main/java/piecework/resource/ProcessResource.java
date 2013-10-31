@@ -92,7 +92,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     Response deleteDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
     @POST
-    @Path("{processDefinitionKey}/deploy/{deploymentId}")
+    @Path("{processDefinitionKey}/release/{deploymentId}")
     @RolesAllowed({AuthorizationRole.OWNER})
     Response publishDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
 
@@ -143,7 +143,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
 
     @POST
     @PUT
-    @Path("{processDefinitionKey}/deployment/{deploymentId}/interaction/{interactionId}")
+    @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     Response updateActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, Activity activity) throws StatusCodeError;
 

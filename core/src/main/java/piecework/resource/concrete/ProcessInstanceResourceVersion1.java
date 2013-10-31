@@ -380,7 +380,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
+        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE);
 
         Screen screen = formRequest.getScreen();
 
@@ -411,14 +411,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task);
+        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE);
+        Activity activity = formRequest.getActivity();
+        Map<String, Field> fieldMap = activity.getFieldKeyMap();
 
-        Screen screen = formRequest.getScreen();
-
-        if (screen == null)
-            throw new ConflictError();
-
-        Field field = FormFactory.getField(process, screen, fieldName);
+        Field field = fieldMap.get(fieldName);
         if (field == null)
             throw new NotFoundError();
 

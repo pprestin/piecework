@@ -15,6 +15,7 @@
  */
 package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -107,6 +108,11 @@ public class FormRequest {
         this.referrer = builder.referrer;
         this.userAgent = builder.userAgent;
         this.task = builder.task;
+    }
+
+    @JsonIgnore
+    public Action action() {
+        return this.activity != null && this.action != null ? this.activity.action(this.action) : null;
     }
 
     public String getRequestId() {
@@ -223,6 +229,27 @@ public class FormRequest {
             this.messages = new ManyMap<String, Message>();
         }
 
+        public Builder(FormRequest request) {
+            this.requestId = request.requestId;
+            this.processDefinitionKey = request.processDefinitionKey;
+            this.processInstanceId = request.processInstanceId;
+            this.remoteAddr = request.remoteAddr;
+            this.remoteHost = request.remoteHost;
+            this.remotePort = request.remotePort;
+            this.remoteUser = request.remoteUser;
+            this.actAsUser = request.actAsUser;
+            this.certificateSubject = request.certificateSubject;
+            this.certificateIssuer = request.certificateIssuer;
+            this.taskId = request.taskId;
+            this.action = request.action;
+            this.activity = request.activity;
+            this.contentType = request.contentType;
+            this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
+            this.messages = new ManyMap<String, Message>(request.getMessages());
+            this.referrer = request.referrer;
+            this.userAgent = request.userAgent;
+        }
+
         public Builder(FormRequest request, Sanitizer sanitizer) {
             this.requestId = sanitizer.sanitize(request.requestId);
             this.processDefinitionKey = sanitizer.sanitize(request.processDefinitionKey);
@@ -235,7 +262,7 @@ public class FormRequest {
             this.certificateSubject = sanitizer.sanitize(request.certificateSubject);
             this.certificateIssuer = sanitizer.sanitize(request.certificateIssuer);
             this.taskId = sanitizer.sanitize(request.taskId);
-            this.action = request.action;
+            this.action = request.action != null ? request.action : ActionType.CREATE;
             this.activity = request.activity != null ? new Activity.Builder(request.activity, sanitizer).build() : null;
             this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.contentType = sanitizer.sanitize(request.contentType);

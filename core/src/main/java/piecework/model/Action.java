@@ -15,23 +15,27 @@
  */
 package piecework.model;
 
+import piecework.enumeration.DataInjectionStrategy;
+
 import java.io.Serializable;
 
 /**
  * @author James Renfro
  */
-public class ActivityResponse implements Serializable {
+public class Action implements Serializable {
 
     private final Container container;
     private final String location;
+    private final DataInjectionStrategy strategy;
 
-    public ActivityResponse() {
-        this(null, null);
+    public Action() {
+        this(null, null, null);
     }
 
-    public ActivityResponse(Container container, String location) {
+    public Action(Container container, String location, DataInjectionStrategy strategy) {
         this.container = container;
         this.location = location;
+        this.strategy = strategy;
     }
 
     public Container getContainer() {
@@ -40,5 +44,9 @@ public class ActivityResponse implements Serializable {
 
     public String getLocation() {
         return location;
+    }
+
+    public DataInjectionStrategy getStrategy() {
+        return strategy;
     }
 }

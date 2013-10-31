@@ -31,9 +31,8 @@
                     <i class="icon-building icon-1x"></i> Build <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a ng-click="addInteraction(deployment)">Add interaction</a></li>
-                    <li><a ng-click="addScreen(deployment)">Add screen</a></li>
-                    <li><a ng-click="addGrouping(deployment)">Add grouping</a></li>
+                    <li><a ng-click="addActivity(deployment)">Add activity</a></li>
+                    <li><a ng-click="addContainer(deployment)">Add container</a></li>
                     <li><a ng-click="addField(deployment)">Add field</a></li>
                 </ul>
             </div>
@@ -45,11 +44,11 @@
         <ul class="pw-sidenav nav">
             <li class="lead">Activities</li>
             <li ng-class="activity.cssClass" ng-repeat="activity in deployment.activities">
-                <a ng-click="onSelectActivity(activity, deployment.activityMap)">
+                <a ng-click="onSelectActivity(activity, deployment.activities)">
                     {{activity.flowElementLabel}}
                 </a>
                 <ul class="nav" ng-show="activity.cssClass=='active'">
-                    <li ng-class="activity.container.cssClass"><a ng-click="onSelectContainer(activity.container, activity.containers)"><i class="icon-edit icon-1x"></i> Form</a></li>
+                    <li ng-class="activity.form.container.cssClass"><a ng-click="onSelectContainer(activity.form.container, activity.containers)"><i class="icon-edit icon-1x"></i> Form</a></li>
                     <li ng-class="activity.accept.container.cssClass" ng-if="activity.accept"><a ng-click="onSelectContainer(activity.accept.container, activity.containers)"><i class="icon-thumbs-up icon-1x"></i> Accepted</a></li>
                     <li ng-class="activity.reject.container.cssClass" ng-if="activity.reject"><a ng-click="onSelectContainer(activity.reject.container, activity.containers)"><i class="icon-thumbs-down icon-1x"></i> Rejected</a></li>
                 </ul>
@@ -87,9 +86,31 @@
                 <a ng-if="editing" ng-click="confirmDeleteActivity(process.processDefinitionKey, deployment.deploymentId, activity.activityKey)" class="btn btn-link" aria-role="button" aria-hidden="true" title="Delete activity"><i class="icon-remove icon-2x text-danger"></i></a>
             </div>
             <div ng-if="!container" class="activity-details">
-                <div class="form-inline">
-                    <label>Web page</label>
-                    <input ng-model="activity.location" class="form-control" type="text" size="80"/>
+                <h3>{{activity.flowElementLabel}} Activity</h3>
+                <div class="form-group">
+                    <label>Usage</label>
+                    <select ng-change="saveActivity(process, deployment, activity)" ng-model="activity.usageType" class="form-control">
+                        <option value="API">API</option>
+                        <option value="USER_FORM">Web Form</option>
+                        <option value="USER_WIZARD">Multi-step Web Form</option>
+                    </select>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-checked="activity.location"> Provide a custom user interface
+                    </label>
+                </div>
+                <div ng-show="activity.usageType != 'API'" class="form-group">
+                    <label><i class="icon-link"></i> Form location</label>
+                    <input ng-change="saveActivity(process, deployment, activity)" ng-model="activity.form.location" class="form-control" type="text" size="80"/>
+                </div>
+                <div ng-show="activity.usageType != 'API' && activity.accept" class="form-group">
+                    <label><i class="icon-link"></i> Accepted</label>
+                    <input ng-change="saveActivity(process, deployment, activity)" ng-model="activity.accept.location" class="form-control" type="text" size="80"/>
+                </div>
+                <div ng-show="activity.usageType != 'API' && activity.reject" class="form-group">
+                    <label><i class="icon-link"></i> Rejected</label>
+                    <input ng-change="saveActivity(process, deployment, activity)" ng-model="activity.reject.location" class="form-control" type="text" size="80"/>
                 </div>
             </div>
             <div ng-if="container" class="activity-container">

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
+import piecework.enumeration.ActionType;
 import piecework.enumeration.FieldTag;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
@@ -77,10 +78,11 @@ public class SubmissionTemplateFactory {
         Set<Field> fields = null;
 
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
-        Container container = activity.getContainer();
-        if (container != null) {
+        Action action = activity.action(ActionType.CREATE);
+        if (action != null && action.getContainer() != null) {
+            Container container = action.getContainer();
             if (StringUtils.isNotEmpty(validationId))
-                container = ProcessUtility.container(activity.getContainer(), validationId);
+                container = ProcessUtility.container(action.getContainer(), validationId);
 
             if (container != null) {
                 Map<String, Field> fieldMap = activity.getFieldMap();

@@ -505,7 +505,9 @@ public class ProcessDeployment implements Serializable {
         }
 
         public Builder flowElement(String taskDefinitionKey, String label, FlowElementType type) {
-            this.flowElements.add(new FlowElement(taskDefinitionKey, label, type));
+            FlowElement flowElement = new FlowElement(taskDefinitionKey, label, type);
+            if (!this.flowElements.contains(flowElement))
+                this.flowElements.add(flowElement);
             return this;
         }
 

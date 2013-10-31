@@ -51,10 +51,7 @@ public class Form {
     private final Task task;
 
     @XmlElement
-    private final Screen screen;
-
-    @XmlElement
-    private final Activity activity;
+    private final Container container;
 
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
     private final Map<String, List<Value>> data;
@@ -110,12 +107,10 @@ public class Form {
         this.formInstanceId = builder.formInstanceId;
         this.submissionType = builder.submissionType;
         this.task = builder.task;
-        this.screen = builder.screen;
-        this.activity = builder.activity;
+        this.container = builder.container;
         this.data = builder.data;
         this.validation = builder.validation;
         this.root = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME) : null;
-        //this.action = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.formInstanceId) : null;
         this.action = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
             this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
@@ -141,12 +136,8 @@ public class Form {
         return submissionType;
     }
 
-    public Screen getScreen() {
-        return screen;
-    }
-
-    public Activity getActivity() {
-        return activity;
+    public Container getContainer() {
+        return container;
     }
 
     public Task getTask() {
@@ -231,8 +222,7 @@ public class Form {
         private String processDefinitionKey;
         private String submissionType;
         private Task task;
-        private Activity activity;
-        private Screen screen;
+        private Container container;
         private ManyMap<String, Value> data;
         private ManyMap<String, Message> validation;
         private String activation;
@@ -256,8 +246,7 @@ public class Form {
         public Builder(Form form, Sanitizer sanitizer) {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
-            this.activity = form.activity != null ? new Activity.Builder(form.activity, sanitizer).build() : null;
-            this.screen = form.screen != null ? new Screen.Builder(form.screen, sanitizer).build() : null;
+            this.container = form.container != null ? new Container.Builder(form.container, sanitizer).build() : null;
             this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
             if (form.data != null && !form.data.isEmpty())
                 this.data = new ManyMap<String, Value>(form.data);
@@ -322,8 +311,8 @@ public class Form {
             return this;
         }
 
-        public Builder screen(Screen screen) {
-            this.screen = screen;
+        public Builder container(Container container) {
+            this.container = container;
             return this;
         }
 
