@@ -36,6 +36,7 @@ import piecework.model.Process;
 import piecework.CommandExecutor;
 import piecework.command.TaskCommand;
 import piecework.identity.IdentityHelper;
+import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.Sanitizer;
@@ -53,6 +54,9 @@ import java.util.*;
 public class TaskService {
 
     private static final Logger LOG = Logger.getLogger(TaskService.class);
+
+    @Autowired
+    DeploymentRepository deploymentRepository;
 
     @Autowired
     IdentityHelper helper;
@@ -144,7 +148,7 @@ public class TaskService {
         return set;
     }
 
-    public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+    public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters, boolean wrapWithForm) throws StatusCodeError {
         long time = 0;
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
@@ -165,21 +169,30 @@ public class TaskService {
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
                 .link(taskViewContext.getApplicationUri());
 
+        ViewContext version1 = versions.getVersion1();
+
+        if (wrapWithForm)
+            resultsBuilder.resourceName(Form.Constants.ROOT_ELEMENT_NAME)
+                    .link(version1.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME));
+
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
-        ViewContext version1 = versions.getVersion1();
 
         if (!allowedProcesses.isEmpty()) {
             PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
+            Map<String, ProcessDeployment> deploymentMap = new HashMap<String, ProcessDeployment>();
             for (Process allowedProcess : allowedProcesses) {
-//                ProcessDeployment deployment = allowedProcess.getDeployment();
                 if (allowedProcess.getProcessDefinitionKey() != null) {
                     executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey());
-//                            .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
-//                            .engine(deployment.getEngine());
 
-                    resultsBuilder.definition(new Process.Builder(allowedProcess, passthroughSanitizer).build(version1));
+                    Process definition = new Process.Builder(allowedProcess, passthroughSanitizer).build(version1);
+
+                    if (wrapWithForm) {
+                        resultsBuilder.definition(new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(version1)).build(version1));
+                    } else {
+                        resultsBuilder.definition(definition);
+                    }
                 }
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
@@ -213,10 +226,22 @@ public class TaskService {
             Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
 
             if (page.hasContent()) {
+
                 String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
                 String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.ALL;
                 int count = 0;
                 for (ProcessInstance instance : page.getContent()) {
+                    ProcessDeployment processDeployment = null;
+                    if (wrapWithForm) {
+                        processDeployment = deploymentMap.get(instance.getDeploymentId());
+                        if (processDeployment == null && StringUtils.isNotEmpty(instance.getDeploymentId())) {
+                            processDeployment = deploymentRepository.findOne(instance.getDeploymentId());
+                            if (processDeployment != null) {
+                                deploymentMap.put(processDeployment.getDeploymentId(), processDeployment);
+                            }
+                        }
+                    }
+
                     Set<Task> tasks = instance.getTasks();
                     if (tasks != null && !tasks.isEmpty()) {
                         for (Task task : tasks) {
@@ -233,18 +258,31 @@ public class TaskService {
                                     continue;
                             }
 
-                            resultsBuilder.item(rebuildTask(task, passthroughSanitizer));
+                            Task rebuilt = rebuildTask(task, passthroughSanitizer);
+
+                            if (wrapWithForm) {
+                                if (processDeployment != null) {
+                                    Activity activity = processDeployment != null ? processDeployment.getActivity(task.getTaskDefinitionKey()) : null;
+                                    Action createAction = activity != null ? activity.action(ActionType.CREATE) : null;
+
+                                    boolean external = createAction != null && StringUtils.isNotEmpty(createAction.getLocation());
+
+                                    resultsBuilder.item(new Form.Builder()
+                                            .formInstanceId(rebuilt.getTaskInstanceId())
+                                            .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
+                                            .processDefinitionKey(rebuilt.getProcessDefinitionKey())
+                                            .instanceSubresources(rebuilt.getProcessDefinitionKey(),
+                                                    rebuilt.getProcessInstanceId(), null, 0, version1)
+                                            .external(external)
+                                            .build(version1));
+                                }
+                            } else
+                                resultsBuilder.item(rebuilt);
+
                             count++;
                         }
                     }
                 }
-
-//                if (count == 0 && environment.getProperty("synchronize.tasks", Boolean.class, Boolean.FALSE)) {
-//                    SearchResults internalTasks = allowedTasks(rawQueryParameters);
-//                    if (internalTasks.getTotal() != null && internalTasks.getTotal().longValue() > 0) {
-//                        resultsBuilder.items(internalTasks.getList());
-//                    }
-//                }
 
                 if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
                     if (executionCriteria.getFirstResult() != null)

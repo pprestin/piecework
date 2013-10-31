@@ -208,6 +208,11 @@ public class ProcessDeployment implements Serializable {
     }
 
     @JsonIgnore
+    public Activity getStartActivity() {
+        return startActivityKey != null ? getActivity(startActivityKey) : null;
+    }
+
+    @JsonIgnore
     public Activity getActivity(String activityKey) {
         if (activityMap != null && activityKey != null)
             return activityMap.get(activityKey);

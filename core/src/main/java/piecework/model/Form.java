@@ -95,6 +95,9 @@ public class Form {
     @XmlAttribute
     private final boolean valid;
 
+    @XmlAttribute
+    private final boolean external;
+
     @XmlTransient
     @JsonIgnore
     private final List<Attachment> attachments;
@@ -126,6 +129,7 @@ public class Form {
         this.attachmentCount = builder.attachmentCount;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : Collections.<Attachment>emptyList();
         this.valid = builder.valid;
+        this.external = builder.external;
     }
 
     public String getFormInstanceId() {
@@ -216,6 +220,10 @@ public class Form {
         return valid;
     }
 
+    public boolean isExternal() {
+        return external;
+    }
+
     public final static class Builder {
 
         private String formInstanceId;
@@ -234,6 +242,7 @@ public class Form {
         private int attachmentCount;
         private List<Attachment> attachments;
         private boolean valid;
+        private boolean external;
 
         public Builder() {
             super();
@@ -241,6 +250,7 @@ public class Form {
             this.data = new ManyMap<String, Value>();
             this.validation = new ManyMap<String, Message>();
             this.valid = true;
+            this.external = true;
         }
 
         public Builder(Form form, Sanitizer sanitizer) {
@@ -261,6 +271,7 @@ public class Form {
             this.attachmentCount = form.attachmentCount;
             this.attachments = form.getAttachments();
             this.valid = form.valid;
+            this.external = form.external;
         }
 
         public Form build() {
@@ -344,6 +355,11 @@ public class Form {
 
         public Builder invalid() {
             this.valid = false;
+            return this;
+        }
+
+        public Builder external(boolean external) {
+            this.external = external;
             return this;
         }
     }

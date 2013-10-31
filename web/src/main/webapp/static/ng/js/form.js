@@ -1,25 +1,33 @@
 angular.module('Form',
     [
         'ngResource',
+        'ngRoute',
         'ngSanitize',
         'ui.bootstrap',
         'ui.bootstrap.alert',
         'ui.bootstrap.modal'
     ])
-    .config(['$routeProvider', '$locationProvider',
-        function($routeProvider, $locationProvider) {
+    .config(['$routeProvider', '$locationProvider', '$logProvider','$provide',
+        function($routeProvider, $locationProvider, $logProvider, $provide) {
+            //$logProvider.debugEnabled(true);
+
             $routeProvider
                 .when('/form.html', {controller: 'ListController', templateUrl:'/piecework/static/ng/views/form-list.html'})
                 .when('/form/:processDefinitionKey', {controller: 'FormController', templateUrl:'/piecework/static/ng/views/form.html'})
-                .when('/secure/form/:processDefinitionKey/:requestId', {controller: 'FormController', templateUrl:'/piecework/static/ng/views/form.html'})
-                .otherwise({redirectTo:'/form.html'});
+                .when('/form/:processDefinitionKey/:requestId', {controller: 'FormController', templateUrl:'/piecework/static/ng/views/form.html'})
+                ; //.otherwise({redirectTo:'/form.html'});
 
-            $locationProvider.html5Mode(true);
+            $locationProvider.html5Mode(true).hashPrefix('!');
+
+            $provide.decorator('$sniffer', function($delegate) {
+                $delegate.history = true;
+                return $delegate;
+            });
         }
     ])
-    .controller('FormController', ['$scope', '$resource', '$http', '$routeParams','limitToFilter',
-        function($scope, $resource, $http, $routeParams, limitToFilter) {
-            var resourcePath = '/form/:processDefinitionKey';
+    .controller('FormController', ['$scope', '$location', '$resource', '$http', '$routeParams','limitToFilter',
+        function($scope, $location, $resource, $http, $routeParams, limitToFilter) {
+            var resourcePath = './form/:processDefinitionKey';
             if ($routeParams.requestId != null)
                 resourcePath += '/:requestId';
             var Form = $resource(resourcePath, {processDefinitionKey:'@processDefinitionKey',requestId:'@requestId'});
@@ -88,7 +96,7 @@ angular.module('Form',
     ])
     .controller('ListController', ['$scope', '$resource', '$http', '$routeParams','limitToFilter',
         function($scope, $resource, $http, $routeParams, limitToFilter) {
-            var SearchResults = $resource('form', {});
+            var SearchResults = $resource('./form', {});
             var results = SearchResults.get({}, function(results) {
                 $scope.definitions = results.definitions;
                 $scope.forms = results.list;

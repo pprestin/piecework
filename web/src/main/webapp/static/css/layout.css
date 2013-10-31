@@ -409,6 +409,10 @@ select.form-control {
     line-height: 40px;
 }
 
+.pw-navbar-collapse .navbar-form {
+    padding: 0px;
+}
+
 .pw-sidenav {
     margin-top: 0px;
     margin-bottom: 30px;

@@ -25,21 +25,16 @@ import piecework.CommandExecutor;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
-import piecework.command.InstanceStateCommand;
 import piecework.common.RequestDetails;
-import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
-import piecework.enumeration.OperationType;
 import piecework.handler.SubmissionHandler;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
-import piecework.identity.IdentityDetails;
 import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
-import piecework.engine.exception.ProcessEngineException;
 import piecework.handler.RequestHandler;
 import piecework.handler.ResponseHandler;
 import piecework.validation.FormValidation;
@@ -153,41 +148,41 @@ public class FormService {
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
 
-        SearchResults results = taskService.allowedTasksDirect(rawQueryParameters);
+        return taskService.allowedTasksDirect(rawQueryParameters, true);
 
-        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
-                .resourceLabel("Tasks")
-                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-                .link(viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME))
-                .parameters(results.getParameters());
-
-        Set<Process> definitions = helper.findProcesses(AuthorizationRole.INITIATOR);
-        if (definitions != null) {
-            for (Process definition : definitions) {
-                resultsBuilder.definition(new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
-            }
-        }
-
-        List<?> items = results.getList();
-        if (items != null && !items.isEmpty()) {
-            ViewContext version = versions.getVersion1();
-
-            for (Object item : items) {
-                Task task = Task.class.cast(item);
-                resultsBuilder.item(new Form.Builder()
-                        .formInstanceId(task.getTaskInstanceId())
-                        .taskSubresources(task.getProcessDefinitionKey(), task, version)
-                        .processDefinitionKey(task.getProcessDefinitionKey())
-                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, 0, version)
-                        .build(viewContext));
-            }
-        }
-
-        resultsBuilder.firstResult(results.getFirstResult());
-        resultsBuilder.maxResults(results.getMaxResults());
-        resultsBuilder.total(Long.valueOf(results.getTotal()));
-
-        return resultsBuilder.build(viewContext);
+//        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
+//                .resourceLabel("Tasks")
+//                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
+//                .link(viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME))
+//                .parameters(results.getParameters());
+//
+//        Set<Process> definitions = helper.findProcesses(AuthorizationRole.INITIATOR);
+//        if (definitions != null) {
+//            for (Process definition : definitions) {
+//                resultsBuilder.definition(new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
+//            }
+//        }
+//
+//        List<?> items = results.getList();
+//        if (items != null && !items.isEmpty()) {
+//            ViewContext version = versions.getVersion1();
+//
+//            for (Object item : items) {
+//                Task task = Task.class.cast(item);
+//                resultsBuilder.item(new Form.Builder()
+//                        .formInstanceId(task.getTaskInstanceId())
+//                        .taskSubresources(task.getProcessDefinitionKey(), task, version)
+//                        .processDefinitionKey(task.getProcessDefinitionKey())
+//                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, 0, version)
+//                        .build(viewContext));
+//            }
+//        }
+//
+//        resultsBuilder.firstResult(results.getFirstResult());
+//        resultsBuilder.maxResults(results.getMaxResults());
+//        resultsBuilder.total(Long.valueOf(results.getTotal()));
+//
+//        return resultsBuilder.build(viewContext);
     }
 
     public Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
