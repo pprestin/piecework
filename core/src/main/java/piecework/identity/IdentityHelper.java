@@ -179,4 +179,36 @@ public class IdentityHelper {
         return false;
     }
 	
+    // returns true if my roleIds includes one of my roles
+    // returns false otherwise
+    public boolean isAAssignee(String assigneeId, Set<String> candidateAssigneeIds) {
+        // sanity check
+        if ( candidateAssigneeIds == null || candidateAssigneeIds.isEmpty() ) {
+            return false;
+        }
+ 
+        // check if userId is in candidateAssigneeIds 
+        String userId = getAuthenticatedSystemOrUserId();
+        if ( userId == null ) {
+            return false;  // no signed in user
+        } else if ( userId.equals(assigneeId) || candidateAssigneeIds.contains(userId) ) {
+            return true;
+        } 
+
+        // check for group roles
+        SecurityContext context = SecurityContextHolder.getContext();
+        Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
+        if (authorities != null && !authorities.isEmpty()) {
+            for (GrantedAuthority authority : authorities) {
+                if ( ! (authority instanceof ResourceAuthority) ) {
+                    if ( candidateAssigneeIds.contains(authority.getAuthority()) ) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+	
 }

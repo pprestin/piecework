@@ -98,18 +98,7 @@ public class TaskService {
             if (limitToActive && !task.isActive())
                 continue;
 
-            if (!hasOversight) {
-                if (currentUserId == null)
-                    break;
-
-                boolean isCandidate = !task.getCandidateAssigneeIds().isEmpty() && task.getCandidateAssigneeIds().contains(currentUserId);
-                if (isCandidate)
-                    return rebuildTask(task, new PassthroughSanitizer());
-
-                boolean isAssignee = task.getAssigneeId() != null && task.getAssigneeId().equals(currentUserId);
-                if (isAssignee)
-                    return rebuildTask(task, new PassthroughSanitizer());
-            } else {
+            if ( hasOversight || helper.isAAssignee(task.getAssigneeId(), task.getCandidateAssigneeIds()) ) {
                 return rebuildTask(task, new PassthroughSanitizer());
             }
         }
@@ -156,7 +145,7 @@ public class TaskService {
         Set<String> overseerProcessDefinitionKeys = processDefinitionKeys(overseerProcesses);
         Set<String> userProcessDefinitionKeys = processDefinitionKeys(userProcesses);
 
-        String currentUserId = helper.getAuthenticatedSystemOrUserId();
+        //String currentUserId = helper.getAuthenticatedSystemOrUserId();
 
         ViewContext taskViewContext = versions.getVersion1();
 
@@ -228,13 +217,11 @@ public class TaskService {
                                     !taskStatus.equalsIgnoreCase(task.getTaskStatus()))
                                 continue;
 
-                            if (!overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())) {
-                                if (!task.getCandidateAssignees().contains(currentUserId) && !task.getAssigneeId().equals(currentUserId))
-                                    continue;
+                            if (  overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())
+                                || helper.isAAssignee(task.getAssigneeId(), task.getCandidateAssigneeIds()) ) {
+                                resultsBuilder.item(rebuildTask(task, passthroughSanitizer));
+                                count++;
                             }
-
-                            resultsBuilder.item(rebuildTask(task, passthroughSanitizer));
-                            count++;
                         }
                     }
                 }
@@ -289,7 +276,12 @@ public class TaskService {
         Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
         if (candidateAssigneeIds != null && !candidateAssigneeIds.isEmpty()) {
             for (String candidateAssigneeId : candidateAssigneeIds) {
-                builder.candidateAssignee(identityService.getUser(candidateAssigneeId));
+                User user = identityService.getUser(candidateAssigneeId);
+                if ( user != null ) {
+                    builder.candidateAssignee(user);
+                } else {
+                    builder.candidateAssigneeId(candidateAssigneeId);  // group ID
+                }
             }
         }
 

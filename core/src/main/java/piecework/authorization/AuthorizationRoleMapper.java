@@ -23,6 +23,7 @@ import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import piecework.persistence.AuthorizationRepository;
 
 /**
@@ -43,7 +44,7 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
             if (LOG.isDebugEnabled())
                 start = System.currentTimeMillis();
 
-            Collection<ResourceAuthority> mapped = new ArrayList<ResourceAuthority>();
+            Collection<GrantedAuthority> mapped = new ArrayList<GrantedAuthority>();
 			Set<String> authorizationIds = new HashSet<String>();
             for (GrantedAuthority authority : authorities) {
 				String authorizationId = authority.getAuthority();
@@ -52,15 +53,23 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
 
             Iterable<Authorization> authorizations = repository.findAll(authorizationIds);
             if (authorizations != null) {
+                // use a set to avoid duplicate authoritzationId for SimpleGrantedAuthority
+                // reuse vairable authorizationIds
+                authorizationIds = new HashSet<String>();
                 for (Authorization authorization : authorizations) {
                     if (authorization != null) {
                         List<ResourceAuthority> resourceAuthorities = authorization.getAuthorities();
                         if (resourceAuthorities != null && !resourceAuthorities.isEmpty()) {
                             for (ResourceAuthority resourceAuthority : resourceAuthorities) {
                                 mapped.add(resourceAuthority);
+                                authorizationIds.add(authorization.getAuthorizationId());
                             }
                         }
                     }
+                }
+
+                for (String authorizationId : authorizationIds) {
+                    mapped.add( new SimpleGrantedAuthority(authorizationId) );
                 }
             }
 

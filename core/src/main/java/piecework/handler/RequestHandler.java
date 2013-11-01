@@ -199,13 +199,9 @@ public class RequestHandler {
                 throw new ForbiddenError();
             }
 
-            if (task != null && (task.getAssigneeId() == null || !task.getAssigneeId().equals(currentUser.getUserId()))) {
-                // If the user is not the assignee then she or he needs to be a candidate assignee
-                Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
-                if (candidateAssigneeIds == null || !candidateAssigneeIds.contains(currentUser.getUserId())) {
-                    LOG.warn("Forbidden: Unauthorized user " + currentUser.getDisplayName() + " (" + currentUser.getUserId() + ") attempting to access task " + taskId);
-                    throw new ForbiddenError();
-                }
+            if (task != null && ! identityHelper.isAAssignee(task.getAssigneeId(), task.getCandidateAssigneeIds()) ) {
+                LOG.warn("Forbidden: Unauthorized user " + currentUser.getDisplayName() + " (" + currentUser.getUserId() + ") attempting to access task " + taskId);
+                throw new ForbiddenError();
             }
         }
     }
