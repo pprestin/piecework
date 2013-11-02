@@ -1,0 +1,22 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Are you sure you want to cancel/delete this process?</h4>
+        </div>
+        <div class="modal-body">
+            <div ng-show="notifications" class="alert alert-danger">
+                <h4 ng-if="notifications[0].title">{{notifications[0].title}}</h4>
+                <ul>
+                    <li ng-repeat="notification in notifications" ng-bind-html="notification.message"></li>
+                </ul>
+            </div>
+            <p>Deleting a process <b>permanently</b> stops execution and <u>cannot</u> be reversed.</p>
+            <textarea class="form-control input-block-level" placeholder="Enter a reason" ng-model="reason" id="delete-reason" rows="4"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button ng-click="cancel()" type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+            <button ng-click="ok(reason)" type="button" class="btn btn-danger" id="delete-button">Delete</button>
+        </div>
+    </div>
+</div>

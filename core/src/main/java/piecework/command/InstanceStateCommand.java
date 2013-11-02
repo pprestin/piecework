@@ -22,6 +22,7 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
+import piecework.exception.ForbiddenError;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.persistence.DeploymentRepository;
@@ -101,7 +102,7 @@ public class InstanceStateCommand extends InstanceCommand {
                         break;
                     case ASSIGNMENT:
                         if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUserByAnyId(reason)))
-                            throw new ConflictError(Constants.ExceptionCodes.invalid_assignment);
+                            throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
                         defaultApplicationStatus = instance.getPreviousApplicationStatus();
                         break;
                     case CANCELLATION:

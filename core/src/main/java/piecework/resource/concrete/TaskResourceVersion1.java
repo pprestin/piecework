@@ -128,7 +128,7 @@ public class TaskResourceVersion1 implements TaskResource {
         }
 
         FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, validatedAction);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
         Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, validatedAction);
 
         if (submission != null && submission.getAction() != null) {

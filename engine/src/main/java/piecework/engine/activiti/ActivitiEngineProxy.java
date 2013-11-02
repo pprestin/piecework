@@ -124,9 +124,11 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean assign(Process process, ProcessDeployment deployment, String taskId, User user) throws ProcessEngineException {
-        if (user != null && user.getUserId() != null)
+        if (user != null && user.getUserId() != null) {
             processEngine.getTaskService().setAssignee(taskId, user.getUserId());
-        return true;
+            return true;
+        }
+        return false;
     }
 
     @Override

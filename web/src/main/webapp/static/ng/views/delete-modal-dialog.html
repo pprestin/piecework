@@ -4,6 +4,12 @@
             <h3>{{entityToDelete.title}}</h3>
         </div>
         <div class="modal-body">
+            <div ng-show="notifications" class="alert alert-danger">
+                <h4 ng-if="notifications[0].title">{{notifications[0].title}}</h4>
+                <ul>
+                    <li ng-repeat="notification in notifications" ng-bind-html="notification.message"></li>
+                </ul>
+            </div>
             <span ng-bind-html="entityToDelete.text"></span>
         </div>
         <div class="modal-footer">

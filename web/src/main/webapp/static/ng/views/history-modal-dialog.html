@@ -1,0 +1,63 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">History</h4>
+        </div>
+        <div class="modal-body">
+            <div ng-show="loading">
+                <p class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i></p>
+            </div>
+            <div ng-show="!loading">
+                <strong>{{history.processInstanceLabel}}</strong>
+                <p class="muted">{{history.processDefinitionLabel}}</p>
+
+                <table class="table table-condensed">
+                    <tr>
+                        <td><i class="fa fa-play-circle"></i></td>
+                        <td>Started</td>
+                        <td></td>
+                        <td>{{history.initiator.displayName}}<br/>
+                            <span class="text-muted">{{history.startTime|date:'MMM d, y H:mm'}}</span></td>
+                    </tr>
+
+                    <tr ng-repeat="event in history.events">
+                        <td ng-if="event.type == 'task'"><i class="fa fa-puzzle-piece"></i></td>
+                        <td ng-if="event.type == 'task'">{{event.task.taskLabel}}<br/>
+                            <span class="text-muted">{{event.task.taskStatus}}</span>
+                        </td>
+                        <td ng-if="event.type == 'task'">{{datediff(event.task.endTime, event.task.startTime)}}</td>
+
+                        <td ng-if="event.type == 'operation'">
+                            <span ng-switch on="event.operation.type">
+                                <i data-ng-switch-when="cancellation" class="fa fa-ban"></i>
+                                <i data-ng-switch-when="suspension" class="fa fa-pause"></i>
+                                <i data-ng-switch-when="activation" class="fa fa-play"></i>
+                                <i data-ng-switch-when="assignment" class="fa fa-user"></i>
+                                <i data-ng-switch-default class="fa fa-wrench"></i>
+                            </span>
+                        </td>
+                        <td ng-if="event.type == 'operation'">{{event.description}}<br/>
+                            <span class="text-muted">{{event.operation.reason}}</span>
+                        </td>
+                        <td ng-if="event.type == 'operation'"></td>
+                        <td>
+                            {{event.user.displayName}}<br/>
+                            <span class="text-muted">{{event.date|date:'MMM d, y H:mm'}}</span>
+                        </td>
+                    </tr>
+
+                    <tr ng-if="event.endTime">
+                        <td><i class="fa fa-off"></i></td>
+                        <td>Complete</td>
+                        <td></td>
+                        <td>{{event.endTime|date:'MMM d, y H:mm'}}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button ng-click="cancel()" type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+        </div>
+    </div>
+</div>

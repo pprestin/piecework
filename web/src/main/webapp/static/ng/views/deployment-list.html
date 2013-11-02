@@ -27,17 +27,17 @@
     </thead>
     <tbody>
     <tr ng-repeat="deployment in deployments">
-        <td>{{deployment.deploymentVersion}} <span ng-if="deployment.published" title="Released on {{deployment.datePublished | date:'medium' }}"><i class="icon-rocket"></i></span></td>
+        <td>{{deployment.deploymentVersion}} <span ng-if="deployment.published" title="Released on {{deployment.datePublished | date:'medium' }}"><i class="fa fa-rocket"></i></span></td>
         <td><a href="#/deployment/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" title="Edit #{{deployment.deploymentVersion}}">{{deployment.deploymentLabel}}</a></td>
         <td>{{deployment.dateCreated | date:'medium' }}</td>
         <td>{{deployment.dateDeployed | date:'medium' }}</td>
         <td>{{deployment.datePublished | date:'medium' }}</td>
         <td>
-            <a href="#/activity/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" role="button" title="Configure user interfaces"><i class="icon-desktop"></i></a>
+            <a href="#/activity/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" role="button" title="Configure user interfaces"><i class="fa fa-desktop"></i></a>
             &nbsp;
-            <a ng-click="copyDeployment(process.processDefinitionKey, deployment.deploymentId)" style="cursor:pointer" role="button" title="Clone this deployment"><i class="icon-copy"></i></a>
+            <a ng-click="copyDeployment(process.processDefinitionKey, deployment.deploymentId)" style="cursor:pointer" role="button" title="Clone this deployment"><i class="fa fa-copy"></i></a>
             &nbsp;
-            <a ng-click="confirmDeleteDeployment(process.processDefinitionKey, deployment.deploymentId, deployment.deploymentVersion, deployment.deploymentLabel)" ng-if="deployment.deploymentId!=process.deploymentId" class="text-danger" style="cursor:pointer" role="button" title="Delete deployment"><i class="icon-remove-sign"></i></a>
+            <a ng-click="confirmDeleteDeployment(process.processDefinitionKey, deployment.deploymentId, deployment.deploymentVersion, deployment.deploymentLabel)" ng-if="deployment.deploymentId!=process.deploymentId" class="text-danger" style="cursor:pointer" role="button" title="Delete deployment"><i class="fa fa-times-circle"></i></a>
         </td>
     </tr>
     </tbody>
