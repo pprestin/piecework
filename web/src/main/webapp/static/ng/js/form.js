@@ -25,8 +25,8 @@ angular.module('Form',
             });
         }
     ])
-    .controller('FormController', ['$scope', '$location', '$resource', '$http', '$routeParams', 'personService',
-        function($scope, $location, $resource, $http, $routeParams, personService) {
+    .controller('FormController', ['$scope', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
+        function($scope, $location, $resource, $http, $routeParams, personService, dialogs) {
             var resourcePath = './form/:processDefinitionKey';
             if ($routeParams.requestId != null)
                 resourcePath += '/:requestId';
@@ -58,6 +58,7 @@ angular.module('Form',
                     }
                 }
 
+                $scope.dialogs = dialogs;
                 $scope.getPeople = personService.getPeople;
 
                 $scope.showPeople = function() {
@@ -72,6 +73,7 @@ angular.module('Form',
             $scope.processSearchResults = function(results) {
                 $scope.definitions = results.definitions;
                 $scope.forms = results.list;
+                $scope.user = results.user;
                 $scope.processDefinitionDescription = new Object();
                 angular.forEach(results.definitions, function(definition) {
                     $scope.processDefinitionDescription[definition.task.processDefinitionKey] = definition.task.processDefinitionLabel;

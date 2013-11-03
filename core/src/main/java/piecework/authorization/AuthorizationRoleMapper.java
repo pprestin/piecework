@@ -46,8 +46,12 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
             Collection<ResourceAuthority> mapped = new ArrayList<ResourceAuthority>();
 			Set<String> authorizationIds = new HashSet<String>();
             for (GrantedAuthority authority : authorities) {
-				String authorizationId = authority.getAuthority();
-                authorizationIds.add(authorizationId);
+                if (authority instanceof DebugResourceAuthority) {
+                    mapped.add((DebugResourceAuthority)authority);
+                } else {
+				    String authorizationId = authority.getAuthority();
+                    authorizationIds.add(authorizationId);
+                }
 			}
 
             Iterable<Authorization> authorizations = repository.findAll(authorizationIds);

@@ -18,6 +18,7 @@ package piecework.authorization;
 import java.util.*;
 
 import org.springframework.security.core.GrantedAuthority;
+import piecework.model.Process;
 import piecework.security.Sanitizer;
 
 /**
@@ -30,7 +31,7 @@ public class ResourceAuthority implements GrantedAuthority {
 	private final String role;
 	private final Set<String> processDefinitionKeys;
 
-    private ResourceAuthority() {
+    protected ResourceAuthority() {
         this(new Builder());
     }
 	
@@ -38,7 +39,16 @@ public class ResourceAuthority implements GrantedAuthority {
 		this.role = builder.role;
 		this.processDefinitionKeys = builder.processDefinitionKeys != null ? Collections.unmodifiableSet(builder.processDefinitionKeys) : null;
 	}
-	
+
+    public boolean hasRole(Process process, Set<String> allowedRoleSet) {
+        if (allowedRoleSet == null || allowedRoleSet.contains(getRole())) {
+            Set<String> processDefinitionKeys = getProcessDefinitionKeys();
+            if (processDefinitionKeys == null || processDefinitionKeys.contains(process.getProcessDefinitionKey()))
+                return true;
+        }
+        return false;
+    }
+
 	public boolean isAuthorized(String roleAllowed, String processDefinitionKeyAllowed) {
 		if (roleAllowed == null)
 			return false;
@@ -68,6 +78,15 @@ public class ResourceAuthority implements GrantedAuthority {
 	public String getAuthority() {
 		return toString();
 	}
+
+    public Set<String> getProcessDefinitionKeys(Set<String> allowedRoleSet) {
+        if (allowedRoleSet == null || allowedRoleSet.contains(getRole())) {
+            Set<String> processDefinitionKeys = getProcessDefinitionKeys();
+            if (processDefinitionKeys != null && !processDefinitionKeys.isEmpty())
+                return processDefinitionKeys;
+        }
+        return Collections.emptySet();
+    }
 
 	public Set<String> getProcessDefinitionKeys() {
 		return processDefinitionKeys;

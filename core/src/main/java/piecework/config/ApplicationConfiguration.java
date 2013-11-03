@@ -52,6 +52,7 @@ import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.form.AnonymousFormResource;
+import piecework.identity.DebugIdentityService;
 import piecework.identity.DisplayNameConverter;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapIdentityService;
@@ -242,6 +243,11 @@ public class ApplicationConfiguration {
 
     @Bean
     public IdentityService userDetailsService(Environment environment) throws Exception {
+        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
+
+        if (isDebugMode)
+            return new DebugIdentityService();
+
         String identityProviderProtocol = environment.getProperty("identity.provider.protocol");
 
         LdapSettings ldapSettings = ldapSettings(environment);

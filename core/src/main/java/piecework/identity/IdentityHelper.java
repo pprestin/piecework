@@ -136,11 +136,9 @@ public class IdentityHelper {
 			for (GrantedAuthority authority : authorities) {		
 				if (authority instanceof ResourceAuthority) {
 					ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
-					if (allowedRoleSet == null || allowedRoleSet.contains(resourceAuthority.getRole())) {
-                        Set<String> processDefinitionKeys = resourceAuthority.getProcessDefinitionKeys();
-                        if (processDefinitionKeys != null)
-						    allowedProcessDefinitionKeys.addAll(processDefinitionKeys);
-                    }
+                    Set<String> processDefinitionKeys = resourceAuthority.getProcessDefinitionKeys(allowedRoleSet);
+                    if (processDefinitionKeys != null)
+                        allowedProcessDefinitionKeys.addAll(processDefinitionKeys);
 				}
 			}
 		}
@@ -166,11 +164,8 @@ public class IdentityHelper {
                 for (GrantedAuthority authority : authorities) {
                     if (authority instanceof ResourceAuthority) {
                         ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
-                        if (allowedRoleSet == null || allowedRoleSet.contains(resourceAuthority.getRole())) {
-                            Set<String> processDefinitionKeys = resourceAuthority.getProcessDefinitionKeys();
-                            if (processDefinitionKeys == null || processDefinitionKeys.contains(process.getProcessDefinitionKey()))
-                                return true;
-                        }
+                        if (resourceAuthority.hasRole(process, allowedRoleSet))
+                            return true;
                     }
                 }
             }
