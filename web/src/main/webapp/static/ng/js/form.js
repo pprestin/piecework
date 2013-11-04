@@ -12,10 +12,12 @@ angular.module('Form',
         function($routeProvider, $locationProvider, $logProvider, $provide) {
             //$logProvider.debugEnabled(true);
 
+            var root = window.piecework.context.static;
+
             $routeProvider
-                .when('/form.html', {controller: 'ListController', templateUrl:'/piecework/static/ng/views/form-list.html'})
-                .when('/form/:processDefinitionKey', {controller: 'FormController', templateUrl:'/piecework/static/ng/views/form.html'})
-                .when('/form/:processDefinitionKey/:requestId', {controller: 'FormController', templateUrl:'/piecework/static/ng/views/form.html'})
+                .when('/form.html', {controller: 'ListController', templateUrl: root + '/static/ng/views/form-list.html'})
+                .when('/form/:processDefinitionKey', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
+                .when('/form/:processDefinitionKey/:requestId', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
                 .otherwise({redirectTo:'/form.html'});
 
             $locationProvider.html5Mode(true).hashPrefix('!');
@@ -26,8 +28,11 @@ angular.module('Form',
             });
         }
     ])
-    .controller('FormController', ['$scope', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
-        function($scope, $location, $resource, $http, $routeParams, personService, dialogs) {
+    .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
+        function($scope, $window, $location, $resource, $http, $routeParams, personService, dialogs) {
+
+            $scope.context = $window.piecework.context;
+
             $scope.fileUploadOptions = {
                 autoUpload: true
             };
@@ -118,8 +123,9 @@ angular.module('Form',
             });
         }
     ])
-    .controller('ListController', ['$scope', '$resource', '$http', '$routeParams','$modal', 'personService', 'taskService', 'dialogs',
-        function($scope, $resource, $http, $routeParams, $modal, personService, taskService, dialogs) {
+    .controller('ListController', ['$scope', '$window', '$resource', '$http', '$routeParams','$modal', 'personService', 'taskService', 'dialogs',
+        function($scope, $window, $resource, $http, $routeParams, $modal, personService, taskService, dialogs) {
+            $scope.context = $window.piecework.context;
             $scope.processSearchResults = function(results) {
                 $scope.definitions = results.definitions;
                 $scope.forms = results.list;
@@ -480,11 +486,12 @@ angular.module('Form',
     ])
     .factory('dialogs', ['$modal','controllerService','notificationService', 'personService','taskService',
         function($modal, controllerService, notificationService, personService, taskService) {
+            var root = window.piecework.context.static;
             return {
                 openActivateModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: '/piecework/static/ng/views/activate-modal-dialog.html',
+                        templateUrl: root + '/static/ng/views/activate-modal-dialog.html',
                         controller: controllerService.ActivationModalController,
                         resolve: {
                             selectedForms: function () {
@@ -498,7 +505,7 @@ angular.module('Form',
                 openAssignModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: '/piecework/static/ng/views/assign-modal-dialog.html',
+                        templateUrl: root + '/static/ng/views/assign-modal-dialog.html',
                         controller: controllerService.AssignmentModalController,
                         resolve: {
                             selectedForms: function () {
@@ -512,7 +519,7 @@ angular.module('Form',
                 openCancelModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: '/piecework/static/ng/views/cancel-modal-dialog.html',
+                        templateUrl: root + '/static/ng/views/cancel-modal-dialog.html',
                         controller: controllerService.CancellationModalController,
                         resolve: {
                             selectedForms: function () {
@@ -526,7 +533,7 @@ angular.module('Form',
                 openCommentModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: '/piecework/static/ng/views/comment-modal-dialog.html',
+                        templateUrl: root + '/static/ng/views/comment-modal-dialog.html',
                         controller: controllerService.CommentModalController,
                         resolve: {
                             selectedForms: function () {
@@ -540,7 +547,7 @@ angular.module('Form',
                 openHistoryModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: '/piecework/static/ng/views/history-modal-dialog.html',
+                        templateUrl: root + '/static/ng/views/history-modal-dialog.html',
                         controller: controllerService.HistoryModalController,
                         resolve: {
                             selectedForms: function () {
@@ -554,7 +561,7 @@ angular.module('Form',
                 openSuspendModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: '/piecework/static/ng/views/suspend-modal-dialog.html',
+                        templateUrl: root + '/static/ng/views/suspend-modal-dialog.html',
                         controller: controllerService.SuspensionModalController,
                         resolve: {
                             selectedForms: function () {

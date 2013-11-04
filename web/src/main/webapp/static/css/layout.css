@@ -575,6 +575,7 @@ select.form-control {
 }
 
 .user-information-name {
+    color: white;
     text-align: right;
     padding: 3px 20px;
 }

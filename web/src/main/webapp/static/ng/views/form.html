@@ -1,6 +1,8 @@
 <nav class="navbar navbar-default navbar-inverse pw-navbar-collapse" style="min-height: 20px;margin-bottom: 0px">
-    <div id="user-information-name" class="pull-right">
-        <span style="color:white">Test user</span>
+    <div class="user-information">
+        <div id="user-information-name" class="user-information-name pull-right">
+            {{context.user.displayName}}
+        </div>
     </div>
 </nav>
 <nav class="navbar navbar-default pw-navbar-collapse" style="margin-bottom: 0px">
