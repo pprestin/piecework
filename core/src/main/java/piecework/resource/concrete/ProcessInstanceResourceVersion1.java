@@ -135,7 +135,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (task == null)
             throw new ForbiddenError();
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
         Submission submission = submissionHandler.handle(process, template, formData);
 
         ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
@@ -153,7 +153,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (task == null)
             throw new ForbiddenError();
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
         Submission submission = submissionHandler.handle(process, template, body);
 
         ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
@@ -219,7 +219,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
         Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, ActionType.CREATE);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
@@ -232,7 +232,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
         Submission submission = submissionHandler.handle(process, template, formData);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
@@ -245,7 +245,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen());
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
         ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 

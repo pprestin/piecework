@@ -34,6 +34,7 @@ public class SubmissionTemplate {
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
     private final Map<String, Field> fieldMap;
     private final boolean isAttachmentAllowed;
+    private final long maxAttachmentSize;
 
     private SubmissionTemplate() {
         this(new Builder());
@@ -48,6 +49,7 @@ public class SubmissionTemplate {
         this.userFields = Collections.unmodifiableSet(builder.userFields);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.fieldRuleMap = Collections.unmodifiableMap(builder.fieldRuleMap);
+        this.maxAttachmentSize = builder.maxAttachmentSize;
     }
 
     public Set<String> getAcceptable() {
@@ -98,6 +100,10 @@ public class SubmissionTemplate {
         return isAttachmentAllowed;
     }
 
+    public long getMaxAttachmentSize() {
+        return maxAttachmentSize;
+    }
+
     public boolean isRestricted(String name) {
         return restricted.contains(name);
     }
@@ -115,6 +121,7 @@ public class SubmissionTemplate {
         private ManyMap<Field, ValidationRule> fieldRuleMap;
         private Map<String, Field> fieldMap;
         private boolean isAttachmentAllowed;
+        private long maxAttachmentSize;
 
         public Builder() {
             this.acceptable = new HashSet<String>();
@@ -124,6 +131,7 @@ public class SubmissionTemplate {
             this.userFields = new HashSet<String>();
             this.fieldRuleMap = new ManyMap<Field, ValidationRule>();
             this.fieldMap = new HashMap<String, Field>();
+            this.maxAttachmentSize = 10485760l;
         }
 
         public SubmissionTemplate build() {
@@ -170,6 +178,11 @@ public class SubmissionTemplate {
 
         public Builder allowAttachments() {
             this.isAttachmentAllowed = true;
+            return this;
+        }
+
+        public Builder maxAttachmentSize(long maxAttachmentSize) {
+            this.maxAttachmentSize = maxAttachmentSize;
             return this;
         }
     }

@@ -1,14 +1,3 @@
-<!--div class="navbar navbar-fixed-top main-navbar">
-    <div class="user-information">
-        <div id="user-information-name" class="user-information-name pull-right">
-        </div>
-    </div>
-    <div class="container">
-        <div class="row">
-            <h1><i class="fa fa-tasks fa-lg"></i> {{form.container.title}}</h1>
-        </div>
-    </div>
-</div-->
 <nav class="navbar navbar-default navbar-inverse pw-navbar-collapse" style="min-height: 20px;margin-bottom: 0px">
     <div id="user-information-name" class="pull-right">
         <span style="color:white">Test user</span>
@@ -16,49 +5,56 @@
 </nav>
 <nav class="navbar navbar-default pw-navbar-collapse" style="margin-bottom: 0px">
     <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+        <button data-ng-click="isCollapsed = !isCollapsed" type="button" class="navbar-toggle">
             <span class="sr-only">Toggle search</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
     </div>
-    <div class="container collapse navbar-collapse navbar-ex1-collapse">
-
+    <div collapse="isCollapsed" class="container collapse navbar-collapse navbar-ex1-collapse">
         <div class="row">
             <div class="col-lg-4 col-sm-4">
-                <button ng-show="form.task.active" class="btn btn-default navbar-btn" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
-                <button ng-show="form.task.active" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="fa fa-trash fa-white"></i></button>
-                <button ng-show="form.task.taskStatus == 'Suspended'" class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>
+                <button data-ng-click="dialogs.openHistoryModal([form])" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>
+                <button data-ng-click="dialogs.openSuspendModal([form])" data-ng-show="form.task.active" class="btn btn-default navbar-btn" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
+                <button data-ng-click="dialogs.openCancelModal([form])" data-ng-show="form.task.active" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="fa fa-trash-o"></i></button>
+                <button data-ng-click="dialogs.openActivateModal([form])" data-ng-show="form.task.taskStatus == 'Suspended'" class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="fa fa-play"></i></button>
             </div>
             <div class="col-lg-8 col-sm-8">
                 <div class="responsive-pull-right">
-                    <p ng-show="form.task.active && form.task.assignee" class="navbar-text text-primary">Assigned to {{form.task.assignee.displayName}}</p>
-                    <div class="btn-group">
-                        <button class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="icon-user icon-white"></i></button>
-                        <button data-ng-show="form.task.candidateAssignees" type="button" class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown">
+                    <p data-ng-show="form.task.active && form.task.assignee" class="navbar-text text-primary">Assigned to {{form.task.assignee.displayName}}</p>
+                    <button data-ng-hide="!form.task.active || form.task.candidateAssignees" data-ng-click="dialogs.openAssignModal([form])" class="btn btn-default navbar-btn incomplete-selected-result-btn" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="fa fa-user"></i></button>
+                    <div data-ng-show="form.task.active && form.task.candidateAssignees" class="btn-group">
+                        <button data-ng-click="dialogs.openAssignModal([form])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="fa fa-user"></i></button>
+                        <button type="button" class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown">
                             <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
                             <li data-ng-repeat="candidateAssignee in form.task.candidateAssignees"><a class="candidate-assignee" id="{{candidateAssignee.userId}}">Assign to {{candidateAssignee.displayName}}</a></li>
                         </ul>
                     </div>
-                    <a class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="icon-comment-alt"></i></a>
-                    <button class="btn btn-default navbar-btn" id="file-button" title="Attach file"><i class="fa fa-paper-clip"></i></button>
-                    <input type="file" name="attachment" class="attach-file hide"/>
-                    <button class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i class="icon-folder-open"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>
-                    <a class="btn btn-default navbar-btn" href="{{root}}.html" rel="external" id="back-button" title="Return to task list"><i class="icon-arrow-left"></i></a>
+                    <a data-ng-click="dialogs.openCommentModal([form])" class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="fa fa-comment-o"></i></a>
+                    <div class="btn-group">
+                        <form class="navbar-form navbar-left form-inline" id="fileupload" action="{{form.attachment}}" method="POST" enctype="multipart/form-data" data-file-upload="fileUploadOptions">
+                            <span class="btn btn-default navbar-btn fileinput-button" data-ng-class="{disabled: disabled}">
+                                  <i ng-hide="sending" class="fa fa-paperclip"></i>  <i ng-show="sending" class='fa fa-paperclip fa-spin'></i>
+                                  <input type="file" name="attachment" multiple="" ng-disabled="disabled">
+                            </span>
+                        </form>
+                    </div>
+                    <button ng-click="isViewingAttachments = !isViewingAttachments" class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i class="fa fa-folder-open"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>
+                    <a class="btn btn-default navbar-btn" href="{{root}}.html" rel="external" id="back-button" title="Return to task list"><i class="fa fa-arrow-left"></i></a>
                 </div>
             </div>
         </div>
     </div>
 </nav>
 <div class="main-content container">
-    <div  class="row">
-        <div ng-show="notifications" class="alert alert-danger">
-            <h4 ng-if="notifications[0].title">{{notifications[0].title}}</h4>
+    <div class="row">
+        <div data-ng-show="notifications" class="alert alert-danger">
+            <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
             <ul>
-                <li ng-repeat="notification in notifications" ng-bind-html="notification.message"></li>
+                <li data-ng-repeat="notification in notifications" data-ng-bind-html="notification.message"></li>
             </ul>
         </div>
         <h2>{{form.container.title}}</h2>
@@ -66,10 +62,11 @@
             <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
             <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime}}</div>
             <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
+            <div data-ng-show="form.state == 'cancelled'"class="alert alert-info">This form can no longer be modified - it has been cancelled</div>
         </div>
         <div class="notifications"></div>
         <div class="container">
-            <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
+            <form ng-class="isViewingAttachments && 'col-md-8'" class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
                 <div class="row">
                     <div class="crumbs"></div>
                     <div class="screen" id="{{form.container.containerId}}">
@@ -87,6 +84,39 @@
                     </div>
                 </div>
             </form>
+            <div ng-show="isViewingAttachments" class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="isEditingAttachments ? 'fa fa-unlock' : 'fa fa-lock'" class="fa fa-lock"></i></button>
+                        <span class="lead">Notes</span>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item" data-ng-repeat="attachment in attachments">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button data-ng-show="isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="text-danger close " type="button">&times;</button>
+                                    <span data-ng-switch on="attachment.contentType">
+                                        <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
+                                        <span data-ng-switch-default class="pw-attachment-file">
+                                            <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" title="{{attachment.description}}">{{attachment.description}}</a>
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="pull-right text-muted">{{attachment.user.displayName}}</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="pull-right text-muted">{{attachment.lastModified|date:'MMM d, y H:mm'}}</div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

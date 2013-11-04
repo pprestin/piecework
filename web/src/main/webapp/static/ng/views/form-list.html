@@ -1,4 +1,4 @@
-<div class="navbar navbar-fixed-top main-navbar">
+<div class="navbar main-navbar">
     <div class="user-information">
         <div id="user-information-name" class="user-information-name pull-right">
         </div>
@@ -17,12 +17,12 @@
             <div class="row">
                 <form class="navbar-form navbar-left form-inline" role="search">
                     <div class="row">
-                        <input style="width: 200px" title="Search by keyword" role="" class="form-control searchField" ng-model="criteria.keyword" placeholder="Search" id="keyword" type="text">
-                        <button ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i ng-show="searching" class='fa fa-spinner fa-spin fa-lg'></i><i ng-show="!searching" class="fa fa-search"></i>&nbsp;&nbsp;</button>
-                        <span ng-if="definitions" class="dropdown">
+                        <input style="width: 200px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="criteria.keyword" placeholder="Search" id="keyword" type="text">
+                        <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i ng-show="searching" class='fa fa-spinner fa-spin fa-lg'></i><i ng-show="!searching" class="fa fa-search"></i>&nbsp;&nbsp;</button>
+                        <span data-ng-if="definitions" class="dropdown">
                             <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>
                             <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">
-                                <li ng-repeat="definition in definitions" class="presentation"><a role="menuitem" href="{{definition.link}}">{{definition.task.processDefinitionLabel}}</a></li>
+                                <li data-ng-repeat="definition in definitions" class="presentation"><a role="menuitem" href="{{definition.link}}">{{definition.task.processDefinitionLabel}}</a></li>
                             </ul>
                         </span>
                     </div>
@@ -39,35 +39,35 @@
                                         <li role="presentation" class="disabled">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" id="statusOpen" ng-change="refreshSearch()" ng-model="criteria.processStatus" ng-true-value="open" role="menuitem" checked=""/> &nbsp;{{processStatusDescription['open']}}
+                                                    <input type="checkbox" id="statusOpen" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="open" role="menuitem" checked=""/> &nbsp;{{processStatusDescription['open']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" id="statusComplete" ng-change="refreshSearch()" ng-model="criteria.processStatus" ng-true-value="complete" role="menuitem"> &nbsp;{{processStatusDescription['complete']}}
+                                                    <input type="checkbox" id="statusComplete" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="complete" role="menuitem"> &nbsp;{{processStatusDescription['complete']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" id="statusCancelled" ng-change="refreshSearch()" ng-model="criteria.processStatus" ng-true-value="cancelled" role="menuitem"> &nbsp;{{processStatusDescription['cancelled']}}
+                                                    <input type="checkbox" id="statusCancelled" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="cancelled" role="menuitem"> &nbsp;{{processStatusDescription['cancelled']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" id="statusSuspended" ng-change="refreshSearch()" ng-model="criteria.processStatus" ng-true-value="suspended" role="menuitem"> &nbsp;{{processStatusDescription['suspended']}}
+                                                    <input type="checkbox" id="statusSuspended" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="suspended" role="menuitem"> &nbsp;{{processStatusDescription['suspended']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" id="statusAny" ng-change="refreshSearch()" ng-model="criteria.processStatus" ng-true-value="all" role="menuitem"> &nbsp;{{processStatusDescription['all']}}
+                                                    <input type="checkbox" id="statusAny" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="all" role="menuitem"> &nbsp;{{processStatusDescription['all']}}
                                                 </label>
                                             </div>
                                         </li>
@@ -86,35 +86,35 @@
                                         <li role="presentation" class="disabled">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" ng-change="refreshSearch()" ng-model="criteria.taskStatus" ng-true-value="Open" role="menuitem" checked=""/> &nbsp;{{taskStatusDescription['Open']}}
+                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.taskStatus" data-ng-true-value="Open" role="menuitem" checked=""/> &nbsp;{{taskStatusDescription['Open']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" ng-change="refreshSearch()" ng-model="criteria.taskStatus" ng-true-value="Complete" role="menuitem"> &nbsp;{{taskStatusDescription['Complete']}}
+                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.taskStatus" data-ng-true-value="Complete" role="menuitem"> &nbsp;{{taskStatusDescription['Complete']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" ng-change="refreshSearch()" ng-model="criteria.taskStatus" ng-true-value="Cancelled" role="menuitem"> &nbsp;{{taskStatusDescription['Cancelled']}}
+                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.taskStatus" data-ng-true-value="Cancelled" role="menuitem"> &nbsp;{{taskStatusDescription['Cancelled']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" ng-change="refreshSearch()" ng-model="criteria.taskStatus" ng-true-value="Suspended" role="menuitem"> &nbsp;{{taskStatusDescription['Suspended']}}
+                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.taskStatus" data-ng-true-value="Suspended" role="menuitem"> &nbsp;{{taskStatusDescription['Suspended']}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" ng-change="refreshSearch()" ng-model="criteria.taskStatus" ng-true-value="all" role="menuitem"> &nbsp;{{taskStatusDescription['all']}}
+                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.taskStatus" data-ng-true-value="all" role="menuitem"> &nbsp;{{taskStatusDescription['all']}}
                                                 </label>
                                             </div>
                                         </li>
@@ -129,17 +129,17 @@
                                     </a>
                                     <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">
                                         <li role="presentation" class="dropdown-header">Processes</li>
-                                        <li ng-repeat="definition in definitions" role="presentation">
+                                        <li data-ng-repeat="definition in definitions" role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" ng-change="refreshSearch()" ng-model="criteria.processDefinitionKey" ng-true-value="{{definition.task.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.task.processDefinitionLabel}}
+                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.processDefinitionKey" data-ng-true-value="{{definition.task.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.task.processDefinitionLabel}}
                                                 </label>
                                             </div>
                                         </li>
                                         <li role="presentation">
                                             <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
                                                 <label class="checkbox">
-                                                    <input type="checkbox" ng-change="refreshSearch()" ng-model="criteria.processDefinitionKey" ng-true-value="" role="menuitem"> &nbsp;{{processDefinitionDescription['']}}
+                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{processDefinitionDescription['']}}
                                                 </label>
                                             </div>
                                         </li>
@@ -150,11 +150,11 @@
                     </div>
                 </form>
                 <div class="navbar-right">
-                    <button ng-click="dialogs.openAssignModal(getFormsSelected(['Open']))" ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>
-                    <button ng-click="dialogs.openHistoryModal(getFormsSelected())" ng-show="isFormSelected()" ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>
-                    <button ng-click="dialogs.openActivateModal(getFormsSelected(['Suspended']))" ng-show="isFormSelected(['Suspended'])" class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>
-                    <button ng-click="dialogs.openSuspendModal(getFormsSelected(['Open']))" ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
-                    <button ng-click="dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))" ng-show="isFormSelected(['Open','Suspended'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>
+                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>
+                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>
+                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected(['Suspended']))" data-ng-show="isFormSelected(['Suspended'])" class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>
+                    <button data-ng-click="dialogs.openSuspendModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
+                    <button data-ng-click="dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))" data-ng-show="isFormSelected(['Open','Suspended'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>
                 </div>
             </div>
         </div>
@@ -162,7 +162,7 @@
 </div>
 <div class="container">
     <div class="main-content row">
-        <div ng-show="notification" class="alert alert-danger">
+        <div data-ng-show="notification" class="alert alert-danger">
             <strong>{{notification.title}}</strong> {{notification.message}}
         </div>
         <h2>Tasks</h2>
@@ -179,15 +179,15 @@
             </thead>
             <tbody>
                 <tr data-ng-repeat="form in forms">
-                    <td><input ng-click="selectForm(form)" type="checkbox" class="result-checkbox"/></td>
+                    <td><input data-ng-click="selectForm(form)" type="checkbox" class="result-checkbox"/></td>
                     <td>
-                        <a ng-if="form.external" href="{{form.link}}" target="_self">{{form.task.processInstanceLabel}}</a>
-                        <a ng-if="!form.external" href="{{form.link}}">{{form.task.processInstanceLabel}}</a>
+                        <a data-ng-if="form.external" href="{{form.link}}" target="_self">{{form.task.processInstanceLabel}}</a>
+                        <a data-ng-if="!form.external" href="{{form.link}}">{{form.task.processInstanceLabel}}</a>
                     </td>
                     <td class="hidden-xs">{{form.task.taskStatus}}</td>
                     <td class="hidden-sm" style="cursor:pointer"><span class="use-tooltip" title="{{form.task.taskDescription}}" data-placement="right" data-trigger="hover">{{form.task.taskLabel}}</span></td>
                     <td class="hidden-sm">{{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</td>
-                    <td>{{form.task.startTime|date:'MMM d, y H:mm'}}<span ng-if="form.task.endTime"> - {{form.task.endTime|date:'MMM d, y H:mm'}}</span></td>
+                    <td>{{form.task.startTime|date:'MMM d, y H:mm'}}<span data-ng-if="form.task.endTime"> - {{form.task.endTime|date:'MMM d, y H:mm'}}</span></td>
                 </tr>
             </tbody>
         </table>

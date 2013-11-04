@@ -244,8 +244,9 @@ public class ApplicationConfiguration {
     @Bean
     public IdentityService userDetailsService(Environment environment) throws Exception {
         Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
+        Boolean isDebugIdentity = environment.getProperty("debug.identity", Boolean.class, Boolean.FALSE);
 
-        if (isDebugMode)
+        if (isDebugMode && isDebugIdentity)
             return new DebugIdentityService();
 
         String identityProviderProtocol = environment.getProperty("identity.provider.protocol");

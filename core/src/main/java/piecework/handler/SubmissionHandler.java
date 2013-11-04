@@ -15,6 +15,7 @@
  */
 package piecework.handler;
 
+import com.mongodb.MongoException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
@@ -263,7 +264,9 @@ public class SubmissionHandler {
                 String id = uuidGenerator.getNextId();
                 location = "/" + directory + "/" + id;
 
-                if (field.getMaxValueLength() > 0)
+                if (isAttachment)
+                    inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(template.getMaxAttachmentSize()) * 1024l);
+                else if (field.getMaxValueLength() > 0)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(field.getMaxValueLength()).longValue() * 1024l);
 
                 Content content = new Content.Builder()
@@ -276,8 +279,15 @@ public class SubmissionHandler {
                 try {
                     content = contentRepository.save(content);
 
-                } catch (MaxSizeExceededException sizeException) {
-                    throw new BadRequestError(Constants.ExceptionCodes.attachment_is_too_large, Long.valueOf(sizeException.getMaxSize()));
+                } catch (MongoException mongoException) {
+                    Throwable cause = mongoException.getCause();
+                    if (cause instanceof MaxSizeExceededException) {
+                        MaxSizeExceededException sizeExceededException = MaxSizeExceededException.class.cast(cause);
+                        throw new BadRequestError(Constants.ExceptionCodes.attachment_is_too_large, Long.valueOf(sizeExceededException.getMaxSize()));
+                    } else {
+                        LOG.error("Failed to store file to mongo", mongoException);
+                        throw new InternalServerError();
+                    }
                 } catch (IOException ioe) {
                     LOG.error(ioe);
                     throw new InternalServerError();

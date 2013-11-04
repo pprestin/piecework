@@ -1,0 +1,12 @@
+<div class="attachment-header">
+    <button type="button" class="close delete-attachment-btn"><i class="icon-trash"></i></button>
+</div>
+<div class="attachment-body">
+    <div class="container">
+        <p>{{attachment.description}}</p>
+        <p><a href="{{attachment.link}}">{{attachment.description}}</a></p>
+    </div>
+</div>
+<div class="attachment-footer">
+    <p class="muted">{{attachment.user.displayName}}<br/>{{attachment.lastModified|date}}</p>
+</div>

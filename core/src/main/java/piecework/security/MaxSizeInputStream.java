@@ -18,6 +18,7 @@ package piecework.security;
 
 
 import org.apache.commons.compress.utils.CountingInputStream;
+import piecework.exception.MaxSizeExceededException;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -41,7 +42,17 @@ public class MaxSizeInputStream extends BufferedInputStream {
         size += bytesRead;
 
         if (size > maxBytes)
-            throw new IOException("File is too large");
+            throw new MaxSizeExceededException(maxBytes);
+
+        return bytesRead;
+    }
+
+    public synchronized int read(byte b[], int off, int len) throws IOException {
+        int bytesRead = super.read(b, off, len);
+        size += bytesRead;
+
+        if (size > maxBytes)
+            throw new MaxSizeExceededException(maxBytes);
 
         return bytesRead;
     }

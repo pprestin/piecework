@@ -27,10 +27,7 @@ import piecework.enumeration.FlowElementType;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.*;
 
@@ -57,6 +54,10 @@ public class Activity implements Serializable, Decorateable<Activity> {
 
     private final int activeScreen;
 
+    private final boolean allowAttachments;
+
+    private final long maxAttachmentSize;
+
     private Activity() {
         this(new Builder());
     }
@@ -68,6 +69,8 @@ public class Activity implements Serializable, Decorateable<Activity> {
         this.elementType = builder.elementType;
         this.usageType = builder.usageType;
         this.activeScreen = builder.activeScreen;
+        this.allowAttachments = builder.allowAttachments;
+        this.maxAttachmentSize = builder.maxAttachmentSize;
     }
 
     public Activity decorate() {
@@ -76,6 +79,10 @@ public class Activity implements Serializable, Decorateable<Activity> {
 
     public String getActivityId() {
         return activityId;
+    }
+
+    public FlowElementType getElementType() {
+        return elementType;
     }
 
     public ActivityUsageType getUsageType() {
@@ -92,6 +99,14 @@ public class Activity implements Serializable, Decorateable<Activity> {
 
     public Map<ActionType, Action> getActionMap() {
         return actionMap;
+    }
+
+    public boolean isAllowAttachments() {
+        return allowAttachments;
+    }
+
+    public long getMaxAttachmentSize() {
+        return maxAttachmentSize;
     }
 
     @JsonIgnore
@@ -135,11 +150,14 @@ public class Activity implements Serializable, Decorateable<Activity> {
         private Set<Field> fields;
         private Map<ActionType, Action> actionMap;
         private int activeScreen;
+        private boolean allowAttachments;
+        private long maxAttachmentSize;
 
         public Builder() {
             this.fields = new TreeSet<Field>();
             this.actionMap = new HashMap<ActionType, Action>();
             this.activeScreen = -1;
+            this.maxAttachmentSize = 10485760l;
         }
 
         public Builder(Activity activity, Sanitizer sanitizer) {
@@ -171,6 +189,8 @@ public class Activity implements Serializable, Decorateable<Activity> {
             }
             this.usageType = activity.usageType;
             this.activeScreen = activity.activeScreen;
+            this.allowAttachments = activity.allowAttachments;
+            this.maxAttachmentSize = activity.maxAttachmentSize;
         }
 
         public Activity build() {
@@ -204,6 +224,16 @@ public class Activity implements Serializable, Decorateable<Activity> {
 
         public Builder activeScreen(int activeScreen) {
             this.activeScreen = activeScreen;
+            return this;
+        }
+
+        public Builder allowAttachments() {
+            this.allowAttachments = true;
+            return this;
+        }
+
+        public Builder maxAttachmentSize(long maxAttachmentSize) {
+            this.maxAttachmentSize = maxAttachmentSize;
             return this;
         }
     }

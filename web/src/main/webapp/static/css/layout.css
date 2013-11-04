@@ -6,7 +6,7 @@
         display: none;
     }
     .main-content {
-        padding-top: 80px;
+        padding-top: 0px;
         padding-bottom: 0px;
         padding-left: 20px;
         padding-right: 20px;
@@ -18,7 +18,7 @@
 }
 @media (min-width:  769px) {
     .main-content {
-        padding-top: 110px;
+        padding-top: 0px;
         padding-bottom: 100px;
     }
     .responsive-pull-right {
@@ -339,6 +339,11 @@ select.form-control {
     margin: 0px;
 }
 
+.pw-attachment-file {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 .pw-field {
     border: 1px solid transparent;
     padding: 10px;
@@ -407,6 +412,10 @@ select.form-control {
 
 .pw-interaction-navbar .navbar-right {
     line-height: 40px;
+}
+
+.navbar.pw-navbar-collapse {
+   border-radius: 0;
 }
 
 .pw-navbar-collapse .navbar-form {

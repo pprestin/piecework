@@ -48,22 +48,29 @@ public class SubmissionTemplateFactory {
     /*
      * Generated an "attachments only submission template", where all fields will be stored as attachments
      */
-    public SubmissionTemplate submissionTemplate(Process process) {
-        return new SubmissionTemplate.Builder().allowAttachments().build();
+    public SubmissionTemplate submissionTemplate(Process process, Task task) throws StatusCodeError {
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+
+        String taskDefinitionKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
+
+        Activity activity = deployment.getActivity(taskDefinitionKey);
+        if (activity != null) {
+            if (activity.isAllowAttachments()) {
+                builder.allowAttachments();
+                builder.maxAttachmentSize(activity.getMaxAttachmentSize());
+            }
+        }
+        return builder.build();
     }
 
     public SubmissionTemplate submissionTemplate(Field field) {
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
         addField(builder, field);
         return builder.build();
-    }
-
-    /*
-     * Takes a screen and generates the appropriate submission template for all
-     * sections and fields used by all groupings
-     */
-    public SubmissionTemplate submissionTemplate(Process process, Screen screen) throws StatusCodeError {
-        return submissionTemplate(process, screen, null);
     }
 
     /*
@@ -78,6 +85,12 @@ public class SubmissionTemplateFactory {
         Set<Field> fields = null;
 
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+
+        if (activity.isAllowAttachments()) {
+            builder.allowAttachments();
+            builder.maxAttachmentSize(activity.getMaxAttachmentSize());
+        }
+
         Action action = activity.action(ActionType.CREATE);
         if (action != null && action.getContainer() != null) {
             Container container = action.getContainer();

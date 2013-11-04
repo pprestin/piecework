@@ -5,7 +5,8 @@ angular.module('Form',
         'ngSanitize',
         'ui.bootstrap',
         'ui.bootstrap.alert',
-        'ui.bootstrap.modal'
+        'ui.bootstrap.modal',
+        'blueimp.fileupload'
     ])
     .config(['$routeProvider', '$locationProvider', '$logProvider','$provide',
         function($routeProvider, $locationProvider, $logProvider, $provide) {
@@ -27,13 +28,31 @@ angular.module('Form',
     ])
     .controller('FormController', ['$scope', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
         function($scope, $location, $resource, $http, $routeParams, personService, dialogs) {
-            var resourcePath = './form/:processDefinitionKey';
-            if ($routeParams.requestId != null)
-                resourcePath += '/:requestId';
-            var Form = $resource(resourcePath, {processDefinitionKey:'@processDefinitionKey',requestId:'@requestId'});
-            var form = Form.get({processDefinitionKey:$routeParams.processDefinitionKey,requestId:$routeParams.requestId}, function(form) {
-                $scope.form = form;
+            $scope.fileUploadOptions = {
+                autoUpload: true
+            };
+            $scope.isCollapsed = false;
+            $scope.isEditingAttachments = false;
+            $scope.isViewingAttachments = false;
+            $scope.sending = false;
+            $scope.addAttachment = function(form, attachment) {
 
+            };
+            $scope.deleteAttachment = function(attachment) {
+                $http.delete(attachment.link).then($scope.refreshAttachments);
+            }
+            $scope.editAttachments = function() {
+                $scope.isEditingAttachments = !$scope.isEditingAttachments;
+            };
+            $scope.refreshAttachments = function() {
+                var form = $scope.form;
+                $http.get(form.attachment).then(function(response) {
+                    $scope.attachments = response.data.list;
+                    $scope.form.attachmentCount = response.data.total;
+                });
+            };
+            $scope.refreshForm = function(form) {
+                $scope.form = form;
                 var fields = $scope.form.container.fields;
                 var data = $scope.form.data;
                 var validation = $scope.form.validation;
@@ -51,8 +70,10 @@ angular.module('Form',
                 if (form.task != null) {
                     if (form.task.active) {
                         form.state = 'assigned';
-                    } else if (form.endTime == null) {
+                    } else if (form.task.taskStatus == 'Suspended') {
                         form.state = 'suspended';
+                    } else if (form.task.taskStatus == 'Cancelled') {
+                        form.state = 'cancelled';
                     } else {
                         form.state = 'completed';
                     }
@@ -65,6 +86,35 @@ angular.module('Form',
 
                 };
 
+                $scope.refreshAttachments(form);
+            };
+            $scope.$on('fileuploaddone', function(event, data) {
+                $scope.refreshAttachments();
+            });
+            $scope.$on('fileuploadfail', function(event, data) {
+                var message = angular.fromJson(data.jqXHR.responseText);
+
+                notificationService.notify($scope, message.messageDetail);
+            });
+            $scope.$on('fileuploadstart', function() {
+                $scope.sending = true;
+            });
+            $scope.$on('fileuploadstop', function() {
+                $scope.sending = false;
+            });
+
+            var resourcePath = './form/:processDefinitionKey';
+            if ($routeParams.requestId != null)
+                resourcePath += '/:requestId';
+            var Form = $resource(resourcePath, {processDefinitionKey:'@processDefinitionKey',requestId:'@requestId'});
+            $scope.criteria = {
+                processDefinitionKey:$routeParams.processDefinitionKey,
+                requestId: $routeParams.requestId
+            };
+            var form = Form.get($scope.criteria, $scope.refreshForm);
+            $scope.$on('event:refresh', function(event, message) {
+                $scope.refreshing = true;
+                form.$get($scope.criteria, $scope.refreshForm);
             });
         }
     ])
@@ -298,6 +348,51 @@ angular.module('Form',
                         $modalInstance.dismiss('cancel');
                     };
                 },
+                'CommentModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
+                    $scope.selectedForms = selectedForms;
+                    $scope.ok = function (comment) {
+                        var checkStatuses = function(scope) {
+                            var selectedForms = scope.selectedForms;
+                            var operationStatus = 'ok';
+                            angular.forEach(selectedForms, function(form) {
+                                if (typeof(form._activationStatus) === 'undefined')
+                                    operationStatus = 'incomplete';
+                                else if (form._activationStatus !== 'ok')
+                                    operationStatus = 'error';
+                            });
+
+                            if (operationStatus == 'ok') {
+                                $modalInstance.close(selectedForms);
+                                $rootScope.$broadcast('event:refresh', 'comment');
+                            }
+                        };
+
+                        var success = function(scope, data, status, headers, config, form) {
+                            form._activationStatus = 'ok';
+                            checkStatuses(scope);
+                        };
+
+                        var failure = function(scope, data, status, headers, config, form) {
+                            form._activationStatus = 'error';
+                            var message = '<em>' + form.task.processInstanceLabel + '</em> cannot add comment because it is in an inconsistent state';
+                            var title = "Unable to add comment";
+                            notificationService.notify($scope, message, title);
+                            checkStatuses(scope);
+                        };
+
+                        notificationService.clear($scope);
+                        var selectedForms = $scope.selectedForms;
+                        angular.forEach(selectedForms, function(form) {
+                            var data = new FormData();
+                            data.append("comment", comment);
+                            instanceService.attach($scope, form, data, success, failure);
+                        });
+                    };
+
+                    $scope.cancel = function () {
+                        $modalInstance.dismiss('cancel');
+                    };
+                },
                 'HistoryModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.loading = true;
@@ -428,6 +523,20 @@ angular.module('Form',
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
+                openCommentModal: function(selectedForms) {
+                    var modalInstance = $modal.open({
+                        backdrop: true,
+                        templateUrl: '/piecework/static/ng/views/comment-modal-dialog.html',
+                        controller: controllerService.CommentModalController,
+                        resolve: {
+                            selectedForms: function () {
+                                return selectedForms;
+                            }
+                        },
+                        windowClass: 'in',
+                    });
+                    modalInstance.result.then(function () {}, function () {});
+                },
                 openHistoryModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
@@ -471,6 +580,19 @@ angular.module('Form',
                         })
                         .error(function(data, status, headers, config) {
                             failure($scope, data, status, headers, config, form, reason);
+                        });
+                },
+                attach: function($scope, form, formData, success, failure) {
+                    var url = form.attachment + ".json";
+                    $http.post(url, formData, {
+                            headers: {'Content-Type': 'multipart/form-data'},
+                            transformRequest: angular.identity
+                        })
+                        .success(function(data, status, headers, config) {
+                            success($scope, data, status, headers, config, form, formData);
+                        })
+                        .error(function(data, status, headers, config) {
+                            failure($scope, data, status, headers, config, form, formData);
                         });
                 },
                 cancel: function($scope, form, reason, success, failure) {
