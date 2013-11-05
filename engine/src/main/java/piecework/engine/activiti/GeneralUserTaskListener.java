@@ -102,6 +102,10 @@ public class GeneralUserTaskListener implements TaskListener {
         if (process == null)
             return;
 
+
+//        Activity activity = processInstance.getActivityMap().get(taskDefinitionKey);
+
+
         Set<Candidate> approvers = new HashSet<Candidate>();
         Set<Candidate> watchers = new HashSet<Candidate>();
 

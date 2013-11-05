@@ -60,10 +60,14 @@ public class DebugIdentityService implements IdentityService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String testUser = environment.getProperty("authentication.testuser");
-        String testUserDisplayName = environment.getProperty("authentication.testuser.displayName");
+        String id = username;
+        String displayName = username;
 
-        UserDetails delegate = new org.springframework.security.core.userdetails.User(testUser, "none",
+        if (testUser != null && testUser.equals(id))
+            displayName = environment.getProperty("authentication.testuser.displayName");
+
+        UserDetails delegate = new org.springframework.security.core.userdetails.User(id, "none",
                 Collections.singletonList(new DebugResourceAuthority(processRepository)));
-        return new IdentityDetails(delegate, testUser, testUser, testUserDisplayName, "");
+        return new IdentityDetails(delegate, id, id, displayName, "");
     }
 }
