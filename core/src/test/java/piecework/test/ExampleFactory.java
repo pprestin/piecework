@@ -362,8 +362,8 @@ public class ExampleFactory {
                 .build();
 
         ProcessDeployment deployment = new ProcessDeployment.Builder()
-                .interaction(startInteraction)
-                .interaction(task1Interaction)
+//                .interaction(startInteraction)
+//                .interaction(task1Interaction)
 //                .interaction(task2Interaction)
                 .build();
 

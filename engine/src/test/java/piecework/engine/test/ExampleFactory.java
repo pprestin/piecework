@@ -118,11 +118,11 @@ public class ExampleFactory {
     public static ProcessDeployment exampleProcessDeployment() {
         return new ProcessDeployment.Builder()
                 .engineProcessDefinitionLocation("META-INF/example.bpmn20.xml")
-                .interaction(exampleInteractionWithTwoScreens())
+//                .interaction(exampleInteractionWithTwoScreens())
 //                .interaction(exampleInteractionForTaskReview())
-                .section(exampleSectionWithTwoFields())
-                .section(exampleSectionWithConfirmationNumber())
-                .section(exampleSectionWithOneField())
+//                .section(exampleSectionWithTwoFields())
+//                .section(exampleSectionWithConfirmationNumber())
+//                .section(exampleSectionWithOneField())
                 .engine("activiti")
                 .engineProcessDefinitionKey("example")
                 .build();

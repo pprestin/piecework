@@ -156,40 +156,58 @@ public class FormFactory {
 //        throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 //    }
 
-    public static Field getField(Process process, Screen screen, String fieldName) throws StatusCodeError  {
-        if (process == null || screen == null || StringUtils.isEmpty(fieldName))
+    public static Field getField(Process process, Task task, String fieldName) throws StatusCodeError {
+        if (process == null || task == null || StringUtils.isEmpty(fieldName))
             return null;
 
         ProcessDeployment deployment = process.getDeployment();
         if (deployment == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-        Map<String, Section> sectionMap = deployment.getSectionMap();
-        List<Grouping> groupings = screen.getGroupings();
+        String activityKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
 
-        for (Grouping grouping : groupings) {
-            if (grouping == null)
-                continue;
-            List<String> sectionsIds = grouping.getSectionIds();
-            if (sectionsIds == null)
-                continue;
+        Activity activity = deployment.getActivity(activityKey);
 
-            for (String sectionId : sectionsIds) {
-                Section section = sectionMap.get(sectionId);
-                if (section == null)
-                    continue;
+        if (activity == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-                for (Field field : section.getFields()) {
-                    if (field.getName() == null)
-                        continue;
-
-                    if (fieldName.equals(field.getName()))
-                        return field;
-                }
-            }
-        }
-        return null;
+        return activity.getFieldMap().get(fieldName);
     }
+
+//    public static Field getField(Process process, Screen screen, String fieldName) throws StatusCodeError  {
+//        if (process == null || screen == null || StringUtils.isEmpty(fieldName))
+//            return null;
+//
+//        ProcessDeployment deployment = process.getDeployment();
+//        if (deployment == null)
+//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+//
+//        Map<String, Section> sectionMap = deployment.getSectionMap();
+//        List<Grouping> groupings = screen.getGroupings();
+//
+//        for (Grouping grouping : groupings) {
+//            if (grouping == null)
+//                continue;
+//            List<String> sectionsIds = grouping.getSectionIds();
+//            if (sectionsIds == null)
+//                continue;
+//
+//            for (String sectionId : sectionsIds) {
+//                Section section = sectionMap.get(sectionId);
+//                if (section == null)
+//                    continue;
+//
+//                for (Field field : section.getFields()) {
+//                    if (field.getName() == null)
+//                        continue;
+//
+//                    if (fieldName.equals(field.getName()))
+//                        return field;
+//                }
+//            }
+//        }
+//        return null;
+//    }
 
     private static void addConfirmationNumber(Field.Builder fieldBuilder, String confirmationNumber) {
         String defaultValue = fieldBuilder.getDefaultValue();

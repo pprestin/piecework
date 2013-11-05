@@ -55,9 +55,6 @@ public class RequestHandler {
     ProcessInstanceService processInstanceService;
 
     @Autowired
-    ScreenHandler screenHandler;
-
-    @Autowired
     TaskService taskService;
 
     public FormRequest create(RequestDetails requestDetails, Process process) throws StatusCodeError {

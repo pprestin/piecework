@@ -86,23 +86,23 @@ public class ProcessDeployment implements Serializable {
     @XmlAttribute
     private final String base;
 
-    @XmlElementWrapper(name="interactions")
-    @XmlElementRef
-    private final List<Interaction> interactions;
-
-    @XmlElementWrapper(name="sections")
-    @XmlElementRef
-    @DBRef
-    private final List<Section> sections;
-
-    @XmlElementWrapper(name="notifications")
-    @XmlElementRef
-    @DBRef
-    private final List<Notification> notifications;
-
-    @XmlElement
-    @DBRef
-    private final Screen defaultScreen;
+//    @XmlElementWrapper(name="interactions")
+//    @XmlElementRef
+//    private final List<Interaction> interactions;
+//
+//    @XmlElementWrapper(name="sections")
+//    @XmlElementRef
+//    @DBRef
+//    private final List<Section> sections;
+//
+//    @XmlElementWrapper(name="notifications")
+//    @XmlElementRef
+//    @DBRef
+//    private final List<Notification> notifications;
+//
+//    @XmlElement
+//    @DBRef
+//    private final Screen defaultScreen;
 
     @XmlAttribute
     private final boolean deployed;
@@ -146,10 +146,10 @@ public class ProcessDeployment implements Serializable {
         this.activityMap = Collections.unmodifiableMap(builder.activityMap);
         this.flowElements = Collections.unmodifiableList(builder.flowElements);
         this.base = builder.base;
-        this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
-        this.sections = Collections.unmodifiableList(builder.sections);
-        this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
-        this.defaultScreen = builder.defaultScreen;
+//        this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
+//        this.sections = Collections.unmodifiableList(builder.sections);
+//        this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
+//        this.defaultScreen = builder.defaultScreen;
         this.editable = builder.editable;
         this.published = builder.published;
         this.deployed = builder.deployed;
@@ -251,35 +251,35 @@ public class ProcessDeployment implements Serializable {
         return flowElements;
     }
 
-    public List<Interaction> getInteractions() {
-        return interactions;
-    }
-
-    public List<Section> getSections() {
-        return sections;
-    }
-
-    @JsonIgnore
-    public Map<String, Section> getSectionMap() {
-        Map<String, Section> sectionMap = new HashMap<String, Section>();
-        if (sections != null) {
-            for (Section section : sections) {
-                if (section == null)
-                    continue;
-
-                sectionMap.put(section.getSectionId(), section);
-            }
-        }
-        return sectionMap;
-    }
-
-    public List<Notification> getNotifications() {
-        return notifications;
-    }
-
-    public Screen getDefaultScreen() {
-        return defaultScreen;
-    }
+//    public List<Interaction> getInteractions() {
+//        return interactions;
+//    }
+//
+//    public List<Section> getSections() {
+//        return sections;
+//    }
+//
+//    @JsonIgnore
+//    public Map<String, Section> getSectionMap() {
+//        Map<String, Section> sectionMap = new HashMap<String, Section>();
+//        if (sections != null) {
+//            for (Section section : sections) {
+//                if (section == null)
+//                    continue;
+//
+//                sectionMap.put(section.getSectionId(), section);
+//            }
+//        }
+//        return sectionMap;
+//    }
+//
+//    public List<Notification> getNotifications() {
+//        return notifications;
+//    }
+//
+//    public Screen getDefaultScreen() {
+//        return defaultScreen;
+//    }
 
     public boolean isPublished() {
         return published;
@@ -310,11 +310,11 @@ public class ProcessDeployment implements Serializable {
         return editable;
     }
 
-    @XmlTransient
-    @JsonIgnore
-    public boolean isEmpty() {
-        return StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
-    }
+//    @XmlTransient
+//    @JsonIgnore
+//    public boolean isEmpty() {
+//        return StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
+//    }
 
     public final static class Builder {
 
@@ -333,10 +333,10 @@ public class ProcessDeployment implements Serializable {
         private Map<String, Activity> activityMap;
         private List<FlowElement> flowElements;
         private Map<State, String> applicationStatus;
-        private List<Interaction> interactions;
-        private List<Section> sections;
-        private List<Notification> notifications;
-        private Screen defaultScreen;
+//        private List<Interaction> interactions;
+//        private List<Section> sections;
+//        private List<Notification> notifications;
+//        private Screen defaultScreen;
         private boolean isDeleted;
         private boolean deployed;
         private boolean published;
@@ -350,9 +350,9 @@ public class ProcessDeployment implements Serializable {
             this.activityMap = new HashMap<String, Activity>();
             this.flowElements = new ArrayList<FlowElement>();
             this.applicationStatus = new HashMap<State, String>();
-            this.interactions = new ArrayList<Interaction>();
-            this.sections = new ArrayList<Section>();
-            this.notifications = new ArrayList<Notification>();
+//            this.interactions = new ArrayList<Interaction>();
+//            this.sections = new ArrayList<Section>();
+//            this.notifications = new ArrayList<Notification>();
             this.dateCreated = new Date();
             this.deployed = false;
             this.published = false;
@@ -405,33 +405,33 @@ public class ProcessDeployment implements Serializable {
                     this.applicationStatus.put(key, value);
                 }
             }
-            this.defaultScreen = deployment.defaultScreen != null ? new Screen.Builder(deployment.defaultScreen, sanitizer).processDefinitionKey(processDefinitionKey).build() : null;
-            if (includeDetails && deployment.interactions != null && !deployment.interactions.isEmpty()) {
-                this.interactions = new ArrayList<Interaction>(deployment.interactions.size());
-                for (Interaction interaction : deployment.interactions) {
-                    this.interactions.add(new Interaction.Builder(interaction, sanitizer).processDefinitionKey(processDefinitionKey).build());
-                }
-            } else {
-                this.interactions = new ArrayList<Interaction>();
-            }
-            if (includeDetails && deployment.notifications != null && !deployment.notifications.isEmpty()) {
-                this.notifications = new ArrayList<Notification>(deployment.notifications.size());
-                for (Notification notification : deployment.notifications) {
-                    if (notification != null)
-                        this.notifications.add(new Notification.Builder(notification, sanitizer).build());
-                }
-            } else {
-                this.notifications = new ArrayList<Notification>();
-            }
-            if (includeDetails && deployment.sections != null && !deployment.sections.isEmpty()) {
-                this.sections = new ArrayList<Section>(deployment.sections.size());
-                for (Section section : deployment.sections) {
-                    if (section != null)
-                        this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
-                }
-            } else {
-                this.sections = new ArrayList<Section>();
-            }
+//            this.defaultScreen = deployment.defaultScreen != null ? new Screen.Builder(deployment.defaultScreen, sanitizer).processDefinitionKey(processDefinitionKey).build() : null;
+//            if (includeDetails && deployment.interactions != null && !deployment.interactions.isEmpty()) {
+//                this.interactions = new ArrayList<Interaction>(deployment.interactions.size());
+//                for (Interaction interaction : deployment.interactions) {
+//                    this.interactions.add(new Interaction.Builder(interaction, sanitizer).processDefinitionKey(processDefinitionKey).build());
+//                }
+//            } else {
+//                this.interactions = new ArrayList<Interaction>();
+//            }
+//            if (includeDetails && deployment.notifications != null && !deployment.notifications.isEmpty()) {
+//                this.notifications = new ArrayList<Notification>(deployment.notifications.size());
+//                for (Notification notification : deployment.notifications) {
+//                    if (notification != null)
+//                        this.notifications.add(new Notification.Builder(notification, sanitizer).build());
+//                }
+//            } else {
+//                this.notifications = new ArrayList<Notification>();
+//            }
+//            if (includeDetails && deployment.sections != null && !deployment.sections.isEmpty()) {
+//                this.sections = new ArrayList<Section>(deployment.sections.size());
+//                for (Section section : deployment.sections) {
+//                    if (section != null)
+//                        this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
+//                }
+//            } else {
+//                this.sections = new ArrayList<Section>();
+//            }
             this.isDeleted = deployment.isDeleted;
             this.published = deployment.published;
             this.editable = deployment.editable;
@@ -516,41 +516,41 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
-        public Builder interaction(Interaction interaction) {
-            if (this.interactions == null)
-                this.interactions = new ArrayList<Interaction>();
-            this.interactions.add(interaction);
-            return this;
-        }
-
-        public Builder interactions(List<Interaction> interactions) {
-            this.interactions = interactions;
-            return this;
-        }
-
-        public Builder section(Section section) {
-            if (this.sections == null)
-                this.sections = new ArrayList<Section>();
-            this.sections.add(section);
-            return this;
-        }
-
-        public Builder notification(Notification notification) {
-            if (this.notifications == null)
-                this.notifications = new ArrayList<Notification>();
-            this.notifications.add(notification);
-            return this;
-        }
-
-        public Builder notifications(List<Notification> notifications) {
-            this.notifications = notifications;
-            return this;
-        }
-
-        public Builder defaultScreen(Screen defaultScreen) {
-            this.defaultScreen = defaultScreen;
-            return this;
-        }
+//        public Builder interaction(Interaction interaction) {
+//            if (this.interactions == null)
+//                this.interactions = new ArrayList<Interaction>();
+//            this.interactions.add(interaction);
+//            return this;
+//        }
+//
+//        public Builder interactions(List<Interaction> interactions) {
+//            this.interactions = interactions;
+//            return this;
+//        }
+//
+//        public Builder section(Section section) {
+//            if (this.sections == null)
+//                this.sections = new ArrayList<Section>();
+//            this.sections.add(section);
+//            return this;
+//        }
+//
+//        public Builder notification(Notification notification) {
+//            if (this.notifications == null)
+//                this.notifications = new ArrayList<Notification>();
+//            this.notifications.add(notification);
+//            return this;
+//        }
+//
+//        public Builder notifications(List<Notification> notifications) {
+//            this.notifications = notifications;
+//            return this;
+//        }
+//
+//        public Builder defaultScreen(Screen defaultScreen) {
+//            this.defaultScreen = defaultScreen;
+//            return this;
+//        }
 
         public Builder publish() {
             this.published = true;
@@ -587,20 +587,20 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
-        public Builder clearInteractions() {
-            this.interactions = new ArrayList<Interaction>();
-            return this;
-        }
-
-        public Builder clearNotifications() {
-            this.notifications = new ArrayList<Notification>();
-            return this;
-        }
-
-        public Builder clearSections() {
-            this.sections = new ArrayList<Section>();
-            return this;
-        }
+//        public Builder clearInteractions() {
+//            this.interactions = new ArrayList<Interaction>();
+//            return this;
+//        }
+//
+//        public Builder clearNotifications() {
+//            this.notifications = new ArrayList<Notification>();
+//            return this;
+//        }
+//
+//        public Builder clearSections() {
+//            this.sections = new ArrayList<Section>();
+//            return this;
+//        }
 
         public Builder deleteActivity(String activityKey) {
             this.activityMap.remove(activityKey);

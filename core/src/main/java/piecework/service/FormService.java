@@ -315,11 +315,7 @@ public class FormService {
 
         Activity activity = formRequest.getActivity();
 
-        SubmissionTemplate template;
-        if (activity != null)
-            template = submissionTemplateFactory.submissionTemplate(process, activity, validationId);
-        else
-            template = submissionTemplateFactory.submissionTemplate(process, formRequest.getScreen(), validationId);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, activity, validationId);
 
         Submission submission = submissionHandler.handle(process, template, body, formRequest);
 

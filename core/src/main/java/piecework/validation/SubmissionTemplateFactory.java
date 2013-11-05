@@ -141,55 +141,55 @@ public class SubmissionTemplateFactory {
      * Takes a screen and generates the appropriate submission template for it,
      * limiting to a specific section id
      */
-    public SubmissionTemplate submissionTemplate(Process process, Screen screen, String validationId) throws StatusCodeError {
-        List<Grouping> groupings = screen.getGroupings();
-        ProcessDeployment deployment = process.getDeployment();
-        if (deployment == null)
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
-        Map<String, Section> sectionMap = deployment.getSectionMap();
-
-        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
-        if (groupings != null && sectionMap != null && !sectionMap.isEmpty()) {
-            for (Grouping grouping : groupings) {
-                if (grouping == null)
-                    continue;
-
-                String groupingId = grouping.getGroupingId();
-                if (groupingId != null && validationId != null && !groupingId.equals(validationId))
-                    continue;
-
-                List<Button> buttons = grouping.getButtons();
-                if (buttons != null) {
-                    for (Button button : buttons) {
-                        if (button == null)
-                            continue;
-                        builder.button(button);
-                    }
-                }
-
-                List<String> sectionsIds = grouping.getSectionIds();
-                if (sectionsIds == null)
-                    continue;
-
-                for (String sectionId : sectionsIds) {
-                    Section section = sectionMap.get(sectionId);
-                    if (section == null)
-                        continue;
-
-                    List<Field> fields = section.getFields();
-                    if (fields == null || fields.isEmpty())
-                        continue;
-
-                    for (Field field : fields) {
-                        addField(builder, field);
-                    }
-                }
-            }
-        }
-
-        return builder.build();
-    }
+//    public SubmissionTemplate submissionTemplate(Process process, Screen screen, String validationId) throws StatusCodeError {
+//        List<Grouping> groupings = screen.getGroupings();
+//        ProcessDeployment deployment = process.getDeployment();
+//        if (deployment == null)
+//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+//
+//        Map<String, Section> sectionMap = deployment.getSectionMap();
+//
+//        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+//        if (groupings != null && sectionMap != null && !sectionMap.isEmpty()) {
+//            for (Grouping grouping : groupings) {
+//                if (grouping == null)
+//                    continue;
+//
+//                String groupingId = grouping.getGroupingId();
+//                if (groupingId != null && validationId != null && !groupingId.equals(validationId))
+//                    continue;
+//
+//                List<Button> buttons = grouping.getButtons();
+//                if (buttons != null) {
+//                    for (Button button : buttons) {
+//                        if (button == null)
+//                            continue;
+//                        builder.button(button);
+//                    }
+//                }
+//
+//                List<String> sectionsIds = grouping.getSectionIds();
+//                if (sectionsIds == null)
+//                    continue;
+//
+//                for (String sectionId : sectionsIds) {
+//                    Section section = sectionMap.get(sectionId);
+//                    if (section == null)
+//                        continue;
+//
+//                    List<Field> fields = section.getFields();
+//                    if (fields == null || fields.isEmpty())
+//                        continue;
+//
+//                    for (Field field : fields) {
+//                        addField(builder, field);
+//                    }
+//                }
+//            }
+//        }
+//
+//        return builder.build();
+//    }
 
     private void addField(SubmissionTemplate.Builder builder, Field field) {
         builder.rules(field, new ArrayList<ValidationRule>(validationRules(field)));

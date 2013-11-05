@@ -215,6 +215,10 @@ public class Container implements Serializable {
             return this;
         }
 
+        public Builder fields(Field ... fields) {
+            return fields(Arrays.asList(fields));
+        }
+
         public Builder fields(Collection<Field> fields) {
             if (fields != null && !fields.isEmpty()) {
                 this.fields = new ArrayList<Field>(fields);

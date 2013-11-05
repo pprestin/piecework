@@ -382,12 +382,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE);
 
-        Screen screen = formRequest.getScreen();
+//        Screen screen = formRequest.getScreen();
+//
+//        if (screen == null)
+//            throw new ConflictError();
 
-        if (screen == null)
-            throw new ConflictError();
-
-        Field field = FormFactory.getField(process, screen, fieldName);
+        Field field = FormFactory.getField(process, task, fieldName);
         if (field == null)
             throw new NotFoundError();
 

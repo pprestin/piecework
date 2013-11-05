@@ -17,6 +17,7 @@ package piecework.handler;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -43,6 +44,7 @@ import static org.mockito.Mockito.*;
 /**
  * @author James Renfro
  */
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class ResponseHandlerTest {
 

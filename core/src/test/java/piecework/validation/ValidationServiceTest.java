@@ -17,6 +17,7 @@ package piecework.validation;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.junit.runner.RunWith;
@@ -45,6 +46,7 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class ValidationServiceTest {
 
