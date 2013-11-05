@@ -254,7 +254,9 @@ public class TaskService {
                                 continue;
 
                             if (!overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())) {
-                                if (!task.getCandidateAssignees().contains(currentUserId) && !task.getAssigneeId().equals(currentUserId))
+                                if (task.getCandidateAssigneeIds() == null || task.getAssigneeId() == null)
+                                    continue;
+                                if (!task.getCandidateAssigneeIds().contains(currentUserId) && !task.getAssigneeId().equals(currentUserId))
                                     continue;
                             }
 
