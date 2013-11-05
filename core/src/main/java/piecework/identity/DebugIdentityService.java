@@ -16,6 +16,7 @@
 package piecework.identity;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -35,11 +36,15 @@ import java.util.List;
 public class DebugIdentityService implements IdentityService {
 
     @Autowired
+    Environment environment;
+
+    @Autowired
     ProcessRepository processRepository;
 
     @Override
     public User getUser(String internalId) {
-        return new User.Builder(loadUserByUsername("testuser")).build();
+
+        return new User.Builder(loadUserByUsername(internalId)).build();
     }
 
     @Override
@@ -54,8 +59,11 @@ public class DebugIdentityService implements IdentityService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserDetails delegate = new org.springframework.security.core.userdetails.User("testuser", "none",
+        String testUser = environment.getProperty("authentication.testuser");
+        String testUserDisplayName = environment.getProperty("authentication.testuser.displayName");
+
+        UserDetails delegate = new org.springframework.security.core.userdetails.User(testUser, "none",
                 Collections.singletonList(new DebugResourceAuthority(processRepository)));
-        return new IdentityDetails(delegate, "testuser", "testuser", "Test User", "");
+        return new IdentityDetails(delegate, testUser, testUser, testUserDisplayName, "");
     }
 }
