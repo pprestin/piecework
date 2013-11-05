@@ -8,6 +8,7 @@ define([ 'views/form/base-field-view', 'text!templates/form/field-checkbox.hbs']
             View.__super__.initialize.apply(this, options);
 
             var modelName = this.model.get("name");
+            var modelValue = this.model.get("value");
             var modelOptions = this.model.get("options");
             var values = this.model.get("values");
             if (modelName != null && modelOptions != null && modelOptions.length > 0) {
@@ -15,9 +16,9 @@ define([ 'views/form/base-field-view', 'text!templates/form/field-checkbox.hbs']
                     var option = modelOptions[i];
                     if (option.name == null)
                         option.name = modelName;
-                    if (option.value in values)
+                    if (modelValue != null && modelValue.length > 0 && option.value == modelValue) {
                         option.selected = true;
-
+                    }
                 }
 
             }
