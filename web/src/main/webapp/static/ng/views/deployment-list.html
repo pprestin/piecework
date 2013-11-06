@@ -1,6 +1,6 @@
 <ul class="breadcrumb">
-    <li><a href="#">Processes</a></li>
-    <li><a href="#/process/{{process.processDefinitionKey}}">{{process.processDefinitionLabel}}</a></li>
+    <li><a href="./designer/process">Processes</a></li>
+    <li><a href="./designer/process/{{process.processDefinitionKey}}">{{process.processDefinitionLabel}}</a></li>
     <li class="active">Deployments</li>
 </ul>
 <alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">
@@ -28,12 +28,12 @@
     <tbody>
     <tr ng-repeat="deployment in deployments">
         <td>{{deployment.deploymentVersion}} <span ng-if="deployment.published" title="Released on {{deployment.datePublished | date:'medium' }}"><i class="fa fa-rocket"></i></span></td>
-        <td><a href="#/deployment/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" title="Edit #{{deployment.deploymentVersion}}">{{deployment.deploymentLabel}}</a></td>
+        <td><a href="./designer/deployment/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" title="Edit #{{deployment.deploymentVersion}}">{{deployment.deploymentLabel}}</a></td>
         <td>{{deployment.dateCreated | date:'medium' }}</td>
         <td>{{deployment.dateDeployed | date:'medium' }}</td>
         <td>{{deployment.datePublished | date:'medium' }}</td>
         <td>
-            <a href="#/activity/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" role="button" title="Configure user interfaces"><i class="fa fa-desktop"></i></a>
+            <a href="./designer/activity/{{process.processDefinitionKey}}/{{deployment.deploymentId}}" role="button" title="Configure user interfaces"><i class="fa fa-desktop"></i></a>
             &nbsp;
             <a ng-click="copyDeployment(process.processDefinitionKey, deployment.deploymentId)" style="cursor:pointer" role="button" title="Clone this deployment"><i class="fa fa-copy"></i></a>
             &nbsp;

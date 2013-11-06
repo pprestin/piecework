@@ -34,16 +34,36 @@ var utils = {
 };
 
 angular
-.module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.bootstrap.alert','ui.bootstrap.modal','ui.sortable','blueimp.fileupload'])
-    .config([
-        '$httpProvider', 'fileUploadProvider',
-        function ($httpProvider, fileUploadProvider) {
-            angular.extend(fileUploadProvider.defaults, {
-                maxFileSize: 5000000,
-                acceptFileTypes: /(\.|\/)(xml)$/i
+    .module('ProcessDesigner', ['ngResource','ngSanitize','ui.bootstrap','ui.bootstrap.alert','ui.bootstrap.modal','ui.sortable','blueimp.fileupload'])
+    .config(['$routeProvider', '$locationProvider', '$provide',
+
+        function($routeProvider, $locationProvider, $provide) {
+            $routeProvider
+                .when('/designer', {controller: 'ProcessListController', templateUrl:'../static/ng/views/process-list.html'})
+                .when('/designer/process/:processDefinitionKey', {controller: 'ProcessEditController', templateUrl:'../static/ng/views/process-detail.html'})
+                .when('/designer/deployment/:processDefinitionKey', {controller: 'DeploymentListController', templateUrl:'../static/ng/views/deployment-list.html'})
+                .when('/designer/deployment/:processDefinitionKey/:deploymentId', {controller: 'DeploymentDetailController', templateUrl:'../static/ng/views/deployment-detail.html'})
+                .when('/designer/activity/:processDefinitionKey/:deploymentId', {controller: 'ActivityListController', templateUrl:'../static/ng/views/activity-list.html'})
+                .when('/designer/activity/:processDefinitionKey/:deploymentId/:interactionId', {controller: 'ActivityDetailController', templateUrl:'../static/ng/views/activity-detail.html'})
+                .otherwise({redirectTo:'/designer'});
+
+            $locationProvider.html5Mode(true).hashPrefix('!');
+
+            $provide.decorator('$sniffer', function($delegate) {
+                $delegate.history = true;
+                return $delegate;
             });
         }
     ])
+//    .config([
+//        '$httpProvider', 'fileUploadProvider',
+//        function ($httpProvider, fileUploadProvider) {
+//            angular.extend(fileUploadProvider.defaults, {
+//                maxFileSize: 5000000,
+//                acceptFileTypes: /(\.|\/)(xml)$/i
+//            });
+//        }
+//    ])
     .controller('DeploymentDetailController', ['$scope','$resource','$routeParams',
         function($scope, $resource, $routeParams) {
             var Deployment = $resource('process/:processDefinitionKey/deployment/:deploymentId', {processDefinitionKey:'@processDefinitionKey',deploymentId:'@deploymentId'});
@@ -465,17 +485,6 @@ angular
             };
         }
     ])
-    .config(function($routeProvider) {
-        $routeProvider
-            .when('/', {controller: 'ProcessListController', templateUrl:'../static/ng/views/process-list.html'})
-            .when('/process/:processDefinitionKey', {controller: 'ProcessEditController', templateUrl:'../static/ng/views/process-detail.html'})
-            .when('/deployment/:processDefinitionKey', {controller: 'DeploymentListController', templateUrl:'../static/ng/views/deployment-list.html'})
-            .when('/deployment/:processDefinitionKey/:deploymentId', {controller: 'DeploymentDetailController', templateUrl:'../static/ng/views/deployment-detail.html'})
-            .when('/activity/:processDefinitionKey/:deploymentId', {controller: 'ActivityListController', templateUrl:'../static/ng/views/activity-list.html'})
-            .when('/activity/:processDefinitionKey/:deploymentId/:interactionId', {controller: 'ActivityDetailController', templateUrl:'../static/ng/views/activity-detail.html'})
-
-            .otherwise({redirectTo:'/'});
-    })
     .directive('container', function($compile){
       return{
         restrict: 'A',

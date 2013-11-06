@@ -58,10 +58,29 @@ angular.module('Form',
             };
             $scope.refreshForm = function(form) {
                 $scope.form = form;
-                var fields = $scope.form.container.fields;
+
                 var data = $scope.form.data;
                 var validation = $scope.form.validation;
                 var readonly = $scope.form.container.readonly;
+
+                var rootContainer = form.container;
+                var fields = new Array();
+                if (rootContainer.children != null && rootContainer.children.length > 1 && rootContainer.activeChildIndex != -1) {
+                    $scope.form.steps = rootContainer.children;
+                    $scope.form.layout = 'wizard';
+                    $scope.form.activeStep = rootContainer.activeChildIndex;
+                    angular.forEach(rootContainer.children, function(child) {
+                        if (child.readonly) {
+                            angular.forEach(child.fields, function(field) {
+                                field.readonly = true;
+                            });
+                        }
+                        fields.push.apply(fields, child.fields);
+                    });
+                } else {
+                    fields = $scope.form.container.fields;
+                    $scope.form.layout = 'normal';
+                }
 
                 angular.forEach(fields, function(field) {
                     var values = data[field.name];
@@ -69,7 +88,8 @@ angular.module('Form',
                         field.value = values[0];
                     if (typeof(validation) !== 'undefined' && validation[field.name] != null)
                         field.messages = validation[field.name];
-                    field.readonly = readonly;
+                    if (readonly)
+                        field.readonly = readonly;
                 });
 
                 if (form.task != null) {
@@ -91,7 +111,8 @@ angular.module('Form',
 
                 };
 
-                $scope.refreshAttachments(form);
+                if (form != null && form.attachment != null)
+                    $scope.refreshAttachments(form);
             };
             $scope.$on('fileuploaddone', function(event, data) {
                 $scope.refreshAttachments();

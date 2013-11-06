@@ -40,6 +40,24 @@ public class ProcessInstanceUtility {
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.mediumDateTime();
 
+    public static String template(String template, Map<String, List<Value>> data) {
+        return template(template, data, null);
+    }
+
+    public static String template(String template, Map<String, List<Value>> data, Map<String, List<Value>> validationData) {
+        Map<String, Value> scopes = new HashMap<String, Value>();
+        scopes(scopes, data);
+        if (validationData != null)
+            scopes(scopes, validationData);
+
+        StringWriter writer = new StringWriter();
+        MustacheFactory mf = new DefaultMustacheFactory();
+        Mustache mustache = mf.compile(new StringReader(template), "my-template");
+        mustache.execute(writer, scopes);
+
+        return StringEscapeUtils.unescapeXml(writer.toString());
+    }
+
     public static String processInstanceLabel(Process process, ProcessInstance instance, FormValidation validation, String submissionLabel) {
         String processInstanceLabel = instance != null ? instance.getProcessInstanceLabel() : null;
         String processInstanceLabelTemplate = process.getProcessInstanceLabelTemplate();
@@ -48,20 +66,12 @@ public class ProcessInstanceUtility {
             processInstanceLabel = submissionLabel;
 
         if (StringUtils.isEmpty(processInstanceLabel) && processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
-            Map<String, Value> scopes = new HashMap<String, Value>();
+
 
             Map<String, List<Value>> data = instance != null ? instance.getData() : null;
             Map<String, List<Value>> validationData = validation.getData();
 
-            scopes(scopes, data);
-            scopes(scopes, validationData);
-
-            StringWriter writer = new StringWriter();
-            MustacheFactory mf = new DefaultMustacheFactory();
-            Mustache mustache = mf.compile(new StringReader(processInstanceLabelTemplate), "processInstanceLabel");
-            mustache.execute(writer, scopes);
-
-            processInstanceLabel = StringEscapeUtils.unescapeXml(writer.toString());
+            processInstanceLabel = template(processInstanceLabelTemplate, data, validationData);
 
             if (StringUtils.isEmpty(processInstanceLabel))
                 processInstanceLabel = "Submission " + dateTimeFormatter.print(System.currentTimeMillis());

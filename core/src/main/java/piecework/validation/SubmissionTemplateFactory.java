@@ -27,6 +27,7 @@ import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.util.ActivityUtil;
 import piecework.util.ConstraintUtil;
 import piecework.util.OptionResolver;
 import piecework.util.ProcessUtility;
@@ -91,11 +92,10 @@ public class SubmissionTemplateFactory {
             builder.maxAttachmentSize(activity.getMaxAttachmentSize());
         }
 
-        Action action = activity.action(ActionType.CREATE);
-        if (action != null && action.getContainer() != null) {
-            Container container = action.getContainer();
+        Container container = ActivityUtil.container(activity, ActionType.CREATE);
+        if (container != null) {
             if (StringUtils.isNotEmpty(validationId))
-                container = ProcessUtility.container(action.getContainer(), validationId);
+                container = ProcessUtility.container(container, validationId);
 
             if (container != null) {
                 Map<String, Field> fieldMap = activity.getFieldMap();

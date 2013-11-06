@@ -16,6 +16,7 @@
 package piecework.resource.concrete;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
@@ -29,6 +30,8 @@ import piecework.model.Form;
 import piecework.resource.DesignerResource;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;
+
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -45,7 +48,7 @@ public class DesignerResourceImpl implements DesignerResource {
     }
 	
 	@Override
-	public IndexView index() throws StatusCodeError {
+	public IndexView index(List<PathSegment> pathSegments) throws StatusCodeError {
 		return new IndexView();
 	}
 

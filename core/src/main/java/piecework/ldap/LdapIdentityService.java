@@ -91,6 +91,7 @@ public class LdapIdentityService implements IdentityService {
         String ldapPersonSearchBase = ldapSettings.getLdapPersonSearchBase();
         String ldapDisplayNameAttribute = ldapSettings.getLdapPersonAttributeDisplayName();
         String ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
+        String ldapEmailAttribute = ldapSettings.getLdapPersonAttributeEmail();
         SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
 
         long countLimit = maxResults != null ? maxResults.longValue() : 100l;

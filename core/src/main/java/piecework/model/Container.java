@@ -53,6 +53,8 @@ public class Container implements Serializable {
 
     private final int ordinal;
 
+    private final int activeChildIndex;
+
     private final boolean readonly;
 
     private final boolean deleted;
@@ -73,6 +75,7 @@ public class Container implements Serializable {
         this.children = Collections.unmodifiableList(builder.children);
         this.buttons = Collections.unmodifiableList(builder.buttons);
         this.ordinal = builder.ordinal;
+        this.activeChildIndex = builder.activeChildIndex;
         this.readonly = builder.readonly;
         this.deleted = builder.deleted;
     }
@@ -122,6 +125,10 @@ public class Container implements Serializable {
         return ordinal;
     }
 
+    public int getActiveChildIndex() {
+        return activeChildIndex;
+    }
+
     public boolean isReadonly() {
         return readonly;
     }
@@ -143,6 +150,7 @@ public class Container implements Serializable {
         private List<Container> children;
         private List<Button> buttons;
         private int ordinal;
+        private int activeChildIndex;
         private boolean readonly;
         private boolean deleted;
 
@@ -152,6 +160,7 @@ public class Container implements Serializable {
             this.fields = new ArrayList<Field>();
             this.children = new ArrayList<Container>();
             this.buttons = new ArrayList<Button>();
+            this.activeChildIndex = -1;
         }
 
         public Builder(Container container, Sanitizer sanitizer) {
@@ -188,8 +197,12 @@ public class Container implements Serializable {
             }
             if (container.children != null && !container.children.isEmpty()) {
                 for (Container child : container.children) {
-                    if (child.getContainerId() == null || containerIdToRemove == null || !containerIdToRemove.equals(child.getContainerId()))
-                        this.children.add(new Builder(child, sanitizer, fieldMap, containerIdToRemove).build());
+                    if (child.getContainerId() == null || containerIdToRemove == null || !containerIdToRemove.equals(child.getContainerId())) {
+                        Builder childBuilder = new Builder(child, sanitizer, fieldMap, containerIdToRemove);
+                        if (container.activeChildIndex != -1 && container.activeChildIndex != child.ordinal)
+                            childBuilder.readonly();
+                        this.children.add(childBuilder.build());
+                    }
                 }
             }
             if (container.buttons != null && !container.buttons.isEmpty()) {
@@ -197,6 +210,7 @@ public class Container implements Serializable {
                     this.buttons.add(new Button.Builder(button, sanitizer).build());
                 }
             }
+            this.activeChildIndex = container.activeChildIndex;
             this.ordinal = container.ordinal;
             this.readonly = container.readonly;
             this.deleted = container.deleted;
@@ -260,6 +274,11 @@ public class Container implements Serializable {
             if (this.buttons == null)
                 this.buttons = new ArrayList<Button>();
             this.buttons.add(button);
+            return this;
+        }
+
+        public Builder activeChildIndex(int activeChildIndex) {
+            this.activeChildIndex = activeChildIndex;
             return this;
         }
 

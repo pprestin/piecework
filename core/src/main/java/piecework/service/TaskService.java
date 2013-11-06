@@ -84,13 +84,13 @@ public class TaskService {
         if (instance == null)
             return null;
 
-        return allowedTask(process, instance, limitToActive);
+        return allowedTask(process, instance, taskId, limitToActive);
     }
 
     /*
      * Returns the first task for the passed instance that the user is allowed to access
      */
-    public Task allowedTask(Process process, ProcessInstance instance, boolean limitToActive) throws StatusCodeError {
+    public Task allowedTask(Process process, ProcessInstance instance, String taskId, boolean limitToActive) throws StatusCodeError {
 
         Set<Task> tasks = instance.getTasks();
 
@@ -100,6 +100,9 @@ public class TaskService {
 
         for (Task task : tasks) {
             if (limitToActive && !task.isActive())
+                continue;
+
+            if (taskId != null && !task.getTaskInstanceId().equals(taskId))
                 continue;
 
             if (!hasOversight) {
@@ -314,7 +317,7 @@ public class TaskService {
 
     public boolean hasAllowedTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
 
-        if (allowedTask(process, processInstance, limitToActive) != null)
+        if (allowedTask(process, processInstance, null, limitToActive) != null)
             return true;
 
         return false;

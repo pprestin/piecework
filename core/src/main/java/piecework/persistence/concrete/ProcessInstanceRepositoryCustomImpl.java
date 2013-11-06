@@ -153,7 +153,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         options.returnNew(true);
         ProcessInstance stored = mongoOperations.findAndModify(query, update, options, ProcessInstance.class);
 
-        return false;
+        return true;
     }
 
     private ProcessInstance updateEfficiently(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {

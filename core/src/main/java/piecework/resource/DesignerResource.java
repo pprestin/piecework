@@ -18,6 +18,8 @@ package piecework.resource;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 
 import piecework.ApplicationResource;
@@ -25,6 +27,8 @@ import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
 import piecework.designer.model.view.IndexView;
 import piecework.exception.StatusCodeError;
+
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -38,8 +42,8 @@ public interface DesignerResource extends ApplicationResource {
 	public Response root() throws StatusCodeError;
 	
 	@GET
-	@Path("designer")
+	@Path("designer/{segments:.*}")
 	@RolesAllowed({AuthorizationRole.USER})
-	public IndexView index() throws StatusCodeError;
+	public IndexView index(@PathParam("segments") List<PathSegment> pathSegments) throws StatusCodeError;
 		
 }

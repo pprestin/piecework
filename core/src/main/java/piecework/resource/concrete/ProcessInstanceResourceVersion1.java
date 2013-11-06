@@ -131,7 +131,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
-        Task task = taskService.allowedTask(process, instance, true);
+        Task task = taskService.allowedTask(process, instance, null, true);
         if (task == null)
             throw new ForbiddenError();
 
@@ -149,7 +149,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
-        Task task = taskService.allowedTask(process, instance, true);
+        Task task = taskService.allowedTask(process, instance, null, true);
         if (task == null)
             throw new ForbiddenError();
 
@@ -258,7 +258,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
-        Task task = taskService.allowedTask(process, instance, true);
+        Task task = taskService.allowedTask(process, instance, null, true);
         if (!helper.isAuthenticatedSystem() && task == null)
             throw new ForbiddenError();
 
@@ -375,7 +375,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        Task task = taskService.allowedTask(process, instance, true);
+        Task task = taskService.allowedTask(process, instance, null, true);
         if (task == null && !helper.isAuthenticatedSystem())
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
@@ -406,7 +406,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        Task task = taskService.allowedTask(process, instance, true);
+        Task task = taskService.allowedTask(process, instance, null, true);
         if (task == null && !helper.isAuthenticatedSystem())
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 

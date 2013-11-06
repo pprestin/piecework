@@ -30,6 +30,7 @@ import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.security.EncryptionService;
 import piecework.service.IdentityService;
+import piecework.util.ProcessInstanceUtility;
 import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -370,8 +371,14 @@ public class FormFactory {
                     decoratedFieldMap.put(entry.getKey(), field(formBuilder, entry.getValue(), data, results, readonly));
                 }
             }
+            Container container = action.getContainer();
+            String title = container.getTitle();
 
-            return new Container.Builder(action.getContainer(), passthroughSanitizer, decoratedFieldMap).readonly(readonly).build();
+            if (StringUtils.isNotEmpty(title) && title.contains("{{")) {
+                title = ProcessInstanceUtility.template(title, data);
+            }
+
+            return new Container.Builder(container, passthroughSanitizer, decoratedFieldMap).title(title).readonly(readonly).build();
         }
 
         // Rebuilds any values of type File so that their links are correct

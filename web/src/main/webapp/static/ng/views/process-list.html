@@ -12,9 +12,9 @@
     </thead>
     <tbody>
         <tr ng-repeat="process in processes">
-            <td><a href="#/process/{{process.processDefinitionKey}}">{{process.processDefinitionLabel}}</a></td>
+            <td><a href="./designer/process/{{process.processDefinitionKey}}">{{process.processDefinitionLabel}}</a></td>
             <td>{{process.processDefinitionKey}}</td>
-            <td><a href="#/deployment/{{process.processDefinitionKey}}/{{process.deploymentId}}" title="{{process.deploymentLabel}}" ng-if="process.deploymentVersion"><i class="icon-rocket"></i> {{"#" + process.deploymentVersion}} "{{process.deploymentLabel}}"</a></td>
+            <td><a href="./designer/deployment/{{process.processDefinitionKey}}/{{process.deploymentId}}" title="{{process.deploymentLabel}}" ng-if="process.deploymentVersion"><i class="icon-rocket"></i> {{"#" + process.deploymentVersion}} "{{process.deploymentLabel}}"</a></td>
             <td>{{process.deploymentDate | date:'medium' }}</td>
         </tr>
     </tbody>
