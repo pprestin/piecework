@@ -103,6 +103,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
             String applicationTitle = environment.getProperty("application.name");
+            final String applicationUrl = environment.getProperty("base.application.uri");
             final String assetsUrl = environment.getProperty("ui.static.urlbase");
 
             User user = new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
@@ -163,6 +164,13 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
                                     tagNode.removeAllChildren();
                                     tagNode.addChild(new ContentNode(content.toString()));
                                 }
+                            } else if (tagName.equals("base")) {
+                                Map<String, String> attributes = tagNode.getAttributes();
+                                String href = tagNode.getAttributeByName("href");
+                                if (checkForSecurePath(href)) {
+                                    attributes.put("href", recomputeSecurePath(href, applicationUrl));
+                                    tagNode.setAttributes(attributes);
+                                }
                             }
                         }
                     }
@@ -178,11 +186,28 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		}
 	}
 
+    private boolean checkForSecurePath(String path) {
+        if (path == null)
+            return false;
+
+        return path.startsWith("secure/") || path.startsWith("../secure/") || path.startsWith(("../../secure"));
+    }
+
     private boolean checkForStaticPath(String path) {
         if (path == null)
             return false;
 
         return path.startsWith("static/") || path.startsWith("../static/") || path.startsWith(("../../static"));
+    }
+
+    private String recomputeSecurePath(final String path, String assetsUrl) {
+        int indexOf = path.indexOf("secure/");
+
+        if (indexOf > path.length())
+            return path;
+
+        String adjustedPath = path.substring(indexOf+7);
+        return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
     }
 
     private String recomputeStaticPath(final String path, String assetsUrl) {

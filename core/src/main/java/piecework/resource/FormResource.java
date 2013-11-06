@@ -37,7 +37,7 @@ public interface FormResource extends ApplicationResource {
     @GET
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    @Produces({"text/html","application/json", "application/xml", "text/javascript"})
+    @Produces({"text/html", "application/json", "application/xml", "text/javascript"})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
