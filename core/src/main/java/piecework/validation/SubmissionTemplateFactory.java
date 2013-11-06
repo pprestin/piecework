@@ -59,13 +59,14 @@ public class SubmissionTemplateFactory {
         String taskDefinitionKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
 
         Activity activity = deployment.getActivity(taskDefinitionKey);
-        if (activity != null) {
-            if (activity.isAllowAttachments()) {
-                builder.allowAttachments();
-                builder.maxAttachmentSize(activity.getMaxAttachmentSize());
-            }
-        }
-        return builder.build();
+        return submissionTemplate(process, activity, null);
+//        if (activity != null) {
+//            if (activity.isAllowAttachments()) {
+//                builder.allowAttachments();
+//                builder.maxAttachmentSize(activity.getMaxAttachmentSize());
+//            }
+//        }
+//        return builder.build();
     }
 
     public SubmissionTemplate submissionTemplate(Field field) {
@@ -92,7 +93,8 @@ public class SubmissionTemplateFactory {
             builder.maxAttachmentSize(activity.getMaxAttachmentSize());
         }
 
-        Container container = ActivityUtil.container(activity, ActionType.CREATE);
+        Container parentContainer = ActivityUtil.parent(activity, ActionType.CREATE);
+        Container container = ActivityUtil.child(activity, ActionType.CREATE, parentContainer);
         if (container != null) {
             if (StringUtils.isNotEmpty(validationId))
                 container = ProcessUtility.container(container, validationId);
@@ -112,7 +114,7 @@ public class SubmissionTemplateFactory {
 
                 // Only add buttons to the validation from the top-level container, or from
                 // the particular validation container that is selected
-                List<Button> buttons = container.getButtons();
+                List<Button> buttons = parentContainer.getButtons();
                 if (buttons != null) {
                     for (Button button : buttons) {
                         if (button == null)

@@ -137,11 +137,18 @@ angular.module('Form',
                 processDefinitionKey:$routeParams.processDefinitionKey,
                 requestId: $routeParams.requestId
             };
-            var form = Form.get($scope.criteria, $scope.refreshForm);
+
             $scope.$on('event:refresh', function(event, message) {
                 $scope.refreshing = true;
-                form.$get($scope.criteria, $scope.refreshForm);
+                Form.get($scope.criteria, $scope.refreshForm);
             });
+
+            if (typeof($window.piecework) !== 'undefined' && typeof($window.piecework.model) !== 'undefined' && typeof($window.piecework.model.total) === 'undefined') {
+                $scope.refreshForm($window.piecework.model);
+                delete $window.piecework['model'];
+            } else {
+                Form.get($scope.criteria, $scope.refreshForm);
+            }
         }
     ])
     .controller('ListController', ['$scope', '$window', '$resource', '$http', '$routeParams','$modal', 'personService', 'taskService', 'dialogs',
@@ -163,7 +170,7 @@ angular.module('Form',
             $scope.criteria.processStatus = 'open';
             $scope.criteria.taskStatus = 'all';
             var SearchResults = $resource('./form', {processStatus:'@processStatus'});
-            var results = SearchResults.get($scope.criteria, $scope.processSearchResults);
+            //var results = SearchResults.get($scope.criteria, $scope.processSearchResults);
 
             $scope.processStatusDescription = {
                 'open': 'Active',
@@ -221,7 +228,7 @@ angular.module('Form',
             $scope.$on('event:refresh', function(event, message) {
                 $scope.searching = true;
                 $scope.selectedFormMap = new Object();
-                results.$get($scope.criteria, $scope.processSearchResults);
+                SearchResults.get($scope.criteria, $scope.processSearchResults);
             });
 
             $scope.dialogs = dialogs;
@@ -237,6 +244,12 @@ angular.module('Form',
                     delete $scope.selectedFormMap[form.formInstanceId];
             };
 
+            if (typeof($window.piecework) !== 'undefined' && typeof($window.piecework.model) !== 'undefined' && typeof($window.piecework.model.total) !== 'undefined') {
+                $scope.processSearchResults($window.piecework.model);
+                delete $window.piecework['model'];
+            } else {
+                SearchResults.get($scope.criteria, $scope.processSearchResults);
+            }
         }
     ])
     .factory('controllerService', ['instanceService', 'notificationService', 'personService', 'taskService',

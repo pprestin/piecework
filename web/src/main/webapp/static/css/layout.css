@@ -91,11 +91,36 @@ ul.attachments li .attachment-footer {
 }
 
 ul.breadcrumb-stacked {
-
+    margin-top: 0px;
+    margin-bottom: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-shadow: 0 1px 0 #fff;
+    background-color: #f7f5fa;
+    border-radius: 5px;
 }
 
 ul.breadcrumb-stacked li {
+   display: block;
+   color: #716b7a;
+   padding: 5px 20px;
+}
 
+ul.breadcrumb-stacked li a {
+    color: #716b7a;
+}
+
+ul.breadcrumb-stacked li.active a {
+    font-weight: bold;
+    color: #563d7c;
+    background-color: transparent;
+}
+
+ul.breadcrumb-stacked > li:hover,
+ul.breadcrumb-stacked > li:focus {
+    text-decoration: none;
+    background-color: #e5e3e9;
+    border-right: 1px solid #dbd8e0;
 }
 
 ul.files li {
@@ -329,6 +354,10 @@ select.form-control {
 
 .navbar-ex1-collapse .row .navbar-form {
     margin: 0px;
+}
+
+.pw-attachments {
+    margin-top: 20px;
 }
 
 .pw-attachment-file {

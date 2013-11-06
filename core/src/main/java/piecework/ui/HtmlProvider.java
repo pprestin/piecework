@@ -102,82 +102,15 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
 		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
-            String applicationTitle = environment.getProperty("application.name");
-            final String applicationUrl = environment.getProperty("base.application.uri");
-            final String assetsUrl = environment.getProperty("ui.static.urlbase");
 
             User user = new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
-            PageContext pageContext = new PageContext.Builder()
-                    .applicationTitle(applicationTitle)
-                    .assetsUrl(assetsUrl)
-                    .user(user)
-                    .build();
-
-            final String pageContextAsJson = objectMapper.writer().writeValueAsString(pageContext);
-            final String modelAsJson = objectMapper.writer().writeValueAsString(t);
-            final boolean isExplanation = type != null && type.equals(Explanation.class);
 
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
 
             TagNode node = cleaner.clean(template.getInputStream());
-            node.traverse(new TagNodeVisitor() {
-                @Override
-                public boolean visit(TagNode parentNode, HtmlNode htmlNode) {
-
-                    if (htmlNode instanceof TagNode) {
-                        TagNode tagNode = TagNode.class.cast(htmlNode);
-                        String tagName = tagNode.getName();
-
-                        if (tagName != null) {
-                            if (tagName.equals("link") || tagName.equals("script")) {
-                                Map<String, String> attributes = tagNode.getAttributes();
-                                String href = attributes.get("href");
-                                String src = attributes.get("src");
-                                String main = attributes.get("data-main");
-                                String id = attributes.get("id");
-
-                                if (checkForStaticPath(href)) {
-                                    attributes.put("href", recomputeStaticPath(href, assetsUrl));
-                                    tagNode.setAttributes(attributes);
-                                }
-                                if (checkForStaticPath(src)) {
-                                    attributes.put("src", recomputeStaticPath(src, assetsUrl));
-                                    tagNode.setAttributes(attributes);
-                                }
-                                if (checkForStaticPath(main)) {
-                                    attributes.put("data-main", recomputeStaticPath(main, assetsUrl));
-                                    tagNode.setAttributes(attributes);
-                                }
-
-                                if (tagName.equals("script") && id != null && id.equals("piecework-context-script")) {
-                                    StringBuilder content = new StringBuilder("piecework = {};")
-                                        .append("piecework.context = ").append(pageContextAsJson).append(";");
-
-                                    if (modelAsJson != null) {
-                                        if (isExplanation)
-                                            content.append("piecework.explanation = ").append(modelAsJson).append(";");
-                                        else
-                                            content.append("piecework.model = ").append(modelAsJson).append(";");
-                                    }
-                                    tagNode.removeAllChildren();
-                                    tagNode.addChild(new ContentNode(content.toString()));
-                                }
-                            } else if (tagName.equals("base")) {
-                                Map<String, String> attributes = tagNode.getAttributes();
-                                String href = tagNode.getAttributeByName("href");
-                                if (checkForSecurePath(href)) {
-                                    attributes.put("href", recomputeSecurePath(href, applicationUrl));
-                                    tagNode.setAttributes(attributes);
-                                }
-                            }
-                        }
-                    }
-
-                    return true;
-                }
-            });
+            node.traverse(new HtmlProviderVisitor(t, type, user, objectMapper, environment));
 
             SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
             serializer.writeToStream(node, entityStream);
@@ -186,40 +119,6 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		}
 	}
 
-    private boolean checkForSecurePath(String path) {
-        if (path == null)
-            return false;
-
-        return path.startsWith("secure/") || path.startsWith("../secure/") || path.startsWith(("../../secure"));
-    }
-
-    private boolean checkForStaticPath(String path) {
-        if (path == null)
-            return false;
-
-        return path.startsWith("static/") || path.startsWith("../static/") || path.startsWith(("../../static"));
-    }
-
-    private String recomputeSecurePath(final String path, String assetsUrl) {
-        int indexOf = path.indexOf("secure/");
-
-        if (indexOf > path.length())
-            return path;
-
-        String adjustedPath = path.substring(indexOf+7);
-        return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
-    }
-
-    private String recomputeStaticPath(final String path, String assetsUrl) {
-        int indexOf = path.indexOf("static/");
-
-        if (indexOf > path.length())
-            return path;
-
-        String adjustedPath = path.substring(indexOf);
-        return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
-    }
-	
 	private boolean hasTemplateResource(Class<?> type) {
 		if (type.equals(SearchResults.class))
 			return true;
