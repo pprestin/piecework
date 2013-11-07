@@ -34,12 +34,12 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
 
     private static final Logger LOG = Logger.getLogger(HtmlProviderVisitor.class);
 
-    private final String applicationTitle;
-    private final String applicationUrl;
-    private final String assetsUrl;
-    private final String pageContextAsJson;
-    private final String modelAsJson;
-    private final boolean isExplanation;
+    protected final String applicationTitle;
+    protected final String applicationUrl;
+    protected final String assetsUrl;
+    protected final String pageContextAsJson;
+    protected final String modelAsJson;
+    protected final boolean isExplanation;
 
     public HtmlProviderVisitor(Object t, Class<?> type, User user, ObjectMapper objectMapper, Environment environment) {
         this.applicationTitle = environment.getProperty("application.name");
@@ -78,39 +78,12 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
             String tagName = tagNode.getName();
 
             if (tagName != null) {
-                if (tagName.equals("link") || tagName.equals("script")) {
-                    Map<String, String> attributes = tagNode.getAttributes();
-                    String href = attributes.get("href");
-                    String src = attributes.get("src");
-                    String main = attributes.get("data-main");
-                    String id = attributes.get("id");
-
-                    if (checkForStaticPath(href)) {
-                        attributes.put("href", recomputeStaticPath(href, assetsUrl));
-                        tagNode.setAttributes(attributes);
-                    }
-                    if (checkForStaticPath(src)) {
-                        attributes.put("src", recomputeStaticPath(src, assetsUrl));
-                        tagNode.setAttributes(attributes);
-                    }
-                    if (checkForStaticPath(main)) {
-                        attributes.put("data-main", recomputeStaticPath(main, assetsUrl));
-                        tagNode.setAttributes(attributes);
-                    }
-
-                    if (tagName.equals("script") && id != null && id.equals("piecework-context-script")) {
-                        StringBuilder content = new StringBuilder("piecework = {};")
-                                .append("piecework.context = ").append(pageContextAsJson).append(";");
-
-                        if (modelAsJson != null) {
-                            if (isExplanation)
-                                content.append("piecework.explanation = ").append(modelAsJson).append(";");
-                            else
-                                content.append("piecework.model = ").append(modelAsJson).append(";");
-                        }
-                        tagNode.removeAllChildren();
-                        tagNode.addChild(new ContentNode(content.toString()));
-                    }
+                if (tagName.equals("body")) {
+                    handleBody(tagName, tagNode);
+                } else if (tagName.equals("script")) {
+                    handleScript(tagName, tagNode);
+                } else if (tagName.equals("link")) {
+                    handleStylesheet(tagName, tagNode);
                 } else if (tagName.equals("base")) {
                     Map<String, String> attributes = tagNode.getAttributes();
                     String href = tagNode.getAttributeByName("href");
@@ -125,21 +98,67 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         return true;
     }
 
-    private boolean checkForSecurePath(String path) {
+    private void handleReferences(TagNode tagNode) {
+        Map<String, String> attributes = tagNode.getAttributes();
+        String href = attributes.get("href");
+        String src = attributes.get("src");
+        String main = attributes.get("data-main");
+
+        if (checkForStaticPath(href)) {
+            attributes.put("href", recomputeStaticPath(href, assetsUrl));
+            tagNode.setAttributes(attributes);
+        }
+        if (checkForStaticPath(src)) {
+            attributes.put("src", recomputeStaticPath(src, assetsUrl));
+            tagNode.setAttributes(attributes);
+        }
+        if (checkForStaticPath(main)) {
+            attributes.put("data-main", recomputeStaticPath(main, assetsUrl));
+            tagNode.setAttributes(attributes);
+        }
+    }
+
+    protected void handleBody(String tagName, TagNode tagNode) {
+
+    }
+
+    protected void handleStylesheet(String tagName, TagNode tagNode) {
+        handleReferences(tagNode);
+    }
+
+    protected void handleScript(String tagName, TagNode tagNode) {
+        handleReferences(tagNode);
+        String id = tagNode.getAttributeByName("id");
+        if (tagName.equals("script") && id != null && id.equals("piecework-context-script")) {
+            StringBuilder content = new StringBuilder("piecework = {};")
+                    .append("piecework.context = ").append(pageContextAsJson).append(";");
+
+            if (modelAsJson != null) {
+                if (isExplanation)
+                    content.append("piecework.explanation = ").append(modelAsJson).append(";");
+                else
+                    content.append("piecework.model = ").append(modelAsJson).append(";");
+            }
+            tagNode.removeAllChildren();
+            tagNode.addChild(new ContentNode(content.toString()));
+        }
+    }
+
+    protected boolean checkForSecurePath(String path) {
         if (path == null)
             return false;
 
         return path.startsWith("secure/") || path.startsWith("../secure/") || path.startsWith(("../../secure"));
     }
 
-    private boolean checkForStaticPath(String path) {
+    protected boolean checkForStaticPath(String path) {
         if (path == null)
             return false;
 
         return path.startsWith("static/") || path.startsWith("../static/") || path.startsWith(("../../static"));
     }
 
-    private String recomputeSecurePath(final String path, String assetsUrl) {
+    protected String recomputeSecurePath(final String path, String assetsUrl) {
         int indexOf = path.indexOf("secure/");
 
         if (indexOf > path.length())
@@ -149,7 +168,7 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
     }
 
-    private String recomputeStaticPath(final String path, String assetsUrl) {
+    protected String recomputeStaticPath(final String path, String assetsUrl) {
         int indexOf = path.indexOf("static/");
 
         if (indexOf > path.length())

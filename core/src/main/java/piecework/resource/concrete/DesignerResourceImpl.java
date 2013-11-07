@@ -46,7 +46,12 @@ public class DesignerResourceImpl implements DesignerResource {
 	public Response root() throws StatusCodeError {
 		return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri("designer")).build();
     }
-	
+
+    @Override
+    public IndexView index() throws StatusCodeError {
+        return new IndexView();
+    }
+
 	@Override
 	public IndexView index(List<PathSegment> pathSegments) throws StatusCodeError {
 		return new IndexView();

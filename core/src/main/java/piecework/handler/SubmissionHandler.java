@@ -293,9 +293,12 @@ public class SubmissionHandler {
                     throw new InternalServerError();
                 }
                 location = content.getLocation();
+
+                String description = submissionBuilder.getDescription(name);
                 file = new File.Builder()
                         .id(id)
                         .name(value)
+                        .description(description)
                         .location(location)
                         .contentType(contentType)
                         .build();
@@ -336,6 +339,8 @@ public class SubmissionHandler {
             }
 
             return true;
+        } else if (template.isDescription(name)) {
+            submissionBuilder.description(name, value);
         }
 
         return false;

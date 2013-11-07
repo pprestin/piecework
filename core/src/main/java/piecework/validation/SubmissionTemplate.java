@@ -92,6 +92,16 @@ public class SubmissionTemplate {
         return acceptable.contains(name);
     }
 
+    public boolean isDescription(String descriptionName) {
+        int indexOf = descriptionName.indexOf("!description");
+        if (indexOf != -1 && indexOf < descriptionName.length()) {
+            String fieldName = descriptionName.substring(0, indexOf);
+            return ((!acceptable.contains(descriptionName) && acceptable.contains(fieldName)) ||
+                    (!restricted.contains(descriptionName) && restricted.contains(fieldName)));
+        }
+        return false;
+    }
+
     public boolean isButton(String name) {
         return name != null && buttonNames.contains(name);
     }

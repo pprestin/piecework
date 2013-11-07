@@ -28,9 +28,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import piecework.identity.IdentityDetails;
-import piecework.model.Explanation;
 import piecework.model.User;
 import piecework.model.SearchResults;
+import piecework.persistence.ContentRepository;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -42,7 +42,6 @@ import javax.ws.rs.ext.Provider;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Map;
 
 /**
  * @author James Renfro
@@ -52,6 +51,9 @@ import java.util.Map;
 public class HtmlProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
 
 	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
+
+    @Autowired
+    private ContentRepository contentRepository;
 
     @Autowired
     private Environment environment;
@@ -109,8 +111,10 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
 
+            OptimizingHtmlProviderVisitor visitor =
+                    new OptimizingHtmlProviderVisitor(t, type, user, objectMapper, environment, contentRepository);
             TagNode node = cleaner.clean(template.getInputStream());
-            node.traverse(new HtmlProviderVisitor(t, type, user, objectMapper, environment));
+            node.traverse(visitor);
 
             SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
             serializer.writeToStream(node, entityStream);

@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -37,7 +38,8 @@ public class RequestDetails {
     private final String remoteUser;
     private final String actAsUser;
     private final MediaType contentType;
-    private final  List<MediaType> acceptableMediaTypes;
+    private final List<MediaType> acceptableMediaTypes;
+    private final Map<String, List<String>> requestHeaders;
     private final String referrer;
     private final String userAgent;
     private final boolean isServiceCall;
@@ -56,6 +58,7 @@ public class RequestDetails {
         this.actAsUser = builder.actAsUser;
         this.contentType = builder.contentType;
         this.acceptableMediaTypes = builder.acceptableMediaTypes;
+        this.requestHeaders = builder.requestHeaders;
         this.isServiceCall = builder.isServiceCall;
         this.referrer = builder.referrer;
         this.userAgent = builder.userAgent;
@@ -97,6 +100,10 @@ public class RequestDetails {
         return acceptableMediaTypes;
     }
 
+    public Map<String, List<String>> getRequestHeaders() {
+        return requestHeaders;
+    }
+
     public String getReferrer() {
         return referrer;
     }
@@ -121,6 +128,7 @@ public class RequestDetails {
         private boolean isServiceCall;
         private MediaType contentType;
         private List<MediaType> acceptableMediaTypes;
+        private Map<String, List<String>> requestHeaders;
         private String referrer;
         private String userAgent;
 
@@ -143,6 +151,7 @@ public class RequestDetails {
                     this.contentType = headers.getMediaType();
                     this.referrer = headers.getHeaderString("Referer");
                     this.userAgent = headers.getHeaderString("User-Agent");
+                    this.requestHeaders = headers.getRequestHeaders();
                 }
 
                 HttpServletRequest request = context.getHttpServletRequest();

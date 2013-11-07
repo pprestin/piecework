@@ -171,6 +171,7 @@ public class Submission {
         private String alias;
         private ActionType action;
         private ManyMap<String, Value> data;
+        private Map<String, String> descriptionMap;
         private List<Attachment> attachments;
         private Map<String, Activity> activityMap;
         private Date submissionDate;
@@ -182,6 +183,7 @@ public class Submission {
             this.attachments = new ArrayList<Attachment>();
             this.action = ActionType.COMPLETE;
             this.data = new ManyMap<String, Value>();
+            this.descriptionMap = new HashMap<String, String>();
         }
 
         public Builder(Submission submission, Sanitizer sanitizer, boolean ignoreData) {
@@ -195,6 +197,7 @@ public class Submission {
             this.submissionId = sanitizer.sanitize(submissionId);
             this.submitterId = sanitizer.sanitize(submission.submitterId);
             this.action = submission.getAction();
+            this.descriptionMap = new HashMap<String, String>();
 
             if (!ignoreData && submission.data != null && !submission.data.isEmpty()) {
                 this.data = new ManyMap<String, Value>(submission.data.size());
@@ -300,6 +303,11 @@ public class Submission {
             return this;
         }
 
+        public Builder description(String key, String value) {
+            descriptionMap.put(key, value);
+            return this;
+        }
+
         public Builder formValue(String key, String value) {
             this.data.putOne(key, new Value(value));
             return this;
@@ -317,6 +325,10 @@ public class Submission {
 
         public String getProcessDefinitionKey() {
             return processDefinitionKey;
+        }
+
+        public String getDescription(String name) {
+            return this.descriptionMap.get(name + "!description");
         }
     }
 

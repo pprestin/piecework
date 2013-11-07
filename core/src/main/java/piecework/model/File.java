@@ -40,6 +40,9 @@ public class File extends Value {
     private final String name;
 
     @XmlElement
+    private final String description;
+
+    @XmlElement
     private final String contentType;
 
     @XmlTransient
@@ -60,6 +63,7 @@ public class File extends Value {
         this.contentType = builder.contentType;
         this.location = builder.location;
         this.name = builder.name;
+        this.description = builder.description;
         this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
         this.uri = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getServiceUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
     }
@@ -71,6 +75,10 @@ public class File extends Value {
 
     public String getName() {
         return name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public String getContentType() {
@@ -100,6 +108,7 @@ public class File extends Value {
 
         private String id;
         private String name;
+        private String description;
         private String contentType;
         private String location;
         private String processDefinitionKey;
@@ -113,9 +122,11 @@ public class File extends Value {
 
         public Builder(File file) {
             this.id = file.id;
+            this.description = file.description;
             this.location = file.location;
             this.contentType = file.contentType;
             this.name = file.name;
+            this.description = file.description;
         }
 
         public Builder(File file, Sanitizer sanitizer) {
@@ -123,6 +134,7 @@ public class File extends Value {
             this.location = sanitizer.sanitize(file.location);
             this.contentType = sanitizer.sanitize(file.contentType);
             this.name = sanitizer.sanitize(file.name);
+            this.description = sanitizer.sanitize(file.description);
         }
 
         public File build() {
@@ -145,6 +157,11 @@ public class File extends Value {
 
         public Builder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
             return this;
         }
 

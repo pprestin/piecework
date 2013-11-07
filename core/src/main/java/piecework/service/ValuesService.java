@@ -141,7 +141,7 @@ public class ValuesService {
 
                 if (value instanceof File) {
                     File file = File.class.cast(value);
-                    files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(file.getName()).id(file.getId()).contentType(file.getContentType()).build(version1));
+                    files.add(new File.Builder().processDefinitionKey(process.getProcessDefinitionKey()).processInstanceId(instance.getProcessInstanceId()).fieldName(fieldName).name(file.getName()).id(file.getId()).contentType(file.getContentType()).description(file.getDescription()).build(version1));
                 } else {
                     String link = value.getValue();
                     String id = Base64Utility.safeBase64(link);

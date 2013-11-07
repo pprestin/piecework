@@ -28,6 +28,9 @@ import java.util.Set;
  */
 public interface ProcessInstanceRepository extends MongoRepository<ProcessInstance, String>, ProcessInstanceRepositoryCustom {
 
+    @Query(value="{ 'processDefinitionKey' : ?0 }")
+    List<ProcessInstance> findByProcessDefinitionKey(String processDefinitionKey);
+
     @Query(value="{ 'processDefinitionKey' : ?0, 'engineProcessInstanceId' : ?1 }")
     ProcessInstance findByProcessDefinitionKeyAndEngineProcessInstanceId(String processDefinitionKey, String engineProcessInstanceId);
 

@@ -60,13 +60,6 @@ public class SubmissionTemplateFactory {
 
         Activity activity = deployment.getActivity(taskDefinitionKey);
         return submissionTemplate(process, activity, null);
-//        if (activity != null) {
-//            if (activity.isAllowAttachments()) {
-//                builder.allowAttachments();
-//                builder.maxAttachmentSize(activity.getMaxAttachmentSize());
-//            }
-//        }
-//        return builder.build();
     }
 
     public SubmissionTemplate submissionTemplate(Field field) {

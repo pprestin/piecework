@@ -12,7 +12,7 @@ angular.module('Form',
         function($routeProvider, $locationProvider, $logProvider, $provide) {
             //$logProvider.debugEnabled(true);
 
-            var root = window.piecework.context.static;
+            var root = window.piecework.context['static'];
 
             $routeProvider
                 .when('/form.html', {controller: 'ListController', templateUrl: root + '/static/ng/views/form-list.html'})
@@ -44,7 +44,7 @@ angular.module('Form',
 
             };
             $scope.deleteAttachment = function(attachment) {
-                $http.delete(attachment.link).then($scope.refreshAttachments);
+                $http['delete'](attachment.link).then($scope.refreshAttachments);
             }
             $scope.editAttachments = function() {
                 $scope.isEditingAttachments = !$scope.isEditingAttachments;
@@ -520,7 +520,7 @@ angular.module('Form',
     ])
     .factory('dialogs', ['$modal','controllerService','notificationService', 'personService','taskService',
         function($modal, controllerService, notificationService, personService, taskService) {
-            var root = window.piecework.context.static;
+            var root = window.piecework.context['static'];
             return {
                 openActivateModal: function(selectedForms) {
                     var modalInstance = $modal.open({
