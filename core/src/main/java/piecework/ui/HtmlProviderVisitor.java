@@ -34,6 +34,8 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
 
     private static final Logger LOG = Logger.getLogger(HtmlProviderVisitor.class);
 
+    protected final Object t;
+    protected final Class<?> type;
     protected final String applicationTitle;
     protected final String applicationUrl;
     protected final String assetsUrl;
@@ -42,6 +44,8 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
     protected final boolean isExplanation;
 
     public HtmlProviderVisitor(Object t, Class<?> type, User user, ObjectMapper objectMapper, Environment environment) {
+        this.t = t;
+        this.type = type;
         this.applicationTitle = environment.getProperty("application.name");
         this.applicationUrl = environment.getProperty("base.application.uri");
         this.assetsUrl = environment.getProperty("ui.static.urlbase");

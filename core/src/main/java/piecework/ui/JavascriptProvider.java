@@ -20,8 +20,12 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
+import org.htmlcleaner.CleanerProperties;
+import org.htmlcleaner.HtmlCleaner;
+import org.htmlcleaner.TagNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
@@ -33,8 +37,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import piecework.identity.IdentityDetails;
 import piecework.model.Explanation;
+import piecework.model.Form;
 import piecework.model.SearchResults;
 import piecework.model.User;
+import piecework.persistence.ContentRepository;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -59,9 +65,10 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
     private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
 
     @Autowired
-    private Environment environment;
+    ContentRepository contentRepository;
 
-//    private ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private Environment environment;
 
     @Autowired
     JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
@@ -77,7 +84,7 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
         long size = 0;
         if (resource.exists()) {
             try {
-                size = resource.getFile().length();
+                size = resource.contentLength();
             } catch (IOException e) {
                 LOG.error("Unable to determine size of template for " + type.getSimpleName(), e);
             }
@@ -108,56 +115,52 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
             userName = userDetails.getDisplayName();
         }
 
+        PrintWriter writer = new PrintWriter(entityStream);
+
+        if (type.equals(Form.class)) {
+            Form form = Form.class.cast(t);
+
+            if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
+                Resource script = getExternalScriptResource(type, t);
+                InputStream input = script.getInputStream();
+
+                String applicationTitle = environment.getProperty("application.name");
+                final String assetsUrl = environment.getProperty("ui.static.urlbase");
+
+                User user = new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
+                PageContext pageContext = new PageContext.Builder()
+                        .applicationTitle(applicationTitle)
+                        .assetsUrl(assetsUrl)
+                        .user(user)
+                        .build();
+
+                ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
+
+                final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
+                final String modelAsJson = objectMapper.writer().writeValueAsString(t);
+                final boolean isExplanation = type != null && type.equals(Explanation.class);
+
+                Map<String, String> scopes = new HashMap<String, String>();
+
+                scopes.put("pageContext", pageContextAsJson);
+                scopes.put("model", modelAsJson);
+
+                MustacheFactory mf = new DefaultMustacheFactory();
+                Mustache mustache = mf.compile(new BufferedReader(new InputStreamReader(input)), "resource");
+                mustache.execute(writer, scopes);
+                writer.flush();
+                return;
+            }
+        }
+
         Resource script = getScriptResource(type, t);
         if (script.exists()) {
-            String applicationTitle = environment.getProperty("application.name");
-            final String assetsUrl = environment.getProperty("ui.static.urlbase");
-
-            User user = new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
-            PageContext pageContext = new PageContext.Builder()
-                    .applicationTitle(applicationTitle)
-                    .assetsUrl(assetsUrl)
-                    .user(user)
-                    .build();
-
-            ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
-
-            final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
-            final String modelAsJson = objectMapper.writer().writeValueAsString(t);
-            final boolean isExplanation = type != null && type.equals(Explanation.class);
-
-            script.getInputStream();
-
-            Map<String, String> scopes = new HashMap<String, String>();
-
-            scopes.put("pageContext", pageContextAsJson);
-            scopes.put("model", modelAsJson);
-
-            PrintWriter writer = new PrintWriter(entityStream);
-            MustacheFactory mf = new DefaultMustacheFactory();
-            Mustache mustache = mf.compile(new BufferedReader(new InputStreamReader(script.getInputStream())), "resource");
-            mustache.execute(writer, scopes);
+            InputStream input = script.getInputStream();
+            IOUtils.copy(input, writer);
             writer.flush();
         } else {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-    }
-
-    private boolean checkForStaticPath(String path) {
-        if (path == null)
-            return false;
-
-        return path.startsWith("static/") || path.startsWith("../static/") || path.startsWith(("../../static"));
-    }
-
-    private String recomputeStaticPath(final String path, String assetsUrl) {
-        int indexOf = path.indexOf("static/");
-
-        if (indexOf > path.length())
-            return path;
-
-        String adjustedPath = path.substring(indexOf);
-        return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
     }
 
     private boolean hasScriptResource(Class<?> type) {
@@ -166,11 +169,33 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
         if (InputStream.class.isAssignableFrom(type))
             return false;
 
-        Resource resource = getScriptResource(type, null);
+        Resource resource = getTemplateResource(type, null);
         return resource != null && resource.exists();
     }
 
     private Resource getScriptResource(Class<?> type, Object t) {
+        Resource template = getTemplateResource(type, t);
+        if (!template.exists())
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+
+        CleanerProperties cleanerProperties = new CleanerProperties();
+        cleanerProperties.setOmitXmlDeclaration(true);
+        HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
+        User user = getAuthenticatedUser();
+        ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
+        OptimizingHtmlProviderVisitor visitor =
+                new OptimizingHtmlProviderVisitor(t, type, user, objectMapper, environment, contentRepository);
+
+        try {
+            TagNode node = cleaner.clean(template.getInputStream());
+            node.traverse(visitor);
+        } catch (IOException ioe) {
+            LOG.error("Unable to read template", ioe);
+        }
+        return visitor.getScriptResource();
+    }
+
+    private Resource getExternalScriptResource(Class<?> type, Object t) {
         String scriptsDirectory = environment.getProperty("scripts.directory");
 
         StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
@@ -197,7 +222,59 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
                 resource = new ClassPathResource("META-INF/piecework/scripts/" + "script.js");
         }
 
+        return resource;
+    }
+
+    private Resource getTemplateResource(Class<?> type, Object t) {
+        String templatesDirectory = environment.getProperty("templates.directory");
+
+        StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
+
+        if (type.equals(SearchResults.class)) {
+            SearchResults results = SearchResults.class.cast(t);
+            templateNameBuilder.append(".").append(results.getResourceName());
+        }
+
+        templateNameBuilder.append(".template.html");
+
+        String templateName = templateNameBuilder.toString();
+        Resource resource = null;
+        if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}")) {
+            resource = new FileSystemResource(templatesDirectory + File.separator + templateName);
+
+            if (!resource.exists())
+                resource = new FileSystemResource(templatesDirectory + File.separator + "key" + File.separator + templateName);
+
+            if (!resource.exists())
+                resource = new FileSystemResource(templatesDirectory + File.separator + "Layout.template.html");
+
+        } else {
+            resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
+
+            if (!resource.exists())
+                resource = new ClassPathResource("META-INF/piecework/templates/" + "Layout.template.html");
+        }
+
 
         return resource;
+    }
+
+    private User getAuthenticatedUser() {
+        String internalId = null;
+        String externalId = null;
+        String userName = null;
+
+        SecurityContext context = SecurityContextHolder.getContext();
+        Authentication authentication = context.getAuthentication();
+
+        Object principal = authentication != null ? authentication.getPrincipal() : null;
+
+        if (principal != null && principal instanceof IdentityDetails) {
+            IdentityDetails userDetails = IdentityDetails.class.cast(principal);
+            internalId = userDetails.getInternalId();
+            externalId = userDetails.getExternalId();
+            userName = userDetails.getDisplayName();
+        }
+        return new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
     }
 }

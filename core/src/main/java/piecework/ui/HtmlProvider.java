@@ -16,6 +16,7 @@
 package piecework.ui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.*;
@@ -85,34 +86,16 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 			MultivaluedMap<String, Object> httpHeaders,
 			OutputStream entityStream) throws IOException,
 			WebApplicationException {
-		
-		String internalId = null;
-        String externalId = null;
-		String userName = null;
-		
-		SecurityContext context = SecurityContextHolder.getContext();
-		Authentication authentication = context.getAuthentication();
-		
-		Object principal = authentication != null ? authentication.getPrincipal() : null;
-		
-		if (principal != null && principal instanceof IdentityDetails) {
-			IdentityDetails userDetails = IdentityDetails.class.cast(principal);
-            internalId = userDetails.getInternalId();
-            externalId = userDetails.getExternalId();
-			userName = userDetails.getDisplayName();
-		}
 
 		Resource template = getTemplateResource(type, t);
 		if (template.exists()) {
-
-            User user = new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
-
+            User user = getAuthenticatedUser();
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
 
-            OptimizingHtmlProviderVisitor visitor =
-                    new OptimizingHtmlProviderVisitor(t, type, user, objectMapper, environment, contentRepository);
+            LinkOptimizingVisitor visitor =
+                    new LinkOptimizingVisitor(t, type, user, objectMapper, environment);
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(visitor);
 
@@ -122,6 +105,25 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		}
 	}
+
+    private User getAuthenticatedUser() {
+        String internalId = null;
+        String externalId = null;
+        String userName = null;
+
+        SecurityContext context = SecurityContextHolder.getContext();
+        Authentication authentication = context.getAuthentication();
+
+        Object principal = authentication != null ? authentication.getPrincipal() : null;
+
+        if (principal != null && principal instanceof IdentityDetails) {
+            IdentityDetails userDetails = IdentityDetails.class.cast(principal);
+            internalId = userDetails.getInternalId();
+            externalId = userDetails.getExternalId();
+            userName = userDetails.getDisplayName();
+        }
+        return new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
+    }
 
 	private boolean hasTemplateResource(Class<?> type) {
 		if (type.equals(SearchResults.class))

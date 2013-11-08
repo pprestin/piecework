@@ -28,6 +28,9 @@ import org.htmlcleaner.TagNode;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import piecework.model.Content;
 import piecework.model.User;
 import piecework.persistence.ContentRepository;
@@ -46,28 +49,22 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
     private final StringBuffer buffer;
     private final String assetsDirectoryPath;
     private final ContentRepository contentRepository;
+    private final boolean doOptimization;
 
     public OptimizingHtmlProviderVisitor(Object t, Class<?> type, User user, ObjectMapper objectMapper, Environment environment, ContentRepository contentRepository) {
         super(t, type, user, objectMapper, environment);
         this.buffer = new StringBuffer();
         this.assetsDirectoryPath = environment.getProperty("assets.directory");
         this.contentRepository = contentRepository;
+        this.doOptimization = environment.getProperty("javascript.minification", Boolean.class, Boolean.FALSE);
+    }
+
+    public ByteArrayResource getScriptResource() {
+        return new ByteArrayResource(buffer.toString().getBytes());
     }
 
     protected void handleBody(String tagName, TagNode tagNode) {
-        buffer.append("; piecework = {};").append("piecework.context = ").append(pageContextAsJson).append(";");
 
-        if (modelAsJson != null) {
-            if (isExplanation)
-                buffer.append("piecework.explanation = ").append(modelAsJson).append(";");
-            else
-                buffer.append("piecework.model = ").append(modelAsJson).append(";");
-        }
-
-        TagNode script = new TagNode("script");
-        script.addAttribute("type", "text/javascript");
-        script.addChild(new ContentNode(buffer.toString()));
-        tagNode.addChild(script);
     }
 
     protected void handleStylesheet(String tagName, TagNode tagNode) {
@@ -116,7 +113,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
 
             if (reader != null) {
 
-                if (true) {
+                if (!doOptimization || path.contains(".min.")) {
                     // Don't bother to compress files that are already compressed
                     String line;
                     while ((line = reader.readLine()) != null) {
