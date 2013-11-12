@@ -23,12 +23,13 @@ angular.module('Form',
 
             $locationProvider.html5Mode(true).hashPrefix('!');
 
-            $provide.decorator('$sniffer', function($delegate) {
+            $provide.decorator('$sniffer', ['$delegate', function($delegate) {
                 $delegate.history = true;
                 return $delegate;
-            });
+            }]);
         }
     ])
+//    .decorator('HistoryDecorator', ['$sniffer', function()])
     .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
         function($scope, $window, $location, $resource, $http, $routeParams, personService, dialogs) {
 
@@ -261,7 +262,7 @@ angular.module('Form',
     .factory('controllerService', ['instanceService', 'notificationService', 'personService', 'taskService',
         function(instanceService, notificationService, personService, taskService) {
             return {
-                'ActivationModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
+                'ActivationModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (reason) {
                         var checkActivationStatuses = function(scope) {
@@ -304,7 +305,7 @@ angular.module('Form',
                         $modalInstance.dismiss('cancel');
                     };
                 }],
-                'AssignmentModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
+                'AssignmentModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.getPeople = personService.getPeople;
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (assignee) {
@@ -351,7 +352,7 @@ angular.module('Form',
                         $modalInstance.dismiss('cancel');
                     };
                 }],
-                'CancellationModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
+                'CancellationModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (reason) {
                         var checkStatuses = function(scope) {
@@ -394,7 +395,7 @@ angular.module('Form',
                         $modalInstance.dismiss('cancel');
                     };
                 }],
-                'CommentModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
+                'CommentModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (comment) {
                         var checkStatuses = function(scope) {
@@ -439,7 +440,7 @@ angular.module('Form',
                         $modalInstance.dismiss('cancel');
                     };
                 }],
-                'HistoryModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
+                'HistoryModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.loading = true;
                     notificationService.clear($scope);
@@ -478,7 +479,7 @@ angular.module('Form',
                         $modalInstance.dismiss('cancel');
                     };
                 }],
-                'SuspensionModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
+                'SuspensionModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (reason) {
                         var checkStatuses = function(scope) {
