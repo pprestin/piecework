@@ -209,7 +209,7 @@ public class ProcessInstanceSearchCriteria {
     }
 
     public final static class Builder {
-
+        private Set<String> limitToProcessDefinitionKeys;
         private Set<String> processDefinitionKeys;
         private Set<String> engines;
         private Set<String> engineProcessDefinitionKeys;
@@ -244,6 +244,7 @@ public class ProcessInstanceSearchCriteria {
         }
 
         public Builder(Map<String, List<String>> queryParameters, Sanitizer sanitizer) {
+            this.limitToProcessDefinitionKeys = new HashSet<String>();
             this.processDefinitionKeys = new HashSet<String>();
             this.processInstanceIds = new HashSet<String>();
             this.engines = new HashSet<String>();
@@ -270,7 +271,7 @@ public class ProcessInstanceSearchCriteria {
                             try {
                                 boolean isEngineParameter = true;
                                 if (key.equals("processDefinitionKey"))
-                                    this.processDefinitionKeys.add(value);
+                                    this.limitToProcessDefinitionKeys.add(value);
                                 else if (key.equals("processInstanceId"))
                                     this.processInstanceIds.add(value);
                                 else if (key.equals("complete"))
@@ -336,9 +337,11 @@ public class ProcessInstanceSearchCriteria {
         }
 
         public Builder processDefinitionKey(String processDefinitionKey) {
-            if (this.processDefinitionKeys == null)
-                this.processDefinitionKeys = new HashSet<String>();
-            this.processDefinitionKeys.add(processDefinitionKey);
+            if (this.limitToProcessDefinitionKeys.isEmpty() || this.limitToProcessDefinitionKeys.contains(processDefinitionKey)) {
+                if (this.processDefinitionKeys == null)
+                    this.processDefinitionKeys = new HashSet<String>();
+                this.processDefinitionKeys.add(processDefinitionKey);
+            }
             return this;
         }
 

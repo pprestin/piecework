@@ -40,7 +40,12 @@ public interface DesignerResource extends ApplicationResource {
 	@Path("")
 	@RolesAllowed({AuthorizationRole.USER})
 	public Response root() throws StatusCodeError;
-	
+
+    @GET
+    @Path("designer")
+    @RolesAllowed({AuthorizationRole.USER})
+    public IndexView index() throws StatusCodeError;
+
 	@GET
 	@Path("designer/{segments:.*}")
 	@RolesAllowed({AuthorizationRole.USER})

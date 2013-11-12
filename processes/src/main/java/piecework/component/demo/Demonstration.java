@@ -27,7 +27,6 @@ import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
-import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
@@ -113,12 +112,12 @@ public class Demonstration implements TaskListener {
 
         try {
             processService.read(process.getProcessDefinitionKey());
-            processService.updateAndPublishDeployment(process, deployment, resource);
+            processService.updateAndPublishDeployment(process, deployment, resource, false);
         } catch (MappingException mappingException) {
             LOG.fatal("Could not create Demonstration process because of a spring mapping exception", mappingException);
         } catch (Exception e) {
             processService.create(process);
-            processService.createAndPublishDeployment(process, deployment, resource);
+            processService.createAndPublishDeployment(process, deployment, resource, false);
         }
     }
 
@@ -133,7 +132,7 @@ public class Demonstration implements TaskListener {
                 .inputStream(classPathResource.getInputStream())
                 .build();
 
-        processService.updateAndPublishDeployment(process, deployment, resource);
+        processService.updateAndPublishDeployment(process, deployment, resource, false);
     }
 
     public static Field approvedField() {

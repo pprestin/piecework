@@ -211,9 +211,13 @@
         },
         includeVariableButtons: function(field, $form) {
             var selector = ':input[type="file"][name="' + field.name + '"]';
+            var descriptionSelector = ':input.process-variable-description[data-element="' + field.name + '"]';
             $form.find(selector).change(function(event) {
                 var files = $(event.target)[0].files;
                 var data = new FormData();
+                var description = $(descriptionSelector).val();
+                if (typeof(description) !== 'undefined')
+                    data.append(field.name + '!description', description);
 
                 $.each(files, function(i, file) {
                     data.append(field.name, file);
@@ -228,7 +232,15 @@
                     type : 'POST',
                     success: function() {
                         utils.onVariableItemAdded(field, $form);
+                        $(descriptionSelector).val('');
                     }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    var data = $.parseJSON(jqXHR.responseText);
+                    var selector = '.process-alert[data-element="' + field.name + '"]';
+                    var message = data.messageDetail;
+                    var $alert = $(selector);
+                    $alert.show();
+                    $alert.text(message);
                 });
 
                 return false;
@@ -284,8 +296,11 @@
                         var $li = utils.$variableLiTemplates[field.name].clone();
                         var attachment = data.list[index];
                         var $anchor = $li.find('.process-variable-link');
+                        var $description = $li.find('.process-variable-description');
                         $anchor.attr('href', attachment.link);
                         $anchor.text(attachment.name);
+                        if (attachment.description != null)
+                            $description.text(attachment.description);
                         $newAttachmentList.append($li);
                     }
 

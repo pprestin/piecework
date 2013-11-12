@@ -12,7 +12,8 @@ angular.module('Form',
         function($routeProvider, $locationProvider, $logProvider, $provide) {
             //$logProvider.debugEnabled(true);
 
-            var root = window.piecework.context.static;
+            var context = window.piecework.context;
+            var root = context['static'];
 
             $routeProvider
                 .when('/form.html', {controller: 'ListController', templateUrl: root + '/static/ng/views/form-list.html'})
@@ -31,7 +32,8 @@ angular.module('Form',
     .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
         function($scope, $window, $location, $resource, $http, $routeParams, personService, dialogs) {
 
-            $scope.context = $window.piecework.context;
+            $scope.context = window.piecework.context;
+            //$window.piecework.context;
 
             $scope.fileUploadOptions = {
                 autoUpload: true
@@ -44,7 +46,7 @@ angular.module('Form',
 
             };
             $scope.deleteAttachment = function(attachment) {
-                $http.delete(attachment.link).then($scope.refreshAttachments);
+                $http['delete'](attachment.link).then($scope.refreshAttachments);
             }
             $scope.editAttachments = function() {
                 $scope.isEditingAttachments = !$scope.isEditingAttachments;
@@ -137,16 +139,25 @@ angular.module('Form',
                 processDefinitionKey:$routeParams.processDefinitionKey,
                 requestId: $routeParams.requestId
             };
-            var form = Form.get($scope.criteria, $scope.refreshForm);
+
             $scope.$on('event:refresh', function(event, message) {
                 $scope.refreshing = true;
-                form.$get($scope.criteria, $scope.refreshForm);
+                Form.get($scope.criteria, $scope.refreshForm);
             });
+
+            $scope.model = $window.piecework.model;
+            if (typeof($scope.model) !== 'undefined' && typeof($scope.model.total) === 'undefined') {
+                $scope.refreshForm($scope.model);
+                delete $scope['model'];
+            } else {
+                Form.get($scope.criteria, $scope.refreshForm);
+            }
         }
     ])
     .controller('ListController', ['$scope', '$window', '$resource', '$http', '$routeParams','$modal', 'personService', 'taskService', 'dialogs',
         function($scope, $window, $resource, $http, $routeParams, $modal, personService, taskService, dialogs) {
             $scope.context = $window.piecework.context;
+            //$window.piecework.context;
             $scope.processSearchResults = function(results) {
                 $scope.definitions = results.definitions;
                 $scope.forms = results.list;
@@ -163,7 +174,7 @@ angular.module('Form',
             $scope.criteria.processStatus = 'open';
             $scope.criteria.taskStatus = 'all';
             var SearchResults = $resource('./form', {processStatus:'@processStatus'});
-            var results = SearchResults.get($scope.criteria, $scope.processSearchResults);
+            //var results = SearchResults.get($scope.criteria, $scope.processSearchResults);
 
             $scope.processStatusDescription = {
                 'open': 'Active',
@@ -221,7 +232,7 @@ angular.module('Form',
             $scope.$on('event:refresh', function(event, message) {
                 $scope.searching = true;
                 $scope.selectedFormMap = new Object();
-                results.$get($scope.criteria, $scope.processSearchResults);
+                SearchResults.get($scope.criteria, $scope.processSearchResults);
             });
 
             $scope.dialogs = dialogs;
@@ -237,12 +248,20 @@ angular.module('Form',
                     delete $scope.selectedFormMap[form.formInstanceId];
             };
 
+            $scope.model = $window.piecework.model;
+            //if (typeof($window.piecework) !== 'undefined' && typeof($window.piecework.model) !== 'undefined' && typeof($window.piecework.model.total) !== 'undefined') {
+            if (typeof($scope.model) !== 'undefined' && typeof($window.piecework.model.total) !== 'undefined') {
+                $scope.processSearchResults($scope.model);
+                delete $scope['model'];
+            } else {
+                SearchResults.get($scope.criteria, $scope.processSearchResults);
+            }
         }
     ])
     .factory('controllerService', ['instanceService', 'notificationService', 'personService', 'taskService',
         function(instanceService, notificationService, personService, taskService) {
             return {
-                'ActivationModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
+                'ActivationModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (reason) {
                         var checkActivationStatuses = function(scope) {
@@ -284,8 +303,8 @@ angular.module('Form',
                     $scope.cancel = function () {
                         $modalInstance.dismiss('cancel');
                     };
-                },
-                'AssignmentModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
+                }],
+                'AssignmentModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.getPeople = personService.getPeople;
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (assignee) {
@@ -331,8 +350,8 @@ angular.module('Form',
                     $scope.cancel = function () {
                         $modalInstance.dismiss('cancel');
                     };
-                },
-                'CancellationModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
+                }],
+                'CancellationModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (reason) {
                         var checkStatuses = function(scope) {
@@ -374,8 +393,8 @@ angular.module('Form',
                     $scope.cancel = function () {
                         $modalInstance.dismiss('cancel');
                     };
-                },
-                'CommentModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
+                }],
+                'CommentModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (comment) {
                         var checkStatuses = function(scope) {
@@ -419,8 +438,8 @@ angular.module('Form',
                     $scope.cancel = function () {
                         $modalInstance.dismiss('cancel');
                     };
-                },
-                'HistoryModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
+                }],
+                'HistoryModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.loading = true;
                     notificationService.clear($scope);
@@ -458,8 +477,8 @@ angular.module('Form',
                     $scope.cancel = function () {
                         $modalInstance.dismiss('cancel');
                     };
-                },
-                'SuspensionModalController': function ($rootScope, $scope, $modalInstance, selectedForms) {
+                }],
+                'SuspensionModalController': ['$rootScope', '$scope', '$modalInstance', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (reason) {
                         var checkStatuses = function(scope) {
@@ -501,13 +520,14 @@ angular.module('Form',
                     $scope.cancel = function () {
                         $modalInstance.dismiss('cancel');
                     };
-                }
+                }]
             }
         }
     ])
     .factory('dialogs', ['$modal','controllerService','notificationService', 'personService','taskService',
         function($modal, controllerService, notificationService, personService, taskService) {
-            var root = window.piecework.context.static;
+            var context = window.piecework.context;
+            var root = context['static'];
             return {
                 openActivateModal: function(selectedForms) {
                     var modalInstance = $modal.open({
@@ -654,8 +674,8 @@ angular.module('Form',
             };
         }
     ])
-    .factory('notificationService', [
-        function() {
+    .factory('notificationService', ['$http',
+        function($http) {
             return {
                 clear: function($scope) {
                     delete $scope['notifications'];

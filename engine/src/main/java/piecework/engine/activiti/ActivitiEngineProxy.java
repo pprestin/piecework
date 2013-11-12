@@ -183,7 +183,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
 
         try {
-            org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().processDefinitionKey(engineProcessDefinitionKey).taskId(taskId).singleResult();
+            org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().taskId(taskId).singleResult();
 
             if (activitiTask != null)  {
                 Map<String, Object> variables = new HashMap<String, Object>();

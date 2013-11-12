@@ -26,22 +26,29 @@ import piecework.model.Container;
  */
 public class ActivityUtil {
 
-    public static Container container(Activity activity, ActionType actionType) {
-        Action action = activity.action(ActionType.CREATE);
+    public static Container parent(Activity activity, ActionType actionType) {
+        Action action = activity.action(actionType != null ? actionType : ActionType.CREATE);
         if (action == null)
             return null;
 
         Container container = action.getContainer();
+        return container;
+    }
+
+    public static Container child(Activity activity, ActionType actionType, Container parent) {
+
+        if (parent == null)
+            parent = parent(activity, actionType);
 
         if (activity.getUsageType() == ActivityUsageType.USER_WIZARD) {
-            int activeChildIndex = container.getActiveChildIndex();
+            int activeChildIndex = parent.getActiveChildIndex();
 
-            if (activeChildIndex != -1 && container.getChildren() != null && container.getChildren().size() >= activeChildIndex) {
-                return container.getChildren().get(activeChildIndex - 1);
+            if (activeChildIndex != -1 && parent.getChildren() != null && parent.getChildren().size() >= activeChildIndex) {
+                return parent.getChildren().get(activeChildIndex - 1);
             }
         }
 
-        return container;
+        return parent;
     }
 
 }

@@ -73,16 +73,7 @@ public class ProcessService {
     ProcessRepository processRepository;
 
     @Autowired
-    InteractionRepository interactionRepository;
-
-    @Autowired
-    NotificationRepository notificationRepository;
-
-    @Autowired
-    ScreenRepository screenRepository;
-
-    @Autowired
-    SectionRepository sectionRepository;
+    ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
     Sanitizer sanitizer;
@@ -101,13 +92,28 @@ public class ProcessService {
         return processRepository.save(builder.build());
     }
 
-    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource) throws StatusCodeError {
+    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting) throws StatusCodeError {
         Process process = create(rawProcess);
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
         deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
         publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         process = read(process.getProcessDefinitionKey());
+
+        if (migrateExisting)
+            migrate(process);
+
         return process;
+    }
+
+    private void migrate(Process process) {
+        List<ProcessInstance> all = processInstanceRepository.findByProcessDefinitionKey(process.getProcessDefinitionKey());
+
+        if (all != null && !all.isEmpty()) {
+            for (ProcessInstance instance : all) {
+                ProcessInstance.Builder builder = new ProcessInstance.Builder(instance).deploymentId(process.getDeploymentId());
+                processInstanceRepository.save(builder.build());
+            }
+        }
     }
 
     public ProcessDeployment createDeployment(String rawProcessDefinitionKey) throws StatusCodeError {
@@ -459,18 +465,20 @@ public class ProcessService {
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
         builder.deploymentLabel(update.getDeploymentLabel());
 
-
-
         return cascadeSave(builder.build(), selectedDeploymentVersion.getVersion(), false);
     }
 
-    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource) throws StatusCodeError {
+    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting) throws StatusCodeError {
         Process process = read(rawProcess.getProcessDefinitionKey());
                 //update(rawProcess.getProcessDefinitionKey(), rawProcess);
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
         deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
         publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
         process = read(process.getProcessDefinitionKey());
+
+        if (migrateExisting)
+            migrate(process);
+
         return process;
     }
 

@@ -202,7 +202,7 @@ public class Activity implements Serializable, Decorateable<Activity> {
             return this;
         }
 
-        public Builder appendFields(Set<Field> fields) {
+        public Builder appendFields(Collection<Field> fields) {
             if (fields != null)
                 this.fields.addAll(fields);
             return this;

@@ -270,6 +270,12 @@ public class Container implements Serializable {
             return this;
         }
 
+        public Builder children(Collection<Container> children) {
+            if (children != null && !children.isEmpty())
+                this.children = new ArrayList<Container>(children);
+            return this;
+        }
+
         public Builder button(Button button) {
             if (this.buttons == null)
                 this.buttons = new ArrayList<Button>();

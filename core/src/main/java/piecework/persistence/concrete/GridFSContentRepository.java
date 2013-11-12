@@ -19,6 +19,17 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
+import org.apache.cxf.common.util.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
@@ -27,6 +38,8 @@ import org.springframework.stereotype.Service;
 import piecework.persistence.ContentRepository;
 import piecework.model.Content;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,15 +53,85 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 @Service
 public class GridFSContentRepository implements ContentRepository {
 
+    private static final Logger LOG = Logger.getLogger(GridFSContentRepository.class);
+
     @Autowired
     GridFsOperations gridFsOperations;
+
+    private CloseableHttpClient client;
+
+    @PostConstruct
+    public void init() {
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cm.setMaxTotal(100);
+        this.client = HttpClients.custom().setConnectionManager(cm).build();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (this.client != null) {
+            try {
+                this.client.close();
+            } catch (IOException ioe) {
+                LOG.error("Unable to close http client", ioe);
+            }
+        }
+    }
 
     @Override
     public Content findByLocation(String location) {
         if (location == null)
             return null;
 
-        GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
+        String storageLocation = location;
+        GridFSDBFile file = null;
+
+        int indexOf = storageLocation.indexOf("://");
+        if (indexOf == -1 || (indexOf + 3 ) >= storageLocation.length()) {
+            // If the storage location doesn't have a :// it's not remote so just retrieve it
+            file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
+        } else {
+            // A known protocol is necessary if we're going to retrieve the item remotely
+            String protocol = location.substring(0, indexOf);
+            if (StringUtils.isEmpty(protocol) || (!protocol.equals("http") && !protocol.equals("https")))
+                return null;
+
+            storageLocation = "/remote/" + location.substring((indexOf+3));
+
+            // Check to see if we already have a cached copy of this file
+            file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
+            if (file != null) {
+                LOG.debug("Retrieved remote resource " + location + " from " + storageLocation);
+                // TODO: Add logic to check normal caching and time-to-live based on expires header
+                DBObject metadata = file.getMetaData();
+                return toContent(file);
+            }
+
+            HttpContext context = new BasicHttpContext();
+            HttpGet get = new HttpGet(location);
+            CloseableHttpResponse response = null;
+            try {
+                LOG.debug("Retrieving resource from " + location);
+                response = client.execute(get, context);
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    BasicDBObject metadata = new BasicDBObject();
+                    metadata.put("originalFilename", location);
+                    gridFsOperations.store(entity.getContent(), storageLocation, entity.getContentType().getValue(), metadata);
+                    file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
+                }
+            } catch (Exception e) {
+                LOG.error("Unable to retrieve remote resource", e);
+            } finally {
+                if (response != null) {
+                    try {
+                        response.close();
+                    } catch (IOException ioe) {
+                        LOG.error("Unable to close response", ioe);
+                    }
+                }
+            }
+        }
 
         if (file == null)
             return null;

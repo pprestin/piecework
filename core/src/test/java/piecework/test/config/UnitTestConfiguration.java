@@ -338,6 +338,11 @@ public class UnitTestConfiguration {
         }
 
         @Override
+        public List<ProcessInstance> findByProcessDefinitionKey(String processDefinitionKey) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
         public List<ProcessInstance> findByProcessInstanceIdInAndKeywordsRegex(Iterable<String> processInstanceIds, String keyword) {
             return null;
         }

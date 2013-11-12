@@ -1,0 +1,75 @@
+<div data-ng-show="notifications" class="alert alert-danger">
+    <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
+    <ul>
+        <li data-ng-repeat="notification in notifications" data-ng-bind-html="notification.message"></li>
+    </ul>
+</div>
+<div data-ng-show="form.container.readonly">
+    <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
+    <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime}}</div>
+    <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
+    <div data-ng-show="form.state == 'cancelled'"class="alert alert-info">This form can no longer be modified - it has been cancelled</div>
+</div>
+<div class="notifications"></div>
+<div>
+    <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
+        <div class="row">
+            <div class="crumbs col-md-3">
+                <ul class="breadcrumb-stacked">
+                    <li ng-repeat="step in form.steps" ng-class="form.activeStep == step.ordinal ? 'active' : ''">
+                        <a ng-show="step.ordinal <= form.container.activeChildIndex" ng-click="form.activeStep = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                        <span ng-show="step.ordinal > form.container.activeChildIndex">{{step.breadcrumb}}</span>
+                    </li>
+                </ul>
+            </div>
+            <div ng-class="isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen" id="{{container.containerId}}">
+                <div ng-repeat="step in form.steps" ng-show="form.activeStep == step.ordinal" class="screen-content">
+                    <h2>{{form.container.title}}</h2>
+                    <h4>{{step.title}}</h4>
+                    <ul data-ng-model="step.fields">
+                        <li data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'../static/ng/views/field.html'" class="pw-field"></li>
+                    </ul>
+                </div>
+                <div class="screen-footer">
+                    <div class="btn-toolbar pull-right" role="toolbar">
+                        <button data-ng-repeat="button in form.container.buttons" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+            <div ng-show="isViewingAttachments" class="pw-attachments col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="isEditingAttachments ? 'fa fa-unlock' : 'fa fa-lock'" class="fa fa-lock"></i></button>
+                        <span class="lead">Notes</span>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item" data-ng-repeat="attachment in attachments">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button data-ng-show="isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="text-danger close " type="button">&times;</button>
+                                    <span data-ng-switch on="attachment.contentType">
+                                        <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
+                                        <span data-ng-switch-default class="pw-attachment-file">
+                                            <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" title="{{attachment.description}}">{{attachment.description}}</a>
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="pull-right text-muted">{{attachment.user.displayName}}</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="pull-right text-muted">{{attachment.lastModified|date:'MMM d, y H:mm'}}</div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
