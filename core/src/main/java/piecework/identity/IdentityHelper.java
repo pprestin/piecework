@@ -30,6 +30,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.authorization.AccessAuthority;
+import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAuthority;
 import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
@@ -37,6 +39,7 @@ import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityDetails;
 import piecework.model.Process;
+import piecework.model.Task;
 import piecework.model.User;
 import piecework.persistence.ProcessRepository;
 
@@ -48,6 +51,9 @@ import piecework.service.IdentityService;
  */
 @Service
 public class IdentityHelper {
+
+//    @Autowired
+//    AuthorizationRoleMapper authorizationRoleMapper;
 
 	@Autowired
 	ProcessRepository processRepository;
@@ -76,11 +82,32 @@ public class IdentityHelper {
     }
 
     public User getCurrentUser() {
-        IdentityDetails principal = getAuthenticatedPrincipal();
+        IdentityDetails principal = null;
+        Collection<? extends GrantedAuthority> authorities = null;
+        SecurityContext context = SecurityContextHolder.getContext();
+        if (context != null) {
+            Authentication authentication = context.getAuthentication();
+
+            if (authentication != null) {
+                Object principalAsObject = authentication.getPrincipal();
+                if (principalAsObject instanceof IdentityDetails)
+                    principal = IdentityDetails.class.cast(principalAsObject);
+                authorities = authentication.getAuthorities();
+            }
+        }
         if (principal == null)
             return null;
 
-        return new User.Builder(principal).build();
+        AccessAuthority accessAuthority = null;
+        if (authorities != null && !authorities.isEmpty()) {
+            for (GrantedAuthority authority : authorities) {
+                if (authority instanceof AccessAuthority) {
+                    accessAuthority = AccessAuthority.class.cast(authority);
+                }
+            }
+        }
+
+        return new User.Builder(principal).accessAuthority(accessAuthority).build();
     }
 
     public IdentityDetails getAuthenticatedPrincipal() {
@@ -134,9 +161,9 @@ public class IdentityHelper {
 		Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
 		if (authorities != null && !authorities.isEmpty()) {
 			for (GrantedAuthority authority : authorities) {		
-				if (authority instanceof ResourceAuthority) {
-					ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
-                    Set<String> processDefinitionKeys = resourceAuthority.getProcessDefinitionKeys(allowedRoleSet);
+				if (authority instanceof AccessAuthority) {
+                    AccessAuthority accessAuthority = AccessAuthority.class.cast(authority);
+                    Set<String> processDefinitionKeys = accessAuthority.getProcessDefinitionKeys(allowedRoleSet);
                     if (processDefinitionKeys != null)
                         allowedProcessDefinitionKeys.addAll(processDefinitionKeys);
 				}
@@ -162,14 +189,43 @@ public class IdentityHelper {
             Set<String> allowedRoleSet = allowedRoles != null && allowedRoles.length > 0 ? Sets.newHashSet(allowedRoles) : null;
             if (authorities != null && !authorities.isEmpty()) {
                 for (GrantedAuthority authority : authorities) {
-                    if (authority instanceof ResourceAuthority) {
-                        ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
-                        if (resourceAuthority.hasRole(process, allowedRoleSet))
+                    if (authority instanceof AccessAuthority) {
+                        AccessAuthority accessAuthority = AccessAuthority.class.cast(authority);
+                        if (accessAuthority.hasRole(process, allowedRoleSet))
                             return true;
                     }
                 }
             }
         }
+
+        return false;
+    }
+	
+    // returns true if my roleIds includes one of my roles
+    // returns false otherwise
+    public boolean isCandidateOrAssignee(User user, Task task) {
+        String userId = user != null ? user.getUserId() : null;
+        if (userId == null)
+            return false;  // no signed in user
+
+        // Check to see if the user is the assignee
+        String assigneeId = task.getAssigneeId();
+        if (StringUtils.isNotEmpty(assigneeId) && userId.equals(assigneeId))
+            return true;
+
+        Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
+        // sanity check
+        if ( candidateAssigneeIds == null || candidateAssigneeIds.isEmpty())
+            return false;
+
+        // Check if user is a candidate assignee
+        if (candidateAssigneeIds.contains(userId))
+            return true;
+
+        // Check if the user has access authority based on a group id that is in the collection of candidate assignee ids
+        AccessAuthority accessAuthority = user.getAccessAuthority();
+        if (accessAuthority != null && accessAuthority.hasGroup(candidateAssigneeIds))
+            return true;
 
         return false;
     }

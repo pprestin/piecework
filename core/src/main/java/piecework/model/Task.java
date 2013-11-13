@@ -437,6 +437,11 @@ public class Task implements Serializable, Comparable<Task> {
             return this;
         }
 
+        public Builder candidateAssigneeId(String candidateAssigneeId) {
+            this.candidateAssigneeIds.add(candidateAssigneeId);
+            return this;
+        }
+
         public Builder startTime(Date startTime) {
             this.startTime = startTime;
             return this;

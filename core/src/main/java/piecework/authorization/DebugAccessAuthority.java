@@ -15,6 +15,7 @@
  */
 package piecework.authorization;
 
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.model.Process;
 import piecework.persistence.ProcessRepository;
@@ -26,13 +27,18 @@ import java.util.Set;
 /**
  * @author James Renfro
  */
-public class DebugResourceAuthority extends ResourceAuthority {
+public class DebugAccessAuthority extends AccessAuthority {
 
     private final ProcessRepository processRepository;
 
-    public DebugResourceAuthority(ProcessRepository processRepository) {
+    public DebugAccessAuthority(ProcessRepository processRepository) {
         super();
         this.processRepository = processRepository;
+    }
+
+    @Override
+    public boolean hasGroup(Set<String> allowedGroupIds) {
+        return true;
     }
 
     @Override

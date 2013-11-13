@@ -29,7 +29,6 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.ProcessInstanceService;
 import piecework.service.TaskService;
 import piecework.validation.FormValidation;
@@ -189,14 +188,9 @@ public class RequestHandler {
 
                 throw new ForbiddenError();
             }
-
-            if (task != null && (task.getAssigneeId() == null || !task.getAssigneeId().equals(currentUser.getUserId()))) {
-                // If the user is not the assignee then she or he needs to be a candidate assignee
-                Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
-                if (candidateAssigneeIds == null || !candidateAssigneeIds.contains(currentUser.getUserId())) {
-                    LOG.warn("Forbidden: Unauthorized user " + currentUser.getDisplayName() + " (" + currentUser.getUserId() + ") attempting to access task " + taskId);
-                    throw new ForbiddenError();
-                }
+            if (task != null && ! identityHelper.isCandidateOrAssignee(currentUser, task)) {
+                LOG.warn("Forbidden: Unauthorized user " + currentUser.getDisplayName() + " (" + currentUser.getUserId() + ") attempting to access task " + taskId);
+                throw new ForbiddenError();
             }
         }
     }

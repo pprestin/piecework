@@ -43,14 +43,16 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
             if (LOG.isDebugEnabled())
                 start = System.currentTimeMillis();
 
-            Collection<ResourceAuthority> mapped = new ArrayList<ResourceAuthority>();
+            AccessAuthority.Builder builder = new AccessAuthority.Builder();
+
 			Set<String> authorizationIds = new HashSet<String>();
             for (GrantedAuthority authority : authorities) {
-                if (authority instanceof DebugResourceAuthority) {
-                    mapped.add((DebugResourceAuthority)authority);
+                if (authority instanceof DebugAccessAuthority) {
+                    return Collections.singletonList((DebugAccessAuthority)authority);
                 } else {
 				    String authorizationId = authority.getAuthority();
                     authorizationIds.add(authorizationId);
+                    builder.groupId(authorizationId);
                 }
 			}
 
@@ -61,7 +63,7 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
                         List<ResourceAuthority> resourceAuthorities = authorization.getAuthorities();
                         if (resourceAuthorities != null && !resourceAuthorities.isEmpty()) {
                             for (ResourceAuthority resourceAuthority : resourceAuthorities) {
-                                mapped.add(resourceAuthority);
+                                builder.resourceAuthority(resourceAuthority);
                             }
                         }
                     }
@@ -71,7 +73,7 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
             if (LOG.isDebugEnabled())
                 LOG.debug("Mapped authorization roles in " + (System.currentTimeMillis() - start) + " ms");
 
-			return mapped;
+			return Collections.singletonList(builder.build());
 		}
 		
 		return null;

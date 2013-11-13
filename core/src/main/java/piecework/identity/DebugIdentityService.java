@@ -17,16 +17,13 @@ package piecework.identity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import piecework.authorization.DebugResourceAuthority;
-import piecework.authorization.ResourceAuthority;
+import piecework.authorization.DebugAccessAuthority;
 import piecework.model.User;
 import piecework.persistence.ProcessRepository;
 import piecework.service.IdentityService;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -67,7 +64,7 @@ public class DebugIdentityService implements IdentityService {
             displayName = environment.getProperty("authentication.testuser.displayName");
 
         UserDetails delegate = new org.springframework.security.core.userdetails.User(id, "none",
-                Collections.singletonList(new DebugResourceAuthority(processRepository)));
+                Collections.singletonList(new DebugAccessAuthority(processRepository)));
         return new IdentityDetails(delegate, id, id, displayName, "");
     }
 }

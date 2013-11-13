@@ -44,19 +44,18 @@ public class ResourceAccessVoter extends RoleVoter {
 
         if (object instanceof MethodInvocation) {
         	MethodInvocation methodInvocation = MethodInvocation.class.cast(object);
-        	
+            String processDefinitionKey = getProcessDefinitionKey(methodInvocation);
+
 	        for (ConfigAttribute attribute : attributes) {
 	            if (this.supports(attribute)) {
 	                result = ACCESS_DENIED;
-	
+
 	                // Attempt to find a matching granted authority
 	                for (GrantedAuthority authority : authorities) {
-	                	String processDefinitionKey = getProcessDefinitionKey(methodInvocation);
-	                
-	                	if (authority instanceof ResourceAuthority) {
-	                		ResourceAuthority resourceAuthority = ResourceAuthority.class.cast(authority);
+	                	if (authority instanceof AccessAuthority) {
+                            AccessAuthority accessAuthority = AccessAuthority.class.cast(authority);
 	                		String roleAllowed = attribute.getAttribute();
-	                		if (resourceAuthority.isAuthorized(roleAllowed, processDefinitionKey))
+	                		if (accessAuthority.isAuthorized(roleAllowed, processDefinitionKey))
 	                			return ACCESS_GRANTED;
 	                	}	
 	                }

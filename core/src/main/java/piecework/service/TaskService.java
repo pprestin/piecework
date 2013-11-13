@@ -96,27 +96,13 @@ public class TaskService {
 
         boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
 
-        String currentUserId = !hasOversight ? helper.getAuthenticatedSystemOrUserId() : null;
+        User currentUser = !hasOversight ? helper.getCurrentUser() : null;
 
         for (Task task : tasks) {
             if (limitToActive && !task.isActive())
                 continue;
 
-            if (taskId != null && !task.getTaskInstanceId().equals(taskId))
-                continue;
-
-            if (!hasOversight) {
-                if (currentUserId == null)
-                    break;
-
-                boolean isCandidate = !task.getCandidateAssigneeIds().isEmpty() && task.getCandidateAssigneeIds().contains(currentUserId);
-                if (isCandidate)
-                    return rebuildTask(task, new PassthroughSanitizer());
-
-                boolean isAssignee = task.getAssigneeId() != null && task.getAssigneeId().equals(currentUserId);
-                if (isAssignee)
-                    return rebuildTask(task, new PassthroughSanitizer());
-            } else {
+            if ( hasOversight || helper.isCandidateOrAssignee(currentUser, task) ) {
                 return rebuildTask(task, new PassthroughSanitizer());
             }
         }
@@ -163,7 +149,7 @@ public class TaskService {
         Set<String> overseerProcessDefinitionKeys = processDefinitionKeys(overseerProcesses);
         Set<String> userProcessDefinitionKeys = processDefinitionKeys(userProcesses);
 
-        String currentUserId = helper.getAuthenticatedSystemOrUserId();
+        User currentUser = helper.getCurrentUser();
 
         ViewContext taskViewContext = versions.getVersion1();
 
@@ -233,17 +219,24 @@ public class TaskService {
                 String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
                 String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.ALL;
                 int count = 0;
-                for (ProcessInstance instance : page.getContent()) {
-                    ProcessDeployment processDeployment = null;
-                    if (wrapWithForm) {
-                        processDeployment = deploymentMap.get(instance.getDeploymentId());
-                        if (processDeployment == null && StringUtils.isNotEmpty(instance.getDeploymentId())) {
-                            processDeployment = deploymentRepository.findOne(instance.getDeploymentId());
-                            if (processDeployment != null) {
-                                deploymentMap.put(processDeployment.getDeploymentId(), processDeployment);
-                            }
+                if (wrapWithForm) {
+                    Set<String> deploymentIds = new HashSet<String>();
+                    for (ProcessInstance instance : page.getContent()) {
+                        if (instance.getDeploymentId() != null)
+                            deploymentIds.add(instance.getDeploymentId());
+                    }
+                    Iterable<ProcessDeployment> deployments = deploymentRepository.findAll(deploymentIds);
+                    if (deployments != null) {
+                        for (ProcessDeployment deployment : deployments) {
+                            deploymentMap.put(deployment.getDeploymentId(), deployment);
                         }
                     }
+                }
+
+                for (ProcessInstance instance : page.getContent()) {
+                    ProcessDeployment processDeployment = null;
+                    if (wrapWithForm)
+                        processDeployment = deploymentMap.get(instance.getDeploymentId());
 
                     Set<Task> tasks = instance.getTasks();
                     if (tasks != null && !tasks.isEmpty()) {
@@ -256,35 +249,31 @@ public class TaskService {
                                     !taskStatus.equalsIgnoreCase(task.getTaskStatus()))
                                 continue;
 
-                            if (!overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())) {
-                                if (task.getCandidateAssigneeIds() == null || task.getAssigneeId() == null)
-                                    continue;
-                                if (!task.getCandidateAssigneeIds().contains(currentUserId) && !task.getAssigneeId().equals(currentUserId))
-                                    continue;
-                            }
+                            if (overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())
+                                || helper.isCandidateOrAssignee(currentUser, task) ) {
+                                Task rebuilt = rebuildTask(task, passthroughSanitizer);
 
-                            Task rebuilt = rebuildTask(task, passthroughSanitizer);
+                                if (wrapWithForm) {
+                                    if (processDeployment != null) {
+                                        Activity activity = processDeployment != null ? processDeployment.getActivity(task.getTaskDefinitionKey()) : null;
+                                        Action createAction = activity != null ? activity.action(ActionType.CREATE) : null;
 
-                            if (wrapWithForm) {
-                                if (processDeployment != null) {
-                                    Activity activity = processDeployment != null ? processDeployment.getActivity(task.getTaskDefinitionKey()) : null;
-                                    Action createAction = activity != null ? activity.action(ActionType.CREATE) : null;
+                                        boolean external = createAction != null && StringUtils.isNotEmpty(createAction.getLocation());
 
-                                    boolean external = createAction != null && StringUtils.isNotEmpty(createAction.getLocation());
-
-                                    resultsBuilder.item(new Form.Builder()
-                                            .formInstanceId(rebuilt.getTaskInstanceId())
-                                            .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
-                                            .processDefinitionKey(rebuilt.getProcessDefinitionKey())
-                                            .instanceSubresources(rebuilt.getProcessDefinitionKey(),
-                                                    rebuilt.getProcessInstanceId(), null, 0, version1)
-                                            .external(external)
-                                            .build(version1));
+                                        resultsBuilder.item(new Form.Builder()
+                                                .formInstanceId(rebuilt.getTaskInstanceId())
+                                                .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
+                                                .processDefinitionKey(rebuilt.getProcessDefinitionKey())
+                                                .instanceSubresources(rebuilt.getProcessDefinitionKey(),
+                                                        rebuilt.getProcessInstanceId(), null, 0, version1)
+                                                .external(external)
+                                                .build(version1));
+                                    }
+                                } else {
+                                    resultsBuilder.item(rebuilt);
                                 }
-                            } else
-                                resultsBuilder.item(rebuilt);
-
-                            count++;
+                                count++;
+                            }
                         }
                     }
                 }
@@ -332,7 +321,12 @@ public class TaskService {
         Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
         if (candidateAssigneeIds != null && !candidateAssigneeIds.isEmpty()) {
             for (String candidateAssigneeId : candidateAssigneeIds) {
-                builder.candidateAssignee(identityService.getUser(candidateAssigneeId));
+                User user = identityService.getUser(candidateAssigneeId);
+                if ( user != null ) {
+                    builder.candidateAssignee(user);
+                } else {
+                    builder.candidateAssigneeId(candidateAssigneeId);  // group ID
+                }
             }
         }
 
