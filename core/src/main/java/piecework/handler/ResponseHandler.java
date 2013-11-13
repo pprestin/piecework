@@ -93,7 +93,7 @@ public class ResponseHandler {
 
                 location = deployment.getBase() + "/" + location;
 
-                Content content = content(location);
+                Content content = content(location, acceptableMediaTypes);
                 return Response.ok(new StreamingPageContent(process, form, content, action.getStrategy()), content.getContentType()).build();
             }
         }
@@ -105,18 +105,26 @@ public class ResponseHandler {
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
     }
 
-    public Content content(String location) throws StatusCodeError {
+    public Content content(String location, List<MediaType> acceptableMediaTypes) throws StatusCodeError {
         // If the location is not blank then retrieve from that location
         Content content;
         if (location.startsWith("classpath:")) {
             String classpathLocation = location.substring("classpath:".length());
             ClassPathResource resource = new ClassPathResource(classpathLocation);
             try {
-                if (!resource.exists())
-                    resource = new ClassPathResource(classpathLocation + ".js");
+                String contentType = null;
+                if (!resource.exists() && acceptableMediaTypes.size() == 1) {
+                    MediaType mediaType = acceptableMediaTypes.get(0);
+                    contentType = mediaType.toString();
+                    if (contentType.equals("text/javascript"))
+                        resource = new ClassPathResource(classpathLocation + ".js");
+                    else if (contentType.equals("text/css"))
+                        resource = new ClassPathResource(classpathLocation + ".css");
+                }
 
                 BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
-                String contentType = URLConnection.guessContentTypeFromStream(inputStream);
+                if (contentType == null)
+                    contentType = URLConnection.guessContentTypeFromStream(inputStream);
                 if (contentType == null) {
                     if (location.endsWith(".css"))
                         contentType = "text/css";

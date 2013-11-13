@@ -135,6 +135,7 @@ public class ApplicationConfiguration {
     @Bean
     public Server applicationServer() {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
+        extensionMappings.put("css", "text/css");
         extensionMappings.put("js", "text/javascript");
         extensionMappings.put("json", "application/json");
         extensionMappings.put("xml", "application/xml");
@@ -151,7 +152,7 @@ public class ApplicationConfiguration {
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);
         providers.add(jsonProvider);
-        providers.add(javascriptProvider);
+//        providers.add(javascriptProvider);
         sf.setProviders(providers);
 
         BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);

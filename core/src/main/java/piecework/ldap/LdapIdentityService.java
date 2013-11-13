@@ -163,10 +163,15 @@ public class LdapIdentityService implements IdentityService {
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieving user by internalId " + internalId);
 
-        DirContextOperations userData = internalUserSearch.searchForUser(internalId);
-        String username = userData.getStringAttribute(ldapSettings.getLdapPersonAttributeIdInternal());
-        if (username == null)
-            return null;
+        DirContextOperations userData;
+        String username;
+        try {
+            userData = internalUserSearch.searchForUser(internalId);
+            username = userData.getStringAttribute(ldapSettings.getLdapPersonAttributeIdInternal());
+        } catch (UsernameNotFoundException nfe) {
+            cache.put(internalId, null);
+            throw nfe;
+        }
 
         UserDetails userDetails = userDetailsMapper.mapUserFromContext(userData, username,
                 authoritiesPopulator.getGrantedAuthorities(userData, username));

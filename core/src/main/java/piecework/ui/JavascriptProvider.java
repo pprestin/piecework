@@ -27,6 +27,7 @@ import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -41,6 +42,7 @@ import piecework.model.Form;
 import piecework.model.SearchResults;
 import piecework.model.User;
 import piecework.persistence.ContentRepository;
+import piecework.service.FormTemplateService;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -62,13 +64,13 @@ import java.util.Map;
 @Provider
 @Service
 public class JavascriptProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
-    private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
+    private static final Logger LOG = Logger.getLogger(JavascriptProvider.class);
 
     @Autowired
-    ContentRepository contentRepository;
+    Environment environment;
 
     @Autowired
-    private Environment environment;
+    FormTemplateService formTemplateService;
 
     @Autowired
     JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
@@ -80,7 +82,7 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
 
     @Override
     public long getSize(Object t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        Resource resource = getScriptResource(type, t);
+        Resource resource = formTemplateService.getExternalScriptResource(type, t);
         long size = 0;
         if (resource.exists()) {
             try {
@@ -121,7 +123,7 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
             Form form = Form.class.cast(t);
 
             if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
-                Resource script = getExternalScriptResource(type, t);
+                Resource script = formTemplateService.getExternalScriptResource(type, t);
                 InputStream input = script.getInputStream();
 
                 String applicationTitle = environment.getProperty("application.name");
@@ -153,14 +155,14 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
             }
         }
 
-        Resource script = getScriptResource(type, t);
-        if (script.exists()) {
-            InputStream input = script.getInputStream();
-            IOUtils.copy(input, writer);
-            writer.flush();
-        } else {
+//        Resource script = formTemplateService.getScriptResource(type, t);
+//        if (script.exists()) {
+//            InputStream input = script.getInputStream();
+//            IOUtils.copy(input, writer);
+//            writer.flush();
+//        } else {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
-        }
+//        }
     }
 
     private boolean hasScriptResource(Class<?> type) {
@@ -169,112 +171,9 @@ public class JavascriptProvider extends AbstractConfigurableProvider implements 
         if (InputStream.class.isAssignableFrom(type))
             return false;
 
-        Resource resource = getTemplateResource(type, null);
+        Resource resource = formTemplateService.getTemplateResource(type, null);
         return resource != null && resource.exists();
     }
 
-    private Resource getScriptResource(Class<?> type, Object t) {
-        Resource template = getTemplateResource(type, t);
-        if (!template.exists())
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
 
-        CleanerProperties cleanerProperties = new CleanerProperties();
-        cleanerProperties.setOmitXmlDeclaration(true);
-        HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-        User user = getAuthenticatedUser();
-        ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
-        OptimizingHtmlProviderVisitor visitor =
-                new OptimizingHtmlProviderVisitor(t, type, user, objectMapper, environment, contentRepository);
-
-        try {
-            TagNode node = cleaner.clean(template.getInputStream());
-            node.traverse(visitor);
-        } catch (IOException ioe) {
-            LOG.error("Unable to read template", ioe);
-        }
-        return visitor.getScriptResource();
-    }
-
-    private Resource getExternalScriptResource(Class<?> type, Object t) {
-        String scriptsDirectory = environment.getProperty("scripts.directory");
-
-        StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
-
-        if (type.equals(SearchResults.class)) {
-            SearchResults results = SearchResults.class.cast(t);
-            templateNameBuilder.append(".").append(results.getResourceName());
-        }
-
-        templateNameBuilder.append(".js");
-
-        String templateName = templateNameBuilder.toString();
-        Resource resource = null;
-        if (scriptsDirectory != null && !scriptsDirectory.equals("${scripts.directory}")) {
-            resource = new FileSystemResource(scriptsDirectory + File.separator + templateName);
-
-            if (!resource.exists())
-                resource = new FileSystemResource(scriptsDirectory + File.separator + "script.js");
-
-        } else {
-            resource = new ClassPathResource("META-INF/piecework/scripts/" + templateName);
-
-            if (!resource.exists())
-                resource = new ClassPathResource("META-INF/piecework/scripts/" + "script.js");
-        }
-
-        return resource;
-    }
-
-    private Resource getTemplateResource(Class<?> type, Object t) {
-        String templatesDirectory = environment.getProperty("templates.directory");
-
-        StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
-
-        if (type.equals(SearchResults.class)) {
-            SearchResults results = SearchResults.class.cast(t);
-            templateNameBuilder.append(".").append(results.getResourceName());
-        }
-
-        templateNameBuilder.append(".template.html");
-
-        String templateName = templateNameBuilder.toString();
-        Resource resource = null;
-        if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}")) {
-            resource = new FileSystemResource(templatesDirectory + File.separator + templateName);
-
-            if (!resource.exists())
-                resource = new FileSystemResource(templatesDirectory + File.separator + "key" + File.separator + templateName);
-
-            if (!resource.exists())
-                resource = new FileSystemResource(templatesDirectory + File.separator + "Layout.template.html");
-
-        } else {
-            resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
-
-            if (!resource.exists())
-                resource = new ClassPathResource("META-INF/piecework/templates/" + "Layout.template.html");
-        }
-
-
-        return resource;
-    }
-
-    private User getAuthenticatedUser() {
-        String internalId = null;
-        String externalId = null;
-        String userName = null;
-
-        SecurityContext context = SecurityContextHolder.getContext();
-        Authentication authentication = context.getAuthentication();
-
-        Object principal = authentication != null ? authentication.getPrincipal() : null;
-
-        if (principal != null && principal instanceof IdentityDetails) {
-            IdentityDetails userDetails = IdentityDetails.class.cast(principal);
-            internalId = userDetails.getInternalId();
-            externalId = userDetails.getExternalId();
-            userName = userDetails.getDisplayName();
-        }
-        return new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
-    }
 }

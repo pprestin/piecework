@@ -34,44 +34,14 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
 
     private static final Logger LOG = Logger.getLogger(HtmlProviderVisitor.class);
 
-    protected final Object t;
-    protected final Class<?> type;
     protected final String applicationTitle;
     protected final String applicationUrl;
     protected final String assetsUrl;
-    protected final String pageContextAsJson;
-    protected final String modelAsJson;
-    protected final boolean isExplanation;
 
-    public HtmlProviderVisitor(Object t, Class<?> type, User user, ObjectMapper objectMapper, Environment environment) {
-        this.t = t;
-        this.type = type;
-        this.applicationTitle = environment.getProperty("application.name");
-        this.applicationUrl = environment.getProperty("base.application.uri");
-        this.assetsUrl = environment.getProperty("ui.static.urlbase");
-
-        PageContext pageContext = new PageContext.Builder()
-                .applicationTitle(applicationTitle)
-                .assetsUrl(assetsUrl)
-                .user(user)
-                .build();
-
-        String pageContextAsJson;
-        String modelAsJson;
-        boolean isExplanation;
-        try {
-            pageContextAsJson = objectMapper.writer().writeValueAsString(pageContext);
-            modelAsJson = objectMapper.writer().writeValueAsString(t);
-            isExplanation = type != null && type.equals(Explanation.class);
-        } catch (Exception e) {
-            LOG.error("Unable to construct json", e);
-            pageContextAsJson = "";
-            modelAsJson = "";
-            isExplanation = false;
-        }
-        this.pageContextAsJson = pageContextAsJson;
-        this.modelAsJson = modelAsJson;
-        this.isExplanation = isExplanation;
+    public HtmlProviderVisitor(String applicationTitle, String applicationUrl, String assetsUrl) {
+        this.applicationTitle = applicationTitle;
+        this.applicationUrl = applicationUrl;
+        this.assetsUrl = assetsUrl;
     }
 
     @Override
@@ -84,6 +54,8 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
             if (tagName != null) {
                 if (tagName.equals("body")) {
                     handleBody(tagName, tagNode);
+                } else if (tagName.equals("head")) {
+                    handleHead(tagName, tagNode);
                 } else if (tagName.equals("script")) {
                     handleScript(tagName, tagNode);
                 } else if (tagName.equals("link")) {
@@ -122,6 +94,10 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         }
     }
 
+    protected void handleHead(String tagName, TagNode tagNode) {
+
+    }
+
     protected void handleBody(String tagName, TagNode tagNode) {
 
     }
@@ -132,20 +108,6 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
 
     protected void handleScript(String tagName, TagNode tagNode) {
         handleReferences(tagNode);
-        String id = tagNode.getAttributeByName("id");
-        if (tagName.equals("script") && id != null && id.equals("piecework-context-script")) {
-            StringBuilder content = new StringBuilder("piecework = {};")
-                    .append("piecework.context = ").append(pageContextAsJson).append(";");
-
-            if (modelAsJson != null) {
-                if (isExplanation)
-                    content.append("piecework.explanation = ").append(modelAsJson).append(";");
-                else
-                    content.append("piecework.model = ").append(modelAsJson).append(";");
-            }
-            tagNode.removeAllChildren();
-            tagNode.addChild(new ContentNode(content.toString()));
-        }
     }
 
     protected boolean checkForSecurePath(String path) {

@@ -71,6 +71,9 @@ public class Form {
     @XmlAttribute
     private final String src;
 
+    @XmlTransient
+    private final String staticRoot;
+
     @XmlAttribute
     private final String activation;
 
@@ -119,7 +122,8 @@ public class Form {
             this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
             this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
-        this.src =  context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.formInstanceId) : null;
+        this.src = context != null ? context.getApplicationUri("resource", builder.processDefinitionKey, builder.formInstanceId) : null;
+        this.staticRoot = context != null ? context.getApplicationUri("resource", "static", builder.processDefinitionKey) : null;
         this.assignment = builder.assignment;
         this.activation = builder.activation;
         this.attachment = builder.attachment;
@@ -186,6 +190,11 @@ public class Form {
 
     public String getSrc() {
         return src;
+    }
+
+    @JsonIgnore
+    public String getStaticRoot() {
+        return staticRoot;
     }
 
     public String getActivation() {

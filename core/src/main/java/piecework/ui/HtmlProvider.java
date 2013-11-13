@@ -32,7 +32,9 @@ import piecework.identity.IdentityDetails;
 import piecework.model.User;
 import piecework.model.SearchResults;
 import piecework.persistence.ContentRepository;
+import piecework.service.FormTemplateService;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -54,12 +56,23 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
 
     @Autowired
-    private ContentRepository contentRepository;
+    Environment environment;
 
     @Autowired
-    private Environment environment;
+    FormTemplateService formTemplateService;
 
     private ObjectMapper objectMapper = new ObjectMapper();
+
+    private String applicationTitle;
+    private String applicationUrl;
+    private String assetsUrl;
+
+    @PostConstruct
+    public void init() {
+        this.applicationTitle = environment.getProperty("application.name");
+        this.applicationUrl = environment.getProperty("base.application.uri");
+        this.assetsUrl = environment.getProperty("ui.static.urlbase");
+    }
 
 	@Override
 	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -68,7 +81,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
 	@Override
 	public long getSize(Object t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		Resource resource = getTemplateResource(type, t);
+		Resource resource = formTemplateService.getTemplateResource(type, t);
 		long size = 0;
 		if (resource.exists()) {
 			try {
@@ -87,7 +100,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 			OutputStream entityStream) throws IOException,
 			WebApplicationException {
 
-		Resource template = getTemplateResource(type, t);
+		Resource template = formTemplateService.getTemplateResource(type, t);
 		if (template.exists()) {
             User user = getAuthenticatedUser();
             CleanerProperties cleanerProperties = new CleanerProperties();
@@ -95,7 +108,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
 
             LinkOptimizingVisitor visitor =
-                    new LinkOptimizingVisitor(t, type, user, objectMapper, environment);
+                    new LinkOptimizingVisitor(applicationTitle, applicationUrl, assetsUrl, t, type, user, objectMapper, environment);
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(visitor);
 
@@ -131,42 +144,42 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 		if (InputStream.class.isAssignableFrom(type))
             return false;
 
-		Resource resource = getTemplateResource(type, null);
+		Resource resource = formTemplateService.getTemplateResource(type, null);
 		return resource != null && resource.exists();
 	}
 	
-	private Resource getTemplateResource(Class<?> type, Object t) {
-        String templatesDirectory = environment.getProperty("templates.directory");
-
-		StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
-		
-		if (type.equals(SearchResults.class)) {
-			SearchResults results = SearchResults.class.cast(t);
-			templateNameBuilder.append(".").append(results.getResourceName());
-		}
-			
-		templateNameBuilder.append(".template.html");
-		
-		String templateName = templateNameBuilder.toString();
-		Resource resource = null;
-		if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}")) {
-			resource = new FileSystemResource(templatesDirectory + File.separator + templateName);
-
-            if (!resource.exists())
-                resource = new FileSystemResource(templatesDirectory + File.separator + "key" + File.separator + templateName);
-
-            if (!resource.exists())
-                resource = new FileSystemResource(templatesDirectory + File.separator + "Layout.template.html");
-
-        } else {
-			resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
-
-            if (!resource.exists())
-                resource = new ClassPathResource("META-INF/piecework/templates/" + "Layout.template.html");
-        }
-
-
-		return resource;
-	}
+//	private Resource getTemplateResource(Class<?> type, Object t) {
+//        String templatesDirectory = environment.getProperty("templates.directory");
+//
+//		StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
+//
+//		if (type.equals(SearchResults.class)) {
+//			SearchResults results = SearchResults.class.cast(t);
+//			templateNameBuilder.append(".").append(results.getResourceName());
+//		}
+//
+//		templateNameBuilder.append(".template.html");
+//
+//		String templateName = templateNameBuilder.toString();
+//		Resource resource = null;
+//		if (templatesDirectory != null && !templatesDirectory.equals("${templates.directory}")) {
+//			resource = new FileSystemResource(templatesDirectory + File.separator + templateName);
+//
+//            if (!resource.exists())
+//                resource = new FileSystemResource(templatesDirectory + File.separator + "key" + File.separator + templateName);
+//
+//            if (!resource.exists())
+//                resource = new FileSystemResource(templatesDirectory + File.separator + "Layout.template.html");
+//
+//        } else {
+//			resource = new ClassPathResource("META-INF/piecework/templates/" + templateName);
+//
+//            if (!resource.exists())
+//                resource = new ClassPathResource("META-INF/piecework/templates/" + "Layout.template.html");
+//        }
+//
+//
+//		return resource;
+//	}
 
 }

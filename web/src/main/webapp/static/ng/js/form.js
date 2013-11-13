@@ -344,7 +344,7 @@ angular.module('Form',
                         notificationService.clear($scope);
                         var selectedForms = $scope.selectedForms;
                         angular.forEach(selectedForms, function(form) {
-                            taskService.assignTask($scope, form, assignee, success, failure);
+                            taskService.assignTask($scope, form, assignee.userId, success, failure);
                         });
                     };
 

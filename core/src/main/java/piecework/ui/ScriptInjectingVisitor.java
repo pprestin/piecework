@@ -64,10 +64,6 @@ public class ScriptInjectingVisitor implements TagNodeVisitor {
                     decorator.decorate(tag);
                 }
             }
-//            else {
-//                if (!FOLLOW_TAGS.contains(tagName))
-//                    return false;
-//            }
         }
         return true;
     }
@@ -103,7 +99,7 @@ public class ScriptInjectingVisitor implements TagNodeVisitor {
             String src = tag.getAttributeByName("src");
 
             if (!src.startsWith("/") && !src.startsWith("http://") && !src.startsWith("https://")) {
-                tag.addAttribute("src", "static/" + src);
+                tag.addAttribute("src", form.getStaticRoot() + "/" + src);
             }
         }
     }
@@ -115,7 +111,7 @@ public class ScriptInjectingVisitor implements TagNodeVisitor {
             String href = tag.getAttributeByName("href");
 
             if (!href.startsWith("/") && !href.startsWith("http://") && !href.startsWith("https://")) {
-                tag.addAttribute("href", "static/" + href);
+                tag.addAttribute("href", form.getStaticRoot() + "/" + href);
             }
         }
 

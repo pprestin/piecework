@@ -24,9 +24,9 @@ import org.springframework.stereotype.Service;
 import piecework.CommandExecutor;
 import piecework.Constants;
 import piecework.Versions;
-import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.enumeration.ActionType;
+import piecework.form.FormFactory;
 import piecework.handler.SubmissionHandler;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
@@ -60,6 +60,9 @@ public class FormService {
 
     @Autowired
     CommandExecutor commandExecutor;
+
+    @Autowired
+    FormFactory formFactory;
 
     @Autowired
     IdentityHelper helper;
@@ -103,6 +106,26 @@ public class FormService {
             throw new BadRequestError();
 
         return responseHandler.handle(requestDetails, formRequest, process);
+    }
+
+    public Form getForm(MessageContext context, Process process, String requestId) throws StatusCodeError {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+
+        // Assume that we've been provided with a form request identifier
+        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+
+        // But if it's null, then try to create a new form request -- this will assume that the requestId
+        // is a taskId, and check to make sure that the user is authorized to create form requests for
+        // that task
+        if (formRequest == null)
+            formRequest = requestHandler.create(requestDetails, process, requestId, null);
+
+        if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
+            throw new BadRequestError();
+
+        ActionType actionType = formRequest.getAction() != null ? formRequest.getAction() : ActionType.CREATE;
+
+        return formFactory.form(formRequest, process, formRequest.getInstance(), formRequest.getTask(), null, actionType);
     }
 
     public Response provideFormResponse(MessageContext context, Process process, List<PathSegment> pathSegments) throws StatusCodeError {
@@ -149,40 +172,6 @@ public class FormService {
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
 
         return taskService.allowedTasksDirect(rawQueryParameters, true);
-
-//        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
-//                .resourceLabel("Tasks")
-//                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-//                .link(viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME))
-//                .parameters(results.getParameters());
-//
-//        Set<Process> definitions = helper.findProcesses(AuthorizationRole.INITIATOR);
-//        if (definitions != null) {
-//            for (Process definition : definitions) {
-//                resultsBuilder.definition(new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(viewContext)).build(viewContext));
-//            }
-//        }
-//
-//        List<?> items = results.getList();
-//        if (items != null && !items.isEmpty()) {
-//            ViewContext version = versions.getVersion1();
-//
-//            for (Object item : items) {
-//                Task task = Task.class.cast(item);
-//                resultsBuilder.item(new Form.Builder()
-//                        .formInstanceId(task.getTaskInstanceId())
-//                        .taskSubresources(task.getProcessDefinitionKey(), task, version)
-//                        .processDefinitionKey(task.getProcessDefinitionKey())
-//                        .instanceSubresources(task.getProcessDefinitionKey(), task.getProcessInstanceId(), null, 0, version)
-//                        .build(viewContext));
-//            }
-//        }
-//
-//        resultsBuilder.firstResult(results.getFirstResult());
-//        resultsBuilder.maxResults(results.getMaxResults());
-//        resultsBuilder.total(Long.valueOf(results.getTotal()));
-//
-//        return resultsBuilder.build(viewContext);
     }
 
     public Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
@@ -218,7 +207,7 @@ public class FormService {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
@@ -332,7 +321,7 @@ public class FormService {
         String base = detail.getBase();
 
         if (StringUtils.isNotEmpty(base)) {
-            Content content = responseHandler.content(base + "/" + name);
+            Content content = responseHandler.content(base + "/" + name, Collections.<MediaType>emptyList());
 
             if (content != null)
                 return Response.ok(content.getInputStream()).type(content.getContentType()).build();
