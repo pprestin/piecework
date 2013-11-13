@@ -109,6 +109,7 @@ public class FormService {
     }
 
     public Form getForm(MessageContext context, Process process, String requestId) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 
         // Assume that we've been provided with a form request identifier
@@ -125,7 +126,7 @@ public class FormService {
 
         ActionType actionType = formRequest.getAction() != null ? formRequest.getAction() : ActionType.CREATE;
 
-        return formFactory.form(formRequest, process, formRequest.getInstance(), formRequest.getTask(), null, actionType);
+        return formFactory.form(formRequest, process, formRequest.getInstance(), formRequest.getTask(), null, actionType, principal);
     }
 
     public Response provideFormResponse(MessageContext context, Process process, List<PathSegment> pathSegments) throws StatusCodeError {

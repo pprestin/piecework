@@ -110,11 +110,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
-        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, false))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, false))
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
         processInstanceService.activate(process, instance, reason);
@@ -194,14 +195,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response cancel(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
-        String currentUserId = helper.getAuthenticatedSystemOrUserId();
-        boolean isInitiator = instance.getInitiatorId() != null && currentUserId != null && instance.getInitiatorId().equals(currentUserId);
-
-        if (!isInitiator && !helper.hasRole(process, AuthorizationRole.OVERSEER))
+        if (!instance.isInitiator(principal) && !principal.hasRole(process, AuthorizationRole.OVERSEER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         processInstanceService.cancel(process, instance, reason);
@@ -254,12 +253,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response detach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
         Task task = taskService.allowedTask(process, instance, null, true);
-        if (!helper.isAuthenticatedSystem() && task == null)
+        if (principal.getEntityType() != Entity.EntityType.SYSTEM && task == null)
             throw new ForbiddenError();
 
         attachmentService.delete(process, instance, attachmentId);
@@ -289,11 +289,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
-        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         processInstanceService.suspend(process, instance, reason);
@@ -344,12 +345,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response remove(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
-        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         valuesService.delete(process, instance, fieldName, valueId);
@@ -358,12 +360,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response value(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
-        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         return valuesService.read(process, instance, fieldName, valueId);
@@ -371,12 +374,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String value) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         Task task = taskService.allowedTask(process, instance, null, true);
-        if (task == null && !helper.isAuthenticatedSystem())
+        if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
@@ -402,12 +406,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         Task task = taskService.allowedTask(process, instance, null, true);
-        if (task == null && !helper.isAuthenticatedSystem())
+        if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
@@ -451,11 +456,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response values(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        if (!helper.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         List<Value> files = valuesService.searchValues(process, instance, fieldName);

@@ -146,12 +146,12 @@ public class UnitTestConfiguration {
 	@Bean
 	public IdentityHelper helper() {
         IdentityHelper helper = Mockito.mock(IdentityHelper.class);
-        IdentityDetails user = Mockito.mock(IdentityDetails.class);
-        Mockito.when(user.getInternalId()).thenReturn("123456789");
+        User user = Mockito.mock(User.class);
+        Mockito.when(user.getUserId()).thenReturn("123456789");
         Mockito.when(user.getDisplayName()).thenReturn("Test User");
-        Mockito.when(user.getExternalId()).thenReturn("testuser");
-        Mockito.when(helper.getAuthenticatedPrincipal()).thenReturn(user);
-        Mockito.when(helper.hasRole(Mockito.any(Process.class), Mockito.any(String.class))).thenReturn(true);
+        Mockito.when(user.getVisibleId()).thenReturn("testuser");
+        Mockito.when(helper.getPrincipal()).thenReturn(user);
+        Mockito.when(user.hasRole(Mockito.any(Process.class), Mockito.any(String.class))).thenReturn(true);
 		return helper;
 	}
 	

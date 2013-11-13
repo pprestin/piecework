@@ -176,20 +176,17 @@ public class RequestHandler {
         if (process == null)
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
 
-        if (!identityHelper.hasRole(process, AuthorizationRole.OVERSEER)) {
-            String taskId = task != null ? task.getTaskInstanceId() : null;
-            // If the user does not have 'overseer' role then she or he needs to be an assignee or at least a candidate assignee
-            User currentUser = identityHelper.getCurrentUser();
-            if (currentUser == null || StringUtils.isEmpty(currentUser.getUserId())) {
-                LOG.error("Forbidden: Unauthorized user or user with no userId (e.g. system user) attempting to create a request for task: " + taskId);
-                String systemId = identityHelper.getAuthenticatedSystemOrUserId();
-                if (StringUtils.isNotEmpty(systemId))
-                    LOG.error("System id is " + systemId + " -- needs overseer access in order to use form functionality");
+        String taskId = task != null ? task.getTaskInstanceId() : null;
 
-                throw new ForbiddenError();
-            }
-            if (task != null && ! identityHelper.isCandidateOrAssignee(currentUser, task)) {
-                LOG.warn("Forbidden: Unauthorized user " + currentUser.getDisplayName() + " (" + currentUser.getUserId() + ") attempting to access task " + taskId);
+        Entity principal = identityHelper.getPrincipal();
+        if (principal == null || StringUtils.isEmpty(principal.getEntityId())) {
+            LOG.error("Forbidden: Unauthorized user or user with no userId (e.g. system user) attempting to create a request for task: " + taskId);
+            throw new ForbiddenError();
+        }
+
+        if (principal.hasRole(process, AuthorizationRole.OVERSEER)) {
+            if (task != null && !task.isCandidateOrAssignee(principal)) {
+                LOG.warn("Forbidden: Unauthorized principal " + principal.toString() + " attempting to access task " + taskId);
                 throw new ForbiddenError();
             }
         }

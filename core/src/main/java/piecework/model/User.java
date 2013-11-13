@@ -41,7 +41,7 @@ import piecework.util.ManyMap;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(name = User.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class User extends Value {
+public class User extends Entity {
 
     private static final long serialVersionUID = -4312076944171057691L;
 
@@ -68,21 +68,18 @@ public class User extends Value {
     @XmlTransient
     private final ManyMap<String, String> attributes;
 
-    @XmlTransient
-    private final AccessAuthority accessAuthority;
-
     private User() {
         this(new User.Builder(), new ViewContext());
     }
 
     private User(User.Builder builder, ViewContext context) {
+        super(builder.userId, EntityType.PERSON, builder.accessAuthority);
         this.userId = builder.userId;
         this.visibleId = builder.visibleId;
         this.displayName = builder.displayName;
         this.emailAddress = builder.emailAddress;
         this.phoneNumber = builder.phoneNumber;
         this.attributes = builder.attributes;
-        this.accessAuthority = builder.accessAuthority;
         this.uri = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.userId) : null;
     }
 
@@ -111,11 +108,6 @@ public class User extends Value {
         return attributes;
     }
 
-    @JsonIgnore
-    public AccessAuthority getAccessAuthority() {
-        return accessAuthority;
-    }
-
     @JsonValue(value=false)
     @JsonIgnore
     public String getValue() {
@@ -125,6 +117,10 @@ public class User extends Value {
     public String getUri() {
 		return uri;
 	}
+
+    public String toString() {
+        return displayName;
+    }
 
 	public final static class Builder {
 

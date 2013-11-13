@@ -31,15 +31,13 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.RequestDetails;
 import piecework.identity.IdentityHelper;
+import piecework.model.*;
+import piecework.model.Process;
 import piecework.persistence.RequestRepository;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.TaskService;
 import piecework.exception.ForbiddenError;
-import piecework.model.FormRequest;
-import piecework.model.Interaction;
-import piecework.model.Process;
-import piecework.model.Screen;
 import piecework.test.ExampleFactory;
 
 import javax.servlet.http.HttpServletRequest;
@@ -76,7 +74,12 @@ public class RequestHandlerTest {
         this.servletRequest = Mockito.mock(HttpServletRequest.class);
         Mockito.when(context.getHttpServletRequest()).thenReturn(servletRequest);
         this.process = ExampleFactory.exampleProcess();
-        Mockito.when(identityHelper.hasRole(process, AuthorizationRole.INITIATOR)).thenReturn(true);
+        User user = Mockito.mock(User.class);
+        Mockito.when(user.getUserId()).thenReturn("123456789");
+        Mockito.when(user.getDisplayName()).thenReturn("Test User");
+        Mockito.when(user.getVisibleId()).thenReturn("testuser");
+        Mockito.when(identityHelper.getPrincipal()).thenReturn(user);
+        Mockito.when(user.hasRole(process, AuthorizationRole.INITIATOR)).thenReturn(true);
 
         Mockito.when(requestRepository.save(Mockito.any(FormRequest.class))).thenAnswer(new Answer<FormRequest>() {
             @Override
@@ -90,7 +93,11 @@ public class RequestHandlerTest {
 
     @Test
     public void testCreateAndHandleInitialRequestAsOverseer() throws Exception {
-        Mockito.when(identityHelper.hasRole(process, AuthorizationRole.OVERSEER)).thenReturn(true);
+        User user = Mockito.mock(User.class);
+        Mockito.when(user.getUserId()).thenReturn("123456789");
+        Mockito.when(user.getDisplayName()).thenReturn("Test User");
+        Mockito.when(user.getVisibleId()).thenReturn("testuser");
+        Mockito.when(user.hasRole(process, AuthorizationRole.OVERSEER)).thenReturn(true);
         Mockito.when(servletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
         Mockito.when(servletRequest.getRemoteHost()).thenReturn("127.0.0.1");
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);

@@ -91,18 +91,15 @@ public class TaskService {
      * Returns the first task for the passed instance that the user is allowed to access
      */
     public Task allowedTask(Process process, ProcessInstance instance, String taskId, boolean limitToActive) throws StatusCodeError {
-
+        Entity principal = helper.getPrincipal();
         Set<Task> tasks = instance.getTasks();
-
-        boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
-
-        User currentUser = !hasOversight ? helper.getCurrentUser() : null;
+        boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
 
         for (Task task : tasks) {
             if (limitToActive && !task.isActive())
                 continue;
 
-            if ( hasOversight || helper.isCandidateOrAssignee(currentUser, task) ) {
+            if ( hasOversight || task.isCandidateOrAssignee(principal) ) {
                 return rebuildTask(task, new PassthroughSanitizer());
             }
         }
@@ -142,14 +139,13 @@ public class TaskService {
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
 
+        Entity principal = helper.getPrincipal();
         Set<Process> overseerProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
         Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
         Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
         Set<String> overseerProcessDefinitionKeys = processDefinitionKeys(overseerProcesses);
         Set<String> userProcessDefinitionKeys = processDefinitionKeys(userProcesses);
-
-        User currentUser = helper.getCurrentUser();
 
         ViewContext taskViewContext = versions.getVersion1();
 
@@ -250,7 +246,7 @@ public class TaskService {
                                 continue;
 
                             if (overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())
-                                || helper.isCandidateOrAssignee(currentUser, task) ) {
+                                || task.isCandidateOrAssignee(principal) ) {
                                 Task rebuilt = rebuildTask(task, passthroughSanitizer);
 
                                 if (wrapWithForm) {
@@ -347,21 +343,5 @@ public class TaskService {
         }
 
         return null;
-    }
-
-    private TaskCriteria overseerCriteria(Set<Process> allowedProcesses, MultivaluedMap<String, String> rawQueryParameters) {
-        return new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer).build();
-    }
-
-    private TaskCriteria overseerCriteria(Set<Process> allowedProcesses, String taskId) {
-        return new TaskCriteria.Builder().processes(allowedProcesses).taskId(taskId).build();
-    }
-
-    private TaskCriteria userCriteria(Set<Process> allowedProcesses, MultivaluedMap<String, String> rawQueryParameters) {
-        return new TaskCriteria.Builder(allowedProcesses, rawQueryParameters, sanitizer).participantId(helper.getAuthenticatedSystemOrUserId()).build();
-    }
-
-    private TaskCriteria userCriteria(Set<Process> allowedProcesses, String taskId) {
-        return new TaskCriteria.Builder().processes(allowedProcesses).taskId(taskId).participantId(helper.getAuthenticatedSystemOrUserId()).build();
     }
 }

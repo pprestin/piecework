@@ -28,6 +28,7 @@ import piecework.enumeration.ActionType;
 import piecework.form.FormFactory;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.identity.IdentityHelper;
 import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -59,6 +60,9 @@ public class ResponseHandler {
     FormFactory formFactory;
 
     @Autowired
+    IdentityHelper helper;
+
+    @Autowired
     Versions versions;
 
     public Response handle(RequestDetails requestDetails, FormRequest formRequest, Process process) throws StatusCodeError {
@@ -66,12 +70,12 @@ public class ResponseHandler {
     }
 
     public Response handle(RequestDetails requestDetails, FormRequest formRequest, Process process, ProcessInstance instance, Task task, FormValidation validation) throws StatusCodeError {
-
+        Entity principal = helper.getPrincipal();
         ActionType actionType = formRequest.getAction() != null ? formRequest.getAction() : ActionType.CREATE;
         Activity activity = formRequest.getActivity();
         Action action = activity.action(actionType);
 
-        Form form = formFactory.form(formRequest, process, instance, task, validation, actionType);
+        Form form = formFactory.form(formRequest, process, instance, task, validation, actionType, principal);
 
         if (form != null && action != null && form.getContainer() != null && !form.getContainer().isReadonly()) {
 

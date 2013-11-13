@@ -104,9 +104,14 @@ public class TaskResourceVersion1 implements TaskResource {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 
-        String actingUser = helper.getAuthenticatedSystemOrUserId();
-        if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(requestDetails.getActAsUser()))
-            actingUser = requestDetails.getActAsUser();
+        String actingUser = null;
+        Entity principal = helper.getPrincipal();
+        if (principal != null) {
+            if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(requestDetails.getActAsUser()))
+                actingUser = requestDetails.getActAsUser();
+            else
+                actingUser = principal.getEntityId();
+        }
 
         Task task = taskId != null ? taskService.allowedTask(process, taskId, true) : null;
 

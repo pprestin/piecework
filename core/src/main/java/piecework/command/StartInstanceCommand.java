@@ -62,11 +62,11 @@ public class StartInstanceCommand extends InstanceCommand {
             if (deployment == null)
                 throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
 
-            IdentityDetails user = helper.getAuthenticatedPrincipal();
-            String initiatorId = user != null ? user.getInternalId() : null;
+            Entity principal = helper.getPrincipal();
+            String initiatorId = principal != null ? principal.getEntityId() : null;
             String initiationStatus = deployment.getInitiationStatus();
 
-            if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(submission.getSubmitterId())) {
+            if (principal != null && principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(submission.getSubmitterId())) {
                 User submitter = identityService.getUserByAnyId(submission.getSubmitterId());
                 if (submitter != null)
                     initiatorId = submitter.getUserId();

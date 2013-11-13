@@ -52,18 +52,12 @@ public class FormFactory {
     private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
 
     @Autowired
-    IdentityHelper helper;
-
-    @Autowired
     EncryptionService encryptionService;
-
-    @Autowired
-    IdentityService identityService;
 
     @Autowired
     Versions versions;
 
-    public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation, ActionType actionType) throws StatusCodeError {
+    public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation, ActionType actionType, Entity principal) throws StatusCodeError {
         long start = 0;
 
         if (LOG.isDebugEnabled())
@@ -76,11 +70,9 @@ public class FormFactory {
             activity = activity(process, instance, task);
 
         ViewContext version = versions.getVersion1();
-        String loggedInUserId = helper.getAuthenticatedSystemOrUserId();
-        User currentUser = helper.getCurrentUser();
-        boolean hasOversight = helper.hasRole(process, AuthorizationRole.OVERSEER);
+        boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
 
-        FactoryWorker worker = new FactoryWorker(process, instance, task, activity, actionType, version, loggedInUserId, currentUser, hasOversight);
+        FactoryWorker worker = new FactoryWorker(process, instance, task, activity, actionType, version, principal, hasOversight);
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         ManyMap<String, Message> messages = new ManyMap<String, Message>();
 
@@ -289,11 +281,10 @@ public class FormFactory {
         private final Activity activity;
         private final ActionType actionType;
         private final ViewContext version;
-        private final String loggedInUserId;
-        private final User currentUser;
+        private final Entity principal;
         private final boolean hasOversight;
 
-        public FactoryWorker(Process process, ProcessInstance instance, Task task, Activity activity, ActionType actionType, ViewContext version, String loggedInUserId, User currentUser, boolean hasOversight) {
+        public FactoryWorker(Process process, ProcessInstance instance, Task task, Activity activity, ActionType actionType, ViewContext version, Entity principal, boolean hasOversight) {
             this.process = process;
             this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
             this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
@@ -303,8 +294,7 @@ public class FormFactory {
             this.activity = activity;
             this.actionType = actionType;
             this.version = version;
-            this.loggedInUserId = loggedInUserId;
-            this.currentUser = currentUser;
+            this.principal = principal;
             this.hasOversight = hasOversight;
         }
 
@@ -314,7 +304,7 @@ public class FormFactory {
                     .processDefinitionKey(processDefinitionKey)
                     .taskSubresources(processDefinitionKey, task, version);
 
-            if (hasOversight || task == null || task.getAssigneeId() == null || task.getAssigneeId().equals(loggedInUserId))
+            if (hasOversight || task == null || task.isCandidateOrAssignee(principal))
                 builder.container(container(builder, activity, actionType, data, results));
 
             if (processInstanceId != null)
@@ -359,7 +349,7 @@ public class FormFactory {
             if (task != null) {
                 if (!task.isActive())
                     readonly = true;
-                else if (task.getAssignee() != null && !task.getAssignee().getUserId().equals(loggedInUserId))
+                else if (task.getAssignee() != null && !task.isAssignee(principal))
                     readonly = true;
             }
 
@@ -385,8 +375,8 @@ public class FormFactory {
         private List<Value> values(String fieldName, List<? extends Value> values, String defaultValue) {
             if (values == null || values.isEmpty()) {
                 if (StringUtils.isNotEmpty(defaultValue)) {
-                    if (defaultValue.equals("{{CurrentUser}}"))
-                        return Collections.singletonList((Value)currentUser);
+                    if (defaultValue.equals("{{CurrentUser}}") && principal != null)
+                        return Collections.singletonList((Value)principal.getActingAs());
                     if (defaultValue.equals("{{CurrentDate}}")) {
                         Value currentDateValue = new Value(dateTimeFormatter.print(new Date().getTime()));
                         return Collections.singletonList(currentDateValue);

@@ -77,8 +77,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 	@Override
 	public String start(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
-        IdentityDetails principal = helper.getAuthenticatedPrincipal();
-        String userId = principal != null ? principal.getInternalId() : null;
+        Entity principal = helper.getPrincipal();
+        String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         ProcessDeployment detail = process.getDeployment();
@@ -102,16 +102,14 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean activate(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
-        IdentityDetails principal = helper.getAuthenticatedPrincipal();
-        String userId = principal != null ? principal.getInternalId() : null;
+        Entity principal = helper.getPrincipal();
+        String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
-        ProcessDeployment detail = process.getDeployment();
-
-        if (detail == null)
+        if (deployment == null)
             throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
 
-        String engineProcessDefinitionKey = detail.getEngineProcessDefinitionKey();
+        String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
         org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
 
         if (activitiInstance != null) {
@@ -133,8 +131,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
 	public boolean cancel(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
-        IdentityDetails principal = helper.getAuthenticatedPrincipal();
-        String userId = principal != null ? principal.getInternalId() : null;
+        Entity principal = helper.getPrincipal();
+        String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         if (deployment == null)
@@ -153,8 +151,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean suspend(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException {
-        IdentityDetails principal = helper.getAuthenticatedPrincipal();
-        String userId = principal != null ? principal.getInternalId() : null;
+        Entity principal = helper.getPrincipal();
+        String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         if (deployment == null)
@@ -173,8 +171,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException {
-        IdentityDetails principal = helper.getAuthenticatedPrincipal();
-        String userId = principal != null ? principal.getInternalId() : null;
+        Entity principal = helper.getPrincipal();
+        String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         if (deployment == null)
@@ -217,8 +215,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
     @Override
     public ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException {
-        IdentityDetails principal = helper.getAuthenticatedPrincipal();
-        String userId = principal != null ? principal.getInternalId() : null;
+        Entity principal = helper.getPrincipal();
+        String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
         if (!deployment.getEngine().equals(getKey()))
@@ -588,13 +586,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 		if (engineProcessInstanceId == null)
 			activitiInstance = processEngine.getRuntimeService()
 				.createProcessInstanceQuery()
-				.processDefinitionKey(engineProcessDefinitionKey)
+//				.processDefinitionKey(engineProcessDefinitionKey)
 				.processInstanceBusinessKey(processBusinessKey)
 				.singleResult();
 		else
-        activitiInstance = processEngine.getRuntimeService()
+            activitiInstance = processEngine.getRuntimeService()
 				.createProcessInstanceQuery()
-				.processDefinitionKey(engineProcessDefinitionKey)
+//				.processDefinitionKey(engineProcessDefinitionKey)
 				.processInstanceId(engineProcessInstanceId)
 				.singleResult();
 

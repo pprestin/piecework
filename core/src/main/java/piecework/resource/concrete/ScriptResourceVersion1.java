@@ -132,11 +132,15 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
                 String applicationTitle = environment.getProperty("application.name");
                 final String assetsUrl = environment.getProperty("ui.static.urlbase");
 
-                User user = identityHelper.getCurrentUser();
+                Entity principal = identityHelper.getPrincipal();
+                User currentUser = null;
+                if (principal instanceof User)
+                    currentUser = User.class.cast(principal);
+
                 PageContext pageContext = new PageContext.Builder()
                         .applicationTitle(applicationTitle)
                         .assetsUrl(assetsUrl)
-                        .user(user)
+                        .user(currentUser)
                         .build();
 
                 ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(Form.class, MediaType.APPLICATION_JSON_TYPE);

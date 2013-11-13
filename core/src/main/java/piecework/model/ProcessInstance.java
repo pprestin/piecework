@@ -199,6 +199,11 @@ public class ProcessInstance implements Serializable {
         this.isDeleted = builder.isDeleted;
     }
 
+    @JsonIgnore
+    public boolean isInitiator(Entity principal) {
+        return getInitiatorId() != null && principal != null && getInitiatorId().equals(principal.getEntityId());
+    }
+
     public String getProcessInstanceId() {
 		return processInstanceId;
 	}

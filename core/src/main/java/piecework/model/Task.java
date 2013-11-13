@@ -18,9 +18,11 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ComparisonChain;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.authorization.AccessAuthority;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
 
@@ -150,6 +152,50 @@ public class Task implements Serializable, Comparable<Task> {
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.isDeleted = builder.isDeleted;
+    }
+
+    @JsonIgnore
+    public boolean isAssignee(Entity entity) {
+        String entityId = entity != null ? entity.getEntityId() : null;
+        if (entityId == null)
+            return false;  // no signed in user
+
+        // Check to see if the user is the assignee
+        String assigneeId = getAssigneeId();
+        if (StringUtils.isNotEmpty(assigneeId) && entityId.equals(assigneeId))
+            return true;
+
+        return false;
+    }
+
+    @JsonIgnore
+    // returns true if my roleIds includes one of my roles
+    // returns false otherwise
+    public boolean isCandidateOrAssignee(Entity entity) {
+        String entityId = entity != null ? entity.getEntityId() : null;
+        if (entityId == null)
+            return false;  // no signed in user
+
+        // Check to see if the user is the assignee
+        String assigneeId = getAssigneeId();
+        if (StringUtils.isNotEmpty(assigneeId) && entityId.equals(assigneeId))
+            return true;
+
+        Set<String> candidateAssigneeIds = getCandidateAssigneeIds();
+        // sanity check
+        if ( candidateAssigneeIds == null || candidateAssigneeIds.isEmpty())
+            return false;
+
+        // Check if user is a candidate assignee
+        if (candidateAssigneeIds.contains(entityId))
+            return true;
+
+        // Check if the user has access authority based on a group id that is in the collection of candidate assignee ids
+        AccessAuthority accessAuthority = entity.getAccessAuthority();
+        if (accessAuthority != null && accessAuthority.hasGroup(candidateAssigneeIds))
+            return true;
+
+        return false;
     }
 
     @Override

@@ -81,7 +81,7 @@ public class ResponseHandlerTest {
 
         ViewContext version1 = new ViewContext("http://localhost:8000", "/secure", "/api", "/v1");
         Mockito.when(versions.getVersion1()).thenReturn(version1);
-        Mockito.when(formFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class), ActionType.CREATE)).thenReturn(form);
+        Mockito.when(formFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class), ActionType.CREATE, null)).thenReturn(form);
     }
 
     @Test

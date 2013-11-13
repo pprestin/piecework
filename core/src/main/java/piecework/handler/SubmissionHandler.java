@@ -79,9 +79,10 @@ public class SubmissionHandler {
     UuidGenerator uuidGenerator;
 
     public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest, ActionType action) throws StatusCodeError {
-        String submitterId = helper.getAuthenticatedSystemOrUserId();
+        Entity principal = helper.getPrincipal();
+        String submitterId = principal.getEntityId();
 
-        if (helper.isAuthenticatedSystem() && StringUtils.isNotEmpty(formRequest.getActAsUser()))
+        if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(formRequest.getActAsUser()))
             submitterId = formRequest.getActAsUser();
         else if (rawSubmission != null && StringUtils.isNotEmpty(rawSubmission.getSubmitterId()))
             submitterId = sanitizer.sanitize(rawSubmission.getSubmitterId());
@@ -141,16 +142,16 @@ public class SubmissionHandler {
     }
 
     public Submission handle(Process process, SubmissionTemplate template, Map<String, List<String>> formValueContentMap, FormRequest formRequest) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
+        String actingAsId = principal.getActingAsId();
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
                 .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
-                .submitterId(helper.getAuthenticatedSystemOrUserId());
+                .submitterId(principal.getEntityId());
 
         if (formValueContentMap != null && !formValueContentMap.isEmpty()) {
-            String userId = helper.getAuthenticatedSystemOrUserId();
-
             for (Map.Entry<String, List<String>> entry : formValueContentMap.entrySet()) {
                 String name = sanitizer.sanitize(entry.getKey());
                 List<String> rawValues = entry.getValue();
@@ -158,7 +159,7 @@ public class SubmissionHandler {
                 if (rawValues != null) {
                     for (String rawValue : rawValues) {
                         String value = sanitizer.sanitize(rawValue);
-                        if (!handleStorage(template, submissionBuilder, name, value, userId)) {
+                        if (!handleStorage(template, submissionBuilder, name, value, actingAsId)) {
                             LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                         }
                     }
@@ -174,14 +175,15 @@ public class SubmissionHandler {
     }
 
     public Submission handle(Process process, SubmissionTemplate template, MultipartBody body, FormRequest formRequest) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
+        String actingAsId = principal.getActingAsId();
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
                 .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
-                .submitterId(helper.getAuthenticatedSystemOrUserId());
+                .submitterId(principal.getEntityId());
 
-        String userId = helper.getAuthenticatedSystemOrUserId();
         List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
         if (attachments != null && !attachments.isEmpty()) {
             for (org.apache.cxf.jaxrs.ext.multipart.Attachment attachment : attachments) {
@@ -191,7 +193,7 @@ public class SubmissionHandler {
                 if (mediaType == null)
                     continue;
 
-                handleAllContentTypes(template, submissionBuilder, attachment, userId);
+                handleAllContentTypes(template, submissionBuilder, attachment, actingAsId);
             }
         }
         return submissionRepository.save(submissionBuilder.build());

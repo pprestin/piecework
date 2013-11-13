@@ -128,14 +128,15 @@ public class InstanceStateCommand extends InstanceCommand {
                     applicationStatus = defaultApplicationStatus;
             }
 
-            String userId = helper.getAuthenticatedSystemOrUserId();
+            Entity principal = helper.getPrincipal();
+            String actingAsUserId = principal.getActingAsId();
             Set<Task> tasks = null;
 
             if (operation != OperationType.ASSIGNMENT && operation != OperationType.UPDATE) {
                 tasks = tasks(instance.getTasks(), operation);
             }
 
-            processInstanceRepository.update(instance.getProcessInstanceId(), new Operation(UUID.randomUUID().toString(), operation, reason, new Date(), userId), applicationStatus, applicationStatusExplanation, processStatus, tasks);
+            processInstanceRepository.update(instance.getProcessInstanceId(), new Operation(UUID.randomUUID().toString(), operation, reason, new Date(), actingAsUserId), applicationStatus, applicationStatusExplanation, processStatus, tasks);
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Executed instance state command " + this.toString());
