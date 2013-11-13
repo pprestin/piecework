@@ -61,6 +61,7 @@ angular.module('Form',
             };
             $scope.refreshForm = function(form) {
                 $scope.form = form;
+                $scope.attachments = form.attachments;
 
                 var data = $scope.form.data;
                 var validation = $scope.form.validation;
@@ -114,8 +115,8 @@ angular.module('Form',
 
                 };
 
-                if (form != null && form.attachment != null)
-                    $scope.refreshAttachments(form);
+                //if (form != null && form.attachment != null)
+                //    $scope.refreshAttachments(form);
             };
             $scope.$on('fileuploaddone', function(event, data) {
                 $scope.refreshAttachments();
