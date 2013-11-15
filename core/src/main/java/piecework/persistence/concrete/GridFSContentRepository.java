@@ -19,7 +19,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
-import org.apache.cxf.common.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -31,6 +31,8 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
@@ -40,7 +42,10 @@ import piecework.model.Content;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -80,63 +85,30 @@ public class GridFSContentRepository implements ContentRepository {
 
     @Override
     public Content findByLocation(String location) {
-        if (location == null)
+        if (StringUtils.isEmpty(location))
             return null;
 
-        String storageLocation = location;
-        GridFSDBFile file = null;
+        try {
+            int indexOf = location.indexOf(':');
+            String scheme = "";
+            if (indexOf != -1)
+                scheme = location.substring(0, indexOf);
 
-        int indexOf = storageLocation.indexOf("://");
-        if (indexOf == -1 || (indexOf + 3 ) >= storageLocation.length()) {
-            // If the storage location doesn't have a :// it's not remote so just retrieve it
-            file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
-        } else {
-            // A known protocol is necessary if we're going to retrieve the item remotely
-            String protocol = location.substring(0, indexOf);
-            if (StringUtils.isEmpty(protocol) || (!protocol.equals("http") && !protocol.equals("https")))
-                return null;
+            Content content;
+            if (scheme.equals("http") || scheme.endsWith("https"))
+                content = getRemotely(location);
+            else if (scheme.equals("classpath"))
+                content = getFromClasspath(location);
+            else if (scheme.equals("file"))
+                content = getFromFileSystem(location);
+            else
+                content = getFromGridFS(location);
 
-            storageLocation = "/remote/" + location.substring((indexOf+3));
-
-            // Check to see if we already have a cached copy of this file
-            file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
-            if (file != null) {
-                LOG.debug("Retrieved remote resource " + location + " from " + storageLocation);
-                // TODO: Add logic to check normal caching and time-to-live based on expires header
-                DBObject metadata = file.getMetaData();
-                return toContent(file);
-            }
-
-            HttpContext context = new BasicHttpContext();
-            HttpGet get = new HttpGet(location);
-            CloseableHttpResponse response = null;
-            try {
-                LOG.debug("Retrieving resource from " + location);
-                response = client.execute(get, context);
-                HttpEntity entity = response.getEntity();
-                if (entity != null) {
-                    BasicDBObject metadata = new BasicDBObject();
-                    metadata.put("originalFilename", location);
-                    gridFsOperations.store(entity.getContent(), storageLocation, entity.getContentType().getValue(), metadata);
-                    file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
-                }
-            } catch (Exception e) {
-                LOG.error("Unable to retrieve remote resource", e);
-            } finally {
-                if (response != null) {
-                    try {
-                        response.close();
-                    } catch (IOException ioe) {
-                        LOG.error("Unable to close response", ioe);
-                    }
-                }
-            }
+            return content;
+        } catch (IOException e) {
+            LOG.error("Could not retrieve content", e);
+            return null;
         }
-
-        if (file == null)
-            return null;
-
-        return toContent(file);
     }
 
     @Override
@@ -170,6 +142,9 @@ public class GridFSContentRepository implements ContentRepository {
     }
 
     private Content toContent(GridFSDBFile file) {
+        if (file == null)
+            return null;
+
         String fileId = file.getId().toString();
         DBObject metadata = file.getMetaData();
         String originalFileName = metadata != null ? String.class.cast(metadata.get("originalFilename")) : null;
@@ -184,6 +159,103 @@ public class GridFSContentRepository implements ContentRepository {
                 .length(Long.valueOf(file.getLength()))
                 .md5(file.getMD5())
                 .build();
+    }
+
+    private Content getFromClasspath(String location) throws IOException {
+        if (!location.startsWith("classpath:"))
+            return null;
+
+        String classpathLocation = location.substring("classpath:".length());
+        ClassPathResource resource = new ClassPathResource(classpathLocation);
+
+        String contentType = null;
+        BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
+        if (contentType == null)
+            contentType = URLConnection.guessContentTypeFromStream(inputStream);
+        if (contentType == null) {
+            if (location.endsWith(".css"))
+                contentType = "text/css";
+            else if (location.endsWith(".js"))
+                contentType = "application/json";
+            else if (location.endsWith(".html"))
+                contentType = "text/html";
+        }
+        return new Content.Builder().inputStream(inputStream).contentType(contentType).build();
+    }
+
+    private Content getFromFileSystem(String location) throws IOException {
+        if (!location.startsWith("file:"))
+            return null;
+
+        FileSystemResource resource = new FileSystemResource(location.substring("file:".length()));
+        BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
+        String contentType = URLConnection.guessContentTypeFromStream(inputStream);
+        if (contentType == null) {
+            if (location.endsWith(".css"))
+                contentType = "text/css";
+            else if (location.endsWith(".js"))
+                contentType = "application/json";
+            else if (location.endsWith(".html"))
+                contentType = "text/html";
+        }
+        return new Content.Builder().inputStream(inputStream).contentType(contentType).build();
+    }
+
+    private Content getFromGridFS(String location) {
+        GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
+        return toContent(file);
+    }
+
+    private Content getRemotely(String location) {
+        URI uri;
+        try {
+            uri = URI.create(location);
+
+            // A known scheme is necessary if we're going to retrieve the item remotely
+            String scheme = uri.getScheme();
+            if (StringUtils.isEmpty(scheme) || (!scheme.equals("http") && !scheme.equals("https")))
+                return null;
+        } catch (IllegalArgumentException iae) {
+            return null;
+        }
+
+        String storageLocation = "/remote/" + uri.getHost() + "/" + uri.getPath();
+
+        // Check to see if we already have a cached copy of this file
+        GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
+        if (file != null) {
+            LOG.debug("Retrieved remote resource " + location + " from " + storageLocation);
+            // TODO: Add logic to check normal caching and time-to-live based on expires header
+            DBObject metadata = file.getMetaData();
+            return toContent(file);
+        }
+
+        HttpContext context = new BasicHttpContext();
+        HttpGet get = new HttpGet(location);
+        CloseableHttpResponse response = null;
+        try {
+            LOG.debug("Retrieving resource from " + location);
+            response = client.execute(get, context);
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                BasicDBObject metadata = new BasicDBObject();
+                metadata.put("originalFilename", location);
+                gridFsOperations.store(entity.getContent(), storageLocation, entity.getContentType().getValue(), metadata);
+                file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
+            }
+        } catch (Exception e) {
+            LOG.error("Unable to retrieve remote resource", e);
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (IOException ioe) {
+                    LOG.error("Unable to close response", ioe);
+                }
+            }
+        }
+
+        return toContent(file);
     }
 
     private Content toContent(GridFsResource resource) throws IOException {

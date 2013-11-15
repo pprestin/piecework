@@ -135,8 +135,8 @@ public class ApplicationConfiguration {
     @Bean
     public Server applicationServer() {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
-        extensionMappings.put("css", "text/css");
-        extensionMappings.put("js", "text/javascript");
+//        extensionMappings.put("css", "text/css");
+//        extensionMappings.put("js", "text/javascript");
         extensionMappings.put("json", "application/json");
         extensionMappings.put("xml", "application/xml");
         extensionMappings.put("html", "text/html");

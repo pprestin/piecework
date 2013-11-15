@@ -28,8 +28,9 @@ import org.springframework.stereotype.Service;
 
 import piecework.*;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.RequestDetails;
+import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
+import piecework.form.LegacyFormFactory;
 import piecework.handler.SubmissionHandler;
 import piecework.service.ProcessHistoryService;
 import piecework.service.ProcessInstanceService;
@@ -52,7 +53,6 @@ import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.TaskService;
 import piecework.ui.StreamingAttachmentContent;
-import piecework.form.FormFactory;
 import piecework.util.ProcessInstanceUtility;
 
 import java.util.List;
@@ -391,7 +391,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 //        if (screen == null)
 //            throw new ConflictError();
 
-        Field field = FormFactory.getField(process, task, fieldName);
+        Field field = LegacyFormFactory.getField(process, task, fieldName);
         if (field == null)
             throw new NotFoundError();
 

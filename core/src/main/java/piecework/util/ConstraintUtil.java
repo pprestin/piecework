@@ -44,7 +44,7 @@ public class ConstraintUtil {
         return null;
     }
 
-    public static boolean evaluate(Map<String, Field> fieldMap, ManyMap<String, Value> submissionData, Constraint constraint) {
+    public static boolean evaluate(Map<String, Field> fieldMap, Map<String, List<Value>> submissionData, Constraint constraint) {
         if (constraint == null)
             return true;
 
@@ -83,7 +83,7 @@ public class ConstraintUtil {
         return isSatisfied;
     }
 
-    public static boolean checkAll(String type, Map<String, Field> fieldMap, ManyMap<String, Value> submissionData, List<Constraint> constraints) {
+    public static boolean checkAll(String type, Map<String, Field> fieldMap, Map<String, List<Value>> submissionData, List<Constraint> constraints) {
         if (constraints != null && !constraints.isEmpty()) {
             for (Constraint constraint : constraints) {
                 if (type == null || constraint.getType() == null || constraint.getType().equals(type)) {
@@ -95,7 +95,7 @@ public class ConstraintUtil {
         return true;
     }
 
-    public static boolean checkAny(String type, Map<String, Field> fieldMap, ManyMap<String, Value> submissionData, List<Constraint> constraints) {
+    public static boolean checkAny(String type, Map<String, Field> fieldMap, Map<String, List<Value>> submissionData, List<Constraint> constraints) {
         if (constraints != null && !constraints.isEmpty()) {
             for (Constraint constraint : constraints) {
                 if (type == null || constraint.getType() == null || constraint.getType().equals(type)) {

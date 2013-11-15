@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
-import piecework.service.FormService;
+import piecework.service.LegacyFormService;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
@@ -30,6 +30,7 @@ import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import java.util.List;
 
@@ -37,12 +38,9 @@ import java.util.List;
  * @author James Renfro
  */
 @Service
-public class FormResourceVersion1 implements FormResource {
+public class FormResourceVersion1 extends AbstractFormResource implements FormResource {
 
     private static final Logger LOG = Logger.getLogger(FormResourceVersion1.class);
-
-    @Autowired
-    FormService formService;
 
     @Autowired
     IdentityHelper identityHelper;
@@ -57,45 +55,48 @@ public class FormResourceVersion1 implements FormResource {
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.startForm(context, process);
+        return startForm(context, process);
     }
 
     @Override
-    public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
+    public Response read(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.provideFormResponse(context, process, pathSegments);
+        return taskForm(context, process, taskId);
     }
+
+//    @Override
+//    public Response readJson(String rawProcessDefinitionKey, String requestId, MessageContext context) throws StatusCodeError {
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//        Process process = identityHelper.findProcess(processDefinitionKey, true);
+//        return taskFormJson(context, process, requestId);
+//    }
 
     @Override
     public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.saveForm(context, process, rawRequestId, body);
+        return saveForm(context, process, rawRequestId, body);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.submitForm(context, process, rawRequestId, body);
+        return submitForm(context, process, rawRequestId, body);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return formService.validateForm(context, process, body, rawRequestId, rawValidationId);
+        return validateForm(context, process, body, rawRequestId, rawValidationId);
     }
 
     @Override
     public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        return formService.search(rawQueryParameters, getViewContext());
+        return search(rawQueryParameters);
     }
-
-	public ViewContext getViewContext() {
-        return versions.getVersion1();
-	}
 
 }

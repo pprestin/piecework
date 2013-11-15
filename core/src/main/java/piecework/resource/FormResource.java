@@ -37,14 +37,20 @@ public interface FormResource extends ApplicationResource {
     @GET
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    @Produces({"text/html", "application/json", "application/xml", "text/javascript"})
+    @Produces({"text/html"})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
-	@Path("{processDefinitionKey}/{segments:.*}")
+	@Path("{processDefinitionKey}/{taskId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html","application/json", "application/xml", "text/javascript"})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
+    @Produces({"text/html","application/json"})
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context MessageContext context) throws StatusCodeError;
+
+//    @GET
+//    @Path("{processDefinitionKey}/{requestId}")
+//    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+//    @Produces({"application/json"})
+//    Response readJson(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/save/{requestId}")

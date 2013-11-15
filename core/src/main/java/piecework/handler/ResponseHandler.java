@@ -23,9 +23,9 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
-import piecework.common.RequestDetails;
+import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
-import piecework.form.FormFactory;
+import piecework.form.LegacyFormFactory;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
@@ -57,7 +57,7 @@ public class ResponseHandler {
     ContentRepository contentRepository;
 
     @Autowired
-    FormFactory formFactory;
+    LegacyFormFactory legacyFormFactory;
 
     @Autowired
     IdentityHelper helper;
@@ -75,7 +75,7 @@ public class ResponseHandler {
         Activity activity = formRequest.getActivity();
         Action action = activity.action(actionType);
 
-        Form form = formFactory.form(formRequest, process, instance, task, validation, actionType, principal);
+        Form form = legacyFormFactory.form(formRequest, process, instance, task, validation, actionType, principal);
 
         if (form != null && action != null && form.getContainer() != null && !form.getContainer().isReadonly()) {
 

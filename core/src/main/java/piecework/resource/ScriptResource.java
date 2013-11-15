@@ -36,25 +36,25 @@ import java.util.List;
 public interface ScriptResource {
 
     @GET
-    @Path("{processDefinitionKey}")
+    @Path("{processDefinitionKey}.js")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
     @Produces({"text/javascript"})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
-    @Path("{processDefinitionKey}/{requestId}")
+    @Path("{processDefinitionKey}/{requestId}.js")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces({"text/javascript"})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
 
     @GET
-    @Path("css/{id}")
+    @Path("css/{id}.css")
     @RolesAllowed({AuthorizationRole.USER})
     @Produces({"text/css"})
     Response readStylesheet(@PathParam("id") String stylesheetId) throws StatusCodeError;
 
     @GET
-    @Path("script/{id}")
+    @Path("script/{id}.js")
     @RolesAllowed({AuthorizationRole.USER})
     @Produces({"text/javascript"})
     Response readScript(@PathParam("id") String scriptId) throws StatusCodeError;

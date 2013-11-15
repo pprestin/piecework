@@ -198,6 +198,17 @@ public class Task implements Serializable, Comparable<Task> {
         return false;
     }
 
+    @JsonIgnore
+    public boolean canEdit(Entity entity) {
+        String entityId = entity != null ? entity.getEntityId() : null;
+        if (entityId == null)
+            return false;
+
+        String assigneeId = getAssigneeId();
+
+        return StringUtils.isEmpty(assigneeId) || assigneeId.equals(entityId);
+    }
+
     @Override
     public int compareTo(Task o) {
         int result = 0;

@@ -38,4 +38,6 @@ public interface EncryptionService {
 
     List<Value> decrypt(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException;
 
+    ManyMap<String, Value> mask(Map<String, List<Value>> original);
+
 }

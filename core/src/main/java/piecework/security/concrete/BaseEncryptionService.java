@@ -15,6 +15,7 @@
  */
 package piecework.security.concrete;
 
+import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import piecework.model.Secret;
@@ -64,6 +65,42 @@ public abstract class BaseEncryptionService implements EncryptionService {
                 Secret secret = Secret.class.cast(value);
                 String plaintext = decrypt(secret);
                 list.add(new Value(plaintext));
+            } else {
+                list.add(value);
+            }
+        }
+
+        return list;
+    }
+
+    public ManyMap<String, Value> mask(Map<String, List<Value>> original) {
+        ManyMap<String, Value> map = new ManyMap<String, Value>();
+
+        if (original != null && !original.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
+                String key = entry.getKey();
+                try {
+                    List<Value> masked = mask(entry.getValue());
+                    map.put(key, masked);
+                } catch (Exception e) {
+                    LOG.error("Could not decrypt messages for " + key, e);
+                }
+            }
+        }
+
+        return map;
+    }
+
+    public List<Value> mask(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+        if (values.isEmpty())
+            return Collections.emptyList();
+
+        List<Value> list = new ArrayList<Value>(values.size());
+        for (Value value : values) {
+            if (value instanceof Secret) {
+                Secret secret = Secret.class.cast(value);
+                String plaintext = decrypt(secret);
+                list.add(new Value(Strings.repeat("*", plaintext.length())));
             } else {
                 list.add(value);
             }

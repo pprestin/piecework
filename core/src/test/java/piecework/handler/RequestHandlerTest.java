@@ -27,9 +27,8 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.RequestDetails;
+import piecework.model.RequestDetails;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
@@ -37,7 +36,6 @@ import piecework.persistence.RequestRepository;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.TaskService;
-import piecework.exception.ForbiddenError;
 import piecework.test.ExampleFactory;
 
 import javax.servlet.http.HttpServletRequest;

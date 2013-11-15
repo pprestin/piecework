@@ -255,17 +255,6 @@ public class ProcessService {
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true);
-//        builder.clearInteractions();
-//
-//        List<Interaction> interactions = original.getInteractions();
-//        if (interactions != null) {
-//            Map<String, Section> sectionMap = original.getSectionMap();
-//            for (Interaction interaction : interactions) {
-//                Interaction decorated = ProcessUtility.interaction(interaction, sectionMap, versions.getVersion1());
-//                if (decorated != null)
-//                    builder.interaction(decorated);
-//            }
-//        }
 
         return builder.build();
     }

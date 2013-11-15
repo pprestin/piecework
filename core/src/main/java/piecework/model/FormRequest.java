@@ -199,6 +199,11 @@ public class FormRequest {
         return userAgent;
     }
 
+    @JsonIgnore
+    public boolean validate(Process process) {
+        return getProcessDefinitionKey() != null && process.getProcessDefinitionKey() != null && getProcessDefinitionKey().equals(process.getProcessDefinitionKey());
+    }
+
     public final static class Builder {
 
         private String requestId;

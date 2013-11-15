@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @author James Renfro
  */
 public enum ActionType implements Serializable {
-    ASSIGN("Assigned"), CLAIM("Claimed"), COMPLETE("Completed"), REJECT("Rejected"), SAVE("Saved"), VALIDATE("Validated"), CREATE("Created");
+    ASSIGN("Assigned"), CLAIM("Claimed"), COMPLETE("Completed"), REJECT("Rejected"), SAVE("Saved"), VALIDATE("Validated"), CREATE("Created"), VIEW("Reviewed");
 
     private final String description;
 

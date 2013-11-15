@@ -48,10 +48,10 @@ public interface AnonymousFormResource extends PublicApplicationResource {
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
-    @GET
-	@Path("{processDefinitionKey}/{segments:.*}")
-	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
+//    @GET
+//	@Path("{processDefinitionKey}/{segments:.*}")
+//	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+//    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")

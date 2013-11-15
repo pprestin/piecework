@@ -31,11 +31,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import piecework.ApplicationResource;
-import piecework.common.RequestDetails;
-import piecework.exception.ConflictError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
-import piecework.handler.ResponseHandler;
+import piecework.Constants;
+import piecework.model.RequestDetails;
+import piecework.enumeration.ActionType;
+import piecework.exception.*;
+import piecework.form.FormFactory;
+import piecework.handler.RequestHandler;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
@@ -43,7 +44,6 @@ import piecework.persistence.ContentRepository;
 import piecework.resource.ScriptResource;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
-import piecework.service.FormService;
 import piecework.service.FormTemplateService;
 import piecework.ui.OptimizingHtmlProviderVisitor;
 import piecework.ui.PageContext;
@@ -56,7 +56,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -77,7 +76,7 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
     Environment environment;
 
     @Autowired
-    FormService formService;
+    FormFactory formFactory;
 
     @Autowired
     FormTemplateService formTemplateService;
@@ -89,7 +88,7 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
     JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
 
     @Autowired
-    ResponseHandler responseHandler;
+    RequestHandler requestHandler;
 
     @Autowired
     Sanitizer sanitizer;
@@ -112,53 +111,20 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
     public Response read(String rawProcessDefinitionKey, MessageContext context) throws StatusCodeError {
 //        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 //        piecework.model.Process process = identityHelper.findProcess(processDefinitionKey, true);
-//        Form form = formService.startForm(context, process);
+//        Form form = legacyFormService.startForm(context, process);
 
         return null;
     }
 
     @Override
     public Response read(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
+        Entity principal = identityHelper.getPrincipal();
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
-        Form form = formService.getForm(context, process, requestId);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        FormRequest request = requestHandler.handle(requestDetails, requestId);
 
-        if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
-            try {
-                Resource script = formTemplateService.getExternalScriptResource(Form.class, form);
-                InputStream input = script.getInputStream();
-
-                String applicationTitle = environment.getProperty("application.name");
-                final String assetsUrl = environment.getProperty("ui.static.urlbase");
-
-                Entity principal = identityHelper.getPrincipal();
-                User currentUser = null;
-                if (principal instanceof User)
-                    currentUser = User.class.cast(principal);
-
-                PageContext pageContext = new PageContext.Builder()
-                        .applicationTitle(applicationTitle)
-                        .assetsUrl(assetsUrl)
-                        .user(currentUser)
-                        .build();
-
-                ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(Form.class, MediaType.APPLICATION_JSON_TYPE);
-
-                final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
-                final String modelAsJson = objectMapper.writer().writeValueAsString(form);
-
-                Map<String, String> scopes = new HashMap<String, String>();
-                scopes.put("pageContext", pageContextAsJson);
-                scopes.put("model", modelAsJson);
-
-                return Response.ok(new TemplateResourceStreamingOutput(script, scopes)).build();
-            } catch (IOException ioe) {
-                LOG.error("Failed to generate script", ioe);
-            }
-        }
-
-        throw new NotFoundError();
+        return response(request, principal, new MediaType("text", "javascript"));
     }
 
     @Override
@@ -209,7 +175,7 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
             String base = detail.getBase();
 
             if (StringUtils.isNotEmpty(base)) {
-                Content content = responseHandler.content(base + "/" + name, requestDetails.getAcceptableMediaTypes());
+                Content content = contentRepository.findByLocation(base + "/" + name);
 
                 if (content != null)
                     return Response.ok(content.getInputStream()).type(content.getContentType()).build();
@@ -289,6 +255,50 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
         cache.put(template.getFilename(), stylesheetResource);
 
         return stylesheetResource;
+    }
+
+    private Response response(FormRequest request, Entity principal, MediaType mediaType) throws StatusCodeError {
+        if (request == null)
+            throw new NotFoundError();
+
+        try {
+            Form form = formFactory.form(request, ActionType.CREATE, principal, mediaType);
+
+            if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
+                try {
+                    Resource script = formTemplateService.getExternalScriptResource(Form.class, form);
+                    String applicationTitle = environment.getProperty("application.name");
+                    final String assetsUrl = environment.getProperty("ui.static.urlbase");
+
+                    User currentUser = null;
+                    if (principal instanceof User)
+                        currentUser = User.class.cast(principal);
+
+                    PageContext pageContext = new PageContext.Builder()
+                            .applicationTitle(applicationTitle)
+                            .assetsUrl(assetsUrl)
+                            .user(currentUser)
+                            .build();
+
+                    ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(Form.class, MediaType.APPLICATION_JSON_TYPE);
+
+                    final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
+                    final String modelAsJson = objectMapper.writer().writeValueAsString(form);
+
+                    Map<String, String> scopes = new HashMap<String, String>();
+                    scopes.put("pageContext", pageContextAsJson);
+                    scopes.put("model", modelAsJson);
+
+                    return Response.ok(new TemplateResourceStreamingOutput(script, scopes)).build();
+                } catch (IOException ioe) {
+                    LOG.error("Failed to generate script", ioe);
+                }
+            }
+        } catch (FormBuildingException e) {
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
+
+        throw new NotFoundError();
     }
 
     private static Date lastModified(Resource resource) {

@@ -150,7 +150,7 @@ angular.module('Form',
             $scope.model = $window.piecework.model;
             if (typeof($scope.model) !== 'undefined' && typeof($scope.model.total) === 'undefined') {
                 $scope.refreshForm($scope.model);
-                delete $scope['model'];
+                delete $window.piecework['model'];
             } else {
                 Form.get($scope.criteria, $scope.refreshForm);
             }
@@ -251,10 +251,9 @@ angular.module('Form',
             };
 
             $scope.model = $window.piecework.model;
-            //if (typeof($window.piecework) !== 'undefined' && typeof($window.piecework.model) !== 'undefined' && typeof($window.piecework.model.total) !== 'undefined') {
             if (typeof($scope.model) !== 'undefined' && typeof($window.piecework.model.total) !== 'undefined') {
                 $scope.processSearchResults($scope.model);
-                delete $scope['model'];
+                delete $window.piecework['model'];
             } else {
                 SearchResults.get($scope.criteria, $scope.processSearchResults);
             }
@@ -345,7 +344,8 @@ angular.module('Form',
                         notificationService.clear($scope);
                         var selectedForms = $scope.selectedForms;
                         angular.forEach(selectedForms, function(form) {
-                            taskService.assignTask($scope, form, assignee.userId, success, failure);
+                            var userId = typeof(assignee.userId) === 'undefined' ? assignee : assignee.userId;
+                            taskService.assignTask($scope, form, userId, success, failure);
                         });
                     };
 

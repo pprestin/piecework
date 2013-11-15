@@ -25,11 +25,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.Versions;
-import piecework.common.RequestDetails;
+import piecework.model.RequestDetails;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.StatusCodeError;
-import piecework.form.FormFactory;
+import piecework.form.LegacyFormFactory;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
@@ -59,7 +59,7 @@ public class ResponseHandlerTest {
     ContentRepository contentRepository;
 
     @Mock
-    FormFactory formFactory;
+    LegacyFormFactory legacyFormFactory;
 
     @Mock
     Versions versions;
@@ -81,7 +81,7 @@ public class ResponseHandlerTest {
 
         ViewContext version1 = new ViewContext("http://localhost:8000", "/secure", "/api", "/v1");
         Mockito.when(versions.getVersion1()).thenReturn(version1);
-        Mockito.when(formFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class), ActionType.CREATE, null)).thenReturn(form);
+        Mockito.when(legacyFormFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class), ActionType.CREATE, null)).thenReturn(form);
     }
 
     @Test

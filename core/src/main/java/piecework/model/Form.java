@@ -291,6 +291,28 @@ public class Form {
             return new Form(this, context);
         }
 
+        public Builder instance(ProcessInstance instance, ViewContext context) {
+            String processDefinitionKey = instance.getProcessDefinitionKey();
+            String processInstanceId = instance.getProcessInstanceId();
+            Set<Attachment> attachments = instance.getAttachments();
+            this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
+            this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
+            this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
+            this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+            this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+            if (attachments != null && !attachments.isEmpty()) {
+                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                this.attachmentCount = attachments.size();
+                this.attachments = new ArrayList<Attachment>(attachments.size());
+                for (Attachment attachment : attachments) {
+                    this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
+                }
+            } else {
+                this.attachmentCount = 0;
+            }
+            return this;
+        }
+
         public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, Set<Attachment> attachments, int attachmentCount, ViewContext context) {
             this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
             this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
@@ -338,6 +360,18 @@ public class Form {
 
         public Builder task(Task task) {
             this.task = task;
+            return this;
+        }
+
+        public Builder data(Map<String, List<Value>> data) {
+            if (data != null && !data.isEmpty())
+                this.data = new ManyMap<String, Value>(data);
+            return this;
+        }
+
+        public Builder messages(Map<String, List<Message>> messages) {
+            if (messages != null && !messages.isEmpty())
+                this.validation = new ManyMap<String, Message>(messages);
             return this;
         }
 

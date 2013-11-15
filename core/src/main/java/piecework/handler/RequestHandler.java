@@ -21,9 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.RequestDetails;
+import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
-import piecework.form.FormFactory;
+import piecework.form.LegacyFormFactory;
 import piecework.identity.IdentityHelper;
 import piecework.exception.*;
 import piecework.model.*;
@@ -60,10 +60,6 @@ public class RequestHandler {
         return create(requestDetails, process, null, (Task)null, ActionType.CREATE, null);
     }
 
-//    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task) throws StatusCodeError {
-//        return create(requestDetails, process, processInstance, task, null, null);
-//    }
-
     public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType) throws StatusCodeError {
         return create(requestDetails, process, processInstance, task, actionType, null);
     }
@@ -71,7 +67,7 @@ public class RequestHandler {
     public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, FormValidation validation) throws StatusCodeError {
         verifyCurrentUserIsAuthorized(process, task);
 
-        Activity activity = FormFactory.activity(process, processInstance, task);
+        Activity activity = LegacyFormFactory.activity(process, processInstance, task);
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
@@ -125,8 +121,6 @@ public class RequestHandler {
 
         if (formRequest == null) {
             return null;
-//            LOG.warn("Request being viewed or submitted for invalid/missing requestId " + requestId);
-//            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
         if (request != null) {
@@ -184,7 +178,7 @@ public class RequestHandler {
             throw new ForbiddenError();
         }
 
-        if (principal.hasRole(process, AuthorizationRole.OVERSEER)) {
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER)) {
             if (task != null && !task.isCandidateOrAssignee(principal)) {
                 LOG.warn("Forbidden: Unauthorized principal " + principal.toString() + " attempting to access task " + taskId);
                 throw new ForbiddenError();

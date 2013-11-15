@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common;
+package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.security.SecuritySettings;
@@ -28,6 +30,7 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RequestDetails {
 
     private final String certificateIssuer;
@@ -112,6 +115,7 @@ public class RequestDetails {
         return userAgent;
     }
 
+    @JsonIgnore
     public boolean isServiceCall() {
         return isServiceCall;
     }

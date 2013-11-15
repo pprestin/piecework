@@ -15,9 +15,13 @@
  */
 package piecework.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import piecework.enumeration.DataInjectionStrategy;
 
 import java.io.Serializable;
+import java.net.URI;
 
 /**
  * @author James Renfro
@@ -38,6 +42,18 @@ public class Action implements Serializable {
         this.strategy = strategy;
     }
 
+    @JsonIgnore
+    public URI getUri(Task task) throws IllegalArgumentException {
+        if (StringUtils.isNotEmpty(location)) {
+            String remoteLocation = location;
+            if (remoteLocation.contains("{formRequestId}") && task != null)
+                remoteLocation = remoteLocation.replace("{formRequestId}", task.getTaskInstanceId());
+            URI uri = URI.create(remoteLocation);
+            return uri;
+        }
+        return null;
+    }
+
     public Container getContainer() {
         return container;
     }
@@ -49,4 +65,5 @@ public class Action implements Serializable {
     public DataInjectionStrategy getStrategy() {
         return strategy;
     }
+
 }

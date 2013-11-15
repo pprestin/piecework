@@ -41,7 +41,7 @@ import piecework.test.ExampleFactory;
 public class FormFactoryTest {
 
     @InjectMocks
-    FormFactory formFactory;
+    LegacyFormFactory legacyFormFactory;
 
     @Mock
     IdentityHelper helper;
@@ -64,7 +64,7 @@ public class FormFactoryTest {
         Process process = ExampleFactory.exampleProcess();
         FormRequest request = new FormRequest.Builder().build();
 
-        Form form = formFactory.form(request, process, null, null, null, ActionType.CREATE, null);
+        Form form = legacyFormFactory.form(request, process, null, null, null, ActionType.CREATE, null);
 
         Assert.assertNotNull(form);
 //        Assert.assertEquals("First screen", form.getScreen().getTitle());
@@ -77,7 +77,7 @@ public class FormFactoryTest {
         Process process = ExampleFactory.exampleProcess();
         FormRequest request = new FormRequest.Builder().build();
         Task task = new Task.Builder().taskDefinitionKey("Review").build();
-        Form form = formFactory.form(request, process, null, task, null, ActionType.CREATE, null);
+        Form form = legacyFormFactory.form(request, process, null, task, null, ActionType.CREATE, null);
 
         Assert.assertNotNull(form);
 //        Assert.assertEquals("Review screen", form.getScreen().getTitle());

@@ -39,15 +39,14 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.ldap.core.support.LdapContextSource;
 import piecework.CommandExecutor;
 import piecework.Versions;
+import piecework.form.LegacyFormFactory;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.service.*;
 import piecework.Registry;
 import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.concrete.ProcessEngineConcreteFacade;
-import piecework.form.FormFactory;
 import piecework.validation.SubmissionTemplateFactory;
-import piecework.identity.IdentityDetails;
 import piecework.service.IdentityService;
 import piecework.ldap.LdapSettings;
 import piecework.persistence.AuthorizationRepository;
@@ -61,14 +60,10 @@ import piecework.persistence.concrete.InMemoryContentRepository;
 import piecework.model.*;
 import piecework.persistence.InteractionRepository;
 import piecework.identity.IdentityHelper;
-import piecework.resource.InteractionResource;
 import piecework.model.Process;
 import piecework.persistence.ScreenRepository;
-import piecework.resource.ScreenResource;
-import piecework.resource.concrete.InteractionResourceVersion1Impl;
 import piecework.process.concrete.MongoRepositoryStub;
 import piecework.resource.concrete.ProcessResourceVersion1;
-import piecework.resource.concrete.ScreenResourceVersion1Impl;
 import piecework.resource.ProcessResource;
 import piecework.security.EncryptionService;
 import piecework.security.SecuritySettings;
@@ -139,8 +134,8 @@ public class UnitTestConfiguration {
     }
 
     @Bean
-    public FormFactory formFactory() {
-        return new FormFactory();
+    public LegacyFormFactory formFactory() {
+        return new LegacyFormFactory();
     }
 
 	@Bean
@@ -172,8 +167,8 @@ public class UnitTestConfiguration {
     }
 
     @Bean
-    public FormService formService() {
-        return new FormService();
+    public LegacyFormService formService() {
+        return new LegacyFormService();
     }
 
     @Bean

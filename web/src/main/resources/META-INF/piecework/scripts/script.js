@@ -82,7 +82,7 @@
 
                 var $images = $variable.filter('img');
                 var $others = $variable.filter(':not(img,form)');
-                if (values != null && values.length > 0) {
+                if (typeof(values) !== 'undefined' && values.length > 0) {
                     var first = values[0];
                     if (typeof first === 'object') {
                         $images.attr('src', first.link);
@@ -91,18 +91,20 @@
                 }
             } else {
                 var isEmpty = true;
-                for (var x=0;x<values.length;x++) {
-                    if (values[x] != null && typeof values[x] == 'object' || values[x] != '') {
-                        isEmpty = false;
-                        break;
+                if (typeof(values) !== 'undefined') {
+                    for (var x=0;x<values.length;x++) {
+                        if (values[x] != null && typeof values[x] == 'object' || values[x] != '') {
+                            isEmpty = false;
+                            break;
+                        }
                     }
-                }
-                if (!isEmpty) {
-                    if ($input.length > 0 && type != 'file')
-                        $input.val(values);
+                    if (!isEmpty) {
+                        if ($input.length > 0 && type != 'file')
+                            $input.val(values);
 
-                    if ($variable.length > 0 && !$variable.is('form'))
-                        $variable.text(values);
+                        if ($variable.length > 0 && !$variable.is('form'))
+                            $variable.text(values);
+                    }
                 }
             }
 

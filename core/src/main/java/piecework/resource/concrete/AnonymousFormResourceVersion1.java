@@ -27,7 +27,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import piecework.Versions;
-import piecework.service.FormService;
+import piecework.service.LegacyFormService;
 import piecework.persistence.ProcessRepository;
 import piecework.security.Sanitizer;
 import piecework.exception.*;
@@ -38,51 +38,39 @@ import piecework.model.Process;
  * @author James Renfro
  */
 @Service
-public class AnonymousFormResourceVersion1 implements AnonymousFormResource {
+public class AnonymousFormResourceVersion1 extends AbstractFormResource implements AnonymousFormResource {
 
     private static final Logger LOG = Logger.getLogger(FormResourceVersion1.class);
 
     @Autowired
-    Environment environment;
-
-    @Autowired
     ProcessRepository processRepository;
-
-    @Autowired
-    FormService formService;
-
-    @Autowired
-    Sanitizer sanitizer;
-
-    @Autowired
-    Versions versions;
 
     @Override
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.startForm(context, process);
+        return startForm(context, process);
     }
 
-    @Override
-    public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
-        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
-
-        return formService.provideFormResponse(context, process, pathSegments);
-    }
+//    @Override
+//    public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
+//        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
+//
+//        return legacyFormService.provideFormResponse(context, process, pathSegments);
+//    }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.submitForm(context, process, rawRequestId, body);
+        return submitForm(context, process, rawRequestId, body);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return formService.validateForm(context, process, body, rawRequestId, rawValidationId);
+        return validateForm(context, process, body, rawRequestId, rawValidationId);
     }
 
 

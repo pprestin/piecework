@@ -25,7 +25,7 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
-import piecework.common.RequestDetails;
+import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.handler.SubmissionHandler;
 import piecework.service.ValidationService;
