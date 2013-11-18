@@ -135,15 +135,14 @@ public class ApplicationConfiguration {
     @Bean
     public Server applicationServer() {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
-//        extensionMappings.put("css", "text/css");
-//        extensionMappings.put("js", "text/javascript");
         extensionMappings.put("json", "application/json");
         extensionMappings.put("xml", "application/xml");
         extensionMappings.put("html", "text/html");
+        extensionMappings.put("csv", "text/csv");
 
         JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
         sf.setServiceBeanObjects((Object[])applicationResources);
-        sf.setAddress("/secure");
+        sf.setAddress("/ui");
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
@@ -152,7 +151,6 @@ public class ApplicationConfiguration {
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);
         providers.add(jsonProvider);
-//        providers.add(javascriptProvider);
         sf.setProviders(providers);
 
         BindingFactoryManager manager = sf.getBus().getExtension(BindingFactoryManager.class);

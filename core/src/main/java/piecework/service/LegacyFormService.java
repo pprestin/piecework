@@ -173,7 +173,7 @@ public class LegacyFormService {
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, ViewContext viewContext) throws StatusCodeError {
 
-        return taskService.allowedTasksDirect(rawQueryParameters, true);
+        return taskService.allowedTasksDirect(rawQueryParameters, true, false);
     }
 
     public Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {

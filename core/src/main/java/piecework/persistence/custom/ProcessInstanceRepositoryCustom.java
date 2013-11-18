@@ -2,6 +2,7 @@ package piecework.persistence.custom;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Query;
 import piecework.common.ViewContext;
 import piecework.model.*;
 import piecework.model.Process;
@@ -17,6 +18,8 @@ import java.util.Set;
 public interface ProcessInstanceRepositoryCustom {
 
     Page<ProcessInstance> findByCriteria(ProcessInstanceSearchCriteria criteria, Pageable pageable);
+
+    Page<ProcessInstance> findByQuery(Query query, Pageable pageable);
 
     ProcessInstance findByTaskId(String processDefinitionKey, String taskId);
 

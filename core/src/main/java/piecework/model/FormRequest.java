@@ -24,10 +24,7 @@ import piecework.enumeration.ActionType;
 import piecework.security.Sanitizer;
 import piecework.util.ManyMap;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -76,6 +73,8 @@ public class FormRequest {
 
     private final String userAgent;
 
+    private final Date requestDate;
+
     @Transient
     private final ProcessInstance instance;
 
@@ -108,6 +107,7 @@ public class FormRequest {
         this.referrer = builder.referrer;
         this.userAgent = builder.userAgent;
         this.task = builder.task;
+        this.requestDate = new Date();
     }
 
     @JsonIgnore
@@ -197,6 +197,10 @@ public class FormRequest {
 
     public String getUserAgent() {
         return userAgent;
+    }
+
+    public Date getRequestDate() {
+        return requestDate;
     }
 
     @JsonIgnore

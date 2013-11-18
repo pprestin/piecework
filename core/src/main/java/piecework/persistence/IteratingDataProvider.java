@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security;
+package piecework.persistence;
 
-import org.bouncycastle.crypto.InvalidCipherTextException;
-import piecework.model.Secret;
-import piecework.model.Value;
-import piecework.util.ManyMap;
-
-import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Map;
 
 /**
  * @author James Renfro
  */
-public interface EncryptionService {
+public interface IteratingDataProvider<T> {
 
-    Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException;
+    T getHeader();
 
-    String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException;
+    List<T> next();
+
+    boolean hasNext();
+
+    void reset();
 
 }

@@ -19,6 +19,7 @@ angular.module('Form',
                 .when('/form.html', {controller: 'ListController', templateUrl: root + '/static/ng/views/form-list.html'})
                 .when('/form/:processDefinitionKey', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
                 .when('/form/:processDefinitionKey/:requestId', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
+                .when('/form/:processDefinitionKey/:state/:requestId', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
                 .otherwise({redirectTo:'/form.html'});
 
             $locationProvider.html5Mode(true).hashPrefix('!');
@@ -88,8 +89,20 @@ angular.module('Form',
 
                 angular.forEach(fields, function(field) {
                     var values = data[field.name];
-                    if (values != null && values.length == 1)
-                        field.value = values[0];
+                    if (values != null && values.length == 1) {
+                        var value = values[0];
+                        if (field.type == 'person') {
+                            field.value = {
+                                  displayName: value.displayName,
+                                  userId: value.userId,
+                                  toString: function() {
+                                      return this.displayName;
+                                  }
+                              };
+                        } else {
+                            field.value = values[0];
+                        }
+                    }
                     if (typeof(validation) !== 'undefined' && validation[field.name] != null)
                         field.messages = validation[field.name];
                     if (readonly)
@@ -103,7 +116,7 @@ angular.module('Form',
                         form.state = 'suspended';
                     } else if (form.task.taskStatus == 'Cancelled') {
                         form.state = 'cancelled';
-                    } else {
+                    } else if (form.task.taskStatus == 'Complete') {
                         form.state = 'completed';
                     }
                 }
@@ -168,6 +181,8 @@ angular.module('Form',
                 angular.forEach(results.definitions, function(definition) {
                     $scope.processDefinitionDescription[definition.task.processDefinitionKey] = definition.task.processDefinitionLabel;
                 });
+                if (results.definitions.length == 1)
+                    $scope.criteria.processDefinitionKey = results.definitions[0].task.processDefinitionKey;
                 $scope.processDefinitionDescription[''] = 'Any process';
                 $scope.searching = false;
             };
@@ -177,6 +192,10 @@ angular.module('Form',
             $scope.criteria.taskStatus = 'all';
             var SearchResults = $resource('./form', {processStatus:'@processStatus'});
             //var results = SearchResults.get($scope.criteria, $scope.processSearchResults);
+
+            $scope.export = function(selectedForms) {
+                $window.location.href = "/workflow/ui/instance.csv?processDefinitionKey=" + $scope.criteria.processDefinitionKey;
+            };
 
             $scope.processStatusDescription = {
                 'open': 'Active',
@@ -229,6 +248,14 @@ angular.module('Form',
                 }
 
                 return Object.keys($scope.selectedFormMap).length !== 0;
+            };
+
+            $scope.isSingleProcessSelected = function() {
+                return $scope.criteria.processDefinitionKey != null && $scope.criteria.processDefinitionKey != '';
+            };
+
+            $scope.isSingleProcessSelectable = function() {
+                return $scope.definitions.length == 1;
             };
 
             $scope.$on('event:refresh', function(event, message) {

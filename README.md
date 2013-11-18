@@ -18,7 +18,7 @@ an install with auth = false.
 	% mvn clean install -Dmaven.test.skip=true
 	% mvn org.apache.tomcat.maven:tomcat7-maven-plugin:2.1:run -Dspring.profiles.active=embedded-ldap,embedded-mongo,data -Ddebug.mode=true
 
-Open a browser and point to: http://localhost:8000/piecework/secure/form.html
+Open a browser and point to: http://localhost:8000/piecework/ui/form.html
 
 In debug mode Spring security is being bypassed to log in as "rod". Take a look at core/src/main/resources/META-INF/piecework/default.properties to override that and get a default login screen -- comment out both authentication properties.
 

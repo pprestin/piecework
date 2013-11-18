@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.ldap.core.support.LdapContextSource;
 import piecework.CommandExecutor;
 import piecework.Versions;
@@ -385,6 +386,11 @@ public class UnitTestConfiguration {
         @Override
         public boolean update(String id, String engineProcessInstanceId) {
             return false;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public Page<ProcessInstance> findByQuery(Query query, Pageable pageable) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
 
         @Override

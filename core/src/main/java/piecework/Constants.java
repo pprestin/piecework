@@ -106,6 +106,7 @@ public interface Constants {
         public static final String process_is_misconfigured = "process_is_misconfigured";
         public static final String process_not_deployed = "process_not_deployed";
         public static final String request_does_not_match = "request_does_not_match";
+        public static final String request_expired = "request_expired";
 		public static final String request_id_required = "request_id_required";
         public static final String request_type_required = "request_type_required";
         public static final String screen_id_invalid = "screen_id_invalid";

@@ -16,6 +16,7 @@
 package piecework.resource;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.exception.StatusCodeError;
 
@@ -33,13 +34,13 @@ import java.util.List;
  * @author James Renfro
  */
 @Path("resource")
-public interface ScriptResource {
+public interface ScriptResource extends ApplicationResource {
 
-    @GET
-    @Path("{processDefinitionKey}.js")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    @Produces({"text/javascript"})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
+//    @GET
+//    @Path("{processDefinitionKey}.js")
+//    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+//    @Produces({"text/javascript"})
+//    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
     @Path("{processDefinitionKey}/{requestId}.js")

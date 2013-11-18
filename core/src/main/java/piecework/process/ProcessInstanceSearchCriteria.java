@@ -314,7 +314,10 @@ public class ProcessInstanceSearchCriteria {
                                     this.firstResult = Integer.valueOf(value);
                                 else if (key.equals("keyword"))
                                     this.keywords.add(value);
-                                else {
+                                else if (key.equals("verbose")) {
+                                    if (value != null && value.equals("true"))
+                                        this.includeVariables = true;
+                                } else {
                                     if (key.startsWith("__"))
                                         this.contentParameters.putOne(key.substring(2), value);
                                     else

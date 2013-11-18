@@ -17,6 +17,8 @@ package piecework.handler;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Hours;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -67,7 +69,11 @@ public class RequestHandler {
     public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, FormValidation validation) throws StatusCodeError {
         verifyCurrentUserIsAuthorized(process, task);
 
-        Activity activity = LegacyFormFactory.activity(process, processInstance, task);
+        Activity activity = activity(process, processInstance, task);
+
+        // Don't allow anyone to issue a create request for a task that's not open
+        if (actionType == ActionType.CREATE && task != null && task.getTaskStatus() != null && !task.getTaskStatus().equals(Constants.TaskStatuses.OPEN))
+            actionType = ActionType.VIEW;
 
         FormRequest.Builder formRequestBuilder = new FormRequest.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
@@ -113,7 +119,10 @@ public class RequestHandler {
         }
         Task task = taskService.task(instance, taskId);
         verifyCurrentUserIsAuthorized(process, task);
-        return create(requestDetails, process, instance, task, null);
+
+        ActionType actionType = ActionType.CREATE;
+
+        return create(requestDetails, process, instance, task, actionType);
     }
 
     public FormRequest handle(RequestDetails request, String requestId) throws StatusCodeError {
@@ -147,6 +156,14 @@ public class RequestHandler {
 
                 }
             }
+
+            if (formRequest.getRequestDate() != null) {
+                Hours hours = Hours.hoursBetween(new DateTime(formRequest.getRequestDate()), new DateTime());
+                int h = hours.getHours();
+                if (h > 1) {
+                    throw new ForbiddenError(Constants.ExceptionCodes.request_expired);
+                }
+            }
         }
 
         ProcessInstance instance = formRequest.getInstance();
@@ -165,6 +182,34 @@ public class RequestHandler {
     /*
      * Helper methods
      */
+    public static Activity activity(Process process, ProcessInstance instance, Task task) throws StatusCodeError {
+        Activity activity = null;
+        if (process.isAllowPerInstanceActivities() && task != null && task.getTaskDefinitionKey() != null && instance != null) {
+            Map<String, Activity> activityMap = instance.getActivityMap();
+            if (activityMap != null)
+                activity = activityMap.get(task.getTaskDefinitionKey());
+
+            if (activity != null)
+                return activity;
+        }
+
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        String activityKey = deployment.getStartActivityKey();
+        if (task != null)
+            activityKey = task.getTaskDefinitionKey();
+
+        if (activityKey != null)
+            activity = deployment.getActivity(activityKey);
+
+        if (activity != null)
+            return activity;
+
+        throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+    }
+
 
     private void verifyCurrentUserIsAuthorized(Process process, Task task) throws ForbiddenError, BadRequestError {
         if (process == null)

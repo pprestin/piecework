@@ -53,6 +53,9 @@ public class Form {
     @XmlElement
     private final Container container;
 
+    @XmlElement
+    private final Explanation explanation;
+
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
     private final Map<String, List<Value>> data;
 
@@ -114,6 +117,7 @@ public class Form {
         this.submissionType = builder.submissionType;
         this.task = builder.task;
         this.container = builder.container;
+        this.explanation = builder.explanation;
         this.data = builder.data;
         this.validation = builder.validation;
         this.root = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME) : null;
@@ -150,6 +154,10 @@ public class Form {
 
     public Task getTask() {
         return task;
+    }
+
+    public Explanation getExplanation() {
+        return explanation;
     }
 
     public Map<String, List<Value>> getData() {
@@ -240,6 +248,7 @@ public class Form {
         private String submissionType;
         private Task task;
         private Container container;
+        private Explanation explanation;
         private ManyMap<String, Value> data;
         private ManyMap<String, Message> validation;
         private String activation;
@@ -267,6 +276,7 @@ public class Form {
             this.submissionType = sanitizer.sanitize(form.submissionType);
             this.container = form.container != null ? new Container.Builder(form.container, sanitizer).build() : null;
             this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
+            this.explanation = form.explanation;
             if (form.data != null && !form.data.isEmpty())
                 this.data = new ManyMap<String, Value>(form.data);
             else
@@ -403,6 +413,11 @@ public class Form {
 
         public Builder external(boolean external) {
             this.external = external;
+            return this;
+        }
+
+        public Builder explanation(Explanation explanation) {
+            this.explanation = explanation;
             return this;
         }
     }

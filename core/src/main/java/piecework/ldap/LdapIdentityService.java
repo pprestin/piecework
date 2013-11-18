@@ -157,8 +157,12 @@ public class LdapIdentityService implements IdentityService {
         Cache cache = cacheManager.getCache("loadUserByInternalId");
         Cache.ValueWrapper wrapper = cache.get(internalId);
 
-        if (wrapper != null)
-            return (UserDetails) wrapper.get();
+        if (wrapper != null) {
+            UserDetails details = (UserDetails) wrapper.get();
+            if (details == null)
+                throw new UsernameNotFoundException(internalId);
+            return details;
+        }
 
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieving user by internalId " + internalId);

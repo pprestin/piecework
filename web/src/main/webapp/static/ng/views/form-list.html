@@ -122,7 +122,7 @@
                                     </ul>
                                 </div>
                             </li>
-                            <li>
+                            <li ng-hide="isSingleProcessSelectable()">
                                 <div class="dropdown">
                                     <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">
                                         <span class="dropdown-toggle-text">{{processDefinitionDescription[criteria.processDefinitionKey]}}</span>
@@ -151,11 +151,12 @@
                     </div>
                 </form>
                 <div class="navbar-right">
-                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>
-                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" data-target="#history-dialog" data-backdrop="false" data-toggle="modal" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>
-                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected(['Suspended']))" data-ng-show="isFormSelected(['Suspended'])" class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>
-                    <button data-ng-click="dialogs.openSuspendModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" data-target="#suspend-dialog" data-backdrop="false" data-toggle="modal" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
-                    <button data-ng-click="dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))" data-ng-show="isFormSelected(['Open','Suspended'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>
+                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>
+                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" data-ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>
+                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected(['Suspended']))" data-ng-show="isFormSelected(['Suspended'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>
+                    <button data-ng-click="dialogs.openSuspendModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
+                    <button data-ng-click="dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))" data-ng-show="isFormSelected(['Open','Suspended'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>
+                    <button data-ng-click="export(getFormsSelected())" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>
                 </div>
             </div>
         </div>
@@ -166,7 +167,7 @@
         <div data-ng-show="notification" class="alert alert-danger">
             <strong>{{notification.title}}</strong> {{notification.message}}
         </div>
-        <h2>Tasks</h2>
+        <h2 data-ng-bind="isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : 'Tasks'"></h2>
         <table class="search-results table table-hover">
             <thead>
             <tr>

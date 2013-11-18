@@ -35,6 +35,7 @@ import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 
 import com.google.common.collect.Sets;
+import piecework.security.DataFilterService;
 import piecework.security.EncryptionService;
 import piecework.util.ManyMap;
 import piecework.validation.FormValidation;
@@ -51,7 +52,7 @@ public class ValidationService {
 	private static final Logger LOG = Logger.getLogger(ValidationService.class);
 
     @Autowired
-    EncryptionService encryptionService;
+    DataFilterService dataFilterService;
 
     @Autowired
     IdentityService identityService;
@@ -94,8 +95,8 @@ public class ValidationService {
             Map<String, List<Value>> submissionData = submission.getData();
             Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
-            ManyMap<String, Value> decryptedSubmissionData = encryptionService.decrypt(submissionData);
-            ManyMap<String, Value> decryptedInstanceData = encryptionService.decrypt(instanceData);
+            ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData);
+            ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData);
 
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();

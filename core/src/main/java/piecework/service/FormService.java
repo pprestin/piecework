@@ -64,7 +64,7 @@ public class FormService {
 
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
-        return taskService.allowedTasksDirect(rawQueryParameters, true);
+        return taskService.allowedTasksDirect(rawQueryParameters, true, false);
     }
 
     public FormRequest saveForm(Process process, FormRequest formRequest, MultipartBody body) throws StatusCodeError {
@@ -103,47 +103,25 @@ public class FormService {
         if (action == null)
             action = ActionType.COMPLETE;
 
-        try {
-            FormRequest nextFormRequest = null;
-            switch (action) {
-                case COMPLETE:
-                    ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
-                    nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
-                    return nextFormRequest;
+        FormRequest nextFormRequest = null;
+        switch (action) {
+            case COMPLETE:
+                ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
+                nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
+                return nextFormRequest;
 
-                case REJECT:
-                    stored = processInstanceService.reject(process, instance, task, template, submission);
-                    nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
-                    return nextFormRequest;
+            case REJECT:
+                stored = processInstanceService.reject(process, instance, task, template, submission);
+                nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
+                return nextFormRequest;
 
-                case SAVE:
-                    processInstanceService.save(process, instance, task, template, submission);
-                    return formRequest;
+            case SAVE:
+                processInstanceService.save(process, instance, task, template, submission);
+                return formRequest;
 
-                case VALIDATE:
-                    validationService.validate(process, instance, task, template, submission, true);
-                    return formRequest;
-            }
-        } catch (BadRequestError e) {
-            FormValidation validation = e.getValidation();
-
-            Map<String, List<Message>> results = validation.getResults();
-
-            if (results != null && !results.isEmpty()) {
-                for (Map.Entry<String, List<Message>> result : results.entrySet()) {
-                    LOG.warn("Validation error " + result.getKey() + " : " + result.getValue().iterator().next().getText());
-                }
-            }
-
-            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
-            boolean isJSON = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(MediaType.APPLICATION_JSON_TYPE);
-
-            if (isJSON)
-                throw e;
-
-            FormRequest invalidRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE, validation);
-
-            return invalidRequest;
+            case VALIDATE:
+                validationService.validate(process, instance, task, template, submission, true);
+                return formRequest;
         }
 
         return null;

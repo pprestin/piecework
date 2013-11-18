@@ -15,7 +15,10 @@
  */
 package piecework.security;
 
+import com.google.common.base.Strings;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,8 @@ import piecework.model.*;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
 import java.util.*;
 
 /**
@@ -32,6 +37,8 @@ import java.util.*;
  */
 @Service
 public class DataFilterService {
+
+    private static final Logger LOG = Logger.getLogger(DataFilterService.class);
 
     @Autowired
     private EncryptionService encryptionService;
@@ -42,7 +49,7 @@ public class DataFilterService {
     private static final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
     private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
 
-    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal) {
+    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData) {
         Map<String, List<Value>> data = instance != null ? instance.getData() : new ManyMap<String, Value>();
         Map<String, List<Value>> filtered = new ManyMap<String, Value>();
         if (fieldMap != null) {
@@ -55,10 +62,13 @@ public class DataFilterService {
             }
         }
 
-        if (task.isAssignee(principal)) {
-            return encryptionService.decrypt(filtered);
+        if (includeRestrictedData) {
+            if (task.isAssignee(principal)) {
+                return decrypt(filtered);
+            }
+            return mask(filtered);
         }
-        return encryptionService.mask(filtered);
+        return exclude(filtered);
     }
 
     private List<Value> values(ProcessInstance instance, String fieldName, List<? extends Value> values, String defaultValue, Entity principal) {
@@ -87,6 +97,111 @@ public class DataFilterService {
                         .fieldName(fieldName)
                         .build(versions.getVersion1()));
             } else {
+                list.add(value);
+            }
+        }
+
+        return list;
+    }
+
+    public ManyMap<String, Value> decrypt(Map<String, List<Value>> original) {
+        ManyMap<String, Value> map = new ManyMap<String, Value>();
+
+        if (original != null && !original.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
+                String key = entry.getKey();
+                try {
+                    List<Value> decrypted = decrypt(entry.getValue());
+                    map.put(key, decrypted);
+                } catch (Exception e) {
+                    LOG.error("Could not decrypt messages for " + key, e);
+                }
+            }
+        }
+
+        return map;
+    }
+
+    private List<Value> decrypt(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+        if (values.isEmpty())
+            return Collections.emptyList();
+
+        List<Value> list = new ArrayList<Value>(values.size());
+        for (Value value : values) {
+            if (value instanceof Secret) {
+                Secret secret = Secret.class.cast(value);
+                String plaintext = encryptionService.decrypt(secret);
+                list.add(new Value(plaintext));
+            } else {
+                list.add(value);
+            }
+        }
+
+        return list;
+    }
+
+    private ManyMap<String, Value> mask(Map<String, List<Value>> original) {
+        ManyMap<String, Value> map = new ManyMap<String, Value>();
+
+        if (original != null && !original.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
+                String key = entry.getKey();
+                try {
+                    List<Value> masked = mask(entry.getValue());
+                    map.put(key, masked);
+                } catch (Exception e) {
+                    LOG.error("Could not decrypt messages for " + key, e);
+                }
+            }
+        }
+
+        return map;
+    }
+
+    private List<Value> mask(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+        if (values.isEmpty())
+            return Collections.emptyList();
+
+        List<Value> list = new ArrayList<Value>(values.size());
+        for (Value value : values) {
+            if (value instanceof Secret) {
+                Secret secret = Secret.class.cast(value);
+                String plaintext = encryptionService.decrypt(secret);
+                list.add(new Value(Strings.repeat("*", plaintext.length())));
+            } else {
+                list.add(value);
+            }
+        }
+
+        return list;
+    }
+
+    private ManyMap<String, Value> exclude(Map<String, List<Value>> original) {
+        ManyMap<String, Value> map = new ManyMap<String, Value>();
+
+        if (original != null && !original.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
+                String key = entry.getKey();
+                try {
+                    List<Value> filtered = exclude(entry.getValue());
+                    if (!filtered.isEmpty())
+                        map.put(key, filtered);
+                } catch (Exception e) {
+                    LOG.error("Could not decrypt messages for " + key, e);
+                }
+            }
+        }
+
+        return map;
+    }
+
+    private List<Value> exclude(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+        if (values.isEmpty())
+            return Collections.emptyList();
+
+        List<Value> list = new ArrayList<Value>(values.size());
+        for (Value value : values) {
+            if (! (value instanceof Secret)) {
                 list.add(value);
             }
         }

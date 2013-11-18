@@ -33,7 +33,7 @@ define([ 'models/field', 'models/process', 'mocha', 'chai' ], function(Field, Pr
 			url.should.be.a("function");
 			
 			var location = _.result(model, 'url');
-			location.should.equal("secure/v1/process/demo/field/123");
+			location.should.equal("ui/v1/process/demo/field/123");
 		}),
 		it("correctly decides if model is new", function() {	
 			var model = new Field({'id': '123'});

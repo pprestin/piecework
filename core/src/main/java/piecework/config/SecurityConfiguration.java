@@ -109,7 +109,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 //			.authorizeUrls()
 //			.antMatchers("/static/**").permitAll()
 //            .antMatchers("/public/**").permitAll()
-//        	.antMatchers("/secure/**").authenticated();
+//        	.antMatchers("/ui/**").authenticated();
 //
 //		switch (type) {
 //		case NORMAL:

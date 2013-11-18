@@ -37,20 +37,20 @@ public interface FormResource extends ApplicationResource {
     @GET
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    @Produces({"text/html"})
+    @Produces({"text/html","application/json"})
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
 	@Path("{processDefinitionKey}/{taskId}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces({"text/html","application/json"})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context MessageContext context) throws StatusCodeError;
+    Response readTask(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context MessageContext context) throws StatusCodeError;
 
-//    @GET
-//    @Path("{processDefinitionKey}/{requestId}")
-//    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-//    @Produces({"application/json"})
-//    Response readJson(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
+    @GET
+    @Path("{processDefinitionKey}/page/{requestId}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+    @Produces({"text/html","application/json"})
+    Response readRequest(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/save/{requestId}")
@@ -76,6 +76,7 @@ public interface FormResource extends ApplicationResource {
     @GET
     @Path("")
     @RolesAllowed({AuthorizationRole.OVERSEER, AuthorizationRole.USER})
-    SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
+    @Produces({"text/html", "application/json", "text/csv"})
+    SearchResults search(@Context MessageContext context) throws StatusCodeError;
 
 }

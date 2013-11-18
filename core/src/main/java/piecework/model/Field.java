@@ -59,6 +59,9 @@ public class Field implements Serializable, Comparable<Field> {
     @XmlElement
     private final String label;
 
+    @XmlElement
+    private final String header;
+
 	@XmlElement
     private final String name;
     
@@ -138,6 +141,7 @@ public class Field implements Serializable, Comparable<Field> {
     private Field(Field.Builder builder, ViewContext context) {
         this.fieldId = builder.fieldId;
         this.label = builder.label;
+        this.header = builder.header;
         this.name = builder.name;
         this.type = builder.type;
         this.editable = builder.editable;
@@ -169,6 +173,10 @@ public class Field implements Serializable, Comparable<Field> {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getHeader() {
+        return header;
     }
 
     public String getName() {
@@ -293,6 +301,7 @@ public class Field implements Serializable, Comparable<Field> {
     	private String processDefinitionKey;
         private String processInstanceId;
         private String label;
+        private String header;
         private String name;
         private String type;
         private boolean editable;
@@ -335,6 +344,7 @@ public class Field implements Serializable, Comparable<Field> {
         public Builder(Field field, Sanitizer sanitizer) {
             this.fieldId = field.fieldId != null ? sanitizer.sanitize(field.fieldId) : UUID.randomUUID().toString();
             this.label = sanitizer.sanitize(field.label);
+            this.header = sanitizer.sanitize(field.header);
             this.name = sanitizer.sanitize(field.name);
             this.type = sanitizer.sanitize(field.type);
             this.editable = field.editable;
@@ -403,6 +413,11 @@ public class Field implements Serializable, Comparable<Field> {
 
         public Builder label(String label) {
             this.label = label;
+            return this;
+        }
+
+        public Builder header(String header) {
+            this.header = header;
             return this;
         }
 

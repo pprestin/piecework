@@ -32,10 +32,12 @@ import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.form.LegacyFormFactory;
 import piecework.handler.SubmissionHandler;
+import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.service.ProcessHistoryService;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.service.ValuesService;
+import piecework.ui.ExportStreamingOutput;
 import piecework.util.ManyMap;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
@@ -338,9 +340,22 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
 	@Override
-	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
+	public Response search(MessageContext context) throws StatusCodeError {
+        UriInfo uriInfo = context.getContext(UriInfo.class);
+        List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
+
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-		return processInstanceService.search(rawQueryParameters);
+
+
+        if (mediaTypes != null && mediaTypes.contains(new MediaType("text", "csv"))) {
+            String fileName = "export.csv";
+            ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters);
+            ExportStreamingOutput exportStreamingOutput = new ExportStreamingOutput(provider);
+            return Response.ok(exportStreamingOutput, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
+        } else {
+            SearchResults results = processInstanceService.search(rawQueryParameters);
+            return Response.ok(results).build();
+        }
 	}
 
     @Override

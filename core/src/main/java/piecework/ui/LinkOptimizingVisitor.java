@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
 import org.springframework.core.env.Environment;
+import piecework.designer.model.view.IndexView;
 import piecework.model.Explanation;
 import piecework.model.Form;
 import piecework.model.SearchResults;
@@ -79,6 +80,8 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
             dependencies.addAttribute("href", applicationUrl + "/resource/css/Form.css");
         } else if (type.equals(SearchResults.class)) {
             dependencies.addAttribute("href", applicationUrl + "/resource/css/SearchResults.form.css");
+        } else if (type.equals(IndexView.class)) {
+            dependencies.addAttribute("href", applicationUrl + "/resource/css/IndexView.css");
         }
         tagNode.addChild(dependencies);
     }
@@ -111,6 +114,8 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
             dependencies.addAttribute("src", applicationUrl + "/resource/script/Form.js");
         } else if (type.equals(SearchResults.class)) {
             dependencies.addAttribute("src", applicationUrl + "/resource/script/SearchResults.form.js");
+        } else if (type.equals(IndexView.class)) {
+            dependencies.addAttribute("src", applicationUrl + "/resource/script/IndexView.js");
         }
         tagNode.addChild(dependencies);
     }

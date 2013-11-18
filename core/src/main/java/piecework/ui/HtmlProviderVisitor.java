@@ -114,7 +114,7 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         if (path == null)
             return false;
 
-        return path.startsWith("secure/") || path.startsWith("../secure/") || path.startsWith(("../../secure"));
+        return path.startsWith("ui/") || path.startsWith("../ui/") || path.startsWith(("../../ui"));
     }
 
     protected boolean checkForStaticPath(String path) {
@@ -125,7 +125,7 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
     }
 
     protected String recomputeSecurePath(final String path, String assetsUrl) {
-        int indexOf = path.indexOf("secure/");
+        int indexOf = path.indexOf("ui/");
 
         if (indexOf > path.length())
             return path;

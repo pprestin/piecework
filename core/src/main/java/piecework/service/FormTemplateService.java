@@ -56,16 +56,7 @@ public class FormTemplateService {
     private static final Logger LOG = Logger.getLogger(FormTemplateService.class);
 
     @Autowired
-    CacheManager cacheManager;
-
-    @Autowired
-    ContentRepository contentRepository;
-
-    @Autowired
     Environment environment;
-
-    @Autowired
-    JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
 
     private enum ResourceType { SCRIPT, HTML };
 
@@ -153,27 +144,5 @@ public class FormTemplateService {
         }
         return null;
     }
-
-//    private Resource getResource(ResourceType resourceType, String resourceName) {
-//        String classpathPrefix;
-//        File directory;
-//        if (resourceType == ResourceType.SCRIPT) {
-//            classpathPrefix = SCRIPTS_CLASSPATH_PREFIX;
-//            directory = scriptsDirectory;
-//        } else if (resourceType == ResourceType.HTML) {
-//            classpathPrefix = TEMPLATES_CLASSPATH_PREFIX;
-//            directory = templatesDirectory;
-//        }
-//
-//        Cache cache = cacheManager.getCache("templateCache");
-//        Cache.ValueWrapper wrapper = cache.get(resourceName);
-//
-//        if (wrapper != null)
-//            return (Resource) wrapper.get();
-//
-//
-//
-//    }
-
 
 }

@@ -25,6 +25,7 @@ import piecework.process.AttachmentQueryParameters;
  * @author James Renfro
  */
 @Path("instance")
+@Produces({"application/xml","application/json"})
 public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
 
     @POST
@@ -59,12 +60,14 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}")
     @RolesAllowed({AuthorizationRole.OVERSEER})
+    @Consumes({"application/xml","application/json"})
     Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
 
     @GET
     @Path("")
     @RolesAllowed({AuthorizationRole.OVERSEER})
-    SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
+    @Produces({"application/xml","application/json", "text/csv"})
+    Response search(@Context MessageContext context) throws StatusCodeError;
 
     /*
      * SUBRESOURCES

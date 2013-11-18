@@ -39,9 +39,9 @@ import piecework.identity.IdentityHelper;
 import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.security.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.TaskCriteria;
 import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -54,6 +54,9 @@ import java.util.*;
 public class TaskService {
 
     private static final Logger LOG = Logger.getLogger(TaskService.class);
+
+    @Autowired
+    DataFilterService dataFilterService;
 
     @Autowired
     DeploymentRepository deploymentRepository;
@@ -134,7 +137,7 @@ public class TaskService {
         return set;
     }
 
-    public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters, boolean wrapWithForm) throws StatusCodeError {
+    public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
         long time = 0;
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
@@ -256,12 +259,18 @@ public class TaskService {
 
                                         boolean external = createAction != null && StringUtils.isNotEmpty(createAction.getLocation());
 
+                                        Map<String, List<Value>> data = null;
+
+                                        if (includeData)
+                                            data = dataFilterService.filter(activity.getFieldMap(), instance, null, principal, false);
+
                                         resultsBuilder.item(new Form.Builder()
                                                 .formInstanceId(rebuilt.getTaskInstanceId())
                                                 .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
                                                 .processDefinitionKey(rebuilt.getProcessDefinitionKey())
                                                 .instanceSubresources(rebuilt.getProcessDefinitionKey(),
                                                         rebuilt.getProcessInstanceId(), null, 0, version1)
+                                                .data(data)
                                                 .external(external)
                                                 .build(version1));
                                     }

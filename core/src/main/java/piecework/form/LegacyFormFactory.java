@@ -28,6 +28,7 @@ import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.security.DataFilterService;
 import piecework.security.EncryptionService;
 import piecework.util.ProcessInstanceUtility;
 import piecework.validation.FormValidation;
@@ -50,7 +51,7 @@ public class LegacyFormFactory {
     private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
 
     @Autowired
-    EncryptionService encryptionService;
+    DataFilterService dataFilterService;
 
     @Autowired
     Versions versions;
@@ -75,11 +76,11 @@ public class LegacyFormFactory {
         ManyMap<String, Message> messages = new ManyMap<String, Message>();
 
         if (instance != null) {
-            data.putAll(encryptionService.decrypt(instance.getData()));
+            data.putAll(dataFilterService.decrypt(instance.getData()));
         }
 
         if (validation != null) {
-            data.putAll(encryptionService.decrypt(validation.getData()));
+            data.putAll(dataFilterService.decrypt(validation.getData()));
             messages.putAll(validation.getResults());
         }
 

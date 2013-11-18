@@ -79,7 +79,7 @@ public class ResponseHandlerTest {
         form = new Form.Builder().formInstanceId("123").build();
         task = new Task.Builder().taskInstanceId("456").build();
 
-        ViewContext version1 = new ViewContext("http://localhost:8000", "/secure", "/api", "/v1");
+        ViewContext version1 = new ViewContext("http://localhost:8000", "/ui", "/api", "/v1");
         Mockito.when(versions.getVersion1()).thenReturn(version1);
         Mockito.when(legacyFormFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class), ActionType.CREATE, null)).thenReturn(form);
     }
@@ -104,7 +104,7 @@ public class ResponseHandlerTest {
     public void testRedirect() throws StatusCodeError {
         Response response = responseHandler.redirect(formRequest);
         Assert.assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
-        Assert.assertEquals("http://localhost:8000/secure/form/1", response.getHeaderString(HttpHeaders.LOCATION));
+        Assert.assertEquals("http://localhost:8000/ui/form/1", response.getHeaderString(HttpHeaders.LOCATION));
     }
 
 }

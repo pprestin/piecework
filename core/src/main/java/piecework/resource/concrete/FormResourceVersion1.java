@@ -59,18 +59,18 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public Response read(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws StatusCodeError {
+    public Response readTask(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return taskForm(context, process, taskId);
     }
 
-//    @Override
-//    public Response readJson(String rawProcessDefinitionKey, String requestId, MessageContext context) throws StatusCodeError {
-//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-//        Process process = identityHelper.findProcess(processDefinitionKey, true);
-//        return taskFormJson(context, process, requestId);
-//    }
+    @Override
+    public Response readRequest(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        return requestForm(context, process, requestId);
+    }
 
     @Override
     public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
@@ -94,7 +94,9 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
+    public SearchResults search(MessageContext context) throws StatusCodeError {
+        UriInfo uriInfo = context.getContext(UriInfo.class);
+
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         return search(rawQueryParameters);
     }

@@ -59,7 +59,7 @@ public class LoadTester {
     }
 
     public void retrieveAllTasks() throws Exception {
-        HttpGet get = new HttpGet("https://localhost:8443/piecework/secure/form.json");
+        HttpGet get = new HttpGet("https://localhost:8443/piecework/ui/form.json");
         HttpResponse response = client.execute(get);
         System.out.println(response.getStatusLine());
     }

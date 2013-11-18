@@ -30,8 +30,8 @@ import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import piecework.ApplicationResource;
 import piecework.Constants;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
@@ -62,12 +62,11 @@ import java.util.*;
  * @author James Renfro
  */
 @Service
-public class ScriptResourceVersion1 implements ScriptResource, ApplicationResource {
+public class ScriptResourceVersion1 implements ScriptResource {
 
     private static final Logger LOG = Logger.getLogger(ScriptResourceVersion1.class);
 
-    @Autowired
-    CacheManager cacheManager;
+    CacheManager cacheManager = new org.springframework.cache.concurrent.ConcurrentMapCacheManager();
 
     @Autowired
     ContentRepository contentRepository;
@@ -99,22 +98,24 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
     private String applicationTitle;
     private String applicationUrl;
     private String assetsUrl;
+    private boolean disableResourceCaching;
 
     @PostConstruct
     public void init() {
         this.applicationTitle = environment.getProperty("application.name");
         this.applicationUrl = environment.getProperty("base.application.uri");
         this.assetsUrl = environment.getProperty("ui.static.urlbase");
+        this.disableResourceCaching = environment.getProperty("disable.resource.caching", Boolean.class, Boolean.FALSE);
     }
 
-    @Override
-    public Response read(String rawProcessDefinitionKey, MessageContext context) throws StatusCodeError {
-//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-//        piecework.model.Process process = identityHelper.findProcess(processDefinitionKey, true);
-//        Form form = legacyFormService.startForm(context, process);
-
-        return null;
-    }
+//    @Override
+//    public Response read(String rawProcessDefinitionKey, MessageContext context) throws StatusCodeError {
+////        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+////        piecework.model.Process process = identityHelper.findProcess(processDefinitionKey, true);
+////        Form form = legacyFormService.startForm(context, process);
+//
+//        return null;
+//    }
 
     @Override
     public Response read(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
@@ -133,6 +134,10 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
 
         if (scriptId.equals("Form"))
             templateName = "Form.template.html";
+        else if (scriptId.equals("IndexView"))
+            templateName = "IndexView.template.html";
+        else if (scriptId.equals("Explanation"))
+            templateName = "Explanation.template.html";
 
         Resource templateResource = formTemplateService.getTemplateResource(templateName);
         Resource scriptResource = getScriptResource(templateResource);
@@ -146,6 +151,10 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
 
         if (stylesheetId.equals("Form"))
             templateName = "Form.template.html";
+        else if (stylesheetId.equals("IndexView"))
+            templateName = "IndexView.template.html";
+        else if (stylesheetId.equals("Explanation"))
+            templateName = "Explanation.template.html";
 
         Resource templateResource = formTemplateService.getTemplateResource(templateName);
         Resource stylesheetResource = getStylesheetResource(templateResource);
@@ -194,7 +203,7 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
         Cache cache = cacheManager.getCache("scriptCache");
         OptimizingHtmlProviderVisitor visitor = null;
         try {
-            Cache.ValueWrapper wrapper = cache.get(template.getFilename());
+            Cache.ValueWrapper wrapper = disableResourceCaching ? null : cache.get(template.getFilename());
 
             if (wrapper != null) {
                 Resource scriptResource = (Resource) wrapper.get();
@@ -229,7 +238,7 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
         Cache cache = cacheManager.getCache("stylesheetCache");
         OptimizingHtmlProviderVisitor visitor = null;
         try {
-            Cache.ValueWrapper wrapper = cache.get(template.getFilename());
+            Cache.ValueWrapper wrapper = disableResourceCaching ? null : cache.get(template.getFilename());
 
             if (wrapper != null) {
                 Resource stylesheetResource = (Resource) wrapper.get();
@@ -262,9 +271,13 @@ public class ScriptResourceVersion1 implements ScriptResource, ApplicationResour
             throw new NotFoundError();
 
         try {
-            Form form = formFactory.form(request, ActionType.CREATE, principal, mediaType);
+            ActionType actionType = request.getAction();
+            Form form = formFactory.form(request, actionType, principal, mediaType, null, null);
 
-            if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
+            Activity activity = request.getActivity();
+            Action action = activity.action(actionType);
+
+            if (form.isExternal() && form.getContainer() != null && action != null && action.getStrategy() == DataInjectionStrategy.INCLUDE_SCRIPT) {
                 try {
                     Resource script = formTemplateService.getExternalScriptResource(Form.class, form);
                     String applicationTitle = environment.getProperty("application.name");

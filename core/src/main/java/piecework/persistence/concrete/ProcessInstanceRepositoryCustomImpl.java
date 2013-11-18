@@ -57,31 +57,37 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
 
     @Override
     public Page<ProcessInstance> findByCriteria(ProcessInstanceSearchCriteria criteria, Pageable pageable) {
-        long start = 0;
-        if (LOG.isDebugEnabled())
-            start = System.currentTimeMillis();
-
-        SearchResults.Builder resultsBuilder = new SearchResults.Builder();
         // Otherwise, look up all instances that match the query
         Query query = new ProcessInstanceQueryBuilder(criteria).build();
         query.skip(pageable.getOffset());
         query.limit(pageable.getPageSize());
 
-        // Don't include form data in the result
         org.springframework.data.mongodb.core.query.Field field = query.fields();
-        field.exclude("data");
+
+        // Don't include form data in the result unless it's requested
+        if (! criteria.isIncludeVariables())
+            field.exclude("data");
+
+        return findByQuery(query, pageable);
+    }
+
+    @Override
+    public Page<ProcessInstance> findByQuery(Query query, Pageable request) {
+        long start = 0;
+        if (LOG.isDebugEnabled())
+            start = System.currentTimeMillis();
 
         List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
 
-        Page<ProcessInstance> page;
+        long total = 0;
 
-        if (criteria.getMaxResults() != null || criteria.getFirstResult() != null) {
-            long total = mongoOperations.count(query, ProcessInstance.class);
-            page = new PageImpl<ProcessInstance>(processInstances, pageable, total);
-        } else {
-            page = new PageImpl<ProcessInstance>(processInstances);
-        }
+        // We only need to look up a total if we're not on the first page or the page is full
+        if (query.getSkip() > 0 || processInstances.size() == query.getLimit())
+            total = mongoOperations.count(query, ProcessInstance.class);
+        else
+            total = processInstances.size();
 
+        Page<ProcessInstance> page = new PageImpl<ProcessInstance>(processInstances, request, total);
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieved instances by criteria in " + (System.currentTimeMillis() - start) + " ms");
 

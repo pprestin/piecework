@@ -32,6 +32,7 @@ import piecework.security.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ConstraintUtil;
 import piecework.util.ProcessInstanceUtility;
+import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
@@ -53,7 +54,7 @@ public class FormFactory {
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-    public Form form(FormRequest request, ActionType actionType, Entity principal, MediaType mediaType) throws FormBuildingException {
+    public Form form(FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, FormValidation validation, Explanation explanation) throws FormBuildingException {
         ViewContext version = versions.getVersion1();
         Activity activity = request.getActivity();
 
@@ -63,16 +64,17 @@ public class FormFactory {
         ProcessInstance instance = request.getInstance();
         Task task = request.getTask();
         boolean unmodifiable = task != null && !task.canEdit(principal);
-        boolean revertToDefaultUI = unmodifiable;
+        boolean revertToDefaultUI = false;
 
         Action action = activity.action(actionType);
-        if (unmodifiable) {
-            Action viewAction = activity.action(ActionType.VIEW);
-            if (viewAction != null) {
-                action = viewAction;
-                revertToDefaultUI = false;
-            }
+
+        // If there is no "View" action defined, then revert to the default ui, use create as the action, but make it unmodifiable
+        if (action == null && actionType == ActionType.VIEW) {
+            action = activity.action(ActionType.CREATE);
+            revertToDefaultUI = true;
+            unmodifiable = true;
         }
+
         if (action == null)
             throw new FormBuildingException("Action is null for this activity and type " + actionType);
 
@@ -89,8 +91,17 @@ public class FormFactory {
         }
 
         Map<String, Field> fieldMap = activity.getFieldMap();
-        Map<String, List<Value>> data = dataFilterService.filter(fieldMap, instance, task, principal);
+        Map<String, List<Value>> data = dataFilterService.filter(fieldMap, instance, task, principal, false);
         Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, version, unmodifiable);
+
+        if (validation != null) {
+            Map<String, List<Value>> validationData = validation.getData();
+            if (validationData != null) {
+                for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
+                    data.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
 
         Container container = action.getContainer();
         String title = container.getTitle();
@@ -105,7 +116,8 @@ public class FormFactory {
                 .taskSubresources(processDefinitionKey, task, version)
                 .container(new Container.Builder(container, passthroughSanitizer, decoratedFieldMap).title(title).readonly(unmodifiable).build())
                 .data(data)
-                .messages(request.getMessages());
+                .messages(request.getMessages())
+                .explanation(explanation);
 
         if (instance != null)
             builder.instance(instance, version);

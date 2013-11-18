@@ -31,6 +31,7 @@ import piecework.Constants;
 import piecework.Registry;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
+import piecework.security.DataFilterService;
 import piecework.service.IdentityService;
 import piecework.security.EncryptionService;
 import piecework.service.TaskService;
@@ -63,7 +64,7 @@ public class ValidationServiceTest {
     IdentityHelper helper;
 
     @Mock
-    EncryptionService encryptionService;
+    DataFilterService dataFilterService;
 
     @Mock
     IdentityService identityService;
@@ -73,7 +74,7 @@ public class ValidationServiceTest {
 
 	@Before
 	public void setUp() {
-        Mockito.when(encryptionService.decrypt(Mockito.any(Map.class))).then(new Answer<Map<String, List<String>>>() {
+        Mockito.when(dataFilterService.decrypt(Mockito.any(Map.class))).then(new Answer<Map<String, List<String>>>() {
             @Override
             public Map<String, List<String>> answer(InvocationOnMock invocation) throws Throwable {
                 Map<String, List<String>> map = (Map<String, List<String>>) invocation.getArguments()[0];

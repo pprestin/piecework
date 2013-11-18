@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.Constants;
 import piecework.authorization.AccessAuthority;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;
@@ -200,6 +201,10 @@ public class Task implements Serializable, Comparable<Task> {
 
     @JsonIgnore
     public boolean canEdit(Entity entity) {
+        // Nobody can edit a task that is not open
+        if (taskStatus == null || !taskStatus.equals(piecework.Constants.TaskStatuses.OPEN))
+            return false;
+
         String entityId = entity != null ? entity.getEntityId() : null;
         if (entityId == null)
             return false;

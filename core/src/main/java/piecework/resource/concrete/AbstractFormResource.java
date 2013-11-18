@@ -36,11 +36,14 @@ import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
 import piecework.service.FormService;
 import piecework.ui.StreamingPageContent;
+import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -79,7 +82,15 @@ public class AbstractFormResource {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest request = requestHandler.create(requestDetails, process);
 
-        return response(process, request, ActionType.CREATE, MediaType.TEXT_HTML_TYPE);
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+    }
+
+    protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws StatusCodeError {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        String requestId = sanitizer.sanitize(rawRequestId);
+        FormRequest request = requestHandler.handle(requestDetails, requestId);
+
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws StatusCodeError {
@@ -87,16 +98,8 @@ public class AbstractFormResource {
         String taskId = sanitizer.sanitize(rawTaskId);
         FormRequest request = requestHandler.create(requestDetails, process, taskId, null);
 
-        return response(process, request, ActionType.CREATE, MediaType.TEXT_HTML_TYPE);
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
     }
-
-//    protected Response taskFormJson(MessageContext context, Process process, String rawTaskId) throws StatusCodeError {
-//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-//        String taskId = sanitizer.sanitize(rawTaskId);
-//        FormRequest request = requestHandler.create(requestDetails, process, taskId, null);
-//
-//        return response(process, request, ActionType.CREATE, MediaType.APPLICATION_JSON_TYPE);
-//    }
 
     protected SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
         return formService.search(rawQueryParameters);
@@ -131,7 +134,38 @@ public class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
-        return redirect(formService.submitForm(process, formRequest, requestDetails, body));
+        try {
+            return redirect(formService.submitForm(process, formRequest, requestDetails, body));
+        } catch (Exception e) {
+            FormValidation validation = null;
+            Explanation explanation = null;
+
+            if (e instanceof BadRequestError)
+                validation = ((BadRequestError)e).getValidation();
+            else {
+                String detail = e.getMessage() != null ? e.getMessage() : "";
+                explanation = new Explanation();
+                explanation.setMessage("Unable to complete task");
+                explanation.setMessageDetail("Caught an unexpected exception trying to process form submission " + detail);
+            }
+
+            Map<String, List<Message>> results = validation != null ? validation.getResults() : null;
+
+            if (results != null && !results.isEmpty()) {
+                for (Map.Entry<String, List<Message>> result : results.entrySet()) {
+                    LOG.warn("Validation error " + result.getKey() + " : " + result.getValue().iterator().next().getText());
+                }
+            }
+
+            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
+            boolean isJSON = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(MediaType.APPLICATION_JSON_TYPE);
+
+            if (isJSON && e instanceof BadRequestError)
+                throw (BadRequestError)e;
+
+            FormRequest invalidRequest = requestHandler.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
+            return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
+        }
     }
 
     protected Response validateForm(MessageContext context, Process process, MultipartBody body, String rawRequestId, String rawValidationId) throws StatusCodeError {
@@ -153,16 +187,19 @@ public class AbstractFormResource {
     }
 
     private Response redirect(FormRequest formRequest) throws StatusCodeError {
-        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), formRequest.getRequestId())).build();
+        if (formRequest == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "page", formRequest.getRequestId())).build();
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType) throws StatusCodeError {
+    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, FormValidation validation, Explanation explanation) throws StatusCodeError {
         if (!request.validate(process))
             throw new BadRequestError();
 
         Entity principal = helper.getPrincipal();
         try {
-            Form form = formFactory.form(request, ActionType.CREATE, principal, mediaType);
+            Form form = formFactory.form(request, actionType, principal, mediaType, validation, explanation);
             return Response.ok(form).build();
         } catch (RemoteFormException rfe) {
             return Response.seeOther(rfe.getUri()).build();

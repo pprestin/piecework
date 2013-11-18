@@ -104,6 +104,11 @@ public class File extends Value {
         return null;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
     public final static class Builder {
 
         private String id;
