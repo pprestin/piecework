@@ -225,7 +225,16 @@ public class Activity implements Serializable, Decorateable<Activity> {
 
         public Builder action(ActionType type, Action action) {
             this.actionMap.put(type, action);
+            appendFieldsFromContainer(action.getContainer());
             return this;
+        }
+
+        private void appendFieldsFromContainer(Container container) {
+            if (container != null) {
+                this.appendFields(container.getFields());
+                for (Container child : container.getChildren())
+                    appendFieldsFromContainer(child);
+            }
         }
 
         public Builder actionMap(Map<ActionType, Action> actionMap) {

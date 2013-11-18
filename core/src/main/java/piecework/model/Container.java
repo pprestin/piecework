@@ -265,8 +265,10 @@ public class Container implements Serializable {
         }
 
         public Builder child(Container child) {
-            if (child != null)
+            if (child != null) {
+
                 this.children.add(child);
+            }
             return this;
         }
 

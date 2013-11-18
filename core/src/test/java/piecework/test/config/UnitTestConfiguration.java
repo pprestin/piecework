@@ -42,6 +42,7 @@ import piecework.CommandExecutor;
 import piecework.Versions;
 import piecework.form.LegacyFormFactory;
 import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.security.DataFilterService;
 import piecework.service.*;
 import piecework.Registry;
 import piecework.common.UuidGenerator;
@@ -117,6 +118,11 @@ public class UnitTestConfiguration {
     @Bean
     public SubmissionTemplateFactory submissionTemplateFactory() {
         return new SubmissionTemplateFactory();
+    }
+
+    @Bean
+    public DataFilterService dataFilterService() {
+        return new DataFilterService();
     }
 
     @Bean

@@ -56,6 +56,9 @@ public class DataFilterService {
             for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
                 Field field = entry.getValue();
                 String fieldName = field.getName();
+                if (fieldName == null)
+                    continue;
+
                 String defaultValue = field.getDefaultValue();
                 List<Value> values = values(instance, fieldName, data.get(fieldName), defaultValue, principal);
                 filtered.put(fieldName, values);
