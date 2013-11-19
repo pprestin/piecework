@@ -47,6 +47,9 @@ public class Form {
     @XmlAttribute
     private final String submissionType;
 
+    @XmlAttribute
+    private final String layout;
+
     @XmlElement
     private final Task task;
 
@@ -115,6 +118,7 @@ public class Form {
     private Form(Form.Builder builder, ViewContext context) {
         this.formInstanceId = builder.formInstanceId;
         this.submissionType = builder.submissionType;
+        this.layout = builder.layout;
         this.task = builder.task;
         this.container = builder.container;
         this.explanation = builder.explanation;
@@ -146,6 +150,10 @@ public class Form {
 
     public String getSubmissionType() {
         return submissionType;
+    }
+
+    public String getLayout() {
+        return layout;
     }
 
     public Container getContainer() {
@@ -246,6 +254,7 @@ public class Form {
         private String formInstanceId;
         private String processDefinitionKey;
         private String submissionType;
+        private String layout;
         private Task task;
         private Container container;
         private Explanation explanation;
@@ -274,6 +283,7 @@ public class Form {
         public Builder(Form form, Sanitizer sanitizer) {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
+            this.layout = sanitizer.sanitize(form.layout);
             this.container = form.container != null ? new Container.Builder(form.container, sanitizer).build() : null;
             this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
             this.explanation = form.explanation;
@@ -360,6 +370,11 @@ public class Form {
 
         public Builder submissionType(String submissionType) {
             this.submissionType = submissionType;
+            return this;
+        }
+
+        public Builder layout(String layout) {
+            this.layout = layout;
             return this;
         }
 

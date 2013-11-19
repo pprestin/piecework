@@ -1,3 +1,20 @@
+<script type="text/ng-template" id="step.html">
+    <div ng-class="step.leaf ? 'panel panel-default' : ''">
+        <div ng-class="step.leaf ? 'panel-heading' : ''"><h4>{{step.title}}</h4></div>
+        <div ng-class="step.leaf ? 'panel-body' : ''">
+            <ul data-ng-model="step.fields">
+                <li data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
+            </ul>
+            <div data-ng-repeat="step in step.children" data-ng-include="'step.html'"></div>
+        </div>
+    </div>
+    <div class="screen-footer">
+        <div data-ng-hide="step.parent.buttons" class="btn-toolbar pull-right" role="toolbar">
+            <button data-ng-repeat="button in step.buttons" data-ng-click="clickButton(button)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</script>
 <script type="text/ng-template" id="container.html">
     <div data-ng-show="notifications" class="alert alert-danger">
         <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
@@ -22,7 +39,7 @@
                     </ul>
                     <div class="screen-footer">
                         <div class="btn-toolbar pull-right" role="toolbar">
-                            <button data-ng-repeat="button in form.container.buttons" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+                            <button data-ng-repeat="button in form.container.buttons" data-ng-click="clickButton(button)" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
                         </div>
                     </div>
                 </div>
@@ -68,23 +85,23 @@
     <div ng-switch on="field.type">
         <div ng-switch-when="html" ng-bind-html="field.defaultValue">{{field.defaultValue}}</div>
         <div ng-switch-when="checkbox">
-            <div class="checkbox" ng-repeat="option in field.options">
+            <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
-                    <input ng-disabled="{{!field.editable}}" ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+                    <input data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
                 </label>
             </div>
         </div>
-        <input ng-switch-when="date" ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}"/>
-        <div ng-switch-when="radio">
-            <div class="radio" ng-repeat="option in field.options">
+        <input data-ng-switch-when="date" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}"/>
+        <div data-ng-switch-when="radio">
+            <div class="radio" data-ng-repeat="option in field.options">
                 <label>
-                    <input ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" type="radio" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+                    <input data-ng-disabled="!field.editable" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="radio" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
                 </label>
             </div>
         </div>
         <div ng-switch-when="select-one">
-            <select ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" name="{{field.name}}" >
-                <option ng-repeat="option in field.options" value="{{option.value}}">
+            <select data-ng-disabled="!field.editable" data-ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" name="{{field.name}}" >
+                <option ng-repeat="option in field.options" value="{{option.value}}" data-ng-selected="{{option.value == field.value}}">
                     {{option.label!='' && option.label || option.value}}
                 </option>
             </select>
@@ -94,16 +111,92 @@
             <input ng-show="{{!field.readonly}}" class="form-control" name="{{field.name}}" type="file"/>
         </div>
         <div data-ng-switch-when="person">
-            <input ng-model="field.value.displayName" ng-show="field.readonly" class="form-control" type="text" disabled/>
-            <input ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-show="!field.readonly" ng-required="field.required" class="form-control" placeholder="{{field.placeholder ? field.placeholder : 'Enter name'}}" type="text" typeahead="person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8" typeahead-wait-ms="300" />
-            <input ng-show="!field.readonly" value="{{field.value.userId ? field.value.userId : field.value}}" name="{{field.name}}" type="hidden"/>
+            <input data-ng-model="field.value.displayName" data-ng-show="field.readonly" class="form-control" type="text" disabled/>
+            <input data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="{{field.pattern}}" ng-show="!field.readonly" ng-required="field.required" class="form-control" placeholder="{{field.placeholder ? field.placeholder : 'Enter name'}}" type="text" typeahead="person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8" typeahead-wait-ms="300" />
+            <input data-ng-disabled="!field.editable" data-ng-show="!field.readonly" value="{{field.value.userId ? field.value.userId : field.value}}" name="{{field.name}}" type="hidden"/>
         </div>
-        <textarea ng-switch-when="textarea" ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-readonly="{{field.readonly}}" ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
-        <input data-ng-switch-default ng-disabled="!field.editable" ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+        <textarea data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
+        <input data-ng-switch-default data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
     </div>
     <span data-ng-repeat="message in field.messages" class="text-danger">{{message.text}}</span>
 </script>
-
+<script type="text/ng-template" id="multipage.html">
+    <div data-ng-show="notifications" class="alert alert-danger">
+        <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
+        <ul>
+            <li data-ng-repeat="notification in notifications" data-ng-bind-html="notification.message"></li>
+        </ul>
+    </div>
+    <div data-ng-show="form.container.readonly">
+        <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
+        <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>
+        <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
+        <div data-ng-show="form.state == 'cancelled'"class="alert alert-info">This form can no longer be modified - it has been cancelled</div>
+    </div>
+    <div class="notifications"></div>
+    <div>
+        <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data" novalidate>
+            <div class="row">
+                <div class="crumbs col-md-3">
+                    <ul class="breadcrumb-stacked">
+                        <li ng-repeat="step in form.steps" ng-class="form.activeStep == step.ordinal ? 'active' : ''">
+                            <a ng-show="step.ordinal <= form.container.activeChildIndex" ng-click="form.activeStep = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                            <span ng-show="step.ordinal > form.container.activeChildIndex">{{step.breadcrumb}}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div ng-class="isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen" id="container-{{container.containerId}}">
+                    <div ng-repeat="step in form.steps" ng-show="form.activeStep == step.ordinal" class="screen-content">
+                        <h2>{{form.container.title}}</h2>
+                        <h4>{{step.title}}</h4>
+                        <ul data-ng-model="step.fields">
+                            <li data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
+                        </ul>
+                    </div>
+                    <div class="screen-footer">
+                        <div class="btn-toolbar pull-right" role="toolbar">
+                            <button data-ng-repeat="button in form.container.buttons" data-ng-click="clickButton(button)" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+                <div ng-show="isViewingAttachments" class="pw-attachments col-md-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="isEditingAttachments ? 'fa fa-unlock' : 'fa fa-lock'" class="fa fa-lock"></i></button>
+                            <span class="lead">Notes</span>
+                        </div>
+                        <ul class="list-group">
+                            <li class="list-group-item" data-ng-repeat="attachment in attachments">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button data-ng-show="isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="text-danger close " type="button">&times;</button>
+                                    <span data-ng-switch on="attachment.contentType">
+                                        <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
+                                        <span data-ng-switch-default class="pw-attachment-file">
+                                            <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" title="{{attachment.description}}">{{attachment.description}}</a>
+                                        </span>
+                                    </span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="pull-right text-muted">{{attachment.user.displayName}}</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="pull-right text-muted">{{attachment.lastModified|date:'MMM d, y H:mm'}}</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</script>
 <script type="text/ng-template" id="multistep.html">
     <div data-ng-show="notifications" class="alert alert-danger">
         <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
@@ -124,25 +217,13 @@
                 <div class="crumbs col-md-3">
                     <ul class="breadcrumb-stacked">
                         <li ng-repeat="step in form.steps" ng-class="form.activeStep == step.ordinal ? 'active' : ''">
-                            <a ng-show="step.ordinal <= form.container.activeChildIndex" ng-click="form.activeStep = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
-                            <span ng-show="step.ordinal > form.container.activeChildIndex">{{step.breadcrumb}}</span>
+                            <a ng-click="nextStep(step.ordinal)" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
                         </li>
                     </ul>
                 </div>
-                <div ng-class="isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen" id="container-{{container.containerId}}">
-                    <div ng-repeat="step in form.steps" ng-show="form.activeStep == step.ordinal" class="screen-content">
-                        <h2>{{form.container.title}}</h2>
-                        <h4>{{step.title}}</h4>
-                        <ul data-ng-model="step.fields">
-                            <li data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
-                        </ul>
-                    </div>
-                    <div class="screen-footer">
-                        <div class="btn-toolbar pull-right" role="toolbar">
-                            <button data-ng-repeat="button in form.container.buttons" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
+                <div ng-class="isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen">
+                    <h2>{{form.container.title}}</h2>
+                    <div ng-repeat="step in form.steps" ng-show="form.activeStep == step.ordinal" data-ng-include="'step.html'"></div>
                 </div>
                 <div ng-show="isViewingAttachments" class="pw-attachments col-md-4">
                     <div class="panel panel-default">
@@ -240,7 +321,10 @@
     <p>{{form.explanation.messageDetail}}</p>
 </div>
 <div class="main-content container" data-ng-switch on="form.layout">
-    <div class="row" data-ng-switch-when="wizard">
+    <div class="row" data-ng-switch-when="multipage">
+        <div data-ng-include="'multipage.html'"></div>
+    </div>
+    <div class="row" data-ng-switch-when="multistep">
         <div data-ng-include="'multistep.html'"></div>
     </div>
     <div class="row" data-ng-switch-when="normal">

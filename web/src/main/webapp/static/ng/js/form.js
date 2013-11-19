@@ -47,6 +47,18 @@ angular.module('Form',
             $scope.addAttachment = function(form, attachment) {
 
             };
+            $scope.clickButton = function(button) {
+                if (button.action == 'next') {
+                    $scope.form.activeStep += 1;
+                    if ($scope.form.activeStep > $scope.form.maxStep)
+                        $scope.form.maxStep = $scope.form.activeStep;
+                } else if (button.action == 'previous') {
+                    $scope.form.activeStep -= 1;
+                }
+            };
+            $scope.nextStep = function(ordinal) {
+                $scope.form.activeStep = ordinal;
+            }
             $scope.deleteAttachment = function(attachment) {
                 $http['delete'](attachment.link).then($scope.refreshAttachments);
             }
@@ -60,6 +72,16 @@ angular.module('Form',
                     $scope.form.attachmentCount = response.data.total;
                 });
             };
+            $scope.markLeaves = function(container) {
+                if (container.children != null && container.children.length > 1) {
+                    angular.forEach(container.children, function(child) {
+                        $scope.markLeaves(child);
+                        child.parent = container;
+                    });
+                } else {
+                    container.leaf = true;
+                }
+            };
             $scope.refreshForm = function(form) {
                 $scope.form = form;
                 $scope.attachments = form.attachments;
@@ -70,17 +92,23 @@ angular.module('Form',
 
                 var rootContainer = form.container;
                 var fields = new Array();
+                $scope.markLeaves(rootContainer);
                 if (rootContainer.children != null && rootContainer.children.length > 1 && rootContainer.activeChildIndex != -1) {
                     $scope.form.steps = rootContainer.children;
-                    $scope.form.layout = 'wizard';
                     $scope.form.activeStep = rootContainer.activeChildIndex;
+                    var previousChild = null;
                     angular.forEach(rootContainer.children, function(child) {
-                        if (child.readonly) {
+                        child.previous = previousChild;
+                        if (previousChild != null)
+                            previousChild.next = child;
+
+                        if (form.layout == 'multipage' && child.readonly) {
                             angular.forEach(child.fields, function(field) {
-                                field.readonly = true;
+                                field.editable = false;
                             });
                         }
                         fields.push.apply(fields, child.fields);
+                        previousChild = child;
                     });
                 } else {
                     fields = $scope.form.container.fields;
@@ -106,7 +134,7 @@ angular.module('Form',
                     if (typeof(validation) !== 'undefined' && validation[field.name] != null)
                         field.messages = validation[field.name];
                     if (readonly)
-                        field.readonly = readonly;
+                        field.editable = false;
                 });
 
                 if (form.task != null) {
@@ -116,7 +144,7 @@ angular.module('Form',
                         form.state = 'suspended';
                     } else if (form.task.taskStatus == 'Cancelled') {
                         form.state = 'cancelled';
-                    } else if (form.task.taskStatus == 'Complete') {
+                    } else if (form.task.taskStatus == 'Complete' && (form.task.assignee == null || form.task.assignee.userId != $scope.context.user.userId)) {
                         form.state = 'completed';
                     }
                 }
@@ -255,7 +283,7 @@ angular.module('Form',
             };
 
             $scope.isSingleProcessSelectable = function() {
-                return $scope.definitions.length == 1;
+                return typeof($scope.definitions) !== 'undefined' && $scope.definitions.length == 1;
             };
 
             $scope.$on('event:refresh', function(event, message) {
@@ -449,7 +477,7 @@ angular.module('Form',
 
                         var failure = function(scope, data, status, headers, config, form) {
                             form._activationStatus = 'error';
-                            var message = '<em>' + form.task.processInstanceLabel + '</em> cannot add comment because it is in an inconsistent state';
+                            var message = '<em>' + form.task.processInstanceLabel + '</em> cannot add comment. ' + data.messageDetail;
                             var title = "Unable to add comment";
                             notificationService.notify($scope, message, title);
                             checkStatuses(scope);

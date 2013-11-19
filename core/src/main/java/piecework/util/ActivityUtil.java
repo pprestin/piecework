@@ -40,7 +40,7 @@ public class ActivityUtil {
         if (parent == null)
             parent = parent(activity, actionType);
 
-        if (activity.getUsageType() == ActivityUsageType.USER_WIZARD) {
+        if (activity.getUsageType() == ActivityUsageType.MULTI_PAGE) {
             int activeChildIndex = parent.getActiveChildIndex();
 
             if (activeChildIndex != -1 && parent.getChildren() != null && parent.getChildren().size() >= activeChildIndex) {

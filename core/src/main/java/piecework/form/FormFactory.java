@@ -23,6 +23,7 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.ActivityUsageType;
 import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.FormBuildingException;
 import piecework.exception.InternalFormException;
@@ -68,11 +69,14 @@ public class FormFactory {
 
         Action action = activity.action(actionType);
 
-        // If there is no "View" action defined, then revert to the default ui, use create as the action, but make it unmodifiable
-        if (action == null && actionType == ActionType.VIEW) {
+        // If there is no action defined, then revert to CREATE
+        if (action == null) {
             action = activity.action(ActionType.CREATE);
-            revertToDefaultUI = true;
-            unmodifiable = true;
+            // If the action type was VIEW then revert to the default ui, use create as the action, but make it unmodifiable
+            if (actionType == ActionType.VIEW) {
+                revertToDefaultUI = true;
+                unmodifiable = true;
+            }
         }
 
         if (action == null)
@@ -118,6 +122,19 @@ public class FormFactory {
                 .data(data)
                 .messages(request.getMessages())
                 .explanation(explanation);
+
+        ActivityUsageType usageType = activity.getUsageType() != null ? activity.getUsageType() : ActivityUsageType.USER_FORM;
+        switch (usageType) {
+            case MULTI_PAGE:
+                builder.layout("multipage");
+                break;
+            case MULTI_STEP:
+                builder.layout("multistep");
+                break;
+            default:
+                builder.layout("normal");
+                break;
+        }
 
         if (instance != null)
             builder.instance(instance, version);

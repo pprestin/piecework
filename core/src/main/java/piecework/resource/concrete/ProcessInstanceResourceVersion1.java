@@ -154,7 +154,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         Task task = taskService.allowedTask(process, instance, null, true);
         if (task == null)
-            throw new ForbiddenError();
+            throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
         Submission submission = submissionHandler.handle(process, template, body);
