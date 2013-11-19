@@ -1,16 +1,16 @@
 <script type="text/ng-template" id="step.html">
-    <div ng-class="step.leaf ? 'panel panel-default' : ''">
+    <div ng-class="step.leaf ? 'panel panel-default step' : 'step'">
         <div ng-class="step.leaf ? 'panel-heading' : ''"><h4>{{step.title}}</h4></div>
         <div ng-class="step.leaf ? 'panel-body' : ''">
             <ul data-ng-model="step.fields">
-                <li data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
+                <li data-ng-show="isVisible(field)" data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
             </ul>
             <div data-ng-repeat="step in step.children" data-ng-include="'step.html'"></div>
         </div>
     </div>
     <div class="screen-footer">
         <div data-ng-hide="step.parent.buttons" class="btn-toolbar pull-right" role="toolbar">
-            <button data-ng-repeat="button in step.buttons" data-ng-click="clickButton(button)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+            <button data-ng-repeat="button in step.buttons" data-ng-click="clickButton(button, step, form)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -35,7 +35,7 @@
             <div class="row">
                 <div class="screen" id="{{container.containerId}}">
                     <ul data-ng-model="form.container.fields">
-                        <li data-ng-class="field.cssClass" data-ng-repeat="field in form.container.fields" data-ng-include="'field.html'" class="pw-field"></li>
+                        <li data-ng-show="isVisible(field)" data-ng-class="field.cssClass" data-ng-repeat="field in form.container.fields" data-ng-include="'field.html'" class="pw-field"></li>
                     </ul>
                     <div class="screen-footer">
                         <div class="btn-toolbar pull-right" role="toolbar">
@@ -81,10 +81,10 @@
     </div>
 </script>
 <script type="text/ng-template" id="field.html">
-    <label ng-if="field.label">{{field.label}}</label>
-    <div ng-switch on="field.type">
-        <div ng-switch-when="html" ng-bind-html="field.defaultValue">{{field.defaultValue}}</div>
-        <div ng-switch-when="checkbox">
+    <label data-ng-if="field.label">{{field.label}}</label>
+    <div data-ng-switch on="field.type" class="form-group">
+        <div data-ng-switch-when="html" data-ng-bind-html="field.defaultValue">{{field.defaultValue}}</div>
+        <div data-ng-switch-when="checkbox">
             <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
                     <input data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
@@ -99,9 +99,9 @@
                 </label>
             </div>
         </div>
-        <div ng-switch-when="select-one">
-            <select data-ng-disabled="!field.editable" data-ng-model="field.value" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" name="{{field.name}}" >
-                <option ng-repeat="option in field.options" value="{{option.value}}" data-ng-selected="{{option.value == field.value}}">
+        <div data-ng-switch-when="select-one">
+            <select data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" name="{{field.name}}" >
+                <option data-ng-repeat="option in field.options" value="{{option.value}}" data-ng-selected="{{option.value == field.value}}">
                     {{option.label!='' && option.label || option.value}}
                 </option>
             </select>
@@ -116,7 +116,7 @@
             <input data-ng-disabled="!field.editable" data-ng-show="!field.readonly" value="{{field.value.userId ? field.value.userId : field.value}}" name="{{field.name}}" type="hidden"/>
         </div>
         <textarea data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
-        <input data-ng-switch-default data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+        <input data-ng-switch-default data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" ui-mask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
     </div>
     <span data-ng-repeat="message in field.messages" class="text-danger">{{message.text}}</span>
 </script>
@@ -150,7 +150,7 @@
                         <h2>{{form.container.title}}</h2>
                         <h4>{{step.title}}</h4>
                         <ul data-ng-model="step.fields">
-                            <li data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
+                            <li data-ng-show="isVisible(field)" data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
                         </ul>
                     </div>
                     <div class="screen-footer">

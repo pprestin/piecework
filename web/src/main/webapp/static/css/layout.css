@@ -367,7 +367,7 @@ select.form-control {
 
 .pw-field {
     border: 1px solid transparent;
-    padding: 10px;
+    padding: 0px 10px;
 }
 
 .pw-field.editing {

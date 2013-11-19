@@ -6,7 +6,8 @@ angular.module('Form',
         'ui.bootstrap',
         'ui.bootstrap.alert',
         'ui.bootstrap.modal',
-        'blueimp.fileupload'
+        'blueimp.fileupload',
+        'ui.mask'
     ])
     .config(['$routeProvider', '$locationProvider', '$logProvider','$provide',
         function($routeProvider, $locationProvider, $logProvider, $provide) {
@@ -36,7 +37,39 @@ angular.module('Form',
 
             $scope.context = window.piecework.context;
             //$window.piecework.context;
+            $scope.evaluateVisibilityConstraint = function(field, constraint) {
+                var f = $scope.fieldMap[constraint.name];
+                if (typeof(f) === 'undefined')
+                    return true;
 
+                var re = new RegExp(constraint.value);
+                var result = re.test(f.value);
+
+                if (typeof(constraint.and) !== 'undefined' && constraint.and != null) {
+                    return result && $scope.evaluateVisibilityConstraints(field, constraint.and, false);
+                }
+                if (typeof(constraint.or) !== 'undefined' && constraint.or != null) {
+                    return result || $scope.evaluateVisibilityConstraints(field, constraint.or, true);
+                }
+
+                return result;
+            };
+            $scope.evaluateVisibilityConstraints = function(field, constraints, acceptAny) {
+                var r = null;
+                angular.forEach(constraints, function(constraint) {
+                    var b = $scope.evaluateVisibilityConstraint(field, constraint);
+                    if (r == null)
+                        r = b;
+                    else {
+                        if (acceptAny)
+                            r = r || b;
+                        else
+                            r = r && b;
+                    }
+                });
+
+                return r;
+            };
             $scope.fileUploadOptions = {
                 autoUpload: true
             };
@@ -47,11 +80,14 @@ angular.module('Form',
             $scope.addAttachment = function(form, attachment) {
 
             };
-            $scope.clickButton = function(button) {
+            $scope.clickButton = function(button, step, form) {
                 if (button.action == 'next') {
-                    $scope.form.activeStep += 1;
-                    if ($scope.form.activeStep > $scope.form.maxStep)
-                        $scope.form.maxStep = $scope.form.activeStep;
+                    var success = function(data, status, headers, config) {
+                        $scope.form.activeStep += 1;
+                        if ($scope.form.activeStep > $scope.form.maxStep)
+                            $scope.form.maxStep = $scope.form.activeStep;
+                    };
+                    $scope.validateStep(step, form, success);
                 } else if (button.action == 'previous') {
                     $scope.form.activeStep -= 1;
                 }
@@ -64,6 +100,26 @@ angular.module('Form',
             }
             $scope.editAttachments = function() {
                 $scope.isEditingAttachments = !$scope.isEditingAttachments;
+            };
+            $scope.isVisible = function(field) {
+                if (field.constraints != undefined && field.constraints.length > 0) {
+                     for (var i=0;i<field.constraints.length;i++) {
+                         var constraint = field.constraints[i];
+
+                         if (typeof(constraint) !== 'undefined') {
+                             if (constraint.type != null) {
+                                 if (constraint.type == 'IS_ONLY_VISIBLE_WHEN') {
+                                     return $scope.evaluateVisibilityConstraint(field, constraint)
+                                 } else if (constraint.type == 'IS_ONLY_REQUIRED_WHEN') {
+
+                                 }
+
+                             }
+                         }
+                     }
+                }
+
+                return true;
             };
             $scope.refreshAttachments = function() {
                 var form = $scope.form;
@@ -114,8 +170,9 @@ angular.module('Form',
                     fields = $scope.form.container.fields;
                     $scope.form.layout = 'normal';
                 }
-
+                $scope.fieldMap = new Object();
                 angular.forEach(fields, function(field) {
+                    $scope.fieldMap[field.name] = field;
                     var values = data[field.name];
                     if (values != null && values.length == 1) {
                         var value = values[0];
@@ -173,6 +230,63 @@ angular.module('Form',
             $scope.$on('fileuploadstop', function() {
                 $scope.sending = false;
             });
+            $scope.validateStep = function(step, form, success) {
+                var data = new FormData();
+
+                $('.generated').remove();
+                $('.control-group').removeClass('error');
+                $('.control-group').removeClass('warning');
+
+                $('.step:visible').find(':input').each(function(index, element) {
+                    var name = element.name;
+                    if (name == undefined || name == null || name == '')
+                        return;
+
+                    if (element.files !== undefined && element.files != null) {
+                        $.each(element.files, function(fileIndex, file) {
+                            if (file != null)
+                                data.append(name, file);
+                        });
+                    } else {
+                        var $element = $(element);
+                        var value = $(element).val();
+
+                        if (($element.is(':radio') || $element.is(':checkbox'))) {
+                            if ($element.is(":checked")) {
+                                if (value != undefined)
+                                    data.append(name, value);
+                            }
+                        } else {
+                            data.append(name, value);
+                        }
+                    }
+                });
+                var url = form.action + '/' + step.containerId;
+                $http({
+                         method: 'POST',
+                         url: url,
+                         data: {},
+                         transformRequest: function() { return data; },
+                         headers: {'Content-Type': 'multipart/form-data'}
+                     })
+                    .success(success)
+                    .error(function(data, status, headers, config) {
+                        if (data.items != null) {
+                            var map = {};
+                            for (var i=0;i<data.items.length;i++) {
+                                map[data.items[i].propertyName] = data.items[i];
+                            }
+                            for (var i=0;i<step.fields.length;i++) {
+                                var field = step.fields[i];
+                                var item = map[field.name];
+                                if (typeof(item) !== 'undefined') {
+                                    field.messages = new Array();
+                                    field.messages.push({ text: item.message });
+                                }
+                            }
+                        }
+                    });
+            }
 
             var resourcePath = './form/:processDefinitionKey';
             if ($routeParams.requestId != null)
