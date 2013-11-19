@@ -21,18 +21,14 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
-import piecework.service.LegacyFormService;
 import piecework.model.SearchResults;
-import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
 import piecework.resource.FormResource;
 import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
-import java.util.List;
 
 /**
  * @author James Renfro
@@ -55,7 +51,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return startForm(context, process);
+        return startForm(context, process, false);
     }
 
     @Override
@@ -83,7 +79,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return submitForm(context, process, rawRequestId, body);
+        return submitForm(context, process, rawRequestId, body, false);
     }
 
     @Override

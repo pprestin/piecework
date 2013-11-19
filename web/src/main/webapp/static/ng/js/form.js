@@ -302,6 +302,10 @@ angular.module('Form',
                 Form.get($scope.criteria, $scope.refreshForm);
             });
 
+            $scope.onFieldChange = function(field) {
+                field.messages = null;
+            };
+
             $scope.model = $window.piecework.model;
             if (typeof($scope.model) !== 'undefined' && typeof($scope.model.total) === 'undefined') {
                 $scope.refreshForm($scope.model);
@@ -323,7 +327,7 @@ angular.module('Form',
                 angular.forEach(results.definitions, function(definition) {
                     $scope.processDefinitionDescription[definition.task.processDefinitionKey] = definition.task.processDefinitionLabel;
                 });
-                if (results.definitions.length == 1)
+                if (results.definitions != null && results.definitions.length == 1)
                     $scope.criteria.processDefinitionKey = results.definitions[0].task.processDefinitionKey;
                 $scope.processDefinitionDescription[''] = 'Any process';
                 $scope.searching = false;

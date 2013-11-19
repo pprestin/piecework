@@ -79,7 +79,7 @@ public class ResponseHandlerTest {
         form = new Form.Builder().formInstanceId("123").build();
         task = new Task.Builder().taskInstanceId("456").build();
 
-        ViewContext version1 = new ViewContext("http://localhost:8000", "/ui", "/api", "/v1");
+        ViewContext version1 = new ViewContext("http://localhost:8000", "/ui", "/api", "/public", "/v1");
         Mockito.when(versions.getVersion1()).thenReturn(version1);
         Mockito.when(legacyFormFactory.form(any(FormRequest.class), any(Process.class), any(ProcessInstance.class), any(Task.class), any(FormValidation.class), ActionType.CREATE, null)).thenReturn(form);
     }

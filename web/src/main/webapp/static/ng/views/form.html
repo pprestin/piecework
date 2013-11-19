@@ -87,20 +87,20 @@
         <div data-ng-switch-when="checkbox">
             <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
-                    <input data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
                 </label>
             </div>
         </div>
-        <input data-ng-switch-when="date" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}"/>
+        <input data-ng-switch-when="date" data-ng-change="onFieldChange(field)" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}"/>
         <div data-ng-switch-when="radio">
             <div class="radio" data-ng-repeat="option in field.options">
                 <label>
-                    <input data-ng-disabled="!field.editable" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="radio" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="radio" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
                 </label>
             </div>
         </div>
         <div data-ng-switch-when="select-one">
-            <select data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" name="{{field.name}}" >
+            <select data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" name="{{field.name}}" >
                 <option data-ng-repeat="option in field.options" value="{{option.value}}" data-ng-selected="{{option.value == field.value}}">
                     {{option.label!='' && option.label || option.value}}
                 </option>
@@ -108,15 +108,15 @@
         </div>
         <div data-ng-switch-when="file" data-ng-show="field.value">
             <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}"/>
-            <input ng-show="{{!field.readonly}}" class="form-control" name="{{field.name}}" type="file"/>
+            <input data-ng-change="onFieldChange(field)" data-ng-show="{{!field.readonly}}" class="form-control" name="{{field.name}}" type="file"/>
         </div>
         <div data-ng-switch-when="person">
             <input data-ng-model="field.value.displayName" data-ng-show="field.readonly" class="form-control" type="text" disabled/>
-            <input data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="{{field.pattern}}" ng-show="!field.readonly" ng-required="field.required" class="form-control" placeholder="{{field.placeholder ? field.placeholder : 'Enter name'}}" type="text" typeahead="person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8" typeahead-wait-ms="300" />
+            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="{{field.pattern}}" ng-show="!field.readonly" ng-required="field.required" class="form-control" placeholder="{{field.placeholder ? field.placeholder : 'Enter name'}}" type="text" typeahead="person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8" typeahead-wait-ms="300" />
             <input data-ng-disabled="!field.editable" data-ng-show="!field.readonly" value="{{field.value.userId ? field.value.userId : field.value}}" name="{{field.name}}" type="hidden"/>
         </div>
-        <textarea data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
-        <input data-ng-switch-default data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" ui-mask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+        <textarea data-ng-change="onFieldChange(field)" data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
+        <input data-ng-switch-default data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" ui-mask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
     </div>
     <span data-ng-repeat="message in field.messages" class="text-danger">{{message.text}}</span>
 </script>
@@ -214,15 +214,15 @@
     <div>
         <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
             <div class="row">
-                <div class="crumbs col-md-3">
-                    <ul class="breadcrumb-stacked">
-                        <li ng-repeat="step in form.steps" ng-class="form.activeStep == step.ordinal ? 'active' : ''">
-                            <a ng-click="nextStep(step.ordinal)" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
-                        </li>
-                    </ul>
-                </div>
-                <div ng-class="isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen">
+                <div ng-class="isViewingAttachments ? 'col-md-8' : 'col-md-12'" class="screen">
                     <h2>{{form.container.title}}</h2>
+                    <div class="crumbs">
+                        <ul class="breadcrumb">
+                            <li ng-repeat="step in form.steps" ng-class="form.activeStep == step.ordinal ? 'active' : ''">
+                                <a ng-click="nextStep(step.ordinal)" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                            </li>
+                        </ul>
+                    </div>
                     <div ng-repeat="step in form.steps" ng-show="form.activeStep == step.ordinal" data-ng-include="'step.html'"></div>
                 </div>
                 <div ng-show="isViewingAttachments" class="pw-attachments col-md-4">

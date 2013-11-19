@@ -33,6 +33,7 @@ public class Versions {
 
     private String hostUri;
     private String baseApplicationUri;
+    private String basePublicUri;
     private String baseServiceUri;
 
     @PostConstruct
@@ -40,10 +41,11 @@ public class Versions {
         this.hostUri = environment.getProperty("host.uri");
         this.baseApplicationUri = environment.getProperty("base.application.uri");
         this.baseServiceUri = environment.getProperty("base.service.uri");
+        this.basePublicUri = environment.getProperty("base.public.uri");
     }
 
     public ViewContext getVersion1() {
-        return new ViewContext(hostUri, baseApplicationUri, baseServiceUri, "v1");
+        return new ViewContext(hostUri, baseApplicationUri, baseServiceUri, basePublicUri, "v1");
     }
 
 }

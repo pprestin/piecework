@@ -272,7 +272,7 @@ public class ScriptResourceVersion1 implements ScriptResource {
 
         try {
             ActionType actionType = request.getAction();
-            Form form = formFactory.form(request, actionType, principal, mediaType, null, null);
+            Form form = formFactory.form(request, actionType, principal, mediaType, null, null, false);
 
             Activity activity = request.getActivity();
             Action action = activity.action(actionType);

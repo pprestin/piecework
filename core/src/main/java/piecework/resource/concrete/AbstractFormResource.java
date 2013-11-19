@@ -77,12 +77,11 @@ public class AbstractFormResource {
     @Autowired
     Versions versions;
 
-
-    protected Response startForm(MessageContext context, Process process) throws StatusCodeError {
+    protected Response startForm(MessageContext context, Process process, boolean anonymous) throws StatusCodeError {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest request = requestHandler.create(requestDetails, process);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, anonymous);
     }
 
     protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws StatusCodeError {
@@ -90,7 +89,7 @@ public class AbstractFormResource {
         String requestId = sanitizer.sanitize(rawRequestId);
         FormRequest request = requestHandler.handle(requestDetails, requestId);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, false);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws StatusCodeError {
@@ -98,7 +97,7 @@ public class AbstractFormResource {
         String taskId = sanitizer.sanitize(rawTaskId);
         FormRequest request = requestHandler.create(requestDetails, process, taskId, null);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, false);
     }
 
     protected SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
@@ -111,7 +110,7 @@ public class AbstractFormResource {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
@@ -121,7 +120,7 @@ public class AbstractFormResource {
         return redirect(formService.saveForm(process, formRequest, body));
     }
 
-    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
+    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultipartBody body, boolean anonymous) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
@@ -164,7 +163,7 @@ public class AbstractFormResource {
                 throw (BadRequestError)e;
 
             FormRequest invalidRequest = requestHandler.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
-            return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
+            return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, anonymous);
         }
     }
 
@@ -193,13 +192,13 @@ public class AbstractFormResource {
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "page", formRequest.getRequestId())).build();
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, FormValidation validation, Explanation explanation) throws StatusCodeError {
+    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, FormValidation validation, Explanation explanation, boolean anonymous) throws StatusCodeError {
         if (!request.validate(process))
             throw new BadRequestError();
 
         Entity principal = helper.getPrincipal();
         try {
-            Form form = formFactory.form(request, actionType, principal, mediaType, validation, explanation);
+            Form form = formFactory.form(request, actionType, principal, mediaType, validation, explanation, anonymous);
             return Response.ok(form).build();
         } catch (RemoteFormException rfe) {
             return Response.seeOther(rfe.getUri()).build();

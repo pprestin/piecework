@@ -55,7 +55,7 @@ public class FormFactory {
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-    public Form form(FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, FormValidation validation, Explanation explanation) throws FormBuildingException {
+    public Form form(FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, FormValidation validation, Explanation explanation, boolean anonymous) throws FormBuildingException {
         ViewContext version = versions.getVersion1();
         Activity activity = request.getActivity();
 
@@ -122,6 +122,9 @@ public class FormFactory {
                 .data(data)
                 .messages(request.getMessages())
                 .explanation(explanation);
+
+        if (anonymous)
+            builder.anonymous();
 
         ActivityUsageType usageType = activity.getUsageType() != null ? activity.getUsageType() : ActivityUsageType.USER_FORM;
         switch (usageType) {

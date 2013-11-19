@@ -23,16 +23,18 @@ public class ViewContext {
     private final String hostUri;
 	private final String baseApplicationUri;
 	private final String baseServiceUri;
+    private final String basePublicUri;
 	private final String version;
 	
 	public ViewContext() {
-		this(null, null, null, null);
+		this(null, null, null, null, null);
 	}
 	
-	public ViewContext(String hostUri, String baseUri, String baseServiceUri, String version) {
+	public ViewContext(String hostUri, String baseUri, String baseServiceUri, String basePublicUri, String version) {
         this.hostUri = hostUri;
 		this.baseApplicationUri = baseUri;
 		this.baseServiceUri = baseServiceUri;
+        this.basePublicUri = basePublicUri;
 		this.version = version;
 	}
 
@@ -48,15 +50,30 @@ public class ViewContext {
 		return baseServiceUri;
 	}
 
-	public String getVersion() {
+    public String getBasePublicUri() {
+        return basePublicUri;
+    }
+
+    public String getVersion() {
 		return version;
 	}
+
+    public String getApplicationOrPublicUri(boolean anonymous, String ... fragments) {
+        if (anonymous)
+            return getPublicUri(fragments);
+        return getApplicationUri(fragments);
+    }
 
 	public String getApplicationUri(String ... fragments) {
 
 		return buildUri(false, baseApplicationUri, fragments);
 	}
-	
+
+    public String getPublicUri(String ... fragments) {
+
+        return buildUri(false, basePublicUri, fragments);
+    }
+
 	public String getServiceUri(String ... fragments) {
 
 		return buildUri(true, baseServiceUri, fragments);

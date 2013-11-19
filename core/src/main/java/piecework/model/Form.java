@@ -17,7 +17,6 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
@@ -124,13 +123,13 @@ public class Form {
         this.explanation = builder.explanation;
         this.data = builder.data;
         this.validation = builder.validation;
-        this.root = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME) : null;
-        this.action = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
+        this.root = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME) : null;
+        this.action = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
-            this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
+            this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
-            this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
-        this.src = context != null ? context.getApplicationUri("resource", builder.processDefinitionKey, builder.formInstanceId) : null;
+            this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
+        this.src = context != null ? context.getApplicationOrPublicUri(builder.anonymous, "resource", builder.processDefinitionKey, builder.formInstanceId) : null;
         this.staticRoot = context != null ? context.getApplicationUri("resource", "static", builder.processDefinitionKey) : null;
         this.assignment = builder.assignment;
         this.activation = builder.activation;
@@ -270,6 +269,7 @@ public class Form {
         private List<Attachment> attachments;
         private boolean valid;
         private boolean external;
+        private boolean anonymous;
 
         public Builder() {
             super();
@@ -433,6 +433,11 @@ public class Form {
 
         public Builder explanation(Explanation explanation) {
             this.explanation = explanation;
+            return this;
+        }
+
+        public Builder anonymous() {
+            this.anonymous = true;
             return this;
         }
     }

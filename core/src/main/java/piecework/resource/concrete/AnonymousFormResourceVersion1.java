@@ -15,21 +15,15 @@
  */
 package piecework.resource.concrete;
 
-import java.util.*;
-
 import javax.ws.rs.core.*;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import piecework.Versions;
-import piecework.service.LegacyFormService;
 import piecework.persistence.ProcessRepository;
-import piecework.security.Sanitizer;
 import piecework.exception.*;
 import piecework.form.*;
 import piecework.model.Process;
@@ -49,21 +43,14 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return startForm(context, process);
+        return startForm(context, process, true);
     }
-
-//    @Override
-//    public Response read(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
-//        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
-//
-//        return legacyFormService.provideFormResponse(context, process, pathSegments);
-//    }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return submitForm(context, process, rawRequestId, body);
+        return submitForm(context, process, rawRequestId, body, true);
     }
 
     @Override
