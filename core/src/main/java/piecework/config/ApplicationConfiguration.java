@@ -56,6 +56,7 @@ import piecework.identity.DebugIdentityService;
 import piecework.identity.DisplayNameConverter;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapIdentityService;
+import piecework.ldap.LdapGroupService;
 import piecework.ldap.LdapSettings;
 import piecework.security.CustomAuthenticationSource;
 import piecework.security.SecuritySettings;
@@ -316,7 +317,7 @@ public class ApplicationConfiguration {
 
     private LdapAuthoritiesPopulator authoritiesPopulator(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
         DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(ldapSettings, securitySettings), ldapSettings.getLdapGroupSearchBase());
-        authoritiesPopulator.setGroupSearchFilter(ldapSettings.getLdapGroupSearchFilter());
+        authoritiesPopulator.setGroupSearchFilter(ldapSettings.getLdapGroupMemberSearchFilter());
         return authoritiesPopulator;
     }
 
@@ -384,5 +385,20 @@ public class ApplicationConfiguration {
         ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
         ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
         return userSearch;
+    }
+
+    @Bean
+    public LdapGroupService groupService(Environment environment) throws Exception {
+        LdapSettings ldapSettings = ldapSettings(environment);
+        SecuritySettings securitySettings = securitySettings(environment);
+
+        LdapContextSource contextSource = groupLdapContextSource(ldapSettings, securitySettings);
+        FilterBasedLdapUserSearch groupSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapGroupSearchBase(), ldapSettings.getLdapGroupSearchFilter(), contextSource);
+        groupSearch.setReturningAttributes(null);
+        groupSearch.setSearchSubtree(true);
+        groupSearch.setSearchTimeLimit(10000);
+
+         IdentityService userService = userDetailsService(environment); // bean dependency
+         return ( new LdapGroupService(contextSource, groupSearch, ldapSettings, userService, cacheManager()) );
     }
 }

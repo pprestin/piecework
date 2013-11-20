@@ -35,6 +35,11 @@ public class LdapSettings {
     private final String ldapGroupBase;
     private final String ldapGroupSearchBase;
     private final String ldapGroupSearchFilter;
+    private final String ldapGroupMemberSearchFilter;
+    private final String ldapGroupAttributeMember;
+    private final String ldapGroupAttributeId;
+    private final String ldapGroupAttributeDisplayName;
+    private final String ldapGroupUseridPrefix;
     private final String ldapPersonDn;
     private final String ldapPersonAttributeDisplayName;
     private final String ldapPersonAttributeIdInternal;
@@ -54,12 +59,17 @@ public class LdapSettings {
         this.authenticationType = authenticationType(environment.getProperty("ldap.authentication.type"));
         this.ldapGroupSearchBase = environment.getProperty("ldap.group.search.base");
         this.ldapGroupSearchFilter  = environment.getProperty("ldap.group.search.filter");
+        this.ldapGroupMemberSearchFilter  = environment.getProperty("ldap.group.member.search.filter");
         this.ldapPersonUrl = environment.getProperty("ldap.person.url");
         this.ldapPersonBase = environment.getProperty("ldap.person.base");
         this.ldapPersonDn = environment.getProperty("ldap.person.dn");
         this.ldapPersonAttributeDisplayName = environment.getProperty("ldap.attribute.name.display");
         this.ldapPersonAttributeIdInternal = environment.getProperty("ldap.attribute.id.internal");
         this.ldapPersonAttributeIdExternal = environment.getProperty("ldap.attribute.id.external");
+        this.ldapGroupAttributeMember = environment.getProperty("ldap.attribute.group.member");
+        this.ldapGroupAttributeId = environment.getProperty("ldap.attribute.group.id");
+        this.ldapGroupAttributeDisplayName  = environment.getProperty("ldap.attribute.group.name.display");
+        this.ldapGroupUseridPrefix = environment.getProperty("ldap.group.userid.prefix");
         this.ldapPersonAttributeEmail = environment.getProperty("ldap.attribute.email");
         this.ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
         this.ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
@@ -91,12 +101,32 @@ public class LdapSettings {
         return ldapGroupSearchFilter;
     }
 
+    public String getLdapGroupMemberSearchFilter() {
+        return ldapGroupMemberSearchFilter;
+    }
+
     public String getLdapGroupUrl() {
         return ldapGroupUrl;
     }
 
     public String getLdapGroupBase() {
         return ldapGroupBase;
+    }
+
+    public String getLdapGroupAttributeMember() {
+        return ldapGroupAttributeMember;
+    }
+
+    public String getLdapGroupAttributeId() {
+        return ldapGroupAttributeId;
+    }
+
+    public String getLdapGroupAttributeDisplayName() {
+        return ldapGroupAttributeDisplayName;
+    }
+
+    public String getLdapGroupUseridPrefix() {
+        return ldapGroupUseridPrefix;
     }
 
     public String getLdapPersonDn() {
