@@ -45,8 +45,8 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
     private final ContentRepository contentRepository;
     private final boolean doOptimization;
 
-    public OptimizingHtmlProviderVisitor(String applicationTitle, String applicationUrl, String assetsUrl, Environment environment, ContentRepository contentRepository) {
-        super(applicationTitle, applicationUrl, assetsUrl);
+    public OptimizingHtmlProviderVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl, Environment environment, ContentRepository contentRepository) {
+        super(applicationTitle, applicationUrl, publicUrl, assetsUrl);
         this.scriptBuffer = new StringBuffer();
         this.stylesheetBuffer = new StringBuffer();
         this.assetsDirectoryPath = environment.getProperty("assets.directory");

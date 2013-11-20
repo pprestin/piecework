@@ -41,8 +41,8 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
     private final String modelAsJson;
     private final boolean isExplanation;
 
-    public LinkOptimizingVisitor(String applicationTitle, String applicationUrl, String assetsUrl, Object t, Class<?> type, User user, ObjectMapper objectMapper, Environment environment) {
-        super(applicationTitle, applicationUrl, assetsUrl);
+    public LinkOptimizingVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl, Object t, Class<?> type, User user, ObjectMapper objectMapper, Environment environment) {
+        super(applicationTitle, applicationUrl, publicUrl, assetsUrl);
         this.t = t;
         this.type = type;
         PageContext pageContext = new PageContext.Builder()
@@ -77,7 +77,12 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
         dependencies.addAttribute("rel", "stylesheet");
 
         if (type.equals(Form.class)) {
-            dependencies.addAttribute("href", applicationUrl + "/resource/css/Form.css");
+            Form form = Form.class.cast(t);
+            if (form.isAnonymous())
+                dependencies.addAttribute("href", publicUrl + "/resource/css/Form.css");
+            else
+                dependencies.addAttribute("href", applicationUrl + "/resource/css/Form.css");
+
         } else if (type.equals(SearchResults.class)) {
             dependencies.addAttribute("href", applicationUrl + "/resource/css/SearchResults.form.css");
         } else if (type.equals(IndexView.class)) {
@@ -111,13 +116,33 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
         dependencies.addAttribute("rel", "script");
 
         if (type.equals(Form.class)) {
-            dependencies.addAttribute("src", applicationUrl + "/resource/script/Form.js");
+            Form form = Form.class.cast(t);
+            if (form.isAnonymous())
+                dependencies.addAttribute("src", publicUrl + "/resource/script/Form.js");
+            else
+                dependencies.addAttribute("src", applicationUrl + "/resource/script/Form.js");
+
         } else if (type.equals(SearchResults.class)) {
             dependencies.addAttribute("src", applicationUrl + "/resource/script/SearchResults.form.js");
         } else if (type.equals(IndexView.class)) {
             dependencies.addAttribute("src", applicationUrl + "/resource/script/IndexView.js");
         }
         tagNode.addChild(dependencies);
+    }
+
+    protected void handleBase(TagNode tagNode) {
+        Map<String, String> attributes = tagNode.getAttributes();
+        String href = tagNode.getAttributeByName("href");
+        if (checkForSecurePath(href)) {
+            String url = applicationUrl;
+            if (type.equals(Form.class)) {
+                Form form = Form.class.cast(t);
+                if (form.isAnonymous())
+                    url = publicUrl;
+            }
+            attributes.put("href", recomputeSecurePath(href, url));
+            tagNode.setAttributes(attributes);
+        }
     }
 
     protected void handleScript(String tagName, TagNode tagNode) {

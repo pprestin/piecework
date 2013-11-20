@@ -131,6 +131,7 @@ public interface Constants {
         public static final String SELECT_MULTIPLE = "select-multiple";
         public static final String TEXT = "text";
         public static final String TEXTAREA = "textarea";
+        public static final String URL = "url";
     }
 
     public static class ProcessStatuses {

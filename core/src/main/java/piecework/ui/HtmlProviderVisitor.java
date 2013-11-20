@@ -36,11 +36,13 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
 
     protected final String applicationTitle;
     protected final String applicationUrl;
+    protected final String publicUrl;
     protected final String assetsUrl;
 
-    public HtmlProviderVisitor(String applicationTitle, String applicationUrl, String assetsUrl) {
+    public HtmlProviderVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl) {
         this.applicationTitle = applicationTitle;
         this.applicationUrl = applicationUrl;
+        this.publicUrl = publicUrl;
         this.assetsUrl = assetsUrl;
     }
 
@@ -61,17 +63,21 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
                 } else if (tagName.equals("link")) {
                     handleStylesheet(tagName, tagNode);
                 } else if (tagName.equals("base")) {
-                    Map<String, String> attributes = tagNode.getAttributes();
-                    String href = tagNode.getAttributeByName("href");
-                    if (checkForSecurePath(href)) {
-                        attributes.put("href", recomputeSecurePath(href, applicationUrl));
-                        tagNode.setAttributes(attributes);
-                    }
+                    handleBase(tagNode);
                 }
             }
         }
 
         return true;
+    }
+
+    protected void handleBase(TagNode tagNode) {
+        Map<String, String> attributes = tagNode.getAttributes();
+        String href = tagNode.getAttributeByName("href");
+        if (checkForSecurePath(href)) {
+            attributes.put("href", recomputeSecurePath(href, applicationUrl));
+            tagNode.setAttributes(attributes);
+        }
     }
 
     private void handleReferences(TagNode tagNode) {

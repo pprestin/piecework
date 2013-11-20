@@ -96,6 +96,13 @@ public class SubmissionTemplateFactory {
                 Map<String, Field> fieldMap = activity.getFieldMap();
                 List<String> fieldIds = container.getFieldIds();
 
+                if (fieldIds.isEmpty() && container.getChildren() != null && !container.getChildren().isEmpty()) {
+                    fieldIds = new ArrayList<String>();
+                    for (Container child : container.getChildren()) {
+                        fieldIds.addAll(child.getFieldIds());
+                    }
+                }
+
                 if (fieldIds != null) {
                     fields = new TreeSet<Field>();
                     for (String fieldId : fieldIds) {

@@ -6,8 +6,7 @@ angular.module('Form',
         'ui.bootstrap',
         'ui.bootstrap.alert',
         'ui.bootstrap.modal',
-        'blueimp.fileupload',
-        'ui.mask'
+        'blueimp.fileupload'
     ])
     .config(['$routeProvider', '$locationProvider', '$logProvider','$provide',
         function($routeProvider, $locationProvider, $logProvider, $provide) {
@@ -31,10 +30,9 @@ angular.module('Form',
             }]);
         }
     ])
-//    .decorator('HistoryDecorator', ['$sniffer', function()])
     .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
         function($scope, $window, $location, $resource, $http, $routeParams, personService, dialogs) {
-
+            console.log('started', 'This is a note');
             $scope.context = window.piecework.context;
             //$window.piecework.context;
             $scope.evaluateVisibilityConstraint = function(field, constraint) {
@@ -73,6 +71,13 @@ angular.module('Form',
             $scope.fileUploadOptions = {
                 autoUpload: true
             };
+            $scope.$on('keyup:37', function(onEvent, keypressEvent) {
+                $scope.previousStep();
+                $scope.$digest();
+            });
+            $scope.$on('keyup:39', function(onEvent, keypressEvent) {
+                $scope.nextStep();
+            });
             $scope.isCollapsed = false;
             $scope.isEditingAttachments = false;
             $scope.isViewingAttachments = false;
@@ -82,24 +87,59 @@ angular.module('Form',
             };
             $scope.clickButton = function(button, step, form) {
                 if (button.action == 'next') {
-                    var success = function(data, status, headers, config) {
-                        $scope.form.activeStep += 1;
-                        if ($scope.form.activeStep > $scope.form.maxStep)
-                            $scope.form.maxStep = $scope.form.activeStep;
-                    };
-                    $scope.validateStep(step, form, success);
+                    $scope.nextStep(step);
                 } else if (button.action == 'previous') {
-                    $scope.form.activeStep -= 1;
+                    $scope.previousStep();
                 }
             };
-            $scope.nextStep = function(ordinal) {
-                $scope.form.activeStep = ordinal;
-            }
+            $scope.changeStep = function(ordinal) {
+                $scope.form.activeStepOrdinal = ordinal;
+            };
+            $scope.nextStep = function(step) {
+                if (typeof(step) === 'undefined') {
+                    step = $scope.getActiveStep();
+                }
+                var success = function(data, status, headers, config) {
+                    if ($scope.form.steps.length > $scope.form.activeStepOrdinal) {
+                        $scope.form.activeStepOrdinal += 1;
+                        if ($scope.form.activeStepOrdinal > $scope.form.maxStep)
+                            $scope.form.maxStep = $scope.form.activeStepOrdinal;
+                    }
+                };
+                $scope.validateStep(step, $scope.form, success);
+            };
+            $scope.previousStep = function() {
+                if ($scope.form.activeStepOrdinal > 1) {
+                    $scope.form.activeStepOrdinal -= 1;
+                }
+            };
             $scope.deleteAttachment = function(attachment) {
                 $http['delete'](attachment.link).then($scope.refreshAttachments);
-            }
+            };
             $scope.editAttachments = function() {
                 $scope.isEditingAttachments = !$scope.isEditingAttachments;
+            };
+            $scope.getActiveStep = function() {
+                var activeStep = null;
+                angular.forEach($scope.form.steps, function(step) {
+                    if ($scope.form.activeStepOrdinal == step.ordinal)
+                        activeStep = step;
+                });
+                return activeStep;
+            };
+            $scope.isActiveStep = function(form, step) {
+                if (!step.isStep && step.leaf)
+                    step = step.parent;
+                if (form.container.reviewChildIndex > -1 && form.activeStepOrdinal == form.container.reviewChildIndex) {
+                    return step.ordinal < form.activeStepOrdinal;
+                }
+                return $scope.isCurrentStep(form, step);
+            };
+            $scope.isCurrentStep = function(form, step) {
+                var active = form.activeStepOrdinal;
+                var ordinal = step.ordinal;
+                var isCurrent = form.activeStepOrdinal == step.ordinal;
+                return isCurrent;
             };
             $scope.isVisible = function(field) {
                 if (field.constraints != undefined && field.constraints.length > 0) {
@@ -138,6 +178,32 @@ angular.module('Form',
                     container.leaf = true;
                 }
             };
+            $scope.range = function(min, max) {
+                var input = [];
+                for (var i=min; i<=max; i++) input.push(i);
+                return input;
+            };
+            $scope.addFields = function(fields, form, container, isRoot) {
+                var previousChild = null;
+                if (container.children == null)
+                    return;
+                angular.forEach(container.children, function(child) {
+                    if (isRoot)
+                        child.isStep = true;
+                    child.previous = previousChild;
+                    if (previousChild != null)
+                        previousChild.next = child;
+
+                    if (form.layout == 'multipage' && child.readonly) {
+                        angular.forEach(child.fields, function(field) {
+                            field.editable = false;
+                        });
+                    }
+                    fields.push.apply(fields, child.fields);
+                    previousChild = child;
+                    $scope.addFields(fields, form, child, false);
+                });
+            };
             $scope.refreshForm = function(form) {
                 $scope.form = form;
                 $scope.attachments = form.attachments;
@@ -151,21 +217,8 @@ angular.module('Form',
                 $scope.markLeaves(rootContainer);
                 if (rootContainer.children != null && rootContainer.children.length > 1 && rootContainer.activeChildIndex != -1) {
                     $scope.form.steps = rootContainer.children;
-                    $scope.form.activeStep = rootContainer.activeChildIndex;
-                    var previousChild = null;
-                    angular.forEach(rootContainer.children, function(child) {
-                        child.previous = previousChild;
-                        if (previousChild != null)
-                            previousChild.next = child;
-
-                        if (form.layout == 'multipage' && child.readonly) {
-                            angular.forEach(child.fields, function(field) {
-                                field.editable = false;
-                            });
-                        }
-                        fields.push.apply(fields, child.fields);
-                        previousChild = child;
-                    });
+                    $scope.form.activeStepOrdinal = rootContainer.activeChildIndex;
+                    $scope.addFields(fields, form, rootContainer, true);
                 } else {
                     fields = $scope.form.container.fields;
                     $scope.form.layout = 'normal';
@@ -213,8 +266,11 @@ angular.module('Form',
 
                 };
 
-                //if (form != null && form.attachment != null)
-                //    $scope.refreshAttachments(form);
+                // FIXME: Reduce cost by customizing to only use on fields that have a mask
+                window.setTimeout(function() {
+                    $(':input').inputmask();
+                }, 500);
+
             };
             $scope.$on('fileuploaddone', function(event, data) {
                 $scope.refreshAttachments();
@@ -261,6 +317,7 @@ angular.module('Form',
                         }
                     }
                 });
+                var validationId = step.leaf ? step.parent.containerId : step.containerId;
                 var url = form.action + '/' + step.containerId;
                 $http({
                          method: 'POST',
@@ -276,12 +333,23 @@ angular.module('Form',
                             for (var i=0;i<data.items.length;i++) {
                                 map[data.items[i].propertyName] = data.items[i];
                             }
-                            for (var i=0;i<step.fields.length;i++) {
-                                var field = step.fields[i];
-                                var item = map[field.name];
-                                if (typeof(item) !== 'undefined') {
-                                    field.messages = new Array();
-                                    field.messages.push({ text: item.message });
+                            var steps = [step];
+                            if (!step.leaf) {
+                                steps = step.children;
+                            }
+                            for (var n=0;n<steps.length;n++) {
+                                var s = steps[n];
+                                for (var i=0;i<s.fields.length;i++) {
+                                    var field = s.fields[i];
+                                    var item = map[field.name];
+                                    if (typeof(item) !== 'undefined') {
+                                        field.messages = new Array();
+                                        field.cssClass = "has-error";
+                                        field.messages.push({ text: item.message });
+                                    }  else {
+                                        field.cssClass = null;
+                                        field.messages = null;
+                                    }
                                 }
                             }
                         }
@@ -303,6 +371,7 @@ angular.module('Form',
             });
 
             $scope.onFieldChange = function(field) {
+                field.cssClass = null;
                 field.messages = null;
             };
 
@@ -432,6 +501,19 @@ angular.module('Form',
             }
         }
     ])
+    .directive('keypressEvents', ['$document', '$rootScope',
+        function($document, $rootScope) {
+            return {
+                restrict: 'A',
+                link: function() {
+                    $document.bind('keyup', function(e) {
+                        console.log('Got keyup:', e.which);
+                        $rootScope.$broadcast('keyup', e);
+                        $rootScope.$broadcast('keyup:' + e.which, e);
+                    });
+            }
+        };
+    }])
     .factory('controllerService', ['instanceService', 'notificationService', 'personService', 'taskService',
         function(instanceService, notificationService, personService, taskService) {
             return {

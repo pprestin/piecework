@@ -97,6 +97,7 @@ public class ScriptResourceVersion1 implements ScriptResource {
 
     private String applicationTitle;
     private String applicationUrl;
+    private String publicUrl;
     private String assetsUrl;
     private boolean disableResourceCaching;
 
@@ -104,6 +105,7 @@ public class ScriptResourceVersion1 implements ScriptResource {
     public void init() {
         this.applicationTitle = environment.getProperty("application.name");
         this.applicationUrl = environment.getProperty("base.application.uri");
+        this.publicUrl = environment.getProperty("base.public.uri");
         this.assetsUrl = environment.getProperty("ui.static.urlbase");
         this.disableResourceCaching = environment.getProperty("disable.resource.caching", Boolean.class, Boolean.FALSE);
     }
@@ -215,7 +217,7 @@ public class ScriptResourceVersion1 implements ScriptResource {
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new OptimizingHtmlProviderVisitor(applicationTitle, applicationUrl, assetsUrl, environment, contentRepository);
+            visitor = new OptimizingHtmlProviderVisitor(applicationTitle, applicationUrl, publicUrl, assetsUrl, environment, contentRepository);
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(visitor);
         } catch (IOException ioe) {
@@ -250,7 +252,7 @@ public class ScriptResourceVersion1 implements ScriptResource {
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new OptimizingHtmlProviderVisitor(applicationTitle, applicationUrl, assetsUrl, environment, contentRepository);
+            visitor = new OptimizingHtmlProviderVisitor(applicationTitle, applicationUrl, publicUrl, assetsUrl, environment, contentRepository);
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(visitor);
         } catch (IOException ioe) {

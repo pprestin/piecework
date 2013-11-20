@@ -6,7 +6,9 @@ angular.module('ui.mask', [])
     'maskDefinitions': {
       '9': /\d/,
       'A': /[a-zA-Z]/,
-      '*': /[a-zA-Z0-9]/
+      '*': /[a-zA-Z0-9]/,
+      '0': /\d?/,
+      '_': /\s?/
     }
   })
   .directive('uiMask', ['uiMaskConfig', function (maskConfig) {
@@ -216,7 +218,7 @@ angular.module('ui.mask', [])
             if (typeof placeholder !== "undefined" && placeholder[i]) {
               return placeholder[i];
             } else {
-              return "_";
+              return " ";
             }
           }
 

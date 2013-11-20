@@ -55,6 +55,8 @@ public class Container implements Serializable {
 
     private final int activeChildIndex;
 
+    private final int reviewChildIndex;
+
     private final boolean readonly;
 
     private final boolean deleted;
@@ -76,6 +78,7 @@ public class Container implements Serializable {
         this.buttons = Collections.unmodifiableList(builder.buttons);
         this.ordinal = builder.ordinal;
         this.activeChildIndex = builder.activeChildIndex;
+        this.reviewChildIndex = builder.reviewChildIndex;
         this.readonly = builder.readonly;
         this.deleted = builder.deleted;
     }
@@ -129,6 +132,10 @@ public class Container implements Serializable {
         return activeChildIndex;
     }
 
+    public int getReviewChildIndex() {
+        return reviewChildIndex;
+    }
+
     public boolean isReadonly() {
         return readonly;
     }
@@ -151,6 +158,7 @@ public class Container implements Serializable {
         private List<Button> buttons;
         private int ordinal;
         private int activeChildIndex;
+        private int reviewChildIndex;
         private boolean readonly;
         private boolean deleted;
 
@@ -161,6 +169,7 @@ public class Container implements Serializable {
             this.children = new ArrayList<Container>();
             this.buttons = new ArrayList<Button>();
             this.activeChildIndex = -1;
+            this.reviewChildIndex = -1;
         }
 
         public Builder(Container container, Sanitizer sanitizer) {
@@ -211,6 +220,7 @@ public class Container implements Serializable {
                 }
             }
             this.activeChildIndex = container.activeChildIndex;
+            this.reviewChildIndex = container.reviewChildIndex;
             this.ordinal = container.ordinal;
             this.readonly = container.readonly;
             this.deleted = container.deleted;
@@ -287,6 +297,11 @@ public class Container implements Serializable {
 
         public Builder activeChildIndex(int activeChildIndex) {
             this.activeChildIndex = activeChildIndex;
+            return this;
+        }
+
+        public Builder reviewChildIndex(int reviewChildIndex) {
+            this.reviewChildIndex = reviewChildIndex;
             return this;
         }
 

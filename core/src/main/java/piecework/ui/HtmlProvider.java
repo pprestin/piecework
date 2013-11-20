@@ -16,14 +16,11 @@
 package piecework.ui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -31,7 +28,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import piecework.identity.IdentityDetails;
 import piecework.model.User;
 import piecework.model.SearchResults;
-import piecework.persistence.ContentRepository;
 import piecework.service.FormTemplateService;
 
 import javax.annotation.PostConstruct;
@@ -65,12 +61,14 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 
     private String applicationTitle;
     private String applicationUrl;
+    private String publicUrl;
     private String assetsUrl;
 
     @PostConstruct
     public void init() {
         this.applicationTitle = environment.getProperty("application.name");
         this.applicationUrl = environment.getProperty("base.application.uri");
+        this.publicUrl = environment.getProperty("base.public.uri");
         this.assetsUrl = environment.getProperty("ui.static.urlbase");
     }
 
@@ -108,7 +106,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
 
             LinkOptimizingVisitor visitor =
-                    new LinkOptimizingVisitor(applicationTitle, applicationUrl, assetsUrl, t, type, user, objectMapper, environment);
+                    new LinkOptimizingVisitor(applicationTitle, applicationUrl, publicUrl, assetsUrl, t, type, user, objectMapper, environment);
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(visitor);
 

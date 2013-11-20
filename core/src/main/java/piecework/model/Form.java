@@ -110,6 +110,9 @@ public class Form {
     @JsonIgnore
     private final List<Attachment> attachments;
 
+    @JsonIgnore
+    private final boolean anonymous;
+
     private Form() {
         this(new Form.Builder(), new ViewContext());
     }
@@ -141,6 +144,7 @@ public class Form {
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : Collections.<Attachment>emptyList();
         this.valid = builder.valid;
         this.external = builder.external;
+        this.anonymous = builder.anonymous;
     }
 
     public String getFormInstanceId() {
@@ -248,6 +252,11 @@ public class Form {
         return external;
     }
 
+    @JsonIgnore
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
     public final static class Builder {
 
         private String formInstanceId;
@@ -301,6 +310,7 @@ public class Form {
             this.attachments = form.getAttachments();
             this.valid = form.valid;
             this.external = form.external;
+            this.anonymous = form.anonymous;
         }
 
         public Form build() {
