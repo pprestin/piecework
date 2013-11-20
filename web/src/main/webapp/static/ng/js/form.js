@@ -30,11 +30,24 @@ angular.module('Form',
             }]);
         }
     ])
-    .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'personService', 'dialogs',
-        function($scope, $window, $location, $resource, $http, $routeParams, personService, dialogs) {
+    .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'personService', 'taskService', 'dialogs',
+        function($scope, $window, $location, $resource, $http, $routeParams, personService, taskService, dialogs) {
             console.log('started', 'This is a note');
             $scope.context = window.piecework.context;
-            //$window.piecework.context;
+            $scope.assignTo = function(userId) {
+                var success = function(scope, data, status, headers, config, form, assignee) {
+                    scope.$broadcast('event:refresh', 'assignment');
+                };
+
+                var failure = function(scope, data, status, headers, config, form, assignee) {
+                    form._assignmentStatus = 'error';
+                    var displayName = typeof(assignee.displayName) === 'undefined' ? assignee : assignee.displayName;
+                    var message = '<em>' + form.task.processInstanceLabel + '</em> cannot be assigned to <em>' + displayName + '</em>';
+                    var title = data.messageDetail;
+                    notificationService.notify($scope, message, title);
+                };
+                taskService.assignTask($scope, $scope.form, userId, success, failure);
+            };
             $scope.evaluateVisibilityConstraint = function(field, constraint) {
                 var f = $scope.fieldMap[constraint.name];
                 if (typeof(f) === 'undefined')
@@ -134,6 +147,10 @@ angular.module('Form',
                     return step.ordinal < form.activeStepOrdinal;
                 }
                 return $scope.isCurrentStep(form, step);
+            };
+            $scope.isAvailableStep = function(form, step) {
+                //return step.ordinal <= form.container.activeChildIndex;
+                return true;
             };
             $scope.isCurrentStep = function(form, step) {
                 var active = form.activeStepOrdinal;
@@ -507,8 +524,6 @@ angular.module('Form',
                 restrict: 'A',
                 link: function() {
                     $document.bind('keyup', function(e) {
-                        console.log('Got keyup:', e.which);
-                        $rootScope.$broadcast('keyup', e);
                         $rootScope.$broadcast('keyup:' + e.which, e);
                     });
             }

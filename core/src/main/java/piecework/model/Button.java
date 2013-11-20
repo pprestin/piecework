@@ -74,6 +74,9 @@ public class Button implements Serializable {
 
 	@XmlAttribute
     private final int ordinal;
+
+    @XmlAttribute
+    private final boolean primary;
 	
     @XmlTransient
     @JsonIgnore
@@ -93,6 +96,7 @@ public class Button implements Serializable {
         this.value = builder.value;
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
+        this.primary = builder.primary;
         this.link = builder.link;
     }
     
@@ -136,7 +140,11 @@ public class Button implements Serializable {
 		return isDeleted;
 	}
 
-	public final static class Builder {
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public final static class Builder {
 
     	private String buttonId;
     	private String processDefinitionKey;
@@ -149,6 +157,7 @@ public class Button implements Serializable {
         private String link;
         private int ordinal;
         private boolean isDeleted;
+        private boolean primary;
 
         public Builder() {
             super();
@@ -165,6 +174,7 @@ public class Button implements Serializable {
             this.value = sanitizer.sanitize(button.value);
             this.ordinal = button.ordinal;
             this.isDeleted = button.isDeleted;
+            this.primary = button.primary;
         }
 
         public Button build() {
@@ -232,6 +242,11 @@ public class Button implements Serializable {
 
         public Builder undelete() {
             this.isDeleted = false;
+            return this;
+        }
+
+        public Builder primary() {
+            this.primary = true;
             return this;
         }
     }

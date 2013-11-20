@@ -142,8 +142,8 @@
                 <div class="crumbs col-md-3">
                     <ul class="breadcrumb-stacked">
                         <li ng-repeat="step in form.steps" ng-class="isActiveStep(form, step) ? 'active' : ''">
-                            <a ng-show="step.ordinal <= form.container.activeChildIndex" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
-                            <span ng-show="step.ordinal > form.container.activeChildIndex">{{step.breadcrumb}}</span>
+                            <a data-ng-show="isAvailableStep(form, step)" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                            <span ng-show="!isAvailableStep(form, step)">{{step.breadcrumb}}</span>
                         </li>
                     </ul>
                 </div>
@@ -157,7 +157,7 @@
                     </div>
                     <div class="screen-footer">
                         <div class="btn-toolbar pull-right" role="toolbar">
-                            <button data-ng-repeat="button in form.container.buttons" data-ng-click="clickButton(button)" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+                            <button data-ng-repeat="button in form.container.buttons" data-ng-class="button.primary ? 'btn-primary' : ''" data-ng-click="clickButton(button)" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
                         </div>
                         <div class="clearfix"></div>
                     </div>
@@ -299,7 +299,7 @@
                             <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li data-ng-repeat="candidateAssignee in form.task.candidateAssignees"><a class="candidate-assignee" id="{{candidateAssignee.userId}}">Assign to {{candidateAssignee.displayName}}</a></li>
+                            <li data-ng-repeat="candidateAssignee in form.task.candidateAssignees"><a data-ng-click="assignTo(candidateAssignee.userId)" class="candidate-assignee" id="{{candidateAssignee.userId}}">Assign to {{candidateAssignee.displayName}}</a></li>
                         </ul>
                     </div>
                     <a data-ng-click="dialogs.openCommentModal([form])" data-ng-show="form.history" class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="fa fa-comment-o"></i></a>
