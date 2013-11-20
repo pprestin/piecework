@@ -156,7 +156,7 @@
                     <button data-ng-click="dialogs.openActivateModal(getFormsSelected(['Suspended']))" data-ng-show="isFormSelected(['Suspended'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>
                     <button data-ng-click="dialogs.openSuspendModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
                     <button data-ng-click="dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))" data-ng-show="isFormSelected(['Open','Suspended'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>
-                    <button data-ng-click="export(getFormsSelected())" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>
+                    <button data-ng-click="exportCsv(getFormsSelected())" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>
                 </div>
             </div>
         </div>

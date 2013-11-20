@@ -408,7 +408,7 @@ angular.module('Form',
             var SearchResults = $resource('./form', {processStatus:'@processStatus'});
             //var results = SearchResults.get($scope.criteria, $scope.processSearchResults);
 
-            $scope.export = function(selectedForms) {
+            $scope.exportCsv = function(selectedForms) {
                 $window.location.href = "/workflow/ui/instance.csv?processDefinitionKey=" + $scope.criteria.processDefinitionKey;
             };
 

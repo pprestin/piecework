@@ -112,7 +112,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
         return content.replaceAll("url\\('\\.\\./", "url('" + recomputeStaticPath(rootPath, assetsUrl));
     }
 
-    public static String compressJavaScript(Reader in, Options o) {
+    public String compressJavaScript(Reader in, Options o, String path) {
         StringWriter out = new StringWriter();
         try {
             JavaScriptCompressor compressor = new JavaScriptCompressor(in, new YuiCompressorErrorReporter());
@@ -122,8 +122,9 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
         } catch (Exception e) {
             LOG.error("Unable to compress javascript", e);
             try {
+                in = reader(path);
                 return IOUtils.toString(in);
-            } catch (IOException ioe) {
+            } catch (Exception ioe) {
                 LOG.error("Unable to output string", ioe);
             }
         } finally {
@@ -158,7 +159,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
                         buffer.append(builder);
 
                 } else if (path.endsWith(".js")) {
-                    buffer.append(compressJavaScript(reader, new Options())).append(NEWLINE);
+                    buffer.append(compressJavaScript(reader, new Options(), path)).append(NEWLINE);
                 } else if (path.endsWith(".css")) {
                     buffer.append(rebaseStylesheetUrls(compressStylesheet(reader, new Options()), path)).append(NEWLINE);
                 }
@@ -219,7 +220,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
             if (line < 0) {
                 LOG.error(message);
             } else {
-                LOG.error(line + ':' + lineOffset + ':' + message);
+                LOG.error(line + ':' + lineOffset + ':' + lineSource + ":" + message);
             }
         }
 
