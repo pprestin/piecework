@@ -21,13 +21,11 @@ import piecework.Versions;
 import piecework.enumeration.EventType;
 import piecework.enumeration.OperationType;
 import piecework.exception.StatusCodeError;
-import piecework.identity.IdentityDetails;
 import piecework.model.*;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.TaskFactory;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -86,11 +84,16 @@ public class ProcessHistoryService {
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         if (tasks != null) {
+            // Loop through first to gather the set of all user ids that we want to look up
+            Set<String> userIds = new HashSet<String>();
+            for (Task task : tasks) {
+                userIds.addAll(task.getAssigneeAndCandidateAssigneeIds());
+            }
+            Map<String, User> userMap = identityService.findUsers(userIds);
             for (Task task : tasks) {
                 String id = "task-" + i;
                 Date date = task.getStartTime();
-
-                Task decoratedTask = taskService.rebuildTask(task, passthroughSanitizer);
+                Task decoratedTask = TaskFactory.task(task, passthroughSanitizer, userMap, versions.getVersion1());
                 history.event(new Event.Builder().id(id).type(EventType.TASK).task(decoratedTask).date(date).user(decoratedTask.getAssignee()).build());
                 i++;
             }

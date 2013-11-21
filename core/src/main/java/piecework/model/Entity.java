@@ -25,6 +25,7 @@ import piecework.authorization.AccessAuthority;
 
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -65,6 +66,17 @@ public class Entity extends Value {
         }
 
         return false;
+    }
+
+    @JsonIgnore
+    public Set<String> getProcessDefinitionKeys(String ... allowedRoles) {
+        Set<String> allowedRoleSet = allowedRoles != null && allowedRoles.length > 0 ? Sets.newHashSet(allowedRoles) : null;
+        Set<String> processDefinitionKeys = accessAuthority.getProcessDefinitionKeys(allowedRoleSet);
+
+        if (processDefinitionKeys == null)
+            return Collections.emptySet();
+
+        return processDefinitionKeys;
     }
 
     @JsonIgnore

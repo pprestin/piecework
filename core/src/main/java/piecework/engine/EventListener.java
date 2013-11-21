@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
+package piecework.engine;
 
-import piecework.exception.StatusCodeError;
+import piecework.enumeration.ActionType;
+import piecework.model.Process;
+import piecework.model.ProcessInstance;
+import piecework.model.Task;
 
 /**
  * @author James Renfro
  */
-public interface Command<T> {
+public interface EventListener {
 
-    <T> T execute(CommandExecutor commandExecutor) throws StatusCodeError;
+    void notify(StateChangeEvent event);
 
     String getProcessDefinitionKey();
 

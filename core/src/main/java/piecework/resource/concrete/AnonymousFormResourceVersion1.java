@@ -43,14 +43,14 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return startForm(context, process, true);
+        return startForm(context, process);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return submitForm(context, process, rawRequestId, body, true);
+        return submitForm(context, process, rawRequestId, body);
     }
 
     @Override
@@ -60,6 +60,10 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
         return validateForm(context, process, body, rawRequestId, rawValidationId);
     }
 
+    @Override
+    protected boolean isAnonymous() {
+        return true;
+    }
 
     private Process verifyProcessAllowsAnonymousSubmission(final String rawProcessDefinitionKey) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);

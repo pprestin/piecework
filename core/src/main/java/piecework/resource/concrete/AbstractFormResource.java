@@ -49,7 +49,7 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class AbstractFormResource {
+public abstract class AbstractFormResource {
 
     private static final Logger LOG = Logger.getLogger(AbstractFormResource.class);
 
@@ -77,11 +77,13 @@ public class AbstractFormResource {
     @Autowired
     Versions versions;
 
-    protected Response startForm(MessageContext context, Process process, boolean anonymous) throws StatusCodeError {
+    protected abstract boolean isAnonymous();
+
+    protected Response startForm(MessageContext context, Process process) throws StatusCodeError {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest request = requestHandler.create(requestDetails, process);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, anonymous);
+        return response(process, request);
     }
 
     protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws StatusCodeError {
@@ -89,7 +91,7 @@ public class AbstractFormResource {
         String requestId = sanitizer.sanitize(rawRequestId);
         FormRequest request = requestHandler.handle(requestDetails, requestId);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, false);
+        return response(process, request);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws StatusCodeError {
@@ -97,11 +99,12 @@ public class AbstractFormResource {
         String taskId = sanitizer.sanitize(rawTaskId);
         FormRequest request = requestHandler.create(requestDetails, process, taskId, null);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, false);
+        return response(process, request);
     }
 
     protected SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
-        return formService.search(rawQueryParameters);
+        Entity principal = helper.getPrincipal();
+        return formService.search(rawQueryParameters, principal);
     }
 
     protected Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
@@ -120,7 +123,7 @@ public class AbstractFormResource {
         return redirect(formService.saveForm(process, formRequest, body));
     }
 
-    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultipartBody body, boolean anonymous) throws StatusCodeError {
+    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
@@ -163,7 +166,7 @@ public class AbstractFormResource {
                 throw (BadRequestError)e;
 
             FormRequest invalidRequest = requestHandler.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
-            return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, anonymous);
+            return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
         }
     }
 
@@ -192,30 +195,52 @@ public class AbstractFormResource {
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "page", formRequest.getRequestId())).build();
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, FormValidation validation, Explanation explanation, boolean anonymous) throws StatusCodeError {
+    private Response handle(Process process, InternalFormException ife) throws StatusCodeError {
+        Form form = ife.getForm();
+        String location = ife.getLocation();
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+
+        String fullPath = deployment.getBase() + "/" + location;
+
+        Content content = contentRepository.findByLocation(fullPath);
+        if (content == null)
+            throw new NotFoundError();
+
+        return Response.ok(new StreamingPageContent(process, form, content, DataInjectionStrategy.INCLUDE_SCRIPT), content.getContentType()).build();
+    }
+
+    private Response response(Process process, FormRequest request) throws StatusCodeError {
         if (!request.validate(process))
             throw new BadRequestError();
 
         Entity principal = helper.getPrincipal();
         try {
-            Form form = formFactory.form(request, actionType, principal, mediaType, validation, explanation, anonymous);
+            Form form = formFactory.form(request, principal, isAnonymous());
             return Response.ok(form).build();
         } catch (RemoteFormException rfe) {
             return Response.seeOther(rfe.getUri()).build();
         } catch (InternalFormException ife) {
-            Form form = ife.getForm();
-            String location = ife.getLocation();
-            ProcessDeployment deployment = process.getDeployment();
-            if (deployment == null)
-                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+            return handle(process, ife);
+        } catch (FormBuildingException fbe) {
+            LOG.error("Unable to build form", fbe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
+    }
 
-            String fullPath = deployment.getBase() + "/" + location;
+    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, FormValidation validation, Explanation explanation) throws StatusCodeError {
+        if (!request.validate(process))
+            throw new BadRequestError();
 
-            Content content = contentRepository.findByLocation(fullPath);
-            if (content == null)
-                throw new NotFoundError();
-
-            return Response.ok(new StreamingPageContent(process, form, content, DataInjectionStrategy.INCLUDE_SCRIPT), content.getContentType()).build();
+        Entity principal = helper.getPrincipal();
+        try {
+            Form form = formFactory.form(request, actionType, principal, mediaType, validation, explanation, isAnonymous());
+            return Response.ok(form).build();
+        } catch (RemoteFormException rfe) {
+            return Response.seeOther(rfe.getUri()).build();
+        } catch (InternalFormException ife) {
+            return handle(process, ife);
         } catch (FormBuildingException fbe) {
             LOG.error("Unable to build form", fbe);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);

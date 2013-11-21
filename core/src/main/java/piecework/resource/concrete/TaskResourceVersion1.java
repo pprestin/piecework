@@ -113,7 +113,7 @@ public class TaskResourceVersion1 implements TaskResource {
                 actingUser = principal.getEntityId();
         }
 
-        Task task = taskId != null ? taskService.allowedTask(process, taskId, true) : null;
+        Task task = taskId != null ? taskService.read(process, taskId, true) : null;
 
         if (task == null)
             throw new NotFoundError();
@@ -173,7 +173,7 @@ public class TaskResourceVersion1 implements TaskResource {
 
         piecework.model.Process process = processService.read(processDefinitionKey);
 
-        Task task = taskService.allowedTask(process, taskId, true);
+        Task task = taskService.read(process, taskId, true);
         if (task == null)
             throw new NotFoundError();
 
@@ -194,7 +194,8 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Override
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
-        SearchResults results = taskService.allowedTasksDirect(rawQueryParameters, false, false);
+        Entity principal = helper.getPrincipal();
+        SearchResults results = taskService.search(rawQueryParameters, principal, false, false);
 
         ViewContext version = versions.getVersion1();
 

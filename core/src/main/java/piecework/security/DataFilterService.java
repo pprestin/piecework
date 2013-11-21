@@ -27,6 +27,7 @@ import piecework.Versions;
 import piecework.model.*;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
+import piecework.validation.FormValidation;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -48,6 +49,19 @@ public class DataFilterService {
 
     private static final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
     private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
+
+    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, FormValidation validation) {
+        Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, false);
+        if (validation != null) {
+            Map<String, List<Value>> validationData = validation.getData();
+            if (validationData != null) {
+                for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
+                    data.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        return data;
+    }
 
     public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData) {
         Map<String, List<Value>> data = instance != null ? instance.getData() : new ManyMap<String, Value>();

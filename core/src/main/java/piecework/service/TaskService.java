@@ -42,6 +42,7 @@ import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.task.TaskFactory;
 import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -71,6 +72,9 @@ public class TaskService {
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
+    ProcessService processService;
+
+    @Autowired
     Sanitizer sanitizer;
 
     @Autowired
@@ -80,30 +84,39 @@ public class TaskService {
     Versions versions;
 
 
-    public Task allowedTask(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
-
+    public Task read(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
         ProcessInstance instance = processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
 
         if (instance == null)
             return null;
 
-        return allowedTask(process, instance, taskId, limitToActive);
+        Entity principal = helper.getPrincipal();
+        return findTask(process, instance, taskId, principal, limitToActive);
     }
 
     /*
      * Returns the first task for the passed instance that the user is allowed to access
      */
-    public Task allowedTask(Process process, ProcessInstance instance, String taskId, boolean limitToActive) throws StatusCodeError {
-        Entity principal = helper.getPrincipal();
+    public Task allowedTask(Process process, ProcessInstance instance, Entity principal, boolean limitToActive) throws StatusCodeError {
+        return findTask(process, instance, null, principal, limitToActive);
+    }
+
+    private Task findTask(Process process, ProcessInstance instance, String taskId, Entity principal, boolean limitToActive) throws StatusCodeError {
+
         Set<Task> tasks = instance.getTasks();
         boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
+        ViewContext version1 = versions.getVersion1();
 
         for (Task task : tasks) {
             if (limitToActive && !task.isActive())
                 continue;
 
+            if (taskId != null && !task.getTaskInstanceId().equals(taskId))
+                continue;
+
             if ( hasOversight || task.isCandidateOrAssignee(principal) ) {
-                return rebuildTask(task, new PassthroughSanitizer());
+                Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
+                return TaskFactory.task(task, new PassthroughSanitizer(), userMap, version1);
             }
         }
 
@@ -113,7 +126,7 @@ public class TaskService {
     public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
         String taskId = task != null ? task.getTaskInstanceId() : null;
         if (StringUtils.isNotEmpty(taskId)) {
-            task = allowedTask(process, taskId, false);
+            task = read(process, taskId, false);
             if (task == null || !task.isActive())
                 throw new ForbiddenError();
         }
@@ -126,29 +139,17 @@ public class TaskService {
         }
     }
 
-    private Set<String> processDefinitionKeys(Set<Process> processes) {
-        Set<String> set = new HashSet<String>();
-        if (processes != null) {
-            for (Process process : processes) {
-                set.add(process.getProcessDefinitionKey());
-            }
-        }
-
-        return set;
-    }
-
-    public SearchResults allowedTasksDirect(MultivaluedMap<String, String> rawQueryParameters, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
         long time = 0;
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
 
-        Entity principal = helper.getPrincipal();
-        Set<Process> overseerProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
-        Set<Process> userProcesses = Sets.difference(helper.findProcesses(AuthorizationRole.USER), overseerProcesses);
-        Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
+        Set<String> overseerProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+        Set<String> userProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.USER);
 
-        Set<String> overseerProcessDefinitionKeys = processDefinitionKeys(overseerProcesses);
-        Set<String> userProcessDefinitionKeys = processDefinitionKeys(userProcesses);
+        Set<Process> overseerProcesses = processService.findProcesses(overseerProcessDefinitionKeys);
+        Set<Process> userProcesses = Sets.difference(processService.findProcesses(userProcessDefinitionKeys), overseerProcesses);
+        Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
         ViewContext taskViewContext = versions.getVersion1();
 
@@ -250,7 +251,8 @@ public class TaskService {
 
                             if (overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())
                                 || task.isCandidateOrAssignee(principal) ) {
-                                Task rebuilt = rebuildTask(task, passthroughSanitizer);
+                                Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
+                                Task rebuilt = TaskFactory.task(task, new PassthroughSanitizer(), userMap, version1);
 
                                 if (wrapWithForm) {
                                     if (processDeployment != null) {
@@ -309,43 +311,24 @@ public class TaskService {
         return resultsBuilder.build();
     }
 
-    public boolean hasAllowedTask(Process process, ProcessInstance processInstance, boolean limitToActive) throws StatusCodeError {
+    public boolean hasAllowedTask(Process process, ProcessInstance processInstance, Entity principal, boolean limitToActive) throws StatusCodeError {
 
-        if (allowedTask(process, processInstance, null, limitToActive) != null)
+        if (allowedTask(process, processInstance, principal, limitToActive) != null)
             return true;
 
         return false;
     }
 
-    public Task rebuildTask(Task task, Sanitizer sanitizer) {
-        Task.Builder builder = new Task.Builder(task, sanitizer);
-
-        if (StringUtils.isNotEmpty(task.getAssigneeId())) {
-            builder.assignee(identityService.getUser(task.getAssigneeId()));
-        }
-        Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
-        if (candidateAssigneeIds != null && !candidateAssigneeIds.isEmpty()) {
-            for (String candidateAssigneeId : candidateAssigneeIds) {
-                User user = identityService.getUser(candidateAssigneeId);
-                if ( user != null ) {
-                    builder.candidateAssignee(user);
-                } else {
-                    builder.candidateAssigneeId(candidateAssigneeId);  // group ID
-                }
-            }
-        }
-
-        return builder.build(versions.getVersion1());
-    }
-
-    public Task task(ProcessInstance instance, String taskId) {
+    public Task read(ProcessInstance instance, String taskId) {
         if (instance != null && StringUtils.isNotEmpty(taskId)) {
             if (instance != null) {
                 Set<Task> tasks = instance.getTasks();
                 if (tasks != null) {
                     for (Task task : tasks) {
-                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId))
-                            return rebuildTask(task, new PassthroughSanitizer());
+                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId)) {
+                            Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
+                            return TaskFactory.task(task, new PassthroughSanitizer(), userMap, versions.getVersion1());
+                        }
                     }
                 }
             }
@@ -353,4 +336,9 @@ public class TaskService {
 
         return null;
     }
+
+    public boolean update(String processInstanceId, Task task) {
+        return processInstanceRepository.update(processInstanceId, task);
+    }
+
 }

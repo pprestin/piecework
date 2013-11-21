@@ -233,6 +233,16 @@ public class ProcessService {
         deploymentRepository.save(updated);
     }
 
+    public Set<piecework.model.Process> findProcesses(Set<String> processDefinitionKeys) {
+        if (processDefinitionKeys != null) {
+            List<Process> processes = processRepository.findAllBasic(processDefinitionKeys);
+            if (processes != null && !processes.isEmpty())
+                return Collections.unmodifiableSet(new HashSet<Process>(processes));
+        }
+
+        return Collections.emptySet();
+    }
+
     public Activity getActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityId) throws StatusCodeError {
         ProcessDeployment deployment = getDeployment(rawProcessDefinitionKey, rawDeploymentId);
         String activityKey = sanitizer.sanitize(rawActivityId);
@@ -320,9 +330,10 @@ public class ProcessService {
         return result;
     }
 
-    public SearchResults search(MultivaluedMap<String, String> queryParameters) {
+    public SearchResults search(MultivaluedMap<String, String> queryParameters, Entity principal) {
         List<Process> results;
-        Set<Process> processes = helper.findProcesses(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OWNER, AuthorizationRole.CREATOR);
+        Set<Process> processes = findProcesses(processDefinitionKeys);
 
         if (processes != null && !processes.isEmpty()) {
             results = new ArrayList<Process>(processes.size());

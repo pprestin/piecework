@@ -31,4 +31,6 @@ public interface ProcessInstanceRepositoryCustom {
 
     boolean update(String id, Task task);
 
+    ProcessInstance update(String id, String processStatus, String applicationStatus);
+
 }

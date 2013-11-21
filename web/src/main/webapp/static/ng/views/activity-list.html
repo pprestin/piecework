@@ -56,7 +56,7 @@
                     <li ng-class="screen.cssClass" ng-repeat="container in activity.container.children | orderActionType">
                         <a ng-click="onSelectScreen(screen, interaction.screens)">
                             <span ng-switch on="screen.action">
-                                <span ng-switch-when="CREATE"><i class="icon-edit icon-1x"></i> </span>
+                                <span ng-switch-when="CREATE_TASK"><i class="icon-edit icon-1x"></i> </span>
                                 <span ng-switch-when="COMPLETE"><i class="icon-ok icon-1x"></i> </span>
                                 <span ng-switch-when="REJECT"><i class="icon-thumbs-down icon-1x"></i> </span>
                             </span>

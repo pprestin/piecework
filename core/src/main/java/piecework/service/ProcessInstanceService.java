@@ -15,6 +15,7 @@
  */
 package piecework.service;
 
+import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.CommandExecutor;
@@ -29,6 +32,7 @@ import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
 import piecework.enumeration.OperationType;
+import piecework.persistence.DeploymentRepository;
 import piecework.persistence.IteratingDataProvider;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
@@ -49,6 +53,8 @@ import piecework.util.ProcessInstanceUtility;
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
 /**
  * @author James Renfro
  */
@@ -59,6 +65,9 @@ public class ProcessInstanceService {
 
     @Autowired
     AttachmentRepository attachmentRepository;
+
+    @Autowired
+    DeploymentRepository deploymentRepository;
 
     @Autowired
     ProcessService processService;
@@ -99,6 +108,21 @@ public class ProcessInstanceService {
         InstanceStateCommand cancellation = new InstanceStateCommand(process, instance, OperationType.CANCELLATION);
         cancellation.reason(reason);
         commandExecutor.execute(cancellation);
+    }
+
+    public ProcessInstance complete(String processInstanceId) {
+        ProcessInstance processInstance = processInstanceRepository.findOne(processInstanceId);
+        if (processInstance != null) {
+            String deploymentId = processInstance.getDeploymentId();
+            ProcessDeployment deployment = deploymentRepository.findOne(deploymentId);
+            String completionStatus = null;
+            if (deployment != null) {
+                completionStatus = deployment.getCompletionStatus();
+            }
+
+            return processInstanceRepository.update(processInstanceId, Constants.ProcessStatuses.COMPLETE, completionStatus);
+        }
+        return null;
     }
 
     public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {
@@ -191,11 +215,12 @@ public class ProcessInstanceService {
         }
     }
 
-    public ExportInstanceProvider exportProvider(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+    public ExportInstanceProvider exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
-        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
         if (!allowedProcesses.isEmpty()) {
             Map<String, Process> allowedProcessMap = new HashMap<String, Process>();
             for (Process allowedProcess : allowedProcesses) {
@@ -228,7 +253,7 @@ public class ProcessInstanceService {
                     break;
             }
 
-            Set<String> processDefinitionKeys = executionCriteria.getProcessDefinitionKeys();
+            processDefinitionKeys = executionCriteria.getProcessDefinitionKeys();
             if (processDefinitionKeys.size() != 1)
                 throw new BadRequestError();
 
@@ -240,7 +265,7 @@ public class ProcessInstanceService {
         return null;
     }
 
-    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
@@ -251,7 +276,8 @@ public class ProcessInstanceService {
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
                 .link(version1.getApplicationUri());
 
-        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
                 String allowedProcessDefinitionKey = allowedProcess.getProcessDefinitionKey();

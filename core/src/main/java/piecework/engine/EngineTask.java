@@ -13,17 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
+package piecework.engine;
 
-import piecework.exception.StatusCodeError;
+import piecework.enumeration.ActionType;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author James Renfro
  */
-public interface Command<T> {
-
-    <T> T execute(CommandExecutor commandExecutor) throws StatusCodeError;
+public interface EngineTask {
 
     String getProcessDefinitionKey();
+
+    String getProcessInstanceId();
+
+    String getTaskDefinitionKey();
+
+    String getTaskId();
+
+    String getEngineProcessInstanceId();
+
+    String getName();
+
+    String getDescription();
+
+    String getAssigneeId();
+
+    Set<String> getCandidateAssigneeIds();
+
+    Set<String> getCandidateGroupIds();
+
+    Date getStartTime();
+
+    Date getDueDate();
+
+    int getPriority();
+
+    ActionType getActionType();
 
 }

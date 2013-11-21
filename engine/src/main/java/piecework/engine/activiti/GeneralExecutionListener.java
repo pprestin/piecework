@@ -15,25 +15,16 @@
  */
 package piecework.engine.activiti;
 
-import com.mongodb.WriteResult;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
-import piecework.Constants;
-import piecework.model.Process;
-import piecework.model.ProcessDeployment;
-import piecework.model.ProcessInstance;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.engine.EngineStateSynchronizer;
+import piecework.enumeration.StateChangeType;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import java.util.Date;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -41,57 +32,29 @@ import java.util.Date;
 @Service("generalExecutionListener")
 public class GeneralExecutionListener implements ExecutionListener {
 
-    private static final Logger LOG = Logger.getLogger(GeneralExecutionListener.class);
+    private static final Map<String, StateChangeType> EVENT_MAP;
+
+    static {
+        Map<String, StateChangeType> map = new HashMap<String, StateChangeType>();
+        map.put(EVENTNAME_START, StateChangeType.START_PROCESS);
+        map.put(EVENTNAME_END, StateChangeType.COMPLETE_PROCESS);
+        EVENT_MAP = Collections.unmodifiableMap(map);
+    }
 
     @Autowired
-    ProcessRepository processRepository;
-
-    @Autowired
-    ProcessInstanceRepository processInstanceRepository;
-
-    @Autowired
-    MongoOperations mongoOperations;
+    EngineStateSynchronizer engineStateSynchronizer;
 
     @Override
     public void notify(DelegateExecution execution) throws Exception {
         String eventName = execution.getEventName();
 
-        if (eventName != null && eventName.equals(EVENTNAME_END)) {
+        if (eventName != null) {
             // Business key will always be the actual Piecework process instance id
-            String businessKey = execution.getProcessBusinessKey();
-            String completionStatus = null;
-
-            ProcessInstance processInstance = processInstanceRepository.findOne(businessKey);
-            if (processInstance != null) {
-                Process process = processRepository.findOne(processInstance.getProcessDefinitionKey());
-                if (process != null) {
-                    ProcessDeployment deployment = process.getDeployment();
-                    if (deployment != null)
-                        completionStatus = deployment.getCompletionStatus();
-                }
-
-//                ProcessInstance.Builder builder = new ProcessInstance.Builder(processInstance);
-//                builder.applicationStatus(completionStatus);
-//                builder.processStatus(Constants.ProcessStatuses.COMPLETE);
-//                builder.endTime(new Date());
-//                processInstance = builder.build();
-//                processInstance = processInstanceRepository.save(processInstance);
-
-                WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(processInstance.getProcessInstanceId())),
-                        new Update().set("endTime", new Date())
-                                .set("applicationStatus", completionStatus)
-                                .set("processStatus", Constants.ProcessStatuses.COMPLETE),
-                        ProcessInstance.class);
-
-                String error = result.getError();
-                if (StringUtils.isNotEmpty(error)) {
-                    LOG.error("Unable to correctly save final state of process instance " + processInstance.getProcessInstanceId() + ": " + error);
-                }
-            } else {
-                LOG.error("Unable to save final state of process instance with execution business key " + businessKey);
+            String pieceworkProcessInstanceId = execution.getProcessBusinessKey();
+            StateChangeType event = EVENT_MAP.get(eventName);
+            if (event != null) {
+                engineStateSynchronizer.onProcessInstanceEvent(event, pieceworkProcessInstanceId);
             }
-
-
         }
     }
 

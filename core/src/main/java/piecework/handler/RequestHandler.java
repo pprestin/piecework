@@ -25,7 +25,6 @@ import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
-import piecework.form.LegacyFormFactory;
 import piecework.identity.IdentityHelper;
 import piecework.exception.*;
 import piecework.model.*;
@@ -117,7 +116,7 @@ public class RequestHandler {
             LOG.warn("Forbidden: No instance found for the task id passed " + process.getProcessDefinitionKey() + " task: " + taskId);
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
-        Task task = taskService.task(instance, taskId);
+        Task task = taskService.read(instance, taskId);
         verifyCurrentUserIsAuthorized(process, task);
 
         ActionType actionType = ActionType.CREATE;
@@ -173,7 +172,7 @@ public class RequestHandler {
 
         FormRequest.Builder builder = new FormRequest.Builder(formRequest)
                 .instance(instance)
-                .task(taskService.task(instance, formRequest.getTaskId()));
+                .task(taskService.read(instance, formRequest.getTaskId()));
 
         return builder.build();
     }

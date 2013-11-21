@@ -67,4 +67,9 @@ public abstract class InstanceCommand implements Command<ProcessInstance> {
         return this;
     }
 
+    @Override
+    public String getProcessDefinitionKey() {
+        return process != null ? process.getProcessDefinitionKey() : null;
+    }
+
 }

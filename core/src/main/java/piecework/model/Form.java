@@ -279,6 +279,7 @@ public class Form {
         private boolean valid;
         private boolean external;
         private boolean anonymous;
+        private boolean readonly;
 
         public Builder() {
             super();
@@ -322,23 +323,25 @@ public class Form {
         }
 
         public Builder instance(ProcessInstance instance, ViewContext context) {
-            String processDefinitionKey = instance.getProcessDefinitionKey();
-            String processInstanceId = instance.getProcessInstanceId();
-            Set<Attachment> attachments = instance.getAttachments();
-            this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
-            this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
-            this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
-            this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
-            this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
-            if (attachments != null && !attachments.isEmpty()) {
-                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-                this.attachmentCount = attachments.size();
-                this.attachments = new ArrayList<Attachment>(attachments.size());
-                for (Attachment attachment : attachments) {
-                    this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
+            if (instance != null) {
+                String processDefinitionKey = instance.getProcessDefinitionKey();
+                String processInstanceId = instance.getProcessInstanceId();
+                Set<Attachment> attachments = instance.getAttachments();
+                this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
+                this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
+                this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
+                this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+                this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+                if (attachments != null && !attachments.isEmpty()) {
+                    PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                    this.attachmentCount = attachments.size();
+                    this.attachments = new ArrayList<Attachment>(attachments.size());
+                    for (Attachment attachment : attachments) {
+                        this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
+                    }
+                } else {
+                    this.attachmentCount = 0;
                 }
-            } else {
-                this.attachmentCount = 0;
             }
             return this;
         }
@@ -446,9 +449,18 @@ public class Form {
             return this;
         }
 
-        public Builder anonymous() {
-            this.anonymous = true;
+        public Builder anonymous(boolean anonymous) {
+            this.anonymous = anonymous;
             return this;
+        }
+
+        public Builder readonly() {
+            this.readonly = true;
+            return this;
+        }
+
+        public boolean isReadonly() {
+            return readonly;
         }
     }
 

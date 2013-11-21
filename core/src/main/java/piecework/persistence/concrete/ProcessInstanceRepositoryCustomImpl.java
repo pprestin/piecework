@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.model.*;
 import piecework.persistence.custom.ProcessInstanceRepositoryCustom;
 import piecework.process.ProcessInstanceQueryBuilder;
@@ -160,6 +161,16 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         ProcessInstance stored = mongoOperations.findAndModify(query, update, options, ProcessInstance.class);
 
         return true;
+    }
+
+    @Override
+    public ProcessInstance update(String id, String processStatus, String applicationStatus) {
+        return mongoOperations.findAndModify(new Query(where("_id").is(id)),
+                new Update().set("endTime", new Date())
+                        .set("applicationStatus", applicationStatus)
+                        .set("processStatus", Constants.ProcessStatuses.COMPLETE),
+                OPTIONS,
+                ProcessInstance.class);
     }
 
     private ProcessInstance updateEfficiently(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {

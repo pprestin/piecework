@@ -110,15 +110,6 @@ public class ScriptResourceVersion1 implements ScriptResource {
         this.disableResourceCaching = environment.getProperty("disable.resource.caching", Boolean.class, Boolean.FALSE);
     }
 
-//    @Override
-//    public Response read(String rawProcessDefinitionKey, MessageContext context) throws StatusCodeError {
-////        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-////        piecework.model.Process process = identityHelper.findProcess(processDefinitionKey, true);
-////        Form form = legacyFormService.startForm(context, process);
-//
-//        return null;
-//    }
-
     @Override
     public Response read(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
         Entity principal = identityHelper.getPrincipal();

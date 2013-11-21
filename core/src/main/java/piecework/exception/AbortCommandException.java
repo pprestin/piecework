@@ -13,17 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
-
-import piecework.exception.StatusCodeError;
+package piecework.exception;
 
 /**
  * @author James Renfro
  */
-public interface Command<T> {
+public class AbortCommandException extends Exception {
 
-    <T> T execute(CommandExecutor commandExecutor) throws StatusCodeError;
+    public AbortCommandException() {
+        super();
+    }
 
-    String getProcessDefinitionKey();
+    public AbortCommandException(String message) {
+        super(message);
+    }
+
+    public AbortCommandException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
 }

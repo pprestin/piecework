@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
-
-import piecework.exception.StatusCodeError;
+package piecework.enumeration;
 
 /**
  * @author James Renfro
  */
-public interface Command<T> {
-
-    <T> T execute(CommandExecutor commandExecutor) throws StatusCodeError;
-
-    String getProcessDefinitionKey();
-
+public enum StateChangeType {
+    START_PROCESS, COMPLETE_PROCESS, CREATE_TASK, ASSIGN_TASK, COMPLETE_TASK, NONE
 }

@@ -48,7 +48,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
-@Service
+@Deprecated
 public class ResponseHandler {
 
     private static final Logger LOG = Logger.getLogger(ResponseHandler.class);

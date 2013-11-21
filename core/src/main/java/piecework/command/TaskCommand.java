@@ -91,4 +91,8 @@ public class TaskCommand implements Command<Boolean> {
         return Boolean.valueOf(result);
     }
 
+    public String getProcessDefinitionKey() {
+        return process != null ? process.getProcessDefinitionKey() : null;
+    }
+
 }

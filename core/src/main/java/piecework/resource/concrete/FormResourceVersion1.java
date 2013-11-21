@@ -51,7 +51,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return startForm(context, process, false);
+        return startForm(context, process);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return submitForm(context, process, rawRequestId, body, false);
+        return submitForm(context, process, rawRequestId, body);
     }
 
     @Override
@@ -95,6 +95,11 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
 
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         return search(rawQueryParameters);
+    }
+
+    @Override
+    protected boolean isAnonymous() {
+        return false;
     }
 
 }
