@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.springframework.data.domain.Sort;
 import piecework.security.Sanitizer;
 import piecework.util.ManyMap;
 
@@ -206,6 +207,30 @@ public class ProcessInstanceSearchCriteria {
 
     public boolean isIncludeVariables() {
         return includeVariables;
+    }
+
+    public Sort getSort() {
+        Sort.Direction direction = Sort.Direction.DESC;
+        String sortProperty = "startTime";
+        switch (getOrderBy()) {
+            case START_TIME_ASC:
+                direction = Sort.Direction.ASC;
+                sortProperty = "startTime";
+                break;
+            case START_TIME_DESC:
+                direction = Sort.Direction.DESC;
+                sortProperty = "startTime";
+                break;
+            case END_TIME_ASC:
+                direction = Sort.Direction.ASC;
+                sortProperty = "endTime";
+                break;
+            case END_TIME_DESC:
+                direction = Sort.Direction.DESC;
+                sortProperty = "endTime";
+                break;
+        }
+        return new Sort(direction, sortProperty);
     }
 
     public final static class Builder {
