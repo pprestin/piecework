@@ -28,5 +28,5 @@ public interface GroupService {
      * @param  groupId an Id (or a name) that unqiuely identifies a group.
      * @return         a Group object if found, null otherwise.
      */  
-    Group getGroupById(String groupId);
+    public Group getGroupById(String groupId);
 }

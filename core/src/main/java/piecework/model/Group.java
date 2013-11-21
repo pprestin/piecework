@@ -44,7 +44,7 @@ public class Group {
 
     @XmlElementWrapper(name="fields")
     @XmlElementRef
-    private final List<User> users;
+    private final List<User> members;
 
     // constructors
     private Group() {
@@ -55,21 +55,21 @@ public class Group {
         groupId = builder.groupId;
         name = builder.name;
         displayName = builder.displayName;
-        users = builder.users == null ? null : Collections.unmodifiableList(builder.users);
+        members = builder.members == null ? null : Collections.unmodifiableList(builder.members);
     }
 
     // getters
     public String getGroupId() { return groupId; }
     public String getName() { return name; }
     public String getDisplayName() { return displayName; }
-    public List<User> getUsers() { return users; }
+    public List<User> getMembers() { return members; }
 
     // nested Builder class
     public static class Builder {
         private String groupId;
         private String name;
         private String displayName;
-        private List<User> users;
+        private List<User> members;
 
         // constructors
         public Builder() { super(); }
@@ -78,14 +78,14 @@ public class Group {
             groupId = group.groupId;
             name = group.name;
             displayName = group.displayName;
-            users = group.users == null ? null : Collections.unmodifiableList(group.users);
+            members = group.members == null ? null : Collections.unmodifiableList(group.members);
 
-            if ( group.users == null || group.users.isEmpty() ) {
-                users = new ArrayList<User>();
+            if ( group.members == null || group.members.isEmpty() ) {
+                members = new ArrayList<User>();
             } else {
-                users = new ArrayList<User>( group.users.size() );
-                for ( User u : group.users ) {
-                    users.add(new User.Builder(u).build());
+                members = new ArrayList<User>( group.members.size() );
+                for ( User m : group.members ) {
+                    members.add(new User.Builder(m).build());
                 }
             }
         }
@@ -110,12 +110,12 @@ public class Group {
             return this;
         }
 
-        public Builder user(User u) {
-            if ( users == null ) {
-                users = new ArrayList<User>();
+        public Builder member(User m) {
+            if ( members == null ) {
+                members = new ArrayList<User>();
             }
-            if ( u != null ) {
-                users.add(u);  // no copy is created
+            if ( m != null ) {
+                members.add(m);  // no copy is created
             }
             return this;
         }

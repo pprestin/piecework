@@ -71,6 +71,11 @@ public class LdapGroupService implements GroupService {
         if (LOG.isDebugEnabled())
             LOG.debug("Looking in cache for group by groupId " + groupId);
 
+        // sanity check
+        if ( groupId == null || groupId.isEmpty() ) {
+            return null;
+        }
+
         Cache cache = cacheManager.getCache("loadGroupByName");
         Cache.ValueWrapper wrapper = cache.get(groupId);
 
@@ -108,7 +113,7 @@ public class LdapGroupService implements GroupService {
                     String userId = m.substring(prefix.length());
                     User user = userDetailsService.getUserByAnyId(userId);
                     if ( user != null ) {
-                        builder.user(user);
+                        builder.member(user);
                     }
                 }
             }

@@ -68,6 +68,8 @@ public class Notification implements Serializable {
     @JsonIgnore
     private final boolean isDeleted;
 
+    private final Map<String, String> dataMap;
+
     private Notification() {
         this(new Builder());
     }
@@ -83,6 +85,7 @@ public class Notification implements Serializable {
         this.candidateRoles = (Set<String>) (builder.candidateRoles != null ? Collections.unmodifiableSet(builder.candidateRoles) : Collections.emptySet());
         this.ordinal = builder.ordinal;
         this.isDeleted = builder.isDeleted;
+        this.dataMap = (Map<String, String>) ( builder.dataMap == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.dataMap) );
     }
 
     public String getNotificationId() {
@@ -94,11 +97,13 @@ public class Notification implements Serializable {
     }
 
     public String getSubject() {
-        return subject;
+        String subj = get("subject"); // get subject from dataMap
+        return subj == null || subj.isEmpty() ? subject : subj;
     }
 
     public String getText() {
-        return text;
+        String txt = get("text,body"); // get text from dataMap
+        return txt == null || txt.isEmpty() ? text : txt;
     }
 
     public String getType() {
@@ -121,9 +126,51 @@ public class Notification implements Serializable {
         return ordinal;
     }
 
+    /**
+     * returns the first non-empty value found for a list of keys separated with comma.
+     * @param  key  a comma-separated list of keys
+     * @return      the first non-empty value of the given keys,
+     *              or null if none of the keys exist in the notifications
+     */ 
+    public String get(String keys) {
+        if ( dataMap == null || dataMap.isEmpty() || keys == null || keys.isEmpty() ) {
+            return null;
+        }
+
+        String[] ks = keys.split(",");
+        for ( String k: ks ) {
+            String v = dataMap.get(k);
+            if ( v != null && !v.isEmpty() ) {
+                return v;
+            }
+        }
+
+        return null;
+    }
+
     @JsonIgnore
     public boolean isDeleted() {
         return isDeleted;
+    }
+
+    public Map<String, String> getDataMap() {
+        return dataMap;
+    }  
+
+    public String getSenderEmail() {
+        return get("senderEmail,senderEmailAddress,sender,from");
+    }
+
+    public String getSenderName() {
+        return get("senderName,senderLabel");
+    }
+
+    public String getRecipients() {
+        return get("recipients,recipient,to,assignee");
+    }
+
+    public String getBcc() {
+        return get("bcc,cc");
     }
 
     public final static class Builder {
@@ -138,10 +185,12 @@ public class Notification implements Serializable {
         private Set<String> taskEvents;
         private int ordinal;
         private boolean isDeleted;
+        private Map<String, String> dataMap;
 
         public Builder() {
             super();
             this.notificationId = UUID.randomUUID().toString();
+            this.dataMap = new HashMap<String, String>();
         }
 
         public Builder(Notification notification, Sanitizer sanitizer) {
@@ -175,6 +224,12 @@ public class Notification implements Serializable {
                 }
             } else {
                 this.taskEvents = new HashSet<String>();
+            }
+
+            if (notification.dataMap != null && !notification.dataMap.isEmpty()) {
+                this.dataMap = new HashMap<String, String>(notification.dataMap);
+            } else {
+                this.dataMap = new HashMap<String, String>();
             }
         }
 
@@ -242,6 +297,13 @@ public class Notification implements Serializable {
             this.isDeleted = false;
             return this;
         }
+
+        public Builder put(String key, String value) {
+            if ( key != null && ! key.isEmpty() ) {
+                dataMap.put(key, value);
+            }
+            return this;
+        }
     }
 
     public static class Constants {
@@ -249,5 +311,4 @@ public class Notification implements Serializable {
         public static final String ROOT_ELEMENT_NAME = "notification";
         public static final String TYPE_NAME = "NotificationType";
     }
-
 }

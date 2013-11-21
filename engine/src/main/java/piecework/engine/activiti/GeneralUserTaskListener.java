@@ -18,9 +18,12 @@ package piecework.engine.activiti;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.task.IdentityLink;
+import org.activiti.engine.*;
+import org.activiti.engine.form.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
@@ -33,17 +36,22 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
 import piecework.Constants;
 import piecework.enumeration.ActionType;
 import piecework.identity.IdentityDetails;
 import piecework.service.IdentityService;
+import piecework.service.NotificationService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.Versions;
+import piecework.common.ViewContext;
 
 import javax.annotation.PostConstruct;
+
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
@@ -62,6 +70,9 @@ public class GeneralUserTaskListener implements TaskListener {
     Environment environment;
 
     @Autowired
+    Versions versions;  // needed for constructing taskUrl
+
+    @Autowired
     ProcessRepository processRepository;
 
     @Autowired
@@ -73,6 +84,10 @@ public class GeneralUserTaskListener implements TaskListener {
     @Autowired
     IdentityService userDetailsService;
 
+    @Autowired
+    NotificationService notificationService;
+
+    @SuppressWarnings("unused")
     @Override
     public void notify(DelegateTask delegateTask) {
         String engineProcessInstanceId = delegateTask.getProcessInstanceId();
@@ -102,55 +117,34 @@ public class GeneralUserTaskListener implements TaskListener {
         if (process == null)
             return;
 
-
-//        Activity activity = processInstance.getActivityMap().get(taskDefinitionKey);
-
-
         Set<Candidate> approvers = new HashSet<Candidate>();
         Set<Candidate> watchers = new HashSet<Candidate>();
 
-//        List<Interaction> interactions = process.getInteractions();
-//        if (interactions != null) {
-//            Interaction selectedInteraction = null;
-//            for (Interaction interaction : interactions) {
-//                if (interaction.getTaskDefinitionKeys() != null && interaction.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
-//                    selectedInteraction = interaction;
-//                    break;
-//                }
-//            }
-//
-//            if (selectedInteraction != null) {
-//                List<Candidate> candidates = selectedInteraction.getCandidates();
-//                if (candidates == null)
-//                    return;
-//
-//                for (Candidate candidate : candidates) {
-//                    if (candidate.getCandidateId() == null)
-//                        continue;
-//                    if (candidate.getType() == null)
-//                        continue;
-//
-//                    if (candidate.getType().equals(Constants.CandidateTypes.PERSON))
-//                        delegateTask.addCandidateUser(candidate.getCandidateId());
-//                    else if (candidate.getType().equals(Constants.CandidateTypes.GROUP))
-//                        delegateTask.addCandidateGroup(candidate.getCandidateId());
-//
-//                    if (candidate.getRole() != null && candidate.getRole().equals(Constants.CandidateRoles.APPROVER))
-//                        approvers.add(candidate);
-//                    else if (candidate.getRole() != null && candidate.getRole().equals(Constants.CandidateRoles.WATCHER))
-//                        watchers.add(candidate);
-//                }
-//            }
-//        }
-
         String taskEventType = null;
 
-        if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_CREATE))
-            taskEventType = Constants.TaskEventTypes.CREATE;
-        if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE))
-            taskEventType = Constants.TaskEventTypes.COMPLETE;
+        // last assignee is the user who completed the last task
+        User lastAssignee = null;
 
         Task.Builder taskBuilder = null;
+        if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_CREATE)) {
+            taskEventType = Constants.TaskEventTypes.CREATE;
+            String assigneeId = String.class.cast(variables.get("lastAssignee"));
+            if ( assigneeId == null || assigneeId.isEmpty() ) {
+                 assigneeId = processInstance.getInitiatorId();
+            }
+            if (StringUtils.isNotEmpty(assigneeId)) {
+                lastAssignee = userDetailsService.getUser(assigneeId);
+            }
+        } else if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_COMPLETE)) {
+            taskEventType = Constants.TaskEventTypes.COMPLETE;
+
+            String assigneeId = delegateTask.getAssignee();
+            if (StringUtils.isNotEmpty(assigneeId)) {
+                lastAssignee = userDetailsService.getUser(assigneeId);
+                delegateTask.setVariable("lastAssignee", assigneeId); // save assignee for later use
+            }
+        }
+
 
         if (delegateTask.getEventName().equals(TaskListener.EVENTNAME_CREATE)) {
             taskBuilder = new Task.Builder()
@@ -226,43 +220,133 @@ public class GeneralUserTaskListener implements TaskListener {
                 LOG.error("Failed to store task changes");
         }
 
+        // build notifications
+        List<Notification> notifications = buildNotifications(delegateTask);
 
-//        List<Notification> notifications = process.getNotifications();
-//        if (notifications != null && !notifications.isEmpty()) {
-//            Map<String, String> context = new HashMap<String, String>();
-//            Map<String, List<Value>> formValueMap = processInstance.getData();
-//            if (formValueMap != null && !formValueMap.isEmpty()) {
-//                for (Map.Entry<String, List<Value>> entry : formValueMap.entrySet()) {
-//                    String key = entry.getKey();
-//                    List<Value> values = entry.getValue();
-//
-//                    if (StringUtils.isNotEmpty(key) && !values.isEmpty()) {
-//                        context.put(key, values.iterator().next().getValue());
-//                    }
-//                }
-//            }
-//
-//            for (Notification notification : notifications) {
-//                if (notification == null)
-//                    continue;
-//
-//                if (taskEventType != null && notification.getTaskEvents() != null && notification.getTaskEvents().contains(taskEventType)) {
-//                    if (taskDefinitionKey != null && notification.getTaskDefinitionKeys() != null && notification.getTaskDefinitionKeys().contains(taskDefinitionKey)) {
-//                        Set<Candidate> candidates = new HashSet<Candidate>();
-//                        if (notification.getCandidateRoles().isEmpty()) {
-//                            candidates.addAll(approvers);
-//                            candidates.addAll(watchers);
-//                        } else if (notification.getCandidateRoles().contains(Constants.CandidateRoles.APPROVER)) {
-//                            candidates.addAll(approvers);
-//                        } else if (notification.getCandidateRoles().contains(Constants.CandidateRoles.APPROVER)) {
-//                            candidates.addAll(watchers);
-//                        }
-//
-//                        sendNotification(candidates, notification, context);
-//                    }
-//                }
-//            }
-//        }
+        if ( notifications != null && !notifications.isEmpty() ) {
+            // build context to be used for macro expansion 
+            Map<String, String> context = new HashMap<String, String>();
+            context.put("PIECEWORK_PROCESS_INSTANCE_LABEL", processInstance.getProcessInstanceLabel());
+            context.put("TASK_ID", delegateTask.getId());
+            context.put("TASK_NAME", delegateTask.getName());
+            if ( lastAssignee != null ) {
+                context.put("LAST_ASSIGNEE_NAME", lastAssignee.getDisplayName());
+            }
+
+            ViewContext taskViewContext = versions.getVersion1();
+            String taskUrl = taskViewContext.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, delegateTask.getId());
+            context.put("TASK_URL", taskUrl);
+
+            // send out notifications
+            notificationService.send(notifications, context);
+        }
+    }
+
+    // add notification properties/templates to notification map
+    // we use the following naming convention for notification key names
+    // <notification name>.<field name>
+    // <notification name> starts with "notification"
+    // e.g. "notification1.subject", "notification1.recipients" etc.
+    private void addNotificationProperties(Map<String, Map<String, String> > notifications, List<FormProperty> properties) {
+        for (FormProperty p : properties) {
+            String name = p.getName();;
+            FormType type = p.getType();
+            String value = p.getValue();
+            if (name.startsWith("notification") ) {
+                String notificationName = null;
+                String fieldName = null;
+                int idx = name.indexOf('.');
+                if ( idx >= 0 ) {
+                    notificationName = name.substring(0, idx);
+                    fieldName = name.substring(idx+1);
+                } else {
+                    notificationName = name;
+                }
+
+                Map<String, String> notification = null;
+                if ( notifications.containsKey(notificationName) ) {
+                    notification = notifications.get(notificationName);
+                } else {
+                    notification = new HashMap<String, String> ();
+                    notifications.put(notificationName, notification);
+                }
+
+                if ( fieldName != null &&  !fieldName.isEmpty() && value != null && !value.isEmpty() ) {
+                    notification.put( fieldName, value );
+                }
+            }
+        }
+    }
+
+    // build notifications from templates and process variables/form parameters stored
+    // with process definitions. Use a map to avoid duplicate and to allow task parameters
+    // to override process parameters.
+    private List<Notification> buildNotifications(DelegateTask delegateTask) {
+        Map<String, Map<String, String> > notificationsMap = new HashMap<String, Map<String, String> >();
+
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        FormService formService = processEngine.getFormService();
+
+        // default notification parameter are stored in "StartFormData"
+        StartFormData formData = formService.getStartFormData(delegateTask.getProcessDefinitionId());
+        List<FormProperty> properties = formData.getFormProperties();
+        addNotificationProperties(notificationsMap, properties);
+
+        // task parameters have higher precedence 
+        TaskFormData taskData = formService.getTaskFormData(delegateTask.getId());
+        properties = taskData.getFormProperties();
+        addNotificationProperties(notificationsMap, properties);
+
+        // get assignees
+        String assigneeIds = delegateTask.getAssignee();
+        if ( assigneeIds == null || assigneeIds.isEmpty() ) {
+            Set<IdentityLink> candidates = delegateTask.getCandidates();
+            if (candidates != null) {
+                StringBuilder str = new StringBuilder();
+                for (IdentityLink candidate : candidates) {
+                    if (StringUtils.isNotEmpty(candidate.getUserId())) {
+                        if ( str.length() > 0) {
+                            str.append(',').append(candidate.getUserId());
+                        } else {
+                            str.append(candidate.getUserId());
+                        }
+                    } else if (StringUtils.isNotEmpty(candidate.getGroupId())) {
+                        if ( str.length() > 0) {
+                            str.append(',').append(candidate.getGroupId());
+                        } else {
+                            str.append(candidate.getGroupId());
+                        }
+                    }
+                }
+                assigneeIds = str.toString();
+            }
+        }
+
+        // build and filter notifications
+        List<Notification> notifications = new ArrayList<Notification>();
+        for ( String k : notificationsMap.keySet() ) {
+            Map<String, String> notification = notificationsMap.get(k);
+
+            // filtering notifications based on task events (create, complete etc.)
+            // defaults to TaskListener.EVENTNAME_CREATE.
+            String onevent = notification.get("onevent");
+            if (onevent == null || onevent.isEmpty() ) {
+                onevent = TaskListener.EVENTNAME_CREATE;
+            }
+
+            if ( onevent.indexOf(TaskListener.EVENTNAME_ALL_EVENTS)>=0 || onevent.indexOf(delegateTask.getEventName())>=0 ) {
+                Notification.Builder builder = new Notification.Builder();
+                for ( Map.Entry<String, String> kv  : notification.entrySet() ) {
+                    builder.put(kv.getKey(), kv.getValue());
+                }
+                if ( assigneeIds != null && ! assigneeIds.isEmpty() ) {
+                    builder.put("assignee", assigneeIds);
+                }
+                notifications.add( builder.build() );
+            }
+        }
+
+        return notifications;
     }
 
     private void sendNotification(Set<Candidate> candidates, Notification notification, Map<String, String> context) {
@@ -318,5 +402,4 @@ public class GeneralUserTaskListener implements TaskListener {
             LOG.error("Unable to send email with subject " + subject);
         }
     }
-
 }
