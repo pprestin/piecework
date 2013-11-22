@@ -184,7 +184,7 @@ public class ValidationService {
             if (value instanceof User) {
                 list.add(User.class.cast(value));
             } else {
-                User user = identityService.getUserByAnyId(value.getValue());
+                User user = identityService.getUser(value.getValue());
                 if (user != null)
                     list.add(user);
             }

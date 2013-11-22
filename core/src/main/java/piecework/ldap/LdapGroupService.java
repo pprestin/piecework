@@ -111,7 +111,7 @@ public class LdapGroupService implements GroupService {
             for ( String m : members ) {
                 if ( prefix == null || prefix.isEmpty() || m.startsWith(prefix) ) {
                     String userId = m.substring(prefix.length());
-                    User user = userDetailsService.getUserByAnyId(userId);
+                    User user = userDetailsService.getUser(userId);
                     if ( user != null ) {
                         builder.member(user);
                     }

@@ -49,7 +49,6 @@ public class LdapSettings {
     private final String ldapPersonBase;
     private final String ldapPersonSearchBase;
     private final String ldapPersonSearchFilter;
-    private final String ldapPersonSearchFilterInternal;
     private final String ldapDefaultUser;
     private final char[] ldapDefaultPassword;
     private final SearchControls searchControls;
@@ -73,7 +72,6 @@ public class LdapSettings {
         this.ldapPersonAttributeEmail = environment.getProperty("ldap.attribute.email");
         this.ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
         this.ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
-        this.ldapPersonSearchFilterInternal = environment.getProperty("ldap.person.search.filter.internal");
         this.ldapGroupUrl = environment.getProperty("ldap.group.url");
         this.ldapGroupBase = environment.getProperty("ldap.group.base");
         this.ldapDefaultUser = environment.getProperty("ldap.authentication.user");
@@ -175,10 +173,6 @@ public class LdapSettings {
 
     public SearchControls getSearchControls() {
         return searchControls;
-    }
-
-    public String getLdapPersonSearchFilterInternal() {
-        return ldapPersonSearchFilterInternal;
     }
 
     private static LdapAuthenticationEncryption authenticationEncryption(String ldapAuthenticationEncryption) {

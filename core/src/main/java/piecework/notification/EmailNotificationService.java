@@ -199,7 +199,7 @@ public class EmailNotificationService implements NotificationService {
                     users.addAll(members);
                 }   
             } else { // assuming userId
-                User recipient = userDetailsService.getUserByAnyId(id);
+                User recipient = userDetailsService.getUser(id);
                 if ( recipient != null ) { 
                     users.add(recipient);
                 }   

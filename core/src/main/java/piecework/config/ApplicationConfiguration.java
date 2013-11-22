@@ -256,11 +256,10 @@ public class ApplicationConfiguration {
 
         LdapContextSource contextSource = personLdapContextSource(ldapSettings, securitySettings);
         LdapUserSearch userSearch = userSearch(contextSource, ldapSettings);
-        LdapUserSearch userSearchInternal = userSearchInternal(environment, contextSource);
         LdapAuthoritiesPopulator authoritiesPopulator = authoritiesPopulator(ldapSettings, securitySettings);
         CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper();
 
-        return new LdapIdentityService(contextSource, userSearch, userSearchInternal, authoritiesPopulator, userDetailsMapper, ldapSettings, cacheManager());
+        return new LdapIdentityService(contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings, cacheManager());
     }
 
     @Bean
@@ -366,21 +365,6 @@ public class ApplicationConfiguration {
 
     private LdapUserSearch userSearch(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {
         LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapSettings.getLdapPersonSearchFilter(), personLdapContextSource);
-        ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
-        ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
-        ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
-        return userSearch;
-    }
-
-    private LdapUserSearch userSearchInternal(Environment environment, LdapContextSource personLdapContextSource) throws Exception {
-        LdapSettings ldapSettings = ldapSettings(environment);
-        String ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilterInternal();
-
-        // Fallback to original setting if an internal setting is not defined
-        if (StringUtils.isEmpty(ldapPersonSearchFilter))
-            ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilter();
-
-        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapPersonSearchFilter, personLdapContextSource);
         ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
         ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
         ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);

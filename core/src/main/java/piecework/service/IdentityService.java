@@ -42,9 +42,7 @@ import java.util.List;
  */
 public interface IdentityService extends UserDetailsService {
 
-    User getUser(String internalId);
-
-    User getUserByAnyId(String id);
+    User getUser(String id);
 
     List<User> findUsersByDisplayName(String displayNameLike, Long maxResults);
 

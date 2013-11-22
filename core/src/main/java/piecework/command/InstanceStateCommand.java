@@ -101,7 +101,7 @@ public class InstanceStateCommand extends InstanceCommand {
                         applicationStatusExplanation = reason;
                         break;
                     case ASSIGNMENT:
-                        if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUserByAnyId(reason)))
+                        if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUser(reason)))
                             throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
                         defaultApplicationStatus = instance.getPreviousApplicationStatus();
                         break;
