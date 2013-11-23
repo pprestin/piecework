@@ -33,7 +33,7 @@
         <input ng-show="!field.readonly" value="{{field.value.userId ? field.value.userId : field.value}}" name="{{field.name}}" type="hidden"/>
     </div>
     <textarea ng-switch-when="textarea" ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-readonly="{{field.readonly}}" ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
-    <input data-ng-switch-default ng-disabled="!field.editable" ng-model="field.value" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-readonly="field.readonly" ng-required="{{field.required}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+    <input data-ng-switch-default ng-disabled="!field.editable" ng-maxlength="{{field.maxValueLength}}" ng-minlength="{{field.minValueLength}}" ng-pattern="{{field.pattern}}" ng-readonly="field.readonly" ng-required="{{field.required}}" ng-value="field.value" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
 </div>
 <span data-ng-repeat="message in field.messages" class="text-danger">{{message.text}}</span>
 

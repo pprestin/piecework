@@ -1,84 +1,60 @@
-<script type="text/ng-template" id="step.html">
-    <div ng-show="isActiveStep(form, step)" data-ng-class="step.leaf ? 'panel panel-default step' : 'step'">
-        <div ng-class="step.leaf ? 'panel-heading' : ''"><h4>{{step.title}}</h4></div>
-        <div ng-class="step.leaf ? 'panel-body' : ''">
-            <ul data-ng-model="step.fields">
-                <li data-ng-show="isVisible(field)" data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
-            </ul>
-            <div data-ng-repeat="step in step.children" data-ng-include="'step.html'"></div>
-        </div>
-    </div>
-    <div data-ng-show="isCurrentStep(form, step)" class="screen-footer">
-        <div data-ng-hide="step.parent.buttons" class="btn-toolbar pull-right" role="toolbar">
-            <button data-ng-repeat="button in step.buttons" data-ng-click="clickButton(button, step, form)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-</script>
-<script type="text/ng-template" id="container.html">
-    <div data-ng-show="notifications" class="alert alert-danger">
-        <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
-        <ul>
-            <li data-ng-repeat="notification in notifications" data-ng-bind-html="notification.message"></li>
-        </ul>
-    </div>
-    <h2>{{form.container.title}}</h2>
-    <div data-ng-show="form.container.readonly">
-        <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
-        <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>
-        <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
-        <div data-ng-show="form.state == 'cancelled'"class="alert alert-info">This form can no longer be modified - it has been cancelled</div>
-    </div>
-    <div class="notifications"></div>
-    <div>
-        <form ng-class="isViewingAttachments && 'col-md-8'" class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
-            <div class="row">
-                <div class="screen" id="{{container.containerId}}">
-                    <ul data-ng-model="form.container.fields">
-                        <li data-ng-show="isVisible(field)" data-ng-class="field.cssClass" data-ng-repeat="field in form.container.fields" data-ng-include="'field.html'" class="pw-field"></li>
-                    </ul>
-                    <div class="screen-footer">
-                        <div class="btn-toolbar pull-right" role="toolbar">
-                            <button data-ng-repeat="button in form.container.buttons" data-ng-click="clickButton(button)" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+<script type="text/ng-template" id="attachments.html">
+    <div data-ng-show="state.isViewingAttachments" class="pw-attachments col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="state.isEditingAttachments ? 'fa fa-unlock' : 'fa fa-lock'" class="fa fa-lock"></i></button>
+                <span class="lead">Notes</span>
+            </div>
+            <ul class="list-group">
+                <li class="list-group-item" data-ng-repeat="attachment in attachments">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button data-ng-show="state.isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="text-danger close " type="button">&times;</button>
+                            <span data-ng-switch on="attachment.contentType">
+                                <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
+                                <span data-ng-switch-default class="pw-attachment-file">
+                                    <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" target="_self" title="{{attachment.description}}">{{attachment.description}}</a>
+                                </span>
+                            </span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </form>
-        <div ng-show="isViewingAttachments" class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="isEditingAttachments ? 'fa fa-unlock' : 'fa fa-lock'" class="fa fa-lock"></i></button>
-                    <span class="lead">Notes</span>
-                </div>
-                <ul class="list-group">
-                    <li class="list-group-item" data-ng-repeat="attachment in attachments">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button data-ng-show="isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="text-danger close " type="button">&times;</button>
-                                    <span data-ng-switch on="attachment.contentType">
-                                        <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
-                                        <span data-ng-switch-default class="pw-attachment-file">
-                                            <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" title="{{attachment.description}}">{{attachment.description}}</a>
-                                        </span>
-                                    </span>
-                            </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="pull-right text-muted">{{attachment.user.displayName}}</div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="pull-right text-muted">{{attachment.user.displayName}}</div>
-                            </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="pull-right text-muted">{{attachment.lastModified|date:'MMM d, y H:mm'}}</div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="pull-right text-muted">{{attachment.lastModified|date:'MMM d, y H:mm'}}</div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+                    </div>
+                </li>
+            </ul>
         </div>
     </div>
+</script>
+<script type="text/ng-template" id="fieldset.html">
+    <ul data-ng-model="container.fields">
+        <li data-ng-show="isVisible(field)" data-ng-class="field.cssClass" data-ng-repeat="field in container.fields" class="pw-field">
+            <wf-field field="field"/>
+        </li>
+    </ul>
+</script>
+<script type="text/ng-template" id="container.html">
+    <wf-notifications notifications="notifications"></wf-notifications>
+    <h2>{{container.title}}</h2>
+    <wf-status form="form"></wf-status>
+    <form ng-class="state.isViewingAttachments && 'col-md-8'" class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
+        <div class="row">
+            <div class="screen" id="{{container.containerId}}">
+                <wf-fieldset form="form" container="container"></wf-fieldset>
+                <div class="screen-footer">
+                    <wf-toolbar form="form" container="container"></wf-toolbar>
+                </div>
+            </div>
+        </div>
+    </form>
+    <wf-attachments attachments="form.attachments" form="form" state="state"></wf-attachments>
 </script>
 <script type="text/ng-template" id="field.html">
     <label data-ng-if="field.label">{{field.label}}</label>
@@ -108,7 +84,7 @@
         </div>
         <div data-ng-switch-when="file" data-ng-show="field.value">
             <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}"/>
-            <input data-ng-change="onFieldChange(field)" data-ng-show="{{!field.readonly}}" class="form-control" name="{{field.name}}" type="file"/>
+            <input data-ng-change="onFieldChange(field)" data-ng-model="file" data-ng-show="{{!field.readonly}}" class="form-control" name="{{field.name}}" type="file"/>
         </div>
         <div data-ng-switch-when="person">
             <input data-ng-model="field.value.displayName" data-ng-show="field.readonly" class="form-control" type="text" disabled/>
@@ -117,154 +93,132 @@
         </div>
         <textarea data-ng-change="onFieldChange(field)" data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
         <div data-ng-switch-default>
-            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" data-inputmask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" data-inputmask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
         </div>
     </div>
     <span data-ng-repeat="message in field.messages" class="help-block text-danger">{{message.text}}</span>
 </script>
 <script type="text/ng-template" id="multipage.html">
-    <div data-ng-show="notifications" class="alert alert-danger">
-        <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
-        <ul>
-            <li data-ng-repeat="notification in notifications" data-ng-bind-html="notification.message"></li>
-        </ul>
-    </div>
-    <div data-ng-show="form.container.readonly">
-        <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
-        <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>
-        <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
-        <div data-ng-show="form.state == 'cancelled'"class="alert alert-info">This form can no longer be modified - it has been cancelled</div>
-    </div>
-    <div class="notifications"></div>
+    <wf-notifications notifications="notifications"></wf-notifications>
+    <wf-status form="form"></wf-status>
     <div>
         <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data" novalidate>
             <div class="row">
                 <div class="crumbs col-md-3">
                     <ul class="breadcrumb-stacked">
-                        <li ng-repeat="step in form.steps" ng-class="isActiveStep(form, step) ? 'active' : ''">
-                            <a data-ng-show="isAvailableStep(form, step)" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
-                            <span ng-show="!isAvailableStep(form, step)">{{step.breadcrumb}}</span>
+                        <li ng-repeat="step in form.steps" ng-class="wizard.isActiveStep(form, step) ? 'active' : ''">
+                            <a data-ng-show="wizard.isAvailableStep(form, step)" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                            <span ng-show="!wizard.isAvailableStep(form, step)">{{step.breadcrumb}}</span>
                         </li>
                     </ul>
                 </div>
-                <div ng-class="isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen" id="container-{{container.containerId}}">
-                    <div ng-repeat="step in form.steps" ng-show="isActiveStep(form, step)" class="screen-content">
-                        <h2>{{form.container.title}}</h2>
-                        <h4>{{step.title}}</h4>
-                        <ul data-ng-model="step.fields">
-                            <li data-ng-show="isVisible(field)" data-ng-class="field.cssClass" data-ng-repeat="field in step.fields" data-ng-include="'field.html'" class="pw-field"></li>
-                        </ul>
+                <div ng-class="state.isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen" id="container-{{container.containerId}}">
+                    <h2>{{form.container.title}}</h2>
+                    <div ng-repeat="step in form.steps">
+                        <wf-step form="form" step="step" active="wizard.isActiveStep(form, step)" current="wizard.isCurrentStep(form, step)"></wf-step>
                     </div>
                     <div class="screen-footer">
-                        <div class="btn-toolbar pull-right" role="toolbar">
-                            <button data-ng-repeat="button in form.container.buttons" data-ng-class="button.primary ? 'btn-primary' : ''" data-ng-click="clickButton(button)" data-ng-show="!form.container.readonly" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
-                        </div>
+                        <wf-toolbar form="form" container="form.container"></wf-toolbar>
                         <div class="clearfix"></div>
                     </div>
                 </div>
-                <div ng-show="isViewingAttachments" class="pw-attachments col-md-4">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="isEditingAttachments ? 'fa fa-unlock' : 'fa fa-lock'" class="fa fa-lock"></i></button>
-                            <span class="lead">Notes</span>
-                        </div>
-                        <ul class="list-group">
-                            <li class="list-group-item" data-ng-repeat="attachment in attachments">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <button data-ng-show="isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="text-danger close " type="button">&times;</button>
-                                    <span data-ng-switch on="attachment.contentType">
-                                        <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
-                                        <span data-ng-switch-default class="pw-attachment-file">
-                                            <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" title="{{attachment.description}}">{{attachment.description}}</a>
-                                        </span>
-                                    </span>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="pull-right text-muted">{{attachment.user.displayName}}</div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="pull-right text-muted">{{attachment.lastModified|date:'MMM d, y H:mm'}}</div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <wf-attachments attachments="form.attachments" form="form" state="state"></wf-attachments>
             </div>
         </form>
     </div>
 </script>
 <script type="text/ng-template" id="multistep.html">
-    <div data-ng-show="notifications" class="alert alert-danger">
+    <wf-notifications notifications="notifications"></wf-notifications>
+    <wf-status form="form"></wf-status>
+    <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
+        <div class="row">
+            <div ng-class="state.isViewingAttachments ? 'col-md-8' : 'col-md-12'" class="screen">
+                <h2>{{form.container.title}}</h2>
+                <div class="crumbs">
+                    <ul class="breadcrumb">
+                        <li ng-repeat="step in form.steps" ng-class="wizard.isActiveStep(form, step) ? 'active' : ''">
+                            <a ng-click="wizard.changeStep(form, step.ordinal)" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div ng-repeat="step in form.steps">
+                    <wf-step form="form" step="step" active="wizard.isActiveStep(form, step)" current="wizard.isCurrentStep(form, step)"></wf-step>
+                </div>
+            </div>
+            <wf-attachments attachments="form.attachments" form="form" state="state"></wf-attachments>
+        </div>
+    </form>
+</script>
+<script type="text/ng-template" id="notifications.html">
+    <div data-ng-if="notifications" data-ng-show="notifications" class="alert alert-danger">
         <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
         <ul>
             <li data-ng-repeat="notification in notifications" data-ng-bind-html="notification.message"></li>
         </ul>
     </div>
+</script>
+<script type="text/ng-template" id="review.html">
+    <wf-notifications notifications="notifications"></wf-notifications>
+    <wf-status form="form"></wf-status>
+    <div>
+        <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data" novalidate>
+            <div class="row">
+                <div class="crumbs col-md-3">
+                    <ul class="breadcrumb-stacked">
+                        <li ng-repeat="step in form.steps" ng-class="wizard.isActiveStep(form, step) ? 'active' : ''">
+                            <a data-ng-show="wizard.isAvailableStep(form, step)" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                            <span ng-show="!wizard.isAvailableStep(form, step)">{{step.breadcrumb}}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div ng-class="state.isViewingAttachments ? 'col-md-5' : 'col-md-9'" class="screen">
+                    <h2>{{form.container.title}}</h2>
+                    <div ng-repeat="step in form.steps">
+                        <wf-step form="form" step="step" active="wizard.isActiveStep(form, step)" current="false"></wf-step>
+                    </div>
+                    <div class="screen-footer">
+                        <wf-toolbar form="form" container="form.container"></wf-toolbar>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+                <wf-attachments attachments="form.attachments" form="form" state="state"></wf-attachments>
+            </div>
+        </form>
+    </div>
+</script>
+<script type="text/ng-template" id="status.html">
     <div data-ng-show="form.container.readonly">
         <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
         <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>
         <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
         <div data-ng-show="form.state == 'cancelled'"class="alert alert-info">This form can no longer be modified - it has been cancelled</div>
     </div>
-    <div class="notifications"></div>
-    <div>
-        <form class="form form-default" action="{{form.action}}" method="POST" enctype="multipart/form-data">
-            <div class="row">
-                <div ng-class="isViewingAttachments ? 'col-md-8' : 'col-md-12'" class="screen">
-                    <h2>{{form.container.title}}</h2>
-                    <div class="crumbs">
-                        <ul class="breadcrumb">
-                            <li ng-repeat="step in form.steps" ng-class="isActiveStep(form, step) ? 'active' : ''">
-                                <a ng-click="changeStep(step.ordinal)" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div ng-repeat="step in form.steps" data-ng-include="'step.html'"></div>
-                </div>
-                <div ng-show="isViewingAttachments" class="pw-attachments col-md-4">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <button data-ng-click="editAttachments()" class="close" type="button"><i ng-class="isEditingAttachments ? 'fa fa-unlock' : 'fa fa-lock'" class="fa fa-lock"></i></button>
-                            <span class="lead">Notes</span>
-                        </div>
-                        <ul class="list-group">
-                            <li class="list-group-item" data-ng-repeat="attachment in attachments">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <button data-ng-show="isEditingAttachments" data-ng-click="deleteAttachment(attachment)" class="text-danger close " type="button">&times;</button>
-                                    <span data-ng-switch on="attachment.contentType">
-                                        <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
-                                        <span data-ng-switch-default class="pw-attachment-file">
-                                            <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" title="{{attachment.description}}">{{attachment.description}}</a>
-                                        </span>
-                                    </span>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="pull-right text-muted">{{attachment.user.displayName}}</div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="pull-right text-muted">{{attachment.lastModified|date:'MMM d, y H:mm'}}</div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
+</script>
+<script type="text/ng-template" id="step.html">
+    <div ng-show="active" data-ng-class="step.leaf ? 'panel panel-default step' : 'step'">
+        <div ng-class="step.leaf ? 'panel-heading' : ''"><h4>{{step.title}}</h4></div>
+        <div ng-class="step.leaf ? 'panel-body' : ''">
+            <wf-fieldset form="form" container="step"></wf-fieldset>
+            <div data-ng-repeat="child in step.children">
+                <div ng-show="active" data-ng-class="child.leaf ? 'panel panel-default child' : 'child'">
+                    <div ng-class="child.leaf ? 'panel-heading' : ''"><h4>{{child.title}}</h4></div>
+                    <div ng-class="child.leaf ? 'panel-body' : ''">
+                        <wf-fieldset form="form" container="child"></wf-fieldset>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
+    </div>
+    <div data-ng-show="current" class="screen-footer">
+        <wf-toolbar form="form" container="step"></wf-toolbar>
+        <div class="clearfix"></div>
     </div>
 </script>
-
+<script type="text/ng-template" id="toolbar.html">
+    <div class="btn-toolbar pull-right" role="toolbar">
+        <button data-ng-repeat="button in container.buttons" data-ng-click="wizard.clickButton(form, container, button)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+    </div>
+</script>
 <nav class="navbar navbar-default navbar-inverse pw-navbar-collapse" style="min-height: 20px;margin-bottom: 0px">
     <div class="user-information">
         <div id="user-information-name" class="user-information-name pull-right">
@@ -274,14 +228,14 @@
 </nav>
 <nav class="navbar navbar-default pw-navbar-collapse">
     <div class="navbar-header">
-        <button data-ng-click="isCollapsed = !isCollapsed" type="button" class="navbar-toggle">
+        <button data-ng-click="state.isCollapsed = !state.isCollapsed" type="button" class="navbar-toggle">
             <span class="sr-only">Toggle search</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
     </div>
-    <div collapse="isCollapsed" class="container collapse navbar-collapse navbar-ex1-collapse">
+    <div collapse="state.isCollapsed" class="container collapse navbar-collapse navbar-ex1-collapse">
         <div class="row">
             <div class="navbar-left">
                 <button data-ng-click="dialogs.openHistoryModal([form])" data-ng-show="form.history" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>
@@ -306,12 +260,12 @@
                     <div class="btn-group">
                         <form data-ng-show="form.history" class="navbar-form navbar-left form-inline" id="fileupload" action="{{form.attachment}}" method="POST" enctype="multipart/form-data" data-file-upload="fileUploadOptions">
                             <span class="btn btn-default navbar-btn fileinput-button" data-ng-class="{disabled: disabled}">
-                                  <i ng-hide="sending" class="fa fa-paperclip"></i>  <i ng-show="sending" class='fa fa-paperclip fa-spin'></i>
+                                  <i ng-hide="state.sending" class="fa fa-paperclip"></i>  <i ng-show="state.sending" class='fa fa-paperclip fa-spin'></i>
                                   <input type="file" name="attachment" multiple="" ng-disabled="disabled">
                             </span>
                         </form>
                     </div>
-                    <button data-ng-click="isViewingAttachments = !isViewingAttachments" data-ng-show="form.history" class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i ng-class="isViewingAttachments ? 'fa-folder-open' : 'fa-folder'" class="fa fa-folder"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>
+                    <button data-ng-click="viewAttachments()" data-ng-show="form.history" class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i ng-class="state.isViewingAttachments ? 'fa-folder-open' : 'fa-folder'" class="fa fa-folder"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>
                     <a class="btn btn-default navbar-btn" href="{{root}}.html" rel="external" id="back-button" title="Return to task list"><i class="fa fa-arrow-left"></i></a>
                 </div>
             </div>
@@ -324,12 +278,15 @@
 </div>
 <div class="main-content container" data-ng-switch on="form.layout">
     <div class="row" data-ng-switch-when="multipage">
-        <div data-ng-include="'multipage.html'"></div>
+        <wf-multipage form="form" state="state"></wf-multipage>
     </div>
     <div class="row" data-ng-switch-when="multistep">
-        <div data-ng-include="'multistep.html'"></div>
+        <wf-multistep form="form" state="state"></wf-multistep>
+    </div>
+    <div class="row" data-ng-switch-when="review">
+        <wf-review form="form" state="state"></wf-review>
     </div>
     <div class="row" data-ng-switch-when="normal">
-        <div data-ng-include="'container.html'"></div>
+        <wf-container form="form" container="form.container" state="state"/>
     </div>
 </div>

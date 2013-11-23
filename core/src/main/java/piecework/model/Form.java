@@ -306,9 +306,8 @@ public class Form {
                 this.validation = new ManyMap<String, Message>(form.validation);
             else
                 this.validation = new ManyMap<String, Message>();
-
-            this.attachmentCount = form.attachmentCount;
             this.attachments = form.getAttachments();
+            this.attachmentCount = form.getAttachments().size();
             this.valid = form.valid;
             this.external = form.external;
             this.anonymous = form.anonymous;
@@ -340,7 +339,7 @@ public class Form {
                         this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
                     }
                 } else {
-                    this.attachmentCount = 0;
+                    this.attachmentCount = instance.getAttachmentIds().size();
                 }
             }
             return this;

@@ -70,12 +70,15 @@ public class FormFactory {
         Task task = request.getTask();
         boolean unmodifiable = task != null && !task.canEdit(principal);
 
+        if (unmodifiable && actionType != null && actionType == ActionType.CREATE)
+            actionType = ActionType.VIEW;
+
         Form.Builder builder = new Form.Builder()
                 .formInstanceId(formInstanceId)
                 .processDefinitionKey(processDefinitionKey);
 
         if (activity != null) {
-            Action action = action(builder, activity, task, actionType, mediaType, version);
+            Action action = action(builder, activity, task, actionType, mediaType, version, unmodifiable);
             Map<String, Field> fieldMap = activity.getFieldMap();
             Map<String, List<Value>> data = dataFilterService.filter(fieldMap, instance, task, principal, validation);
             Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, version, unmodifiable);
@@ -107,7 +110,7 @@ public class FormFactory {
         builder.container(container);
     }
 
-    private Action action(Form.Builder builder, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version) throws FormBuildingException {
+    private Action action(Form.Builder builder, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version, boolean unmodifiable) throws FormBuildingException {
         // Can't do any of this processing without an activity
         if (activity == null)
             return null;
@@ -247,6 +250,9 @@ public class FormFactory {
                 break;
             case MULTI_STEP:
                 builder.layout("multistep");
+                break;
+            case REVIEW_PAGE:
+                builder.layout("review");
                 break;
             default:
                 builder.layout("normal");

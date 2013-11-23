@@ -22,8 +22,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.ldap.SizeLimitExceededException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
-import org.springframework.ldap.filter.AndFilter;
-import org.springframework.ldap.filter.LikeFilter;
+import org.springframework.ldap.filter.*;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
@@ -78,14 +77,27 @@ public class LdapIdentityService implements IdentityService {
 
     @Override
     public Map<String, User> findUsers(Set<String> ids) {
+        long start = 0l;
+        if (LOG.isDebugEnabled())
+            start = System.currentTimeMillis();
         Map<String, User> map = new HashMap<String, User>();
         if (ids != null) {
+            String internalId = ldapSettings.getLdapPersonAttributeIdInternal();
+            OrFilter filter = new OrFilter();
             for (String id : ids) {
-                User user = getUser(id);
-                if (user != null)
-                    map.put(id, user);
+                filter.or(new EqualsFilter(internalId, id));
+            }
+            List<User> users = findMany(filter, -1);
+            if (users != null) {
+                for (User user : users) {
+                    if (user != null)
+                        map.put(user.getUserId(), user);
+                }
             }
         }
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Retrieving users for " + ids.size() + " took " + (System.currentTimeMillis() - start) + " ms");
         return map;
     }
 
@@ -93,42 +105,15 @@ public class LdapIdentityService implements IdentityService {
         if (LOG.isDebugEnabled())
             LOG.debug("Looking for users by display name " + displayNameLike);
 
-        Cache cache = cacheManager.getCache("userDisplayNameLike");
-        Cache.ValueWrapper wrapper = cache.get(displayNameLike);
+        displayNameLike = displayNameLike.replaceAll(" ", "*");
 
-        if (wrapper != null)
-            return (List<User>) wrapper.get();
-
-        String ldapPersonSearchBase = ldapSettings.getLdapPersonSearchBase();
         String ldapDisplayNameAttribute = ldapSettings.getLdapPersonAttributeDisplayName();
         String ldapExternalIdAttribute = ldapSettings.getLdapPersonAttributeIdExternal();
         String ldapEmailAttribute = ldapSettings.getLdapPersonAttributeEmail();
-        SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
 
         long countLimit = maxResults != null ? maxResults.longValue() : 100l;
-        SearchControls defaultSearchControls = ldapSettings.getSearchControls();
-        SearchControls searchControls = new SearchControls(defaultSearchControls.getSearchScope(),
-            countLimit, defaultSearchControls.getTimeLimit(), defaultSearchControls.getReturningAttributes(),
-            defaultSearchControls.getReturningObjFlag(), defaultSearchControls.getDerefLinkFlag());
-
-        template.setSearchControls(searchControls);
-
-        displayNameLike = displayNameLike.replaceAll(" ", "*");
-
-        String filter = new AndFilter().and(new LikeFilter(ldapDisplayNameAttribute, displayNameLike + "*")).and(new LikeFilter(ldapExternalIdAttribute, "*")).encode();
-        try {
-            List<IdentityDetails> identityDetailsList = template.search(ldapPersonSearchBase, filter, userDetailsMapper);
-            List<User> users = identityDetailsList != null && !identityDetailsList.isEmpty() ? new ArrayList<User>(identityDetailsList.size()) : Collections.<User>emptyList();
-            if (identityDetailsList != null) {
-                for (IdentityDetails identityDetails : identityDetailsList) {
-                    users.add(new User.Builder(identityDetails).build());
-                }
-            }
-            cache.put(displayNameLike, users);
-            return users;
-        } catch (SizeLimitExceededException e) {
-            return null;
-        }
+        Filter filter = new AndFilter().and(new LikeFilter(ldapDisplayNameAttribute, displayNameLike + "*")).and(new LikeFilter(ldapExternalIdAttribute, "*"));
+        return findMany(filter, countLimit);
     }
 
     @Override
@@ -229,5 +214,35 @@ public class LdapIdentityService implements IdentityService {
         return null;
     }
 
+    private List<User> findMany(Filter filter, long countLimit) {
+        String encoded = filter.encode();
+        Cache cache = cacheManager.getCache("userCache");
+        Cache.ValueWrapper wrapper = cache.get(encoded);
+        if (wrapper != null)
+            return (List<User>) wrapper.get();
 
+        String ldapPersonSearchBase = ldapSettings.getLdapPersonSearchBase();
+        SpringSecurityLdapTemplate template = new SpringSecurityLdapTemplate(personLdapContextSource);
+
+        SearchControls defaultSearchControls = ldapSettings.getSearchControls();
+        SearchControls searchControls = new SearchControls(defaultSearchControls.getSearchScope(),
+                countLimit, defaultSearchControls.getTimeLimit(), defaultSearchControls.getReturningAttributes(),
+                defaultSearchControls.getReturningObjFlag(), defaultSearchControls.getDerefLinkFlag());
+
+        template.setSearchControls(searchControls);
+
+        try {
+            List<IdentityDetails> identityDetailsList = template.search(ldapPersonSearchBase, encoded, userDetailsMapper);
+            List<User> users = identityDetailsList != null && !identityDetailsList.isEmpty() ? new ArrayList<User>(identityDetailsList.size()) : Collections.<User>emptyList();
+            if (identityDetailsList != null) {
+                for (IdentityDetails identityDetails : identityDetailsList) {
+                    users.add(new User.Builder(identityDetails).build());
+                }
+            }
+            cache.put(encoded, users);
+            return users;
+        } catch (SizeLimitExceededException e) {
+            return null;
+        }
+    }
 }

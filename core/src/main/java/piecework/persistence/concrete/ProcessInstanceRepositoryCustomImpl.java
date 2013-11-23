@@ -183,7 +183,6 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         include(update, submission);
 
         return mongoOperations.findAndModify(query, update, OPTIONS, ProcessInstance.class);
-
     }
 
     private ProcessInstance updateSimply(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {

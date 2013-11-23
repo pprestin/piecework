@@ -20,12 +20,11 @@ import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.security.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -83,6 +82,18 @@ public class TaskFilter {
 
         return overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())
                 || task.isCandidateOrAssignee(principal);
+    }
+
+    public Set<String> getDeploymentIds(Iterable<ProcessInstance> instances) {
+        if (wrapWithForm) {
+            Set<String> deploymentIds = new HashSet<String>();
+            for (ProcessInstance instance : instances) {
+                if (instance.getDeploymentId() != null)
+                    deploymentIds.add(instance.getDeploymentId());
+            }
+            return deploymentIds;
+        }
+        return Collections.emptySet();
     }
 
     public boolean isWrapWithForm() {

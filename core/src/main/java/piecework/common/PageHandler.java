@@ -13,24 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.enumeration;
+package piecework.common;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.domain.Page;
+import piecework.model.SearchResults;
 
 /**
  * @author James Renfro
  */
-public enum ActivityUsageType {
-    API("API"), MULTI_PAGE("Multi-page"), USER_FORM("Single page"), MULTI_STEP("Multi-step"), REVIEW_PAGE("Review"), USER_WIZARD("Wizard");
+public interface PageHandler<T> {
 
-    private final String description;
+    SearchResults handle(Page<T> page);
 
-    private ActivityUsageType(String description) {
-        this.description = description;
-    }
-
-    @JsonIgnore
-    public String description() {
-        return description;
-    }
 }

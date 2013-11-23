@@ -182,7 +182,6 @@
             <tbody>
                 <tr data-ng-repeat="form in forms">
                     <td><input data-ng-click="selectForm(form)" type="checkbox" class="result-checkbox"/></td>
-                    <!--td><a href="#!/form/{{form.task.processDefinitionKey}}/{{form.task.taskInstanceId}}">{{form.task.processInstanceLabel}}</a></td-->
                     <td>
                         <a data-ng-if="form.external" href="{{form.link}}" target="_self">{{form.task.processInstanceLabel}}</a>
                         <a data-ng-if="!form.external" href="{{form.link}}">{{form.task.processInstanceLabel}}</a>

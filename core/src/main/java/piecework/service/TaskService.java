@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.PageHandler;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
@@ -41,9 +42,9 @@ import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.task.TaskDeployment;
 import piecework.task.TaskFactory;
 import piecework.task.TaskFilter;
+import piecework.task.TaskPageHandler;
 import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -102,28 +103,6 @@ public class TaskService {
         return findTask(process, instance, null, principal, limitToActive);
     }
 
-    private Task findTask(Process process, ProcessInstance instance, String taskId, Entity principal, boolean limitToActive) throws StatusCodeError {
-
-        Set<Task> tasks = instance.getTasks();
-        boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
-        ViewContext version1 = versions.getVersion1();
-
-        for (Task task : tasks) {
-            if (limitToActive && !task.isActive())
-                continue;
-
-            if (taskId != null && !task.getTaskInstanceId().equals(taskId))
-                continue;
-
-            if ( hasOversight || task.isCandidateOrAssignee(principal) ) {
-                Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
-                return TaskFactory.task(task, new PassthroughSanitizer(), userMap, version1);
-            }
-        }
-
-        return null;
-    }
-
     public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
         String taskId = task != null ? task.getTaskInstanceId() : null;
         if (StringUtils.isNotEmpty(taskId)) {
@@ -152,52 +131,32 @@ public class TaskService {
         Set<Process> userProcesses = Sets.difference(processService.findProcesses(userProcessDefinitionKeys), overseerProcesses);
         Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
-        ViewContext taskViewContext = versions.getVersion1();
+        ViewContext version = versions.getVersion1();
 
-        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
-                .resourceLabel("Tasks")
-                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-                .link(taskViewContext.getApplicationUri());
+        TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, wrapWithForm, includeData);
+        TaskPageHandler pageHandler = new TaskPageHandler(rawQueryParameters, taskFilter, sanitizer, version){
 
-        ViewContext version1 = versions.getVersion1();
-
-        if (wrapWithForm)
-            resultsBuilder.resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-                    .link(version1.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME));
-
-        ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
-                new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
-
-        if (!allowedProcesses.isEmpty()) {
-            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-
-            Map<String, ProcessDeployment> deploymentMap = new HashMap<String, ProcessDeployment>();
-            for (Process allowedProcess : allowedProcesses) {
-                if (allowedProcess.getProcessDefinitionKey() != null) {
-                    executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey());
-
-                    Process definition = new Process.Builder(allowedProcess, passthroughSanitizer).build(version1);
-
-                    if (wrapWithForm) {
-                        resultsBuilder.definition(new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(version1)).build(version1));
-                    } else {
-                        resultsBuilder.definition(definition);
+            protected Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds) {
+                Map<String, ProcessDeployment> deploymentMap = new HashMap<String, ProcessDeployment>();
+                if (!deploymentIds.isEmpty()) {
+                    Iterable<ProcessDeployment> deployments = deploymentRepository.findAll(deploymentIds);
+                    if (deployments != null) {
+                        for (ProcessDeployment deployment : deployments) {
+                            deploymentMap.put(deployment.getDeploymentId(), deployment);
+                        }
                     }
                 }
+                return deploymentMap;
             }
-            TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, wrapWithForm, includeData);
-            ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
-            search(resultsBuilder, executionCriteria, taskFilter, deploymentMap, principal, version1);
-        }
 
-        if (LOG.isDebugEnabled())
-            LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
+            @Override
+            protected Map<String, User> getUserMap(Set<String> userIds) {
+                return identityService.findUsers(userIds);
+            }
 
-        return resultsBuilder.build();
-    }
+        };
 
-    private void search(SearchResults.Builder resultsBuilder, ProcessInstanceSearchCriteria executionCriteria, TaskFilter taskFilter, Map<String, ProcessDeployment> deploymentMap, Entity principal, ViewContext version1) {
-        resultsBuilder.parameters(executionCriteria.getSanitizedParameters());
+        ProcessInstanceSearchCriteria executionCriteria = pageHandler.criteria(allowedProcesses);
 
         int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
         int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
@@ -205,67 +164,12 @@ public class TaskService {
         Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort());
         Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
 
-        if (page.hasContent()) {
-            String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
-            String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.ALL;
-            int count = 0;
-            if (taskFilter.isWrapWithForm()) {
-                Set<String> deploymentIds = new HashSet<String>();
-                for (ProcessInstance instance : page.getContent()) {
-                    if (instance.getDeploymentId() != null)
-                        deploymentIds.add(instance.getDeploymentId());
-                }
-                Iterable<ProcessDeployment> deployments = deploymentRepository.findAll(deploymentIds);
-                if (deployments != null) {
-                    for (ProcessDeployment deployment : deployments) {
-                        deploymentMap.put(deployment.getDeploymentId(), deployment);
-                    }
-                }
-            }
+        SearchResults results = pageHandler.handle(page);
 
-            List<TaskDeployment> rawTasks = new ArrayList<TaskDeployment>();
-            Set<String> userIds = new HashSet<String>();
-            for (ProcessInstance instance : page.getContent()) {
-                ProcessDeployment processDeployment = null;
-                if (taskFilter.isWrapWithForm())
-                    processDeployment = deploymentMap.get(instance.getDeploymentId());
+        if (LOG.isDebugEnabled())
+            LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
 
-                Set<Task> tasks = instance.getTasks();
-                if (tasks != null && !tasks.isEmpty()) {
-                    for (Task task : tasks) {
-                        if (taskFilter.include(task, processStatus, taskStatus)) {
-                            rawTasks.add(new TaskDeployment(processDeployment, instance, task));
-                            userIds.addAll(task.getAssigneeAndCandidateAssigneeIds());
-                        }
-                    }
-                }
-            }
-
-            Map<String, User> userMap = identityService.findUsers(userIds);
-
-            for (TaskDeployment rawTask : rawTasks) {
-                resultsBuilder.item(taskFilter.result(rawTask, userMap, version1));
-                count++;
-            }
-
-            if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
-                if (executionCriteria.getFirstResult() != null)
-                    resultsBuilder.firstResult(executionCriteria.getFirstResult());
-                else
-                    resultsBuilder.firstResult(1);
-
-                if (executionCriteria.getMaxResults() != null)
-                    resultsBuilder.maxResults(executionCriteria.getMaxResults());
-                else
-                    resultsBuilder.maxResults(count);
-
-                resultsBuilder.total(Long.valueOf(count));
-            } else {
-                resultsBuilder.firstResult(1);
-                resultsBuilder.maxResults(count);
-                resultsBuilder.total(Long.valueOf(count));
-            }
-        }
+        return results;
     }
 
     public boolean hasAllowedTask(Process process, ProcessInstance processInstance, Entity principal, boolean limitToActive) throws StatusCodeError {
@@ -296,6 +200,28 @@ public class TaskService {
 
     public boolean update(String processInstanceId, Task task) {
         return processInstanceRepository.update(processInstanceId, task);
+    }
+
+    private Task findTask(Process process, ProcessInstance instance, String taskId, Entity principal, boolean limitToActive) throws StatusCodeError {
+
+        Set<Task> tasks = instance.getTasks();
+        boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
+        ViewContext version1 = versions.getVersion1();
+
+        for (Task task : tasks) {
+            if (limitToActive && !task.isActive())
+                continue;
+
+            if (taskId != null && !task.getTaskInstanceId().equals(taskId))
+                continue;
+
+            if ( hasOversight || task.isCandidateOrAssignee(principal) ) {
+                Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
+                return TaskFactory.task(task, new PassthroughSanitizer(), userMap, version1);
+            }
+        }
+
+        return null;
     }
 
 }

@@ -55,15 +55,17 @@ public class TaskFactory {
         return builder.build(version);
     }
 
-    public static Task task(Task task, EngineTask delegateTask) {
+    public static Task task(Task task, EngineTask delegateTask, boolean isComplete) {
         if (task == null)
             return null;
 
         ActionType action = delegateTask.getActionType();
         String taskStatus = action == ActionType.REJECT ? Constants.TaskStatuses.REJECTED : Constants.TaskStatuses.COMPLETE;
 
-        Task.Builder taskBuilder = new Task.Builder(task, new PassthroughSanitizer())
-                .taskAction(action.name())
+        Task.Builder taskBuilder = new Task.Builder(task, new PassthroughSanitizer());
+
+        if (isComplete)
+            taskBuilder.taskAction(action.name())
                 .taskStatus(taskStatus)
                 .finished()
                 .endTime(new Date());

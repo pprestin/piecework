@@ -88,7 +88,7 @@ public class EngineStateSynchronizer {
                     break;
                 default:
                     Task task = taskService.read(processInstance, delegateTask.getTaskId());
-                    updated = TaskFactory.task(task, delegateTask);
+                    updated = TaskFactory.task(task, delegateTask, type == StateChangeType.COMPLETE_TASK);
                     break;
             };
 
