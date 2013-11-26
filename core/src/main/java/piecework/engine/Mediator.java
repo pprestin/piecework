@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import piecework.Command;
 import piecework.command.CommandListener;
 import piecework.exception.AbortCommandException;
+import piecework.exception.BadRequestError;
 import piecework.model.Process;
 import piecework.util.ManyMap;
 
@@ -67,19 +68,21 @@ public class Mediator {
         }
     }
 
-    public <T> Command<T> before(piecework.Command<T> command) {
+    public <T> Command<T> before(piecework.Command<T> command) throws BadRequestError {
         String processDefinitionKey = command.getProcessDefinitionKey();
         piecework.Command<T> updatedCommand = command;
         if (StringUtils.isNotEmpty(processDefinitionKey)) {
             List<CommandListener> listenerList = commandListenerMap.get(processDefinitionKey);
             if (listenerList != null) {
+                BadRequestError badRequestError = null;
                 for (CommandListener listener : listenerList) {
                     try {
                         piecework.Command<T> beforeCommand = updatedCommand;
                         updatedCommand = listener.before(beforeCommand);
                         if (updatedCommand == null)
                             updatedCommand = beforeCommand;
-
+                    } catch (BadRequestError bre) {
+                        badRequestError = bre;
                     } catch (AbortCommandException ace) {
                         LOG.info("Aborting command because listener told me to", ace);
                         updatedCommand = null;
@@ -88,6 +91,10 @@ public class Mediator {
                         LOG.error("Caught exception notifying eventListeners", e);
                     }
                 }
+
+                // If any of the listeners threw a bad request error, then rethrow it
+                if (badRequestError != null)
+                    throw badRequestError;
             }
         }
 

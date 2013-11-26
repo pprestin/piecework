@@ -23,17 +23,15 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import piecework.enumeration.OperationType;
+import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.common.ViewContext;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 
 /**
@@ -80,6 +78,9 @@ public class ProcessInstance implements Serializable {
 
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
     private final Map<String, List<Value>> data;
+
+    @XmlJavaTypeAdapter(FormNameMessageMapAdapter.class)
+    private final Map<String, List<Message>> messages;
 
     private final Map<String, Activity> activityMap;
 
@@ -188,6 +189,7 @@ public class ProcessInstance implements Serializable {
             this.data = Collections.unmodifiableMap(builder.data);
         }
 
+        this.messages = Collections.unmodifiableMap(builder.messages);
         this.attachments = Collections.unmodifiableSet(builder.attachments);
         this.operations = Collections.unmodifiableList(builder.operations);
         this.submissionIds = builder.submissionIds != null ? Collections.unmodifiableList(builder.submissionIds) : null;
@@ -270,6 +272,11 @@ public class ProcessInstance implements Serializable {
         return data;
     }
 
+    @JsonIgnore
+    public Map<String, List<Message>> getMessages() {
+        return messages;
+    }
+
     public Map<String, Activity> getActivityMap() {
         return activityMap;
     }
@@ -343,6 +350,7 @@ public class ProcessInstance implements Serializable {
         private String applicationStatusExplanation;
         private String previousApplicationStatus;
         private ManyMap<String, Value> data;
+        private ManyMap<String, Message> messages;
         private Map<String, Activity> activityMap;
         private Set<String> keywords;
         private Set<Attachment> attachments;
@@ -361,6 +369,7 @@ public class ProcessInstance implements Serializable {
             this.attachmentIds = new HashSet<String>();
             this.keywords = new HashSet<String>();
             this.data = new ManyMap<String, Value>();
+            this.messages = new ManyMap<String, Message>();
             this.operations = new ArrayList<Operation>();
             this.submissionIds = new ArrayList<String>();
             this.tasks = new HashMap<String, Task>();
@@ -402,6 +411,11 @@ public class ProcessInstance implements Serializable {
 				this.data = new ManyMap<String, Value>(instance.data);
 			else
                 this.data = new ManyMap<String, Value>();
+
+            if (instance.messages != null && !instance.messages.isEmpty())
+                this.messages = new ManyMap<String, Message>(instance.messages);
+            else
+                this.messages = new ManyMap<String, Message>();
 
             if (instance.operations != null && !instance.operations.isEmpty())
                 this.operations = new ArrayList<Operation>(instance.operations);

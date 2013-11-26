@@ -115,8 +115,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     }
 
     @Override
-    public ProcessInstance update(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
-        return updateEfficiently(id, label, data, attachments, submission);
+    public ProcessInstance update(String id, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, List<Attachment> attachments, Submission submission, String applicationStatusExplanation) {
+        return updateEfficiently(id, label, data, messages, attachments, submission, applicationStatusExplanation);
     }
 
     @Override
@@ -173,14 +173,18 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                 ProcessInstance.class);
     }
 
-    private ProcessInstance updateEfficiently(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
+    private ProcessInstance updateEfficiently(String id, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, List<Attachment> attachments, Submission submission, String applicationStatusExplanation) {
         Query query = new Query(where("_id").is(id));
         Update update = new Update();
+
+        if (applicationStatusExplanation != null)
+            update.set("applicationStatusExplanation", applicationStatusExplanation);
 
         include(update, attachments);
         include(update, data);
         include(update, label);
         include(update, submission);
+        includeMessages(update, messages);
 
         return mongoOperations.findAndModify(query, update, OPTIONS, ProcessInstance.class);
     }
@@ -240,6 +244,27 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                         if (clz != null) {
                             typeMapper.writeType(clz, DBObject.class.cast(dbObject));
                         }
+                        dbObjects.add(dbObject);
+                    }
+                }
+
+                update.set(key, dbObjects);
+            }
+        }
+    }
+
+    private void includeMessages(Update update, Map<String, List<Message>> messages) {
+        if (messages != null && !messages.isEmpty()) {
+            MongoConverter converter = mongoOperations.getConverter();
+
+            for (Map.Entry<String, List<Message>> entry : messages.entrySet()) {
+                String key = "messages." + entry.getKey();
+                List<Message> values = entry.getValue();
+                List<Object> dbObjects = new ArrayList<Object>();
+
+                for (Message value : values) {
+                    if (value != null) {
+                        Object dbObject = converter.convertToMongoType(value);
                         dbObjects.add(dbObject);
                     }
                 }

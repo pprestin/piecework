@@ -73,9 +73,6 @@ public class ProcessInstanceService {
     ProcessService processService;
 
     @Autowired
-    IdentityHelper helper;
-
-    @Autowired
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
@@ -363,19 +360,35 @@ public class ProcessInstanceService {
         }
 
         Map<String, List<Value>> data = isAttachment ? null : validation.getData();
-
-        InstanceCommand persist = previous == null ? new StartInstanceCommand(process) : new UpdateInstanceCommand(process, previous);
-
-        persist.label(ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel()))
-               .attachments(attachments)
-               .data(data)
-               .submission(submission);
-
-        ProcessInstance instance = commandExecutor.execute(persist);
+        String label = ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel());
+        ProcessInstance instance = doStore(process, previous, label, data, null, attachments, submission, true);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");
 
         return instance;
     }
+
+    public ProcessInstance updateData(String processDefinitionKey, String processInstanceId, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) throws StatusCodeError {
+        Process process = processService.read(processDefinitionKey);
+        ProcessInstance instance = read(process, processInstanceId, true);
+
+        return doStore(process, instance, null, data, messages, null, null, false);
+    }
+
+    private ProcessInstance doStore(Process process, ProcessInstance previous, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, List<Attachment> attachments, Submission submission,  boolean modifyLabel) throws StatusCodeError {
+        InstanceCommand persist = previous == null ? new StartInstanceCommand(process) : new UpdateInstanceCommand(process, previous);
+
+        if (modifyLabel)
+            persist.label(label);
+
+        persist.attachments(attachments)
+                .data(data)
+                .submission(submission)
+                .messages(messages);
+
+        ProcessInstance instance = commandExecutor.execute(persist);
+        return instance;
+    }
+
 }

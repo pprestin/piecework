@@ -16,11 +16,8 @@
 package piecework.command;
 
 import piecework.Command;
-import piecework.model.Attachment;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
-import piecework.model.Submission;
-import piecework.model.Value;
 
 import java.util.List;
 import java.util.Map;
@@ -35,8 +32,10 @@ public abstract class InstanceCommand implements Command<ProcessInstance> {
 
     protected List<Attachment> attachments;
     protected Map<String, List<Value>> data;
+    protected Map<String, List<Message>> messages;
     protected String label;
     protected Submission submission;
+    protected String applicationStatusExplanation;
 
     public InstanceCommand(Process process) {
         this(process, null);
@@ -57,6 +56,11 @@ public abstract class InstanceCommand implements Command<ProcessInstance> {
         return this;
     }
 
+    public InstanceCommand messages(Map<String, List<Message>> messages) {
+        this.messages = messages;
+        return this;
+    }
+
     public InstanceCommand label(String label) {
         this.label = label;
         return this;
@@ -64,6 +68,11 @@ public abstract class InstanceCommand implements Command<ProcessInstance> {
 
     public InstanceCommand submission(Submission submission) {
         this.submission = submission;
+        return this;
+    }
+
+    public InstanceCommand applicationStatusExplanation(String applicationStatusExplanation) {
+        this.applicationStatusExplanation = applicationStatusExplanation;
         return this;
     }
 

@@ -491,9 +491,6 @@ public class ProcessService {
                 .deploymentVersion(deploymentVersion);
 
         builder.clearActivities();
-//        builder.clearInteractions();
-//        builder.clearNotifications();
-//        builder.clearSections();
 
         if (createNew)
             builder.deploymentId(null);
@@ -511,66 +508,6 @@ public class ProcessService {
                 builder.activity(key, activityRepository.save(new Activity.Builder(entry.getValue(), sanitizer).build()));
             }
         }
-
-//        Map<String, String> sectionIdMap = new HashMap<String, String>();
-//        if (deployment.getSections() != null && !deployment.getSections().isEmpty()) {
-//            for (Section section : deployment.getSections()) {
-//                Section.Builder sectionBuilder = new Section.Builder(section, sanitizer);
-//                if (createNew)
-//                    sectionBuilder.sectionId(null);
-//                Section persistedSection = sectionRepository.save(sectionBuilder.build());
-//                builder.section(persistedSection);
-//                if (StringUtils.isNotEmpty(section.getSectionId()))
-//                    sectionIdMap.put(section.getSectionId(), persistedSection.getSectionId());
-//            }
-//        }
-//        if (deployment.getInteractions() != null && !deployment.getInteractions().isEmpty()) {
-//            for (Interaction interaction : deployment.getInteractions()) {
-//                Interaction.Builder interactionBuilder = new Interaction.Builder(interaction, sanitizer);
-//                if (createNew)
-//                    interactionBuilder.id(null);
-//
-//                Map<ActionType, Screen> screens = interaction.getScreens();
-//                if (screens != null && !screens.isEmpty()) {
-//                    for (Map.Entry<ActionType, Screen> entry : screens.entrySet()) {
-//                        Screen screen = entry.getValue();
-//                        Screen.Builder screenBuilder = new Screen.Builder(screen, sanitizer, false);
-//                        if (createNew)
-//                            screenBuilder.screenId(null);
-//
-//                        List<Grouping> groupings = screen.getGroupings();
-//                        if (groupings != null) {
-//                            for (Grouping grouping : groupings) {
-//                                Grouping.Builder groupingBuilder = new Grouping.Builder(grouping, sanitizer, false);
-//                                List<String> sectionIds = grouping.getSectionIds();
-//                                if (sectionIds != null) {
-//                                    for (String sectionId : sectionIds) {
-//                                        String persistedSectionId = sectionIdMap.get(sectionId);
-//                                        if (StringUtils.isNotEmpty(persistedSectionId))
-//                                            groupingBuilder.sectionId(persistedSectionId);
-//                                    }
-//                                }
-//                                screenBuilder.grouping(groupingBuilder.build());
-//                            }
-//                        }
-//
-//                        Screen persistedScreen = screenRepository.save(screenBuilder.build());
-//                        interactionBuilder.screen(entry.getKey(), persistedScreen);
-//                    }
-//                }
-//                Interaction persistedInteraction = interactionRepository.save(interactionBuilder.build());
-//                builder.interaction(persistedInteraction);
-//            }
-//        }
-//        if (deployment.getNotifications() != null && !deployment.getNotifications().isEmpty()) {
-//            for (Notification notification : deployment.getNotifications()) {
-//                Notification.Builder notificationBuilder = new Notification.Builder(notification, sanitizer);
-//                if (createNew)
-//                    notificationBuilder.notificationId(null);
-//                Notification persistedNotification = notificationRepository.save(notificationBuilder.build());
-//                builder.notification(persistedNotification);
-//            }
-//        }
 
         return deploymentRepository.save(builder.build());
     }
