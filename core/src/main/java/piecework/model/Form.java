@@ -50,6 +50,9 @@ public class Form {
     private final String layout;
 
     @XmlElement
+    private final String applicationStatusExplanation;
+
+    @XmlElement
     private final Task task;
 
     @XmlElement
@@ -123,6 +126,7 @@ public class Form {
         this.layout = builder.layout;
         this.task = builder.task;
         this.container = builder.container;
+        this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.explanation = builder.explanation;
         this.data = builder.data;
         this.validation = builder.validation;
@@ -161,6 +165,10 @@ public class Form {
 
     public Container getContainer() {
         return container;
+    }
+
+    public String getApplicationStatusExplanation() {
+        return applicationStatusExplanation;
     }
 
     public Task getTask() {
@@ -263,6 +271,7 @@ public class Form {
         private String processDefinitionKey;
         private String submissionType;
         private String layout;
+        private String applicationStatusExplanation;
         private Task task;
         private Container container;
         private Explanation explanation;
@@ -294,6 +303,7 @@ public class Form {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
             this.layout = sanitizer.sanitize(form.layout);
+            this.applicationStatusExplanation = sanitizer.sanitize(form.applicationStatusExplanation);
             this.container = form.container != null ? new Container.Builder(form.container, sanitizer).build() : null;
             this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
             this.explanation = form.explanation;
@@ -361,6 +371,11 @@ public class Form {
             } else {
                 this.attachmentCount = attachmentCount;
             }
+            return this;
+        }
+
+        public Builder applicationStatusExplanation(String applicationStatusExplanation) {
+            this.applicationStatusExplanation = applicationStatusExplanation;
             return this;
         }
 

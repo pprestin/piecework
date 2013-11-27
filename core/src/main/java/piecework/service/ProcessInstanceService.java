@@ -15,7 +15,6 @@
  */
 package piecework.service;
 
-import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.CommandExecutor;
@@ -33,7 +30,6 @@ import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
 import piecework.enumeration.OperationType;
 import piecework.persistence.DeploymentRepository;
-import piecework.persistence.IteratingDataProvider;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.validation.SubmissionTemplate;
@@ -45,15 +41,12 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.AttachmentRepository;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
-
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -361,7 +354,7 @@ public class ProcessInstanceService {
 
         Map<String, List<Value>> data = isAttachment ? null : validation.getData();
         String label = ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel());
-        ProcessInstance instance = doStore(process, previous, label, data, null, attachments, submission, true);
+        ProcessInstance instance = doStore(process, previous, label, data, null, null, attachments, submission, true);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");
@@ -373,16 +366,17 @@ public class ProcessInstanceService {
         Process process = processService.read(processDefinitionKey);
         ProcessInstance instance = read(process, processInstanceId, true);
 
-        return doStore(process, instance, null, data, messages, null, null, false);
+        return doStore(process, instance, null, data, messages, applicationStatusExplanation, null, null, false);
     }
 
-    private ProcessInstance doStore(Process process, ProcessInstance previous, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, List<Attachment> attachments, Submission submission,  boolean modifyLabel) throws StatusCodeError {
+    private ProcessInstance doStore(Process process, ProcessInstance previous, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation, List<Attachment> attachments, Submission submission, boolean modifyLabel) throws StatusCodeError {
         InstanceCommand persist = previous == null ? new StartInstanceCommand(process) : new UpdateInstanceCommand(process, previous);
 
         if (modifyLabel)
             persist.label(label);
 
-        persist.attachments(attachments)
+        persist.applicationStatusExplanation(applicationStatusExplanation)
+                .attachments(attachments)
                 .data(data)
                 .submission(submission)
                 .messages(messages);

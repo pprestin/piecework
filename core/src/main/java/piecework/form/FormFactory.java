@@ -93,6 +93,9 @@ public class FormFactory {
                 .explanation(explanation)
                 .anonymous(anonymous);
 
+        if (actionType != ActionType.COMPLETE && instance != null)
+            builder.applicationStatusExplanation(instance.getApplicationStatusExplanation());
+
         return builder.build(version);
     }
 

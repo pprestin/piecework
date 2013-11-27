@@ -79,7 +79,7 @@ public class DataFilterService {
             }
         }
 
-        if (includeRestrictedData) {
+        if (includeRestrictedData && task != null) {
             if (task.isAssignee(principal)) {
                 return decrypt(filtered);
             }

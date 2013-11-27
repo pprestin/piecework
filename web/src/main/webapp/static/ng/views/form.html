@@ -63,11 +63,11 @@
         <div data-ng-switch-when="checkbox">
             <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
-                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" type="checkbox" name="{{field.name}}" value="{{option.value}}"> {{option.label}}
+                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" value="{{option.value}}" type="checkbox" name="{{field.name}}"> {{option.label}}
                 </label>
             </div>
         </div>
-        <input data-ng-switch-when="date" data-ng-change="onFieldChange(field)" data-ng-model="field.value" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}"/>
+        <input data-ng-switch-when="date" data-ng-change="onFieldChange(field)" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}" value="{{field.value|date:&quot;yyyy-MM-dd'T'HH:mm:ss.00&quot;}}"/>
         <div data-ng-switch-when="radio">
             <div class="radio" data-ng-repeat="option in field.options">
                 <label>
@@ -93,7 +93,7 @@
         </div>
         <textarea data-ng-change="onFieldChange(field)" data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
         <div data-ng-switch-default>
-            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" data-inputmask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-inputmask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
         </div>
     </div>
     <span data-ng-repeat="message in field.messages" class="help-block text-danger">{{message.text}}</span>
@@ -166,7 +166,7 @@
                 <div class="crumbs col-md-3">
                     <ul class="breadcrumb-stacked">
                         <li ng-repeat="step in form.steps" ng-class="wizard.isActiveStep(form, step) ? 'active' : ''">
-                            <a data-ng-show="wizard.isAvailableStep(form, step)" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
+                            <a data-ng-class="step.breadcrumbCssClass" data-ng-show="wizard.isAvailableStep(form, step)" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}} <i class="fa fa-warning invalid-only" title="This section has validation errors"></i></a>
                             <span ng-show="!wizard.isAvailableStep(form, step)">{{step.breadcrumb}}</span>
                         </li>
                     </ul>
@@ -272,6 +272,9 @@
         </div>
     </div>
 </nav>
+<div data-ng-show="form.applicationStatusExplanation" class="container alert alert-info">
+    {{form.applicationStatusExplanation}}
+</div>
 <div data-ng-show="form.explanation" class="container alert alert-danger">
     <h4 data-ng-if="form.explanation.message">{{form.explanation.message}}</h4>
     <p>{{form.explanation.messageDetail}}</p>

@@ -44,6 +44,8 @@ public class FormValidation implements Serializable {
     private final ProcessInstance instance;
 
     private final String applicationStatusExplanation;
+
+    private final boolean hasError;
 	
 	private FormValidation() {
 		this(new Builder());
@@ -58,6 +60,7 @@ public class FormValidation implements Serializable {
 	    this.submission = builder.submission;
         this.instance = builder.instance;
         this.applicationStatusExplanation = builder.applicationStatusExplanation;
+        this.hasError = builder.hasError;
     }
 
     public String getTitle() {
@@ -92,6 +95,10 @@ public class FormValidation implements Serializable {
         return applicationStatusExplanation;
     }
 
+    public boolean isHasError() {
+        return hasError;
+    }
+
     public final static class Builder {
 
         private String title;
@@ -102,6 +109,7 @@ public class FormValidation implements Serializable {
         private Submission submission;
         private ProcessInstance instance;
         private String applicationStatusExplanation;
+        private boolean hasError;
 
         public Builder() {
             super();
@@ -193,7 +201,11 @@ public class FormValidation implements Serializable {
             this.applicationStatusExplanation = applicationStatusExplanation;
             return this;
         }
-        
+
+        public Builder hasError(boolean hasError) {
+            this.hasError = hasError;
+            return this;
+        }
 	}
 	
 }

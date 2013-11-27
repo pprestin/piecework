@@ -88,6 +88,9 @@ angular.module('wf.directives',
                             return result || scope.evaluateVisibilityConstraints(field, constraint.or, true);
                         }
 
+                        if (!result)
+                            field.required = false;
+
                         return result;
                     };
                     scope.evaluateVisibilityConstraints = function(field, constraints, acceptAny) {
@@ -854,12 +857,18 @@ angular.module('wf.services',
                                 if (!step.leaf) {
                                     steps = step.children;
                                 }
+                                var isFirst = true;
                                 for (var n=0;n<steps.length;n++) {
                                     var s = steps[n];
                                     for (var i=0;i<s.fields.length;i++) {
+
                                         var field = s.fields[i];
                                         var item = map[field.name];
                                         if (typeof(item) !== 'undefined') {
+                                            if (isFirst) {
+                                                form.activeStepOrdinal = step.ordinal;
+                                                isFirst = false;
+                                            }
                                             field.messages = new Array();
                                             field.cssClass = "has-error";
                                             field.messages.push({ text: item.message });
@@ -965,10 +974,47 @@ angular.module('Form',
                             field.editable = false;
                         });
                     }
+                    angular.forEach(child.fields, function(field) {
+                        field.parent = child;
+                    });
+
                     fields.push.apply(fields, child.fields);
                     previousChild = child;
                     $scope.addFields(fields, form, child, false);
                 });
+            };
+            $scope.handleField = function(form, data, validation, field, readonly) {
+                var values = data[field.name];
+                if (values != null && values.length > 0) {
+                    if (values.length == 1) {
+                        var value = values[0];
+                        if (field.type == 'person') {
+                            field.value = {
+                                  displayName: value.displayName,
+                                  userId: value.userId,
+                                  toString: function() {
+                                      return this.displayName;
+                                  }
+                              };
+                        } else {
+                            field.value = values[0];
+                        }
+                    }
+                }
+                field.values = new Array(field.maxInputs);
+                if (values != null) {
+                    for (var i=0;i<values.length;i++) {
+                        field.values[i] = values[i];
+                    }
+                }
+
+                if (typeof(validation) !== 'undefined' && validation[field.name] != null) {
+                    field.messages = validation[field.name];
+                    field.cssClass = "has-error";
+                    form.activeStepOrdinal = field.parent.ordinal;
+                    field.parent.breadcrumbCssClass = "invalid";
+                } if (readonly)
+                    field.editable = false;
             };
             $scope.refreshForm = function(form) {
                 $scope.form = form;
@@ -992,34 +1038,7 @@ angular.module('Form',
                 form.fieldMap = new Object();
                 angular.forEach(fields, function(field) {
                     form.fieldMap[field.name] = field;
-                    var values = data[field.name];
-                    if (values != null && values.length > 0) {
-                        if (values.length == 1) {
-                            var value = values[0];
-                            if (field.type == 'person') {
-                                field.value = {
-                                      displayName: value.displayName,
-                                      userId: value.userId,
-                                      toString: function() {
-                                          return this.displayName;
-                                      }
-                                  };
-                            } else {
-                                field.value = values[0];
-                            }
-                        }
-                    }
-                    field.values = new Array(field.maxInputs);
-                    if (values != null) {
-                        for (var i=0;i<values.length;i++) {
-                            field.values[i] = values[i];
-                        }
-                    }
-
-                    if (typeof(validation) !== 'undefined' && validation[field.name] != null)
-                        field.messages = validation[field.name];
-                    if (readonly)
-                        field.editable = false;
+                    $scope.handleField(form, data, validation, field, readonly);
                 });
 
                 if (form.task != null) {

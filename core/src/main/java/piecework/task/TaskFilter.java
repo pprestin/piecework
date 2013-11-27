@@ -62,8 +62,9 @@ public class TaskFilter {
                     .formInstanceId(rebuilt.getTaskInstanceId())
                     .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
                     .processDefinitionKey(rebuilt.getProcessDefinitionKey())
-                    .instanceSubresources(rebuilt.getProcessDefinitionKey(),
-                            rebuilt.getProcessInstanceId(), null, 0, version1)
+                    .instance(deployment.getInstance(), version1)
+//                    .instanceSubresources(rebuilt.getProcessDefinitionKey(),
+//                            rebuilt.getProcessInstanceId(), null, 0, version1)
                     .data(data)
                     .external(external)
                     .build(version1);
