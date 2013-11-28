@@ -32,7 +32,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportResource;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
 import org.springframework.ldap.core.AuthenticationSource;
@@ -52,8 +51,8 @@ import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.form.AnonymousFormResource;
+import piecework.form.AnonymousScriptResource;
 import piecework.identity.DebugIdentityService;
-import piecework.identity.DisplayNameConverter;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapIdentityService;
 import piecework.ldap.LdapSettings;
@@ -61,8 +60,7 @@ import piecework.security.CustomAuthenticationSource;
 import piecework.security.SecuritySettings;
 import piecework.service.IdentityService;
 import piecework.ui.CustomJaxbJsonProvider;
-import piecework.ui.HtmlProvider;
-import piecework.ui.JavascriptProvider;
+import piecework.ui.visitor.HtmlProvider;
 import piecework.util.KeyManagerCabinet;
 
 import javax.net.ssl.SSLContext;
@@ -91,6 +89,9 @@ public class ApplicationConfiguration {
 
     @Autowired
     AnonymousFormResource formResource;
+
+    @Autowired
+    AnonymousScriptResource scriptResource;
 	
 	@Autowired
     HtmlProvider htmlProvider;
@@ -99,7 +100,10 @@ public class ApplicationConfiguration {
     CustomJaxbJsonProvider jsonProvider;
 
     @Autowired
-    JavascriptProvider javascriptProvider;
+    GeneralExceptionMapper generalExceptionMapper;
+
+//    @Autowired
+//    JavascriptProvider javascriptProvider;
 
 	@Bean
 	public Bus cxf() {
@@ -118,7 +122,7 @@ public class ApplicationConfiguration {
 		sf.setExtensionMappings(extensionMappings);
 		
 		List<Object> providers = new ArrayList<Object>();
-		providers.add(new GeneralExceptionMapper());
+		providers.add(generalExceptionMapper);
 		providers.add(new StatusCodeErrorMapper());
 		providers.add(new AccessDeniedExceptionMapper());
 		providers.add(htmlProvider);
@@ -146,7 +150,7 @@ public class ApplicationConfiguration {
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
-        providers.add(new GeneralExceptionMapper());
+        providers.add(generalExceptionMapper);
         providers.add(new StatusCodeErrorMapper());
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);
@@ -167,12 +171,12 @@ public class ApplicationConfiguration {
         extensionMappings.put("html", "text/html");
 
         JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
-        sf.setServiceBeanObjects(formResource);
+        sf.setServiceBeanObjects(formResource, scriptResource);
         sf.setAddress("/public");
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
-        providers.add(new GeneralExceptionMapper());
+        providers.add(generalExceptionMapper);
         providers.add(new StatusCodeErrorMapper());
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);

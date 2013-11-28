@@ -31,6 +31,7 @@ import piecework.exception.MaxSizeExceededException;
 import piecework.exception.StatusCodeError;
 import piecework.persistence.ActivityRepository;
 import piecework.security.MaxSizeInputStream;
+import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.validation.SubmissionTemplate;
 import piecework.service.IdentityService;
 import piecework.model.*;
@@ -41,6 +42,7 @@ import piecework.security.EncryptionService;
 import piecework.security.Sanitizer;
 import piecework.persistence.SubmissionRepository;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,7 +62,7 @@ public class SubmissionHandler {
     @Autowired
     ContentRepository contentRepository;
 
-    @Autowired
+    @Autowired(required = false)
     EncryptionService encryptionService;
 
     @Autowired
@@ -77,6 +79,12 @@ public class SubmissionHandler {
 
     @Autowired
     UuidGenerator uuidGenerator;
+
+    @PostConstruct
+    public void init() {
+        if (encryptionService == null)
+            encryptionService = new PassthroughEncryptionService();
+    }
 
     public Submission handle(Process process, SubmissionTemplate template, Submission rawSubmission, FormRequest formRequest, ActionType action) throws StatusCodeError {
         Entity principal = helper.getPrincipal();
@@ -176,13 +184,14 @@ public class SubmissionHandler {
 
     public Submission handle(Process process, SubmissionTemplate template, MultipartBody body, FormRequest formRequest) throws StatusCodeError {
         Entity principal = helper.getPrincipal();
-        String actingAsId = principal.getActingAsId();
+        String principalId = principal != null ? principal.getEntityId() : "anonoymous";
+        String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
                 .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
-                .submitterId(principal.getEntityId());
+                .submitterId(principalId);
 
         List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
         if (attachments != null && !attachments.isEmpty()) {

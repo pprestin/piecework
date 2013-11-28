@@ -756,7 +756,7 @@ angular.module('wf.services',
                     if (button.action == 'next') {
                         this.nextStep(form, container);
                     } else if (button.action == 'previous') {
-                        this.previousStep();
+                        this.previousStep(form);
                     }
                 },
                 getActiveStep : function(form) {
@@ -985,6 +985,14 @@ angular.module('Form',
             };
             $scope.handleField = function(form, data, validation, field, readonly) {
                 var values = data[field.name];
+//                field.optionMap = new Object();
+//                if (field.options != null) {
+//                    angular.forEach(field.options, function(option)) {
+//                        if (option.value != null) {
+//                            field.optionMap[option.value] = option;
+//                        }
+//                    });
+//                }
                 if (values != null && values.length > 0) {
                     if (values.length == 1) {
                         var value = values[0];
@@ -1004,7 +1012,14 @@ angular.module('Form',
                 field.values = new Array(field.maxInputs);
                 if (values != null) {
                     for (var i=0;i<values.length;i++) {
-                        field.values[i] = values[i];
+                        var value = values[i];
+                        field.values[i] = value;
+//                        if (value != null) {
+//                            var option = field.optionMap[value];
+//                            if (option != null) {
+//
+//                            }
+//                        }
                     }
                 }
 

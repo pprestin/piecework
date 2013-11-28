@@ -66,8 +66,6 @@ public class RequestHandler {
     }
 
     public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, FormValidation validation) throws StatusCodeError {
-        verifyCurrentUserIsAuthorized(process, task);
-
         Activity activity = activity(process, processInstance, task);
 
         // Don't allow anyone to issue a create request for a task that's not open

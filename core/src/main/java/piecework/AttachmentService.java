@@ -22,7 +22,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
@@ -39,7 +38,7 @@ import piecework.persistence.ContentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.ui.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingAttachmentContent;
 
 import java.util.*;
 

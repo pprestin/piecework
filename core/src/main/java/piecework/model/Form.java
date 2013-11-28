@@ -18,6 +18,7 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import piecework.form.FormDisposition;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
@@ -109,12 +110,17 @@ public class Form {
     @XmlAttribute
     private final boolean external;
 
+    @XmlAttribute
+    private final boolean allowAttachments;
+
     @XmlTransient
     @JsonIgnore
     private final List<Attachment> attachments;
 
     @JsonIgnore
     private final boolean anonymous;
+
+    private final FormDisposition disposition;
 
     private Form() {
         this(new Form.Builder(), new ViewContext());
@@ -148,7 +154,9 @@ public class Form {
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : Collections.<Attachment>emptyList();
         this.valid = builder.valid;
         this.external = builder.external;
+        this.allowAttachments = builder.allowAttachments;
         this.anonymous = builder.anonymous;
+        this.disposition = builder.disposition;
     }
 
     public String getFormInstanceId() {
@@ -260,9 +268,17 @@ public class Form {
         return external;
     }
 
+    public boolean isAllowAttachments() {
+        return allowAttachments;
+    }
+
     @JsonIgnore
     public boolean isAnonymous() {
         return anonymous;
+    }
+
+    public FormDisposition getDisposition() {
+        return disposition;
     }
 
     public final static class Builder {
@@ -288,7 +304,9 @@ public class Form {
         private boolean valid;
         private boolean external;
         private boolean anonymous;
+        private boolean allowAttachments;
         private boolean readonly;
+        private FormDisposition disposition;
 
         public Builder() {
             super();
@@ -320,6 +338,7 @@ public class Form {
             this.attachmentCount = form.getAttachments().size();
             this.valid = form.valid;
             this.external = form.external;
+            this.allowAttachments = form.allowAttachments;
             this.anonymous = form.anonymous;
         }
 
@@ -463,6 +482,11 @@ public class Form {
             return this;
         }
 
+        public Builder allowAttachments(boolean allowAttachments) {
+            this.allowAttachments = allowAttachments;
+            return this;
+        }
+
         public Builder anonymous(boolean anonymous) {
             this.anonymous = anonymous;
             return this;
@@ -475,6 +499,11 @@ public class Form {
 
         public boolean isReadonly() {
             return readonly;
+        }
+
+        public Builder disposition(FormDisposition disposition) {
+            this.disposition = disposition;
+            return this;
         }
     }
 

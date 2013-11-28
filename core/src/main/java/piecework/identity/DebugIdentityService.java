@@ -58,6 +58,9 @@ public class DebugIdentityService implements IdentityService {
         Map<String, User> map = new HashMap<String, User>();
         if (ids != null) {
             for (String id : ids) {
+                if (id == null)
+                    continue;
+
                 User user = getUser(id);
                 if (user != null)
                     map.put(id, user);

@@ -16,7 +16,6 @@
 package piecework.form;
 
 import junit.framework.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -25,15 +24,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 import piecework.Versions;
 import piecework.enumeration.ActionType;
 import piecework.exception.FormBuildingException;
-import piecework.exception.StatusCodeError;
-import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.DataFilterService;
-import piecework.service.ProcessInstanceService;
-import piecework.service.TaskService;
-import piecework.service.ValidationService;
-import piecework.test.ExampleFactory;
+
+import javax.ws.rs.core.MediaType;
 
 /**
  * @author James Renfro
@@ -51,17 +46,20 @@ public class FormFactoryTest {
     Process process;
 
     @Mock
+    ProcessDeployment deployment;
+
+    @Mock
     Versions versions;
 
     @Mock
-    User user;
+    Entity user;
 
 
     @Test
     public void testFormInitial() throws FormBuildingException {
         FormRequest request = new FormRequest.Builder().build();
 
-        Form form = formFactory.form(request, user, false);
+        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, MediaType.TEXT_HTML_TYPE, null, null, false);
 
         Assert.assertNotNull(form);
 //        Assert.assertEquals("First screen", form.getScreen().getTitle());

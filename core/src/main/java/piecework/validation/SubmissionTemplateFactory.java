@@ -198,10 +198,10 @@ public class SubmissionTemplateFactory {
         if (!field.isDeleted() && field.isEditable()) {
             String fieldName = field.getName();
             if (fieldName != null) {
-                builder.acceptable(fieldName);
-
                 if (field.isRestricted())
                     builder.restricted(fieldName);
+                else
+                    builder.acceptable(fieldName);
 
                 if (field.getType().equals(Constants.FieldTypes.PERSON))
                     builder.userField(fieldName);

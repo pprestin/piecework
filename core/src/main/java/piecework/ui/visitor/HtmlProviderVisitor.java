@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.visitor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
-import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
-import org.springframework.core.env.Environment;
-import piecework.model.Explanation;
-import piecework.model.User;
 
 import java.util.Map;
 
@@ -75,7 +72,10 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         Map<String, String> attributes = tagNode.getAttributes();
         String href = tagNode.getAttributeByName("href");
         if (checkForSecurePath(href)) {
-            attributes.put("href", recomputeSecurePath(href, applicationUrl));
+            if (StringUtils.isEmpty(href))
+                attributes.put("href", applicationUrl);
+            else
+                attributes.put("href", recomputeSecurePath(href, applicationUrl));
             tagNode.setAttributes(attributes);
         }
     }

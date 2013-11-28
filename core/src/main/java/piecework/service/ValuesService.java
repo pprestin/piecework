@@ -28,7 +28,7 @@ import piecework.model.Process;
 import piecework.persistence.ContentRepository;
 import piecework.command.InstanceCommand;
 import piecework.command.UpdateInstanceCommand;
-import piecework.ui.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.util.Base64Utility;
 import piecework.util.ManyMap;
 

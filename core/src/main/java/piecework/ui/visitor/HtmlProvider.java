@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 University of Washington
+ * Copyright 2012 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.visitor;
 
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
@@ -26,6 +26,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import java.io.*;
@@ -35,34 +36,35 @@ import java.lang.reflect.Type;
 /**
  * @author James Renfro
  */
-@Produces("text/javascript")
+@Produces("text/html")
 @Provider
-//@Service
-@Deprecated
-public class JavascriptProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
-    private static final Logger LOG = Logger.getLogger(JavascriptProvider.class);
+public class HtmlProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
+
+	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
 
     @Autowired
     UserInterfaceService userInterfaceService;
 
-    @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return !type.equals(StreamingPageContent.class) && userInterfaceService.hasExternalScriptResource(type);
-    }
+	@Override
+	public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+		return !StreamingOutput.class.isAssignableFrom(type) && userInterfaceService.hasPage(type);
+	}
 
-    @Override
-    public long getSize(Object t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return userInterfaceService.getExternalScriptSize(type, t);
-    }
+	@Override
+	public long getSize(Object t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+		return userInterfaceService.getPageSize(type, t);
+	}
 
-    @Override
-    public void writeTo(Object t, Class<?> type, Type genericType,
-                        Annotation[] annotations, MediaType mediaType,
-                        MultivaluedMap<String, Object> httpHeaders,
-                        OutputStream entityStream) throws IOException,
-            WebApplicationException {
-        if (!userInterfaceService.serveExternalScriptResource(type, t, entityStream))
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-    }
+	@Override
+	public void writeTo(Object t, Class<?> type, Type genericType,
+			Annotation[] annotations, MediaType mediaType,
+			MultivaluedMap<String, Object> httpHeaders,
+			OutputStream entityStream) throws IOException,
+			WebApplicationException {
+
+		if (!userInterfaceService.servePage(type, t, entityStream)) {
+			throw new WebApplicationException(Response.Status.NOT_FOUND);
+		}
+	}
 
 }

@@ -19,6 +19,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.springframework.core.io.Resource;
+import piecework.ui.streaming.ResourceStreamingOutput;
 
 import javax.ws.rs.WebApplicationException;
 import java.io.*;

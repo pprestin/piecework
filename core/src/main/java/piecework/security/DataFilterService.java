@@ -25,10 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.model.*;
+import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
 import piecework.validation.FormValidation;
 
+import javax.annotation.PostConstruct;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.*;
@@ -41,7 +43,7 @@ public class DataFilterService {
 
     private static final Logger LOG = Logger.getLogger(DataFilterService.class);
 
-    @Autowired
+    @Autowired(required = false)
     private EncryptionService encryptionService;
 
     @Autowired
@@ -49,6 +51,12 @@ public class DataFilterService {
 
     private static final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
     private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
+
+    @PostConstruct
+    public void init() {
+        if (encryptionService == null)
+            encryptionService = new PassthroughEncryptionService();
+    }
 
     public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, FormValidation validation) {
         Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, false);
@@ -137,6 +145,25 @@ public class DataFilterService {
         }
 
         return map;
+    }
+
+    public List<Value> encrypt(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+        if (values.isEmpty())
+            return Collections.emptyList();
+
+        List<Value> list = new ArrayList<Value>(values.size());
+        for (Value value : values) {
+            if (value instanceof Value) {
+                String plaintext = value != null ? value.getValue() : null;
+                if (StringUtils.isNotEmpty(plaintext)) {
+                    list.add(encryptionService.encrypt(plaintext));
+                }
+            } else {
+                list.add(value);
+            }
+        }
+
+        return list;
     }
 
     private List<Value> decrypt(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {

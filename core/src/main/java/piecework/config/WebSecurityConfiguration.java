@@ -157,9 +157,4 @@ public class WebSecurityConfiguration {
         return null;
     }
 
-    @Bean
-    public EncryptionService encryptionService() {
-        return new ExampleBouncyCastleEncryptionService();
-    }
-
 }

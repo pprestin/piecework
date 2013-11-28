@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.streaming;
 
 import org.apache.commons.io.IOUtils;
 import piecework.model.Attachment;
 import piecework.model.Content;
+import piecework.ui.Streamable;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;

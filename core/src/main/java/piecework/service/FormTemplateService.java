@@ -15,43 +15,42 @@
  */
 package piecework.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.htmlcleaner.CleanerProperties;
-import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.TagNode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import piecework.identity.IdentityDetails;
+import piecework.designer.model.view.IndexView;
+import piecework.exception.NotFoundError;
+import piecework.model.Explanation;
+import piecework.model.Form;
 import piecework.model.SearchResults;
-import piecework.model.User;
-import piecework.persistence.ContentRepository;
-import piecework.ui.OptimizingHtmlProviderVisitor;
 
 import javax.annotation.PostConstruct;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro
  */
 @Service
 public class FormTemplateService {
+
+    private static final Set<Class<?>> ACCEPTABLE_TEMPLATE_CLASSES =
+            Sets.newHashSet(Explanation.class, Form.class, IndexView.class);
+    private static final Map<String, Class<?>> ACCEPTABLE_TEMPLATE_NAME_MAP;
+
+    static {
+        ACCEPTABLE_TEMPLATE_NAME_MAP = new HashMap<String, Class<?>>();
+        for (Class<?> cls : ACCEPTABLE_TEMPLATE_CLASSES)
+            ACCEPTABLE_TEMPLATE_NAME_MAP.put(cls.getSimpleName(), cls);
+    }
 
     private static final Logger LOG = Logger.getLogger(FormTemplateService.class);
 
@@ -104,12 +103,32 @@ public class FormTemplateService {
         return resource;
     }
 
+    public String getTemplateName(String id, boolean anonymous) throws NotFoundError {
+        if (StringUtils.isNotEmpty(id)) {
+            Class<?> type = ACCEPTABLE_TEMPLATE_NAME_MAP.get(id);
+            if (type != null) {
+                StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
+                if (anonymous)
+                    templateNameBuilder.append(".anonymous");
+                templateNameBuilder.append(".template.html");
+                return templateNameBuilder.toString();
+            }
+        }
+        throw new NotFoundError();
+    }
+
     public Resource getTemplateResource(Class<?> type, Object t) {
         StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
 
-        if (type.equals(SearchResults.class)) {
-            SearchResults results = SearchResults.class.cast(t);
-            templateNameBuilder.append(".").append(results.getResourceName());
+        if (t != null) {
+            if (type.equals(SearchResults.class)) {
+                SearchResults results = SearchResults.class.cast(t);
+                templateNameBuilder.append(".").append(results.getResourceName());
+            } else if (type.equals(Form.class)) {
+                Form form = Form.class.cast(t);
+                if (form.isAnonymous())
+                    templateNameBuilder.append(".anonymous");
+            }
         }
 
         templateNameBuilder.append(".template.html");

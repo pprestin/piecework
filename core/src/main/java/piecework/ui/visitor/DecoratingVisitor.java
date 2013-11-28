@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.visitor;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -25,12 +22,11 @@ import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
-import piecework.Constants;
 import piecework.enumeration.FieldTag;
 import piecework.model.*;
+import piecework.ui.TagDecorator;
 import piecework.util.ManyMap;
 
-import java.io.IOException;
 import java.util.*;
 
 /**

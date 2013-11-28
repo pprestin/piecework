@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Registry;
 import piecework.exception.BadRequestError;
+import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.exception.ValidationRuleException;
 import piecework.model.*;
@@ -92,6 +93,7 @@ public class ValidationService {
 
         if (fieldRuleMap != null) {
             Set<String> acceptableFieldNames = new HashSet<String>(template.getAcceptable());
+            Set<String> restrictedFieldNames = new HashSet<String>(template.getRestricted());
             Map<String, List<Value>> submissionData = submission.getData();
             Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
@@ -107,8 +109,10 @@ public class ValidationService {
                             rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
                         } catch (ValidationRuleException e) {
                             validationBuilder.error(rule.getName(), e.getMessage());
-                            if (onlyAcceptValidInputs)
+                            if (onlyAcceptValidInputs) {
                                 acceptableFieldNames.remove(rule.getName());
+                                restrictedFieldNames.remove(rule.getName());
+                            }
                         }
                     }
                 }
@@ -131,7 +135,9 @@ public class ValidationService {
                     continue;
                 }
 
-                if (acceptableFieldNames.contains(fieldName)) {
+                boolean isAcceptable = acceptableFieldNames.contains(fieldName);
+                boolean isRestricted = restrictedFieldNames.contains(fieldName);
+                if (isAcceptable || isRestricted) {
                     List<? extends Value> values = submissionData.get(fieldName);
                     List<? extends Value> previousValues = instanceData.get(fieldName);
 
@@ -149,9 +155,6 @@ public class ValidationService {
 
                     if (values == null)
                         values = Collections.emptyList();
-
-//                    if (ConstraintUtil.hasConstraint(Constants.ConstraintTypes.IS_VALID_USER, field.getConstraints()))
-//                        messages = users(messages);
 
                     validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
                 }

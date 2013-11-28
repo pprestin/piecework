@@ -27,8 +27,9 @@ import piecework.enumeration.ActivityUsageType;
 import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.FormBuildingException;
 import piecework.exception.InternalFormException;
-import piecework.exception.RemoteFormException;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.DeploymentRepository;
 import piecework.security.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ConstraintUtil;
@@ -48,6 +49,9 @@ public class FormFactory {
     private static final Logger LOG = Logger.getLogger(FormFactory.class);
 
     @Autowired
+    DeploymentRepository deploymentRepository;
+
+    @Autowired
     DataFilterService dataFilterService;
 
     @Autowired
@@ -55,11 +59,11 @@ public class FormFactory {
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-    public Form form(FormRequest request, Entity principal, boolean anonymous) throws FormBuildingException {
-        return form(request, request.getAction(), principal, MediaType.TEXT_HTML_TYPE, null, null, anonymous);
-    }
+//    public Form form(Process process, ProcessDeployment deployment, FormRequest request, Entity principal, boolean anonymous) throws FormBuildingException {
+//        return form(process, deployment, request, request.getAction(), principal, MediaType.TEXT_HTML_TYPE, null, null, anonymous);
+//    }
 
-    public Form form(FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, FormValidation validation, Explanation explanation, boolean anonymous) throws FormBuildingException {
+    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, FormValidation validation, Explanation explanation, boolean anonymous) throws FormBuildingException {
         ViewContext version = versions.getVersion1();
         Activity activity = request.getActivity();
 
@@ -67,6 +71,7 @@ public class FormFactory {
         String processDefinitionKey = request.getProcessDefinitionKey();
         String processInstanceId = request.getProcessInstanceId();
         ProcessInstance instance = request.getInstance();
+
         Task task = request.getTask();
         boolean unmodifiable = task != null && !task.canEdit(principal);
 
@@ -78,13 +83,14 @@ public class FormFactory {
                 .processDefinitionKey(processDefinitionKey);
 
         if (activity != null) {
-            Action action = action(builder, activity, task, actionType, mediaType, version, unmodifiable);
+            Action action = action(builder, deployment, activity, task, actionType, mediaType, version, unmodifiable);
             Map<String, Field> fieldMap = activity.getFieldMap();
             Map<String, List<Value>> data = dataFilterService.filter(fieldMap, instance, task, principal, validation);
             Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, version, unmodifiable);
 
             container(builder, data, decoratedFieldMap, action);
             builder.data(data);
+            builder.allowAttachments(activity.isAllowAttachments());
         }
 
         builder.taskSubresources(processDefinitionKey, task, version)
@@ -113,7 +119,7 @@ public class FormFactory {
         builder.container(container);
     }
 
-    private Action action(Form.Builder builder, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version, boolean unmodifiable) throws FormBuildingException {
+    private Action action(Form.Builder builder, ProcessDeployment deployment, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version, boolean unmodifiable) throws FormBuildingException {
         // Can't do any of this processing without an activity
         if (activity == null)
             return null;
@@ -137,17 +143,24 @@ public class FormFactory {
         URI uri = safeUri(action, task);
         boolean external = isExternal(uri);
 
+        FormDisposition formDisposition = null;
+
         if (mediaType.equals(MediaType.TEXT_HTML_TYPE) && action.getStrategy() == DataInjectionStrategy.INCLUDE_SCRIPT && !revertToDefaultUI) {
             if (external)
-                throw new RemoteFormException(uri);
+                formDisposition = new FormDisposition(uri);
             if (action.getLocation() != null) {
-                Form form = builder.build(version);
-                throw new InternalFormException(form, action.getLocation());
+                String fullPath = deployment.getBase() + "/" + action.getLocation();
+                formDisposition = new FormDisposition(fullPath);
             }
         }
 
         // Tacking this on at the end - could be somewhere better
-        layout(builder, activity);
+        if (formDisposition == null) {
+            formDisposition = new FormDisposition();
+            layout(builder, activity);
+        }
+
+        builder.disposition(formDisposition);
 
         return action;
     }

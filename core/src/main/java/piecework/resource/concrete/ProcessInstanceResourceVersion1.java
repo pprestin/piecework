@@ -36,7 +36,7 @@ import piecework.service.ProcessHistoryService;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.service.ValuesService;
-import piecework.ui.ExportStreamingOutput;
+import piecework.ui.streaming.ExportStreamingOutput;
 import piecework.util.ManyMap;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
@@ -53,7 +53,7 @@ import piecework.handler.RequestHandler;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.TaskService;
-import piecework.ui.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.util.ProcessInstanceUtility;
 
 import java.util.List;

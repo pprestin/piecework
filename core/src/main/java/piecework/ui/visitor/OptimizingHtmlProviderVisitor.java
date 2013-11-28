@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.visitor;
 
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
@@ -27,6 +27,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ByteArrayResource;
 import piecework.model.Content;
 import piecework.persistence.ContentRepository;
+import piecework.ui.DatedByteArrayResource;
 
 import java.io.*;
 import java.util.Map;

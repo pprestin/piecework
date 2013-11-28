@@ -75,6 +75,25 @@ public class IdentityHelper {
 //        return userId;
 //    }
 
+//    private User getAuthenticatedUser() {
+//        String internalId = null;
+//        String externalId = null;
+//        String userName = null;
+//
+//        SecurityContext context = SecurityContextHolder.getContext();
+//        Authentication authentication = context.getAuthentication();
+//
+//        Object principal = authentication != null ? authentication.getPrincipal() : null;
+//
+//        if (principal != null && principal instanceof IdentityDetails) {
+//            IdentityDetails userDetails = IdentityDetails.class.cast(principal);
+//            internalId = userDetails.getInternalId();
+//            externalId = userDetails.getExternalId();
+//            userName = userDetails.getDisplayName();
+//        }
+//        return new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
+//    }
+
     public Entity getPrincipal() {
         String systemName = null;
         IdentityDetails identity = null;

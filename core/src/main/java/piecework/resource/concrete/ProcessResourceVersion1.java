@@ -41,7 +41,7 @@ import piecework.exception.StatusCodeError;
 import piecework.resource.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.Streamable;
-import piecework.ui.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingAttachmentContent;
 
 import java.io.IOException;
 import java.util.List;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.visitor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
@@ -22,10 +22,8 @@ import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
 import org.springframework.core.env.Environment;
 import piecework.designer.model.view.IndexView;
-import piecework.model.Explanation;
-import piecework.model.Form;
-import piecework.model.SearchResults;
-import piecework.model.User;
+import piecework.model.*;
+import piecework.ui.PageContext;
 
 import java.util.Map;
 
@@ -41,7 +39,7 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
     private final String modelAsJson;
     private final boolean isExplanation;
 
-    public LinkOptimizingVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl, Object t, Class<?> type, User user, ObjectMapper objectMapper, Environment environment) {
+    public LinkOptimizingVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl, Object t, Class<?> type, Entity user, ObjectMapper objectMapper, Environment environment) {
         super(applicationTitle, applicationUrl, publicUrl, assetsUrl);
         this.t = t;
         this.type = type;
@@ -87,6 +85,8 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
             dependencies.addAttribute("href", applicationUrl + "/resource/css/SearchResults.form.css");
         } else if (type.equals(IndexView.class)) {
             dependencies.addAttribute("href", applicationUrl + "/resource/css/IndexView.css");
+        } else if (type.equals(Explanation.class)) {
+            dependencies.addAttribute("href", publicUrl + "/resource/css/Explanation.css");
         }
         tagNode.addChild(dependencies);
     }
@@ -126,6 +126,8 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
             dependencies.addAttribute("src", applicationUrl + "/resource/script/SearchResults.form.js");
         } else if (type.equals(IndexView.class)) {
             dependencies.addAttribute("src", applicationUrl + "/resource/script/IndexView.js");
+        } else if (type.equals(Explanation.class)) {
+            dependencies.addAttribute("href", publicUrl + "/resource/script/Explanation.js");
         }
         tagNode.addChild(dependencies);
     }
@@ -139,6 +141,8 @@ public class LinkOptimizingVisitor extends HtmlProviderVisitor {
                 Form form = Form.class.cast(t);
                 if (form.isAnonymous())
                     url = publicUrl;
+            } else if (type.equals(Explanation.class)) {
+                url = publicUrl;
             }
             attributes.put("href", recomputeSecurePath(href, url));
             tagNode.setAttributes(attributes);

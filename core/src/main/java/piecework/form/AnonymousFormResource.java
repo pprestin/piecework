@@ -40,28 +40,21 @@ import java.util.List;
  * @author James Renfro
  */
 @Path("form")
-@Produces("text/html")
 public interface AnonymousFormResource extends PublicApplicationResource {
 
     @GET
     @Path("{processDefinitionKey}")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+    @Produces("text/html")
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
-
-//    @GET
-//	@Path("{processDefinitionKey}/{segments:.*}")
-//	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-//    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")
-    @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes("multipart/form-data")
+    @Produces("text/html")
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
-    @RolesAllowed({AuthorizationRole.INITIATOR})
     @Produces("application/json")
     @Consumes("multipart/form-data")
     Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;

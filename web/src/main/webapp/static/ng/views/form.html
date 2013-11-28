@@ -63,7 +63,7 @@
         <div data-ng-switch-when="checkbox">
             <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
-                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" value="{{option.value}}" type="checkbox" name="{{field.name}}"> {{option.label}}
+                    <input data-ng-change="onFieldChange(field)" data-ng-model="option.value" data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" value="{{option.value}}" type="checkbox" name="{{option.name ? option.name : field.name}}"> {{option.label}}
                 </label>
             </div>
         </div>
@@ -216,7 +216,7 @@
 </script>
 <script type="text/ng-template" id="toolbar.html">
     <div class="btn-toolbar pull-right" role="toolbar">
-        <button data-ng-repeat="button in container.buttons" data-ng-click="wizard.clickButton(form, container, button)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+        <button data-ng-class="button.primary && 'btn-primary'" data-ng-repeat="button in container.buttons" data-ng-click="wizard.clickButton(form, container, button)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
     </div>
 </script>
 <nav class="navbar navbar-default navbar-inverse pw-navbar-collapse" style="min-height: 20px;margin-bottom: 0px">
@@ -256,16 +256,16 @@
                             <li data-ng-repeat="candidateAssignee in form.task.candidateAssignees"><a data-ng-click="assignTo(candidateAssignee.userId)" class="candidate-assignee" id="{{candidateAssignee.userId}}">Assign to {{candidateAssignee.displayName}}</a></li>
                         </ul>
                     </div>
-                    <a data-ng-click="dialogs.openCommentModal([form])" data-ng-show="form.history" class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="fa fa-comment-o"></i></a>
+                    <a data-ng-click="dialogs.openCommentModal([form])" data-ng-show="form.allowAttachments && form.history" class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="fa fa-comment-o"></i></a>
                     <div class="btn-group">
-                        <form data-ng-show="form.history" class="navbar-form navbar-left form-inline" id="fileupload" action="{{form.attachment}}" method="POST" enctype="multipart/form-data" data-file-upload="fileUploadOptions">
+                        <form data-ng-show="form.allowAttachments && form.history" class="navbar-form navbar-left form-inline" id="fileupload" action="{{form.attachment}}" method="POST" enctype="multipart/form-data" data-file-upload="fileUploadOptions">
                             <span class="btn btn-default navbar-btn fileinput-button" data-ng-class="{disabled: disabled}">
-                                  <i ng-hide="state.sending" class="fa fa-paperclip"></i>  <i ng-show="state.sending" class='fa fa-paperclip fa-spin'></i>
+                                  <i ng-hide="state.sending" class="fa fa-download"></i>  <i ng-show="state.sending" class='fa fa-paperclip fa-spin'></i>
                                   <input type="file" name="attachment" multiple="" ng-disabled="disabled">
                             </span>
                         </form>
                     </div>
-                    <button data-ng-click="viewAttachments()" data-ng-show="form.history" class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i ng-class="state.isViewingAttachments ? 'fa-folder-open' : 'fa-folder'" class="fa fa-folder"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>
+                    <button data-ng-click="viewAttachments()" data-ng-show="form.allowAttachments && form.history" class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i ng-class="state.isViewingAttachments ? 'fa-folder-open' : 'fa-folder'" class="fa fa-folder"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>
                     <a class="btn btn-default navbar-btn" href="{{root}}.html" rel="external" id="back-button" title="Return to task list"><i class="fa fa-arrow-left"></i></a>
                 </div>
             </div>

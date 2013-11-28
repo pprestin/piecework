@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.form.FormDisposition;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.DataInjectionStrategy;
@@ -32,16 +33,20 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
+import piecework.persistence.DeploymentRepository;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
+import piecework.service.DeploymentService;
 import piecework.service.FormService;
-import piecework.ui.StreamingPageContent;
+import piecework.service.UserInterfaceService;
+import piecework.ui.streaming.StreamingPageContent;
 import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +59,7 @@ public abstract class AbstractFormResource {
     private static final Logger LOG = Logger.getLogger(AbstractFormResource.class);
 
     @Autowired
-    ContentRepository contentRepository;
+    DeploymentService deploymentService;
 
     @Autowired
     FormFactory formFactory;
@@ -69,10 +74,13 @@ public abstract class AbstractFormResource {
     RequestHandler requestHandler;
 
     @Autowired
-    Sanitizer sanitizer;
+    protected Sanitizer sanitizer;
 
     @Autowired
     SecuritySettings securitySettings;
+
+    @Autowired
+    UserInterfaceService userInterfaceService;
 
     @Autowired
     Versions versions;
@@ -195,38 +203,8 @@ public abstract class AbstractFormResource {
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "page", formRequest.getRequestId())).build();
     }
 
-    private Response handle(Process process, InternalFormException ife) throws StatusCodeError {
-        Form form = ife.getForm();
-        String location = ife.getLocation();
-        ProcessDeployment deployment = process.getDeployment();
-        if (deployment == null)
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
-        String fullPath = deployment.getBase() + "/" + location;
-
-        Content content = contentRepository.findByLocation(fullPath);
-        if (content == null)
-            throw new NotFoundError();
-
-        return Response.ok(new StreamingPageContent(process, form, content, DataInjectionStrategy.INCLUDE_SCRIPT), content.getContentType()).build();
-    }
-
     private Response response(Process process, FormRequest request) throws StatusCodeError {
-        if (!request.validate(process))
-            throw new BadRequestError();
-
-        Entity principal = helper.getPrincipal();
-        try {
-            Form form = formFactory.form(request, principal, isAnonymous());
-            return Response.ok(form).build();
-        } catch (RemoteFormException rfe) {
-            return Response.seeOther(rfe.getUri()).build();
-        } catch (InternalFormException ife) {
-            return handle(process, ife);
-        } catch (FormBuildingException fbe) {
-            LOG.error("Unable to build form", fbe);
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-        }
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
     }
 
     private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, FormValidation validation, Explanation explanation) throws StatusCodeError {
@@ -235,12 +213,24 @@ public abstract class AbstractFormResource {
 
         Entity principal = helper.getPrincipal();
         try {
-            Form form = formFactory.form(request, actionType, principal, mediaType, validation, explanation, isAnonymous());
+            ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
+            Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, validation, explanation, isAnonymous());
+            FormDisposition formDisposition = form.getDisposition();
+
+            switch (formDisposition.getType()) {
+                case REMOTE:
+                    return Response.seeOther(formDisposition.getUri()).build();
+                case CUSTOM:
+                    return Response.ok(userInterfaceService.getCustomPageAsStreaming(form), MediaType.TEXT_HTML_TYPE).build();
+            }
+
             return Response.ok(form).build();
-        } catch (RemoteFormException rfe) {
-            return Response.seeOther(rfe.getUri()).build();
-        } catch (InternalFormException ife) {
-            return handle(process, ife);
+        } catch (IOException ioe) {
+            LOG.error("IOException serving page", ioe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         } catch (FormBuildingException fbe) {
             LOG.error("Unable to build form", fbe);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
