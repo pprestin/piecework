@@ -23,12 +23,14 @@ public interface ProcessInstanceRepositoryCustom {
 
     ProcessInstance findByTaskId(String processDefinitionKey, String taskId);
 
-    ProcessInstance update(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission);
+    ProcessInstance update(String id, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, List<Attachment> attachments, Submission submission, String applicationStatusExplanation);
 
     boolean update(String id, Operation operation, String applicationStatus, String applicationStatusExplanation, String processStatus, Set<Task> tasks);
 
     boolean update(String id, String engineProcessInstanceId);
 
     boolean update(String id, Task task);
+
+    ProcessInstance update(String id, String processStatus, String applicationStatus);
 
 }

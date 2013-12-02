@@ -29,7 +29,7 @@ import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
 import piecework.enumeration.OperationType;
-import piecework.persistence.IteratingDataProvider;
+import piecework.persistence.DeploymentRepository;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.validation.SubmissionTemplate;
@@ -41,7 +41,6 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.AttachmentRepository;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessInstanceUtility;
@@ -61,10 +60,10 @@ public class ProcessInstanceService {
     AttachmentRepository attachmentRepository;
 
     @Autowired
-    ProcessService processService;
+    DeploymentRepository deploymentRepository;
 
     @Autowired
-    IdentityHelper helper;
+    ProcessService processService;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
@@ -99,6 +98,21 @@ public class ProcessInstanceService {
         InstanceStateCommand cancellation = new InstanceStateCommand(process, instance, OperationType.CANCELLATION);
         cancellation.reason(reason);
         commandExecutor.execute(cancellation);
+    }
+
+    public ProcessInstance complete(String processInstanceId) {
+        ProcessInstance processInstance = processInstanceRepository.findOne(processInstanceId);
+        if (processInstance != null) {
+            String deploymentId = processInstance.getDeploymentId();
+            ProcessDeployment deployment = deploymentRepository.findOne(deploymentId);
+            String completionStatus = null;
+            if (deployment != null) {
+                completionStatus = deployment.getCompletionStatus();
+            }
+
+            return processInstanceRepository.update(processInstanceId, Constants.ProcessStatuses.COMPLETE, completionStatus);
+        }
+        return null;
     }
 
     public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {
@@ -191,11 +205,12 @@ public class ProcessInstanceService {
         }
     }
 
-    public ExportInstanceProvider exportProvider(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+    public ExportInstanceProvider exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
-        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
         if (!allowedProcesses.isEmpty()) {
             Map<String, Process> allowedProcessMap = new HashMap<String, Process>();
             for (Process allowedProcess : allowedProcesses) {
@@ -228,7 +243,7 @@ public class ProcessInstanceService {
                     break;
             }
 
-            Set<String> processDefinitionKeys = executionCriteria.getProcessDefinitionKeys();
+            processDefinitionKeys = executionCriteria.getProcessDefinitionKeys();
             if (processDefinitionKeys.size() != 1)
                 throw new BadRequestError();
 
@@ -240,7 +255,7 @@ public class ProcessInstanceService {
         return null;
     }
 
-    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
@@ -251,7 +266,8 @@ public class ProcessInstanceService {
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
                 .link(version1.getApplicationUri());
 
-        Set<Process> allowedProcesses = helper.findProcesses(AuthorizationRole.OVERSEER);
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
                 String allowedProcessDefinitionKey = allowedProcess.getProcessDefinitionKey();
@@ -337,19 +353,36 @@ public class ProcessInstanceService {
         }
 
         Map<String, List<Value>> data = isAttachment ? null : validation.getData();
-
-        InstanceCommand persist = previous == null ? new StartInstanceCommand(process) : new UpdateInstanceCommand(process, previous);
-
-        persist.label(ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel()))
-               .attachments(attachments)
-               .data(data)
-               .submission(submission);
-
-        ProcessInstance instance = commandExecutor.execute(persist);
+        String label = ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel());
+        ProcessInstance instance = doStore(process, previous, label, data, null, null, attachments, submission, true);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");
 
         return instance;
     }
+
+    public ProcessInstance updateData(String processDefinitionKey, String processInstanceId, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) throws StatusCodeError {
+        Process process = processService.read(processDefinitionKey);
+        ProcessInstance instance = read(process, processInstanceId, true);
+
+        return doStore(process, instance, null, data, messages, applicationStatusExplanation, null, null, false);
+    }
+
+    private ProcessInstance doStore(Process process, ProcessInstance previous, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation, List<Attachment> attachments, Submission submission, boolean modifyLabel) throws StatusCodeError {
+        InstanceCommand persist = previous == null ? new StartInstanceCommand(process) : new UpdateInstanceCommand(process, previous);
+
+        if (modifyLabel)
+            persist.label(label);
+
+        persist.applicationStatusExplanation(applicationStatusExplanation)
+                .attachments(attachments)
+                .data(data)
+                .submission(submission)
+                .messages(messages);
+
+        ProcessInstance instance = commandExecutor.execute(persist);
+        return instance;
+    }
+
 }

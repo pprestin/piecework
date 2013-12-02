@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import piecework.common.Decorateable;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
 import piecework.enumeration.DataInjectionStrategy;
@@ -39,7 +38,7 @@ import java.util.*;
 @XmlType(name = Activity.Constants.TYPE_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = Activity.Constants.ROOT_ELEMENT_NAME)
-public class Activity implements Serializable, Decorateable<Activity> {
+public class Activity implements Serializable {
 
     @Id
     private final String activityId;
@@ -71,10 +70,6 @@ public class Activity implements Serializable, Decorateable<Activity> {
         this.activeScreen = builder.activeScreen;
         this.allowAttachments = builder.allowAttachments;
         this.maxAttachmentSize = builder.maxAttachmentSize;
-    }
-
-    public Activity decorate() {
-        return new Builder(this, new PassthroughSanitizer()).build();
     }
 
     public String getActivityId() {

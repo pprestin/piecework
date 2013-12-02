@@ -24,4 +24,6 @@ public interface Command<T> {
 
     <T> T execute(CommandExecutor commandExecutor) throws StatusCodeError;
 
+    String getProcessDefinitionKey();
+
 }

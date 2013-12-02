@@ -20,7 +20,8 @@ public enum FieldTag {
     SELECT_MULTIPLE(new FieldTagDefinition("select", new FieldAttributeDefinition("multiple"))),
     SELECT_ONE(new FieldTagDefinition("select")),
     TEXT(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "text"))),
-    TEXTAREA(new FieldTagDefinition("textarea"));
+    TEXTAREA(new FieldTagDefinition("textarea")),
+    URL(new FieldTagDefinition("input", new FieldAttributeDefinition("type", "url")));
 
     private FieldTagDefinition definition;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.visitor;
 
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
@@ -27,6 +27,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ByteArrayResource;
 import piecework.model.Content;
 import piecework.persistence.ContentRepository;
+import piecework.ui.DatedByteArrayResource;
 
 import java.io.*;
 import java.util.Map;
@@ -45,8 +46,8 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
     private final ContentRepository contentRepository;
     private final boolean doOptimization;
 
-    public OptimizingHtmlProviderVisitor(String applicationTitle, String applicationUrl, String assetsUrl, Environment environment, ContentRepository contentRepository) {
-        super(applicationTitle, applicationUrl, assetsUrl);
+    public OptimizingHtmlProviderVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl, Environment environment, ContentRepository contentRepository) {
+        super(applicationTitle, applicationUrl, publicUrl, assetsUrl);
         this.scriptBuffer = new StringBuffer();
         this.stylesheetBuffer = new StringBuffer();
         this.assetsDirectoryPath = environment.getProperty("assets.directory");
@@ -112,7 +113,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
         return content.replaceAll("url\\('\\.\\./", "url('" + recomputeStaticPath(rootPath, assetsUrl));
     }
 
-    public static String compressJavaScript(Reader in, Options o) {
+    public String compressJavaScript(Reader in, Options o, String path) {
         StringWriter out = new StringWriter();
         try {
             JavaScriptCompressor compressor = new JavaScriptCompressor(in, new YuiCompressorErrorReporter());
@@ -122,8 +123,9 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
         } catch (Exception e) {
             LOG.error("Unable to compress javascript", e);
             try {
+                in = reader(path);
                 return IOUtils.toString(in);
-            } catch (IOException ioe) {
+            } catch (Exception ioe) {
                 LOG.error("Unable to output string", ioe);
             }
         } finally {
@@ -158,7 +160,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
                         buffer.append(builder);
 
                 } else if (path.endsWith(".js")) {
-                    buffer.append(compressJavaScript(reader, new Options())).append(NEWLINE);
+                    buffer.append(compressJavaScript(reader, new Options(), path)).append(NEWLINE);
                 } else if (path.endsWith(".css")) {
                     buffer.append(rebaseStylesheetUrls(compressStylesheet(reader, new Options()), path)).append(NEWLINE);
                 }
@@ -219,7 +221,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
             if (line < 0) {
                 LOG.error(message);
             } else {
-                LOG.error(line + ':' + lineOffset + ':' + message);
+                LOG.error(line + ':' + lineOffset + ':' + lineSource + ":" + message);
             }
         }
 

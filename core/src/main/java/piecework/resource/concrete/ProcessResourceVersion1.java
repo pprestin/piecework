@@ -15,7 +15,6 @@
  */
 package piecework.resource.concrete;
 
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -32,6 +31,7 @@ import piecework.Versions;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.exception.BadRequestError;
 import piecework.exception.NotFoundError;
+import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
@@ -41,7 +41,7 @@ import piecework.exception.StatusCodeError;
 import piecework.resource.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.Streamable;
-import piecework.ui.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingAttachmentContent;
 
 import java.io.IOException;
 import java.util.List;
@@ -53,6 +53,9 @@ import java.util.List;
 public class ProcessResourceVersion1 implements ProcessResource {
 
     private static final Logger LOG = Logger.getLogger(ProcessResourceVersion1.class);
+
+    @Autowired
+    IdentityHelper helper;
 
 	@Autowired
     ProcessService processService;
@@ -236,7 +239,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
 	public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
-		return processService.search(uriInfo.getQueryParameters());
+        Entity principal = helper.getPrincipal();
+		return processService.search(uriInfo.getQueryParameters(), principal);
 	}
 
     @Override

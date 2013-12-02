@@ -436,6 +436,11 @@ public class Field implements Serializable, Comparable<Field> {
             return this;
         }
 
+        public Builder editable(boolean editable) {
+            this.editable = editable;
+            return this;
+        }
+
         public Builder readonly() {
             this.readonly = true;
             return this;
@@ -448,6 +453,11 @@ public class Field implements Serializable, Comparable<Field> {
         
         public Builder required() {
             this.required = true;
+            return this;
+        }
+
+        public Builder required(boolean required) {
+            this.required = required;
             return this;
         }
 

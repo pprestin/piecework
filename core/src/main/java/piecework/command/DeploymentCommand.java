@@ -53,7 +53,6 @@ public class DeploymentCommand implements Command<ProcessDeployment> {
     private final String deploymentId;
     private final ProcessDeploymentResource resource;
 
-
     public DeploymentCommand(Process process, String deploymentId, ProcessDeploymentResource resource) {
         this.process = process;
         this.deploymentId = deploymentId;
@@ -130,6 +129,10 @@ public class DeploymentCommand implements Command<ProcessDeployment> {
         }
 
         return persistedDeployment;
+    }
+
+    public String getProcessDefinitionKey() {
+        return process != null ? process.getProcessDefinitionKey() : null;
     }
 
     private ProcessDeployment cascadeSave(CommandExecutor commandExecutor, ProcessDeployment deployment) {

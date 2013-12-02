@@ -36,6 +36,8 @@ import piecework.ldap.LdapSettings;
 import piecework.model.User;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -45,5 +47,7 @@ public interface IdentityService extends UserDetailsService {
     User getUser(String id);
 
     List<User> findUsersByDisplayName(String displayNameLike, Long maxResults);
+
+    Map<String, User> findUsers(Set<String> ids);
 
 }

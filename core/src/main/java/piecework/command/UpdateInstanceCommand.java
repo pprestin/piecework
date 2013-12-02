@@ -15,27 +15,13 @@
  */
 package piecework.command;
 
-import com.mongodb.DBRef;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.bson.types.ObjectId;
-import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
-import piecework.Constants;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.CommandExecutor;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -60,7 +46,7 @@ public class UpdateInstanceCommand extends InstanceCommand {
             throw new InternalServerError();
 
         ProcessInstanceRepository repository = commandExecutor.getProcessInstanceRepository();
-        instance = repository.update(instance.getProcessInstanceId(), label, data, attachments, submission);
+        instance = repository.update(instance.getProcessInstanceId(), label, data, messages, attachments, submission, applicationStatusExplanation);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Executed update instance command " + this.toString());

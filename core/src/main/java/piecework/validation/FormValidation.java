@@ -42,6 +42,10 @@ public class FormValidation implements Serializable {
     private final Submission submission;
 
     private final ProcessInstance instance;
+
+    private final String applicationStatusExplanation;
+
+    private final boolean hasError;
 	
 	private FormValidation() {
 		this(new Builder());
@@ -55,6 +59,8 @@ public class FormValidation implements Serializable {
 		this.unchangedFields = builder.unchangedFields != null ? Collections.unmodifiableSet(builder.unchangedFields) : null;
 	    this.submission = builder.submission;
         this.instance = builder.instance;
+        this.applicationStatusExplanation = builder.applicationStatusExplanation;
+        this.hasError = builder.hasError;
     }
 
     public String getTitle() {
@@ -85,6 +91,14 @@ public class FormValidation implements Serializable {
         return instance;
     }
 
+    public String getApplicationStatusExplanation() {
+        return applicationStatusExplanation;
+    }
+
+    public boolean isHasError() {
+        return hasError;
+    }
+
     public final static class Builder {
 
         private String title;
@@ -94,6 +108,8 @@ public class FormValidation implements Serializable {
         private Set<String> unchangedFields;
         private Submission submission;
         private ProcessInstance instance;
+        private String applicationStatusExplanation;
+        private boolean hasError;
 
         public Builder() {
             super();
@@ -130,6 +146,12 @@ public class FormValidation implements Serializable {
             if (data != null && !data.isEmpty()) {
                 this.data.putAll(data);
             }
+            return this;
+        }
+
+        public Builder messages(ManyMap<String, Message> messages) {
+            if (messages != null)
+                this.results.putAll(messages);
             return this;
         }
 
@@ -174,7 +196,16 @@ public class FormValidation implements Serializable {
             this.instance = instance;
             return this;
         }
-        
+
+        public Builder applicationStatusExplanation(String applicationStatusExplanation) {
+            this.applicationStatusExplanation = applicationStatusExplanation;
+            return this;
+        }
+
+        public Builder hasError(boolean hasError) {
+            this.hasError = hasError;
+            return this;
+        }
 	}
 	
 }

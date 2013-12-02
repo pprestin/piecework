@@ -13,50 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.ui.streaming;
 
 import org.htmlcleaner.*;
-import piecework.enumeration.DataInjectionStrategy;
-import piecework.model.Content;
-import piecework.model.Form;
-import piecework.model.Process;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
  * @author James Renfro
  */
-public class StreamingPageContent implements StreamingOutput {
+public class HtmlCleanerStreamingOutput implements StreamingOutput {
 
-    private final Process process;
-    private final Form form;
-    private final Content content;
-    private final DataInjectionStrategy strategy;
+    private final InputStream inputStream;
+    private final TagNodeVisitor visitor;
 
-    public StreamingPageContent(Process process, Form form, Content content, DataInjectionStrategy strategy) {
-        this.process = process;
-        this.form = form;
-        this.content = content;
-        this.strategy = strategy;
+    public HtmlCleanerStreamingOutput(InputStream inputStream, TagNodeVisitor visitor) {
+        this.inputStream = inputStream;
+        this.visitor = visitor;
     }
 
+    @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
         CleanerProperties cleanerProperties = new CleanerProperties();
         cleanerProperties.setOmitXmlDeclaration(true);
         HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-        TagNode node = cleaner.clean(content.getInputStream());
-        switch (strategy) {
-            case INCLUDE_SCRIPT:
-                node.traverse(new ScriptInjectingVisitor(form));
-                break;
-            case DECORATE_HTML:
-                node.traverse(new DecoratingVisitor(form));
-                break;
-        }
-
+        TagNode node = cleaner.clean(inputStream);
+        node.traverse(visitor);
         SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
         serializer.writeToStream(node, output);
     }

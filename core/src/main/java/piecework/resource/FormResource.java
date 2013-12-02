@@ -56,7 +56,7 @@ public interface FormResource extends ApplicationResource {
     @Path("{processDefinitionKey}/save/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("multipart/form-data")
-    @Produces("text/html")
+    @Produces({"text/html","application/json"})
     Response save(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
 
     @POST

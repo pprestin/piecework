@@ -96,6 +96,13 @@ public class SubmissionTemplateFactory {
                 Map<String, Field> fieldMap = activity.getFieldMap();
                 List<String> fieldIds = container.getFieldIds();
 
+                if (fieldIds.isEmpty() && container.getChildren() != null && !container.getChildren().isEmpty()) {
+                    fieldIds = new ArrayList<String>();
+                    for (Container child : container.getChildren()) {
+                        fieldIds.addAll(child.getFieldIds());
+                    }
+                }
+
                 if (fieldIds != null) {
                     fields = new TreeSet<Field>();
                     for (String fieldId : fieldIds) {
@@ -191,10 +198,10 @@ public class SubmissionTemplateFactory {
         if (!field.isDeleted() && field.isEditable()) {
             String fieldName = field.getName();
             if (fieldName != null) {
-                builder.acceptable(fieldName);
-
                 if (field.isRestricted())
                     builder.restricted(fieldName);
+                else
+                    builder.acceptable(fieldName);
 
                 if (field.getType().equals(Constants.FieldTypes.PERSON))
                     builder.userField(fieldName);
@@ -215,25 +222,25 @@ public class SubmissionTemplateFactory {
 
         OptionResolver optionResolver = null;
         List<Constraint> constraints = field.getConstraints();
+        Constraint onlyRequiredWhenConstraint = null;
         if (constraints != null && !constraints.isEmpty()) {
             for (Constraint constraint : constraints) {
                 String type = constraint.getType();
                 if (type == null)
                     continue;
 
-                if (type.equals(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN))
+                if (type.equals(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN)) {
                     rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.CONSTRAINED_REQUIRED)
                             .name(fieldName)
                             .constraint(constraint)
                             .build());
-//                if (type.equals(Constants.ConstraintTypes.IS_VALID_USER))
-//                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALID_USER).name(fieldName).build());
-                else if (type.equals(Constants.ConstraintTypes.IS_NUMERIC))
+                    onlyRequiredWhenConstraint = constraint;
+                } else if (type.equals(Constants.ConstraintTypes.IS_NUMERIC))
                     rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMERIC).name(fieldName).build());
                 else if (type.equals(Constants.ConstraintTypes.IS_EMAIL_ADDRESS))
                     rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.EMAIL).name(fieldName).build());
                 else if (type.equals(Constants.ConstraintTypes.IS_ALL_VALUES_MATCH))
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALUES_MATCH).name(fieldName).build());
+                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALUES_MATCH).name(fieldName).constraint(onlyRequiredWhenConstraint).build());
                 else if (type.equals(Constants.ConstraintTypes.IS_LIMITED_TO))
                     optionResolver = registry.retrieve(Option.class, constraint.getName());
             }
@@ -269,7 +276,7 @@ public class SubmissionTemplateFactory {
         }
 
         if (field.getMaxInputs() > 1 || field.getMinInputs() > 1)
-            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMBER_OF_INPUTS).name(fieldName).numberOfInputs(field.getMaxInputs(), field.getMinInputs()).build());
+            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMBER_OF_INPUTS).name(fieldName).numberOfInputs(field.getMaxInputs(), field.getMinInputs()).constraint(onlyRequiredWhenConstraint).required(field.isRequired()).build());
 
         return rules;
     }

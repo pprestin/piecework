@@ -141,8 +141,8 @@ public class LegacyFormFactory {
 //            }
 //        }
 //
-//        if (selectedInteraction != null && selectedInteraction.getScreens() != null && selectedInteraction.getScreens().containsKey(ActionType.CREATE))
-//            return selectedInteraction.getScreens().get(ActionType.CREATE);
+//        if (selectedInteraction != null && selectedInteraction.getScreens() != null && selectedInteraction.getScreens().containsKey(ActionType.CREATE_TASK))
+//            return selectedInteraction.getScreens().get(ActionType.CREATE_TASK);
 //
 //        throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 //    }

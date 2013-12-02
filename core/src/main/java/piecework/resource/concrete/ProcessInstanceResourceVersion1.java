@@ -23,7 +23,6 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import piecework.*;
@@ -37,7 +36,7 @@ import piecework.service.ProcessHistoryService;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.service.ValuesService;
-import piecework.ui.ExportStreamingOutput;
+import piecework.ui.streaming.ExportStreamingOutput;
 import piecework.util.ManyMap;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
@@ -54,7 +53,7 @@ import piecework.handler.RequestHandler;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.TaskService;
-import piecework.ui.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.util.ProcessInstanceUtility;
 
 import java.util.List;
@@ -70,9 +69,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     AttachmentService attachmentService;
-
-    @Autowired
-    Environment environment;
 
     @Autowired
     IdentityHelper helper;
@@ -117,7 +113,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, false))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, false))
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
         processInstanceService.activate(process, instance, reason);
@@ -131,10 +127,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultivaluedMap<String, String> formData) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
-        Task task = taskService.allowedTask(process, instance, null, true);
+        Task task = taskService.allowedTask(process, instance, principal, true);
         if (task == null)
             throw new ForbiddenError();
 
@@ -149,10 +146,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultipartBody body) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
-        Task task = taskService.allowedTask(process, instance, null, true);
+        Task task = taskService.allowedTask(process, instance, principal, true);
         if (task == null)
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
@@ -167,10 +165,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response attachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
 
-        if (!taskService.hasAllowedTask(process, instance, false))
+        if (!taskService.hasAllowedTask(process, instance, principal, false))
             throw new ForbiddenError();
 
         SearchResults searchResults = attachmentService.search(process, instance, queryParameters);
@@ -179,11 +178,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
-        if (!taskService.hasAllowedTask(process, instance, true))
+        if (!taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError();
 
         StreamingAttachmentContent content = attachmentService.content(process, instance, attachmentId);
@@ -260,7 +260,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
-        Task task = taskService.allowedTask(process, instance, null, true);
+        Task task = taskService.allowedTask(process, instance, principal, true);
         if (principal.getEntityType() != Entity.EntityType.SYSTEM && task == null)
             throw new ForbiddenError();
 
@@ -296,7 +296,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String reason = sanitizer.sanitize(rawReason);
 
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         processInstanceService.suspend(process, instance, reason);
@@ -341,19 +341,19 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 	@Override
 	public Response search(MessageContext context) throws StatusCodeError {
+        Entity principal = helper.getPrincipal();
         UriInfo uriInfo = context.getContext(UriInfo.class);
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
 
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
 
-
         if (mediaTypes != null && mediaTypes.contains(new MediaType("text", "csv"))) {
             String fileName = "export.csv";
-            ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters);
+            ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters, principal);
             ExportStreamingOutput exportStreamingOutput = new ExportStreamingOutput(provider);
             return Response.ok(exportStreamingOutput, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
         } else {
-            SearchResults results = processInstanceService.search(rawQueryParameters);
+            SearchResults results = processInstanceService.search(rawQueryParameters, principal);
             return Response.ok(results).build();
         }
 	}
@@ -366,7 +366,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         valuesService.delete(process, instance, fieldName, valueId);
@@ -381,7 +381,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         return valuesService.read(process, instance, fieldName, valueId);
@@ -394,17 +394,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        Task task = taskService.allowedTask(process, instance, null, true);
+        Task task = taskService.allowedTask(process, instance, principal, true);
         if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE);
-
-//        Screen screen = formRequest.getScreen();
-//
-//        if (screen == null)
-//            throw new ConflictError();
 
         Field field = LegacyFormFactory.getField(process, task, fieldName);
         if (field == null)
@@ -426,7 +421,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        Task task = taskService.allowedTask(process, instance, null, true);
+        Task task = taskService.allowedTask(process, instance, principal, true);
         if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
@@ -476,7 +471,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, true))
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         List<Value> files = valuesService.searchValues(process, instance, fieldName);

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @author James Renfro
  */
 public enum ActivityUsageType {
-    API("API"), MULTI_PAGE("Multi-page"), USER_FORM("Single page"), MULTI_STEP("Multi-step"), USER_WIZARD("Wizard");
+    API("API"), MULTI_PAGE("Multi-page"), USER_FORM("Single page"), MULTI_STEP("Multi-step"), REVIEW_PAGE("Review"), USER_WIZARD("Wizard");
 
     private final String description;
 

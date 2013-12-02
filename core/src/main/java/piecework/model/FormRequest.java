@@ -79,6 +79,9 @@ public class FormRequest {
     private final ProcessInstance instance;
 
     @Transient
+    private final ProcessDeployment deployment;
+
+    @Transient
     private final Task task;
 
     private FormRequest() {
@@ -103,6 +106,7 @@ public class FormRequest {
         this.contentType= builder.contentType;
         this.acceptableMediaTypes = Collections.unmodifiableList(builder.acceptableMediaTypes);
         this.messages = Collections.unmodifiableMap(builder.messages);
+        this.deployment = builder.deployment;
         this.instance = builder.instance;
         this.referrer = builder.referrer;
         this.userAgent = builder.userAgent;
@@ -195,6 +199,10 @@ public class FormRequest {
         return task;
     }
 
+    public ProcessDeployment getDeployment() {
+        return deployment;
+    }
+
     public String getUserAgent() {
         return userAgent;
     }
@@ -221,6 +229,7 @@ public class FormRequest {
         private String certificateSubject;
         private String certificateIssuer;
         private String taskId;
+        private ProcessDeployment deployment;
         private ProcessInstance instance;
         private Task task;
         private Activity activity;
@@ -371,6 +380,11 @@ public class FormRequest {
 
         public Builder action(ActionType action) {
             this.action = action;
+            return this;
+        }
+
+        public Builder deployment(ProcessDeployment deployment) {
+            this.deployment = deployment;
             return this;
         }
 

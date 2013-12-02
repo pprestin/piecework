@@ -16,14 +16,21 @@
 package piecework.exception;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
 import piecework.model.Explanation;
+import piecework.service.UserInterfaceService;
+
+import java.io.IOException;
 
 
 /**
@@ -32,10 +39,14 @@ import piecework.model.Explanation;
  * @author James Renfro
  */
 @Provider
+@Service
 public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException> {
 
 	private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(GeneralExceptionMapper.class);
-	
+
+    @Autowired
+    private UserInterfaceService userInterfaceService;
+
 	/**
 	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
 	 */
@@ -72,6 +83,14 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
 		Explanation explanation = new Explanation();
 		explanation.setMessage(messageHeader);
         explanation.setMessageDetail(messageDetail);
+
+        try {
+            StreamingOutput streamingOutput = userInterfaceService.getDefaultPageAsStreaming(Explanation.class, explanation);
+            return Response.status(status).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();
+        } catch (IOException ioe) {
+            LOG.error("Unable to get explanation page as a streaming output", ioe);
+        }
+
 		return Response.status(status).entity(explanation).build();
 	}
 

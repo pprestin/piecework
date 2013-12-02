@@ -18,10 +18,11 @@ package piecework;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import piecework.common.UuidGenerator;
+import piecework.engine.Mediator;
 import piecework.engine.ProcessEngineFacade;
+import piecework.exception.ForbiddenError;
 import piecework.exception.StatusCodeError;
 import piecework.persistence.*;
 import piecework.service.IdentityService;
@@ -34,6 +35,9 @@ import piecework.identity.IdentityHelper;
 public class CommandExecutor {
 
     private static final Logger LOG = Logger.getLogger(CommandExecutor.class);
+
+    @Autowired
+    Mediator mediator;
 
     @Autowired
     Environment environment;
@@ -57,21 +61,19 @@ public class CommandExecutor {
     DeploymentRepository deploymentRepository;
 
     @Autowired
-    InteractionRepository interactionRepository;
-
-    @Autowired
     ProcessRepository processRepository;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
-    SectionRepository sectionRepository;
-
-    @Autowired
     UuidGenerator uuidGenerator;
 
     public <T> T execute(Command<T> command) throws StatusCodeError {
+        command = mediator.before(command);
+        if (command == null)
+            throw new ForbiddenError();
+
         long start = 0;
         if (LOG.isDebugEnabled()) {
             start = System.currentTimeMillis();
@@ -119,14 +121,6 @@ public class CommandExecutor {
 
     public ActivityRepository getActivityRepository() {
         return activityRepository;
-    }
-
-    public InteractionRepository getInteractionRepository() {
-        return interactionRepository;
-    }
-
-    public SectionRepository getSectionRepository() {
-        return sectionRepository;
     }
 
     public UuidGenerator getUuidGenerator() {

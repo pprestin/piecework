@@ -32,6 +32,7 @@ public class ValidationRule {
     public enum ValidationRuleType {
         CONSTRAINED,
         CONSTRAINED_REQUIRED,
+        CONSTRAINED_RULE,
         EMAIL,
         LIMITED_OPTIONS,
         NUMBER_OF_INPUTS,
@@ -54,6 +55,7 @@ public class ValidationRule {
     private final int minInputs;
     private final int maxValueLength;
     private final int minValueLength;
+    private final boolean required;
 
     private ValidationRule() {
         this(new Builder(ValidationRuleType.REQUIRED));
@@ -70,6 +72,7 @@ public class ValidationRule {
         this.minInputs = builder.minInputs;
         this.maxValueLength = builder.maxValueLength;
         this.minValueLength = builder.minValueLength;
+        this.required = builder.required;
     }
 
     public void evaluate(ManyMap<String, Value> submissionData,  ManyMap<String, Value> instanceData) throws ValidationRuleException {
@@ -143,6 +146,9 @@ public class ValidationRule {
     }
 
     private void evaluateNumberOfInputs(ManyMap<String, Value> submissionData) throws ValidationRuleException {
+        if (constraint != null && !ConstraintUtil.evaluate(null, submissionData, constraint))
+            return;
+
         int numberOfInputs = 0;
         List<? extends Value> values = safeValues(name, submissionData);
         for (Value value : values) {
@@ -159,7 +165,7 @@ public class ValidationRule {
 
         if (maxInputs < numberOfInputs)
             throw new ValidationRuleException("No more than " + maxInputs + " are allowed");
-        else if (minInputs > numberOfInputs)
+        else if (required && minInputs > numberOfInputs)
             throw new ValidationRuleException("At least " + minInputs + " are required");
     }
 
@@ -251,6 +257,9 @@ public class ValidationRule {
     }
 
     private void evaluateValuesMatch(ManyMap<String, Value> submissionData) throws ValidationRuleException {
+        if (constraint != null && !ConstraintUtil.evaluate(null, submissionData, constraint))
+            return;
+
         List<? extends Value> values = safeValues(name, submissionData);
         String lastValue = null;
         for (Value value : values) {
@@ -286,6 +295,7 @@ public class ValidationRule {
         private int minInputs;
         private int maxValueLength;
         private int minValueLength;
+        private boolean required;
 
         public Builder(ValidationRuleType type) {
             this.type = type;
@@ -335,6 +345,11 @@ public class ValidationRule {
         public Builder valueLength(int maxValueLength, int minValueLength) {
             this.maxValueLength = maxValueLength;
             this.minValueLength = minValueLength;
+            return this;
+        }
+
+        public Builder required(boolean required) {
+            this.required = required;
             return this;
         }
     }

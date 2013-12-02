@@ -24,8 +24,7 @@ import piecework.model.User;
 import piecework.persistence.ProcessRepository;
 import piecework.service.IdentityService;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -47,6 +46,22 @@ public class DebugIdentityService implements IdentityService {
     @Override
     public List<User> findUsersByDisplayName(String displayNameLike, Long maxResults) {
         return Collections.singletonList(getUser("testuser"));
+    }
+
+    @Override
+    public Map<String, User> findUsers(Set<String> ids) {
+        Map<String, User> map = new HashMap<String, User>();
+        if (ids != null) {
+            for (String id : ids) {
+                if (id == null)
+                    continue;
+
+                User user = getUser(id);
+                if (user != null)
+                    map.put(id, user);
+            }
+        }
+        return map;
     }
 
     @Override

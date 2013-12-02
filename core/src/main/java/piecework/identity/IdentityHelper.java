@@ -16,10 +16,7 @@
 package piecework.identity;
 
 import java.security.cert.X509Certificate;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +73,25 @@ public class IdentityHelper {
 //            }
 //        }
 //        return userId;
+//    }
+
+//    private User getAuthenticatedUser() {
+//        String internalId = null;
+//        String externalId = null;
+//        String userName = null;
+//
+//        SecurityContext context = SecurityContextHolder.getContext();
+//        Authentication authentication = context.getAuthentication();
+//
+//        Object principal = authentication != null ? authentication.getPrincipal() : null;
+//
+//        if (principal != null && principal instanceof IdentityDetails) {
+//            IdentityDetails userDetails = IdentityDetails.class.cast(principal);
+//            internalId = userDetails.getInternalId();
+//            externalId = userDetails.getExternalId();
+//            userName = userDetails.getDisplayName();
+//        }
+//        return new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
 //    }
 
     public Entity getPrincipal() {
@@ -187,53 +203,17 @@ public class IdentityHelper {
         return result;
     }
 
-	public Set<piecework.model.Process> findProcesses(String ... allowedRoles) {
-		SecurityContext context = SecurityContextHolder.getContext();
-		Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
-		
-		Set<String> allowedRoleSet = allowedRoles != null && allowedRoles.length > 0 ? Sets.newHashSet(allowedRoles) : null;
-		Set<String> allowedProcessDefinitionKeys = new HashSet<String>();
-		if (authorities != null && !authorities.isEmpty()) {
-			for (GrantedAuthority authority : authorities) {		
-				if (authority instanceof AccessAuthority) {
-                    AccessAuthority accessAuthority = AccessAuthority.class.cast(authority);
-                    Set<String> processDefinitionKeys = accessAuthority.getProcessDefinitionKeys(allowedRoleSet);
-                    if (processDefinitionKeys != null)
-                        allowedProcessDefinitionKeys.addAll(processDefinitionKeys);
-				}
-			}
-		}
-
-        Set<piecework.model.Process> processes = new HashSet<piecework.model.Process>();
-		Iterator<Process> iterator = processRepository.findAllBasic(allowedProcessDefinitionKeys).iterator();
-		while (iterator.hasNext()) {
-			Process record = iterator.next();
-			if (!record.isDeleted())
-				processes.add(record);
-		}
-		
-		return processes;
-	}
-
-//    public boolean hasRole(Process process, String ... allowedRoles) {
-//        if (process != null && StringUtils.isNotEmpty(process.getProcessDefinitionKey())) {
-//            SecurityContext context = SecurityContextHolder.getContext();
-//            Collection<? extends GrantedAuthority> authorities = context.getAuthentication().getAuthorities();
+//	public Set<piecework.model.Process> findProcesses(String ... allowedRoles) {
+//        Entity principal = getPrincipal();
+//        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(allowedRoles);
 //
-//            Set<String> allowedRoleSet = allowedRoles != null && allowedRoles.length > 0 ? Sets.newHashSet(allowedRoles) : null;
-//            if (authorities != null && !authorities.isEmpty()) {
-//                for (GrantedAuthority authority : authorities) {
-//                    if (authority instanceof AccessAuthority) {
-//                        AccessAuthority accessAuthority = AccessAuthority.class.cast(authority);
-//                        if (accessAuthority.hasRole(process, allowedRoleSet))
-//                            return true;
-//                    }
-//                }
-//            }
+//        if (processDefinitionKeys != null) {
+//            List<Process> processes = processRepository.findAllBasic(processDefinitionKeys);
+//            if (processes != null && !processes.isEmpty())
+//                return Collections.unmodifiableSet(new HashSet<Process>(processes));
 //        }
 //
-//        return false;
-//    }
+//		return Collections.emptySet();
+//	}
 
-	
 }

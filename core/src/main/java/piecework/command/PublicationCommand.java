@@ -95,4 +95,8 @@ public class PublicationCommand implements Command<ProcessDeployment> {
         return persistedDeployment;
     }
 
+    public String getProcessDefinitionKey() {
+        return process != null ? process.getProcessDefinitionKey() : null;
+    }
+
 }

@@ -54,7 +54,6 @@ import piecework.ldap.LdapSettings;
 import piecework.persistence.AuthorizationRepository;
 import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.engine.ProcessEngineProxy;
-import piecework.handler.ResponseHandler;
 import piecework.persistence.*;
 import piecework.handler.RequestHandler;
 import piecework.handler.SubmissionHandler;
@@ -131,11 +130,6 @@ public class UnitTestConfiguration {
     }
 
     @Bean
-    public ResponseHandler responseHandler() {
-        return new ResponseHandler();
-    }
-
-    @Bean
     public SubmissionHandler submissionHandler() {
         return new SubmissionHandler();
     }
@@ -171,11 +165,6 @@ public class UnitTestConfiguration {
     @Bean
     public EncryptionService encryptionService() {
         return new PassthroughEncryptionService();
-    }
-
-    @Bean
-    public LegacyFormService formService() {
-        return new LegacyFormService();
     }
 
     @Bean
@@ -375,7 +364,7 @@ public class UnitTestConfiguration {
         }
 
         @Override
-        public ProcessInstance update(String id, String label, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission) {
+        public ProcessInstance update(String id, String label, Map<String, List<Value>> data, Map<String, List<Message>> validation, List<Attachment> attachments, Submission submission, String applicationStatusExplanation) {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
 
@@ -402,6 +391,11 @@ public class UnitTestConfiguration {
         @Override
         public boolean update(String id, Task task) {
             return false;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public ProcessInstance update(String id, String processStatus, String applicationStatus) {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 	

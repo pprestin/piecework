@@ -17,8 +17,8 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
+import piecework.form.FormDisposition;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
@@ -49,6 +49,9 @@ public class Form {
 
     @XmlAttribute
     private final String layout;
+
+    @XmlElement
+    private final String applicationStatusExplanation;
 
     @XmlElement
     private final Task task;
@@ -107,9 +110,17 @@ public class Form {
     @XmlAttribute
     private final boolean external;
 
+    @XmlAttribute
+    private final boolean allowAttachments;
+
     @XmlTransient
     @JsonIgnore
     private final List<Attachment> attachments;
+
+    @JsonIgnore
+    private final boolean anonymous;
+
+    private final FormDisposition disposition;
 
     private Form() {
         this(new Form.Builder(), new ViewContext());
@@ -121,16 +132,17 @@ public class Form {
         this.layout = builder.layout;
         this.task = builder.task;
         this.container = builder.container;
+        this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.explanation = builder.explanation;
         this.data = builder.data;
         this.validation = builder.validation;
-        this.root = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME) : null;
-        this.action = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
+        this.root = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME) : null;
+        this.action = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
-            this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
+            this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
         else
-            this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
-        this.src = context != null ? context.getApplicationUri("resource", builder.processDefinitionKey, builder.formInstanceId) : null;
+            this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
+        this.src = context != null ? context.getApplicationOrPublicUri(builder.anonymous, "resource", builder.processDefinitionKey, builder.formInstanceId) : null;
         this.staticRoot = context != null ? context.getApplicationUri("resource", "static", builder.processDefinitionKey) : null;
         this.assignment = builder.assignment;
         this.activation = builder.activation;
@@ -142,6 +154,9 @@ public class Form {
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : Collections.<Attachment>emptyList();
         this.valid = builder.valid;
         this.external = builder.external;
+        this.allowAttachments = builder.allowAttachments;
+        this.anonymous = builder.anonymous;
+        this.disposition = builder.disposition;
     }
 
     public String getFormInstanceId() {
@@ -158,6 +173,10 @@ public class Form {
 
     public Container getContainer() {
         return container;
+    }
+
+    public String getApplicationStatusExplanation() {
+        return applicationStatusExplanation;
     }
 
     public Task getTask() {
@@ -249,12 +268,26 @@ public class Form {
         return external;
     }
 
+    public boolean isAllowAttachments() {
+        return allowAttachments;
+    }
+
+    @JsonIgnore
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
+    public FormDisposition getDisposition() {
+        return disposition;
+    }
+
     public final static class Builder {
 
         private String formInstanceId;
         private String processDefinitionKey;
         private String submissionType;
         private String layout;
+        private String applicationStatusExplanation;
         private Task task;
         private Container container;
         private Explanation explanation;
@@ -270,6 +303,10 @@ public class Form {
         private List<Attachment> attachments;
         private boolean valid;
         private boolean external;
+        private boolean anonymous;
+        private boolean allowAttachments;
+        private boolean readonly;
+        private FormDisposition disposition;
 
         public Builder() {
             super();
@@ -284,6 +321,7 @@ public class Form {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
             this.layout = sanitizer.sanitize(form.layout);
+            this.applicationStatusExplanation = sanitizer.sanitize(form.applicationStatusExplanation);
             this.container = form.container != null ? new Container.Builder(form.container, sanitizer).build() : null;
             this.task = form.task != null ? new Task.Builder(form.task, sanitizer).build() : null;
             this.explanation = form.explanation;
@@ -296,11 +334,12 @@ public class Form {
                 this.validation = new ManyMap<String, Message>(form.validation);
             else
                 this.validation = new ManyMap<String, Message>();
-
-            this.attachmentCount = form.attachmentCount;
             this.attachments = form.getAttachments();
+            this.attachmentCount = form.getAttachments().size();
             this.valid = form.valid;
             this.external = form.external;
+            this.allowAttachments = form.allowAttachments;
+            this.anonymous = form.anonymous;
         }
 
         public Form build() {
@@ -312,23 +351,25 @@ public class Form {
         }
 
         public Builder instance(ProcessInstance instance, ViewContext context) {
-            String processDefinitionKey = instance.getProcessDefinitionKey();
-            String processInstanceId = instance.getProcessInstanceId();
-            Set<Attachment> attachments = instance.getAttachments();
-            this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
-            this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
-            this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
-            this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
-            this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
-            if (attachments != null && !attachments.isEmpty()) {
-                PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-                this.attachmentCount = attachments.size();
-                this.attachments = new ArrayList<Attachment>(attachments.size());
-                for (Attachment attachment : attachments) {
-                    this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
+            if (instance != null) {
+                String processDefinitionKey = instance.getProcessDefinitionKey();
+                String processInstanceId = instance.getProcessInstanceId();
+                Set<Attachment> attachments = instance.getAttachments();
+                this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
+                this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
+                this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
+                this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+                this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+                if (attachments != null && !attachments.isEmpty()) {
+                    PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+                    this.attachmentCount = attachments.size();
+                    this.attachments = new ArrayList<Attachment>(attachments.size());
+                    for (Attachment attachment : attachments) {
+                        this.attachments.add(new Attachment.Builder(attachment, passthroughSanitizer).processDefinitionKey(processDefinitionKey).processInstanceId(processInstanceId).build(context));
+                    }
+                } else {
+                    this.attachmentCount = instance.getAttachmentIds().size();
                 }
-            } else {
-                this.attachmentCount = 0;
             }
             return this;
         }
@@ -349,6 +390,11 @@ public class Form {
             } else {
                 this.attachmentCount = attachmentCount;
             }
+            return this;
+        }
+
+        public Builder applicationStatusExplanation(String applicationStatusExplanation) {
+            this.applicationStatusExplanation = applicationStatusExplanation;
             return this;
         }
 
@@ -433,6 +479,30 @@ public class Form {
 
         public Builder explanation(Explanation explanation) {
             this.explanation = explanation;
+            return this;
+        }
+
+        public Builder allowAttachments(boolean allowAttachments) {
+            this.allowAttachments = allowAttachments;
+            return this;
+        }
+
+        public Builder anonymous(boolean anonymous) {
+            this.anonymous = anonymous;
+            return this;
+        }
+
+        public Builder readonly() {
+            this.readonly = true;
+            return this;
+        }
+
+        public boolean isReadonly() {
+            return readonly;
+        }
+
+        public Builder disposition(FormDisposition disposition) {
+            this.disposition = disposition;
             return this;
         }
     }

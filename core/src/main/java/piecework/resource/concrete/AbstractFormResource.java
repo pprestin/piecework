@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.form.FormDisposition;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.DataInjectionStrategy;
@@ -32,16 +33,20 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
+import piecework.persistence.DeploymentRepository;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
+import piecework.service.DeploymentService;
 import piecework.service.FormService;
-import piecework.ui.StreamingPageContent;
+import piecework.service.UserInterfaceService;
+import piecework.ui.streaming.StreamingPageContent;
 import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -49,12 +54,12 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class AbstractFormResource {
+public abstract class AbstractFormResource {
 
     private static final Logger LOG = Logger.getLogger(AbstractFormResource.class);
 
     @Autowired
-    ContentRepository contentRepository;
+    DeploymentService deploymentService;
 
     @Autowired
     FormFactory formFactory;
@@ -69,20 +74,24 @@ public class AbstractFormResource {
     RequestHandler requestHandler;
 
     @Autowired
-    Sanitizer sanitizer;
+    protected Sanitizer sanitizer;
 
     @Autowired
     SecuritySettings securitySettings;
 
     @Autowired
+    UserInterfaceService userInterfaceService;
+
+    @Autowired
     Versions versions;
 
+    protected abstract boolean isAnonymous();
 
     protected Response startForm(MessageContext context, Process process) throws StatusCodeError {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest request = requestHandler.create(requestDetails, process);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+        return response(process, request);
     }
 
     protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws StatusCodeError {
@@ -90,7 +99,7 @@ public class AbstractFormResource {
         String requestId = sanitizer.sanitize(rawRequestId);
         FormRequest request = requestHandler.handle(requestDetails, requestId);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+        return response(process, request);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws StatusCodeError {
@@ -98,11 +107,12 @@ public class AbstractFormResource {
         String taskId = sanitizer.sanitize(rawTaskId);
         FormRequest request = requestHandler.create(requestDetails, process, taskId, null);
 
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+        return response(process, request);
     }
 
     protected SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
-        return formService.search(rawQueryParameters);
+        Entity principal = helper.getPrincipal();
+        return formService.search(rawQueryParameters, principal);
     }
 
     protected Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
@@ -111,7 +121,7 @@ public class AbstractFormResource {
         if (StringUtils.isEmpty(requestId))
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
@@ -193,30 +203,34 @@ public class AbstractFormResource {
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "page", formRequest.getRequestId())).build();
     }
 
+    private Response response(Process process, FormRequest request) throws StatusCodeError {
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+    }
+
     private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, FormValidation validation, Explanation explanation) throws StatusCodeError {
         if (!request.validate(process))
             throw new BadRequestError();
 
         Entity principal = helper.getPrincipal();
         try {
-            Form form = formFactory.form(request, actionType, principal, mediaType, validation, explanation);
+            ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
+            Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, validation, explanation, isAnonymous());
+            FormDisposition formDisposition = form.getDisposition();
+
+            switch (formDisposition.getType()) {
+                case REMOTE:
+                    return Response.seeOther(formDisposition.getUri()).build();
+                case CUSTOM:
+                    return Response.ok(userInterfaceService.getCustomPageAsStreaming(form), MediaType.TEXT_HTML_TYPE).build();
+            }
+
             return Response.ok(form).build();
-        } catch (RemoteFormException rfe) {
-            return Response.seeOther(rfe.getUri()).build();
-        } catch (InternalFormException ife) {
-            Form form = ife.getForm();
-            String location = ife.getLocation();
-            ProcessDeployment deployment = process.getDeployment();
-            if (deployment == null)
-                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
-            String fullPath = deployment.getBase() + "/" + location;
-
-            Content content = contentRepository.findByLocation(fullPath);
-            if (content == null)
-                throw new NotFoundError();
-
-            return Response.ok(new StreamingPageContent(process, form, content, DataInjectionStrategy.INCLUDE_SCRIPT), content.getContentType()).build();
+        } catch (IOException ioe) {
+            LOG.error("IOException serving page", ioe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         } catch (FormBuildingException fbe) {
             LOG.error("Unable to build form", fbe);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);

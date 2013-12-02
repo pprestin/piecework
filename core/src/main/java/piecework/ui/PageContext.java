@@ -15,6 +15,7 @@
  */
 package piecework.ui;
 
+import piecework.model.Entity;
 import piecework.model.User;
 
 /**
@@ -26,7 +27,7 @@ public class PageContext {
 	private final String pageTitle;
 	private final String assetsUrl;
 	private final Object resource;
-	private final User user;
+	private final Entity user;
 	
 	public PageContext(Builder builder) {
 		this.applicationTitle = builder.applicationTitle;
@@ -40,7 +41,7 @@ public class PageContext {
 		return resource;
 	}
 
-	public User getUser() {
+	public Entity getUser() {
 		return user;
 	}
 
@@ -62,7 +63,7 @@ public class PageContext {
         private String pageTitle;
         private String assetsUrl;
         private Object resource;
-        private User user;
+        private Entity user;
 
         public Builder() {
 
@@ -92,7 +93,7 @@ public class PageContext {
             return this;
         }
 
-        public Builder user(User user) {
+        public Builder user(Entity user) {
             this.user = user;
             return this;
         }

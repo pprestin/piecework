@@ -22,6 +22,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import piecework.model.*;
+import piecework.ui.visitor.ScreenBuildingVisitor;
 
 import java.util.List;
 

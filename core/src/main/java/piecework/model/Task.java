@@ -312,6 +312,15 @@ public class Task implements Serializable, Comparable<Task> {
         return candidateAssigneeIds;
     }
 
+    @JsonIgnore
+    public Set<String> getAssigneeAndCandidateAssigneeIds() {
+        Set<String> set = new HashSet<String>();
+        if (candidateAssigneeIds != null)
+            set.addAll(candidateAssigneeIds);
+        set.add(assigneeId);
+        return Collections.unmodifiableSet(set);
+    }
+
     public Date getStartTime() {
         return startTime;
     }
@@ -489,12 +498,31 @@ public class Task implements Serializable, Comparable<Task> {
             return this;
         }
 
+        public Builder assigneeId(String assigneeId) {
+            this.assigneeId = assigneeId;
+            return this;
+        }
+
         public Builder candidateAssignee(User candidateAssignee) {
             if (this.candidateAssignees == null)
                 this.candidateAssignees = new ArrayList<User>();
             if (candidateAssignee != null) {
                 this.candidateAssignees.add(candidateAssignee);
                 this.candidateAssigneeIds.add(candidateAssignee.getUserId());
+            }
+            return this;
+        }
+
+        public Builder candidateAssigneeIds(Collection<String> ... collections) {
+            if (collections != null) {
+                this.candidateAssigneeIds = new HashSet<String>();
+                for (Collection<String> collection : collections) {
+                    if (collection == null || collection.isEmpty())
+                        continue;
+                    this.candidateAssigneeIds.addAll(collection);
+                }
+            } else {
+                this.candidateAssigneeIds = new HashSet<String>();
             }
             return this;
         }

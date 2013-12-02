@@ -18,8 +18,6 @@ package piecework.security.concrete.config;
 import org.springframework.context.annotation.*;
 import piecework.security.EncryptionService;
 import piecework.security.concrete.ExampleBouncyCastleEncryptionService;
-import piecework.security.concrete.ExampleEncryptionService;
-import piecework.security.concrete.PassthroughEncryptionService;
 
 /**
  * @author James Renfro

@@ -27,14 +27,10 @@ import piecework.handler.RequestHandler;
 import piecework.handler.SubmissionHandler;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.validation.FormValidation;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author James Renfro
@@ -62,13 +58,12 @@ public class FormService {
     @Autowired
     ValidationService validationService;
 
-
-    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
-        return taskService.allowedTasksDirect(rawQueryParameters, true, false);
+    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
+        return taskService.search(rawQueryParameters, principal, true, false);
     }
 
     public FormRequest saveForm(Process process, FormRequest formRequest, MultipartBody body) throws StatusCodeError {
-        Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
+        Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)
@@ -83,7 +78,7 @@ public class FormService {
     }
 
     public FormRequest submitForm(Process process, FormRequest formRequest, RequestDetails requestDetails, MultipartBody body) throws StatusCodeError {
-        Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
+        Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
         String processInstanceId = null;
 
         if (task != null)
@@ -129,7 +124,7 @@ public class FormService {
 
     public void validateForm(Process process, FormRequest formRequest, MultipartBody body, String validationId) throws StatusCodeError {
 
-        Task task = formRequest.getTaskId() != null ? taskService.allowedTask(process, formRequest.getTaskId(), true) : null;
+        Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
         if (task != null && task.getProcessInstanceId() != null)

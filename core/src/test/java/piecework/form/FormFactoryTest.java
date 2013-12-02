@@ -16,7 +16,6 @@
 package piecework.form;
 
 import junit.framework.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -24,63 +23,46 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.Versions;
 import piecework.enumeration.ActionType;
-import piecework.exception.StatusCodeError;
-import piecework.identity.IdentityHelper;
+import piecework.exception.FormBuildingException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.service.ProcessInstanceService;
-import piecework.service.TaskService;
-import piecework.service.ValidationService;
-import piecework.test.ExampleFactory;
+import piecework.security.DataFilterService;
+
+import javax.ws.rs.core.MediaType;
 
 /**
  * @author James Renfro
  */
-@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class FormFactoryTest {
 
     @InjectMocks
-    LegacyFormFactory legacyFormFactory;
+    FormFactory formFactory;
 
     @Mock
-    IdentityHelper helper;
+    DataFilterService dataFilterService;
 
     @Mock
-    ProcessInstanceService processInstanceService;
+    Process process;
 
     @Mock
-    TaskService taskService;
-
-    @Mock
-    ValidationService validationService;
+    ProcessDeployment deployment;
 
     @Mock
     Versions versions;
 
+    @Mock
+    Entity user;
+
 
     @Test
-    public void testFormInitial() throws StatusCodeError {
-        Process process = ExampleFactory.exampleProcess();
+    public void testFormInitial() throws FormBuildingException {
         FormRequest request = new FormRequest.Builder().build();
 
-        Form form = legacyFormFactory.form(request, process, null, null, null, ActionType.CREATE, null);
+        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, MediaType.TEXT_HTML_TYPE, null, null, false);
 
         Assert.assertNotNull(form);
 //        Assert.assertEquals("First screen", form.getScreen().getTitle());
-//        Assert.assertEquals(1, form.getScreen().getGroupings().size());
-//        Assert.assertEquals(1, form.getScreen().getSections().size());
-    }
-
-    @Test
-    public void testFormTask() throws StatusCodeError {
-        Process process = ExampleFactory.exampleProcess();
-        FormRequest request = new FormRequest.Builder().build();
-        Task task = new Task.Builder().taskDefinitionKey("Review").build();
-        Form form = legacyFormFactory.form(request, process, null, task, null, ActionType.CREATE, null);
-
-        Assert.assertNotNull(form);
-//        Assert.assertEquals("Review screen", form.getScreen().getTitle());
 //        Assert.assertEquals(1, form.getScreen().getGroupings().size());
 //        Assert.assertEquals(1, form.getScreen().getSections().size());
     }

@@ -13,30 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
-
-import org.apache.commons.io.IOUtils;
-import org.springframework.core.io.Resource;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.OutputStream;
+package piecework.enumeration;
 
 /**
  * @author James Renfro
  */
-public class ResourceStreamingOutput implements StreamingOutput {
-
-    protected final Resource resource;
-
-    public ResourceStreamingOutput(Resource resource) {
-        this.resource = resource;
-    }
-
-    @Override
-    public void write(OutputStream output) throws IOException, WebApplicationException {
-        IOUtils.copy(resource.getInputStream(), output);
-    }
-
+public enum StateChangeType {
+    START_PROCESS, COMPLETE_PROCESS, CREATE_TASK, ASSIGN_TASK, COMPLETE_TASK, NONE
 }
