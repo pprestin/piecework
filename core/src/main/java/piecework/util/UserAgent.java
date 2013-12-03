@@ -20,6 +20,7 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
+@Deprecated
 public interface UserAgent {
 
 	UserReference getUser();

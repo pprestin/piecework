@@ -64,9 +64,6 @@ public class ProcessService {
     ProcessEngineFacade facade;
 
     @Autowired
-    IdentityHelper helper;
-
-    @Autowired
     ContentRepository contentRepository;
 
     @Autowired
@@ -400,7 +397,9 @@ public class ProcessService {
         builder.processDefinitionKey(update.getProcessDefinitionKey())
                .processDefinitionLabel(update.getProcessDefinitionLabel())
                .participantSummary(update.getParticipantSummary())
-               .processSummary(update.getProcessSummary());
+               .processSummary(update.getProcessSummary())
+               .allowAnonymousSubmission(update.isAnonymousSubmissionAllowed())
+               .assignmentRestrictedToCandidates(update.isAssignmentRestrictedToCandidates());
 
         return processRepository.save(builder.build());
     }

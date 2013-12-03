@@ -164,11 +164,13 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     }
 
     @Override
-    public ProcessInstance update(String id, String processStatus, String applicationStatus) {
+    public ProcessInstance update(String id, String processStatus, String applicationStatus, Map<String, List<Value>> data) {
+        Update update = new Update().set("endTime", new Date())
+                .set("applicationStatus", applicationStatus)
+                .set("processStatus", Constants.ProcessStatuses.COMPLETE);
+        include(update, data);
         return mongoOperations.findAndModify(new Query(where("_id").is(id)),
-                new Update().set("endTime", new Date())
-                        .set("applicationStatus", applicationStatus)
-                        .set("processStatus", Constants.ProcessStatuses.COMPLETE),
+                update,
                 OPTIONS,
                 ProcessInstance.class);
     }

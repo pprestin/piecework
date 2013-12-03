@@ -59,7 +59,7 @@ public class FormFactoryTest {
     public void testFormInitial() throws FormBuildingException {
         FormRequest request = new FormRequest.Builder().build();
 
-        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, MediaType.TEXT_HTML_TYPE, null, null, false);
+        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, MediaType.TEXT_HTML_TYPE, null, null, false, false);
 
         Assert.assertNotNull(form);
 //        Assert.assertEquals("First screen", form.getScreen().getTitle());

@@ -15,16 +15,48 @@
  */
 package piecework.util;
 
+import piecework.Constants;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
-import piecework.model.Action;
-import piecework.model.Activity;
-import piecework.model.Container;
+import piecework.exception.InternalServerError;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.StatusCodeError;
+import piecework.model.*;
+
+import java.util.Map;
 
 /**
  * @author James Renfro
  */
 public class ActivityUtil {
+
+    public static Activity activity(piecework.model.Process process, ProcessInstance instance, Task task) throws MisconfiguredProcessException {
+        Activity activity = null;
+        if (process.isAllowPerInstanceActivities() && task != null && task.getTaskDefinitionKey() != null && instance != null) {
+            Map<String, Activity> activityMap = instance.getActivityMap();
+            if (activityMap != null)
+                activity = activityMap.get(task.getTaskDefinitionKey());
+
+            if (activity != null)
+                return activity;
+        }
+
+        ProcessDeployment deployment = process.getDeployment();
+        if (deployment == null)
+            throw new MisconfiguredProcessException("No deployment found");
+
+        String activityKey = deployment.getStartActivityKey();
+        if (task != null)
+            activityKey = task.getTaskDefinitionKey();
+
+        if (activityKey != null)
+            activity = deployment.getActivity(activityKey);
+
+        if (activity != null)
+            return activity;
+
+        throw new MisconfiguredProcessException("Unable to build activity for process");
+    }
 
     public static Container parent(Activity activity, ActionType actionType) {
         Action action = activity.action(actionType != null ? actionType : ActionType.CREATE);

@@ -50,41 +50,47 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
     public void initialize() {
         decoratorMap.putOne("form", new FormDecorator(form));
-        decoratorMap.putOne("body", new BodyDecorator(form));
-        decoratorMap.putOne("div", new AttachmentsDecorator(form));
+//        decoratorMap.putOne("body", new BodyDecorator(form));
+//        decoratorMap.putOne("div", new AttachmentsDecorator(form));
 
         VariableDecorator variableDecorator = new VariableDecorator(form);
         decoratorMap.putOne("span", variableDecorator);
         decoratorMap.putOne("input", variableDecorator);
+
+        decoratorMap.putOne("script", new ScriptDecorator());
+        decoratorMap.putOne("img", new ScriptDecorator());
+        decoratorMap.putOne("link", new StyleSheetDecorator());
 
         Container container = form.getContainer();
         Map<String, List<Value>> data = variableDecorator.getData();
         Map<String, List<Message>> results = variableDecorator.getResults();
         if (container != null) {
             boolean readonly = container.isReadonly();
-            if (readonly)
-                decoratorMap.putOne("button", new ButtonDecorator(readonly));
-
+//            if (readonly)
+//                decoratorMap.putOne("button", new ButtonDecorator(readonly));
 
             List<Field> fields = container.getFields();
             if (fields != null && !fields.isEmpty()) {
 
                 for (Field field : fields) {
+                    if (StringUtils.isEmpty(field.getName()))
+                        continue;
+
                     List<Value> values = data.get(field.getName());
                     List<Message> messages = results.get(field.getName());
                     FieldDecorator fieldDecorator = new FieldDecorator(field, values, messages, readonly);
                     FieldTag fieldTag = fieldDecorator.getFieldTag();
                     decoratorMap.putOne(fieldTag.getTagName(), fieldDecorator);
 
-                    switch (fieldTag) {
-                        case FILE:
-                            decoratorMap.putOne("form", new FileFieldFormDecorator(field, readonly));
-
-                            if (StringUtils.isNotEmpty(field.getAccept()) && field.getAccept().contains("image/"))
-                                decoratorMap.putOne("img", new ImageFieldDecorator(field, values));
-
-                            break;
-                    }
+//                    switch (fieldTag) {
+//                        case FILE:
+//                            decoratorMap.putOne("form", new FileFieldFormDecorator(field, readonly));
+//
+////                            if (StringUtils.isNotEmpty(field.getAccept()) && field.getAccept().contains("image/"))
+////                                decoratorMap.putOne("img", new ImageFieldDecorator(field, values));
+//
+//                            break;
+//                    }
 
                 }
             }
@@ -100,18 +106,22 @@ public class DecoratingVisitor implements TagNodeVisitor {
             if (decorators == null || decorators.isEmpty())
                 return true;
 
-            String id = tag.getAttributeByName("id");
-            String cls = tag.getAttributeByName("class");
-            String name = tag.getAttributeByName("name");
-            String variable = tag.getAttributeByName("data-process-variable");
-
-            for (TagDecorator decorator : decorators) {
-                if (decorator != null && decorator.canDecorate(tag, id, cls, name, variable)) {
-                    decorator.decorate(tag, id , cls, name, variable);
+            try {
+                for (TagDecorator decorator : decorators) {
+                    if (decorator != null)
+                        decorator.decorate(tag);
                 }
+            } catch (Exception e) {
+                LOG.error("Unable to decorate tag node with name " + tagName, e);
             }
         }
         return true;
+    }
+
+    interface TagDecorator {
+
+        void decorate(TagNode tag);
+
     }
 
     class BodyDecorator implements TagDecorator {
@@ -123,53 +133,8 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
-            Container container = form.getContainer();
+        public void decorate(TagNode tag) {
 
-
-//            if (screenType != null) {
-//                if (screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE) || screenType.equals(Constants.ScreenTypes.STAGED)) {
-//                    TagNode contextScriptTag = new TagNode("script");
-//
-//                    ObjectMapper mapper = new ObjectMapper();
-//
-//                    try {
-//                        StringBuilder content = new StringBuilder(NEWLINE);
-//                        content.append("\t\tpiecework = {};").append(NEWLINE)
-//                               .append("\t\tpiecework.context = {};").append(NEWLINE)
-//                               .append("\t\tpiecework.context.resource = ").append(mapper.writer().writeValueAsString(form))
-//                               .append(";").append(NEWLINE);
-//
-//                        contextScriptTag.addAttribute("type", "text/javascript");
-//                        contextScriptTag.addChild(new ContentNode(content.toString()));
-//                        tag.addChild(contextScriptTag);
-//                    } catch (JsonMappingException e) {
-//                        LOG.error("Unable to add script tag with form resource", e);
-//                    } catch (JsonGenerationException e) {
-//                        LOG.error("Unable to add script tag with form resource", e);
-//                    } catch (IOException e) {
-//                        LOG.error("Unable to add script tag with form resource", e);
-//                    }
-//
-//                    TagNode requirejsScriptTag = new TagNode("script");
-//                    requirejsScriptTag.addAttribute("type", "text/javascript");
-//                    requirejsScriptTag.addAttribute("data-main", "../static/js/form.js");
-//                    requirejsScriptTag.addAttribute("src", "../static/js/vendor/require.js");
-//                }
-//            }
-        }
-
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-//            Screen screen = form.getScreen();
-//            String screenType = screen.getType();
-//
-//            return screenType != null && screenType.equals(Constants.ScreenTypes.WIZARD) || screenType.equals(Constants.ScreenTypes.WIZARD_TEMPLATE);
-            return false;
-        }
-
-        public boolean isReusable() {
-            return false;
         }
     }
 
@@ -183,7 +148,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
             String contentType = tag.getAttributeByName("data-process-content-type");
             String[] contentTypes = contentType != null ? contentType.split("\\s*,\\s*") : new String[0];
             Set<String> contentTypeSet = Sets.newHashSet(contentTypes);
@@ -206,15 +171,6 @@ public class DecoratingVisitor implements TagNodeVisitor {
             }
         }
 
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            String container = tag.getAttributeByName("data-process-container");
-            return container != null && container.equalsIgnoreCase("attachments");
-        }
-
-        public boolean isReusable() {
-            return false;
-        }
     }
 
     class ButtonDecorator implements TagDecorator {
@@ -226,21 +182,13 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
             Map<String, String> attributes = new HashMap<String, String>();
             if (readonly)
                 attributes.put("disabled", "disabled");
             attributes.putAll(tag.getAttributes());
         }
 
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            return name != null && name.equalsIgnoreCase("button");
-        }
-
-        public boolean isReusable() {
-            return false;
-        }
     }
 
     class FormDecorator implements TagDecorator {
@@ -254,7 +202,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
             String type = tag.getAttributeByName("data-process-form");
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.putAll(tag.getAttributes());
@@ -276,37 +224,53 @@ public class DecoratingVisitor implements TagNodeVisitor {
             tag.setAttributes(attributes);
         }
 
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            String exclude = tag.getAttributeByName("data-process-exclude");
-            return exclude == null || !exclude.equals("true");
-        }
+    }
 
-        public boolean isReusable() {
-            return false;
+//    class SectionDecorator implements TagDecorator {
+//
+//        private final Section section;
+//
+//        public SectionDecorator(Section section) {
+//            this.section = section;
+//        }
+//
+//        @Override
+//        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+//
+//        }
+//
+//        @Override
+//        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
+//            return id == null || section.getTagId() != null && section.getTagId().equals(id);
+//        }
+//
+//        public boolean isReusable() {
+//            return true;
+//        }
+//
+//    }
+
+    class ScriptDecorator implements TagDecorator {
+
+        @Override
+        public void decorate(TagNode tag) {
+            String src = tag.getAttributeByName("src");
+
+            if (!src.startsWith("/") && !src.startsWith("http://") && !src.startsWith("https://")) {
+                tag.addAttribute("src", form.getStaticRoot() + "/" + src);
+            }
         }
     }
 
-    class SectionDecorator implements TagDecorator {
-
-        private final Section section;
-
-        public SectionDecorator(Section section) {
-            this.section = section;
-        }
+    class StyleSheetDecorator implements TagDecorator {
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
+            String href = tag.getAttributeByName("href");
 
-        }
-
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            return id == null || section.getTagId() != null && section.getTagId().equals(id);
-        }
-
-        public boolean isReusable() {
-            return true;
+            if (!href.startsWith("/") && !href.startsWith("http://") && !href.startsWith("https://")) {
+                tag.addAttribute("href", form.getStaticRoot() + "/" + href);
+            }
         }
 
     }
@@ -322,7 +286,15 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
+            String cls = tag.getAttributeByName("class");
+            String variable = tag.getAttributeByName("data-element");
+
+            if (cls != null && !cls.equals("process-variable"))
+                return;
+
+            if (StringUtils.isEmpty(variable))
+                return;
 
             String fieldName = variable;
             String attributeName = null;
@@ -334,7 +306,6 @@ public class DecoratingVisitor implements TagNodeVisitor {
                 if (variable.length() > indexOf)
                     attributeName = variable.substring(indexOf + 1);
             }
-
 
             List<Value> values = data.get(fieldName);
 
@@ -359,16 +330,18 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     for (Value value : values) {
                         if (value instanceof User) {
                             User user = User.class.cast(value);
-
-                            if (attributeName == null || attributeName.equals("displayName"))
-                                tag.addChild(new ContentNode(user.getDisplayName()));
-                            else if (attributeName.equals("visibleId"))
-                                tag.addChild(new ContentNode(user.getVisibleId()));
-
-                        } else {
+                            if (user != null) {
+                                if (attributeName == null || attributeName.equals("displayName"))
+                                    tag.addChild(new ContentNode(user.getDisplayName()));
+                                else if (attributeName.equals("visibleId"))
+                                    tag.addChild(new ContentNode(user.getVisibleId()));
+                            }
+                        } else if (value != null && StringUtils.isNotEmpty(value.getValue())) {
                             tag.addChild(new ContentNode(value.getValue()));
                         }
                     }
+                } else if (fieldName.equals("ConfirmationNumber")) {
+                    tag.addChild(new ContentNode(form.getProcessInstanceId()));
                 }
             }
         }
@@ -381,17 +354,6 @@ public class DecoratingVisitor implements TagNodeVisitor {
             return results;
         }
 
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            if (StringUtils.isNotEmpty(variable))
-                return true;
-
-            return false;
-        }
-
-        public boolean isReusable() {
-            return true;
-        }
     }
 
     class FieldDecorator implements TagDecorator {
@@ -413,37 +375,56 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
+            String tagName = tag.getName();
+            if (StringUtils.isEmpty(tagName))
+                return;
+            if (fieldTag == null)
+                return;
+
+            if (!fieldTag.getTagName().equals(tagName))
+                return;
+
+            String inputName = tag.getAttributeByName("name");
+
+            if (StringUtils.isEmpty(inputName))
+                return;
+            if (StringUtils.isEmpty(field.getName()))
+                return;
+            if (!inputName.equals(field.getName()))
+                return;
+
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.putAll(tag.getAttributes());
             attributes.putAll(fieldTag.getAttributes());
 
-            if (StringUtils.isNotEmpty(field.getAccept()))
-                attributes.put("accept", field.getAccept());
+//            if (StringUtils.isNotEmpty(field.getAccept()))
+//                attributes.put("accept", field.getAccept());
 
             tag.setAttributes(attributes);
 
             Value value = null;
 
+            String cls = tag.getAttributeByName("class");
             if (values != null) {
                 if (values.size() > index) {
                     value = values.get(index);
                 }
 
-                if (messages != null && !messages.isEmpty()) {
-                    StringBuilder builder = new StringBuilder();
-                    Iterator<Message> iterator = messages.iterator();
-                    while (iterator.hasNext()) {
-                        Message message = iterator.next();
-                        builder.append(message.getText());
-                        if (iterator.hasNext())
-                            builder.append(",");
-                    }
-                    attributes.put("data-process-messages", builder.toString());
-                }
+//                if (messages != null && !messages.isEmpty()) {
+//                    StringBuilder builder = new StringBuilder();
+//                    Iterator<Message> iterator = messages.iterator();
+//                    while (iterator.hasNext()) {
+//                        Message message = iterator.next();
+//                        builder.append(message.getText());
+//                        if (iterator.hasNext())
+//                            builder.append(",");
+//                    }
+//                    attributes.put("data-process-messages", builder.toString());
+//                }
             }
 
-            if (!field.isVisible())
+            if (!field.isVisible() && StringUtils.isNotEmpty(cls))
                 attributes.put("class", cls + " hide");
 
             switch (fieldTag) {
@@ -459,17 +440,18 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     if (value != null) {
                         if (value instanceof User) {
                             User user = User.class.cast(value);
-                            attributes.put("value", user.getDisplayName());
-                        } else {
+                            if (user != null && user.getDisplayName() != null)
+                                attributes.put("value", user.getDisplayName());
+                        } else if (value.getValue() != null) {
                             attributes.put("value", value.getValue());
                         }
                     }
                     break;
                 case TEXTAREA:
-                    tag.removeAllChildren();
-                    if (value != null)
+                    if (value != null && value.getValue() != null) {
+                        tag.removeAllChildren();
                         tag.addChild(new ContentNode(value.getValue()));
-
+                    }
                     break;
                 case SELECT_MULTIPLE:
                 case SELECT_ONE:
@@ -483,7 +465,12 @@ public class DecoratingVisitor implements TagNodeVisitor {
                             if (option.getValue() != null && value != null && option.getValue().equals(value.getValue()))
                                 optionAttributes.put("selected", "selected");
                             optionNode.setAttributes(optionAttributes);
-                            optionNode.addChild(new ContentNode(option.getLabel()));
+                            if (StringUtils.isNotEmpty(option.getLabel()))
+                                optionNode.addChild(new ContentNode(option.getLabel()));
+                            else if (StringUtils.isNotEmpty(option.getValue()))
+                                optionNode.addChild(new ContentNode(option.getValue()));
+                            else
+                                optionNode.addChild(new ContentNode(""));
                             tag.addChild(optionNode);
                         }
                     }
@@ -496,24 +483,8 @@ public class DecoratingVisitor implements TagNodeVisitor {
             this.index++;
         }
 
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-
-            if (id != null && id.equals(field.getFieldId()))
-                return true;
-
-            if (name != null && name.equals(field.getName()))
-                return true;
-
-            return false;
-        }
-
         public FieldTag getFieldTag() {
             return fieldTag;
-        }
-
-        public boolean isReusable() {
-            return true;
         }
 
     }
@@ -529,7 +500,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
             if (values != null) {
                 for (Value value : values) {
                     if (value instanceof File) {
@@ -544,14 +515,6 @@ public class DecoratingVisitor implements TagNodeVisitor {
             }
         }
 
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            return variable != null && field.getName() != null && variable.equals(field.getName());
-        }
-
-        public boolean isReusable() {
-            return false;
-        }
     }
 
     class FileFieldFormDecorator implements TagDecorator {
@@ -565,7 +528,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
         }
 
         @Override
-        public void decorate(TagNode tag, String id, String cls, String name, String variable) {
+        public void decorate(TagNode tag) {
             Map<String, String> attributes = new HashMap<String, String>();
             attributes.putAll(tag.getAttributes());
             if (!readonly) {
@@ -574,20 +537,6 @@ public class DecoratingVisitor implements TagNodeVisitor {
                 attributes.put("enctype", "multipart/form-data");
             }
             tag.setAttributes(attributes);
-        }
-
-        @Override
-        public boolean canDecorate(TagNode tag, String id, String cls, String name, String variable) {
-            String exclude = tag.getAttributeByName("data-process-exclude");
-            if (exclude == null || !exclude.equals("true")) {
-                String type = tag.getAttributeByName("data-process-form");
-                return type != null && type.equals(field.getName());
-            }
-            return false;
-        }
-
-        public boolean isReusable() {
-            return false;
         }
 
     }

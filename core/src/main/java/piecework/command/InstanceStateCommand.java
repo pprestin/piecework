@@ -32,6 +32,7 @@ import piecework.model.*;
 import piecework.CommandExecutor;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.util.ProcessInstanceUtility;
 
 import java.util.*;
 
@@ -101,6 +102,12 @@ public class InstanceStateCommand extends InstanceCommand {
                         applicationStatusExplanation = reason;
                         break;
                     case ASSIGNMENT:
+                        boolean isAssignmentRestricted = process.isAssignmentRestrictedToCandidates();
+                        if (isAssignmentRestricted && StringUtils.isNotEmpty(reason)) {
+                            Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
+                            if (!candidateAssigneeIds.contains(reason))
+                                throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
+                        }
                         if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUserByAnyId(reason)))
                             throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
                         defaultApplicationStatus = instance.getPreviousApplicationStatus();
@@ -132,9 +139,8 @@ public class InstanceStateCommand extends InstanceCommand {
             String actingAsUserId = principal.getActingAsId();
             Set<Task> tasks = null;
 
-            if (operation != OperationType.ASSIGNMENT && operation != OperationType.UPDATE) {
-                tasks = tasks(instance.getTasks(), operation);
-            }
+            if (operation != OperationType.ASSIGNMENT && operation != OperationType.UPDATE)
+                tasks = ProcessInstanceUtility.tasks(instance.getTasks(), operation);
 
             processInstanceRepository.update(instance.getProcessInstanceId(), new Operation(UUID.randomUUID().toString(), operation, reason, new Date(), actingAsUserId), applicationStatus, applicationStatusExplanation, processStatus, tasks);
 
@@ -154,39 +160,6 @@ public class InstanceStateCommand extends InstanceCommand {
         String processInstanceId = instance != null ? instance.getProcessInstanceId() : "";
 
         return "{ processDefinitionKey: \"" + processDefinitionKey + "\", processInstanceId: \"" + processInstanceId + "\", operation: \"" + operation + "\" }";
-    }
-
-    private static Set<Task> tasks(Set<Task> originals, OperationType operation) {
-        Set<Task> tasks = new TreeSet<Task>();
-        if (originals != null && !originals.isEmpty()) {
-            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-            for (Task original : originals) {
-                Task.Builder builder = new Task.Builder(original, passthroughSanitizer);
-                switch (operation) {
-                    case ACTIVATION:
-                        if (original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED)) {
-                            builder.taskStatus(Constants.TaskStatuses.OPEN);
-                            builder.active();
-                        }
-                        break;
-                    case CANCELLATION:
-                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN) || original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED)) {
-                            builder.taskStatus(Constants.TaskStatuses.CANCELLED);
-                            builder.finished();
-                        }
-                        break;
-                    case SUSPENSION:
-                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN)) {
-                            builder.taskStatus(Constants.TaskStatuses.SUSPENDED);
-                            builder.suspended();
-                        }
-                        break;
-                }
-                tasks.add(builder.build());
-            }
-        }
-
-        return tasks;
     }
 
 }

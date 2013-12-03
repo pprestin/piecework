@@ -15,12 +15,14 @@
  */
 package piecework.engine.activiti;
 
+import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.engine.EngineContext;
 import piecework.engine.EngineStateSynchronizer;
 import piecework.engine.EngineTask;
 import piecework.enumeration.StateChangeType;
@@ -48,6 +50,9 @@ public class GeneralUserTaskListener implements TaskListener {
     @Autowired
     EngineStateSynchronizer engineStateSynchronizer;
 
+    @Autowired
+    ActivitiEngineProxyHelper helper;
+
     @Override
     public void notify(DelegateTask delegateTask) {
         String eventName = delegateTask.getEventName();
@@ -61,7 +66,8 @@ public class GeneralUserTaskListener implements TaskListener {
         if (event != null) {
             if (LOG.isDebugEnabled())
                 LOG.debug("Notifying engine state synchronizer of task event " + event);
-            engineStateSynchronizer.onTaskEvent(event, engineTask);
+            EngineContext context = new ActivitiEngineContext(helper.getProcessEngine(), delegateTask.getProcessDefinitionId(), delegateTask.getProcessInstanceId());
+            engineStateSynchronizer.onTaskEvent(event, engineTask, context);
         }
     }
 

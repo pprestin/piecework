@@ -23,7 +23,7 @@
                         <span data-ng-if="definitions" class="dropdown">
                             <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>
                             <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">
-                                <li data-ng-repeat="definition in definitions" class="presentation"><a role="menuitem" href="{{definition.link}}">{{definition.task.processDefinitionLabel}}</a></li>
+                                <li data-ng-repeat="definition in definitions" class="presentation"><a role="menuitem" href="{{definition.link}}" target="_self">{{definition.task.processDefinitionLabel}}</a></li>
                             </ul>
                         </span>
                     </div>

@@ -20,6 +20,7 @@ import java.io.Serializable;
 /**
  * @author James Renfro
  */
+@Deprecated
 public final class SystemCredential extends EntityReference implements Serializable {
 
 	private static final long serialVersionUID = 8699193188231430851L;

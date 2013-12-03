@@ -15,7 +15,6 @@
  */
 package piecework.resource.concrete;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +68,9 @@ public abstract class AbstractScriptResource {
             Process process = processService.read(request.getProcessDefinitionKey());
             ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
 
-            Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, null, null, false);
+            // Don't include restricted data in a script form
+            boolean includeRestrictedData = false;
+            Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, null, null, includeRestrictedData, isAnonymous());
 
             Activity activity = request.getActivity();
             Action action = activity.action(actionType);

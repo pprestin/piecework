@@ -545,7 +545,7 @@ public class Demonstration implements TaskListener {
         return new Process.Builder()
                 .processDefinitionKey("Demonstration")
                 .processDefinitionLabel("Demonstration Process")
-                .allowAnonymousSubmission()
+                .allowAnonymousSubmission(true)
                 .build();
     }
 

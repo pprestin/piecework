@@ -62,9 +62,23 @@ public interface FormResource extends ApplicationResource {
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+    @Consumes("application/x-www-form-urlencoded")
+    @Produces({"text/html","application/json"})
+    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/submission/{requestId}")
+    @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("multipart/form-data")
     @Produces({"text/html","application/json"})
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
+
+    @POST
+    @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
+    @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+    @Produces("application/json")
+    @Consumes("application/x-www-form-urlencoded")
+    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")

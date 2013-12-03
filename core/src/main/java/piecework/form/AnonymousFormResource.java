@@ -24,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 
@@ -49,14 +50,14 @@ public interface AnonymousFormResource extends PublicApplicationResource {
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")
-    @Consumes("multipart/form-data")
+    @Consumes("application/x-www-form-urlencoded")
     @Produces("text/html")
-    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
+    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
+    @Consumes("application/x-www-form-urlencoded")
     @Produces("application/json")
-    @Consumes("multipart/form-data")
-    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultipartBody body) throws StatusCodeError;
+    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws StatusCodeError;
 
 }

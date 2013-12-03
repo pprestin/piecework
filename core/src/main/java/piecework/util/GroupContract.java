@@ -21,6 +21,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
+@Deprecated
 public interface GroupContract<U extends UserContract> extends Serializable {
 
 	String getId();

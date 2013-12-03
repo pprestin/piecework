@@ -57,11 +57,12 @@ import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapIdentityService;
 import piecework.ldap.LdapSettings;
 import piecework.security.CustomAuthenticationSource;
+import piecework.security.SSLSocketFactoryWrapper;
 import piecework.security.SecuritySettings;
 import piecework.service.IdentityService;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.visitor.HtmlProvider;
-import piecework.util.KeyManagerCabinet;
+import piecework.security.KeyManagerCabinet;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -364,7 +365,7 @@ public class ApplicationConfiguration {
         FiltersType filter = new FiltersType();
         String[] cs = SSLUtils.getCiphersuites(CIPHER_SUITES_LIST, SSLUtils.getSupportedCipherSuites(ctx), filter, java.util.logging.Logger.getLogger(this.getClass().getCanonicalName()), false);
 
-        return new piecework.util.SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
+        return new SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
     }
 
     private LdapUserSearch userSearch(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {

@@ -16,7 +16,6 @@
 package piecework.config;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -27,25 +26,16 @@ import com.mongodb.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
-import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import piecework.common.UuidGenerator;
 import piecework.model.ProcessInstance;
 import piecework.persistence.EmbeddedMongoInstance;
-import piecework.util.SSLSocketFactoryWrapper;
 
-import javax.annotation.PreDestroy;
 import javax.net.ssl.SSLSocketFactory;
 
 /**

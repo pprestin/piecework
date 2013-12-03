@@ -15,39 +15,6 @@
  */
 package piecework.service;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import piecework.CommandExecutor;
-import piecework.Constants;
-import piecework.Versions;
-import piecework.model.RequestDetails;
-import piecework.enumeration.ActionType;
-import piecework.form.LegacyFormFactory;
-import piecework.handler.SubmissionHandler;
-import piecework.validation.SubmissionTemplate;
-import piecework.validation.SubmissionTemplateFactory;
-import piecework.model.SearchResults;
-import piecework.common.ViewContext;
-import piecework.exception.*;
-import piecework.identity.IdentityHelper;
-import piecework.security.SecuritySettings;
-import piecework.handler.RequestHandler;
-import piecework.handler.ResponseHandler;
-import piecework.validation.FormValidation;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.security.Sanitizer;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import java.util.*;
-
 /**
  * This "service" is really just to abstract logic that is shared between the two different form resources.
  *
@@ -71,7 +38,7 @@ public class LegacyFormService {
 //    ProcessInstanceService processInstanceService;
 //
 //    @Autowired
-//    RequestHandler requestHandler;
+//    RequestService requestService;
 //
 //    @Autowired
 //    ResponseHandler responseHandler;
@@ -100,7 +67,7 @@ public class LegacyFormService {
 //    public Response startForm(MessageContext context, Process process) throws StatusCodeError {
 //        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 //
-//        FormRequest formRequest = requestHandler.create(requestDetails, process);
+//        FormRequest formRequest = requestService.create(requestDetails, process);
 //
 //        if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
 //            throw new BadRequestError();
@@ -113,13 +80,13 @@ public class LegacyFormService {
 //        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 //
 //        // Assume that we've been provided with a form request identifier
-//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//        FormRequest formRequest = requestService.handle(requestDetails, requestId);
 //
 //        // But if it's null, then try to create a new form request -- this will assume that the requestId
 //        // is a taskId, and check to make sure that the user is authorized to create form requests for
 //        // that task
 //        if (formRequest == null)
-//            formRequest = requestHandler.create(requestDetails, process, requestId, null);
+//            formRequest = requestService.create(requestDetails, process, requestId, null);
 //
 //        if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
 //            throw new BadRequestError();
@@ -156,13 +123,13 @@ public class LegacyFormService {
 //        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 //
 //        // Assume that we've been provided with a form request identifier
-//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//        FormRequest formRequest = requestService.handle(requestDetails, requestId);
 //
 //        // But if it's null, then try to create a new form request -- this will assume that the requestId
 //        // is a taskId, and check to make sure that the user is authorized to create form requests for
 //        // that task
 //        if (formRequest == null)
-//            formRequest = requestHandler.create(requestDetails, process, requestId, null);
+//            formRequest = requestService.create(requestDetails, process, requestId, null);
 //
 //        if (formRequest.getProcessDefinitionKey() == null || process.getProcessDefinitionKey() == null || !formRequest.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
 //            throw new BadRequestError();
@@ -182,7 +149,7 @@ public class LegacyFormService {
 //            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 //
 //        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();;
-//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//        FormRequest formRequest = requestService.handle(requestDetails, requestId);
 //        if (formRequest == null) {
 //            LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
 //            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -209,7 +176,7 @@ public class LegacyFormService {
 //            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 //
 //        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//        FormRequest formRequest = requestService.handle(requestDetails, requestId);
 //        if (formRequest == null) {
 //            LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
 //            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -240,12 +207,12 @@ public class LegacyFormService {
 //            switch (action) {
 //                case COMPLETE:
 //                    ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
-//                    nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
+//                    nextFormRequest = requestService.create(requestDetails, process, stored, task, action);
 //                    return responseHandler.redirect(nextFormRequest);
 //
 //                case REJECT:
 //                    stored = processInstanceService.reject(process, instance, task, template, submission);
-//                    nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
+//                    nextFormRequest = requestService.create(requestDetails, process, stored, task, action);
 //                    return responseHandler.redirect(nextFormRequest);
 //
 //                case SAVE:
@@ -273,7 +240,7 @@ public class LegacyFormService {
 //            if (isJSON)
 //                throw e;
 //
-//            FormRequest invalidRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE, validation);
+//            FormRequest invalidRequest = requestService.create(requestDetails, process, instance, task, ActionType.CREATE, validation);
 //
 //            return responseHandler.redirect(invalidRequest);
 //
@@ -291,7 +258,7 @@ public class LegacyFormService {
 //            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 //
 //        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-//        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+//        FormRequest formRequest = requestService.handle(requestDetails, requestId);
 //        if (formRequest == null) {
 //            LOG.error("Forbidden: Attempting to validate a form for a request id that doesn't exist");
 //            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);

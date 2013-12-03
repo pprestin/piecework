@@ -25,6 +25,7 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.exception.ForbiddenError;
 import piecework.exception.StatusCodeError;
 import piecework.persistence.*;
+import piecework.security.DataFilterService;
 import piecework.service.IdentityService;
 import piecework.identity.IdentityHelper;
 
@@ -38,6 +39,9 @@ public class CommandExecutor {
 
     @Autowired
     Mediator mediator;
+
+    @Autowired
+    DataFilterService dataFilterService;
 
     @Autowired
     Environment environment;
@@ -85,6 +89,10 @@ public class CommandExecutor {
             LOG.debug("Command completed in " + (System.currentTimeMillis() - start) + " ms");
         }
         return result;
+    }
+
+    public DataFilterService getDataFilterService() {
+        return dataFilterService;
     }
 
     public Environment getEnvironment() {

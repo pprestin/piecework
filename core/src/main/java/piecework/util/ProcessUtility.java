@@ -43,8 +43,12 @@ public class ProcessUtility {
 
     public static Container container(Container container, String containerId) {
         if (container != null) {
-            if (container.getContainerId() != null && container.getContainerId().equals(containerId))
-                return container;
+            if (container.getContainerId() != null) {
+                if (container.getContainerId().equals(containerId))
+                    return container;
+                if (container.getBreadcrumb() != null && container.getBreadcrumb().equals(containerId))
+                    return container;
+            }
 
             if (container.getChildren() != null) {
                 for (Container child : container.getChildren()) {

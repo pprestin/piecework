@@ -58,8 +58,8 @@ public class DataFilterService {
             encryptionService = new PassthroughEncryptionService();
     }
 
-    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, FormValidation validation) {
-        Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, false);
+    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, FormValidation validation, boolean includeRestrictedData, boolean includeInstanceData) {
+        Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, includeRestrictedData, includeInstanceData);
         if (validation != null) {
             Map<String, List<Value>> validationData = validation.getData();
             if (validationData != null) {
@@ -71,8 +71,8 @@ public class DataFilterService {
         return data;
     }
 
-    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData) {
-        Map<String, List<Value>> data = instance != null ? instance.getData() : new ManyMap<String, Value>();
+    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData, boolean includeInstanceData) {
+        Map<String, List<Value>> data = includeInstanceData && instance != null ? instance.getData() : new ManyMap<String, Value>();
         Map<String, List<Value>> filtered = new ManyMap<String, Value>();
         if (fieldMap != null) {
             for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
@@ -88,12 +88,19 @@ public class DataFilterService {
         }
 
         if (includeRestrictedData && task != null) {
-            if (task.isAssignee(principal)) {
+            if (isAuthorizedForRestrictedData(task, principal)) {
                 return decrypt(filtered);
             }
             return mask(filtered);
         }
         return exclude(filtered);
+    }
+
+    private static boolean isAuthorizedForRestrictedData(Task task, Entity principal) {
+        // If this is an application
+        if (principal instanceof Application && StringUtils.isNotEmpty(principal.getEntityId()) && principal.getEntityId().equals("piecework"))
+            return true;
+        return task.isAssignee(principal);
     }
 
     private List<Value> values(ProcessInstance instance, String fieldName, List<? extends Value> values, String defaultValue, Entity principal) {
@@ -220,7 +227,7 @@ public class DataFilterService {
         return list;
     }
 
-    private ManyMap<String, Value> exclude(Map<String, List<Value>> original) {
+    public ManyMap<String, Value> exclude(Map<String, List<Value>> original) {
         ManyMap<String, Value> map = new ManyMap<String, Value>();
 
         if (original != null && !original.isEmpty()) {

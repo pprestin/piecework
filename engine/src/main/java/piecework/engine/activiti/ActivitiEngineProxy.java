@@ -22,6 +22,9 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
+import org.activiti.engine.form.FormProperty;
+import org.activiti.engine.form.StartFormData;
+import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.history.*;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.Deployment;
@@ -124,9 +127,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     public boolean assign(Process process, ProcessDeployment deployment, String taskId, User user) throws ProcessEngineException {
         if (user != null && user.getUserId() != null) {
             processEngine.getTaskService().setAssignee(taskId, user.getUserId());
-            return true;
+        } else {
+            processEngine.getTaskService().setAssignee(taskId, null);
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -256,8 +260,10 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                     if (elementType != null) {
                         updated.flowElement(flowElementId, flowElement.getName(), elementType);
 
-                        if (!activityMap.containsKey(flowElementId))
-                            updated.activity(flowElementId, new Activity.Builder().elementType(elementType).build());
+                        Activity.Builder activityBuilder = new Activity.Builder().elementType(elementType);
+                        if (!activityMap.containsKey(flowElementId)) {
+                            updated.activity(flowElementId, activityBuilder.build());
+                        }
                     }
                 }
             }

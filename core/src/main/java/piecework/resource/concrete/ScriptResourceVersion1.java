@@ -21,9 +21,9 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import piecework.service.RequestService;
 import piecework.model.RequestDetails;
 import piecework.exception.*;
-import piecework.handler.RequestHandler;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
@@ -56,7 +56,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     IdentityHelper identityHelper;
 
     @Autowired
-    RequestHandler requestHandler;
+    RequestService requestService;
 
     @Autowired
     Sanitizer sanitizer;
@@ -70,7 +70,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest request = requestHandler.handle(requestDetails, requestId);
+        FormRequest request = requestService.read(requestDetails, requestId);
 
         return response(request, principal, new MediaType("text", "javascript"));
     }
@@ -119,6 +119,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
                     return Response.ok(content.getInputStream()).type(content.getContentType()).build();
             }
 
+            LOG.warn("Unable to retrieve static resource for path " + base + "/" + name);
             throw new NotFoundError();
         }
 

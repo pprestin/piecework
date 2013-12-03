@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
+import org.htmlcleaner.TagNodeVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -36,6 +37,7 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.persistence.ContentRepository;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
+import piecework.ui.visitor.DecoratingVisitor;
 import piecework.ui.visitor.LinkOptimizingVisitor;
 import piecework.ui.visitor.OptimizingHtmlProviderVisitor;
 import piecework.ui.PageContext;
@@ -141,7 +143,15 @@ public class UserInterfaceService {
         if (content == null)
             throw new MisconfiguredProcessException("No content found for disposition path: " + disposition.getPath());
 
-        ScriptInjectingVisitor visitor = new ScriptInjectingVisitor(form);
+        TagNodeVisitor visitor;
+        switch (disposition.getStrategy()) {
+            case DECORATE_HTML:
+                visitor = new DecoratingVisitor(form);
+                break;
+            default:
+                visitor = new ScriptInjectingVisitor(form);
+                break;
+        }
         return new HtmlCleanerStreamingOutput(content.getInputStream(), visitor);
     }
 

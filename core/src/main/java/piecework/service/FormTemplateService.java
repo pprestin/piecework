@@ -43,13 +43,15 @@ import java.util.Set;
 public class FormTemplateService {
 
     private static final Set<Class<?>> ACCEPTABLE_TEMPLATE_CLASSES =
-            Sets.newHashSet(Explanation.class, Form.class, IndexView.class);
+            Sets.newHashSet(Explanation.class, Form.class, IndexView.class, SearchResults.class);
     private static final Map<String, Class<?>> ACCEPTABLE_TEMPLATE_NAME_MAP;
 
     static {
         ACCEPTABLE_TEMPLATE_NAME_MAP = new HashMap<String, Class<?>>();
         for (Class<?> cls : ACCEPTABLE_TEMPLATE_CLASSES)
             ACCEPTABLE_TEMPLATE_NAME_MAP.put(cls.getSimpleName(), cls);
+
+        ACCEPTABLE_TEMPLATE_NAME_MAP.put("SearchResults.form", SearchResults.class);
     }
 
     private static final Logger LOG = Logger.getLogger(FormTemplateService.class);
@@ -107,7 +109,7 @@ public class FormTemplateService {
         if (StringUtils.isNotEmpty(id)) {
             Class<?> type = ACCEPTABLE_TEMPLATE_NAME_MAP.get(id);
             if (type != null) {
-                StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
+                StringBuilder templateNameBuilder = new StringBuilder(id);
                 if (anonymous)
                     templateNameBuilder.append(".anonymous");
                 templateNameBuilder.append(".template.html");

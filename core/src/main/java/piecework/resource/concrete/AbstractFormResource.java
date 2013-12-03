@@ -25,21 +25,17 @@ import piecework.Versions;
 import piecework.form.FormDisposition;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
-import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.*;
 import piecework.form.FormFactory;
-import piecework.handler.RequestHandler;
+import piecework.service.RequestService;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.DeploymentRepository;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
 import piecework.service.DeploymentService;
 import piecework.service.FormService;
 import piecework.service.UserInterfaceService;
-import piecework.ui.streaming.StreamingPageContent;
 import piecework.validation.FormValidation;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -71,7 +67,7 @@ public abstract class AbstractFormResource {
     IdentityHelper helper;
 
     @Autowired
-    RequestHandler requestHandler;
+    RequestService requestService;
 
     @Autowired
     protected Sanitizer sanitizer;
@@ -88,26 +84,37 @@ public abstract class AbstractFormResource {
     protected abstract boolean isAnonymous();
 
     protected Response startForm(MessageContext context, Process process) throws StatusCodeError {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest request = requestHandler.create(requestDetails, process);
+        try {
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            FormRequest request = requestService.create(requestDetails, process);
 
-        return response(process, request);
+            return response(process, request);
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
     }
 
     protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws StatusCodeError {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         String requestId = sanitizer.sanitize(rawRequestId);
-        FormRequest request = requestHandler.handle(requestDetails, requestId);
+        FormRequest request = requestService.read(requestDetails, requestId);
 
         return response(process, request);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws StatusCodeError {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        String taskId = sanitizer.sanitize(rawTaskId);
-        FormRequest request = requestHandler.create(requestDetails, process, taskId, null);
+        try {
+            Entity principal = helper.getPrincipal();
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            String taskId = sanitizer.sanitize(rawTaskId);
+            FormRequest request = requestService.create(principal, requestDetails, process, taskId, null);
 
-        return response(process, request);
+            return response(process, request);
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
     }
 
     protected SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
@@ -122,13 +129,69 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        FormRequest formRequest = requestService.read(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
+        try {
+            return redirect(formService.saveForm(process, formRequest, body));
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
+    }
 
-        return redirect(formService.saveForm(process, formRequest, body));
+    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultivaluedMap<String, String> formData) throws StatusCodeError {
+        String requestId = sanitizer.sanitize(rawRequestId);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        FormRequest formRequest = requestService.read(requestDetails, requestId);
+        if (formRequest == null) {
+            LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        }
+
+        try {
+            return redirect(formService.submitForm(process, formRequest, requestDetails, formData));
+        } catch (Exception e) {
+            FormValidation validation = null;
+            Explanation explanation = null;
+
+            if (e instanceof BadRequestError)
+                validation = ((BadRequestError)e).getValidation();
+            else {
+                String detail = e.getMessage() != null ? e.getMessage() : "";
+                explanation = new Explanation();
+                explanation.setMessage("Unable to complete task");
+                explanation.setMessageDetail("Caught an unexpected exception trying to process form submission " + detail);
+            }
+
+            Map<String, List<Message>> results = validation != null ? validation.getResults() : null;
+
+            if (results != null && !results.isEmpty()) {
+                for (Map.Entry<String, List<Message>> result : results.entrySet()) {
+                    LOG.warn("Validation error " + result.getKey() + " : " + result.getValue().iterator().next().getText());
+                }
+            }
+
+            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
+            boolean isJSON = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(MediaType.APPLICATION_JSON_TYPE);
+
+            if (isJSON && e instanceof BadRequestError)
+                throw (BadRequestError)e;
+
+            try {
+                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
+                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
+            } catch (MisconfiguredProcessException mpe) {
+                LOG.error("Unable to create new instance because process is misconfigured", mpe);
+                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+            }
+        }
     }
 
     protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
@@ -138,7 +201,7 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        FormRequest formRequest = requestService.read(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -173,8 +236,35 @@ public abstract class AbstractFormResource {
             if (isJSON && e instanceof BadRequestError)
                 throw (BadRequestError)e;
 
-            FormRequest invalidRequest = requestHandler.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
-            return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
+            try {
+                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
+                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
+            } catch (MisconfiguredProcessException mpe) {
+                LOG.error("Unable to create new instance because process is misconfigured", mpe);
+                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+            }
+        }
+    }
+
+    protected Response validateForm(MessageContext context, Process process, MultivaluedMap<String, String> formData, String rawRequestId, String rawValidationId) throws StatusCodeError {
+        String requestId = sanitizer.sanitize(rawRequestId);
+        String validationId = sanitizer.sanitize(rawValidationId);
+
+        if (StringUtils.isEmpty(requestId))
+            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        FormRequest formRequest = requestService.read(requestDetails, requestId);
+        if (formRequest == null) {
+            LOG.error("Forbidden: Attempting to validate a form for a request id that doesn't exist");
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        }
+        try {
+            formService.validateForm(process, formRequest, formData, validationId);
+            return Response.noContent().build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         }
     }
 
@@ -186,14 +276,18 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.handle(requestDetails, requestId);
+        FormRequest formRequest = requestService.read(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to validate a form for a request id that doesn't exist");
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
-        formService.validateForm(process, formRequest, body, validationId);
-
-        return Response.noContent().build();
+        try {
+            formService.validateForm(process, formRequest, body, validationId);
+            return Response.noContent().build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
     }
 
     private Response redirect(FormRequest formRequest) throws StatusCodeError {
@@ -214,7 +308,8 @@ public abstract class AbstractFormResource {
         Entity principal = helper.getPrincipal();
         try {
             ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-            Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, validation, explanation, isAnonymous());
+            boolean includeRestrictedData = true;
+            Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, validation, explanation, includeRestrictedData, isAnonymous());
             FormDisposition formDisposition = form.getDisposition();
 
             switch (formDisposition.getType()) {

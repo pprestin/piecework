@@ -38,7 +38,8 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
 import piecework.security.*;
-import piecework.security.concrete.ExampleBouncyCastleEncryptionService;
+import piecework.security.concrete.DebugAuthenticationFilter;
+import piecework.security.concrete.SingleSignOnAuthenticationFilter;
 
 import java.net.URL;
 import java.util.ArrayList;

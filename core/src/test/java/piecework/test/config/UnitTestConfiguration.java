@@ -41,6 +41,7 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import piecework.CommandExecutor;
 import piecework.Versions;
 import piecework.form.LegacyFormFactory;
+import piecework.service.RequestService;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.DataFilterService;
 import piecework.service.*;
@@ -55,8 +56,7 @@ import piecework.persistence.AuthorizationRepository;
 import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.engine.ProcessEngineProxy;
 import piecework.persistence.*;
-import piecework.handler.RequestHandler;
-import piecework.handler.SubmissionHandler;
+import piecework.submission.SubmissionHandler;
 import piecework.persistence.concrete.InMemoryContentRepository;
 import piecework.model.*;
 import piecework.persistence.InteractionRepository;
@@ -125,8 +125,8 @@ public class UnitTestConfiguration {
     }
 
     @Bean
-    public RequestHandler requestHandler() {
-        return new RequestHandler();
+    public RequestService requestHandler() {
+        return new RequestService();
     }
 
     @Bean
@@ -394,7 +394,7 @@ public class UnitTestConfiguration {
         }
 
         @Override
-        public ProcessInstance update(String id, String processStatus, String applicationStatus) {
+        public ProcessInstance update(String id, String processStatus, String applicationStatus, Map<String, List<Value>> data) {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }

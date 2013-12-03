@@ -15,6 +15,7 @@
  */
 package piecework.ui.streaming;
 
+import org.apache.log4j.Logger;
 import org.htmlcleaner.*;
 
 import javax.ws.rs.WebApplicationException;
@@ -27,6 +28,8 @@ import java.io.OutputStream;
  * @author James Renfro
  */
 public class HtmlCleanerStreamingOutput implements StreamingOutput {
+
+    private static final Logger LOG = Logger.getLogger(HtmlCleanerStreamingOutput.class);
 
     private final InputStream inputStream;
     private final TagNodeVisitor visitor;
@@ -44,6 +47,10 @@ public class HtmlCleanerStreamingOutput implements StreamingOutput {
         TagNode node = cleaner.clean(inputStream);
         node.traverse(visitor);
         SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
-        serializer.writeToStream(node, output);
+        try {
+            serializer.writeToStream(node, output);
+        } catch (Exception e) {
+            LOG.error("Exception serializing output ", e);
+        }
     }
 }

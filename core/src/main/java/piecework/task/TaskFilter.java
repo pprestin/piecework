@@ -56,15 +56,13 @@ public class TaskFilter {
             Map<String, List<Value>> data = null;
 
             if (includeData)
-                data = dataFilterService.filter(activity.getFieldMap(), deployment.getInstance(), null, principal, false);
+                data = dataFilterService.filter(activity.getFieldMap(), deployment.getInstance(), null, principal, false, includeData);
 
             return new Form.Builder()
                     .formInstanceId(rebuilt.getTaskInstanceId())
                     .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
                     .processDefinitionKey(rebuilt.getProcessDefinitionKey())
                     .instance(deployment.getInstance(), version1)
-//                    .instanceSubresources(rebuilt.getProcessDefinitionKey(),
-//                            rebuilt.getProcessInstanceId(), null, 0, version1)
                     .data(data)
                     .external(external)
                     .build(version1);

@@ -45,6 +45,9 @@ public class Form {
     private final String formInstanceId;
 
     @XmlAttribute
+    private final String processInstanceId;
+
+    @XmlAttribute
     private final String submissionType;
 
     @XmlAttribute
@@ -128,6 +131,7 @@ public class Form {
 
     private Form(Form.Builder builder, ViewContext context) {
         this.formInstanceId = builder.formInstanceId;
+        this.processInstanceId = builder.processInstanceId;
         this.submissionType = builder.submissionType;
         this.layout = builder.layout;
         this.task = builder.task;
@@ -161,6 +165,10 @@ public class Form {
 
     public String getFormInstanceId() {
         return formInstanceId;
+    }
+
+    public String getProcessInstanceId() {
+        return processInstanceId;
     }
 
     public String getSubmissionType() {
@@ -284,6 +292,7 @@ public class Form {
     public final static class Builder {
 
         private String formInstanceId;
+        private String processInstanceId;
         private String processDefinitionKey;
         private String submissionType;
         private String layout;
@@ -319,6 +328,7 @@ public class Form {
 
         public Builder(Form form, Sanitizer sanitizer) {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
+            this.processInstanceId = sanitizer.sanitize(form.processInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
             this.layout = sanitizer.sanitize(form.layout);
             this.applicationStatusExplanation = sanitizer.sanitize(form.applicationStatusExplanation);
@@ -355,6 +365,7 @@ public class Form {
                 String processDefinitionKey = instance.getProcessDefinitionKey();
                 String processInstanceId = instance.getProcessInstanceId();
                 Set<Attachment> attachments = instance.getAttachments();
+                this.processInstanceId = processInstanceId;
                 this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
                 this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
                 this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
@@ -375,6 +386,7 @@ public class Form {
         }
 
         public Builder instanceSubresources(String processDefinitionKey, String processInstanceId, Set<Attachment> attachments, int attachmentCount, ViewContext context) {
+            this.processInstanceId = processInstanceId;
             this.activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
             this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
             this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");

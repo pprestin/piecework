@@ -32,6 +32,7 @@ import piecework.enumeration.OperationType;
 import piecework.persistence.DeploymentRepository;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.security.DataFilterService;
 import piecework.validation.SubmissionTemplate;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
@@ -58,9 +59,6 @@ public class ProcessInstanceService {
 
     @Autowired
     AttachmentRepository attachmentRepository;
-
-    @Autowired
-    DeploymentRepository deploymentRepository;
 
     @Autowired
     ProcessService processService;
@@ -101,16 +99,12 @@ public class ProcessInstanceService {
     }
 
     public ProcessInstance complete(String processInstanceId) {
-        ProcessInstance processInstance = processInstanceRepository.findOne(processInstanceId);
-        if (processInstance != null) {
-            String deploymentId = processInstance.getDeploymentId();
-            ProcessDeployment deployment = deploymentRepository.findOne(deploymentId);
-            String completionStatus = null;
-            if (deployment != null) {
-                completionStatus = deployment.getCompletionStatus();
-            }
-
-            return processInstanceRepository.update(processInstanceId, Constants.ProcessStatuses.COMPLETE, completionStatus);
+        try {
+            ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
+            CompletionCommand completion = new CompletionCommand(instance);
+            return commandExecutor.execute(completion);
+        } catch (StatusCodeError error) {
+            LOG.error("Unable to mark instance as complete: " + processInstanceId, error);
         }
         return null;
     }
@@ -222,27 +216,6 @@ public class ProcessInstanceService {
                 }
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
-            Sort.Direction direction = Sort.Direction.DESC;
-            String sortProperty = "startTime";
-            switch (executionCriteria.getOrderBy()) {
-                case START_TIME_ASC:
-                    direction = Sort.Direction.ASC;
-                    sortProperty = "startTime";
-                    break;
-                case START_TIME_DESC:
-                    direction = Sort.Direction.DESC;
-                    sortProperty = "startTime";
-                    break;
-                case END_TIME_ASC:
-                    direction = Sort.Direction.ASC;
-                    sortProperty = "endTime";
-                    break;
-                case END_TIME_DESC:
-                    direction = Sort.Direction.DESC;
-                    sortProperty = "endTime";
-                    break;
-            }
-
             processDefinitionKeys = executionCriteria.getProcessDefinitionKeys();
             if (processDefinitionKeys.size() != 1)
                 throw new BadRequestError();
@@ -250,7 +223,7 @@ public class ProcessInstanceService {
             String processDefinitionKey = processDefinitionKeys.iterator().next();
             Process process = processService.read(processDefinitionKey);
 
-            return new ExportInstanceProvider(process, executionCriteria, processInstanceRepository, new Sort(direction, sortProperty));
+            return new ExportInstanceProvider(process, executionCriteria, processInstanceRepository, executionCriteria.getSort());
         }
         return null;
     }
@@ -288,28 +261,7 @@ public class ProcessInstanceService {
             int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
             int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
 
-            Sort.Direction direction = Sort.Direction.DESC;
-            String sortProperty = "startTime";
-            switch (executionCriteria.getOrderBy()) {
-            case START_TIME_ASC:
-                direction = Sort.Direction.ASC;
-                sortProperty = "startTime";
-                break;
-            case START_TIME_DESC:
-                direction = Sort.Direction.DESC;
-                sortProperty = "startTime";
-                break;
-            case END_TIME_ASC:
-                direction = Sort.Direction.ASC;
-                sortProperty = "endTime";
-                break;
-            case END_TIME_DESC:
-                direction = Sort.Direction.DESC;
-                sortProperty = "endTime";
-                break;
-            }
-
-            Pageable pageable = new PageRequest(firstResult, maxResult, new Sort(direction, sortProperty));
+            Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort());
             Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
 
             if (page.hasContent()) {

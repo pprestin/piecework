@@ -47,17 +47,17 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
     }
 
     @Override
-    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
+    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return submitForm(context, process, rawRequestId, body);
+        return submitForm(context, process, rawRequestId, formData);
     }
 
     @Override
-    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
+    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return validateForm(context, process, body, rawRequestId, rawValidationId);
+        return validateForm(context, process, formData, rawRequestId, rawValidationId);
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.net.URI;
 /**
  * @author James Renfro
  */
+@Deprecated
 public class InternalFormException extends FormBuildingException {
 
     private final Form form;

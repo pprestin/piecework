@@ -52,16 +52,6 @@ public class ActivitiEngineProxyHelper {
         return Collections.unmodifiableSet(set);
     }
 
-//    @Cacheable("processDefinitionKeys")
-//    private Set<String> getProcessDefinitionKeys(Set<Process> processes) {
-//        Set<String> set = Sets.newHashSet();
-//        for (Process process : processes) {
-//            if (process.getEngine() != null && getKey() != null && process.getEngine().equals(getKey()) && StringUtils.isNotEmpty(process.getProcessDefinitionKey()))
-//                set.add(process.getProcessDefinitionKey());
-//        }
-//        return set;
-//    }
-
     @Cacheable("processDefinitionIdMap")
     public ManyMap<String, Process> getProcessDefinitionIdMap(Set<Process> processes) {
         ManyMap<String, Process> processDefinitionKeyMap = new ManyMap<String, Process>();
@@ -79,6 +69,10 @@ public class ActivitiEngineProxyHelper {
         }
 
         return map;
+    }
+
+    public ProcessEngine getProcessEngine() {
+        return processEngine;
     }
 
     public String getKey() {

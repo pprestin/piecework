@@ -20,11 +20,11 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.identity.IdentityHelper;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
-import piecework.handler.RequestHandler;
-import piecework.handler.SubmissionHandler;
+import piecework.submission.SubmissionHandler;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.validation.SubmissionTemplate;
@@ -41,10 +41,13 @@ public class FormService {
     private static final Logger LOG = Logger.getLogger(FormService.class);
 
     @Autowired
+    IdentityHelper helper;
+
+    @Autowired
     ProcessInstanceService processInstanceService;
 
     @Autowired
-    RequestHandler requestHandler;
+    RequestService requestService;
 
     @Autowired
     SubmissionHandler submissionHandler;
@@ -62,7 +65,8 @@ public class FormService {
         return taskService.search(rawQueryParameters, principal, true, false);
     }
 
-    public FormRequest saveForm(Process process, FormRequest formRequest, MultipartBody body) throws StatusCodeError {
+    public FormRequest saveForm(Process process, FormRequest formRequest, MultipartBody body) throws MisconfiguredProcessException, StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
@@ -70,14 +74,15 @@ public class FormService {
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = submissionHandler.handle(process, template, body, formRequest);
+        Submission submission = submissionHandler.handle(process, template, body, formRequest, principal);
 
         processInstanceService.save(process, instance, task, template, submission);
 
         return formRequest;
     }
 
-    public FormRequest submitForm(Process process, FormRequest formRequest, RequestDetails requestDetails, MultipartBody body) throws StatusCodeError {
+    public FormRequest submitForm(Process process, FormRequest formRequest, RequestDetails requestDetails, MultivaluedMap<String, String> formData) throws MisconfiguredProcessException, StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
         String processInstanceId = null;
 
@@ -92,8 +97,33 @@ public class FormService {
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = submissionHandler.handle(process, template, body, formRequest);
+        Submission submission = submissionHandler.handle(process, template, formData, formRequest, principal);
 
+        return submitForm(process, instance, task, formRequest, requestDetails, template, submission);
+    }
+
+    public FormRequest submitForm(Process process, FormRequest formRequest, RequestDetails requestDetails, MultipartBody body) throws MisconfiguredProcessException, StatusCodeError {
+        Entity principal = helper.getPrincipal();
+        Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
+        String processInstanceId = null;
+
+        if (task != null)
+            processInstanceId = task.getProcessInstanceId();
+
+        if (StringUtils.isEmpty(processInstanceId))
+            processInstanceId = formRequest.getProcessInstanceId();
+
+        ProcessInstance instance = null;
+        if (StringUtils.isNotEmpty(processInstanceId))
+            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
+
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
+        Submission submission = submissionHandler.handle(process, template, body, formRequest, principal);
+
+        return submitForm(process, instance, task, formRequest, requestDetails, template, submission);
+    }
+
+    private FormRequest submitForm(Process process, ProcessInstance instance, Task task, FormRequest formRequest, RequestDetails requestDetails, SubmissionTemplate template, Submission submission) throws MisconfiguredProcessException, StatusCodeError {
         ActionType action = submission.getAction();
         if (action == null)
             action = ActionType.COMPLETE;
@@ -102,12 +132,12 @@ public class FormService {
         switch (action) {
             case COMPLETE:
                 ProcessInstance stored = processInstanceService.submit(process, instance, task, template, submission);
-                nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
+                nextFormRequest = requestService.create(requestDetails, process, stored, task, action);
                 return nextFormRequest;
 
             case REJECT:
                 stored = processInstanceService.reject(process, instance, task, template, submission);
-                nextFormRequest = requestHandler.create(requestDetails, process, stored, task, action);
+                nextFormRequest = requestService.create(requestDetails, process, stored, task, action);
                 return nextFormRequest;
 
             case SAVE:
@@ -122,8 +152,8 @@ public class FormService {
         return null;
     }
 
-    public void validateForm(Process process, FormRequest formRequest, MultipartBody body, String validationId) throws StatusCodeError {
-
+    public void validateForm(Process process, FormRequest formRequest, MultivaluedMap<String, String> formData, String validationId) throws MisconfiguredProcessException, StatusCodeError {
+        Entity principal = helper.getPrincipal();
         Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
         ProcessInstance instance = null;
 
@@ -134,7 +164,24 @@ public class FormService {
 
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, activity, validationId);
 
-        Submission submission = submissionHandler.handle(process, template, body, formRequest);
+        Submission submission = submissionHandler.handle(process, template, formData, formRequest, principal);
+
+        validationService.validate(process, instance, task, template, submission, true);
+    }
+
+    public void validateForm(Process process, FormRequest formRequest, MultipartBody body, String validationId) throws MisconfiguredProcessException, StatusCodeError {
+        Entity principal = helper.getPrincipal();
+        Task task = formRequest.getTaskId() != null ? taskService.read(process, formRequest.getTaskId(), true) : null;
+        ProcessInstance instance = null;
+
+        if (task != null && task.getProcessInstanceId() != null)
+            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
+
+        Activity activity = formRequest.getActivity();
+
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, activity, validationId);
+
+        Submission submission = submissionHandler.handle(process, template, body, formRequest, principal);
 
         validationService.validate(process, instance, task, template, submission, true);
     }

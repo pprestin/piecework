@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
+import piecework.model.Entity;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 import piecework.resource.FormResource;
@@ -56,6 +57,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
 
     @Override
     public Response readTask(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws StatusCodeError {
+        Entity principal = identityHelper.getPrincipal();
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return taskForm(context, process, taskId);
@@ -76,10 +78,24 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
+    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        return submitForm(context, process, rawRequestId, formData);
+    }
+
+    @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return submitForm(context, process, rawRequestId, body);
+    }
+
+    @Override
+    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        return validateForm(context, process, formData, rawRequestId, rawValidationId);
     }
 
     @Override

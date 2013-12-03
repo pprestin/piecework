@@ -40,7 +40,7 @@
         <property name="authenticationManager" ref="org.springframework.security.authenticationManager"/>
     </bean>-->
 
-    <!--<bean id="ssoHeaderFilter" class="piecework.security.SingleSignOnAuthenticationFilter">-->
+    <!--<bean id="ssoHeaderFilter" class="piecework.security.concrete.SingleSignOnAuthenticationFilter">-->
         <!--<property name="authenticationManager" ref="org.springframework.security.authenticationManager"/>-->
     <!--</bean>-->
 

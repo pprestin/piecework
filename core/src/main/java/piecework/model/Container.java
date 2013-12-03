@@ -276,15 +276,21 @@ public class Container implements Serializable {
 
         public Builder child(Container child) {
             if (child != null) {
-
                 this.children.add(child);
+                if (child.getFieldIds() != null && !child.getFieldIds().isEmpty())
+                    fieldIds.addAll(child.getFieldIds());
             }
             return this;
         }
 
         public Builder children(Collection<Container> children) {
-            if (children != null && !children.isEmpty())
+            if (children != null && !children.isEmpty()) {
                 this.children = new ArrayList<Container>(children);
+                for (Container child : children) {
+                    if (child.getFieldIds() != null && !child.getFieldIds().isEmpty())
+                        fieldIds.addAll(child.getFieldIds());
+                }
+            }
             return this;
         }
 

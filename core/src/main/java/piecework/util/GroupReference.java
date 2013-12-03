@@ -25,6 +25,7 @@ import java.util.List;
  * 
  * @author James Renfro
  */
+@Deprecated
 public final class GroupReference extends EntityReference implements GroupContract<UserReference> {
 
 	private static final long serialVersionUID = -4916081048504607164L;

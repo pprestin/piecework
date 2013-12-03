@@ -13,7 +13,7 @@
                             <span data-ng-switch on="attachment.contentType">
                                 <span data-ng-switch-when="text/plain"  title="{{attachment.description}}">{{attachment.description}}</span>
                                 <span data-ng-switch-default class="pw-attachment-file">
-                                    <i class="fa fa-paperclip"></i> <a href="{{attachment.link}}" target="_self" title="{{attachment.description}}">{{attachment.description}}</a>
+                                    <i class="fa fa-download"></i> <a href="{{attachment.link}}" target="_self" title="{{attachment.description}}">{{attachment.description}}</a>
                                 </span>
                             </span>
                         </div>
@@ -93,7 +93,7 @@
         </div>
         <textarea data-ng-change="onFieldChange(field)" data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
         <div data-ng-switch-default>
-            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" data-inputmask="{{field.mask}}" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-minlength="{{field.minValueLength}}" data-inputmask="{{field.mask}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
         </div>
     </div>
     <span data-ng-repeat="message in field.messages" class="help-block text-danger">{{message.text}}</span>
@@ -253,6 +253,7 @@
                             <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
+                            <li><a data-ng-click="assignTo('')">Set unassigned</a></li>
                             <li data-ng-repeat="candidateAssignee in form.task.candidateAssignees"><a data-ng-click="assignTo(candidateAssignee.userId)" class="candidate-assignee" id="{{candidateAssignee.userId}}">Assign to {{candidateAssignee.displayName}}</a></li>
                         </ul>
                     </div>
@@ -260,7 +261,7 @@
                     <div class="btn-group">
                         <form data-ng-show="form.allowAttachments && form.history" class="navbar-form navbar-left form-inline" id="fileupload" action="{{form.attachment}}" method="POST" enctype="multipart/form-data" data-file-upload="fileUploadOptions">
                             <span class="btn btn-default navbar-btn fileinput-button" data-ng-class="{disabled: disabled}">
-                                  <i ng-hide="state.sending" class="fa fa-download"></i>  <i ng-show="state.sending" class='fa fa-paperclip fa-spin'></i>
+                                  <i ng-hide="state.sending" class="fa fa-paperclip"></i>  <i ng-show="state.sending" class='fa fa-paperclip fa-spin'></i>
                                   <input type="file" name="attachment" multiple="" ng-disabled="disabled">
                             </span>
                         </form>

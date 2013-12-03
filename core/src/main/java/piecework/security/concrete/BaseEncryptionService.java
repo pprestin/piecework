@@ -18,8 +18,10 @@ package piecework.security.concrete;
 import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.springframework.beans.factory.annotation.Autowired;
 import piecework.model.Secret;
 import piecework.model.Value;
+import piecework.security.EncryptionKeyProvider;
 import piecework.security.EncryptionService;
 import piecework.util.ManyMap;
 
@@ -36,6 +38,10 @@ import java.util.Map;
 public abstract class BaseEncryptionService implements EncryptionService {
 
     private static final Logger LOG = Logger.getLogger(BaseEncryptionService.class);
+
+    @Autowired(required=false)
+    protected EncryptionKeyProvider keyProvider;
+
 
 
 

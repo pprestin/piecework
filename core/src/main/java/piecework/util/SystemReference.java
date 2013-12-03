@@ -32,6 +32,7 @@ import javax.security.auth.x500.X500Principal;
  * 
  * @author James Renfro
  */
+@Deprecated
 public final class SystemReference extends EntityReference implements Serializable {
 	
 	private static final long serialVersionUID = 7379301209689996131L;

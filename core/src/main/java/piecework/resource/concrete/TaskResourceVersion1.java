@@ -27,7 +27,7 @@ import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
-import piecework.handler.SubmissionHandler;
+import piecework.submission.SubmissionHandler;
 import piecework.service.ValidationService;
 import piecework.validation.SubmissionTemplate;
 import piecework.validation.SubmissionTemplateFactory;
@@ -38,7 +38,7 @@ import piecework.exception.*;
 import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
 import piecework.service.TaskService;
-import piecework.handler.RequestHandler;
+import piecework.service.RequestService;
 import piecework.model.*;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -49,6 +49,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -62,16 +63,13 @@ public class TaskResourceVersion1 implements TaskResource {
     IdentityHelper helper;
 
     @Autowired
-    IdentityService userDetailsService;
-
-    @Autowired
     ProcessService processService;
 
     @Autowired
     ProcessInstanceService processInstanceService;
 
     @Autowired
-    RequestHandler requestHandler;
+    RequestService requestService;
 
     @Autowired
     Sanitizer sanitizer;
@@ -132,39 +130,40 @@ public class TaskResourceVersion1 implements TaskResource {
             }
         }
 
-        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, validatedAction);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, validatedAction);
+        try {
+            FormRequest formRequest = requestService.create(requestDetails, process, instance, task, validatedAction);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
+            Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, validatedAction, principal);
 
-        if (submission != null && submission.getAction() != null) {
-            validatedAction = submission.getAction();
-        }
+            if (submission != null && submission.getAction() != null) {
+                validatedAction = submission.getAction();
+            }
 
-        switch (validatedAction) {
-            case ASSIGN:
-                String assignee = submission.getAssignee();
-                if (StringUtils.isEmpty(assignee)) {
-                    throw new BadRequestError(Constants.ExceptionCodes.invalid_assignment);
-                }
-                processInstanceService.assign(process, instance, task, assignee);
-                break;
-            case CLAIM:
-                processInstanceService.assign(process, instance, task, actingUser);
-                break;
-            case SAVE:
-                processInstanceService.save(process, instance, task, template, submission);
-                break;
-            case REJECT:
-                processInstanceService.reject(process, instance, task, template, submission);
-                break;
-            case VALIDATE:
-                validationService.validate(process, instance, task, template, submission, true);
-                break;
-            default:
-                processInstanceService.submit(process, instance, task, template, submission);
-                break;
+            switch (validatedAction) {
+                case ASSIGN:
+                    processInstanceService.assign(process, instance, task, submission.getAssignee());
+                    break;
+                case CLAIM:
+                    processInstanceService.assign(process, instance, task, actingUser);
+                    break;
+                case SAVE:
+                    processInstanceService.save(process, instance, task, template, submission);
+                    break;
+                case REJECT:
+                    processInstanceService.reject(process, instance, task, template, submission);
+                    break;
+                case VALIDATE:
+                    validationService.validate(process, instance, task, template, submission, true);
+                    break;
+                default:
+                    processInstanceService.submit(process, instance, task, template, submission);
+                    break;
+            }
+            return Response.noContent().build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to complete task because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         }
-        return Response.noContent().build();
     }
 
     public Response read(String rawProcessDefinitionKey, String rawTaskId) throws StatusCodeError {

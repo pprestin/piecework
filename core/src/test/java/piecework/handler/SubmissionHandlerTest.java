@@ -16,11 +16,8 @@
 
 package piecework.handler;
 
-import org.apache.cxf.jaxrs.impl.MetadataMap;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -28,7 +25,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import piecework.Constants;
 import piecework.common.UuidGenerator;
 import piecework.identity.IdentityHelper;
 import piecework.service.IdentityService;
@@ -37,14 +33,12 @@ import piecework.persistence.SubmissionRepository;
 import piecework.security.EncryptionService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.validation.SubmissionTemplate;
+import piecework.submission.SubmissionHandler;
 import piecework.validation.SubmissionTemplateFactory;
 import piecework.model.*;
 import piecework.test.ExampleFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MultivaluedMap;
-import java.util.List;
 
 /**
  * @author James Renfro

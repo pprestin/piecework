@@ -246,7 +246,7 @@ public class SubmissionTemplateFactory {
             }
         }
 
-        if (field.isRequired()) {
+        if (onlyRequiredWhenConstraint == null && field.isRequired()) {
             if (fieldTag == FieldTag.FILE)
                 rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());
             else

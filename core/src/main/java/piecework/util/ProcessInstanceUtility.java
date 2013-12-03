@@ -23,7 +23,10 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import piecework.Constants;
+import piecework.enumeration.OperationType;
 import piecework.exception.NotFoundError;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
@@ -39,6 +42,39 @@ import java.util.*;
 public class ProcessInstanceUtility {
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.mediumDateTime();
+
+    public static Set<Task> tasks(Set<Task> originals, OperationType operation) {
+        Set<Task> tasks = new TreeSet<Task>();
+        if (originals != null && !originals.isEmpty()) {
+            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+            for (Task original : originals) {
+                Task.Builder builder = new Task.Builder(original, passthroughSanitizer);
+                switch (operation) {
+                    case ACTIVATION:
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED)) {
+                            builder.taskStatus(Constants.TaskStatuses.OPEN);
+                            builder.active();
+                        }
+                        break;
+                    case CANCELLATION:
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN) || original.getTaskStatus().equals(Constants.TaskStatuses.SUSPENDED)) {
+                            builder.taskStatus(Constants.TaskStatuses.CANCELLED);
+                            builder.finished();
+                        }
+                        break;
+                    case SUSPENSION:
+                        if (original.getTaskStatus().equals(Constants.TaskStatuses.OPEN)) {
+                            builder.taskStatus(Constants.TaskStatuses.SUSPENDED);
+                            builder.suspended();
+                        }
+                        break;
+                }
+                tasks.add(builder.build());
+            }
+        }
+
+        return tasks;
+    }
 
     public static String template(String template, Map<String, List<Value>> data) {
         return template(template, data, null);

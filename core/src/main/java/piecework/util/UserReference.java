@@ -28,6 +28,7 @@ import java.util.Map;
  * 
  * @author James Renfro
  */
+@Deprecated
 public final class UserReference extends EntityReference implements UserContract {
 
 	public static final UserReference ANY_VALID_USER = new Builder("*").build();

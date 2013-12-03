@@ -23,6 +23,7 @@ import java.io.Serializable;
  * 
  * @author James Renfro
  */
+@Deprecated
 public abstract class EntityReference implements Serializable {
 
 	private static final long serialVersionUID = -5879385080201107668L;

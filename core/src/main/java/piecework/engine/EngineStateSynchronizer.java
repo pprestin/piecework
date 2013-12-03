@@ -27,6 +27,8 @@ import piecework.service.ProcessService;
 import piecework.service.TaskService;
 import piecework.task.TaskFactory;
 
+import java.util.Map;
+
 /**
  * @author James Renfro
  */
@@ -47,12 +49,14 @@ public class EngineStateSynchronizer {
     @Autowired
     TaskService taskService;
 
-    public void onProcessInstanceEvent(StateChangeType event, String processInstanceId) {
+    public void onProcessInstanceEvent(StateChangeType type, String processInstanceId, EngineContext context) {
         ProcessInstance instance = null;
-        switch (event) {
+        switch (type) {
         case START_PROCESS:
             if (LOG.isDebugEnabled())
                 LOG.debug("Process instance started " + processInstanceId);
+
+            doStartNotification(type, context);
             break;
         case COMPLETE_PROCESS:
             instance = processInstanceService.complete(processInstanceId);
@@ -70,7 +74,7 @@ public class EngineStateSynchronizer {
         }
     }
 
-    public void onTaskEvent(StateChangeType type, EngineTask delegateTask) {
+    public void onTaskEvent(StateChangeType type, EngineTask delegateTask, EngineContext context) {
         try {
             Process process = processService.read(delegateTask.getProcessDefinitionKey());
             if (process == null)
@@ -92,6 +96,8 @@ public class EngineStateSynchronizer {
                     break;
             };
 
+            doTaskNotification(type, updated, context);
+
             if (updated != null) {
                 if (taskService.update(processInstance.getProcessInstanceId(), updated)) {
                     LOG.debug("Stored task changes");
@@ -103,6 +109,16 @@ public class EngineStateSynchronizer {
         } catch (StatusCodeError error) {
             LOG.error("Unable to save task state changes -- probably because the process or the instance could not be found", error);
         }
+    }
+
+    private void doStartNotification(StateChangeType type, EngineContext engineContext) {
+        //Map<String, String> map = engineContext.getStartFormProperties();
+        //buildNotification(map);
+    }
+
+    private void doTaskNotification(StateChangeType type, Task task, EngineContext engineContext) {
+        //Map<String, String> map = engineContext.getTaskFormProperties(task.getTaskInstanceId());
+        //buildNotification(map);
     }
 
 }

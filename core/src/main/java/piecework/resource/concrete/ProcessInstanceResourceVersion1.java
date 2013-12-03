@@ -30,7 +30,7 @@ import piecework.authorization.AuthorizationRole;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.form.LegacyFormFactory;
-import piecework.handler.SubmissionHandler;
+import piecework.submission.SubmissionHandler;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.service.ProcessHistoryService;
 import piecework.service.ProcessInstanceService;
@@ -49,7 +49,7 @@ import piecework.resource.ProcessInstanceResource;
 import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
-import piecework.handler.RequestHandler;
+import piecework.service.RequestService;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.TaskService;
@@ -83,7 +83,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     ProcessInstanceService processInstanceService;
 
     @Autowired
-    RequestHandler requestHandler;
+    RequestService requestService;
 
     @Autowired
     SubmissionHandler submissionHandler;
@@ -127,40 +127,50 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultivaluedMap<String, String> formData) throws StatusCodeError {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+        try {
+            Entity principal = helper.getPrincipal();
+            Process process = processService.read(rawProcessDefinitionKey);
+            ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        if (task == null)
-            throw new ForbiddenError();
+            Task task = taskService.allowedTask(process, instance, principal, true);
+            if (task == null)
+                throw new ForbiddenError();
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
-        Submission submission = submissionHandler.handle(process, template, formData);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
+            Submission submission = submissionHandler.handle(process, template, formData, principal);
 
-        ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
+            ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
 
-        SearchResults searchResults = attachmentService.search(process, persisted, new AttachmentQueryParameters());
-        return Response.ok(searchResults).build();
+            SearchResults searchResults = attachmentService.search(process, persisted, new AttachmentQueryParameters());
+            return Response.ok(searchResults).build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
     }
 
     @Override
     public Response attach(String rawProcessDefinitionKey, String rawProcessInstanceId, MultipartBody body) throws StatusCodeError {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+        try {
+            Entity principal = helper.getPrincipal();
+            Process process = processService.read(rawProcessDefinitionKey);
+            ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        if (task == null)
-            throw new ForbiddenError(Constants.ExceptionCodes.task_required);
+            Task task = taskService.allowedTask(process, instance, principal, true);
+            if (task == null)
+                throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
-        Submission submission = submissionHandler.handle(process, template, body);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
+            Submission submission = submissionHandler.handle(process, template, body, principal);
 
-        ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
+            ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
 
-        SearchResults searchResults = attachmentService.search(process, persisted, new AttachmentQueryParameters());
-        return Response.ok(searchResults).build();
+            SearchResults searchResults = attachmentService.search(process, persisted, new AttachmentQueryParameters());
+            return Response.ok(searchResults).build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
     }
 
     @Override
@@ -216,42 +226,57 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
 	public Response create(MessageContext context, String rawProcessDefinitionKey, Submission rawSubmission) throws StatusCodeError {
-        Process process = processService.read(rawProcessDefinitionKey);
+        try {
+            Entity principal = helper.getPrincipal();
+            Process process = processService.read(rawProcessDefinitionKey);
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            FormRequest formRequest = requestService.create(requestDetails, process);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
+            Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, ActionType.CREATE, principal);
+            ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, ActionType.CREATE);
-        ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
-
-        return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
+            return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
 	}
 	
 	@Override
 	public Response create(MessageContext context, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError {
-        Process process = processService.read(rawProcessDefinitionKey);
+        try {
+            Entity principal = helper.getPrincipal();
+            Process process = processService.read(rawProcessDefinitionKey);
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            FormRequest formRequest = requestService.create(requestDetails, process);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
+            Submission submission = submissionHandler.handle(process, template, formData, principal);
+            ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = submissionHandler.handle(process, template, formData);
-        ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
-
-        return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
-	}
+            return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
+    }
 
 	@Override
 	public Response createMultipart(MessageContext context, String rawProcessDefinitionKey, MultipartBody body) throws StatusCodeError {
-        Process process = processService.read(rawProcessDefinitionKey);
+        try {
+            Entity principal = helper.getPrincipal();
+            Process process = processService.read(rawProcessDefinitionKey);
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            FormRequest formRequest = requestService.create(requestDetails, process);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
+            Submission submission = submissionHandler.handle(process, template, body, formRequest, principal);
+            ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = submissionHandler.handle(process, template, body, formRequest);
-        ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
-
-        return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
-	}
+            return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
+    }
 
     @Override
     public Response detach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws StatusCodeError {
@@ -389,79 +414,89 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String value) throws StatusCodeError {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String fieldName = sanitizer.sanitize(rawFieldName);
+        try {
+            Entity principal = helper.getPrincipal();
+            Process process = processService.read(rawProcessDefinitionKey);
+            ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+            String fieldName = sanitizer.sanitize(rawFieldName);
 
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
-            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+            Task task = taskService.allowedTask(process, instance, principal, true);
+            if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
+                throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE);
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            FormRequest formRequest = requestService.create(requestDetails, process, instance, task, ActionType.CREATE);
 
-        Field field = LegacyFormFactory.getField(process, task, fieldName);
-        if (field == null)
-            throw new NotFoundError();
+            Field field = LegacyFormFactory.getField(process, task, fieldName);
+            if (field == null)
+                throw new NotFoundError();
 
-        ManyMap<String, String> formValueMap = new ManyMap<String, String>();
-        formValueMap.putOne(fieldName, value);
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(field);
-        Submission submission = submissionHandler.handle(process, template, formValueMap);
-        processInstanceService.save(process, instance, task, template, submission);
+            ManyMap<String, String> formValueMap = new ManyMap<String, String>();
+            formValueMap.putOne(fieldName, value);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(field);
+            Submission submission = submissionHandler.handle(process, template, formValueMap, principal);
+            processInstanceService.save(process, instance, task, template, submission);
 
-        return Response.noContent().build();
+            return Response.noContent().build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
     }
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws StatusCodeError {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String fieldName = sanitizer.sanitize(rawFieldName);
+        try {
+            Entity principal = helper.getPrincipal();
+            Process process = processService.read(rawProcessDefinitionKey);
+            ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+            String fieldName = sanitizer.sanitize(rawFieldName);
 
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
-            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+            Task task = taskService.allowedTask(process, instance, principal, true);
+            if (task == null && principal.getEntityType() != Entity.EntityType.SYSTEM)
+                throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process, instance, task, ActionType.CREATE);
-        Activity activity = formRequest.getActivity();
-        Map<String, Field> fieldMap = activity.getFieldKeyMap();
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            FormRequest formRequest = requestService.create(requestDetails, process, instance, task, ActionType.CREATE);
+            Activity activity = formRequest.getActivity();
+            Map<String, Field> fieldMap = activity.getFieldKeyMap();
 
-        Field field = fieldMap.get(fieldName);
-        if (field == null)
-            throw new NotFoundError();
+            Field field = fieldMap.get(fieldName);
+            if (field == null)
+                throw new NotFoundError();
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(field);
-        Submission submission = submissionHandler.handle(process, template, body);
-        ProcessInstance stored = processInstanceService.save(process, instance, task, template, submission);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(field);
+            Submission submission = submissionHandler.handle(process, template, body, principal);
+            ProcessInstance stored = processInstanceService.save(process, instance, task, template, submission);
 
-        Map<String, List<Value>> data = stored.getData();
+            Map<String, List<Value>> data = stored.getData();
 
-        ViewContext version1 = versions.getVersion1();
-        String location = null;
-        if (data != null) {
-            File file = ProcessInstanceUtility.firstFile(fieldName, data);
+            ViewContext version1 = versions.getVersion1();
+            String location = null;
+            if (data != null) {
+                File file = ProcessInstanceUtility.firstFile(fieldName, data);
 
-            if (file != null) {
-                location =
-                    new File.Builder(file, new PassthroughSanitizer())
-                        .processDefinitionKey(process.getProcessDefinitionKey())
-                        .processInstanceId(stored.getProcessInstanceId())
-                        .fieldName(fieldName)
-                        .build(version1)
-                        .getLink();
+                if (file != null) {
+                    location =
+                        new File.Builder(file, new PassthroughSanitizer())
+                            .processDefinitionKey(process.getProcessDefinitionKey())
+                            .processInstanceId(stored.getProcessInstanceId())
+                            .fieldName(fieldName)
+                            .build(version1)
+                            .getLink();
+                }
             }
+
+            ResponseBuilder builder = Response.noContent();
+
+            if (location != null)
+                builder.header(HttpHeaders.LOCATION, location);
+
+            return builder.build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         }
-
-        ResponseBuilder builder = Response.noContent();
-
-        if (location != null)
-            builder.header(HttpHeaders.LOCATION, location);
-
-        return builder.build();
     }
 
     @Override

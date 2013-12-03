@@ -93,6 +93,9 @@ public class Process implements Serializable {
     @XmlAttribute
     private final boolean allowPerInstanceActivities;
 
+    @XmlAttribute
+    private final boolean assignmentRestrictedToCandidates;
+
 	@XmlTransient
 	@JsonIgnore
 	private final boolean isDeleted;
@@ -122,6 +125,7 @@ public class Process implements Serializable {
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
         this.isAnonymousSubmissionAllowed = builder.isAnonymousSubmissionAllowed;
         this.allowPerInstanceActivities = builder.allowPerInstanceActivities;
+        this.assignmentRestrictedToCandidates = builder.assignmentRestrictedToCandidates;
         this.isDeleted = builder.isDeleted;
         this.version = builder.version;
 	}
@@ -180,6 +184,10 @@ public class Process implements Serializable {
         return isAnonymousSubmissionAllowed;
     }
 
+    public boolean isAssignmentRestrictedToCandidates() {
+        return assignmentRestrictedToCandidates;
+    }
+
     public boolean isAllowPerInstanceActivities() {
         return allowPerInstanceActivities;
     }
@@ -236,6 +244,7 @@ public class Process implements Serializable {
         private boolean isAnonymousSubmissionAllowed;
 		private boolean isDeleted;
         private boolean allowPerInstanceActivities;
+        private boolean assignmentRestrictedToCandidates;
         private long version;
 		
 		public Builder() {
@@ -262,6 +271,7 @@ public class Process implements Serializable {
             this.isAnonymousSubmissionAllowed = process.isAnonymousSubmissionAllowed;
             this.isDeleted = process.isDeleted;
             this.allowPerInstanceActivities = process.allowPerInstanceActivities;
+            this.assignmentRestrictedToCandidates = process.assignmentRestrictedToCandidates;
             this.version = process.version;
 		}
 
@@ -307,8 +317,13 @@ public class Process implements Serializable {
             return this;
         }
 
-        public Builder allowAnonymousSubmission() {
-            this.isAnonymousSubmissionAllowed = true;
+        public Builder allowAnonymousSubmission(boolean allowAnonymousSubmission) {
+            this.isAnonymousSubmissionAllowed = allowAnonymousSubmission;
+            return this;
+        }
+
+        public Builder assignmentRestrictedToCandidates(boolean assignmentRestrictedToCandidates) {
+            this.assignmentRestrictedToCandidates = assignmentRestrictedToCandidates;
             return this;
         }
 

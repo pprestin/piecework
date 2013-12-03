@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
  * 
  * @author James Renfro
  */
+@Deprecated
 public class PropertyValueReader {
 
 	private final Map<String, List<String>> formData;

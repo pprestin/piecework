@@ -21,6 +21,7 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
+@Deprecated
 public interface UserContract extends Serializable {
 
 	String getId();

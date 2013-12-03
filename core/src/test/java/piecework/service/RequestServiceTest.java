@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.handler;
+package piecework.service;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.junit.Assert;
@@ -35,6 +35,7 @@ import piecework.model.Process;
 import piecework.persistence.RequestRepository;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.service.RequestService;
 import piecework.service.TaskService;
 import piecework.test.ExampleFactory;
 
@@ -45,10 +46,10 @@ import javax.servlet.http.HttpServletRequest;
  */
 @Ignore
 @RunWith(MockitoJUnitRunner.class)
-public class RequestHandlerTest {
+public class RequestServiceTest {
 
     @InjectMocks
-    RequestHandler requestHandler;
+    RequestService requestService;
 
     @Mock
     RequestRepository requestRepository;
@@ -102,12 +103,12 @@ public class RequestHandlerTest {
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester");
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestHandler.create(requestDetails, process);
+        FormRequest formRequest = requestService.create(requestDetails, process);
         assertValid(formRequest);
 
         Mockito.when(requestRepository.findOne(Mockito.any(String.class))).thenReturn(formRequest);
 
-        FormRequest handleRequest = requestHandler.handle(requestDetails, formRequest.getRequestId());
+        FormRequest handleRequest = requestService.read(requestDetails, formRequest.getRequestId());
         assertEqual(formRequest, handleRequest);
     }
 
@@ -120,13 +121,13 @@ public class RequestHandlerTest {
 //        Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester").thenReturn("somebodyelse");
 //
 //        RequestDetails firstRequest = new RequestDetails.Builder(context, securitySettings).build();
-//        FormRequest formRequest = requestHandler.create(firstRequest, process);
+//        FormRequest formRequest = requestService.create(firstRequest, process);
 //        assertValid(formRequest);
 //
 //        boolean isExceptionThrown = false;
 //        try {
 //            RequestDetails secondRequest = new RequestDetails.Builder(context, securitySettings).build();
-//            requestHandler.handle(secondRequest, formRequest.getRequestId());
+//            requestService.handle(secondRequest, formRequest.getRequestId());
 //        } catch (ForbiddenError error) {
 //            isExceptionThrown = true;
 //        }

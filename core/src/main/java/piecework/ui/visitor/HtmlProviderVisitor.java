@@ -136,7 +136,7 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         if (indexOf > path.length())
             return path;
 
-        String adjustedPath = path.substring(indexOf+7);
+        String adjustedPath = path.substring(indexOf+3);
         return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
     }
 

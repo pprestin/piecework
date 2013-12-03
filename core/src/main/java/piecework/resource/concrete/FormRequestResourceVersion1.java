@@ -16,14 +16,13 @@
 package piecework.resource.concrete;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.cyberneko.html.filters.Identity;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.Versions;
-import piecework.exception.ForbiddenError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
-import piecework.handler.RequestHandler;
+import piecework.exception.*;
+import piecework.service.RequestService;
 import piecework.identity.IdentityHelper;
 import piecework.model.Entity;
 import piecework.model.FormRequest;
@@ -32,8 +31,6 @@ import piecework.model.RequestDetails;
 import piecework.resource.FormRequestResource;
 import piecework.service.ProcessService;
 
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -43,6 +40,8 @@ import javax.ws.rs.core.Response;
 @Service
 public class FormRequestResourceVersion1 implements FormRequestResource {
 
+    private static final Logger LOG = Logger.getLogger(FormRequestResourceVersion1.class);
+
     @Autowired
     IdentityHelper helper;
 
@@ -50,23 +49,28 @@ public class FormRequestResourceVersion1 implements FormRequestResource {
     ProcessService processService;
 
     @Autowired
-    RequestHandler requestHandler;
+    RequestService requestService;
 
     @Autowired
     Versions versions;
 
     @Override
     public Response create(String processDefinitionKey, String taskId, MessageContext context, RequestDetails requestDetails) throws StatusCodeError {
-        Entity principal = helper.getPrincipal();
-        if (principal.getEntityType() != Entity.EntityType.SYSTEM)
-            throw new ForbiddenError();
-        Process process = processService.read(processDefinitionKey);
-        FormRequest request = requestHandler.create(requestDetails, process);
-        if (request == null)
-            throw new NotFoundError();
+        try {
+            Entity principal = helper.getPrincipal();
+            if (principal.getEntityType() != Entity.EntityType.SYSTEM)
+                throw new ForbiddenError();
+            Process process = processService.read(processDefinitionKey);
+            FormRequest request = requestService.create(requestDetails, process);
+            if (request == null)
+                throw new NotFoundError();
 
-        String link = versions.getVersion1().getApplicationUri("resource", process.getProcessDefinitionKey(), request.getRequestId());
-        return Response.ok(link, MediaType.TEXT_PLAIN_TYPE).build();
+            String link = versions.getVersion1().getApplicationUri("resource", process.getProcessDefinitionKey(), request.getRequestId());
+            return Response.ok(link, MediaType.TEXT_PLAIN_TYPE).build();
+        } catch (MisconfiguredProcessException mpe) {
+            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
     }
 
     @Override

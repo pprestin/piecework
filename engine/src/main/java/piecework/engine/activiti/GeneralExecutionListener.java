@@ -19,6 +19,7 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.engine.EngineContext;
 import piecework.engine.EngineStateSynchronizer;
 import piecework.enumeration.StateChangeType;
 
@@ -53,7 +54,8 @@ public class GeneralExecutionListener implements ExecutionListener {
             String pieceworkProcessInstanceId = execution.getProcessBusinessKey();
             StateChangeType event = EVENT_MAP.get(eventName);
             if (event != null) {
-                engineStateSynchronizer.onProcessInstanceEvent(event, pieceworkProcessInstanceId);
+                EngineContext context = new ActivitiEngineContext(execution.getEngineServices(), execution.getProcessDefinitionId(), execution.getProcessInstanceId());
+                engineStateSynchronizer.onProcessInstanceEvent(event, pieceworkProcessInstanceId, context);
             }
         }
     }
