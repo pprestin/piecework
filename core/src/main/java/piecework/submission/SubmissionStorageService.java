@@ -139,7 +139,7 @@ public class SubmissionStorageService {
                 if (file != null)
                     submissionBuilder.formValue(name, file);
                 else if (isUserField)
-                    submissionBuilder.formValue(name, userDetailsService.getUserByAnyId(value));
+                    submissionBuilder.formValue(name, userDetailsService.getUser(value));
                 else
                     submissionBuilder.formValue(name, value);
 

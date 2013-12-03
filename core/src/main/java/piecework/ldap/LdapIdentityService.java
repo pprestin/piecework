@@ -48,7 +48,6 @@ public class LdapIdentityService implements IdentityService {
     private final LdapSettings ldapSettings;
     private final LdapUserDetailsService delegate;
     private final LdapUserSearch userSearch;
-    private final LdapUserSearch internalUserSearch;
     private final LdapAuthoritiesPopulator authoritiesPopulator;
     private final CustomLdapUserDetailsMapper userDetailsMapper;
 
@@ -58,18 +57,16 @@ public class LdapIdentityService implements IdentityService {
         this.delegate = null;
         this.userDetailsMapper = null;
         this.userSearch = null;
-        this.internalUserSearch = null;
         this.authoritiesPopulator = null;
         this.ldapSettings = null;
     }
 
-    public LdapIdentityService(LdapContextSource personLdapContextSource, LdapUserSearch userSearch, LdapUserSearch internalUserSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, LdapSettings ldapSettings, CacheManager cacheManager) {
+    public LdapIdentityService(LdapContextSource personLdapContextSource, LdapUserSearch userSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, LdapSettings ldapSettings, CacheManager cacheManager) {
         this.personLdapContextSource = personLdapContextSource;
         this.delegate = new LdapUserDetailsService(userSearch, authoritiesPopulator);
         this.delegate.setUserDetailsMapper(userDetailsMapper);
         this.userDetailsMapper = userDetailsMapper;
         this.userSearch = userSearch;
-        this.internalUserSearch = internalUserSearch;
         this.authoritiesPopulator = authoritiesPopulator;
         this.ldapSettings = ldapSettings;
         this.cacheManager = cacheManager;
@@ -119,7 +116,7 @@ public class LdapIdentityService implements IdentityService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (LOG.isDebugEnabled())
-            LOG.debug("Looking for user by username " + username);
+            LOG.debug("Looking for user by uniqueId " + username);
 
         Cache cache = cacheManager.getCache("loadUserByUsername");
         Cache.ValueWrapper wrapper = cache.get(username);
@@ -135,7 +132,7 @@ public class LdapIdentityService implements IdentityService {
         }
 
         if (LOG.isDebugEnabled())
-            LOG.debug("Retrieving user by username " + username);
+            LOG.debug("Retrieving user by uniqueId " + username);
 
 
         try {
@@ -146,72 +143,13 @@ public class LdapIdentityService implements IdentityService {
         return userDetails;
     }
 
-    public UserDetails loadUserByInternalId(String internalId) {
-        if (LOG.isDebugEnabled())
-            LOG.debug("Looking for user by internalId " + internalId);
-
-        Cache cache = cacheManager.getCache("loadUserByInternalId");
-        Cache.ValueWrapper wrapper = cache.get(internalId);
-
-        if (wrapper != null) {
-            UserDetails details = (UserDetails) wrapper.get();
-            if (details == null)
-                throw new UsernameNotFoundException(internalId);
-            return details;
-        }
-
-        if (LOG.isDebugEnabled())
-            LOG.debug("Retrieving user by internalId " + internalId);
-
-        DirContextOperations userData;
-        String username;
+    public User getUser(String id) {
         try {
-            userData = internalUserSearch.searchForUser(internalId);
-            username = userData.getStringAttribute(ldapSettings.getLdapPersonAttributeIdInternal());
-        } catch (UsernameNotFoundException nfe) {
-            cache.put(internalId, null);
-            throw nfe;
-        }
-
-        UserDetails userDetails = userDetailsMapper.mapUserFromContext(userData, username,
-                authoritiesPopulator.getGrantedAuthorities(userData, username));
-        cache.put(internalId, userDetails);
-        return userDetails;
-    }
-
-    public IdentityDetails loadUserByAnyId(String id) {
-        try {
-            return IdentityDetails.class.cast(loadUserByInternalId(id));
-        } catch (UsernameNotFoundException e) {
-            try {
-                return IdentityDetails.class.cast(loadUserByUsername(id));
-            } catch (UsernameNotFoundException e2) {
-                return null;
-            }
-        }
-    }
-
-    public User getUser(String internalId) {
-        try {
-            if (StringUtils.isNotEmpty(internalId)) {
-                UserDetails userDetails = loadUserByInternalId(internalId);
-
-                if (userDetails != null)
-                    return new User.Builder(userDetails).build();
-            }
-        } catch (UsernameNotFoundException e) {
-            // Ignore and return null
-        }
-        return null;
-    }
-
-    public User getUserByAnyId(String id) {
-        UserDetails userDetails = loadUserByAnyId(id);
-
-        if (userDetails != null)
+            UserDetails userDetails = IdentityDetails.class.cast(loadUserByUsername(id));
             return new User.Builder(userDetails).build();
-
-        return null;
+        } catch (UsernameNotFoundException e) {
+            return null;
+        }
     }
 
     private List<User> findMany(Filter filter, long countLimit) {
