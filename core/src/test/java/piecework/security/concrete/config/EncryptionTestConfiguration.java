@@ -16,7 +16,10 @@
 package piecework.security.concrete.config;
 
 import org.springframework.context.annotation.*;
+import piecework.common.UuidGenerator;
+import piecework.security.EncryptionKeyProvider;
 import piecework.security.EncryptionService;
+import piecework.security.concrete.DefaultEncryptionKeyProvider;
 import piecework.security.concrete.ExampleBouncyCastleEncryptionService;
 
 /**
@@ -27,9 +30,19 @@ import piecework.security.concrete.ExampleBouncyCastleEncryptionService;
 @PropertySource("classpath:META-INF/piecework/default.properties")
 public class EncryptionTestConfiguration {
 
-   @Bean
-   public EncryptionService encryptionService() {
-       return new ExampleBouncyCastleEncryptionService();
-   }
+    @Bean
+    public EncryptionService encryptionService() {
+        return new ExampleBouncyCastleEncryptionService();
+    }
+
+    @Bean
+    public EncryptionKeyProvider encryptionKeyProvider() {
+        return new DefaultEncryptionKeyProvider();
+    }
+
+    @Bean
+    public UuidGenerator uuidGenerator() {
+        return new UuidGenerator();
+    }
 
 }
