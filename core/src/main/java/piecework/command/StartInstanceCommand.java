@@ -67,7 +67,7 @@ public class StartInstanceCommand extends InstanceCommand {
             String initiationStatus = deployment.getInitiationStatus();
 
             if (principal != null && principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(submission.getSubmitterId())) {
-                User submitter = identityService.getUserByAnyId(submission.getSubmitterId());
+                User submitter = identityService.getUser(submission.getSubmitterId());
                 if (submitter != null)
                     initiatorId = submitter.getUserId();
             }

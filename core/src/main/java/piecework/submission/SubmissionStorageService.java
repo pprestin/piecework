@@ -136,10 +136,9 @@ public class SubmissionStorageService {
                 if (file != null)
                     submissionBuilder.formValue(name, file);
                 else if (template.isUserField(name))
-                    submissionBuilder.formValue(name, userDetailsService.getUserByAnyId(value));
+                    submissionBuilder.formValue(name, userDetailsService.getUser(value));
                 else
                     submissionBuilder.formValue(name, value);
-
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
                 if (file != null) {
                     contentType = file.getContentType();

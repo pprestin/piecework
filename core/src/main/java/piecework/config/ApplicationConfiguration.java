@@ -55,6 +55,7 @@ import piecework.form.AnonymousScriptResource;
 import piecework.identity.DebugIdentityService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapIdentityService;
+import piecework.ldap.LdapGroupService;
 import piecework.ldap.LdapSettings;
 import piecework.security.CustomAuthenticationSource;
 import piecework.security.SSLSocketFactoryWrapper;
@@ -260,11 +261,10 @@ public class ApplicationConfiguration {
 
         LdapContextSource contextSource = personLdapContextSource(ldapSettings, securitySettings);
         LdapUserSearch userSearch = userSearch(contextSource, ldapSettings);
-        LdapUserSearch userSearchInternal = userSearchInternal(environment, contextSource);
         LdapAuthoritiesPopulator authoritiesPopulator = authoritiesPopulator(ldapSettings, securitySettings);
         CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper();
 
-        return new LdapIdentityService(contextSource, userSearch, userSearchInternal, authoritiesPopulator, userDetailsMapper, ldapSettings, cacheManager());
+        return new LdapIdentityService(contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings, cacheManager());
     }
 
     @Bean
@@ -321,7 +321,7 @@ public class ApplicationConfiguration {
 
     private LdapAuthoritiesPopulator authoritiesPopulator(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
         DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(ldapSettings, securitySettings), ldapSettings.getLdapGroupSearchBase());
-        authoritiesPopulator.setGroupSearchFilter(ldapSettings.getLdapGroupSearchFilter());
+        authoritiesPopulator.setGroupSearchFilter(ldapSettings.getLdapGroupMemberSearchFilter());
         return authoritiesPopulator;
     }
 
@@ -376,18 +376,18 @@ public class ApplicationConfiguration {
         return userSearch;
     }
 
-    private LdapUserSearch userSearchInternal(Environment environment, LdapContextSource personLdapContextSource) throws Exception {
+    @Bean
+    public LdapGroupService groupService(Environment environment) throws Exception {
         LdapSettings ldapSettings = ldapSettings(environment);
-        String ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilterInternal();
+        SecuritySettings securitySettings = securitySettings(environment);
 
-        // Fallback to original setting if an internal setting is not defined
-        if (StringUtils.isEmpty(ldapPersonSearchFilter))
-            ldapPersonSearchFilter = ldapSettings.getLdapPersonSearchFilter();
+        LdapContextSource contextSource = groupLdapContextSource(ldapSettings, securitySettings);
+        FilterBasedLdapUserSearch groupSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapGroupSearchBase(), ldapSettings.getLdapGroupSearchFilter(), contextSource);
+        groupSearch.setReturningAttributes(null);
+        groupSearch.setSearchSubtree(true);
+        groupSearch.setSearchTimeLimit(10000);
 
-        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapPersonSearchFilter, personLdapContextSource);
-        ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
-        ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
-        ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
-        return userSearch;
+         IdentityService userService = userDetailsService(environment); // bean dependency
+         return ( new LdapGroupService(contextSource, groupSearch, ldapSettings, userService, cacheManager()) );
     }
 }
