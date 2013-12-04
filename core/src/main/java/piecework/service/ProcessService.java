@@ -230,6 +230,10 @@ public class ProcessService {
         deploymentRepository.save(updated);
     }
 
+    public Set<Process> findAllProcesses() {
+        return Collections.unmodifiableSet(new HashSet<Process>(processRepository.findAllBasic()));
+    }
+
     public Set<piecework.model.Process> findProcesses(Set<String> processDefinitionKeys) {
         if (processDefinitionKeys != null) {
             List<Process> processes = processRepository.findAllBasic(processDefinitionKeys);

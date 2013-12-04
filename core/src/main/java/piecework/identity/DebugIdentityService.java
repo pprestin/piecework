@@ -23,7 +23,9 @@ import piecework.authorization.DebugAccessAuthority;
 import piecework.model.User;
 import piecework.persistence.ProcessRepository;
 import piecework.service.IdentityService;
+import piecework.service.ProcessService;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -35,7 +37,14 @@ public class DebugIdentityService implements IdentityService {
     Environment environment;
 
     @Autowired
-    ProcessRepository processRepository;
+    ProcessService processService;
+
+    private DebugAccessAuthority accessAuthority;
+
+    @PostConstruct
+    public void init() {
+        this.accessAuthority = new DebugAccessAuthority(processService);
+    }
 
     @Override
     public User getUser(String internalId) {
@@ -74,7 +83,7 @@ public class DebugIdentityService implements IdentityService {
             displayName = environment.getProperty("authentication.testuser.displayName");
 
         UserDetails delegate = new org.springframework.security.core.userdetails.User(id, "none",
-                Collections.singletonList(new DebugAccessAuthority(processRepository)));
+                Collections.singletonList(accessAuthority));
         return new IdentityDetails(delegate, id, id, displayName, "");
     }
 }

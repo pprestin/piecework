@@ -28,6 +28,9 @@ import java.util.List;
  */
 public interface ProcessRepository extends MongoRepository<Process, String> {
 
+    @Query(value="{isDeleted : false}", fields="{_id:1, processDefinitionLabel:1, deploymentId: 1, deploymentLabel:1, deploymentVersion:1, deploymentDate:1, isDeleted :1}")
+    List<Process> findAllBasic();
+
     @Query(value="{_id : { $in: ?0 }, isDeleted : false}", fields="{_id:1, processDefinitionLabel:1, deploymentId: 1, deploymentLabel:1, deploymentVersion:1, deploymentDate:1, isDeleted :1}")
     List<Process> findAllBasic(Iterable<String> processDefinitionKeys);
 

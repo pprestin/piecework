@@ -316,6 +316,12 @@ public class UnitTestConfiguration {
     }
 
 	public class ProcessRepositoryStub extends MongoRepositoryStub<Process> implements ProcessRepository {
+
+        @Override
+        public List<Process> findAllBasic() {
+            return null;
+        }
+
         @Override
         public List<Process> findAllBasic(Iterable<String> processDefinitionKeys) {
             return null;

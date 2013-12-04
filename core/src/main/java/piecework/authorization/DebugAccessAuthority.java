@@ -19,7 +19,9 @@ import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.model.Process;
 import piecework.persistence.ProcessRepository;
+import piecework.service.ProcessService;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,11 +31,11 @@ import java.util.Set;
  */
 public class DebugAccessAuthority extends AccessAuthority {
 
-    private final ProcessRepository processRepository;
+    private final List<Process> processes;
 
-    public DebugAccessAuthority(ProcessRepository processRepository) {
+    public DebugAccessAuthority(ProcessService processService) {
         super();
-        this.processRepository = processRepository;
+        this.processes = new ArrayList<Process>(processService.findAllProcesses());
     }
 
     @Override
@@ -54,7 +56,6 @@ public class DebugAccessAuthority extends AccessAuthority {
     @Override
     public Set<String> getProcessDefinitionKeys(Set<String> allowedRoleSet) {
         Set<String> processDefinitionKeys = new HashSet<String>();
-        List<Process> processes = processRepository.findAll();
         for (Process process : processes) {
             processDefinitionKeys.add(process.getProcessDefinitionKey());
         }

@@ -127,9 +127,12 @@ public class TaskService {
         Set<String> overseerProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
         Set<String> userProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.USER);
 
-        Set<Process> overseerProcesses = processService.findProcesses(overseerProcessDefinitionKeys);
-        Set<Process> userProcesses = Sets.difference(processService.findProcesses(userProcessDefinitionKeys), overseerProcesses);
-        Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
+        Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
+        Set<Process> allowedProcesses = processService.findProcesses(allProcessDefinitionKeys);
+
+//        Set<Process> overseerProcesses = processService.findProcesses(overseerProcessDefinitionKeys);
+//        Set<Process> userProcesses = Sets.difference(processService.findProcesses(userProcessDefinitionKeys), overseerProcesses);
+//        Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
         ViewContext version = versions.getVersion1();
 
