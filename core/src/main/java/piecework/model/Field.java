@@ -16,10 +16,7 @@
 package piecework.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -222,6 +219,19 @@ public class Field implements Serializable, Comparable<Field> {
     public List<Option> getOptions() {
 		return options;
 	}
+
+    @JsonIgnore
+    public Map<String, String> getOptionMap() {
+        Map<String, String> map = new HashMap<String, String>();
+        if (options != null) {
+            for (Option option : options) {
+                if (StringUtils.isNotEmpty(option.getName()) && StringUtils.isNotEmpty(option.getValue()))
+                    map.put(option.getName(), option.getValue());
+            }
+        }
+
+        return map;
+    }
 
 	public String getDefaultValue() {
 		return defaultValue;

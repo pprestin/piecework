@@ -82,7 +82,7 @@ public class AuthorizationUtility {
         if (formRequest.getRequestDate() != null) {
             Hours hours = Hours.hoursBetween(new DateTime(formRequest.getRequestDate()), new DateTime());
             int h = hours.getHours();
-            if (h > 1) {
+            if (h > 24) {
                 throw new ForbiddenError(Constants.ExceptionCodes.request_expired);
             }
         }

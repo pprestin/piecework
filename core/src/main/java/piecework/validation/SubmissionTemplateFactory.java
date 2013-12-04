@@ -194,20 +194,32 @@ public class SubmissionTemplateFactory {
 //    }
 
     private void addField(SubmissionTemplate.Builder builder, Field field) {
-        builder.rules(field, new ArrayList<ValidationRule>(validationRules(field)));
         if (!field.isDeleted() && field.isEditable()) {
-            String fieldName = field.getName();
-            if (fieldName != null) {
-                if (field.isRestricted())
-                    builder.restricted(fieldName);
-                else
-                    builder.acceptable(fieldName);
+            builder.rules(field, new ArrayList<ValidationRule>(validationRules(field)));
+            builder.field(field);
 
-                if (field.getType().equals(Constants.FieldTypes.PERSON))
-                    builder.userField(fieldName);
-
-                builder.field(field);
-            }
+//            String fieldName = field.getName();
+//            if (fieldName != null) {
+//                if (field.isRestricted())
+//                    builder.restricted(fieldName);
+//                else
+//                    builder.acceptable(fieldName);
+//
+//                if (field.getType().equals(Constants.FieldTypes.PERSON))
+//                    builder.userField(fieldName);
+//
+//                builder.field(field);
+//            } else if (field.getType() != null && field.getType().equals(FieldTag.CHECKBOX.getTagName())) {
+//                List<Option> options = field.getOptions();
+//                if (options != null) {
+//                    for (Option option : options) {
+//                        if (field.isRestricted())
+//                            builder.restricted(option.getName());
+//                        else
+//                            builder.acceptable(option.getName());
+//                    }
+//                }
+//            }
         }
     }
 

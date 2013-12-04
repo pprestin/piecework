@@ -15,13 +15,13 @@
  */
 package piecework.security.concrete;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.springframework.stereotype.Service;
 import piecework.model.Secret;
-import piecework.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author James Renfro
@@ -36,5 +36,10 @@ public class PassthroughEncryptionService extends BaseEncryptionService {
     @Override
     public String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException {
         return new String(secret.getCiphertext(), "UTF-8");
+    }
+
+    @Override
+    public String generateKey(int n) throws NoSuchAlgorithmException {
+        throw new NotImplementedException();
     }
 }

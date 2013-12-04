@@ -84,7 +84,6 @@ public class ValidationService {
         return validation;
     }
 
-
     private FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
 
         FormValidation.Builder validationBuilder = new FormValidation.Builder().instance(instance).submission(submission);
@@ -92,8 +91,7 @@ public class ValidationService {
         Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
 
         if (fieldRuleMap != null) {
-            Set<String> acceptableFieldNames = new HashSet<String>(template.getAcceptable());
-            Set<String> restrictedFieldNames = new HashSet<String>(template.getRestricted());
+            Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
             Map<String, List<Value>> submissionData = submission.getData();
             Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
@@ -110,8 +108,7 @@ public class ValidationService {
                         } catch (ValidationRuleException e) {
                             validationBuilder.error(rule.getName(), e.getMessage());
                             if (onlyAcceptValidInputs) {
-                                acceptableFieldNames.remove(rule.getName());
-                                restrictedFieldNames.remove(rule.getName());
+                                fieldNames.remove(rule.getName());
                             }
                         }
                     }
@@ -132,12 +129,12 @@ public class ValidationService {
 
                 if (fieldName == null) {
                     LOG.warn("Field is missing name " + field.getFieldId());
+                    Map<String, String> optionMap = field.getOptionMap();
+
                     continue;
                 }
 
-                boolean isAcceptable = acceptableFieldNames.contains(fieldName);
-                boolean isRestricted = restrictedFieldNames.contains(fieldName);
-                if (isAcceptable || isRestricted) {
+                if (fieldNames.contains(fieldName)) {
                     List<? extends Value> values = submissionData.get(fieldName);
                     List<? extends Value> previousValues = instanceData.get(fieldName);
 

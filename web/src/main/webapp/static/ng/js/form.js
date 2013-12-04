@@ -53,6 +53,15 @@ angular.module('wf.directives',
                         field.cssClass = null;
                         field.messages = null;
                     };
+                    scope.isCheckboxChecked = function(field, option) {
+                        var isChecked = false;
+                        angular.forEach(field.values, function(value) {
+                            if (option != null && option.value == value)
+                                isChecked = true;
+                        });
+
+                        return isChecked;
+                    };
                     scope.range = function(min, max) {
                         var input = [];
                         for (var i=min; i<=max; i++) input.push(i);
@@ -192,8 +201,8 @@ angular.module('wf.directives',
              }
          }
     ])
-    .directive('wfStatus', ['wizardService',
-         function(wizardService) {
+    .directive('wfStatus', ['$rootScope', '$window', 'notificationService', 'taskService', 'wizardService',
+         function($rootScope, $window, notificationService, taskService, wizardService) {
              return {
                  restrict: 'AE',
                  scope: {
@@ -201,7 +210,21 @@ angular.module('wf.directives',
                  },
                  templateUrl: 'status.html',
                  link: function (scope, element) {
+                    scope.claim = function() {
+                        var success = function(scope, data, status, headers, config, form, assignee) {
+                            $rootScope.$broadcast('event:refresh', 'assignment');
+                        };
 
+                        var failure = function(scope, data, status, headers, config, form, assignee) {
+                            form._assignmentStatus = 'error';
+                            var displayName = typeof(assignee.displayName) === 'undefined' ? assignee : assignee.displayName;
+                            var message = form.task.processInstanceLabel + ' cannot be assigned ';
+                            var title = data.messageDetail;
+                            notificationService.notify(scope, title, message);
+                        };
+                        var userId = $window.piecework.context.user.userId;
+                        taskService.assignTask(scope, scope.form, userId, success, failure);
+                    };
                  }
              }
          }
@@ -985,14 +1008,14 @@ angular.module('Form',
             };
             $scope.handleField = function(form, data, validation, field, readonly) {
                 var values = data[field.name];
-//                field.optionMap = new Object();
-//                if (field.options != null) {
-//                    angular.forEach(field.options, function(option)) {
-//                        if (option.value != null) {
-//                            field.optionMap[option.value] = option;
-//                        }
-//                    });
-//                }
+                field.optionMap = new Object();
+                if (field.options != null) {
+                    angular.forEach(field.options, function(option) {
+                        if (option.value != null) {
+                            field.optionMap[option.value] = option;
+                        }
+                    });
+                }
                 if (values != null && values.length > 0) {
                     if (values.length == 1) {
                         var value = values[0];
@@ -1058,7 +1081,10 @@ angular.module('Form',
 
                 if (form.task != null) {
                     if (form.task.active) {
-                        form.state = 'assigned';
+                        if (form.task.assignee != null)
+                            form.state = 'assigned';
+                        else
+                            form.state = 'unassigned';
                     } else if (form.task.taskStatus == 'Suspended') {
                         form.state = 'suspended';
                     } else if (form.task.taskStatus == 'Cancelled') {

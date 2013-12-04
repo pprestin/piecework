@@ -15,8 +15,13 @@
  */
 package piecework.validation;
 
+import org.apache.commons.lang.StringUtils;
+import piecework.Constants;
+import piecework.enumeration.FieldSubmissionType;
+import piecework.enumeration.FieldTag;
 import piecework.model.Button;
 import piecework.model.Field;
+import piecework.model.Option;
 import piecework.util.ManyMap;
 
 import java.util.*;
@@ -26,10 +31,8 @@ import java.util.*;
  */
 public class SubmissionTemplate {
 
-    private final Set<String> acceptable;
     private final Set<String> buttonNames;
     private final Map<String, Button> buttonValueMap;
-    private final Set<String> restricted;
     private final Set<String> userFields;
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
     private final Map<String, Field> fieldMap;
@@ -41,19 +44,35 @@ public class SubmissionTemplate {
     }
 
     private SubmissionTemplate(Builder builder) {
-        this.acceptable = Collections.unmodifiableSet(builder.acceptable);
         this.buttonNames = Collections.unmodifiableSet(builder.buttonNames);
         this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
         this.fieldMap = Collections.unmodifiableMap(builder.fieldMap);
-        this.restricted = Collections.unmodifiableSet(builder.restricted);
         this.userFields = Collections.unmodifiableSet(builder.userFields);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.fieldRuleMap = Collections.unmodifiableMap(builder.fieldRuleMap);
         this.maxAttachmentSize = builder.maxAttachmentSize;
     }
 
-    public Set<String> getAcceptable() {
-        return acceptable;
+    public FieldSubmissionType fieldSubmissionType(String name) {
+        if (StringUtils.isNotEmpty(name)) {
+            Field field = this.fieldMap.get(name);
+            if (field != null) {
+                if (field.isRestricted())
+                    return FieldSubmissionType.RESTRICTED;
+                return FieldSubmissionType.ACCEPTABLE;
+            }
+
+            if (buttonNames.contains(name))
+                return FieldSubmissionType.BUTTON;
+
+            int indexOf = name.indexOf("!description");
+            if (indexOf != -1 && indexOf < name.length()) {
+                String fieldName = name.substring(0, indexOf);
+                if (this.fieldMap.containsKey(fieldName))
+                    return FieldSubmissionType.DESCRIPTION;
+            }
+        }
+        return FieldSubmissionType.INVALID;
     }
 
     public Button getButton(String value) {
@@ -66,10 +85,6 @@ public class SubmissionTemplate {
 
     public Map<String, Field> getFieldMap() {
         return fieldMap;
-    }
-
-    public Set<String> getRestricted() {
-        return restricted;
     }
 
     public Set<String> getUserFields() {
@@ -88,34 +103,12 @@ public class SubmissionTemplate {
         return fieldRuleMap;
     }
 
-    public boolean isAcceptable(String name) {
-        return acceptable.contains(name);
-    }
-
-    public boolean isDescription(String descriptionName) {
-        int indexOf = descriptionName.indexOf("!description");
-        if (indexOf != -1 && indexOf < descriptionName.length()) {
-            String fieldName = descriptionName.substring(0, indexOf);
-            return ((!acceptable.contains(descriptionName) && acceptable.contains(fieldName)) ||
-                    (!restricted.contains(descriptionName) && restricted.contains(fieldName)));
-        }
-        return false;
-    }
-
-    public boolean isButton(String name) {
-        return name != null && buttonNames.contains(name);
-    }
-
     public boolean isAttachmentAllowed() {
         return isAttachmentAllowed;
     }
 
     public long getMaxAttachmentSize() {
         return maxAttachmentSize;
-    }
-
-    public boolean isRestricted(String name) {
-        return restricted.contains(name);
     }
 
     public boolean isUserField(String name) {
@@ -161,6 +154,17 @@ public class SubmissionTemplate {
 
         public Builder field(Field field) {
             this.fieldMap.put(field.getName(), field);
+//            if (field.getType() != null && field.getType().equals(Constants.FieldTypes.CHECKBOX)) {
+//                List<Option> options = field.getOptions();
+//                if (options != null) {
+//                    for (Option option : options) {
+//                        if (StringUtils.isNotEmpty(option.getName())) {
+//                            this.fieldMap.put(option.getName(), field);
+//                        }
+//                    }
+//                }
+//            }
+
             return this;
         }
 

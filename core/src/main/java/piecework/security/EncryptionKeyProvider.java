@@ -1,12 +1,15 @@
 package piecework.security;
 
+import javax.crypto.SecretKey;
+import java.security.GeneralSecurityException;
+
 /**
  * @author James Renfro
  */
 public interface EncryptionKeyProvider {
 
-    String getCurrentKey(String processDefinitionKey, String processInstanceId);
+    SecretKeyRing getEncryptionKeyRing(String processDefinitionKey, String processInstanceId) throws GeneralSecurityException;
 
-    String getKey(String keyName);
+    SecretKey getDecryptionKey(String keyName) throws GeneralSecurityException;
 
 }

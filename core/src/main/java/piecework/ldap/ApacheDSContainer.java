@@ -24,18 +24,18 @@ package piecework.ldap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.directory.server.core.DefaultDirectoryService;
-import org.apache.directory.server.core.authn.AuthenticationInterceptor;
-import org.apache.directory.server.core.exception.ExceptionInterceptor;
-import org.apache.directory.server.core.interceptor.Interceptor;
-import org.apache.directory.server.core.normalization.NormalizationInterceptor;
-import org.apache.directory.server.core.operational.OperationalAttributeInterceptor;
-import org.apache.directory.server.core.partition.impl.btree.jdbm.JdbmPartition;
-import org.apache.directory.server.core.referral.ReferralInterceptor;
-import org.apache.directory.server.core.subtree.SubentryInterceptor;
-import org.apache.directory.server.ldap.LdapServer;
-import org.apache.directory.server.protocol.shared.store.LdifFileLoader;
-import org.apache.directory.server.protocol.shared.transport.TcpTransport;
+//import org.apache.directory.server.core.DefaultDirectoryService;
+//import org.apache.directory.server.core.authn.AuthenticationInterceptor;
+//import org.apache.directory.server.core.exception.ExceptionInterceptor;
+//import org.apache.directory.server.core.interceptor.Interceptor;
+//import org.apache.directory.server.core.normalization.NormalizationInterceptor;
+//import org.apache.directory.server.core.operational.OperationalAttributeInterceptor;
+//import org.apache.directory.server.core.partition.impl.btree.jdbm.JdbmPartition;
+//import org.apache.directory.server.core.referral.ReferralInterceptor;
+//import org.apache.directory.server.core.subtree.SubentryInterceptor;
+//import org.apache.directory.server.ldap.LdapServer;
+//import org.apache.directory.server.protocol.shared.store.LdifFileLoader;
+//import org.apache.directory.server.protocol.shared.transport.TcpTransport;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
@@ -53,7 +53,7 @@ import java.util.List;
  */
 public class ApacheDSContainer {
 
-    private final Log logger = LogFactory.getLog(getClass());
+/*    private final Log logger = LogFactory.getLog(getClass());
 
     final DefaultDirectoryService service;
     LdapServer server;
@@ -271,5 +271,5 @@ public class ApacheDSContainer {
 
     public boolean isRunning() {
         return running;
-    }
+    } */
 }

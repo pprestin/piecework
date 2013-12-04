@@ -17,7 +17,6 @@ package piecework.persistence.concrete;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.compress.utils.IOUtils;
-import org.bouncycastle.jce.provider.JDKMessageDigest;
 import piecework.persistence.ContentRepository;
 import piecework.model.Content;
 
@@ -25,6 +24,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -79,7 +79,7 @@ public class InMemoryContentRepository implements ContentRepository {
                 byte[] data = outputStream.toByteArray();
                 inputStream = new ByteArrayInputStream(data);
                 Base64 encoder = new Base64();
-                md5 = new String(encoder.encode(JDKMessageDigest.MD5.getInstance("MD5").digest(data)));
+                md5 = new String(encoder.encode(MessageDigest.getInstance("MD5").digest(data)));
             } catch (IOException e) {
                 // Don't want to change signature for testing, but also don't want to lose this exception
                 throw new RuntimeException(e);

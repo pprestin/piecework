@@ -61,7 +61,8 @@ public class DataFilterService {
     public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, FormValidation validation, boolean includeRestrictedData, boolean includeInstanceData) {
         Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, includeRestrictedData, includeInstanceData);
         if (validation != null) {
-            Map<String, List<Value>> validationData = validation.getData();
+            // Always decrypt the validation data
+            Map<String, List<Value>> validationData = decrypt(validation.getData());
             if (validationData != null) {
                 for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
                     data.put(entry.getKey(), entry.getValue());

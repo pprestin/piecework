@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
+import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.persistence.ContentRepository;
@@ -67,18 +68,14 @@ public class SubmissionStorageService {
     }
 
     public boolean store(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId, InputStream inputStream, String contentType) throws MisconfiguredProcessException, StatusCodeError {
-        boolean isAcceptable = template.isAcceptable(name);
-        boolean isButton = template.isButton(name);
-        boolean isRestricted = !isAcceptable && template.isRestricted(name);
-        boolean isAttachment = !isAcceptable && !isRestricted && template.isAttachmentAllowed();
-        boolean isUserField = template.isUserField(name);
+        FieldSubmissionType fieldSubmissionType = template.fieldSubmissionType(name);
 
-        if (isButton) {
+        if (fieldSubmissionType == FieldSubmissionType.BUTTON) {
             // Note that submitting multiple button messages on a form will result in unpredictable behavior
             Button button = template.getButton(value);
             button(button, name, value, submissionBuilder);
             return true;
-        } else if (isAcceptable || isRestricted || isAttachment) {
+        } else if (fieldSubmissionType != FieldSubmissionType.INVALID) {
             Field field = template.getField(name);
             String location = null;
             File file = null;
@@ -88,7 +85,7 @@ public class SubmissionStorageService {
                 String id = uuidGenerator.getNextId();
                 location = "/" + directory + "/" + id;
 
-                if (isAttachment)
+                if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(template.getMaxAttachmentSize()) * 1024l);
                 else if (field.getMaxValueLength() > 0)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(field.getMaxValueLength()).longValue() * 1024l);
@@ -128,22 +125,22 @@ public class SubmissionStorageService {
                         .build();
             }
 
-            if (isRestricted) {
+            if (fieldSubmissionType == FieldSubmissionType.RESTRICTED) {
                 try {
                     submissionBuilder.formValue(name, encryptionService.encrypt(value));
                 } catch (Exception e) {
                     LOG.error("Failed to correctly encrypt form value for " + name, e);
                     throw new InternalServerError(Constants.ExceptionCodes.encryption_error, name);
                 }
-            } else if (isAcceptable) {
+            } else if (fieldSubmissionType == FieldSubmissionType.ACCEPTABLE) {
                 if (file != null)
                     submissionBuilder.formValue(name, file);
-                else if (isUserField)
+                else if (template.isUserField(name))
                     submissionBuilder.formValue(name, userDetailsService.getUserByAnyId(value));
                 else
                     submissionBuilder.formValue(name, value);
 
-            } else if (isAttachment) {
+            } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
                 if (file != null) {
                     contentType = file.getContentType();
                     location = file.getLocation();
@@ -163,7 +160,7 @@ public class SubmissionStorageService {
             }
 
             return true;
-        } else if (template.isDescription(name)) {
+        } else if (fieldSubmissionType != FieldSubmissionType.DESCRIPTION) {
             submissionBuilder.description(name, value);
         }
 

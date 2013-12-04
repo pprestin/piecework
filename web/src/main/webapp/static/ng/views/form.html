@@ -63,11 +63,11 @@
         <div data-ng-switch-when="checkbox">
             <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
-                    <input data-ng-change="onFieldChange(field)" data-ng-model="option.value" data-ng-disabled="{{!field.editable}}" data-ng-checked="{{option.value == field.value}}" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" value="{{option.value}}" type="checkbox" name="{{option.name ? option.name : field.name}}"> {{option.label}}
+                    <input data-ng-change="onFieldChange(field)" data-ng-model="option.value" data-ng-disabled="{{!field.editable}}" data-ng-checked="isCheckboxChecked(field, option)" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" name="{{field.name}}" value="{{option.value}}" type="checkbox"> {{option.label}}
                 </label>
             </div>
         </div>
-        <input data-ng-switch-when="date" data-ng-change="onFieldChange(field)" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}" value="{{field.value|date:&quot;yyyy-MM-dd'T'HH:mm:ss.00&quot;}}"/>
+        <input data-ng-switch-when="date" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}" value="{{field.value|date:&quot;yyyy-MM-dd'T'HH:mm:ss.00&quot;}}"/>
         <div data-ng-switch-when="radio">
             <div class="radio" data-ng-repeat="option in field.options">
                 <label>
@@ -93,7 +93,8 @@
         </div>
         <textarea data-ng-change="onFieldChange(field)" data-ng-switch-when="textarea" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-maxlength="{{field.maxValueLength}}" data-ng-minlength="{{field.minValueLength}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="{{field.readonly}}" data-ng-required="field.required" class="form-control" name="{{field.name}}" placeholder="{{field.placeholder}}"></textarea>
         <div data-ng-switch-default>
-            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-minlength="{{field.minValueLength}}" data-inputmask="{{field.mask}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+            <input data-ng-if="field.editable" data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-minlength="{{field.minValueLength}}" data-inputmask="{{field.mask}}" data-ng-pattern="/{{field.pattern}}/" data-ng-readonly="field.readonly" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
+            <input data-ng-if="!field.editable" data-ng-disabled="!field.editable" data-ng-model="field.values[n-1]" data-ng-readonly="field.readonly" class="form-control" type="{{field.type}}" name="{{field.name}}" placeholder="{{field.placeholder}}" size="{{field.displayValueLength}}"/>
         </div>
     </div>
     <span data-ng-repeat="message in field.messages" class="help-block text-danger">{{message.text}}</span>
@@ -150,7 +151,8 @@
     </form>
 </script>
 <script type="text/ng-template" id="notifications.html">
-    <div data-ng-if="notifications" data-ng-show="notifications" class="alert alert-danger">
+    <div data-ng-if="notifications && notifications.length > 0" data-ng-show="notifications" class="alert alert-danger">
+        <button type="button" class="close" data-ng-click="notifications.length=0" aria-hidden="true">&times;</button>
         <h4 data-ng-if="notifications[0].title">{{notifications[0].title}}</h4>
         <ul>
             <li data-ng-repeat="notification in notifications" data-ng-bind-html="notification.message"></li>
@@ -187,11 +189,24 @@
     </div>
 </script>
 <script type="text/ng-template" id="status.html">
+    <wf-notifications notifications="notifications"></wf-notifications>
     <div data-ng-show="form.container.readonly">
-        <div data-ng-show="form.state == 'assigned'" class="alert alert-info">This form cannot be modified - it is assigned to {{form.task.assignee.displayName}}</div>
-        <div data-ng-show="form.state == 'completed'" class="alert alert-info">This form can no longer be modified - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>
-        <div data-ng-show="form.state == 'suspended'"class="alert alert-info">This form can no longer be modified - it has been suspended</div>
-        <div data-ng-show="form.state == 'cancelled'"class="alert alert-info">This form can no longer be modified - it has been cancelled</div>
+        <div data-ng-show="form.state == 'assigned'" class="alert alert-warning">
+            <strong>This form is assigned to {{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</strong> - to take action, you will need to assign it to yourself.
+            <button data-ng-click="claim()" class="btn btn-default pull-right" type="button">Assign to me</button>
+            <div class="clearfix"></div>
+        </div>
+        <div data-ng-show="form.state == 'unassigned'" class="alert alert-warning">
+            <strong>This form is not currently assigned</strong> - to modify it, you will need to assign it to yourself.
+            <button data-ng-click="claim()" class="btn btn-default pull-right" type="button">Assign to me</button>
+            <div class="clearfix"></div>
+        </div>
+        <div data-ng-show="form.state == 'completed'" class="alert alert-warning"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>
+        <div data-ng-show="form.state == 'suspended'"class="alert alert-danger"><strong>This form can no longer be modified</strong> - it has been suspended</div>
+        <div data-ng-show="form.state == 'cancelled'"class="alert alert-danger"><strong>This form can no longer be modified</strong> - it has been cancelled</div>
+    </div>
+    <div data-ng-show="form.applicationStatusExplanation" class="container alert alert-info">
+        {{form.applicationStatusExplanation}}
     </div>
 </script>
 <script type="text/ng-template" id="step.html">
@@ -216,7 +231,7 @@
 </script>
 <script type="text/ng-template" id="toolbar.html">
     <div class="btn-toolbar pull-right" role="toolbar">
-        <button data-ng-class="button.primary && 'btn-primary'" data-ng-repeat="button in container.buttons" data-ng-click="wizard.clickButton(form, container, button)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
+        <button data-ng-if="!container.readonly" data-ng-class="button.primary && 'btn-primary'" data-ng-repeat="button in container.buttons" data-ng-click="wizard.clickButton(form, container, button)" class="btn btn-default" name="{{button.name}}" type="{{button.type}}" value="{{button.value}}">{{button.label}}</button>
     </div>
 </script>
 <nav class="navbar navbar-default navbar-inverse pw-navbar-collapse" style="min-height: 20px;margin-bottom: 0px">
@@ -246,15 +261,15 @@
             <div class="navbar-right">
                 <div class="responsive-pull-right">
                     <p data-ng-show="form.history && form.task.active && form.task.assignee" class="navbar-text text-primary">Assigned to {{form.task.assignee.displayName}}</p>
-                    <button data-ng-hide="!form.task.active || form.task.candidateAssignees" data-ng-click="dialogs.openAssignModal([form])" class="btn btn-default navbar-btn incomplete-selected-result-btn" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="fa fa-user"></i></button>
-                    <div data-ng-show="form.task.active && form.task.candidateAssignees" class="btn-group">
+                    <div data-ng-show="form.task.active" class="btn-group">
                         <button data-ng-click="dialogs.openAssignModal([form])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" data-target="#assign-dialog" data-backdrop="false" data-toggle="modal" title="Assign task" type="button"><i class="fa fa-user"></i></button>
                         <button type="button" class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown">
                             <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a data-ng-click="assignTo('')">Set unassigned</a></li>
-                            <li data-ng-repeat="candidateAssignee in form.task.candidateAssignees"><a data-ng-click="assignTo(candidateAssignee.userId)" class="candidate-assignee" id="{{candidateAssignee.userId}}">Assign to {{candidateAssignee.displayName}}</a></li>
+                            <li><a data-ng-click="assignTo('')">Unassign</a></li>
+                            <li data-ng-show="form.task.candidateAssignees" role="presentation" class="divider"></li>
+                            <li data-ng-repeat="candidateAssignee in form.task.candidateAssignees"><a data-ng-click="assignTo(candidateAssignee.userId)" class="candidate-assignee" id="{{candidateAssignee.userId}}">Assign to {{candidateAssignee.userId == context.user.userId ? 'me' : candidateAssignee.displayName}}</a></li>
                         </ul>
                     </div>
                     <a data-ng-click="dialogs.openCommentModal([form])" data-ng-show="form.allowAttachments && form.history" class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="fa fa-comment-o"></i></a>
@@ -273,9 +288,6 @@
         </div>
     </div>
 </nav>
-<div data-ng-show="form.applicationStatusExplanation" class="container alert alert-info">
-    {{form.applicationStatusExplanation}}
-</div>
 <div data-ng-show="form.explanation" class="container alert alert-danger">
     <h4 data-ng-if="form.explanation.message">{{form.explanation.message}}</h4>
     <p>{{form.explanation.messageDetail}}</p>

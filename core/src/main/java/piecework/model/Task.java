@@ -209,9 +209,7 @@ public class Task implements Serializable, Comparable<Task> {
         if (entityId == null)
             return false;
 
-        String assigneeId = getAssigneeId();
-
-        return StringUtils.isEmpty(assigneeId) || assigneeId.equals(entityId);
+        return isAssignee(entity);
     }
 
     @Override

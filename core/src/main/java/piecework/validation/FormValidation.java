@@ -117,6 +117,18 @@ public class FormValidation implements Serializable {
             this.data = new ManyMap<String, Value>();
             this.results = new ManyMap<String, Message>();
         }
+
+        public Builder(FormValidation validation) {
+            this.attachments = validation.getAttachments() != null ? new ArrayList<Attachment>(validation.getAttachments()) : new ArrayList<Attachment>();
+            this.data = validation.getData() != null ? new ManyMap<String, Value>(validation.getData()) : new ManyMap<String, Value>();
+            this.results = validation.getResults() != null ? new ManyMap<String, Message>(validation.getResults()) : new ManyMap<String, Message>();
+            this.title = validation.getTitle();
+            this.applicationStatusExplanation = validation.getApplicationStatusExplanation();
+            this.unchangedFields = validation.getUnchangedFields() != null ? new HashSet<String>(validation.getUnchangedFields()) : new HashSet<String>();
+            this.hasError = validation.isHasError();
+            this.instance = validation.getInstance();
+            this.submission = validation.getSubmission();
+        }
         
         public FormValidation build() {
         	return new FormValidation(this);
@@ -149,7 +161,7 @@ public class FormValidation implements Serializable {
             return this;
         }
 
-        public Builder messages(ManyMap<String, Message> messages) {
+        public Builder messages(Map<String, List<Message>> messages) {
             if (messages != null)
                 this.results.putAll(messages);
             return this;

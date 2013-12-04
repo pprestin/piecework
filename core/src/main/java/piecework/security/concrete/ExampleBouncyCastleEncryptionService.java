@@ -15,34 +15,36 @@
  */
 package piecework.security.concrete;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.bouncycastle.crypto.BufferedBlockCipher;
-import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
-import org.bouncycastle.crypto.paddings.BlockCipherPadding;
 import org.bouncycastle.crypto.paddings.PKCS7Padding;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.util.encoders.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
+import piecework.common.UuidGenerator;
 import piecework.model.Secret;
-import piecework.security.EncryptionService;
+import piecework.security.EncryptionKeyProvider;
+import piecework.security.SecretKeyRing;
 
 import javax.annotation.PostConstruct;
-import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
-import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Date;
 
@@ -54,18 +56,39 @@ import java.util.Date;
  */
 public class ExampleBouncyCastleEncryptionService extends BaseEncryptionService {
 
+    private static final Logger LOG = Logger.getLogger(ExampleBouncyCastleEncryptionService.class);
+
     @Autowired
     Environment environment;
 
-    private SecretKey secretKey;
+    @Autowired
+    EncryptionKeyProvider keyProvider;
+
+    @Autowired
+    UuidGenerator uuidGenerator;
+
     private SecureRandom random;
+
+    @PostConstruct
+    public void init() throws GeneralSecurityException, UnsupportedEncodingException {
+        String encryptionPseudoRandomGenerator = environment.getProperty("encryption.pseudorandom.generator");
+        if (StringUtils.isNotEmpty(encryptionPseudoRandomGenerator))
+            this.random = SecureRandom.getInstance(encryptionPseudoRandomGenerator);
+        else
+            this.random = new SecureRandom();
+
+        String seed = environment.getProperty("encryption.key.seed");
+        if (StringUtils.isNotEmpty(seed))
+            this.random.setSeed(Base64.decode(seed.getBytes("UTF-8")));
+    }
 
     @Override
     public Secret encrypt(String text) throws InvalidCipherTextException, UnsupportedEncodingException, GeneralSecurityException {
-        String encryptionKeyName = environment.getProperty("encryption.key.name");
         BufferedBlockCipher cipher = cipher();
 
-        byte[] key = secretKey.getEncoded();
+        SecretKeyRing secretKeyRing = keyProvider.getEncryptionKeyRing(null, null);
+
+        byte[] key = secretKeyRing.getSecretKey().getEncoded();
         byte[] iv = new byte[cipher.getBlockSize()];
 
         // Generate a random initialization vector for this encryption
@@ -74,27 +97,36 @@ public class ExampleBouncyCastleEncryptionService extends BaseEncryptionService 
         cipher.init(true, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] clear = text.getBytes("UTF-8");
-        byte[] hidden = new byte[cipher.getOutputSize(clear.length)];
+        int outputSize = cipher.getOutputSize(clear.length);
+        byte[] hidden = new byte[outputSize];
         int bytesProcessed = cipher.processBytes(clear, 0, clear.length, hidden, 0);
         bytesProcessed += cipher.doFinal(hidden, bytesProcessed);
 
         if (bytesProcessed != hidden.length)
             throw new GeneralSecurityException("Unable to correctly encrypt input data");
 
-        return new Secret.Builder().name(encryptionKeyName).date(new Date()).ciphertext(hidden).iv(iv).build();
+        return new Secret.Builder()
+                .id(uuidGenerator.getNextId())
+                .name(secretKeyRing.getKeyName())
+                .date(new Date())
+                .ciphertext(Base64.encode(hidden))
+                .iv(Base64.encode(iv)).build();
     }
 
     @Override
     public String decrypt(Secret secret) throws InvalidCipherTextException, GeneralSecurityException, UnsupportedEncodingException {
+        SecretKey secretKey = keyProvider.getDecryptionKey(secret.getName());
+
         BufferedBlockCipher cipher = cipher();
         byte[] key = secretKey.getEncoded();
-        byte[] iv = secret.getIv();
+        byte[] iv = Base64.decode(secret.getIv());
         cipher.init(false, new ParametersWithIV(new KeyParameter(key), iv));
 
-        byte[] hidden = secret.getCiphertext();
+        byte[] hidden = Base64.decode(secret.getCiphertext());
         byte[] temporary;
 
-        temporary = new byte[cipher.getOutputSize(hidden.length)];
+        int outputLength = cipher.getOutputSize(hidden.length);
+        temporary = new byte[outputLength];
         int bytesProcessed = cipher.processBytes(hidden, 0, hidden.length, temporary, 0);
         bytesProcessed += cipher.doFinal(temporary, bytesProcessed);
 
@@ -105,22 +137,13 @@ public class ExampleBouncyCastleEncryptionService extends BaseEncryptionService 
         return new String(clear, "UTF-8");
     }
 
-    @PostConstruct
-    public void init() throws GeneralSecurityException {
-        String encryptionFactoryAlgorithm = environment.getProperty("encryption.factory.algorithm");
-        String encryptionPseudoRandomGenerator = environment.getProperty("encryption.pseudorandom.generator");
-        String encryptionKeyAlgorithm = environment.getProperty("encryption.key.algorithm");
-        String encryptionKeyValue = environment.getProperty("encryption.key.value");
-        int encryptionKeySize = environment.getProperty("encryption.key.size", Integer.class, 256);
-
-        byte[] salt = new byte[8];
-        random = SecureRandom.getInstance(encryptionPseudoRandomGenerator);
-        random.nextBytes(salt);
-        SecretKeyFactory factory = SecretKeyFactory.getInstance(encryptionFactoryAlgorithm);
-        int iterationCount = random.nextInt(3001) + 1000;
-        KeySpec spec = new PBEKeySpec(encryptionKeyValue.toCharArray(), salt, iterationCount, encryptionKeySize);
-        SecretKey tmp = factory.generateSecret(spec);
-        secretKey = new SecretKeySpec(tmp.getEncoded(), encryptionKeyAlgorithm);
+    @Override
+    public String generateKey(int keySize) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+        LOG.info("Generating a new encryption key of size " + keySize);
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(keySize);
+        SecretKey secretKey = keyGen.generateKey();
+        return new String(Base64.encode(secretKey.getEncoded()), "UTF-8");
     }
 
     private BufferedBlockCipher cipher() {

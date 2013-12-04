@@ -73,6 +73,9 @@ public class FormFactory {
                 .formInstanceId(formInstanceId)
                 .processDefinitionKey(processDefinitionKey);
 
+        if (unmodifiable)
+            builder.readonly();
+
         if (activity != null) {
             Action action = action(builder, deployment, activity, task, actionType, mediaType, version, unmodifiable);
             Map<String, Field> fieldMap = activity.getFieldMap();

@@ -118,13 +118,14 @@ public class SubmissionHandler {
     }
 
     private Submission handleFormValueSubmission(Process process, SubmissionTemplate template, FormRequest formRequest, Map<String, List<String>> formValueContentMap, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
-        String actingAsId = principal.getActingAsId();
+        String principalId = principal != null ? principal.getEntityId() : "anonymous";
+        String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
         Submission.Builder submissionBuilder = new Submission.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .requestId(formRequest != null ? formRequest.getRequestId() : null)
                 .taskId(formRequest != null ? formRequest.getTaskId() : null)
                 .submissionDate(new Date())
-                .submitterId(principal.getEntityId());
+                .submitterId(principalId);
 
         if (formValueContentMap != null && !formValueContentMap.isEmpty()) {
             for (Map.Entry<String, List<String>> entry : formValueContentMap.entrySet()) {
