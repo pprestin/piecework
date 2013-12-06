@@ -95,10 +95,15 @@ public abstract class AbstractFormResource {
         }
     }
 
-    protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws StatusCodeError {
+    protected Response receiptForm(MessageContext context, Process process, String rawRequestId) throws StatusCodeError {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         String requestId = sanitizer.sanitize(rawRequestId);
         FormRequest request = requestService.read(requestDetails, requestId);
+
+        ActionType actionType = request.getAction();
+
+        if (actionType == null || (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT))
+            throw new ForbiddenError();
 
         return response(process, request);
     }
@@ -294,7 +299,14 @@ public abstract class AbstractFormResource {
         if (formRequest == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "page", formRequest.getRequestId())).build();
+        String location;
+
+        if (isAnonymous())
+            location = versions.getVersion1().getPublicUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "receipt", formRequest.getRequestId());
+        else
+            location = versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "receipt", formRequest.getRequestId());
+
+        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, location).build();
     }
 
     private Response response(Process process, FormRequest request) throws StatusCodeError {
@@ -316,7 +328,7 @@ public abstract class AbstractFormResource {
                 case REMOTE:
                     return Response.seeOther(formDisposition.getUri()).build();
                 case CUSTOM:
-                    return Response.ok(userInterfaceService.getCustomPageAsStreaming(form), MediaType.TEXT_HTML_TYPE).build();
+                    return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
             }
 
             return Response.ok(form).build();

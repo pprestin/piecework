@@ -18,6 +18,8 @@ package piecework.ui.visitor;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import piecework.exception.NotFoundError;
+import piecework.model.Explanation;
 import piecework.service.UserInterfaceService;
 import piecework.ui.streaming.StreamingPageContent;
 
@@ -62,9 +64,20 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
 			OutputStream entityStream) throws IOException,
 			WebApplicationException {
 
-		if (!userInterfaceService.servePage(type, t, entityStream)) {
-			throw new WebApplicationException(Response.Status.NOT_FOUND);
-		}
+        try {
+            StreamingOutput streamingOutput;
+
+            if (type.equals(Explanation.class))
+                streamingOutput = userInterfaceService.getExplanationAsStreaming(Explanation.class.cast(t));
+            else
+                streamingOutput = userInterfaceService.getDefaultPageAsStreaming(type, t);
+
+            if (!userInterfaceService.servePage(streamingOutput, entityStream)) {
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            }
+        } catch (NotFoundError nfe) {
+            throw new IOException();
+        }
 	}
 
 }

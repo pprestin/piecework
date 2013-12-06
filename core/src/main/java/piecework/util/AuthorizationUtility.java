@@ -55,9 +55,16 @@ public class AuthorizationUtility {
         if (request == null)
             return;
 
-        if (request.getRemoteUser() != null && formRequest.getRemoteUser() != null && !request.getRemoteUser().equals(formRequest.getRemoteUser())) {
-            LOG.error("Wrong user viewing or submitting form: " + request.getRemoteUser() + " not " + formRequest.getRemoteUser());
-            throw new ForbiddenError(Constants.ExceptionCodes.user_does_not_match);
+        if (StringUtils.isNotEmpty(formRequest.getRemoteUser())) {
+            // If this form request belongs to a specific user (is not anonymous), then don't show it to an anonymous user
+            if (StringUtils.isEmpty(request.getRemoteUser())) {
+                LOG.error("Anonymous user attempting to view or submit a request belonging to " + formRequest.getRemoteUser());
+                throw new ForbiddenError(Constants.ExceptionCodes.user_does_not_match);
+            }
+            if (!request.getRemoteUser().equals(formRequest.getRemoteUser())) {
+                LOG.error("Wrong user viewing or submitting form: " + request.getRemoteUser() + " not " + formRequest.getRemoteUser());
+                throw new ForbiddenError(Constants.ExceptionCodes.user_does_not_match);
+            }
         }
 
         if (request.getRemoteHost() != null && formRequest.getRemoteHost() != null && !request.getRemoteHost().equals(formRequest.getRemoteHost()))
@@ -75,7 +82,6 @@ public class AuthorizationUtility {
                     !certificateSubject.equals(formRequest.getCertificateSubject())) {
                 LOG.error("Wrong certificate submitting form: " + certificateIssuer + ":" + certificateSubject + " not " + formRequest.getCertificateIssuer() + ":" + formRequest.getCertificateSubject());
                 throw new ForbiddenError(Constants.ExceptionCodes.certificate_does_not_match);
-
             }
         }
 

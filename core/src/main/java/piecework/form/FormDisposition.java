@@ -28,26 +28,28 @@ public class FormDisposition {
 
     private final FormDispositionType type;
     private final URI uri;
+    private final String base;
     private final String path;
     private final DataInjectionStrategy strategy;
 
-    public FormDisposition(FormDispositionType type, URI uri, String path, DataInjectionStrategy strategy) {
+    public FormDisposition(FormDispositionType type, URI uri, String base, String path, DataInjectionStrategy strategy) {
         this.type = type;
         this.uri = uri;
+        this.base = base;
         this.path = path;
         this.strategy = strategy;
     }
 
     public FormDisposition() {
-        this(FormDispositionType.DEFAULT, null, null, DataInjectionStrategy.NONE);
+        this(FormDispositionType.DEFAULT, null, null, null, DataInjectionStrategy.NONE);
     }
 
     public FormDisposition(URI uri) {
-        this(FormDispositionType.REMOTE, uri, null, DataInjectionStrategy.INCLUDE_SCRIPT);
+        this(FormDispositionType.REMOTE, uri, null, null, DataInjectionStrategy.INCLUDE_SCRIPT);
     }
 
-    public FormDisposition(String path, DataInjectionStrategy strategy) {
-        this(FormDispositionType.CUSTOM, null, path, strategy);
+    public FormDisposition(String base, String path, DataInjectionStrategy strategy) {
+        this(FormDispositionType.CUSTOM, null, base, path, strategy);
     }
 
     public FormDispositionType getType() {
@@ -56,6 +58,10 @@ public class FormDisposition {
 
     public URI getUri() {
         return uri;
+    }
+
+    public String getBase() {
+        return base;
     }
 
     public String getPath() {

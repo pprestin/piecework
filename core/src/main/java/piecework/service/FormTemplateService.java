@@ -116,10 +116,10 @@ public class FormTemplateService {
                 return templateNameBuilder.toString();
             }
         }
-        throw new NotFoundError();
+        return null;
     }
 
-    public Resource getTemplateResource(Class<?> type, Object t) {
+    public Resource getTemplateResource(Class<?> type, Object t) throws NotFoundError {
         StringBuilder templateNameBuilder = new StringBuilder(type.getSimpleName());
 
         if (t != null) {
@@ -138,20 +138,20 @@ public class FormTemplateService {
         return getTemplateResource(templateName);
     }
 
-    public Resource getTemplateResource(String templateName) {
+    public Resource getTemplateResource(String templateName) throws NotFoundError {
         Resource resource = null;
         if (templatesDirectory != null) {
             File file = new File(templatesDirectory, templateName);
             resource = new FileSystemResource(file);
 
             if (!resource.exists())
-                resource = new FileSystemResource(new File(templatesDirectory, "Layout.template.html"));
+                throw new NotFoundError();
 
         } else {
             resource = new ClassPathResource(TEMPLATES_CLASSPATH_PREFIX + templateName);
 
             if (!resource.exists())
-                resource = new ClassPathResource(TEMPLATES_CLASSPATH_PREFIX + "Layout.template.html");
+                throw new NotFoundError();
         }
 
         return resource;

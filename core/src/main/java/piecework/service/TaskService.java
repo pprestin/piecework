@@ -62,7 +62,7 @@ public class TaskService {
     DataFilterService dataFilterService;
 
     @Autowired
-    DeploymentRepository deploymentRepository;
+    DeploymentService deploymentService;
 
     @Autowired
     IdentityHelper helper;
@@ -140,16 +140,7 @@ public class TaskService {
         TaskPageHandler pageHandler = new TaskPageHandler(rawQueryParameters, taskFilter, sanitizer, version){
 
             protected Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds) {
-                Map<String, ProcessDeployment> deploymentMap = new HashMap<String, ProcessDeployment>();
-                if (!deploymentIds.isEmpty()) {
-                    Iterable<ProcessDeployment> deployments = deploymentRepository.findAll(deploymentIds);
-                    if (deployments != null) {
-                        for (ProcessDeployment deployment : deployments) {
-                            deploymentMap.put(deployment.getDeploymentId(), deployment);
-                        }
-                    }
-                }
-                return deploymentMap;
+                return deploymentService.getDeploymentMap(deploymentIds);
             }
 
             @Override

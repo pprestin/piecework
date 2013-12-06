@@ -21,6 +21,7 @@ import org.springframework.core.io.Resource;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -36,7 +37,13 @@ public class ResourceStreamingOutput implements StreamingOutput {
 
     @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
-        IOUtils.copy(resource.getInputStream(), output);
+        InputStream input = resource.getInputStream();
+        try {
+            IOUtils.copy(input, output);
+        } finally {
+            IOUtils.closeQuietly(input);
+            IOUtils.closeQuietly(output);
+        }
     }
 
 }

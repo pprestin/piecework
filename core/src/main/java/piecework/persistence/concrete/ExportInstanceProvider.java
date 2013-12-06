@@ -68,9 +68,12 @@ public class ExportInstanceProvider implements IteratingDataProvider<String> {
                         String fieldLabel = field.getLabel();
                         String fieldHeader = field.getHeader();
 
+                        if (StringUtils.isEmpty(fieldName))
+                            continue;
+
                         if (StringUtils.isNotEmpty(fieldHeader))
                             headerMap.put(fieldName, "\"" + fieldHeader + "\"");
-                        else
+                        else if (StringUtils.isNotEmpty(fieldLabel))
                             headerMap.put(fieldName, "\"" + fieldLabel+ "\"");
                     }
                 }

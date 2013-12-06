@@ -32,6 +32,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
 import org.springframework.ldap.core.AuthenticationSource;
@@ -39,27 +40,28 @@ import org.springframework.ldap.core.support.DirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.ldap.authentication.*;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
-import org.springframework.util.StringUtils;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
-import piecework.form.AnonymousFormResource;
-import piecework.form.AnonymousScriptResource;
+import piecework.identity.DebugUserDetailsService;
+import piecework.identity.IdentityServiceFactoryBean;
+import piecework.ldap.*;
+import piecework.resource.AnonymousFormResource;
+import piecework.resource.AnonymousScriptResource;
 import piecework.identity.DebugIdentityService;
-import piecework.ldap.CustomLdapUserDetailsMapper;
-import piecework.ldap.LdapIdentityService;
-import piecework.ldap.LdapGroupService;
-import piecework.ldap.LdapSettings;
 import piecework.security.CustomAuthenticationSource;
 import piecework.security.SSLSocketFactoryWrapper;
 import piecework.security.SecuritySettings;
+import piecework.service.CacheService;
+import piecework.service.GroupService;
 import piecework.service.IdentityService;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.visitor.HtmlProvider;
@@ -77,6 +79,7 @@ import java.util.*;
  * @author James Renfro
  */
 @Configuration
+@Import({CacheConfiguration.class, IdentityConfiguration.class})
 public class ApplicationConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(ApplicationConfiguration.class);
@@ -104,8 +107,8 @@ public class ApplicationConfiguration {
     @Autowired
     GeneralExceptionMapper generalExceptionMapper;
 
-//    @Autowired
-//    JavascriptProvider javascriptProvider;
+    @Autowired
+    StatusCodeErrorMapper statusCodeErrorMapper;
 
 	@Bean
 	public Bus cxf() {
@@ -125,7 +128,7 @@ public class ApplicationConfiguration {
 		
 		List<Object> providers = new ArrayList<Object>();
 		providers.add(generalExceptionMapper);
-		providers.add(new StatusCodeErrorMapper());
+		providers.add(statusCodeErrorMapper);
 		providers.add(new AccessDeniedExceptionMapper());
 		providers.add(htmlProvider);
 		providers.add(jsonProvider);
@@ -153,7 +156,7 @@ public class ApplicationConfiguration {
 
         List<Object> providers = new ArrayList<Object>();
         providers.add(generalExceptionMapper);
-        providers.add(new StatusCodeErrorMapper());
+        providers.add(statusCodeErrorMapper);
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);
         providers.add(jsonProvider);
@@ -179,7 +182,7 @@ public class ApplicationConfiguration {
 
         List<Object> providers = new ArrayList<Object>();
         providers.add(generalExceptionMapper);
-        providers.add(new StatusCodeErrorMapper());
+        providers.add(statusCodeErrorMapper);
         providers.add(new AccessDeniedExceptionMapper());
         providers.add(htmlProvider);
         providers.add(jsonProvider);
@@ -209,185 +212,50 @@ public class ApplicationConfiguration {
         return new CustomJaxbJsonProvider();
     }
 
-    @Bean(name="pieceworkAuthorizationRoleMapper")
-    public AuthorizationRoleMapper authorizationRoleMapper() {
-        return new AuthorizationRoleMapper();
-    }
 
-    @Bean
-    public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager();
-    }
+//    @Bean
+//    public IdentityService identityService(Environment environment) throws Exception {
+//        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
+//        Boolean isDebugIdentity = environment.getProperty("debug.identity", Boolean.class, Boolean.FALSE);
+//
+//        if (isDebugMode && isDebugIdentity)
+//            return new DebugIdentityService();
+//
+//        String identityProviderProtocol = environment.getProperty("identity.provider.protocol");
+//
+//        LdapSettings ldapSettings = ldapSettings(environment);
+//        SecuritySettings securitySettings = securitySettings(environment);
+//
+//        LdapContextSource contextSource = personLdapContextSource(ldapSettings, securitySettings);
+//        LdapUserSearch userSearch = userSearch(contextSource, ldapSettings);
+//        LdapAuthoritiesPopulator authoritiesPopulator = authoritiesPopulator(ldapSettings, securitySettings);
+//        CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper();
+//
+//        return new LdapIdentityService(contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings);
+//    }
 
-    @Bean
-    public KeyManagerCabinet keyManagerCabinet(Environment environment) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        SecuritySettings securitySettings = securitySettings(environment);
-        return keyManagerCabinet(securitySettings);
-    }
 
-    private KeyManagerCabinet keyManagerCabinet(SecuritySettings securitySettings) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
 
-        try {
-            return new KeyManagerCabinet.Builder(securitySettings).build();
-        } catch (FileNotFoundException e) {
-            LOG.error("Could not createDeployment key manager cabinet because keystore file not found");
-        }
+//    private LdapAuthenticator authenticator(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {
+//
+//        AbstractLdapAuthenticator authenticator = null;
+//
+//        LdapSettings.LdapAuthenticationType type = ldapSettings.getAuthenticationType();
+//
+//        switch (type) {
+//            case PASSWORDCOMPARE:
+//                authenticator = new PasswordComparisonAuthenticator(personLdapContextSource);
+//                break;
+//            default:
+//                authenticator = new BindAuthenticator(personLdapContextSource);
+//        }
+//
+//        authenticator.setUserSearch(userSearch(personLdapContextSource, ldapSettings));
+//
+//        return authenticator;
+//    }
 
-        return null;
-    }
 
-    @Bean
-    public LdapSettings ldapSettings(Environment environment) {
-        return new LdapSettings(environment);
-    }
 
-    @Bean
-    public SecuritySettings securitySettings(Environment environment) {
-        return new SecuritySettings(environment);
-    }
 
-    @Bean
-    public IdentityService userDetailsService(Environment environment) throws Exception {
-        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
-        Boolean isDebugIdentity = environment.getProperty("debug.identity", Boolean.class, Boolean.FALSE);
-
-        if (isDebugMode && isDebugIdentity)
-            return new DebugIdentityService();
-
-        String identityProviderProtocol = environment.getProperty("identity.provider.protocol");
-
-        LdapSettings ldapSettings = ldapSettings(environment);
-        SecuritySettings securitySettings = securitySettings(environment);
-
-        LdapContextSource contextSource = personLdapContextSource(ldapSettings, securitySettings);
-        LdapUserSearch userSearch = userSearch(contextSource, ldapSettings);
-        LdapAuthoritiesPopulator authoritiesPopulator = authoritiesPopulator(ldapSettings, securitySettings);
-        CustomLdapUserDetailsMapper userDetailsMapper = userDetailsMapper();
-
-        return new LdapIdentityService(contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings, cacheManager());
-    }
-
-    @Bean
-    public CustomLdapUserDetailsMapper userDetailsMapper() throws Exception {
-        return new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper());
-    }
-
-    private LdapAuthenticator authenticator(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {
-
-        AbstractLdapAuthenticator authenticator = null;
-
-        LdapSettings.LdapAuthenticationType type = ldapSettings.getAuthenticationType();
-
-        switch (type) {
-            case PASSWORDCOMPARE:
-                authenticator = new PasswordComparisonAuthenticator(personLdapContextSource);
-                break;
-            default:
-                authenticator = new BindAuthenticator(personLdapContextSource);
-        }
-
-        authenticator.setUserSearch(userSearch(personLdapContextSource, ldapSettings));
-
-        return authenticator;
-    }
-
-    private AuthenticationSource authenticationSource(LdapSettings ldapSettings) {
-        CustomAuthenticationSource authenticationSource = new CustomAuthenticationSource();
-
-        LdapSettings.LdapAuthenticationEncryption encryption = ldapSettings.getEncryption();
-
-        if (encryption == LdapSettings.LdapAuthenticationEncryption.TLS)
-            return new DefaultValuesAuthenticationSourceDecorator(authenticationSource, ldapSettings.getLdapDefaultUser(), new String(ldapSettings.getLdapDefaultPassword()));
-
-        return authenticationSource;
-    }
-
-    private DirContextAuthenticationStrategy authenticationStrategy(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
-        LdapSettings.LdapAuthenticationEncryption encryption = ldapSettings.getEncryption();
-
-        DirContextAuthenticationStrategy strategy = null;
-
-        switch (encryption) {
-            case TLS:
-                strategy = new ExternalTlsDirContextAuthenticationStrategy();
-                ((ExternalTlsDirContextAuthenticationStrategy)strategy).setSslSocketFactory(sslSocketFactory(securitySettings));
-                break;
-            default:
-                strategy = new SimpleDirContextAuthenticationStrategy();
-        }
-
-        return strategy;
-    }
-
-    private LdapAuthoritiesPopulator authoritiesPopulator(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
-        DefaultLdapAuthoritiesPopulator authoritiesPopulator = new DefaultLdapAuthoritiesPopulator(groupLdapContextSource(ldapSettings, securitySettings), ldapSettings.getLdapGroupSearchBase());
-        authoritiesPopulator.setGroupSearchFilter(ldapSettings.getLdapGroupMemberSearchFilter());
-        return authoritiesPopulator;
-    }
-
-    private LdapContextSource groupLdapContextSource(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
-
-        LdapContextSource context = new LdapContextSource();
-        context.setUrl(ldapSettings.getLdapGroupUrl());
-        context.setBase(ldapSettings.getLdapGroupBase());
-        context.setUserDn(ldapSettings.getLdapPersonDn());
-        context.setAuthenticationSource(authenticationSource(ldapSettings));
-        context.setAuthenticationStrategy(authenticationStrategy(ldapSettings, securitySettings));
-        context.afterPropertiesSet();
-
-        return context;
-    }
-
-    private LdapContextSource personLdapContextSource(LdapSettings ldapSettings, SecuritySettings securitySettings) throws Exception {
-
-        LdapContextSource context = new LdapContextSource();
-        context.setUrl(ldapSettings.getLdapPersonUrl());
-        context.setBase(ldapSettings.getLdapPersonBase());
-        context.setUserDn(ldapSettings.getLdapPersonDn());
-        context.setAuthenticationSource(authenticationSource(ldapSettings));
-        context.setAuthenticationStrategy(authenticationStrategy(ldapSettings, securitySettings));
-        context.afterPropertiesSet();
-
-        return context;
-    }
-
-    private SSLSocketFactory sslSocketFactory(SecuritySettings securitySettings) throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
-        KeyManagerCabinet cabinet = keyManagerCabinet(securitySettings);
-        String provider = null;
-        String protocol = "TLS";
-
-        SSLContext ctx = provider == null ? SSLContext.getInstance(protocol) : SSLContext
-                .getInstance(protocol, provider);
-
-        ctx.getClientSessionContext().setSessionTimeout(SSL_CACHE_TIMEOUT);
-        ctx.init(cabinet.getKeyManagers(), cabinet.getTrustManagers(), null);
-
-        FiltersType filter = new FiltersType();
-        String[] cs = SSLUtils.getCiphersuites(CIPHER_SUITES_LIST, SSLUtils.getSupportedCipherSuites(ctx), filter, java.util.logging.Logger.getLogger(this.getClass().getCanonicalName()), false);
-
-        return new SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
-    }
-
-    private LdapUserSearch userSearch(LdapContextSource personLdapContextSource, LdapSettings ldapSettings) throws Exception {
-        LdapUserSearch userSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapPersonSearchBase(), ldapSettings.getLdapPersonSearchFilter(), personLdapContextSource);
-        ((FilterBasedLdapUserSearch)userSearch).setReturningAttributes(null);
-        ((FilterBasedLdapUserSearch)userSearch).setSearchSubtree(true);
-        ((FilterBasedLdapUserSearch)userSearch).setSearchTimeLimit(10000);
-        return userSearch;
-    }
-
-    @Bean
-    public LdapGroupService groupService(Environment environment) throws Exception {
-        LdapSettings ldapSettings = ldapSettings(environment);
-        SecuritySettings securitySettings = securitySettings(environment);
-
-        LdapContextSource contextSource = groupLdapContextSource(ldapSettings, securitySettings);
-        FilterBasedLdapUserSearch groupSearch = new FilterBasedLdapUserSearch(ldapSettings.getLdapGroupSearchBase(), ldapSettings.getLdapGroupSearchFilter(), contextSource);
-        groupSearch.setReturningAttributes(null);
-        groupSearch.setSearchSubtree(true);
-        groupSearch.setSearchTimeLimit(10000);
-
-         IdentityService userService = userDetailsService(environment); // bean dependency
-         return ( new LdapGroupService(contextSource, groupSearch, ldapSettings, userService, cacheManager()) );
-    }
 }

@@ -146,10 +146,6 @@ public class ProcessDeployment implements Serializable {
         this.activityMap = Collections.unmodifiableMap(builder.activityMap);
         this.flowElements = Collections.unmodifiableList(builder.flowElements);
         this.base = builder.base;
-//        this.interactions = (List<Interaction>) (builder.interactions != null ? Collections.unmodifiableList(builder.interactions) : Collections.emptyList());
-//        this.sections = Collections.unmodifiableList(builder.sections);
-//        this.notifications = (List<Notification>) (builder.notifications != null ? Collections.unmodifiableList(builder.notifications) : Collections.emptyList());
-//        this.defaultScreen = builder.defaultScreen;
         this.editable = builder.editable;
         this.published = builder.published;
         this.deployed = builder.deployed;

@@ -46,12 +46,16 @@ public class ErrorResponseBuilder {
 		
 		if (entity != null)
 			return Response.status(statusCode).entity(entity).build();
-		
-		Explanation explanation = new Explanation();
-        explanation.setStatus(statusCode);
-		explanation.setMessage(message);
-		explanation.setMessageDetail(messageDetail);
-		return Response.status(statusCode).entity(explanation).build();
+
+		return Response.status(statusCode).entity(buildExplanation(statusCode, message, messageDetail)).build();
 	}
+
+    public static Explanation buildExplanation(int statusCode, String message, String messageDetail) {
+        Explanation explanation = new Explanation();
+        explanation.setStatus(statusCode);
+        explanation.setMessage(message);
+        explanation.setMessageDetail(messageDetail);
+        return explanation;
+    }
 	
 }

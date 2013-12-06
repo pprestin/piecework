@@ -37,9 +37,6 @@ import piecework.model.Process;
 import piecework.model.Application;
 import piecework.persistence.ProcessRepository;
 
-import com.google.common.collect.Sets;
-import piecework.service.IdentityService;
-
 /**
  * @author James Renfro
  */
@@ -52,8 +49,6 @@ public class IdentityHelper {
 	@Autowired
 	ProcessRepository processRepository;
 
-    @Autowired
-    IdentityService identityService;
 
 //    public String getAuthenticatedSystemOrUserId() {
 //        String userId = null;

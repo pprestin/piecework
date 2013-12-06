@@ -1,5 +1,6 @@
 package piecework.ui;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**

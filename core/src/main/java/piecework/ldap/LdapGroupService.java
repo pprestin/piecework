@@ -17,15 +17,17 @@ package piecework.ldap;
 
 import org.apache.log4j.Logger;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.ldap.search.LdapUserSearch;
 
+import piecework.enumeration.CacheName;
 import piecework.model.User;
 import piecework.model.Group;
+import piecework.service.CacheService;
 import piecework.service.IdentityService;
 import piecework.service.GroupService;
 
@@ -37,26 +39,24 @@ public class LdapGroupService implements GroupService {
 
     private static final Logger LOG = Logger.getLogger(LdapGroupService.class);
 
-    private final CacheManager cacheManager;
     private final LdapContextSource groupLdapContextSource;
     private final LdapSettings ldapSettings;
     private final LdapUserSearch groupSearch;
 
-    IdentityService userDetailsService;  // needed to populate user details of group members.
+    @Autowired
+    CacheService cacheService;
+
+    @Autowired
+    IdentityService identityService;  // needed to populate user details of group members.
 
     public LdapGroupService() {
-        this.cacheManager = null;
-        this.groupLdapContextSource = null;
-        this.groupSearch = null;
-        this.ldapSettings = null;
+        this(null, null, null);
     }
 
-    public LdapGroupService(LdapContextSource groupLdapContextSource, LdapUserSearch groupSearch, LdapSettings ldapSettings, IdentityService userService, CacheManager cacheManager) {
+    public LdapGroupService(LdapContextSource groupLdapContextSource, LdapUserSearch groupSearch, LdapSettings ldapSettings) {
         this.groupLdapContextSource = groupLdapContextSource;
         this.groupSearch = groupSearch;
         this.ldapSettings = ldapSettings;
-        this.userDetailsService = userService;
-        this.cacheManager = cacheManager;
     }
 
     /**
@@ -76,8 +76,7 @@ public class LdapGroupService implements GroupService {
             return null;
         }
 
-        Cache cache = cacheManager.getCache("loadGroupByName");
-        Cache.ValueWrapper wrapper = cache.get(groupId);
+        Cache.ValueWrapper wrapper = cacheService.get(CacheName.GROUP, groupId);
 
         if (wrapper != null)
             return (Group) wrapper.get();
@@ -111,7 +110,7 @@ public class LdapGroupService implements GroupService {
             for ( String m : members ) {
                 if ( prefix == null || prefix.isEmpty() || m.startsWith(prefix) ) {
                     String userId = m.substring(prefix.length());
-                    User user = userDetailsService.getUser(userId);
+                    User user = identityService.getUser(userId);
                     if ( user != null ) {
                         builder.member(user);
                     }
@@ -119,7 +118,7 @@ public class LdapGroupService implements GroupService {
             }
     
             Group group = builder.build();
-            cache.put(groupId, group);
+            cacheService.put(CacheName.GROUP, groupId, group);
             return group;
         } catch (UsernameNotFoundException e) {
             // log an error message and continue

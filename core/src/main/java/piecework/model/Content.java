@@ -15,8 +15,12 @@
  */
 package piecework.model;
 
+import org.apache.log4j.Logger;
+import org.springframework.core.io.Resource;
 import piecework.ui.Streamable;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Date;
@@ -29,11 +33,14 @@ import java.util.Date;
  */
 public class Content implements Serializable, Streamable {
 
+    private static final Logger LOG = Logger.getLogger(Content.class);
+
     private final String contentId;
     private final String contentType;
     private final String filename;
     private final String location;
     private final InputStream inputStream;
+    private final Resource resource;
     private final String md5;
     private final Date lastModified;
     private final Long length;
@@ -48,6 +55,7 @@ public class Content implements Serializable, Streamable {
         this.filename = builder.filename;
         this.location = builder.location;
         this.inputStream = builder.inputStream;
+        this.resource = builder.resource;
         this.md5 = builder.md5;
         this.lastModified = builder.lastModified;
         this.length = builder.length;
@@ -73,8 +81,22 @@ public class Content implements Serializable, Streamable {
         return location;
     }
 
+    @Deprecated
+    // Use getResource instead where possible
     public InputStream getInputStream() {
+        if (resource != null) {
+            try {
+                return resource.getInputStream();
+            } catch (IOException ioe) {
+                LOG.error("Caught an io exception trying to grab the input stream from the resource object", ioe);
+                return null;
+            }
+        }
         return inputStream;
+    }
+
+    public Resource getResource() {
+        return resource;
     }
 
     public String getMd5() {
@@ -96,6 +118,7 @@ public class Content implements Serializable, Streamable {
         private String filename;
         private String location;
         private InputStream inputStream;
+        private Resource resource;
         private String md5;
         private Date lastModified;
         private Long length;
@@ -110,6 +133,7 @@ public class Content implements Serializable, Streamable {
             this.filename = content.filename;
             this.location = content.location;
             this.inputStream = content.inputStream;
+            this.resource = content.resource;
             this.md5 = content.md5;
             this.lastModified = content.lastModified;
             this.length = content.length;
@@ -141,6 +165,11 @@ public class Content implements Serializable, Streamable {
 
         public Builder inputStream(InputStream inputStream) {
             this.inputStream = inputStream;
+            return this;
+        }
+
+        public Builder resource(Resource resource) {
+            this.resource = resource;
             return this;
         }
 

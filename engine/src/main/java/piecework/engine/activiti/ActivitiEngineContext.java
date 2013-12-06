@@ -60,8 +60,18 @@ public class ActivitiEngineContext implements EngineContext {
     }
 
     @Override
+    public <T> void setInstanceVariable(String name, T value) {
+        services.getRuntimeService().setVariable(processInstanceId, name, value);
+    }
+
+    @Override
     public <T> T getTaskVariable(String taskId, String name) {
         return (T) services.getTaskService().getVariable(taskId, name);
+    }
+
+    @Override
+    public <T> void setTaskVariable(String taskId, String name, T value) {
+        services.getTaskService().setVariable(taskId, name, value);
     }
 
     private Map<String, String> convert(List<FormProperty> formProperties) {

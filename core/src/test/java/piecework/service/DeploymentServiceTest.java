@@ -27,6 +27,7 @@ import piecework.model.Process;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
 import piecework.persistence.DeploymentRepository;
+import piecework.security.Sanitizer;
 
 /**
  * @author James Renfro
@@ -55,6 +56,9 @@ public class DeploymentServiceTest {
     @Mock
     ProcessDeployment deploymentFromRepository;
 
+    @Mock
+    Sanitizer sanitizer;
+
     @Before
     public void setup() {
         // Mock deployment should always return it's id
@@ -67,7 +71,7 @@ public class DeploymentServiceTest {
 
     @Test
     public void testReadNoInstance() throws Exception {
-        ProcessDeployment deployment = deploymentService.read(process, null);
+        ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
 
         Assert.assertNotNull(deployment);
         Assert.assertEquals(TEST_DEPLOYMENT_FROM_PROCESS_ID, deployment.getDeploymentId());

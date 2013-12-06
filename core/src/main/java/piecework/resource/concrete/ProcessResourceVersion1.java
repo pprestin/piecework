@@ -35,6 +35,7 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
+import piecework.service.DeploymentService;
 import piecework.service.ProcessService;
 import piecework.common.ViewContext;
 import piecework.exception.StatusCodeError;
@@ -53,6 +54,9 @@ import java.util.List;
 public class ProcessResourceVersion1 implements ProcessResource {
 
     private static final Logger LOG = Logger.getLogger(ProcessResourceVersion1.class);
+
+    @Autowired
+    DeploymentService deploymentService;
 
     @Autowired
     IdentityHelper helper;
@@ -166,7 +170,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
         if (rawProcessDefinitionKey == null || rawDeploymentId == null || rawActivityKey == null || rawContainerId == null)
             throw new BadRequestError();
 
-        processService.deleteContainer(rawProcessDefinitionKey, rawDeploymentId, rawActivityKey, rawContainerId);
+        Process process = processService.read(rawProcessDefinitionKey);
+        deploymentService.deleteContainer(process, rawDeploymentId, rawActivityKey, rawContainerId);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         return responseBuilder.build();
@@ -182,7 +187,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response getDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
-        ProcessDeployment result = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessDeployment result = deploymentService.read(process, rawDeploymentId);
 
         ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, null, new PassthroughSanitizer(), true).build());
         return responseBuilder.build();
@@ -207,7 +213,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response getActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey) throws StatusCodeError {
-        Activity activity = processService.getActivity(rawProcessDefinitionKey, rawDeploymentId, rawActivityKey);
+        Process process = processService.read(rawProcessDefinitionKey);
+        Activity activity = deploymentService.getActivity(process, rawDeploymentId, rawActivityKey);
         if (activity == null)
             throw new NotFoundError();
 
@@ -216,8 +223,9 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response deleteActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey) throws StatusCodeError {
-        ProcessDeployment deployment = processService.getDeployment(rawProcessDefinitionKey, rawDeploymentId);
-        Activity activity = processService.deleteActivity(deployment, rawActivityKey);
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessDeployment deployment = deploymentService.read(process, rawDeploymentId);
+        Activity activity = deploymentService.deleteActivity(deployment, rawActivityKey);
         if (activity == null)
             throw new NotFoundError();
 
@@ -234,7 +242,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public SearchResults searchDeployments(String rawProcessDefinitionKey, UriInfo uriInfo) throws StatusCodeError {
-        return processService.searchDeployments(rawProcessDefinitionKey, uriInfo.getQueryParameters());
+        Process process = processService.read(rawProcessDefinitionKey);
+        return deploymentService.search(process, uriInfo.getQueryParameters());
     }
 
     @Override
@@ -245,7 +254,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response updateDeployment(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeployment rawDeployment) throws StatusCodeError {
-        processService.updateDeployment(rawProcessDefinitionKey, rawDeploymentId, rawDeployment);
+        Process process = processService.read(rawProcessDefinitionKey);
+        deploymentService.update(process, rawDeploymentId, rawDeployment);
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         return responseBuilder.build();
@@ -253,8 +263,8 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response updateActivity(String rawProcessDefinitionKey, String rawDeploymentId, String rawActivityKey, Activity rawActivity) throws StatusCodeError {
-        processService.updateActivity(rawProcessDefinitionKey, rawDeploymentId, rawActivityKey, rawActivity);
-
+        Process process = processService.read(rawProcessDefinitionKey);
+        deploymentService.updateActivity(process, rawDeploymentId, rawActivityKey, rawActivity);
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         return responseBuilder.build();
     }

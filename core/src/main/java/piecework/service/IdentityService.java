@@ -42,7 +42,7 @@ import java.util.Set;
 /**
  * @author James Renfro
  */
-public interface IdentityService extends UserDetailsService {
+public interface IdentityService {
 
     User getUser(String id);
 

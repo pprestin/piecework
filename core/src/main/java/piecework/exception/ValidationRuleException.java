@@ -15,17 +15,25 @@
  */
 package piecework.exception;
 
+import piecework.validation.ValidationRule;
+
 /**
  * @author James Renfro
  */
 public class ValidationRuleException extends Exception {
 
+    private ValidationRule rule;
+
     public ValidationRuleException() {
         super();
     }
 
-    public ValidationRuleException(String message) {
+    public ValidationRuleException(ValidationRule rule, String message) {
         super(message);
+        this.rule = rule;
     }
 
+    public ValidationRule getRule() {
+        return rule;
+    }
 }

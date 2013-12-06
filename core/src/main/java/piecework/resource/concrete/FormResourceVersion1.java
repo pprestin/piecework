@@ -64,10 +64,10 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public Response readRequest(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws StatusCodeError {
+    public Response readReceipt(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws StatusCodeError {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return requestForm(context, process, requestId);
+        return receiptForm(context, process, requestId);
     }
 
     @Override

@@ -75,6 +75,15 @@ public class ValidationRule {
         this.required = builder.required;
     }
 
+    public String toString() {
+        return new StringBuilder("{ rule: \"")
+                .append(type.toString())
+                .append("\" name: \"")
+                .append(name)
+                .append("\"}")
+                .toString();
+    }
+
     public void evaluate(ManyMap<String, Value> submissionData,  ManyMap<String, Value> instanceData) throws ValidationRuleException {
         switch(type) {
         case CONSTRAINED:
@@ -122,7 +131,7 @@ public class ValidationRule {
 
     private void evaluateConstraint(ManyMap<String, Value> submissionData) throws ValidationRuleException {
         if (!ConstraintUtil.evaluate(null, submissionData, constraint))
-            throw new ValidationRuleException("Not a valid input for this field");
+            throw new ValidationRuleException(this, "Not a valid input for this field");
     }
 
     private void evaluateConstraintRequired(ManyMap<String, Value> submissionData) throws ValidationRuleException {
@@ -136,12 +145,12 @@ public class ValidationRule {
 
     private void evaluateOptions(ManyMap<String, Value> submissionData) throws ValidationRuleException {
         if (options == null || options.isEmpty())
-            throw new ValidationRuleException("No valid options for this field");
+            throw new ValidationRuleException(this, "No valid options for this field");
 
         List<? extends Value> values = safeValues(name, submissionData);
         for (Value value : values) {
             if (value != null && !options.contains(value.getValue()))
-                throw new ValidationRuleException("Not a valid option for this field");
+                throw new ValidationRuleException(this, "Not a valid option for this field");
         }
     }
 
@@ -164,16 +173,16 @@ public class ValidationRule {
         }
 
         if (maxInputs < numberOfInputs)
-            throw new ValidationRuleException("No more than " + maxInputs + " are allowed");
+            throw new ValidationRuleException(this, "No more than " + maxInputs + " are allowed");
         else if (required && minInputs > numberOfInputs)
-            throw new ValidationRuleException("At least " + minInputs + " are required");
+            throw new ValidationRuleException(this, "At least " + minInputs + " are required");
     }
 
     private void evaluateNumeric(ManyMap<String, Value> submissionData) throws ValidationRuleException {
         List<? extends Value> values = safeValues(name, submissionData);
         for (Value value : values) {
             if (value != null && StringUtils.isNotEmpty(value.getValue()) && !value.getValue().matches("^[0-9]+$"))
-                throw new ValidationRuleException("Must be a number");
+                throw new ValidationRuleException(this, "Must be a number");
         }
     }
 
@@ -185,7 +194,7 @@ public class ValidationRule {
                 if (examplePattern == null)
                     examplePattern = pattern.toString();
 
-                throw new ValidationRuleException("Does not match required pattern: " + examplePattern);
+                throw new ValidationRuleException(this, "Does not match required pattern: " + examplePattern);
             }
         }
     }
@@ -211,7 +220,7 @@ public class ValidationRule {
         }
 
         if (!hasAtLeastOneValue)
-            throw new ValidationRuleException("Field is required");
+            throw new ValidationRuleException(this, "Field is required");
     }
 
     private void evaluateRequiredIfNoPrevious(ManyMap<String, Value> submissionData, ManyMap<String, Value> instanceData) throws ValidationRuleException {
@@ -237,7 +246,7 @@ public class ValidationRule {
             }
         }
         if (!hasAtLeastOneValue)
-            throw new ValidationRuleException("Field is required");
+            throw new ValidationRuleException(this, "Field is required");
     }
 
     private void evaluateValidUser(ManyMap<String, Value> submissionData) throws ValidationRuleException {
@@ -249,9 +258,9 @@ public class ValidationRule {
         for (Value value : values) {
             if (value != null && value.getValue() != null) {
                 if (value.getValue().length() > maxValueLength)
-                    throw new ValidationRuleException("Cannot be more than " + maxValueLength + " characters");
+                    throw new ValidationRuleException(this, "Cannot be more than " + maxValueLength + " characters");
                 else if (value.getValue().length() < minValueLength)
-                    throw new ValidationRuleException("Cannot be less than " + minValueLength + " characters");
+                    throw new ValidationRuleException(this, "Cannot be less than " + minValueLength + " characters");
             }
         }
     }
@@ -265,7 +274,7 @@ public class ValidationRule {
         for (Value value : values) {
             if (value != null && value.getValue() != null) {
                 if (lastValue != null && !lastValue.equals(value.getValue()))
-                    throw new ValidationRuleException("Values do not match");
+                    throw new ValidationRuleException(this, "Values do not match");
                 lastValue = value.getValue();
             }
         }

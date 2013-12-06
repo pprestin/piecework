@@ -21,6 +21,8 @@ import org.apache.log4j.Logger;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
+import piecework.ui.UserInterfaceSettings;
+import piecework.util.PathUtility;
 
 import java.util.Map;
 
@@ -31,16 +33,12 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
 
     private static final Logger LOG = Logger.getLogger(HtmlProviderVisitor.class);
 
-    protected final String applicationTitle;
-    protected final String applicationUrl;
-    protected final String publicUrl;
-    protected final String assetsUrl;
+    protected final UserInterfaceSettings settings;
+    protected final boolean isAnonymous;
 
-    public HtmlProviderVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl) {
-        this.applicationTitle = applicationTitle;
-        this.applicationUrl = applicationUrl;
-        this.publicUrl = publicUrl;
-        this.assetsUrl = assetsUrl;
+    public HtmlProviderVisitor(UserInterfaceSettings settings, boolean isAnonymous) {
+        this.settings = settings;
+        this.isAnonymous = isAnonymous;
     }
 
     @Override
@@ -71,11 +69,11 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
     protected void handleBase(TagNode tagNode) {
         Map<String, String> attributes = tagNode.getAttributes();
         String href = tagNode.getAttributeByName("href");
-        if (checkForSecurePath(href)) {
+        if (PathUtility.checkForSecurePath(href)) {
             if (StringUtils.isEmpty(href))
-                attributes.put("href", applicationUrl);
+                attributes.put("href", settings.getApplicationUrl());
             else
-                attributes.put("href", recomputeSecurePath(href, applicationUrl));
+                attributes.put("href", PathUtility.recomputeSecurePath(href, settings, isAnonymous));
             tagNode.setAttributes(attributes);
         }
     }
@@ -86,16 +84,16 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         String src = attributes.get("src");
         String main = attributes.get("data-main");
 
-        if (checkForStaticPath(href)) {
-            attributes.put("href", recomputeStaticPath(href, assetsUrl));
+        if (PathUtility.checkForStaticPath(href)) {
+            attributes.put("href", PathUtility.recomputeStaticPath(href, settings));
             tagNode.setAttributes(attributes);
         }
-        if (checkForStaticPath(src)) {
-            attributes.put("src", recomputeStaticPath(src, assetsUrl));
+        if (PathUtility.checkForStaticPath(src)) {
+            attributes.put("src", PathUtility.recomputeStaticPath(src, settings));
             tagNode.setAttributes(attributes);
         }
-        if (checkForStaticPath(main)) {
-            attributes.put("data-main", recomputeStaticPath(main, assetsUrl));
+        if (PathUtility.checkForStaticPath(main)) {
+            attributes.put("data-main", PathUtility.recomputeStaticPath(main, settings));
             tagNode.setAttributes(attributes);
         }
     }
@@ -116,37 +114,5 @@ public class HtmlProviderVisitor implements TagNodeVisitor {
         handleReferences(tagNode);
     }
 
-    protected boolean checkForSecurePath(String path) {
-        if (path == null)
-            return false;
 
-        return path.startsWith("ui/") || path.startsWith("../ui/") || path.startsWith(("../../ui"));
-    }
-
-    protected boolean checkForStaticPath(String path) {
-        if (path == null)
-            return false;
-
-        return path.startsWith("static/") || path.startsWith("../static/") || path.startsWith(("../../static"));
-    }
-
-    protected String recomputeSecurePath(final String path, String assetsUrl) {
-        int indexOf = path.indexOf("ui/");
-
-        if (indexOf > path.length())
-            return path;
-
-        String adjustedPath = path.substring(indexOf+3);
-        return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
-    }
-
-    protected String recomputeStaticPath(final String path, String assetsUrl) {
-        int indexOf = path.indexOf("static/");
-
-        if (indexOf > path.length())
-            return path;
-
-        String adjustedPath = path.substring(indexOf);
-        return new StringBuilder(assetsUrl).append("/").append(adjustedPath).toString();
-    }
 }

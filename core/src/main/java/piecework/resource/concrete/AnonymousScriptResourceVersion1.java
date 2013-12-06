@@ -15,15 +15,24 @@
  */
 package piecework.resource.concrete;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import piecework.exception.StatusCodeError;
-import piecework.form.AnonymousScriptResource;
+import piecework.enumeration.ActionType;
+import piecework.exception.*;
+import piecework.form.FormDisposition;
+import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.ProcessRepository;
+import piecework.resource.AnonymousScriptResource;
 import piecework.service.FormTemplateService;
+import piecework.service.RequestService;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 
 /**
  * @author James Renfro
@@ -36,20 +45,38 @@ public class AnonymousScriptResourceVersion1 extends AbstractScriptResource impl
     @Autowired
     private FormTemplateService formTemplateService;
 
-    @Override
-    public Response readScript(String scriptId) throws StatusCodeError {
-        String templateName = formTemplateService.getTemplateName(scriptId, isAnonymous());
+    @Autowired
+    private ProcessRepository processRepository;
 
-        Resource scriptResource = userInterfaceService.getScriptResource(templateName);
-        return response(scriptResource, "text/javascript");
+    @Override
+    public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+        Form form = getForm(rawProcessDefinitionKey, context);
+        return processScript(form);
     }
 
     @Override
-    public Response readStylesheet(String stylesheetId) throws StatusCodeError {
-        String templateName = formTemplateService.getTemplateName(stylesheetId, isAnonymous());
+    public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+        Form form = getForm(rawProcessDefinitionKey, context);
+        return processStylesheet(form);
+    }
 
-        Resource stylesheetResource = userInterfaceService.getStylesheetResource(templateName);
-        return response(stylesheetResource, "text/css");
+    private Form getForm(final String rawProcessDefinitionKey, final MessageContext context) throws NotFoundError {
+        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
+        return form(process, context, null);
+    }
+
+    private Process verifyProcessAllowsAnonymousSubmission(final String rawProcessDefinitionKey) throws NotFoundError {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        Process process = processRepository.findOne(processDefinitionKey);
+
+        if (process == null)
+            throw new NotFoundError();
+
+        // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
+        if (!process.isAnonymousSubmissionAllowed())
+            throw new NotFoundError();
+
+        return process;
     }
 
     @Override

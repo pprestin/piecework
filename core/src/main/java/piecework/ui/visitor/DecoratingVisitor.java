@@ -22,9 +22,12 @@ import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
+import piecework.designer.model.view.IndexView;
 import piecework.enumeration.FieldTag;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.ui.TagDecorator;
+import piecework.ui.UserInterfaceSettings;
 import piecework.util.ManyMap;
 
 import java.util.*;
@@ -39,18 +42,25 @@ public class DecoratingVisitor implements TagNodeVisitor {
     private static final Logger LOG = Logger.getLogger(DecoratingVisitor.class);
     private static final String NEWLINE = System.getProperty("line.separator");
 
+    private final Process process;
     private final Form form;
     private final ManyMap<String, TagDecorator> decoratorMap;
+    private final UserInterfaceSettings settings;
 
-    public DecoratingVisitor(Form form) {
+    public DecoratingVisitor(UserInterfaceSettings settings, Process process, Form form) {
+        this.settings = settings;
+        this.process = process;
         this.form = form;
         this.decoratorMap = new ManyMap<String, TagDecorator>();
         initialize();
     }
 
     public void initialize() {
+        decoratorMap.putOne("head", new HeadDecorator(process, form));
+        decoratorMap.putOne("body", new BodyDecorator(process, form));
+
         decoratorMap.putOne("form", new FormDecorator(form));
-//        decoratorMap.putOne("body", new BodyDecorator(form));
+
 //        decoratorMap.putOne("div", new AttachmentsDecorator(form));
 
         VariableDecorator variableDecorator = new VariableDecorator(form);
@@ -64,10 +74,14 @@ public class DecoratingVisitor implements TagNodeVisitor {
         Container container = form.getContainer();
         Map<String, List<Value>> data = variableDecorator.getData();
         Map<String, List<Message>> results = variableDecorator.getResults();
+        handleContainer(container, data, results);
+    }
+
+    private void handleContainer(Container container, Map<String, List<Value>> data, Map<String, List<Message>> results) {
         if (container != null) {
             boolean readonly = container.isReadonly();
-//            if (readonly)
-//                decoratorMap.putOne("button", new ButtonDecorator(readonly));
+            if (readonly)
+                decoratorMap.putOne("button", new ButtonDecorator(readonly));
 
             List<Field> fields = container.getFields();
             if (fields != null && !fields.isEmpty()) {
@@ -81,17 +95,13 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     FieldDecorator fieldDecorator = new FieldDecorator(field, values, messages, readonly);
                     FieldTag fieldTag = fieldDecorator.getFieldTag();
                     decoratorMap.putOne(fieldTag.getTagName(), fieldDecorator);
+                }
+            }
 
-//                    switch (fieldTag) {
-//                        case FILE:
-//                            decoratorMap.putOne("form", new FileFieldFormDecorator(field, readonly));
-//
-////                            if (StringUtils.isNotEmpty(field.getAccept()) && field.getAccept().contains("image/"))
-////                                decoratorMap.putOne("img", new ImageFieldDecorator(field, values));
-//
-//                            break;
-//                    }
-
+            List<Container> children = container.getChildren();
+            if (children != null && !children.isEmpty()) {
+                for (Container child : children) {
+                    handleContainer(child, data, results);
                 }
             }
         }
@@ -126,18 +136,57 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
     class BodyDecorator implements TagDecorator {
 
+        private final Process process;
         private final Form form;
 
-        public BodyDecorator(Form form) {
+        public BodyDecorator(Process process, Form form) {
+            this.process = process;
             this.form = form;
         }
 
         @Override
         public void decorate(TagNode tag) {
+            TagNode dependencies = new TagNode("script");
+            dependencies.addAttribute("id", "piecework-dependencies");
+            dependencies.addAttribute("type", "text/javascript");
+            dependencies.addAttribute("rel", "script");
 
+            String processDefinitionKey = process.getProcessDefinitionKey();
+            if (form.isAnonymous())
+                dependencies.addAttribute("src", settings.getPublicUrl() + "/resource/script/" + processDefinitionKey + ".js");
+            else
+                dependencies.addAttribute("src", settings.getApplicationUrl() + "/resource/script/" + processDefinitionKey + ".js");
+
+            tag.addChild(dependencies);
         }
     }
 
+    class HeadDecorator implements TagDecorator {
+
+        private final Process process;
+        private final Form form;
+
+        public HeadDecorator(Process process, Form form) {
+            this.process = process;
+            this.form = form;
+        }
+
+        @Override
+        public void decorate(TagNode tag) {
+            TagNode dependencies = new TagNode("link");
+            dependencies.addAttribute("id", "piecework-stylesheet");
+            dependencies.addAttribute("type", "text/css");
+            dependencies.addAttribute("rel", "stylesheet");
+
+            String processDefinitionKey = process.getProcessDefinitionKey();
+            if (form.isAnonymous())
+                dependencies.addAttribute("href", settings.getPublicUrl() + "/resource/css/" + processDefinitionKey + ".css");
+            else
+                dependencies.addAttribute("href", settings.getApplicationUrl() + "/resource/css/" + processDefinitionKey + ".css");
+
+            tag.addChild(dependencies);
+        }
+    }
 
     class AttachmentsDecorator implements TagDecorator {
 
@@ -255,11 +304,14 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public void decorate(TagNode tag) {
-            String src = tag.getAttributeByName("src");
-
-            if (!src.startsWith("/") && !src.startsWith("http://") && !src.startsWith("https://")) {
-                tag.addAttribute("src", form.getStaticRoot() + "/" + src);
-            }
+//            String src = tag.getAttributeByName("src");
+//
+//            if (!src.startsWith("/") && !src.startsWith("http://") && !src.startsWith("https://")) {
+//                tag.addAttribute("src", form.getStaticRoot() + "/" + src);
+//            }
+            String id = tag.getAttributeByName("id");
+            if (StringUtils.isEmpty(id) || !id.startsWith("piecework-"))
+                tag.removeFromTree();
         }
     }
 
@@ -267,11 +319,15 @@ public class DecoratingVisitor implements TagNodeVisitor {
 
         @Override
         public void decorate(TagNode tag) {
-            String href = tag.getAttributeByName("href");
+//            String href = tag.getAttributeByName("href");
+//
+//            if (!href.startsWith("/") && !href.startsWith("http://") && !href.startsWith("https://")) {
+//                tag.addAttribute("href", form.getStaticRoot() + "/" + href);
+//            }
 
-            if (!href.startsWith("/") && !href.startsWith("http://") && !href.startsWith("https://")) {
-                tag.addAttribute("href", form.getStaticRoot() + "/" + href);
-            }
+            String id = tag.getAttributeByName("id");
+            if (StringUtils.isEmpty(id) || !id.startsWith("piecework-"))
+                tag.removeFromTree();
         }
 
     }

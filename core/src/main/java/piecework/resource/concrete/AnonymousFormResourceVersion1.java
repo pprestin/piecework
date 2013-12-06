@@ -18,15 +18,14 @@ package piecework.resource.concrete;
 import javax.ws.rs.core.*;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.persistence.ProcessRepository;
 import piecework.exception.*;
-import piecework.form.*;
 import piecework.model.Process;
+import piecework.resource.AnonymousFormResource;
 
 /**
  * @author James Renfro
@@ -44,6 +43,12 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
         return startForm(context, process);
+    }
+
+    @Override
+    public Response readReceipt(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
+        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
+        return receiptForm(context, process, rawRequestId);
     }
 
     @Override

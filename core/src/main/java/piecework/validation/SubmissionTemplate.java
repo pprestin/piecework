@@ -71,7 +71,11 @@ public class SubmissionTemplate {
                 if (this.fieldMap.containsKey(fieldName))
                     return FieldSubmissionType.DESCRIPTION;
             }
+
+            if (isAttachmentAllowed)
+                return FieldSubmissionType.ATTACHMENT;
         }
+
         return FieldSubmissionType.INVALID;
     }
 
@@ -87,24 +91,8 @@ public class SubmissionTemplate {
         return fieldMap;
     }
 
-    public Set<String> getUserFields() {
-        return userFields;
-    }
-
-    public Set<String> getButtonNames() {
-        return buttonNames;
-    }
-
-    public Map<String, Button> getButtonValueMap() {
-        return buttonValueMap;
-    }
-
     public Map<Field, List<ValidationRule>> getFieldRuleMap() {
         return fieldRuleMap;
-    }
-
-    public boolean isAttachmentAllowed() {
-        return isAttachmentAllowed;
     }
 
     public long getMaxAttachmentSize() {
@@ -112,7 +100,8 @@ public class SubmissionTemplate {
     }
 
     public boolean isUserField(String name) {
-        return userFields.contains(name);
+        Field field = fieldMap.get(name);
+        return field != null && field.getType() != null && field.getType().equals(Constants.FieldTypes.PERSON);
     }
 
     public final static class Builder {

@@ -37,12 +37,15 @@ import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
+import piecework.enumeration.Scheme;
 import piecework.persistence.ContentRepository;
 import piecework.model.Content;
+import piecework.util.PathUtility;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLConnection;
@@ -89,21 +92,23 @@ public class GridFSContentRepository implements ContentRepository {
             return null;
 
         try {
-            int indexOf = location.indexOf(':');
-            String scheme = "";
-            if (indexOf != -1)
-                scheme = location.substring(0, indexOf);
+            Scheme scheme = PathUtility.findScheme(location);
 
-            Content content;
-            if (scheme.equals("http") || scheme.endsWith("https"))
-                content = getRemotely(location);
-            else if (scheme.equals("classpath"))
-                content = getFromClasspath(location);
-            else if (scheme.equals("file"))
-                content = getFromFileSystem(location);
-            else
-                content = getFromGridFS(location);
-
+            Content content = null;
+            switch (scheme) {
+                case REMOTE:
+                    content = getRemotely(location);
+                    break;
+                case CLASSPATH:
+                    content = getFromClasspath(location);
+                    break;
+                case FILESYSTEM:
+                    content = getFromFileSystem(location);
+                    break;
+                case REPOSITORY:
+                    content = getFromGridFS(location);
+                    break;
+            };
             return content;
         } catch (IOException e) {
             LOG.error("Could not retrieve content", e);
@@ -169,9 +174,9 @@ public class GridFSContentRepository implements ContentRepository {
         ClassPathResource resource = new ClassPathResource(classpathLocation);
 
         String contentType = null;
-        BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
-        if (contentType == null)
-            contentType = URLConnection.guessContentTypeFromStream(inputStream);
+//        BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
+//        if (contentType == null)
+//            contentType = URLConnection.guessContentTypeFromStream(inputStream);
         if (contentType == null) {
             if (location.endsWith(".css"))
                 contentType = "text/css";
@@ -180,14 +185,15 @@ public class GridFSContentRepository implements ContentRepository {
             else if (location.endsWith(".html"))
                 contentType = "text/html";
         }
-        return new Content.Builder().inputStream(inputStream).contentType(contentType).build();
+        return new Content.Builder().resource(resource).contentType(contentType).location(location).filename(location).build();
     }
 
     private Content getFromFileSystem(String location) throws IOException {
         if (!location.startsWith("file:"))
             return null;
 
-        FileSystemResource resource = new FileSystemResource(location.substring("file:".length()));
+        File file = new File(location.substring("file:".length()));
+        FileSystemResource resource = new FileSystemResource(file);
         BufferedInputStream inputStream = new BufferedInputStream(resource.getInputStream());
         String contentType = URLConnection.guessContentTypeFromStream(inputStream);
         if (contentType == null) {
@@ -198,7 +204,7 @@ public class GridFSContentRepository implements ContentRepository {
             else if (location.endsWith(".html"))
                 contentType = "text/html";
         }
-        return new Content.Builder().inputStream(inputStream).contentType(contentType).build();
+        return new Content.Builder().inputStream(inputStream).contentType(contentType).location(location).filename(file.getPath()).build();
     }
 
     private Content getFromGridFS(String location) {

@@ -15,15 +15,13 @@
  */
 package piecework.util;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author James Renfro
  */
-public class ManyMapSet<K, V> extends HashMap<K, Set<V>> {
+public class ManyMapSet<K, V> extends Hashtable<K, Set<V>> {
 
 	private static final long serialVersionUID = -535417510730554623L;
 
@@ -47,14 +45,14 @@ public class ManyMapSet<K, V> extends HashMap<K, Set<V>> {
 	
 	public synchronized int putOne(K key, V value) {
 		
-		Set<V> list = get(key);
-		if (list == null) {
-			list = new HashSet<V>();
-			put(key, list);
+		Set<V> set = get(key);
+		if (set == null) {
+			set = Collections.newSetFromMap(new ConcurrentHashMap<V, Boolean>());
+			put(key, set);
 		}
-		list.add(value);
+		set.add(value);
 		
-		return list.size();
+		return set.size();
 	}
 	
 	public synchronized V removeOne(K key, V value) {

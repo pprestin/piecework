@@ -18,17 +18,19 @@
 	</properties>
 
 	<build>
+        <finalName>piecework</finalName>
 		<plugins>
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
-                <version>2.1</version>
+                <version>2.2</version>
                 <configuration>
                     <port>8000</port>
                     <ajpPort>8009</ajpPort>
                     <httpsPort>8443</httpsPort>
-                    <path>/piecework</path>
+                    <path>/${project.build.finalName}</path>
                     <clientAuth>true</clientAuth>
+                    <serverXml>src/main/webserver/server.xml</serverXml>
                 </configuration>
             </plugin>
 		</plugins>
@@ -107,26 +109,6 @@
 			<artifactId>groovy</artifactId>
 			<version>1.7.5</version>
 		</dependency>
-		<!--<dependency>-->
-			<!--<groupId>org.hibernate</groupId>-->
-			<!--<artifactId>hibernate-entitymanager</artifactId>-->
-			<!--<exclusions>-->
-				<!--<exclusion>-->
-					<!--<artifactId>slf4j-api</artifactId>-->
-					<!--<groupId>org.slf4j</groupId>-->
-				<!--</exclusion>-->
-			<!--</exclusions>-->
-		<!--</dependency>-->
-		<!--<dependency>-->
-			<!--<groupId>org.hibernate</groupId>-->
-			<!--<artifactId>hibernate-validator</artifactId>-->
-			<!--<exclusions>-->
-				<!--<exclusion>-->
-					<!--<artifactId>slf4j-api</artifactId>-->
-					<!--<groupId>org.slf4j</groupId>-->
-				<!--</exclusion>-->
-			<!--</exclusions>-->
-		<!--</dependency>-->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>

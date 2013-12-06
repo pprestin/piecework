@@ -15,10 +15,12 @@
  */
 package piecework.ui.streaming;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.*;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,16 +43,23 @@ public class HtmlCleanerStreamingOutput implements StreamingOutput {
 
     @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
-        CleanerProperties cleanerProperties = new CleanerProperties();
-        cleanerProperties.setOmitXmlDeclaration(true);
-        HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-        TagNode node = cleaner.clean(inputStream);
-        node.traverse(visitor);
-        SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
+        // Sanity check
+        if (inputStream == null) {
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
         try {
+            CleanerProperties cleanerProperties = new CleanerProperties();
+            cleanerProperties.setOmitXmlDeclaration(true);
+            HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
+            TagNode node = cleaner.clean(inputStream);
+            node.traverse(visitor);
+            SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
             serializer.writeToStream(node, output);
         } catch (Exception e) {
             LOG.error("Exception serializing output ", e);
+        } finally {
+            IOUtils.closeQuietly(inputStream);
         }
     }
 }

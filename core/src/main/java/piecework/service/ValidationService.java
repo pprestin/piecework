@@ -106,6 +106,8 @@ public class ValidationService {
                         try {
                             rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
                         } catch (ValidationRuleException e) {
+                            LOG.warn("Invalid input: " + e.getMessage() + " " + e.getRule());
+
                             validationBuilder.error(rule.getName(), e.getMessage());
                             if (onlyAcceptValidInputs) {
                                 fieldNames.remove(rule.getName());

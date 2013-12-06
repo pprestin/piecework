@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.form;
+package piecework.resource;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.PublicApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.exception.StatusCodeError;
@@ -24,7 +25,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -33,15 +37,13 @@ import javax.ws.rs.core.Response;
 public interface AnonymousScriptResource extends PublicApplicationResource {
 
     @GET
-    @Path("css/{id}.css")
-    @RolesAllowed({AuthorizationRole.USER})
+    @Path("css/{processDefinitionKey}.css")
     @Produces({"text/css"})
-    Response readStylesheet(@PathParam("id") String stylesheetId) throws StatusCodeError;
+    Response readStylesheet(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
     @GET
-    @Path("script/{id}.js")
-    @RolesAllowed({AuthorizationRole.USER})
+    @Path("script/{processDefinitionKey}.js")
     @Produces({"text/javascript"})
-    Response readScript(@PathParam("id") String scriptId) throws StatusCodeError;
+    Response readScript(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
 
 }

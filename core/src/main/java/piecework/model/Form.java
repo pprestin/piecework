@@ -147,7 +147,7 @@ public class Form {
         else
             this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
         this.src = context != null ? context.getApplicationOrPublicUri(builder.anonymous, "resource", builder.processDefinitionKey, builder.formInstanceId) : null;
-        this.staticRoot = context != null ? context.getApplicationUri("resource", "static", builder.processDefinitionKey) : null;
+        this.staticRoot = context != null ? context.getApplicationOrPublicUri(builder.anonymous, "resource", "static", builder.processDefinitionKey) : null;
         this.assignment = builder.assignment;
         this.activation = builder.activation;
         this.attachment = builder.attachment;

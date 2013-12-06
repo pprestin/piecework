@@ -47,20 +47,20 @@ public class StreamingPageContent implements StreamingOutput {
     }
 
     public void write(OutputStream output) throws IOException, WebApplicationException {
-        CleanerProperties cleanerProperties = new CleanerProperties();
-        cleanerProperties.setOmitXmlDeclaration(true);
-        HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-        TagNode node = cleaner.clean(content.getInputStream());
-        switch (strategy) {
-            case INCLUDE_SCRIPT:
-                node.traverse(new ScriptInjectingVisitor(form));
-                break;
-            case DECORATE_HTML:
-                node.traverse(new DecoratingVisitor(form));
-                break;
-        }
-
-        SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
-        serializer.writeToStream(node, output);
+//        CleanerProperties cleanerProperties = new CleanerProperties();
+//        cleanerProperties.setOmitXmlDeclaration(true);
+//        HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
+//        TagNode node = cleaner.clean(content.getInputStream());
+//        switch (strategy) {
+//            case INCLUDE_SCRIPT:
+//                node.traverse(new ScriptInjectingVisitor(form));
+//                break;
+//            case DECORATE_HTML:
+//                node.traverse(new DecoratingVisitor(null, process, form, null, null));
+//                break;
+//        }
+//
+//        SimpleHtmlSerializer serializer = new SimpleHtmlSerializer(cleaner.getProperties());
+//        serializer.writeToStream(node, output);
     }
 }

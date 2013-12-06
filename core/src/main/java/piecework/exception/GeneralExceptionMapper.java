@@ -87,6 +87,8 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
         try {
             StreamingOutput streamingOutput = userInterfaceService.getDefaultPageAsStreaming(Explanation.class, explanation);
             return Response.status(status).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();
+        } catch (NotFoundError nfe) {
+            return Response.status(Status.NOT_FOUND).build();
         } catch (IOException ioe) {
             LOG.error("Unable to get explanation page as a streaming output", ioe);
         }

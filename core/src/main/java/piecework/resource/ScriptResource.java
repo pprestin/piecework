@@ -52,13 +52,13 @@ public interface ScriptResource extends ApplicationResource {
     @Path("css/{id}.css")
     @RolesAllowed({AuthorizationRole.USER})
     @Produces({"text/css"})
-    Response readStylesheet(@PathParam("id") String stylesheetId) throws StatusCodeError;
+    Response readStylesheet(@PathParam("id") String stylesheetId, @Context MessageContext context) throws StatusCodeError;
 
     @GET
     @Path("script/{id}.js")
     @RolesAllowed({AuthorizationRole.USER})
     @Produces({"text/javascript"})
-    Response readScript(@PathParam("id") String scriptId) throws StatusCodeError;
+    Response readScript(@PathParam("id") String scriptId, @Context MessageContext context) throws StatusCodeError;
 
     @GET
     @Path("static/{processDefinitionKey}/{segments:.*}")

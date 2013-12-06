@@ -18,10 +18,7 @@ package piecework.authorization;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
-import piecework.model.*;
-import piecework.security.Sanitizer;
 import piecework.util.ManyMap;
-import piecework.util.ManyMapSet;
 
 import java.util.*;
 

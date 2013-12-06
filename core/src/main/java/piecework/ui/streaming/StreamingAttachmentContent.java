@@ -22,9 +22,7 @@ import piecework.ui.Streamable;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringReader;
+import java.io.*;
 
 /**
  * @author James Renfro
@@ -45,10 +43,21 @@ public class StreamingAttachmentContent implements StreamingOutput {
 
     @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
-        if (content != null)
-            IOUtils.copy(content.getInputStream(), output);
-        else if (attachment != null)
-            IOUtils.copy(new StringReader(attachment.getDescription()), output);
+        InputStream input = null;
+        Reader reader = null;
+        try {
+            if (content != null) {
+                input = content.getInputStream();
+                IOUtils.copy(input, output);
+            } else if (attachment != null) {
+                reader = new StringReader(attachment.getDescription());
+                IOUtils.copy(reader, output);
+            }
+        } finally {
+            IOUtils.closeQuietly(reader);
+            IOUtils.closeQuietly(input);
+            IOUtils.closeQuietly(output);
+        }
     }
 
     public Attachment getAttachment() {

@@ -15,19 +15,18 @@
  */
 package piecework.resource.concrete;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import piecework.authorization.AuthorizationRole;
 import piecework.service.RequestService;
 import piecework.model.RequestDetails;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ContentRepository;
 import piecework.resource.ScriptResource;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
@@ -45,9 +44,6 @@ import java.util.*;
 public class ScriptResourceVersion1 extends AbstractScriptResource implements ScriptResource {
 
     private static final Logger LOG = Logger.getLogger(ScriptResourceVersion1.class);
-
-    @Autowired
-    ContentRepository contentRepository;
 
     @Autowired
     FormTemplateService formTemplateService;
@@ -71,23 +67,34 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
         String requestId = sanitizer.sanitize(rawRequestId);
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest request = requestService.read(requestDetails, requestId);
-
         return response(request, principal, new MediaType("text", "javascript"));
     }
 
     @Override
-    public Response readScript(String scriptId) throws StatusCodeError {
+    public Response readScript(String rawScriptId, MessageContext context) throws StatusCodeError {
+        String scriptId = sanitizer.sanitize(rawScriptId);
+        Entity principal = identityHelper.getPrincipal();
         String templateName = formTemplateService.getTemplateName(scriptId, isAnonymous());
+        if (templateName == null) {
+            Form form = getForm(scriptId, principal, context);
+            return processScript(form);
+        }
 
-        Resource scriptResource = userInterfaceService.getScriptResource(templateName);
+        Resource scriptResource = userInterfaceService.getScriptResource(templateName, null, isAnonymous());
         return response(scriptResource, "text/javascript");
     }
 
     @Override
-    public Response readStylesheet(String stylesheetId) throws StatusCodeError {
+    public Response readStylesheet(String rawStylesheetId, MessageContext context) throws StatusCodeError {
+        String stylesheetId = sanitizer.sanitize(rawStylesheetId);
+        Entity principal = identityHelper.getPrincipal();
         String templateName = formTemplateService.getTemplateName(stylesheetId, isAnonymous());
+        if (templateName == null) {
+            Form form = getForm(stylesheetId, principal, context);
+            return processStylesheet(form);
+        }
 
-        Resource stylesheetResource = userInterfaceService.getStylesheetResource(templateName);
+        Resource stylesheetResource = userInterfaceService.getStylesheetResource(templateName, null, isAnonymous());
         return response(stylesheetResource, "text/css");
     }
 
@@ -96,38 +103,27 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-
-        Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
-
-        if (pathSegmentIterator.hasNext()) {
-            String name = "";
-            while (pathSegmentIterator.hasNext()) {
-                name += sanitizer.sanitize(pathSegmentIterator.next().getPath());
-                if (pathSegmentIterator.hasNext())
-                    name += "/";
-            }
-            ProcessDeployment detail = process.getDeployment();
-            if (detail == null)
-                throw new ConflictError();
-
-            String base = detail.getBase();
-
-            if (StringUtils.isNotEmpty(base)) {
-                Content content = contentRepository.findByLocation(base + "/" + name);
-
-                if (content != null)
-                    return Response.ok(content.getInputStream()).type(content.getContentType()).build();
-            }
-
-            LOG.warn("Unable to retrieve static resource for path " + base + "/" + name);
-            throw new NotFoundError();
-        }
-
-        return null;
+        return staticResponse(process, requestDetails, pathSegments);
     }
 
     @Override
     protected boolean isAnonymous() {
         return false;
     }
+
+    private Form getForm(String processDefinitionKey, Entity principal, MessageContext context) throws StatusCodeError {
+        if (principal == null)
+            throw new ForbiddenError();
+
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER, AuthorizationRole.USER);
+        if (!processDefinitionKeys.contains(processDefinitionKey))
+            throw new ForbiddenError();
+
+        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        if (process == null)
+            throw new NotFoundError();
+
+        return form(process, context, principal);
+    }
+
 }

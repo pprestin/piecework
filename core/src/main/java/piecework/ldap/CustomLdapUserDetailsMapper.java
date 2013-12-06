@@ -39,16 +39,14 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implement
 
 	private final Log logger = LogFactory.getLog(CustomLdapUserDetailsMapper.class);
 
-    @Autowired(required = false)
-    DisplayNameConverter displayNameConverter;
-
-    @Autowired
-    LdapSettings ldapSettings;
-
+    private final DisplayNameConverter displayNameConverter;
+    private final LdapSettings ldapSettings;
 	private final LdapUserDetailsMapper delegate;
 
-	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate) {
+	public CustomLdapUserDetailsMapper(LdapUserDetailsMapper delegate, DisplayNameConverter displayNameConverter, LdapSettings ldapSettings) {
 		this.delegate = delegate;
+        this.displayNameConverter = displayNameConverter;
+        this.ldapSettings = ldapSettings;
     }
 	
 	public UserDetails mapUserFromContext(DirContextOperations ctx, String username, Collection<? extends GrantedAuthority> authorities) {

@@ -31,6 +31,7 @@ public class StateChangeEvent {
     private final ProcessInstance instance;
     private final Task task;
     private final ActionType actionType;
+    private final EngineContext context;
 
     private StateChangeEvent() {
         this(new Builder(StateChangeType.NONE));
@@ -42,6 +43,7 @@ public class StateChangeEvent {
         this.instance = builder.instance;
         this.task = builder.task;
         this.actionType = builder.actionType;
+        this.context = builder.context;
     }
 
     public StateChangeType getType() {
@@ -64,6 +66,10 @@ public class StateChangeEvent {
         return actionType;
     }
 
+    public EngineContext getContext() {
+        return context;
+    }
+
     public static final class Builder {
 
         private final StateChangeType type;
@@ -71,6 +77,7 @@ public class StateChangeEvent {
         private ProcessInstance instance;
         private Task task;
         private ActionType actionType;
+        private EngineContext context;
 
         public Builder(StateChangeType type) {
             this.type = type;
@@ -92,6 +99,11 @@ public class StateChangeEvent {
 
         public Builder task(Task task) {
             this.task = task;
+            return this;
+        }
+
+        public Builder context(EngineContext context) {
+            this.context = context;
             return this;
         }
 

@@ -64,7 +64,7 @@ public class EngineStateSynchronizer {
                 try {
                     Process process = processService.read(instance.getProcessDefinitionKey());
                     LOG.debug("Process instance completed " + processInstanceId);
-                    mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).process(process).instance(instance).build());
+                    mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).context(context).process(process).instance(instance).build());
                 } catch (StatusCodeError e) {
                     LOG.error("Unable to find the process for this process instance -- complete process event will not be thrown" + processInstanceId);
                 }
@@ -101,7 +101,7 @@ public class EngineStateSynchronizer {
             if (updated != null) {
                 if (taskService.update(processInstance.getProcessInstanceId(), updated)) {
                     LOG.debug("Stored task changes");
-                    mediator.notify(new StateChangeEvent.Builder(type).process(process).instance(processInstance).task(updated).build());
+                    mediator.notify(new StateChangeEvent.Builder(type).context(context).process(process).instance(processInstance).task(updated).build());
                 } else {
                     LOG.error("Failed to store task changes");
                 }

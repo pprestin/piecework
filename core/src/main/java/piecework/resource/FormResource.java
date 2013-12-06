@@ -47,10 +47,10 @@ public interface FormResource extends ApplicationResource {
     Response readTask(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context MessageContext context) throws StatusCodeError;
 
     @GET
-    @Path("{processDefinitionKey}/page/{requestId}")
+    @Path("{processDefinitionKey}/receipt/{requestId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html","application/json"})
-    Response readRequest(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
+    @Produces({"text/html"})
+    Response readReceipt(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
 
     @POST
     @Path("{processDefinitionKey}/save/{requestId}")

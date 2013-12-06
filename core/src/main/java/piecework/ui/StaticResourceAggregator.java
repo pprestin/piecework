@@ -13,77 +13,107 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui.visitor;
+package piecework.ui;
 
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.htmlcleaner.TagNode;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import piecework.enumeration.Scheme;
 import piecework.model.Content;
 import piecework.persistence.ContentRepository;
-import piecework.ui.DatedByteArrayResource;
+import piecework.util.PathUtility;
 
 import java.io.*;
-import java.util.Map;
+import java.nio.charset.Charset;
 
 /**
+ * Takes paths from repeated calls to the handle() method and looks up the resources
+ * at those paths, then appends their contents to an internal StringBuffer.
+ *
+ * Calling getStaticResource() retrieves a Resource that includes the aggregated data
+ * and can be used to stream or inline it elsewhere.
+ *
  * @author James Renfro
  */
-public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
+public class StaticResourceAggregator {
 
     private static final String NEWLINE = System.getProperty("line.separator");
-    private static final Logger LOG = Logger.getLogger(OptimizingHtmlProviderVisitor.class);
+    private static final Logger LOG = Logger.getLogger(StaticResourceAggregator.class);
 
-    private final StringBuffer scriptBuffer;
-    private final StringBuffer stylesheetBuffer;
-    private final String assetsDirectoryPath;
     private final ContentRepository contentRepository;
-    private final boolean doOptimization;
+    private final StringBuffer buffer;
+    private final UserInterfaceSettings settings;
+    private final String base;
 
-    public OptimizingHtmlProviderVisitor(String applicationTitle, String applicationUrl, String publicUrl, String assetsUrl, Environment environment, ContentRepository contentRepository) {
-        super(applicationTitle, applicationUrl, publicUrl, assetsUrl);
-        this.scriptBuffer = new StringBuffer();
-        this.stylesheetBuffer = new StringBuffer();
-        this.assetsDirectoryPath = environment.getProperty("assets.directory");
+    public StaticResourceAggregator(ContentRepository contentRepository, UserInterfaceSettings settings, String base) {
         this.contentRepository = contentRepository;
-        this.doOptimization = environment.getProperty("javascript.minification", Boolean.class, Boolean.FALSE);
+        this.buffer = new StringBuffer();
+        this.settings = settings;
+        this.base = base;
     }
 
-    public ByteArrayResource getScriptResource() {
-        return new DatedByteArrayResource(scriptBuffer.toString().getBytes());
+    public Resource getStaticResource() {
+        return new DatedByteArrayResource(this.buffer.toString().getBytes(Charset.forName("UTF-8")));
     }
 
-    public ByteArrayResource getStylesheetResource() {
-        return new DatedByteArrayResource(stylesheetBuffer.toString().getBytes());
+    public String handle(String path) {
+        if (StringUtils.isEmpty(path))
+            return null;
+
+        BufferedReader reader = null;
+        try {
+            reader = reader(path);
+
+            if (reader != null) {
+
+                String cleanPath;
+                // Strip off query string for the purpose of deciding if it's javascript or css
+                int indexOf = path.indexOf('?');
+                if (indexOf != -1 && indexOf < path.length())
+                    cleanPath = path.substring(0, indexOf);
+                else
+                    cleanPath = path;
+
+                if (!settings.isDoOptimization() || cleanPath.contains(".min.")) {
+                    StringBuilder builder = new StringBuilder();
+                    // Don't bother to compress files that are already compressed
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        builder.append(line).append(NEWLINE);
+                    }
+
+                    if (cleanPath.endsWith(".css"))
+                        buffer.append(rebaseStylesheetUrls(builder.toString(), path));
+                    else
+                        buffer.append(builder);
+
+                } else if (cleanPath.endsWith(".js")) {
+                    buffer.append(compressJavaScript(reader, new Options(), path)).append(NEWLINE);
+                } else if (cleanPath.endsWith(".css")) {
+                    buffer.append(rebaseStylesheetUrls(compressStylesheet(reader, new Options()), path)).append(NEWLINE);
+                }
+                // If we successfully handled this path then return null to indicate that
+                // no new path needs to be included
+                return null;
+            }
+        } catch (Exception e) {
+            LOG.warn("Unable to include path " + path + " in optimized script", e);
+        } finally {
+            IOUtils.closeQuietly(reader);
+        }
+
+        // Otherwise, return a recomputed path that will correctly serve the resource
+        // externally
+        return PathUtility.recomputeStaticPath(path, settings);
     }
 
-    protected void handleBody(String tagName, TagNode tagNode) {
 
-    }
-
-    protected void handleStylesheet(String tagName, TagNode tagNode) {
-        Map<String, String> attributes = tagNode.getAttributes();
-        String href = attributes.get("href");
-        handleAttribute("href", href, tagNode, stylesheetBuffer);
-    }
-
-    protected void handleScript(String tagName, TagNode tagNode) {
-        Map<String, String> attributes = tagNode.getAttributes();
-        String href = attributes.get("href");
-        String src = attributes.get("src");
-        String main = attributes.get("data-main");
-
-        handleAttribute("href", href, tagNode, scriptBuffer);
-        handleAttribute("src", src, tagNode, scriptBuffer);
-    }
-
-    public String compressStylesheet(Reader in, Options o) {
+    private static String compressStylesheet(Reader in, Options o) {
         StringWriter out = new StringWriter();
         try {
             CssCompressor compressor = new CssCompressor(in);
@@ -110,10 +140,10 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
         lastSlash = path.lastIndexOf('/', lastSlash - 1);
         String rootPath = path.substring(0, lastSlash + 1);
 
-        return content.replaceAll("url\\('\\.\\./", "url('" + recomputeStaticPath(rootPath, assetsUrl));
+        return content.replaceAll("url\\('\\.\\./", "url('" + PathUtility.recomputeStaticPath(rootPath, settings));
     }
 
-    public String compressJavaScript(Reader in, Options o, String path) {
+    private String compressJavaScript(Reader in, Options o, String path) {
         StringWriter out = new StringWriter();
         try {
             JavaScriptCompressor compressor = new JavaScriptCompressor(in, new YuiCompressorErrorReporter());
@@ -136,48 +166,22 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
         return out.toString();
     }
 
-    private synchronized void handleAttribute(String name, String path, TagNode tagNode, StringBuffer buffer) {
-        if (StringUtils.isEmpty(path))
-            return;
-
-        BufferedReader reader = null;
-        try {
-            reader = reader(path);
-
-            if (reader != null) {
-
-                if (!doOptimization || path.contains(".min.")) {
-                    StringBuilder builder = new StringBuilder();
-                    // Don't bother to compress files that are already compressed
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        builder.append(line).append(NEWLINE);
-                    }
-
-                    if (path.endsWith(".css"))
-                        buffer.append(rebaseStylesheetUrls(builder.toString(), path));
-                    else
-                        buffer.append(builder);
-
-                } else if (path.endsWith(".js")) {
-                    buffer.append(compressJavaScript(reader, new Options(), path)).append(NEWLINE);
-                } else if (path.endsWith(".css")) {
-                    buffer.append(rebaseStylesheetUrls(compressStylesheet(reader, new Options()), path)).append(NEWLINE);
-                }
-                tagNode.removeFromTree();
-            } else {
-                tagNode.addAttribute(name, recomputeStaticPath(path, assetsUrl));
-            }
-        } catch (Exception e) {
-            LOG.warn("Unable to include path " + path + " in optimized script", e);
-        } finally {
-            IOUtils.closeQuietly(reader);
-        }
-    }
-
     private BufferedReader reader(String path) throws Exception {
-        if (!checkForStaticPath(path)) {
-            Content content = contentRepository.findByLocation(path);
+        String fullPath;
+        if (StringUtils.isNotEmpty(base)) {
+            // Only add the base if we're looking for the resource in the
+            // repository
+            Scheme scheme = PathUtility.findScheme(path);
+            if (scheme == Scheme.REPOSITORY)
+                fullPath = base + "/" + path;
+            else
+                fullPath = path;
+        } else {
+            fullPath = path;
+        }
+
+        if (!PathUtility.checkForStaticPath(path)) {
+            Content content = contentRepository.findByLocation(fullPath);
             if (content != null) {
                 return new BufferedReader(new InputStreamReader(content.getInputStream()));
             }
@@ -190,7 +194,7 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
             return null;
 
         String adjustedPath = path.substring(indexOf);
-        File file = new File(assetsDirectoryPath, adjustedPath);
+        File file = new File(settings.getAssetsDirectoryPath(), adjustedPath);
         String absolutePath = file.getAbsolutePath();
         LOG.debug("Reading from " + absolutePath);
         if (!file.exists())
@@ -230,5 +234,4 @@ public class OptimizingHtmlProviderVisitor extends HtmlProviderVisitor {
             return new EvaluatorException(message);
         }
     }
-
 }

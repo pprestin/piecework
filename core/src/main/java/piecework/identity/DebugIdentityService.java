@@ -18,6 +18,7 @@ package piecework.identity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import piecework.authorization.DebugAccessAuthority;
 import piecework.model.User;
@@ -34,22 +35,12 @@ import java.util.*;
 public class DebugIdentityService implements IdentityService {
 
     @Autowired
-    Environment environment;
-
-    @Autowired
-    ProcessService processService;
-
-    private DebugAccessAuthority accessAuthority;
-
-    @PostConstruct
-    public void init() {
-        this.accessAuthority = new DebugAccessAuthority(processService);
-    }
+    UserDetailsService userDetailsService;
 
     @Override
     public User getUser(String internalId) {
 
-        return new User.Builder(loadUserByUsername(internalId)).build();
+        return new User.Builder(userDetailsService.loadUserByUsername(internalId)).build();
     }
 
     @Override
@@ -73,17 +64,4 @@ public class DebugIdentityService implements IdentityService {
         return map;
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String testUser = environment.getProperty("authentication.testuser");
-        String id = username;
-        String displayName = username;
-
-        if (testUser != null && testUser.equals(id))
-            displayName = environment.getProperty("authentication.testuser.displayName");
-
-        UserDetails delegate = new org.springframework.security.core.userdetails.User(id, "none",
-                Collections.singletonList(accessAuthority));
-        return new IdentityDetails(delegate, id, id, displayName, "");
-    }
 }

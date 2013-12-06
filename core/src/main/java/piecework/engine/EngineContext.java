@@ -13,6 +13,10 @@ public interface EngineContext {
 
     <T> T getInstanceVariable(String name);
 
+    <T> void setInstanceVariable(String name, T value);
+
     <T> T getTaskVariable(String taskId, String name);
+
+    <T> void setTaskVariable(String taskId, String name, T value);
 
 }
