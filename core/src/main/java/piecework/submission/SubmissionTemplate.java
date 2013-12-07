@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.validation;
+package piecework.submission;
 
 import org.apache.commons.lang.StringUtils;
 import piecework.Constants;
 import piecework.enumeration.FieldSubmissionType;
-import piecework.enumeration.FieldTag;
 import piecework.model.Button;
 import piecework.model.Field;
-import piecework.model.Option;
+import piecework.model.Process;
+import piecework.model.ProcessDeployment;
 import piecework.util.ManyMap;
+import piecework.validation.ValidationRule;
 
 import java.util.*;
 
@@ -31,26 +32,36 @@ import java.util.*;
  */
 public class SubmissionTemplate {
 
+    private final Process process;
+    private final ProcessDeployment deployment;
     private final Set<String> buttonNames;
     private final Map<String, Button> buttonValueMap;
-    private final Set<String> userFields;
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
     private final Map<String, Field> fieldMap;
     private final boolean isAttachmentAllowed;
     private final long maxAttachmentSize;
 
     private SubmissionTemplate() {
-        this(new Builder());
+        this(new Builder(null, null));
     }
 
     private SubmissionTemplate(Builder builder) {
+        this.process = builder.process;
+        this.deployment = builder.deployment;
         this.buttonNames = Collections.unmodifiableSet(builder.buttonNames);
         this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
         this.fieldMap = Collections.unmodifiableMap(builder.fieldMap);
-        this.userFields = Collections.unmodifiableSet(builder.userFields);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.fieldRuleMap = Collections.unmodifiableMap(builder.fieldRuleMap);
         this.maxAttachmentSize = builder.maxAttachmentSize;
+    }
+
+    public Process getProcess() {
+        return process;
+    }
+
+    public ProcessDeployment getDeployment() {
+        return deployment;
     }
 
     public FieldSubmissionType fieldSubmissionType(String name) {
@@ -105,22 +116,20 @@ public class SubmissionTemplate {
     }
 
     public final static class Builder {
-        private Set<String> acceptable;
-        private Set<String> restricted;
+        private final Process process;
+        private final ProcessDeployment deployment;
         private Set<String> buttonNames;
-        private Set<String> userFields;
         private Map<String, Button> buttonValueMap;
         private ManyMap<Field, ValidationRule> fieldRuleMap;
         private Map<String, Field> fieldMap;
         private boolean isAttachmentAllowed;
         private long maxAttachmentSize;
 
-        public Builder() {
-            this.acceptable = new HashSet<String>();
+        public Builder(Process process, ProcessDeployment deployment) {
+            this.process = process;
+            this.deployment = deployment;
             this.buttonNames = new HashSet<String>();
             this.buttonValueMap = new HashMap<String, Button>();
-            this.restricted = new HashSet<String>();
-            this.userFields = new HashSet<String>();
             this.fieldRuleMap = new ManyMap<Field, ValidationRule>();
             this.fieldMap = new HashMap<String, Field>();
             this.maxAttachmentSize = 10485760l;
@@ -128,11 +137,6 @@ public class SubmissionTemplate {
 
         public SubmissionTemplate build() {
             return new SubmissionTemplate(this);
-        }
-
-        public Builder acceptable(String key) {
-            this.acceptable.add(key);
-            return this;
         }
 
         public Builder button(Button button) {
@@ -143,22 +147,6 @@ public class SubmissionTemplate {
 
         public Builder field(Field field) {
             this.fieldMap.put(field.getName(), field);
-//            if (field.getType() != null && field.getType().equals(Constants.FieldTypes.CHECKBOX)) {
-//                List<Option> options = field.getOptions();
-//                if (options != null) {
-//                    for (Option option : options) {
-//                        if (StringUtils.isNotEmpty(option.getName())) {
-//                            this.fieldMap.put(option.getName(), field);
-//                        }
-//                    }
-//                }
-//            }
-
-            return this;
-        }
-
-        public Builder restricted(String key) {
-            this.restricted.add(key);
             return this;
         }
 
@@ -171,11 +159,6 @@ public class SubmissionTemplate {
         public Builder rules(Field field, List<ValidationRule> rules) {
             if (rules != null && !rules.isEmpty())
                 this.fieldRuleMap.put(field, rules);
-            return this;
-        }
-
-        public Builder userField(String name) {
-            this.userFields.add(name);
             return this;
         }
 

@@ -25,6 +25,7 @@ import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import piecework.ldap.*;
 import piecework.security.KeyManagerCabinet;
+import piecework.service.CacheService;
 import piecework.service.GroupService;
 import piecework.service.IdentityService;
 
@@ -36,10 +37,16 @@ import javax.net.ssl.SSLSocketFactory;
 public class GroupServiceFactoryBean implements FactoryBean<GroupService> {
 
     @Autowired
+    CacheService cacheService;
+
+    @Autowired
     Environment environment;
 
     @Autowired
     KeyManagerCabinet cabinet;
+
+    @Autowired
+    IdentityService identityService;
 
     @Autowired
     LdapSettings ldapSettings;
@@ -55,7 +62,7 @@ public class GroupServiceFactoryBean implements FactoryBean<GroupService> {
         groupSearch.setSearchSubtree(true);
         groupSearch.setSearchTimeLimit(10000);
 
-        return new LdapGroupService(contextSource, groupSearch, ldapSettings);
+        return new LdapGroupService(cacheService, identityService, contextSource, groupSearch, ldapSettings);
     }
 
     @Override

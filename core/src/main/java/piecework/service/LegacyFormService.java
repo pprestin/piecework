@@ -47,7 +47,7 @@ public class LegacyFormService {
 //    SecuritySettings securitySettings;
 //
 //    @Autowired
-//    SubmissionHandler submissionHandler;
+//    SubmissionService submissionService;
 //
 //    @Autowired
 //    SubmissionTemplateFactory submissionTemplateFactory;
@@ -162,7 +162,7 @@ public class LegacyFormService {
 //            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 //
 //        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-//        Submission submission = submissionHandler.handle(process, template, body, formRequest);
+//        Submission submission = submissionService.handle(process, template, body, formRequest);
 //
 //        processInstanceService.save(process, instance, task, template, submission);
 //
@@ -196,7 +196,7 @@ public class LegacyFormService {
 //            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 //
 //        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-//        Submission submission = submissionHandler.handle(process, template, body, formRequest);
+//        Submission submission = submissionService.handle(process, template, body, formRequest);
 //
 //        ActionType action = submission.getAction();
 //        if (action == null)
@@ -274,7 +274,7 @@ public class LegacyFormService {
 //
 //        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, activity, validationId);
 //
-//        Submission submission = submissionHandler.handle(process, template, body, formRequest);
+//        Submission submission = submissionService.handle(process, template, body, formRequest);
 //
 //        validationService.validate(process, instance, task, template, submission, true);
 //

@@ -15,10 +15,8 @@
  */
 package piecework.validation;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -27,18 +25,13 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import piecework.Constants;
 import piecework.Registry;
-import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
 import piecework.security.DataFilterService;
 import piecework.service.IdentityService;
-import piecework.security.EncryptionService;
 import piecework.service.TaskService;
 import piecework.service.ValidationService;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.test.ExampleFactory;
+import piecework.submission.SubmissionTemplateFactory;
 import piecework.util.ManyMap;
 
 import java.util.List;

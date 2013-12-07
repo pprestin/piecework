@@ -49,14 +49,13 @@ import piecework.Registry;
 import piecework.common.UuidGenerator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.concrete.ProcessEngineConcreteFacade;
-import piecework.validation.SubmissionTemplateFactory;
+import piecework.submission.SubmissionTemplateFactory;
 import piecework.service.IdentityService;
 import piecework.ldap.LdapSettings;
 import piecework.persistence.AuthorizationRepository;
 import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.engine.ProcessEngineProxy;
 import piecework.persistence.*;
-import piecework.submission.SubmissionHandler;
 import piecework.persistence.concrete.InMemoryContentRepository;
 import piecework.model.*;
 import piecework.persistence.InteractionRepository;
@@ -127,11 +126,6 @@ public class UnitTestConfiguration {
     @Bean
     public RequestService requestHandler() {
         return new RequestService();
-    }
-
-    @Bean
-    public SubmissionHandler submissionHandler() {
-        return new SubmissionHandler();
     }
 
     @Bean

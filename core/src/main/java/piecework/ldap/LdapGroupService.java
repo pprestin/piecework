@@ -42,18 +42,16 @@ public class LdapGroupService implements GroupService {
     private final LdapContextSource groupLdapContextSource;
     private final LdapSettings ldapSettings;
     private final LdapUserSearch groupSearch;
-
-    @Autowired
-    CacheService cacheService;
-
-    @Autowired
-    IdentityService identityService;  // needed to populate user details of group members.
+    private final CacheService cacheService;
+    private final IdentityService identityService;  // needed to populate user details of group members.
 
     public LdapGroupService() {
-        this(null, null, null);
+        this(null, null, null, null, null);
     }
 
-    public LdapGroupService(LdapContextSource groupLdapContextSource, LdapUserSearch groupSearch, LdapSettings ldapSettings) {
+    public LdapGroupService(CacheService cacheService, IdentityService identityService, LdapContextSource groupLdapContextSource, LdapUserSearch groupSearch, LdapSettings ldapSettings) {
+        this.cacheService = cacheService;
+        this.identityService = identityService;
         this.groupLdapContextSource = groupLdapContextSource;
         this.groupSearch = groupSearch;
         this.ldapSettings = ldapSettings;

@@ -21,7 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.CommandExecutor;
@@ -29,11 +30,9 @@ import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
 import piecework.enumeration.OperationType;
-import piecework.persistence.DeploymentRepository;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.security.DataFilterService;
-import piecework.validation.SubmissionTemplate;
+import piecework.submission.SubmissionTemplate;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
@@ -48,6 +47,8 @@ import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -107,6 +108,29 @@ public class ProcessInstanceService {
             LOG.error("Unable to mark instance as complete: " + processInstanceId, error);
         }
         return null;
+    }
+
+    public void deleteAttachment(Process process, ProcessInstance instance, String attachmentId) throws StatusCodeError {
+        if (instance == null)
+            throw new InternalServerError();
+
+//        boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
+
+//        if (skipOptimization) {
+            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
+            builder.removeAttachment(attachmentId);
+
+            processInstanceRepository.save(builder.build());
+//        }
+//        else {
+//            Query query = new Query(where("_id").is(instance.getProcessInstanceId()));
+//            Update update = new Update();
+//
+//            if (attachmentId != null)
+//                update.pull("attachments", attachmentId);
+//
+//            mongoOperations.updateFirst(query, update, ProcessInstance.class);
+//        }
     }
 
     public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {

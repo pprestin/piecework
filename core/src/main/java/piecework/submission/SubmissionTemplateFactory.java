@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.validation;
+package piecework.submission;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
@@ -28,9 +28,9 @@ import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.util.ActivityUtil;
-import piecework.util.ConstraintUtil;
 import piecework.util.OptionResolver;
 import piecework.util.ProcessUtility;
+import piecework.validation.ValidationRule;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -54,7 +54,7 @@ public class SubmissionTemplateFactory {
         if (deployment == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
 
         String taskDefinitionKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
 
@@ -62,8 +62,8 @@ public class SubmissionTemplateFactory {
         return submissionTemplate(process, activity, null);
     }
 
-    public SubmissionTemplate submissionTemplate(Field field) {
-        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+    public SubmissionTemplate submissionTemplate(Process process, Field field) {
+        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, process.getDeployment());
         addField(builder, field);
         return builder.build();
     }
@@ -92,7 +92,7 @@ public class SubmissionTemplateFactory {
 
         Set<Field> fields = null;
 
-        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
+        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
 
         if (activity.isAllowAttachments()) {
             builder.allowAttachments();
@@ -160,87 +160,10 @@ public class SubmissionTemplateFactory {
         return builder.build();
     }
 
-    /*
-     * Takes a screen and generates the appropriate submission template for it,
-     * limiting to a specific section id
-     */
-//    public SubmissionTemplate submissionTemplate(Process process, Screen screen, String validationId) throws StatusCodeError {
-//        List<Grouping> groupings = screen.getGroupings();
-//        ProcessDeployment deployment = process.getDeployment();
-//        if (deployment == null)
-//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-//
-//        Map<String, Section> sectionMap = deployment.getSectionMap();
-//
-//        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder();
-//        if (groupings != null && sectionMap != null && !sectionMap.isEmpty()) {
-//            for (Grouping grouping : groupings) {
-//                if (grouping == null)
-//                    continue;
-//
-//                String groupingId = grouping.getGroupingId();
-//                if (groupingId != null && validationId != null && !groupingId.equals(validationId))
-//                    continue;
-//
-//                List<Button> buttons = grouping.getButtons();
-//                if (buttons != null) {
-//                    for (Button button : buttons) {
-//                        if (button == null)
-//                            continue;
-//                        builder.button(button);
-//                    }
-//                }
-//
-//                List<String> sectionsIds = grouping.getSectionIds();
-//                if (sectionsIds == null)
-//                    continue;
-//
-//                for (String sectionId : sectionsIds) {
-//                    Section section = sectionMap.get(sectionId);
-//                    if (section == null)
-//                        continue;
-//
-//                    List<Field> fields = section.getFields();
-//                    if (fields == null || fields.isEmpty())
-//                        continue;
-//
-//                    for (Field field : fields) {
-//                        addField(builder, field);
-//                    }
-//                }
-//            }
-//        }
-//
-//        return builder.build();
-//    }
-
     private void addField(SubmissionTemplate.Builder builder, Field field) {
         if (!field.isDeleted() && field.isEditable()) {
             builder.rules(field, new ArrayList<ValidationRule>(validationRules(field)));
             builder.field(field);
-
-//            String fieldName = field.getName();
-//            if (fieldName != null) {
-//                if (field.isRestricted())
-//                    builder.restricted(fieldName);
-//                else
-//                    builder.acceptable(fieldName);
-//
-//                if (field.getType().equals(Constants.FieldTypes.PERSON))
-//                    builder.userField(fieldName);
-//
-//                builder.field(field);
-//            } else if (field.getType() != null && field.getType().equals(FieldTag.CHECKBOX.getTagName())) {
-//                List<Option> options = field.getOptions();
-//                if (options != null) {
-//                    for (Option option : options) {
-//                        if (field.isRestricted())
-//                            builder.restricted(option.getName());
-//                        else
-//                            builder.acceptable(option.getName());
-//                    }
-//                }
-//            }
         }
     }
 

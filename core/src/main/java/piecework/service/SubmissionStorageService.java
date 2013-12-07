@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.submission;
+package piecework.service;
 
 import com.mongodb.MongoException;
 import org.apache.commons.lang.StringUtils;
@@ -29,8 +29,7 @@ import piecework.persistence.ContentRepository;
 import piecework.security.EncryptionService;
 import piecework.security.MaxSizeInputStream;
 import piecework.security.concrete.PassthroughEncryptionService;
-import piecework.service.IdentityService;
-import piecework.validation.SubmissionTemplate;
+import piecework.submission.SubmissionTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;

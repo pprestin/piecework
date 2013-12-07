@@ -30,12 +30,11 @@ import piecework.process.AttachmentQueryParameters;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ValidationService;
 import piecework.validation.FormValidation;
-import piecework.validation.SubmissionTemplate;
+import piecework.submission.SubmissionTemplate;
 import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
-import piecework.persistence.ProcessInstanceRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.streaming.StreamingAttachmentContent;
@@ -66,9 +65,6 @@ public class AttachmentService {
 
     @Autowired
     MongoTemplate mongoOperations;
-
-    @Autowired
-    ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
     ProcessInstanceService processInstanceService;
@@ -103,28 +99,6 @@ public class AttachmentService {
         }
 
         return null;
-    }
-
-    public void delete(Process process, ProcessInstance instance, String attachmentId) throws StatusCodeError {
-        if (instance == null)
-            throw new InternalServerError();
-
-        boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
-
-        if (skipOptimization) {
-            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
-            builder.removeAttachment(attachmentId);
-
-            processInstanceRepository.save(builder.build());
-        } else {
-            Query query = new Query(where("_id").is(instance.getProcessInstanceId()));
-            Update update = new Update();
-
-            if (attachmentId != null)
-                update.pull("attachments", attachmentId);
-
-            mongoOperations.updateFirst(query, update, ProcessInstance.class);
-        }
     }
 
     public SearchResults search(piecework.model.Process process, ProcessInstance processInstance, AttachmentQueryParameters queryParameters) throws StatusCodeError {

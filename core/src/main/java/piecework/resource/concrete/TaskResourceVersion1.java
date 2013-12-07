@@ -27,11 +27,11 @@ import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
-import piecework.submission.SubmissionHandler;
 import piecework.service.ValidationService;
-import piecework.validation.SubmissionTemplate;
-import piecework.validation.SubmissionTemplateFactory;
-import piecework.service.IdentityService;
+import piecework.submission.SubmissionHandler;
+import piecework.submission.SubmissionHandlerRegistry;
+import piecework.submission.SubmissionTemplate;
+import piecework.submission.SubmissionTemplateFactory;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
@@ -49,7 +49,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author James Renfro
@@ -78,7 +77,7 @@ public class TaskResourceVersion1 implements TaskResource {
     SecuritySettings securitySettings;
 
     @Autowired
-    SubmissionHandler submissionHandler;
+    SubmissionHandlerRegistry submissionHandlerRegistry;
 
     @Autowired
     SubmissionTemplateFactory submissionTemplateFactory;
@@ -130,14 +129,14 @@ public class TaskResourceVersion1 implements TaskResource {
             }
         }
 
+        SubmissionHandler handler = submissionHandlerRegistry.handler(Submission.class);
         try {
             FormRequest formRequest = requestService.create(requestDetails, process, instance, task, validatedAction);
             SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-            Submission submission = submissionHandler.handle(process, template, rawSubmission, formRequest, validatedAction, principal);
+            Submission submission = handler.handle(rawSubmission, template, formRequest, principal);
 
-            if (submission != null && submission.getAction() != null) {
+            if (submission != null && submission.getAction() != null)
                 validatedAction = submission.getAction();
-            }
 
             switch (validatedAction) {
                 case ASSIGN:

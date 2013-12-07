@@ -43,51 +43,8 @@ import piecework.persistence.ProcessRepository;
 @Service
 public class IdentityHelper {
 
-//    @Autowired
-//    AuthorizationRoleMapper authorizationRoleMapper;
-
 	@Autowired
 	ProcessRepository processRepository;
-
-
-//    public String getAuthenticatedSystemOrUserId() {
-//        String userId = null;
-//        SecurityContext context = SecurityContextHolder.getContext();
-//        if (context != null) {
-//            Authentication authentication = context.getAuthentication();
-//
-//            if (authentication != null) {
-//                Object principalAsObject = authentication.getPrincipal();
-//
-//                if (authentication.getCredentials() != null && authentication.getCredentials() instanceof X509Certificate) {
-//                    userId = principalAsObject.toString();
-//                } else if (principalAsObject instanceof IdentityDetails) {
-//                    IdentityDetails principal = IdentityDetails.class.cast(principalAsObject);
-//                    userId = principal.getInternalId();
-//                }
-//            }
-//        }
-//        return userId;
-//    }
-
-//    private User getAuthenticatedUser() {
-//        String internalId = null;
-//        String externalId = null;
-//        String userName = null;
-//
-//        SecurityContext context = SecurityContextHolder.getContext();
-//        Authentication authentication = context.getAuthentication();
-//
-//        Object principal = authentication != null ? authentication.getPrincipal() : null;
-//
-//        if (principal != null && principal instanceof IdentityDetails) {
-//            IdentityDetails userDetails = IdentityDetails.class.cast(principal);
-//            internalId = userDetails.getInternalId();
-//            externalId = userDetails.getExternalId();
-//            userName = userDetails.getDisplayName();
-//        }
-//        return new User.Builder().userId(internalId).visibleId(externalId).displayName(userName).build(null);
-//    }
 
     public Entity getPrincipal() {
         String systemName = null;
@@ -126,63 +83,6 @@ public class IdentityHelper {
         return new User.Builder(identity).accessAuthority(accessAuthority).build();
     }
 
-//    public User getCurrentUser() {
-//        IdentityDetails principal = null;
-//        Collection<? extends GrantedAuthority> authorities = null;
-//        SecurityContext context = SecurityContextHolder.getContext();
-//        if (context != null) {
-//            Authentication authentication = context.getAuthentication();
-//
-//            if (authentication != null) {
-//                Object principalAsObject = authentication.getPrincipal();
-//                if (principalAsObject instanceof IdentityDetails)
-//                    principal = IdentityDetails.class.cast(principalAsObject);
-//                authorities = authentication.getAuthorities();
-//            }
-//        }
-//        if (principal == null)
-//            return null;
-//
-//        AccessAuthority accessAuthority = null;
-//        if (authorities != null && !authorities.isEmpty()) {
-//            for (GrantedAuthority authority : authorities) {
-//                if (authority instanceof AccessAuthority) {
-//                    accessAuthority = AccessAuthority.class.cast(authority);
-//                }
-//            }
-//        }
-//
-//        return new User.Builder(principal).accessAuthority(accessAuthority).build();
-//    }
-
-//    public IdentityDetails getAuthenticatedPrincipal() {
-//        IdentityDetails principal = null;
-//        SecurityContext context = SecurityContextHolder.getContext();
-//        if (context != null) {
-//            Authentication authentication = context.getAuthentication();
-//
-//            if (authentication != null) {
-//                Object principalAsObject = authentication.getPrincipal();
-//                if (principalAsObject instanceof IdentityDetails)
-//                    principal = IdentityDetails.class.cast(principalAsObject);
-//            }
-//        }
-//        return principal;
-//    }
-
-//    public boolean isAuthenticatedSystem() {
-//        SecurityContext context = SecurityContextHolder.getContext();
-//        if (context != null) {
-//            Authentication authentication = context.getAuthentication();
-//
-//            if (authentication != null && authentication.getCredentials() instanceof X509Certificate) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-
-
     public Process findProcess(String processDefinitionKey, boolean isBadRequest) throws StatusCodeError {
         Process result = processRepository.findOne(processDefinitionKey);
 
@@ -197,18 +97,5 @@ public class IdentityHelper {
 
         return result;
     }
-
-//	public Set<piecework.model.Process> findProcesses(String ... allowedRoles) {
-//        Entity principal = getPrincipal();
-//        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(allowedRoles);
-//
-//        if (processDefinitionKeys != null) {
-//            List<Process> processes = processRepository.findAllBasic(processDefinitionKeys);
-//            if (processes != null && !processes.isEmpty())
-//                return Collections.unmodifiableSet(new HashSet<Process>(processes));
-//        }
-//
-//		return Collections.emptySet();
-//	}
 
 }

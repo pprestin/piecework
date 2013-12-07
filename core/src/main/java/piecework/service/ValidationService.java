@@ -15,32 +15,25 @@
  */
 package piecework.service;
 
-import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
-import piecework.Registry;
 import piecework.exception.BadRequestError;
-import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.exception.ValidationRuleException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.identity.IdentityHelper;
 
 import com.google.common.collect.Sets;
 import piecework.security.DataFilterService;
-import piecework.security.EncryptionService;
 import piecework.util.ManyMap;
 import piecework.validation.FormValidation;
-import piecework.validation.SubmissionTemplate;
+import piecework.submission.SubmissionTemplate;
 import piecework.validation.ValidationRule;
 
 /**
