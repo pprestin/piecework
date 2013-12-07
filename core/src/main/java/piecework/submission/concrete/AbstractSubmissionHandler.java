@@ -17,13 +17,11 @@ package piecework.submission.concrete;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
-import piecework.model.FormRequest;
 import piecework.model.Submission;
 import piecework.persistence.ActivityRepository;
 import piecework.persistence.SubmissionRepository;
@@ -56,12 +54,12 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
     SubmissionStorageService submissionStorageService;
 
     @Override
-    public Submission handle(T data, SubmissionTemplate template, FormRequest request, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
-        Submission submission = handleInternal(data, template, request, principal);
+    public Submission handle(T data, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+        Submission submission = handleInternal(data, template, principal);
         return submissionRepository.save(submission);
     }
 
-    protected abstract Submission handleInternal(T data, SubmissionTemplate template, FormRequest request, Entity principal) throws MisconfiguredProcessException, StatusCodeError;
+    protected abstract Submission handleInternal(T data, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError;
 
     protected void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws MisconfiguredProcessException, StatusCodeError {
         String contentType = MediaType.TEXT_PLAIN;
@@ -100,16 +98,16 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         }
     }
 
-    protected Submission.Builder submissionBuilder(SubmissionTemplate template, FormRequest formRequest, Entity principal) {
-        return submissionBuilder(template, formRequest, principal, null);
+    protected Submission.Builder submissionBuilder(SubmissionTemplate template, Entity principal) {
+        return submissionBuilder(template, principal, null);
     }
 
-    protected Submission.Builder submissionBuilder(SubmissionTemplate template, FormRequest formRequest, Entity principal, Submission rawSubmission) {
+    protected Submission.Builder submissionBuilder(SubmissionTemplate template, Entity principal, Submission rawSubmission) {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
 
         String submitterId = principalId;
-        if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(formRequest.getActAsUser()))
-            submitterId = formRequest.getActAsUser();
+        if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(template.getActAsUser()))
+            submitterId = template.getActAsUser();
         else if (rawSubmission != null && StringUtils.isNotEmpty(rawSubmission.getSubmitterId()))
             submitterId = sanitizer.sanitize(rawSubmission.getSubmitterId());
 
@@ -121,8 +119,8 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
             submissionBuilder = new Submission.Builder();
 
         submissionBuilder.processDefinitionKey(template.getProcess().getProcessDefinitionKey())
-                .requestId(formRequest != null ? formRequest.getRequestId() : null)
-                .taskId(formRequest != null ? formRequest.getTaskId() : null)
+                .requestId(template.getRequestId())
+                .taskId(template.getTaskId())
                 .submissionDate(new Date())
                 .submitterId(submitterId);
 

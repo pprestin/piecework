@@ -20,11 +20,9 @@ import org.springframework.stereotype.Service;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
-import piecework.model.FormRequest;
 import piecework.model.Submission;
 import piecework.submission.SubmissionTemplate;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -37,10 +35,10 @@ public class FormValueSubmissionHandler extends AbstractSubmissionHandler<Map<St
     private static final Logger LOG = Logger.getLogger(FormValueSubmissionHandler.class);
 
     @Override
-    protected Submission handleInternal(Map<String, List<String>> data, SubmissionTemplate template, FormRequest request, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected Submission handleInternal(Map<String, List<String>> data, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
         String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
-        Submission.Builder submissionBuilder = submissionBuilder(template, request, principal);
+        Submission.Builder submissionBuilder = submissionBuilder(template, principal);
 
         if (data != null && !data.isEmpty()) {
             for (Map.Entry<String, List<String>> entry : data.entrySet()) {

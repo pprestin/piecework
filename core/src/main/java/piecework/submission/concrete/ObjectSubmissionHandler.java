@@ -36,9 +36,9 @@ public class ObjectSubmissionHandler extends AbstractSubmissionHandler<Submissio
     private static final Logger LOG = Logger.getLogger(FormValueSubmissionHandler.class);
 
     @Override
-    protected Submission handleInternal(Submission rawSubmission, SubmissionTemplate template, FormRequest request, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected Submission handleInternal(Submission rawSubmission, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
-        Submission.Builder submissionBuilder = submissionBuilder(template, request, principal);
+        Submission.Builder submissionBuilder = submissionBuilder(template, principal);
         if (rawSubmission != null && rawSubmission.getData() != null) {
             for (Map.Entry<String, List<Value>> entry : rawSubmission.getData().entrySet()) {
                 String name = sanitizer.sanitize(entry.getKey());

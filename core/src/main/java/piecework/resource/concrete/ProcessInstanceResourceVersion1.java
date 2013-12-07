@@ -30,10 +30,7 @@ import piecework.authorization.AuthorizationRole;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.persistence.concrete.ExportInstanceProvider;
-import piecework.service.ProcessHistoryService;
-import piecework.service.ProcessInstanceService;
-import piecework.service.ProcessService;
-import piecework.service.ValuesService;
+import piecework.service.*;
 import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.ui.streaming.ExportStreamingOutput;
@@ -49,10 +46,8 @@ import piecework.resource.ProcessInstanceResource;
 import piecework.security.Sanitizer;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
-import piecework.service.RequestService;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.service.TaskService;
 import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.util.ProcessInstanceUtility;
 
@@ -69,6 +64,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     AttachmentService attachmentService;
+
+    @Autowired
+    DeploymentService deploymentService;
 
     @Autowired
     IdentityHelper helper;
@@ -361,8 +359,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             if (field == null)
                 throw new NotFoundError();
 
-            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, field);
-            Submission submission = handler.handle(formValueMap, template, formRequest, principal);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, field, formRequest);
+            Submission submission = handler.handle(formValueMap, template, principal);
             processInstanceService.save(process, instance, task, template, submission);
 
             return Response.noContent().build();
@@ -394,8 +392,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             if (field == null)
                 throw new NotFoundError();
 
-            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, field);
-            Submission submission = handler.handle(body, template, formRequest, principal);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, field, formRequest);
+            Submission submission = handler.handle(body, template, principal);
             ProcessInstance stored = processInstanceService.save(process, instance, task, template, submission);
 
             return valueLocation(process, stored, fieldName);
@@ -467,8 +465,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
             RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
             FormRequest formRequest = requestService.create(requestDetails, process);
-            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, task);
-            Submission submission = handler.handle(data, template, formRequest, principal);
+            ProcessDeployment deployment = deploymentService.read(process, instance);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, task, formRequest);
+            Submission submission = handler.handle(data, template, principal);
             ProcessInstance persisted = attachmentService.attach(process, instance, task, template, submission);
             SearchResults searchResults = attachmentService.search(process, persisted, new AttachmentQueryParameters());
 
@@ -486,8 +485,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             Process process = processService.read(rawProcessDefinitionKey);
             RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
             FormRequest formRequest = requestService.create(requestDetails, process);
-            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-            Submission submission = handler.handle(data, template, formRequest, principal);
+            ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, formRequest);
+            Submission submission = handler.handle(data, template, principal);
             ProcessInstance instance = processInstanceService.submit(process, null, null, template, submission);
 
             return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();

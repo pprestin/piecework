@@ -23,11 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
-import piecework.service.ProcessInstanceService;
-import piecework.service.ProcessService;
+import piecework.service.*;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
-import piecework.service.ValidationService;
 import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplate;
@@ -37,8 +35,6 @@ import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
 import piecework.security.SecuritySettings;
-import piecework.service.TaskService;
-import piecework.service.RequestService;
 import piecework.model.*;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -57,6 +53,9 @@ import java.util.List;
 public class TaskResourceVersion1 implements TaskResource {
 
     private static final Logger LOG = Logger.getLogger(TaskResourceVersion1.class);
+
+    @Autowired
+    DeploymentService deploymentService;
 
     @Autowired
     IdentityHelper helper;
@@ -132,8 +131,9 @@ public class TaskResourceVersion1 implements TaskResource {
         SubmissionHandler handler = submissionHandlerRegistry.handler(Submission.class);
         try {
             FormRequest formRequest = requestService.create(requestDetails, process, instance, task, validatedAction);
-            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-            Submission submission = handler.handle(rawSubmission, template, formRequest, principal);
+            ProcessDeployment deployment = deploymentService.read(process, instance);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, formRequest);
+            Submission submission = handler.handle(rawSubmission, template, principal);
 
             if (submission != null && submission.getAction() != null)
                 validatedAction = submission.getAction();

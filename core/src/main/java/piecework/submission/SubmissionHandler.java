@@ -26,7 +26,7 @@ import piecework.model.Submission;
  */
 public interface SubmissionHandler<T> {
 
-    Submission handle(T submission, SubmissionTemplate template, FormRequest request, Entity principal) throws MisconfiguredProcessException, StatusCodeError;
+    Submission handle(T submission, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError;
 
     Class<?> getType();
 

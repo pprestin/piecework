@@ -34,6 +34,9 @@ public class SubmissionTemplate {
 
     private final Process process;
     private final ProcessDeployment deployment;
+    private final String requestId;
+    private final String taskId;
+    private final String actAsUser;
     private final Set<String> buttonNames;
     private final Map<String, Button> buttonValueMap;
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
@@ -48,6 +51,9 @@ public class SubmissionTemplate {
     private SubmissionTemplate(Builder builder) {
         this.process = builder.process;
         this.deployment = builder.deployment;
+        this.requestId = builder.requestId;
+        this.taskId = builder.taskId;
+        this.actAsUser = builder.actAsUser;
         this.buttonNames = Collections.unmodifiableSet(builder.buttonNames);
         this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
         this.fieldMap = Collections.unmodifiableMap(builder.fieldMap);
@@ -62,6 +68,18 @@ public class SubmissionTemplate {
 
     public ProcessDeployment getDeployment() {
         return deployment;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public String getTaskId() {
+        return taskId;
+    }
+
+    public String getActAsUser() {
+        return actAsUser;
     }
 
     public FieldSubmissionType fieldSubmissionType(String name) {
@@ -118,6 +136,9 @@ public class SubmissionTemplate {
     public final static class Builder {
         private final Process process;
         private final ProcessDeployment deployment;
+        private String requestId;
+        private String taskId;
+        private String actAsUser;
         private Set<String> buttonNames;
         private Map<String, Button> buttonValueMap;
         private ManyMap<Field, ValidationRule> fieldRuleMap;
@@ -142,6 +163,21 @@ public class SubmissionTemplate {
         public Builder button(Button button) {
             this.buttonNames.add(button.getName());
             this.buttonValueMap.put(button.getValue(), button);
+            return this;
+        }
+
+        public Builder requestId(String requestId) {
+            this.requestId = requestId;
+            return this;
+        }
+
+        public Builder taskId(String taskId) {
+            this.taskId = taskId;
+            return this;
+        }
+
+        public Builder actAsUser(String actAsUser) {
+            this.actAsUser = actAsUser;
             return this;
         }
 

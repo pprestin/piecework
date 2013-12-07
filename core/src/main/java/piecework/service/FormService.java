@@ -43,6 +43,9 @@ public class FormService {
     private static final Logger LOG = Logger.getLogger(FormService.class);
 
     @Autowired
+    DeploymentService deploymentService;
+
+    @Autowired
     IdentityHelper helper;
 
     @Autowired
@@ -62,6 +65,7 @@ public class FormService {
 
     @Autowired
     ValidationService validationService;
+
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
         return taskService.search(rawQueryParameters, principal, true, false);
@@ -96,8 +100,9 @@ public class FormService {
         if (task != null && task.getProcessInstanceId() != null)
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = handler.handle(data, template, formRequest, principal);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, task, formRequest);
+        Submission submission = handler.handle(data, template, principal);
 
         processInstanceService.save(process, instance, task, template, submission);
 
@@ -120,8 +125,9 @@ public class FormService {
         if (StringUtils.isNotEmpty(processInstanceId))
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, formRequest.getActivity(), null);
-        Submission submission = handler.handle(data, template, formRequest, principal);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, task, formRequest);
+        Submission submission = handler.handle(data, template, principal);
 
         ActionType action = submission.getAction();
         if (action == null)
@@ -160,10 +166,10 @@ public class FormService {
         if (task != null && task.getProcessInstanceId() != null)
             instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
-        Activity activity = formRequest.getActivity();
-
-        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, activity, validationId);
-        Submission submission = handler.handle(data, template, formRequest, principal);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, task, formRequest, validationId);
+        Submission submission = handler.handle(data, template, principal);
         validationService.validate(process, instance, task, template, submission, true);
     }
+
 }

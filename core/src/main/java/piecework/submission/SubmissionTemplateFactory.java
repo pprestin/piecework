@@ -24,6 +24,7 @@ import piecework.Registry;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.FieldTag;
 import piecework.exception.InternalServerError;
+import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
@@ -46,53 +47,46 @@ public class SubmissionTemplateFactory {
     @Autowired(required=false)
     Registry registry;
 
-    /*
-     * Generated an "attachments only submission template", where all fields will be stored as attachments
-     */
-    public SubmissionTemplate submissionTemplate(Process process, Task task) throws StatusCodeError {
-        ProcessDeployment deployment = process.getDeployment();
-        if (deployment == null)
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
-        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
-
-        String taskDefinitionKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
-
-        Activity activity = deployment.getActivity(taskDefinitionKey);
-        return submissionTemplate(process, activity, null);
+    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, Task task, FormRequest formRequest) throws MisconfiguredProcessException {
+        return submissionTemplate(process, deployment, task, formRequest, null);
     }
 
-    public SubmissionTemplate submissionTemplate(Process process, Field field) {
+    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, Task task, FormRequest formRequest, String validationId) throws MisconfiguredProcessException {
+        if (deployment == null)
+            throw new MisconfiguredProcessException("Deployment not specified in submission");
+
+        Activity activity = formRequest.getActivity();
+        if (activity == null) {
+            String taskDefinitionKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
+            activity = deployment.getActivity(taskDefinitionKey);
+        }
+        return submissionTemplate(process, deployment, formRequest, activity, validationId);
+    }
+
+    public SubmissionTemplate submissionTemplate(Process process, Field field, FormRequest formRequest) {
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, process.getDeployment());
+        if (formRequest != null)
+            builder.requestId(formRequest.getRequestId()).taskId(formRequest.getTaskId()).actAsUser(formRequest.getActAsUser());
+
         addField(builder, field);
         return builder.build();
     }
 
-    private void gatherFieldIds(Container container, List<String> allFieldIds) {
-        List<String> fieldIds = container.getFieldIds();
-        if (fieldIds != null) {
-            allFieldIds.addAll(fieldIds);
-        }
-
-        if (container.getChildren() != null && !container.getChildren().isEmpty()) {
-            for (Container child : container.getChildren()) {
-                gatherFieldIds(child, allFieldIds);
-            }
-        }
+    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, FormRequest formRequest) throws MisconfiguredProcessException {
+        return submissionTemplate(process, deployment, formRequest, formRequest.getActivity(), null);
     }
 
     /*
      * Takes an activity and generates the appropriate submission template for it,
      * limiting to a specific section id
      */
-    public SubmissionTemplate submissionTemplate(Process process, Activity activity, String validationId) throws StatusCodeError {
-        ProcessDeployment deployment = process.getDeployment();
-        if (deployment == null)
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-
+    private SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, FormRequest formRequest, Activity activity, String validationId) throws MisconfiguredProcessException {
         Set<Field> fields = null;
 
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
+
+        if (formRequest != null)
+            builder.requestId(formRequest.getRequestId()).taskId(formRequest.getTaskId()).actAsUser(formRequest.getActAsUser());
 
         if (activity.isAllowAttachments()) {
             builder.allowAttachments();
@@ -164,6 +158,19 @@ public class SubmissionTemplateFactory {
         if (!field.isDeleted() && field.isEditable()) {
             builder.rules(field, new ArrayList<ValidationRule>(validationRules(field)));
             builder.field(field);
+        }
+    }
+
+    private void gatherFieldIds(Container container, List<String> allFieldIds) {
+        List<String> fieldIds = container.getFieldIds();
+        if (fieldIds != null) {
+            allFieldIds.addAll(fieldIds);
+        }
+
+        if (container.getChildren() != null && !container.getChildren().isEmpty()) {
+            for (Container child : container.getChildren()) {
+                gatherFieldIds(child, allFieldIds);
+            }
         }
     }
 
