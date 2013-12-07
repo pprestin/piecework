@@ -221,11 +221,6 @@ public class UnitTestConfiguration {
         return new InteractionRepositoryStub();
     }
 
-    @Bean
-    public NotificationRepository notificationRepository() {
-        return new NotificationRepositoryStub();
-    }
-
 	@Bean 
 	public ProcessRepository processRepository() {
 		return new ProcessRepositoryStub();
@@ -402,10 +397,6 @@ public class UnitTestConfiguration {
 	public class InteractionRepositoryStub extends MongoRepositoryStub<Interaction> implements InteractionRepository {
 
 	}
-
-    public class NotificationRepositoryStub extends MongoRepositoryStub<Notification> implements NotificationRepository {
-
-    }
 
     public class RequestRepositoryStub extends MongoRepositoryStub<FormRequest> implements RequestRepository {
 
