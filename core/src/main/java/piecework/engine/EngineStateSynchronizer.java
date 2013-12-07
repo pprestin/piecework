@@ -26,8 +26,15 @@ import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 import piecework.service.TaskService;
 import piecework.task.TaskFactory;
+import piecework.service.NotificationService;
+import piecework.Versions;
+import piecework.common.ViewContext;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -48,6 +55,12 @@ public class EngineStateSynchronizer {
 
     @Autowired
     TaskService taskService;
+
+    @Autowired
+    Versions versions;
+
+    @Autowired
+    NotificationService notificationService;
 
     public void onProcessInstanceEvent(StateChangeType type, String processInstanceId, EngineContext context) {
         ProcessInstance instance = null;
@@ -96,12 +109,11 @@ public class EngineStateSynchronizer {
                     break;
             };
 
-            doTaskNotification(type, updated, context);
-
             if (updated != null) {
                 if (taskService.update(processInstance.getProcessInstanceId(), updated)) {
                     LOG.debug("Stored task changes");
                     mediator.notify(new StateChangeEvent.Builder(type).context(context).process(process).instance(processInstance).task(updated).build());
+                    doTaskNotification(type, process, processInstance, updated, context);
                 } else {
                     LOG.error("Failed to store task changes");
                 }
@@ -116,9 +128,84 @@ public class EngineStateSynchronizer {
         //buildNotification(map);
     }
 
-    private void doTaskNotification(StateChangeType type, Task task, EngineContext engineContext) {
-        //Map<String, String> map = engineContext.getTaskFormProperties(task.getTaskInstanceId());
-        //buildNotification(map);
+    private Map<String, String> createContext(StateChangeType type, Process process, ProcessInstance instance, Task task, EngineContext engineContext) {
+        // set up context
+        Map<String, String> context = new HashMap<String, String>();
+        context.put("PIECEWORK_PROCESS_INSTANCE_LABEL", instance.getProcessInstanceLabel());
+        context.put("TASK_ID", task.getTaskInstanceId());
+        context.put("TASK_KEY", task.getTaskDefinitionKey());
+        context.put("TASK_LABEL", task.getTaskLabel());
+
+        // task URL
+        ViewContext viewContext = versions.getVersion1();
+        String taskUrl = viewContext.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), task.getTaskInstanceId());
+        context.put("TASK_URL", taskUrl);
+
+        // put assignee IDs into context
+        String assigneeId = task.getAssigneeId();
+        if ( assigneeId == null || assigneeId.isEmpty() ) {
+            Set<String> strs = task.getCandidateAssigneeIds();
+          
+            if ( strs != null && ! strs.isEmpty() ) {
+                StringBuilder str = new StringBuilder();
+                for (String s : strs ) {
+                    if ( str.length() > 0 ) {
+                        str.append(",");
+                    }
+                    str.append(s);
+                }
+
+                assigneeId = str.toString();
+            }
+        } 
+
+        if ( assigneeId == null || assigneeId.isEmpty() ) {
+            return null; // we don't send notifications if there is no assignee
+        } else {
+            context.put("ASSIGNEE", assigneeId);
+        }
+
+        return context;
+    }
+
+    private void doTaskNotification(StateChangeType type, Process process, ProcessInstance instance, Task task, EngineContext engineContext) {
+
+        // sanity check
+        if ( task == null ) {
+            return;
+        }
+
+        // get notfication templates
+        Collection<Notification> notifications = new ArrayList<Notification>();
+        String taskKey = task.getTaskDefinitionKey();
+        if ( taskKey != null && process != null && process.getDeployment() != null ) {
+            ProcessDeployment deployment = process.getDeployment();
+
+            // get notifications common to all tasks for a workflow
+            Collection<Notification> ns = deployment.getNotifications(Notification.Constants.COMMON);
+            if ( ns != null && ns.size() >0 ) {
+                notifications.addAll(ns);
+            }
+            
+            // get notifications specific to a task
+            ns = deployment.getNotifications(taskKey);
+            if ( ns != null && ns.size() >0 ) {
+                notifications.addAll(ns);
+            }
+        }
+
+        if ( notifications.isEmpty() ) {
+            return;
+        }
+        
+        Map<String, String> context = createContext(type, process, instance, task, engineContext);
+
+        if ( context == null || context.isEmpty() ) {
+            return;
+        }
+        
+        // send out notifications
+        notificationService.send(notifications, context, type);
     }
 
 }

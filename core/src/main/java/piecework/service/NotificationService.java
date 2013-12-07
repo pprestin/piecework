@@ -15,9 +15,10 @@
  */
 package piecework.service;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import piecework.model.Notification;
+import piecework.enumeration.StateChangeType;
 
 /**
  * public interface for sending out notifications
@@ -29,13 +30,13 @@ public interface NotificationService {
      * @param  notification notification to send.
      * @param  context      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Notification notification, Map<String, String> context);
+    public void send(Notification notification, Map<String, String> context, StateChangeType type);
 
     /** 
-     * a convenience method for sending out a list of notifications. It simpply loops through
+     * a convenience method for sending out a list of notifications. It simply loops through
      * each notification and calls the method above for each notification.
      * @param  notifications a list of notification to send out.
      * @param  context      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(List<Notification> notifications, Map<String, String> context);
+    public void send(Collection<Notification> notifications, Map<String, String> context, StateChangeType type);
 }

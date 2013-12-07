@@ -310,5 +310,13 @@ public class Notification implements Serializable {
         public static final String RESOURCE_LABEL = "Notification";
         public static final String ROOT_ELEMENT_NAME = "notification";
         public static final String TYPE_NAME = "NotificationType";
+        public static final String SENDER_NAME = "senderName";
+        public static final String SENDER_EMAIL = "senderEmail";
+        public static final String RECIPIENTS = "recipients";
+        public static final String SUBJECT = "subject";
+        public static final String TEXT = "text";
+        public static final String EVENT = "event";
+        public static final String BCC = "bcc";
+        public static final String COMMON = "common";	// notificaiton common for all tasks in a workflow
     }
 }

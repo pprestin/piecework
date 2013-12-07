@@ -15,6 +15,7 @@
  */
 package piecework.notification;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -39,6 +40,7 @@ import piecework.service.IdentityService;
 import piecework.model.Group;
 import piecework.service.GroupService;
 import piecework.Constants;
+import piecework.enumeration.StateChangeType;
 
 /**
  * send out email notifications
@@ -62,10 +64,15 @@ public class EmailNotificationService implements NotificationService {
      * @param  notification notification to send.
      * @param  context      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Notification notification, Map<String, String> context) {
+    public void send(Notification notification, Map<String, String> context, StateChangeType type) {
         // sanity check
         if ( notification == null ) {
             return;
+        }
+
+        String event = notification.get(Notification.Constants.EVENT);
+        if ( event != null && ! event.equals(type.name()) ) {
+            return;  // notfication not for this event/state change
         }
 
         String mailServerHost = environment.getProperty("mail.server.host");
@@ -87,6 +94,11 @@ public class EmailNotificationService implements NotificationService {
 
         // recipients
         String recipientStr = notification.getRecipients();
+        MustacheFactory mf = new DefaultMustacheFactory();
+        StringWriter writer = new StringWriter();
+        Mustache mustache = mf.compile(new StringReader(recipientStr), "recipient");
+        mustache.execute(writer, context);
+        recipientStr = writer.toString();
         List<User> recipients = getUsers(recipientStr);
         if ( recipients == null || recipients.isEmpty() ) {
             return; // recipients are required
@@ -98,9 +110,9 @@ public class EmailNotificationService implements NotificationService {
 
         // get subject
         String subject = notification.getSubject();
-        MustacheFactory mf = new DefaultMustacheFactory();
-        StringWriter writer = new StringWriter();
-        Mustache mustache = mf.compile(new StringReader(subject), "subject");
+        mf = new DefaultMustacheFactory();
+        writer = new StringWriter();
+        mustache = mf.compile(new StringReader(subject), "subject");
         mustache.execute(writer, context);
         subject = writer.toString();
 
@@ -154,7 +166,7 @@ public class EmailNotificationService implements NotificationService {
      * @param  notifications a list of notification to send out.
      * @param  context      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(List<Notification> notifications, Map<String, String> context) {
+    public void send(Collection<Notification> notifications, Map<String, String> context, StateChangeType type) {
 
          // sanity check
          if ( notifications == null ) {
@@ -162,7 +174,7 @@ public class EmailNotificationService implements NotificationService {
          }
 
          for (Notification n : notifications) {
-             send(n, context);
+             send(n, context, type);
          }
     }
 
