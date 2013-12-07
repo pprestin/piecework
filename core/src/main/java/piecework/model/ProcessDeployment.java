@@ -26,6 +26,7 @@ import piecework.enumeration.FlowElementType;
 import piecework.enumeration.State;
 import piecework.security.Sanitizer;
 import piecework.util.ProcessUtility;
+import piecework.util.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
@@ -126,6 +127,8 @@ public class ProcessDeployment implements Serializable {
     @XmlElement
     private final Date datePublished;
 
+    private final ManyMap<String, Notification> notificationMap;
+
     private ProcessDeployment() {
         this(new ProcessDeployment.Builder());
     }
@@ -144,6 +147,7 @@ public class ProcessDeployment implements Serializable {
         this.engineDeploymentId = builder.engineDeploymentId;
         this.startActivityKey = builder.startActivityKey;
         this.activityMap = Collections.unmodifiableMap(builder.activityMap);
+        this.notificationMap = builder.notificationMap;
         this.flowElements = Collections.unmodifiableList(builder.flowElements);
         this.base = builder.base;
         this.editable = builder.editable;
@@ -217,6 +221,10 @@ public class ProcessDeployment implements Serializable {
 
     public Map<String, Activity> getActivityMap() {
         return activityMap;
+    }
+
+    public ManyMap<String, Notification> getNotificationMap() {
+        return notificationMap;
     }
 
     public Map<State, String> getApplicationStatus() {
@@ -312,6 +320,13 @@ public class ProcessDeployment implements Serializable {
 //        return StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
 //    }
 
+    @JsonIgnore
+    public Collection<Notification> getNotifications(String notificationKey) {
+        if (notificationMap != null && notificationKey != null)
+            return (Collection<Notification>) notificationMap.get(notificationKey);
+        return null;
+    }
+
     public final static class Builder {
 
         private String deploymentId;
@@ -340,10 +355,12 @@ public class ProcessDeployment implements Serializable {
         private Date dateCreated;
         private Date dateDeployed;
         private Date datePublished;
+        private ManyMap<String, Notification> notificationMap;
 
         public Builder() {
             super();
             this.activityMap = new HashMap<String, Activity>();
+            this.notificationMap = new ManyMap<String, Notification>();
             this.flowElements = new ArrayList<FlowElement>();
             this.applicationStatus = new HashMap<State, String>();
 //            this.interactions = new ArrayList<Interaction>();
@@ -428,6 +445,12 @@ public class ProcessDeployment implements Serializable {
 //            } else {
 //                this.sections = new ArrayList<Section>();
 //            }
+
+            this.notificationMap = new ManyMap<String, Notification>();
+            if ( deployment.getNotificationMap() != null && deployment.getNotificationMap().size() > 0 ) {
+                this.notificationMap.putAll(deployment.getNotificationMap());
+            }
+
             this.isDeleted = deployment.isDeleted;
             this.published = deployment.published;
             this.editable = deployment.editable;
@@ -497,6 +520,16 @@ public class ProcessDeployment implements Serializable {
 
         public Builder activity(String activityKey, Activity activity) {
             this.activityMap.put(activityKey, activity);
+            return this;
+        }
+
+        public Builder notification(String notificationKey, Notification notification) {
+            this.notificationMap.putOne(notificationKey, notification);
+            return this;
+        }
+
+        public Builder notifications(String notificationKey, List<Notification> notifications) {
+            this.notificationMap.put(notificationKey, notifications);
             return this;
         }
 
@@ -580,6 +613,11 @@ public class ProcessDeployment implements Serializable {
 
         public Builder clearActivities() {
             this.activityMap = new HashMap<String, Activity>();
+            return this;
+        }
+
+        public Builder clearNotifications() {
+            this.notificationMap = new ManyMap<String, Notification>();
             return this;
         }
 
