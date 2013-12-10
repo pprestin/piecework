@@ -79,7 +79,7 @@ import java.util.*;
  * @author James Renfro
  */
 @Configuration
-@Import({CacheConfiguration.class, IdentityConfiguration.class})
+@Import({CacheConfiguration.class, IdentityConfiguration.class, ProviderConfiguration.class})
 public class ApplicationConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(ApplicationConfiguration.class);
@@ -195,10 +195,7 @@ public class ApplicationConfiguration {
         return sf.create();
     }
 
-    @Bean
-    public HtmlProvider htmlProvider() {
-        return new HtmlProvider();
-    }
+
 
 //    @Bean
 //    public JacksonJaxbJsonProvider jacksonJaxbJsonProvider() {
@@ -207,11 +204,6 @@ public class ApplicationConfiguration {
 //        return new JacksonJaxbJsonProvider(objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
 //    }
 
-    @Bean
-    public CustomJaxbJsonProvider customJaxbJsonProvider() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        return new CustomJaxbJsonProvider(new JacksonJaxbJsonProvider(objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS));
-    }
+
 
 }
