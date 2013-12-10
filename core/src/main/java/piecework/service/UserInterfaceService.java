@@ -16,14 +16,12 @@
 package piecework.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -37,12 +35,9 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
-import piecework.ui.InlinePageModelSerializer;
-import piecework.ui.UserInterfaceSettings;
+import piecework.ui.*;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
 import piecework.ui.visitor.*;
-import piecework.ui.PageContext;
-import piecework.ui.TemplateResourceStreamingOutput;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -77,7 +72,7 @@ public class UserInterfaceService {
     private IdentityHelper helper;
 
     @Autowired
-    private JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
+    private CustomJaxbJsonProvider jsonProvider;
 
     @Autowired
     private UserInterfaceSettings settings;
@@ -114,7 +109,7 @@ public class UserInterfaceService {
         Resource template = formTemplateService.getTemplateResource(Explanation.class, explanation);
         if (template.exists()) {
             Entity user = helper.getPrincipal();
-            ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(Explanation.class, MediaType.APPLICATION_JSON_TYPE);
+            ObjectMapper objectMapper = jsonProvider.locateMapper(Explanation.class, MediaType.APPLICATION_JSON_TYPE);
             InlinePageModelSerializer modelSerializer = new InlinePageModelSerializer(settings, explanation, Explanation.class, user, objectMapper);
             StaticResourceAggregatingVisitor aggregatingVisitor =
                     new StaticResourceAggregatingVisitor(null, settings, contentRepository, true);
@@ -143,7 +138,7 @@ public class UserInterfaceService {
         Resource template = formTemplateService.getTemplateResource(type, t);
         if (template.exists()) {
             Entity user = helper.getPrincipal();
-            ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
+            ObjectMapper objectMapper = jsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
 
             boolean isAnonymous = false;
             if (type.equals(Form.class)) {
@@ -202,7 +197,7 @@ public class UserInterfaceService {
                         .user(user)
                         .build();
 
-                ObjectMapper objectMapper = jacksonJaxbJsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
+                ObjectMapper objectMapper = jsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
 
                 final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
                 final String modelAsJson = objectMapper.writer().writeValueAsString(t);

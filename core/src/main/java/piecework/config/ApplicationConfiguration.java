@@ -200,16 +200,18 @@ public class ApplicationConfiguration {
         return new HtmlProvider();
     }
 
-    @Bean
-    public JacksonJaxbJsonProvider jacksonJaxbJsonProvider() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        return new JacksonJaxbJsonProvider(objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
-    }
+//    @Bean
+//    public JacksonJaxbJsonProvider jacksonJaxbJsonProvider() {
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+//        return new JacksonJaxbJsonProvider(objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
+//    }
 
     @Bean
     public CustomJaxbJsonProvider customJaxbJsonProvider() {
-        return new CustomJaxbJsonProvider();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        return new CustomJaxbJsonProvider(new JacksonJaxbJsonProvider(objectMapper, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS));
     }
 
 }
