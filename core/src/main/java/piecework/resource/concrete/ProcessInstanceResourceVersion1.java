@@ -464,7 +464,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
                 throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
             RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-            FormRequest formRequest = requestService.create(requestDetails, process);
+            FormRequest formRequest = requestService.create(requestDetails, process, instance, task, ActionType.ATTACH);
             ProcessDeployment deployment = deploymentService.read(process, instance);
             SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, task, formRequest);
             Submission submission = handler.handle(data, template, principal);
