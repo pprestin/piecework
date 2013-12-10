@@ -102,7 +102,7 @@ public abstract class AbstractFormResource {
 
         ActionType actionType = request.getAction();
 
-        if (actionType == null || (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT))
+        if (actionType == null || (isAnonymous() && (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT)))
             throw new ForbiddenError();
 
         return response(process, request);

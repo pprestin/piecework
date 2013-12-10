@@ -63,7 +63,7 @@
         <div data-ng-switch-when="checkbox">
             <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
-                    <input  data-ng-disabled="{{!field.editable}}" data-ng-checked="isCheckboxChecked(field, option)" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" data-ng-true-value="{{option.value}}" name="{{field.name}}" value="{{option.value}}" type="checkbox"> {{option.label}}
+                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-model="field.value" data-ng-checked="isCheckboxChecked(field, option)" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" data-ng-true-value="{{option.value}}" name="{{field.name}}" value="{{option.value}}" type="checkbox"> {{option.label}}
                 </label>
             </div>
         </div>
@@ -82,9 +82,9 @@
                 </option>
             </select>
         </div>
-        <div data-ng-switch-when="file" data-ng-show="field.value">
-            <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}"/>
-            <input data-ng-change="onFieldChange(field)" data-ng-model="file" data-ng-show="{{!field.readonly}}" class="form-control" name="{{field.name}}" type="file"/>
+        <div data-ng-switch-when="file">
+            <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}" data-ng-show="{{field.value}}"/>
+            <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-model="file" class="form-control" name="{{field.name}}" type="file"/>
         </div>
         <div data-ng-switch-when="person">
             <input data-ng-model="field.value.displayName" data-ng-show="field.readonly" class="form-control" type="text" disabled/>
@@ -108,8 +108,7 @@
                 <div class="crumbs col-md-3">
                     <ul class="breadcrumb-stacked">
                         <li ng-repeat="step in form.steps" ng-class="wizard.isActiveStep(form, step) ? 'active' : ''">
-                            <a data-ng-show="wizard.isAvailableStep(form, step)" ng-click="form.activeStepOrdinal = step.ordinal" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
-                            <span ng-show="!wizard.isAvailableStep(form, step)">{{step.breadcrumb}}</span>
+                            <a ng-click="wizard.changeStep(form, step.ordinal)" href="" class="list-group-item-text">{{step.breadcrumb}}</a>
                         </li>
                     </ul>
                 </div>
