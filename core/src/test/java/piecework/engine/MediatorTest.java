@@ -79,7 +79,7 @@ public class MediatorTest {
     private final static String DUD_PROCESS_DEFINITION_KEY = "DUD";
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         // This will be the key for the events that get sent
         Mockito.when(process.getProcessDefinitionKey()).thenReturn(TEST_PROCESS_DEFINITION_KEY);
     }

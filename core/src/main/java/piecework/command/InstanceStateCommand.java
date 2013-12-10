@@ -109,7 +109,7 @@ public class InstanceStateCommand extends InstanceCommand {
                                 throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
                         }
                         if (StringUtils.isEmpty(reason)) {
-                            if (!facade.assign(process, deployment, task.getTaskInstanceId(), User.class.cast(helper.getPrincipal())))
+                            if (!facade.assign(process, deployment, task.getTaskInstanceId(), null))
                                 throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
                         } else if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUser(reason))) {
                             throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
