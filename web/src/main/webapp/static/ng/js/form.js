@@ -1049,8 +1049,10 @@ angular.module('Form',
                 if (typeof(validation) !== 'undefined' && validation[field.name] != null) {
                     field.messages = validation[field.name];
                     field.cssClass = "has-error";
-                    form.activeStepOrdinal = field.parent.ordinal;
-                    field.parent.breadcrumbCssClass = "invalid";
+                    if (field.parent != null) {
+                        form.activeStepOrdinal = field.parent.ordinal;
+                        field.parent.breadcrumbCssClass = "invalid";
+                    }
                 } if (readonly)
                     field.editable = false;
             };

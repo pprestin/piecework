@@ -25,6 +25,7 @@ import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import piecework.ldap.*;
 import piecework.service.CacheService;
+import piecework.service.ProcessService;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -46,6 +47,9 @@ public class UserDetailsServiceFactoryBean implements FactoryBean<UserDetailsSer
     LdapSettings ldapSettings;
 
     @Autowired
+    ProcessService processService;
+
+    @Autowired
     SSLSocketFactory sslSocketFactory;
 
     @Override
@@ -53,9 +57,11 @@ public class UserDetailsServiceFactoryBean implements FactoryBean<UserDetailsSer
         Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
         Boolean isDebugIdentity = environment.getProperty("debug.identity", Boolean.class, Boolean.FALSE);
 
-        if (isDebugMode && isDebugIdentity)
-            return new DebugUserDetailsService();
-
+        if (isDebugIdentity) {
+            DebugUserDetailsService userDetailsService = new DebugUserDetailsService(environment, processService);
+            userDetailsService.init();
+            return userDetailsService;
+        }
         String identityProviderProtocol = environment.getProperty("identity.provider.protocol");
 
 //        LdapSettings ldapSettings = ldapSettings(environment);

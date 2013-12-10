@@ -132,6 +132,7 @@ public class TaskResourceVersion1 implements TaskResource {
         try {
             FormRequest formRequest = requestService.create(requestDetails, process, instance, task, validatedAction);
             ProcessDeployment deployment = deploymentService.read(process, instance);
+
             SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, formRequest);
             Submission submission = handler.handle(rawSubmission, template, principal);
 

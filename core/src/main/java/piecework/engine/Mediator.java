@@ -17,7 +17,11 @@ package piecework.engine;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import piecework.Command;
 import piecework.command.CommandListener;
@@ -28,6 +32,7 @@ import piecework.util.ManyMap;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -38,34 +43,49 @@ import java.util.Set;
  * @author James Renfro
  */
 @Service
-public class Mediator {
+public class Mediator implements ApplicationContextAware, InitializingBean {
 
     private static final Logger LOG = Logger.getLogger(Mediator.class);
 
-    @Autowired(required = false)
-    Set<CommandListener> commandListeners;
+//    @Autowired(required = false)
+//    Set<CommandListener> commandListeners;
+//
+//    @Autowired(required = false)
+//    Set<EventListener> eventListeners;
 
-    @Autowired(required = false)
-    Set<EventListener> eventListeners;
+    private ApplicationContext applicationContext;
 
     private ManyMap<String, CommandListener> commandListenerMap;
 
     private ManyMap<String, EventListener> eventListenerMap;
 
-    @PostConstruct
-    public void init() {
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Map<String, CommandListener> commandListeners = this.applicationContext.getBeansOfType(CommandListener.class);
         this.commandListenerMap = new ManyMap<String, CommandListener>();
         if (commandListeners != null) {
-            for (CommandListener listener : commandListeners) {
+            for (CommandListener listener : commandListeners.values()) {
                 commandListenerMap.putOne(listener.getProcessDefinitionKey(), listener);
             }
         }
+        Map<String, EventListener> eventListeners = this.applicationContext.getBeansOfType(EventListener.class);
         this.eventListenerMap = new ManyMap<String, EventListener>();
         if (eventListeners != null) {
-            for (EventListener listener : eventListeners) {
+            for (EventListener listener : eventListeners.values()) {
                 eventListenerMap.putOne(listener.getProcessDefinitionKey(), listener);
             }
         }
+    }
+
+    @PostConstruct
+    public void init() {
+
+
     }
 
     public <T> Command<T> before(piecework.Command<T> command) throws BadRequestError {

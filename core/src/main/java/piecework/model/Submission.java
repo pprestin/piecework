@@ -181,7 +181,7 @@ public class Submission {
         public Builder() {
             super();
             this.attachments = new ArrayList<Attachment>();
-            this.action = ActionType.COMPLETE;
+            this.action = null;
             this.data = new ManyMap<String, Value>();
             this.descriptionMap = new HashMap<String, String>();
         }

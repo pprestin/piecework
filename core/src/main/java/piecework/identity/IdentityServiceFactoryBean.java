@@ -31,6 +31,8 @@ import piecework.ldap.LdapUtility;
 import piecework.security.KeyManagerCabinet;
 import piecework.service.CacheService;
 import piecework.service.IdentityService;
+import piecework.service.ProcessService;
+
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -59,6 +61,9 @@ public class IdentityServiceFactoryBean implements FactoryBean<IdentityService> 
     LdapSettings ldapSettings;
 
     @Autowired
+    ProcessService processService;
+
+    @Autowired
     SSLSocketFactory sslSocketFactory;
 
 
@@ -67,8 +72,11 @@ public class IdentityServiceFactoryBean implements FactoryBean<IdentityService> 
         Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
         Boolean isDebugIdentity = environment.getProperty("debug.identity", Boolean.class, Boolean.FALSE);
 
-        if (isDebugMode && isDebugIdentity)
-            return new DebugIdentityService();
+        if (isDebugIdentity) {
+            DebugUserDetailsService debugUserDetailsService = new DebugUserDetailsService(environment, processService);
+            debugUserDetailsService.init();
+            return new DebugIdentityService(debugUserDetailsService);
+        }
 
         String identityProviderProtocol = environment.getProperty("identity.provider.protocol");
 

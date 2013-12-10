@@ -85,56 +85,62 @@ public class SubmissionTemplateFactory {
 
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
 
-        if (formRequest != null)
+        boolean includeFields = false;
+        if (formRequest != null) {
             builder.requestId(formRequest.getRequestId()).taskId(formRequest.getTaskId()).actAsUser(formRequest.getActAsUser());
+            ActionType actionType = formRequest.getAction();
+            includeFields = actionType == ActionType.CREATE || actionType == ActionType.COMPLETE || actionType == ActionType.VALIDATE || actionType == ActionType.SAVE;
+        }
 
         if (activity.isAllowAttachments()) {
             builder.allowAttachments();
             builder.maxAttachmentSize(activity.getMaxAttachmentSize());
         }
 
-        Container parentContainer = ActivityUtil.parent(activity, ActionType.CREATE);
-        Container container = ActivityUtil.child(activity, ActionType.CREATE, parentContainer);
-        if (container != null) {
-            if (StringUtils.isNotEmpty(validationId))
-                container = ProcessUtility.container(container, validationId);
-
+        if (includeFields) {
+            Container parentContainer = ActivityUtil.parent(activity, ActionType.CREATE);
+            Container container = ActivityUtil.child(activity, ActionType.CREATE, parentContainer);
             if (container != null) {
-                Map<String, Field> fieldMap = activity.getFieldMap();
-                List<String> fieldIds = new ArrayList<String>();
+                if (StringUtils.isNotEmpty(validationId))
+                    container = ProcessUtility.container(container, validationId);
 
-                // These fieldIds ultimately determine which fields will be validated
-                int reviewChildIndex = parentContainer.getReviewChildIndex();
-                if (reviewChildIndex > -1 && reviewChildIndex == container.getOrdinal()) {
-                    // If we're at a review step then we need to gather the fields of all
-                    // previous containers owned by the parent
-                    List<Container> children = parentContainer.getChildren();
-                    for (Container child : children) {
-                        if (child.getOrdinal() <= reviewChildIndex)
-                            gatherFieldIds(child, fieldIds);
+                if (container != null) {
+                    Map<String, Field> fieldMap = activity.getFieldMap();
+                    List<String> fieldIds = new ArrayList<String>();
+
+                    // These fieldIds ultimately determine which fields will be validated
+                    int reviewChildIndex = parentContainer.getReviewChildIndex();
+                    if (reviewChildIndex > -1 && reviewChildIndex == container.getOrdinal()) {
+                        // If we're at a review step then we need to gather the fields of all
+                        // previous containers owned by the parent
+                        List<Container> children = parentContainer.getChildren();
+                        for (Container child : children) {
+                            if (child.getOrdinal() <= reviewChildIndex)
+                                gatherFieldIds(child, fieldIds);
+                        }
+                    } else {
+                        // Otherwise we only need to gather the fieldIds from the container that is being validated
+                        gatherFieldIds(container, fieldIds);
                     }
-                } else {
-                    // Otherwise we only need to gather the fieldIds from the container that is being validated
-                    gatherFieldIds(container, fieldIds);
-                }
 
-                if (fieldIds != null) {
-                    fields = new TreeSet<Field>();
-                    for (String fieldId : fieldIds) {
-                        Field field = fieldMap.get(fieldId);
-                        if (field != null)
-                            fields.add(field);
+                    if (fieldIds != null) {
+                        fields = new TreeSet<Field>();
+                        for (String fieldId : fieldIds) {
+                            Field field = fieldMap.get(fieldId);
+                            if (field != null)
+                                fields.add(field);
+                        }
                     }
-                }
 
-                // Only add buttons to the validation from the top-level container, or from
-                // the particular validation container that is selected
-                List<Button> buttons = parentContainer.getButtons();
-                if (buttons != null) {
-                    for (Button button : buttons) {
-                        if (button == null)
-                            continue;
-                        builder.button(button);
+                    // Only add buttons to the validation from the top-level container, or from
+                    // the particular validation container that is selected
+                    List<Button> buttons = parentContainer.getButtons();
+                    if (buttons != null) {
+                        for (Button button : buttons) {
+                            if (button == null)
+                                continue;
+                            builder.button(button);
+                        }
                     }
                 }
             }

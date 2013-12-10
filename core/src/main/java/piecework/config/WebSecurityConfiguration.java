@@ -102,28 +102,6 @@ public class WebSecurityConfiguration {
 //        return new CustomAuthenticationManagerFactoryBean();
 //    }
 
-    @Bean
-    public KeyManagerCabinet keyManagerCabinet(Environment environment) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        SecuritySettings securitySettings = securitySettings(environment);
-        return keyManagerCabinet(securitySettings);
-    }
-
-    private KeyManagerCabinet keyManagerCabinet(SecuritySettings securitySettings) throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-
-        try {
-            return new KeyManagerCabinet.Builder(securitySettings).build();
-        } catch (FileNotFoundException e) {
-            LOG.error("Could not createDeployment key manager cabinet because keystore file not found");
-        }
-
-        return null;
-    }
-
-    @Bean
-    public SecuritySettings securitySettings(Environment environment) {
-        return new SecuritySettings(environment);
-    }
-
     @Bean(name="org.springframework.security.authenticationManager")
     public AuthenticationManager authenticationManager() throws Exception {
         switch (authenticationType()) {
@@ -175,62 +153,37 @@ public class WebSecurityConfiguration {
         return Policy.getInstance(policyUrl);
     }
 
-    @Bean(name="pieceworkPreAuthFilter")
-    public AuthenticationFilterFactoryBean filterFactoryBean() throws Exception {
-        return new AuthenticationFilterFactoryBean(authenticationManager());
-    }
-
 //    @Bean(name="pieceworkPreAuthFilter")
-//    public AbstractPreAuthenticatedProcessingFilter pieceworkPreAuthFilter() throws Exception {
-//        String preauthenticationUserRequestHeader = environment.getProperty("preauthentication.user.request.header");
-//        String testUser = environment.getProperty("authentication.testuser");
-//        String testCredentials = environment.getProperty("authentication.testcredentials");
-//        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
-//
-//        if (isDebugMode) {
-//            LOG.fatal("DISABLING AUTHENTICATION -- THIS SHOULD NOT HAPPEN IN A PRODUCTION SYSTEM");
-//
-//            DebugAuthenticationFilter debugAuthenticationFilter = new DebugAuthenticationFilter(authenticationManager(), testUser, testCredentials);
-//            if (StringUtils.isNotEmpty(preauthenticationUserRequestHeader))
-//                debugAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
-//            return debugAuthenticationFilter;
-//        }
-//
-//        if (preauthenticationUserRequestHeader != null) {
-//            RequestHeaderAuthenticationFilter requestHeaderAuthenticationFilter = new RequestHeaderAuthenticationFilter();
-//            requestHeaderAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
-//            requestHeaderAuthenticationFilter.setAuthenticationManager(authenticationManager());
-//            return requestHeaderAuthenticationFilter;
-//        }
-//
-//        if (authenticationType() == AuthenticationType.PREAUTH) {
-//            SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
-//            singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
-//            return singleSignOnAuthenticationFilter;
-//        }
-//        return null;
+//    public AuthenticationFilterFactoryBean filterFactoryBean() throws Exception {
+//        return new AuthenticationFilterFactoryBean(authenticationManager());
 //    }
 
-    private static final List<String> CIPHER_SUITES_LIST = Arrays.asList("SSL_RSA_WITH_RC4_128_MD5", "SSL_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_DSS_WITH_AES_128_CBC_SHA", "SSL_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA", "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA", "SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA", "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA", "TLS_EMPTY_RENEGOTIATION_INFO_SCSV", "TLS_KRB5_WITH_RC4_128_SHA", "TLS_KRB5_WITH_RC4_128_MD5", "TLS_KRB5_WITH_3DES_EDE_CBC_SHA", "TLS_KRB5_WITH_3DES_EDE_CBC_MD5", "TLS_KRB5_WITH_DES_CBC_SHA", "TLS_KRB5_WITH_DES_CBC_MD5", "TLS_KRB5_EXPORT_WITH_RC4_40_SHA", "TLS_KRB5_EXPORT_WITH_RC4_40_MD5", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA", "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5");
-    private static int SSL_CACHE_TIMEOUT = 86400000;
+    @Bean(name="pieceworkPreAuthFilter")
+    public AbstractPreAuthenticatedProcessingFilter pieceworkPreAuthFilter() throws Exception {
+        String preauthenticationUserRequestHeader = environment.getProperty("preauthentication.user.request.header");
+        String testUser = environment.getProperty("authentication.testuser");
+        String testCredentials = environment.getProperty("authentication.testcredentials");
+        Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
 
-    @Bean
-    public SSLSocketFactory sslSocketFactory(Environment environment) throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, IOException, UnrecoverableKeyException, KeyManagementException {
-        SecuritySettings securitySettings = securitySettings(environment);
-        KeyManagerCabinet cabinet = keyManagerCabinet(securitySettings);
-        String provider = null;
-        String protocol = "TLS";
+        if (isDebugMode) {
+            LOG.fatal("DISABLING AUTHENTICATION -- THIS SHOULD NOT HAPPEN IN A PRODUCTION SYSTEM");
 
-        SSLContext ctx = provider == null ? SSLContext.getInstance(protocol) : SSLContext
-                .getInstance(protocol, provider);
+            DebugAuthenticationFilter debugAuthenticationFilter = new DebugAuthenticationFilter(authenticationManager(), testUser, testCredentials);
+            if (StringUtils.isNotEmpty(preauthenticationUserRequestHeader))
+                debugAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
+            return debugAuthenticationFilter;
+        }
 
-        ctx.getClientSessionContext().setSessionTimeout(SSL_CACHE_TIMEOUT);
-        ctx.init(cabinet.getKeyManagers(), cabinet.getTrustManagers(), null);
+        if (preauthenticationUserRequestHeader != null) {
+            RequestHeaderAuthenticationFilter requestHeaderAuthenticationFilter = new RequestHeaderAuthenticationFilter();
+            requestHeaderAuthenticationFilter.setPrincipalRequestHeader(preauthenticationUserRequestHeader);
+            requestHeaderAuthenticationFilter.setAuthenticationManager(authenticationManager());
+            return requestHeaderAuthenticationFilter;
+        }
 
-        FiltersType filter = new FiltersType();
-        String[] cs = SSLUtils.getCiphersuites(CIPHER_SUITES_LIST, SSLUtils.getSupportedCipherSuites(ctx), filter, java.util.logging.Logger.getLogger(this.getClass().getCanonicalName()), false);
-
-        return new SSLSocketFactoryWrapper(ctx.getSocketFactory(), cs, protocol);
+        SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
+        singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
+        return singleSignOnAuthenticationFilter;
     }
 
 }
