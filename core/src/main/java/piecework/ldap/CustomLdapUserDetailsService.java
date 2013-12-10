@@ -15,6 +15,7 @@
  */
 package piecework.ldap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -46,6 +47,9 @@ public class CustomLdapUserDetailsService extends LdapUserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (LOG.isDebugEnabled())
             LOG.debug("Looking for user by uniqueId " + username);
+
+        if (StringUtils.isEmpty(username))
+            return null;
 
         Cache.ValueWrapper wrapper = cacheService.get(CacheName.IDENTITY, username);
 
