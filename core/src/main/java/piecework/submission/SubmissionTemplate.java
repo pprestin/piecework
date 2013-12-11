@@ -42,6 +42,7 @@ public class SubmissionTemplate {
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
     private final Map<String, Field> fieldMap;
     private final boolean isAttachmentAllowed;
+    private final boolean anyFieldAllowed;
     private final long maxAttachmentSize;
 
     private SubmissionTemplate() {
@@ -58,6 +59,7 @@ public class SubmissionTemplate {
         this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
         this.fieldMap = Collections.unmodifiableMap(builder.fieldMap);
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
+        this.anyFieldAllowed = builder.anyFieldAllowed;
         this.fieldRuleMap = Collections.unmodifiableMap(builder.fieldRuleMap);
         this.maxAttachmentSize = builder.maxAttachmentSize;
     }
@@ -101,6 +103,9 @@ public class SubmissionTemplate {
                     return FieldSubmissionType.DESCRIPTION;
             }
 
+            if (anyFieldAllowed)
+                return FieldSubmissionType.RANDOM;
+
             if (isAttachmentAllowed)
                 return FieldSubmissionType.ATTACHMENT;
         }
@@ -133,6 +138,14 @@ public class SubmissionTemplate {
         return field != null && field.getType() != null && field.getType().equals(Constants.FieldTypes.PERSON);
     }
 
+    public boolean isAttachmentAllowed() {
+        return isAttachmentAllowed;
+    }
+
+    public boolean isAnyFieldAllowed() {
+        return anyFieldAllowed;
+    }
+
     public final static class Builder {
         private final Process process;
         private final ProcessDeployment deployment;
@@ -144,6 +157,7 @@ public class SubmissionTemplate {
         private ManyMap<Field, ValidationRule> fieldRuleMap;
         private Map<String, Field> fieldMap;
         private boolean isAttachmentAllowed;
+        private boolean anyFieldAllowed;
         private long maxAttachmentSize;
 
         public Builder(Process process, ProcessDeployment deployment) {
@@ -200,6 +214,11 @@ public class SubmissionTemplate {
 
         public Builder allowAttachments() {
             this.isAttachmentAllowed = true;
+            return this;
+        }
+
+        public Builder allowAny(boolean anyFieldAllowed) {
+            this.anyFieldAllowed = anyFieldAllowed;
             return this;
         }
 
