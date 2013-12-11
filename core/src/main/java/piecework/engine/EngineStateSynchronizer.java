@@ -23,6 +23,7 @@ import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.service.ProcessInstanceService;
+import piecework.persistence.ProcessInstanceRepository;
 import piecework.service.ProcessService;
 import piecework.service.TaskService;
 import piecework.task.TaskFactory;
@@ -33,6 +34,7 @@ import piecework.common.ViewContext;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -54,6 +56,9 @@ public class EngineStateSynchronizer {
     ProcessInstanceService processInstanceService;
 
     @Autowired
+    ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
     TaskService taskService;
 
     @Autowired
@@ -69,7 +74,14 @@ public class EngineStateSynchronizer {
             if (LOG.isDebugEnabled())
                 LOG.debug("Process instance started " + processInstanceId);
 
-            doStartNotification(type, context);
+            try {
+                instance = processInstanceRepository.findOne(processInstanceId);
+                Process process = processService.read(instance.getProcessDefinitionKey());
+                mediator.notify(new StateChangeEvent.Builder(type).context(context).process(process).instance(instance).build());
+                doStartNotification(type, context);
+            } catch (StatusCodeError error) {
+                LOG.error("Unable to read process instance: " + processInstanceId, error);
+            }   
             break;
         case COMPLETE_PROCESS:
             instance = processInstanceService.complete(processInstanceId);
@@ -128,6 +140,21 @@ public class EngineStateSynchronizer {
         //buildNotification(map);
     }
 
+    // local helper function to append a new stirng value into a map
+    private void appendValue(Map<String, StringBuilder> map, String key, String val)
+    {
+        if ( key == null || val == null ) {
+            return;
+        }
+
+        if ( map.containsKey(key) ) {
+            StringBuilder sb = map.get(key);
+            sb.append(","+val);
+        } else {
+            map.put(key, new StringBuilder(val));
+        }
+    }
+
     private Map<String, String> createContext(StateChangeType type, Process process, ProcessInstance instance, Task task, EngineContext engineContext) {
         // set up context
         Map<String, String> context = new HashMap<String, String>();
@@ -140,6 +167,37 @@ public class EngineStateSynchronizer {
         ViewContext viewContext = versions.getVersion1();
         String taskUrl = viewContext.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), task.getTaskInstanceId());
         context.put("TASK_URL", taskUrl);
+
+        // add instance data into context
+        Map<String, List<Value>> data = instance.getData();
+        if (data != null && !data.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
+                String key = entry.getKey();
+                List<Value> values = entry.getValue();
+                if (values != null) {
+                    Map<String, StringBuilder> lmap = new HashMap<String, StringBuilder>();
+                    for (Value value : values) {
+                        if (value != null && value instanceof User) {
+                            User u = User.class.cast(value);
+                            appendValue(lmap, key+".userId", u.getUserId());
+                            appendValue(lmap, key+".visibleId", u.getVisibleId());
+                            appendValue(lmap, key+".displayName", u.getDisplayName());
+                            appendValue(lmap, key+".emailAddress", u.getEmailAddress());
+                        } else if (value != null && value.getValue() == null) {
+                            appendValue(lmap, key, value.getValue());
+                        }
+                    }   
+
+                    // add values into context
+                    if ( ! lmap.isEmpty() ) {
+                        for (Map.Entry<String,StringBuilder> e : lmap.entrySet()) {
+                            context.put(e.getKey(), e.getValue().toString());
+                        }
+                    } 
+                }   
+            }   
+        }   
+
 
         // put assignee IDs into context
         String assigneeId = task.getAssigneeId();
