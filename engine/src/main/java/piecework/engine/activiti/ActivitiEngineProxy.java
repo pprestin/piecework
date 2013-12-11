@@ -202,7 +202,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 variables(variables, data);
                 processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
                 // Always assign the task to the user before completing it
-                if (StringUtils.isNotEmpty(userId))
+                String currentAssignee = activitiTask.getAssignee();
+                if ( StringUtils.isNotEmpty(userId) && ( currentAssignee == null || ! userId.equals(currentAssignee) ) )
                     processEngine.getTaskService().setAssignee(taskId, userId);
 
                 processEngine.getTaskService().complete(taskId);

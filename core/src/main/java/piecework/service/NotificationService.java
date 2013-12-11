@@ -28,15 +28,15 @@ public interface NotificationService {
     /** 
      * expand any macros in notifications and send the notification to recipients.
      * @param  notification notification to send.
-     * @param  context      a map of key-value pairs to be used for macro expansion.
+     * @param  scope      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Notification notification, Map<String, String> context, StateChangeType type);
+    public void send(Notification notification, Map<String, Object> scope, StateChangeType type);
 
     /** 
      * a convenience method for sending out a list of notifications. It simply loops through
      * each notification and calls the method above for each notification.
      * @param  notifications a list of notification to send out.
-     * @param  context      a map of key-value pairs to be used for macro expansion.
+     * @param  scope      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Collection<Notification> notifications, Map<String, String> context, StateChangeType type);
+    public void send(Collection<Notification> notifications, Map<String, Object> scope, StateChangeType type);
 }
