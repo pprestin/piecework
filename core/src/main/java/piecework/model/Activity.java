@@ -57,6 +57,8 @@ public class Activity implements Serializable {
 
     private final long maxAttachmentSize;
 
+    private final boolean allowAny;
+
     private Activity() {
         this(new Builder());
     }
@@ -69,6 +71,7 @@ public class Activity implements Serializable {
         this.usageType = builder.usageType;
         this.activeScreen = builder.activeScreen;
         this.allowAttachments = builder.allowAttachments;
+        this.allowAny = builder.allowAny;
         this.maxAttachmentSize = builder.maxAttachmentSize;
     }
 
@@ -146,6 +149,7 @@ public class Activity implements Serializable {
         private Map<ActionType, Action> actionMap;
         private int activeScreen;
         private boolean allowAttachments;
+        private boolean allowAny;
         private long maxAttachmentSize;
 
         public Builder() {
@@ -185,6 +189,7 @@ public class Activity implements Serializable {
             this.usageType = activity.usageType;
             this.activeScreen = activity.activeScreen;
             this.allowAttachments = activity.allowAttachments;
+            this.allowAny = activity.allowAny;
             this.maxAttachmentSize = activity.maxAttachmentSize;
         }
 
@@ -244,6 +249,11 @@ public class Activity implements Serializable {
 
         public Builder allowAttachments() {
             this.allowAttachments = true;
+            return this;
+        }
+
+        public Builder allowAny() {
+            this.allowAny = true;
             return this;
         }
 

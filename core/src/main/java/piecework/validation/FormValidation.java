@@ -175,6 +175,14 @@ public class FormValidation implements Serializable {
             return this;
         }
 
+        public <V extends Value> Builder formValue(String key, Collection<V> values) {
+            if (values != null && values.size() > 0)
+                this.data.put(key, new ArrayList<Value>(values));
+            else
+                this.data.put(key, Collections.<Value>emptyList());
+            return this;
+        }
+
         public Builder attachment(Attachment attachment) {
             if (this.attachments == null)
                 this.attachments = new ArrayList<Attachment>();

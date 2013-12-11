@@ -34,8 +34,11 @@ import java.util.*;
  */
 public class DebugIdentityService implements IdentityService {
 
-    @Autowired
-    UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
+
+    public DebugIdentityService(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     public User getUser(String internalId) {

@@ -19,5 +19,5 @@ package piecework.enumeration;
  * @author James Renfro
  */
 public enum FieldSubmissionType {
-    ACCEPTABLE, RESTRICTED, ATTACHMENT, BUTTON, DESCRIPTION, INVALID
+    ACCEPTABLE, RESTRICTED, ATTACHMENT, BUTTON, DESCRIPTION, INVALID, RANDOM
 }

@@ -108,8 +108,12 @@ public class InstanceStateCommand extends InstanceCommand {
                             if (!candidateAssigneeIds.contains(reason))
                                 throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
                         }
-                        if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUser(reason)))
+                        if (StringUtils.isEmpty(reason)) {
+                            if (!facade.assign(process, deployment, task.getTaskInstanceId(), null))
+                                throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
+                        } else if (!facade.assign(process, deployment, task.getTaskInstanceId(), identityService.getUser(reason))) {
                             throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
+                        }
                         defaultApplicationStatus = instance.getPreviousApplicationStatus();
                         break;
                     case CANCELLATION:

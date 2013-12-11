@@ -43,9 +43,6 @@ public class GroupServiceFactoryBean implements FactoryBean<GroupService> {
     Environment environment;
 
     @Autowired
-    KeyManagerCabinet cabinet;
-
-    @Autowired
     IdentityService identityService;
 
     @Autowired

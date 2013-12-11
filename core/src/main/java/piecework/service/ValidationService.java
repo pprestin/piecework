@@ -83,14 +83,15 @@ public class ValidationService {
 
         Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
 
+        Set<String> allFieldNames = Collections.unmodifiableSet(new HashSet<String>(template.getFieldMap().keySet()));
+        Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
+        Map<String, List<Value>> submissionData = submission.getData();
+        Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
+
+        ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData);
+        ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData);
+
         if (fieldRuleMap != null) {
-            Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
-            Map<String, List<Value>> submissionData = submission.getData();
-            Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
-
-            ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData);
-            ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData);
-
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();
                 List<ValidationRule> rules = entry.getValue();
@@ -124,8 +125,6 @@ public class ValidationService {
 
                 if (fieldName == null) {
                     LOG.warn("Field is missing name " + field.getFieldId());
-                    Map<String, String> optionMap = field.getOptionMap();
-
                     continue;
                 }
 
@@ -149,6 +148,16 @@ public class ValidationService {
                         values = Collections.emptyList();
 
                     validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
+                }
+            }
+        }
+
+        if (template.isAnyFieldAllowed() && !decryptedSubmissionData.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : decryptedSubmissionData.entrySet()) {
+                String fieldName = entry.getKey();
+
+                if (!allFieldNames.contains(fieldName)) {
+                    validationBuilder.formValue(fieldName, entry.getValue());
                 }
             }
         }

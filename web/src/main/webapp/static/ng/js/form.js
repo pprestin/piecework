@@ -773,6 +773,9 @@ angular.module('wf.services',
         function($http) {
             return {
                 changeStep : function(form, ordinal) {
+                    if (form.layout == 'multipage' && ordinal > form.container.activeChildIndex)
+                        return;
+
                     form.activeStepOrdinal = ordinal;
                 },
                 clickButton : function(form, container, button) {
@@ -799,7 +802,8 @@ angular.module('wf.services',
                     return this.isCurrentStep(form, step);
                 },
                 isAvailableStep : function(form, step) {
-                    //return step.ordinal <= form.container.activeChildIndex;
+                    if (form.layout == 'multipage' && ordinal > form.container.activeChildIndex)
+                        return false;
                     return true;
                 },
                 isCurrentStep : function(form, step) {
@@ -1049,8 +1053,10 @@ angular.module('Form',
                 if (typeof(validation) !== 'undefined' && validation[field.name] != null) {
                     field.messages = validation[field.name];
                     field.cssClass = "has-error";
-                    form.activeStepOrdinal = field.parent.ordinal;
-                    field.parent.breadcrumbCssClass = "invalid";
+                    if (field.parent != null) {
+                        form.activeStepOrdinal = field.parent.ordinal;
+                        field.parent.breadcrumbCssClass = "invalid";
+                    }
                 } if (readonly)
                     field.editable = false;
             };

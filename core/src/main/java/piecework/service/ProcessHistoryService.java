@@ -55,7 +55,7 @@ public class ProcessHistoryService {
         List<Operation> operations = instance.getOperations();
         Set<Task> tasks = instance.getTasks();
 
-        User initiator = identityService.getUser(instance.getInitiatorId());
+        User initiator = instance.getInitiatorId() != null ? identityService.getUser(instance.getInitiatorId()) : null;
 
         History.Builder history = new History.Builder()
                 .processDefinitionKey(process.getProcessDefinitionKey())
@@ -71,9 +71,9 @@ public class ProcessHistoryService {
             for (Operation operation : operations) {
                 String id = "operation-" + i;
                 String userId = operation.getUserId();
-                User user = identityService.getUser(userId);
+                User user = userId != null ? identityService.getUser(userId) : null;
                 if (operation.getType() == OperationType.ASSIGNMENT) {
-                    User assignee = identityService.getUser(operation.getReason());
+                    User assignee = operation.getReason() != null ? identityService.getUser(operation.getReason()) : null;
                     String assigneeName = assignee != null ? assignee.getDisplayName() + " (" + assignee.getVisibleId() + ") " : operation.getReason();
                     operation = new Operation(operation.getId(), operation.getType(), assigneeName, operation.getDate(), operation.getUserId());
                 }

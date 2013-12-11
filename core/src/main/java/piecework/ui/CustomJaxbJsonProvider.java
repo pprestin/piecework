@@ -15,6 +15,7 @@
  */
 package piecework.ui;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -43,8 +44,15 @@ import java.lang.reflect.Type;
 @Produces(MediaType.WILDCARD)
 public class CustomJaxbJsonProvider implements MessageBodyReader, MessageBodyWriter {
 
-    @Autowired
-    JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
+    private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
+
+    public CustomJaxbJsonProvider(JacksonJaxbJsonProvider jacksonJaxbJsonProvider) {
+        this.jacksonJaxbJsonProvider = jacksonJaxbJsonProvider;
+    }
+
+    public ObjectMapper locateMapper(Class<?> type, MediaType mediaType) {
+        return jacksonJaxbJsonProvider.locateMapper(type, mediaType);
+    }
 
     @Override
     public boolean isReadable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {

@@ -17,7 +17,11 @@ package piecework.engine;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import piecework.Command;
 import piecework.command.CommandListener;
@@ -27,7 +31,9 @@ import piecework.model.Process;
 import piecework.util.ManyMap;
 
 import javax.annotation.PostConstruct;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -38,7 +44,7 @@ import java.util.Set;
  * @author James Renfro
  */
 @Service
-public class Mediator {
+public class Mediator implements ApplicationContextAware, InitializingBean {
 
     private static final Logger LOG = Logger.getLogger(Mediator.class);
 
@@ -48,18 +54,34 @@ public class Mediator {
     @Autowired(required = false)
     Set<EventListener> eventListeners;
 
+    private ApplicationContext applicationContext;
+
     private ManyMap<String, CommandListener> commandListenerMap;
 
     private ManyMap<String, EventListener> eventListenerMap;
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+    }
+
     @PostConstruct
     public void init() {
         this.commandListenerMap = new ManyMap<String, CommandListener>();
+        Map<String, CommandListener> commandListenersMap = this.applicationContext != null ? this.applicationContext.getBeansOfType(CommandListener.class) : null;
+        Collection<CommandListener> commandListeners = commandListenersMap != null ? commandListenersMap.values() : this.commandListeners;
         if (commandListeners != null) {
             for (CommandListener listener : commandListeners) {
                 commandListenerMap.putOne(listener.getProcessDefinitionKey(), listener);
             }
         }
+        Map<String, EventListener> eventListenersMap = this.applicationContext != null ? this.applicationContext.getBeansOfType(EventListener.class) : null;
+        Collection<EventListener> eventListeners = eventListenersMap != null ? eventListenersMap.values() : this.eventListeners;
         this.eventListenerMap = new ManyMap<String, EventListener>();
         if (eventListeners != null) {
             for (EventListener listener : eventListeners) {

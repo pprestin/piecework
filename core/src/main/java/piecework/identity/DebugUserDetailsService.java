@@ -31,27 +31,28 @@ import java.util.Collections;
  */
 public class DebugUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    Environment environment;
-
-    @Autowired
-    ProcessService processService;
-
     private DebugAccessAuthority accessAuthority;
+    private final ProcessService processService;
+    private final String testUser;
+    private final String displayName;
 
-    @PostConstruct
+    public DebugUserDetailsService(Environment environment, ProcessService processService) {
+        this.processService = processService;
+        this.testUser = environment.getProperty("authentication.testuser");
+        this.displayName = environment.getProperty("authentication.testuser.displayName");
+    }
+
     public void init() {
         this.accessAuthority = new DebugAccessAuthority(processService);
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String testUser = environment.getProperty("authentication.testuser");
         String id = username;
         String displayName = username;
 
         if (testUser != null && testUser.equals(id))
-            displayName = environment.getProperty("authentication.testuser.displayName");
+            displayName = this.displayName;
 
         UserDetails delegate = new org.springframework.security.core.userdetails.User(id, "none",
                 Collections.singletonList(accessAuthority));
