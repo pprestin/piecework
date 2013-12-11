@@ -63,11 +63,11 @@
         <div data-ng-switch-when="checkbox">
             <div class="checkbox" data-ng-repeat="option in field.options">
                 <label>
-                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-model="field.value" data-ng-checked="isCheckboxChecked(field, option)" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" data-ng-true-value="{{option.value}}" name="{{field.name}}" value="{{option.value}}" type="checkbox"> {{option.label}}
+                    <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="field.value" data-ng-checked="isCheckboxChecked(field, option)" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" data-ng-true-value="{{option.value}}" name="{{field.name}}" value="{{option.value}}" type="checkbox"> {{option.label}}
                 </label>
             </div>
         </div>
-        <input data-ng-switch-when="date" data-ng-readonly="field.readonly" data-ng-required="{{field.required}}" class="form-control" type="datetime-local" name="{{field.name}}" value="{{field.value|date:&quot;yyyy-MM-dd'T'HH:mm:ss.00&quot;}}"/>
+        <input data-ng-switch-when="date" data-ng-disabled="!field.editable" data-ng-readonly="field.readonly" data-ng-required="field.required" class="form-control" type="datetime-local" name="{{field.name}}" value="{{field.value|date:&quot;yyyy-MM-dd'T'HH:mm:ss.00&quot;}}"/>
         <div data-ng-switch-when="radio">
             <div class="radio" data-ng-repeat="option in field.options">
                 <label>
@@ -84,7 +84,7 @@
         </div>
         <div data-ng-switch-when="file">
             <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}" data-ng-show="{{field.value}}"/>
-            <input data-ng-change="onFieldChange(field)" data-ng-disabled="{{!field.editable}}" data-ng-model="file" class="form-control" name="{{field.name}}" type="file"/>
+            <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="file" data-ng-readonly="field.readonly" class="form-control" name="{{field.name}}" type="file"/>
         </div>
         <div data-ng-switch-when="person">
             <input data-ng-model="field.value.displayName" data-ng-show="field.readonly" class="form-control" type="text" disabled/>
