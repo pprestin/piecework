@@ -24,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
+import piecework.ServiceLocator;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapIdentityService;
 import piecework.ldap.LdapSettings;
@@ -61,7 +62,7 @@ public class IdentityServiceFactoryBean implements FactoryBean<IdentityService> 
     LdapSettings ldapSettings;
 
     @Autowired
-    ProcessService processService;
+    ServiceLocator serviceLocator;
 
     @Autowired
     SSLSocketFactory sslSocketFactory;
@@ -73,7 +74,7 @@ public class IdentityServiceFactoryBean implements FactoryBean<IdentityService> 
         Boolean isDebugIdentity = environment.getProperty("debug.identity", Boolean.class, Boolean.FALSE);
 
         if (isDebugIdentity) {
-            DebugUserDetailsService debugUserDetailsService = new DebugUserDetailsService(environment, processService);
+            DebugUserDetailsService debugUserDetailsService = new DebugUserDetailsService(environment, serviceLocator);
             debugUserDetailsService.init();
             return new DebugIdentityService(debugUserDetailsService);
         }

@@ -9,7 +9,7 @@ import piecework.exception.BadRequestError;
  */
 public interface CommandListener {
 
-    <T> Command<T> before(Command<T> command) throws AbortCommandException, BadRequestError;
+    <T, C extends AbstractCommand<T>> C before(C command) throws AbortCommandException, BadRequestError;
 
     String getProcessDefinitionKey();
 

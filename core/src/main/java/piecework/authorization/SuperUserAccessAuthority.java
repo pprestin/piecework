@@ -29,13 +29,16 @@ import java.util.Set;
 /**
  * @author James Renfro
  */
-public class DebugAccessAuthority extends AccessAuthority {
+public class SuperUserAccessAuthority extends AccessAuthority {
 
     private final List<Process> processes;
 
-    public DebugAccessAuthority(ProcessService processService) {
+    public SuperUserAccessAuthority(ProcessService processService) {
         super();
-        this.processes = new ArrayList<Process>(processService.findAllProcesses());
+        if (processService != null)
+            this.processes = new ArrayList<Process>(processService.findAllProcesses());
+        else
+            this.processes = new ArrayList<Process>();
     }
 
     @Override

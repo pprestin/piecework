@@ -15,15 +15,14 @@
  */
 package piecework.identity;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import piecework.authorization.DebugAccessAuthority;
+import piecework.ServiceLocator;
+import piecework.authorization.SuperUserAccessAuthority;
 import piecework.service.ProcessService;
 
-import javax.annotation.PostConstruct;
 import java.util.Collections;
 
 /**
@@ -31,19 +30,19 @@ import java.util.Collections;
  */
 public class DebugUserDetailsService implements UserDetailsService {
 
-    private DebugAccessAuthority accessAuthority;
-    private final ProcessService processService;
+    private SuperUserAccessAuthority accessAuthority;
+    private final ServiceLocator serviceLocator;
     private final String testUser;
     private final String displayName;
 
-    public DebugUserDetailsService(Environment environment, ProcessService processService) {
-        this.processService = processService;
+    public DebugUserDetailsService(Environment environment, ServiceLocator serviceLocator) {
+        this.serviceLocator = serviceLocator;
         this.testUser = environment.getProperty("authentication.testuser");
         this.displayName = environment.getProperty("authentication.testuser.displayName");
     }
 
     public void init() {
-        this.accessAuthority = new DebugAccessAuthority(processService);
+
     }
 
     @Override
@@ -53,6 +52,11 @@ public class DebugUserDetailsService implements UserDetailsService {
 
         if (testUser != null && testUser.equals(id))
             displayName = this.displayName;
+
+        if (accessAuthority == null) {
+            ProcessService processService = serviceLocator.getService(ProcessService.class);
+            this.accessAuthority = new SuperUserAccessAuthority(processService);
+        }
 
         UserDetails delegate = new org.springframework.security.core.userdetails.User(id, "none",
                 Collections.singletonList(accessAuthority));

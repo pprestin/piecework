@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.service;
+package piecework.validation;
 
 import java.util.*;
 
@@ -31,30 +31,26 @@ import piecework.model.Process;
 
 import com.google.common.collect.Sets;
 import piecework.security.DataFilterService;
+import piecework.service.TaskService;
 import piecework.util.ManyMap;
-import piecework.validation.FormValidation;
 import piecework.submission.SubmissionTemplate;
-import piecework.validation.ValidationRule;
 
 /**
  * @author James Renfro
  */
 @Service
-public class ValidationService {
+public class ValidationFactory {
 	
 	private static final Set<String> FREEFORM_INPUT_TYPES = Sets.newHashSet("text", "textarea", "person-lookup", "current-date", "current-user");
-	private static final Logger LOG = Logger.getLogger(ValidationService.class);
+	private static final Logger LOG = Logger.getLogger(ValidationFactory.class);
 
     @Autowired
     DataFilterService dataFilterService;
 
     @Autowired
-    IdentityService identityService;
-
-    @Autowired
     TaskService taskService;
 
-    public FormValidation validate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
+    public Validation validation(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
         long time = 0;
 
         if (LOG.isDebugEnabled())
@@ -63,7 +59,7 @@ public class ValidationService {
         taskService.checkIsActiveIfTaskExists(process, task);
 
         // Validate the submission
-        FormValidation validation = validate(instance, template, submission, throwException);
+        Validation validation = doValidate(process, instance, task, template, submission, throwException);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
@@ -77,9 +73,9 @@ public class ValidationService {
         return validation;
     }
 
-    private FormValidation validate(ProcessInstance instance, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
+    private Validation doValidate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
 
-        FormValidation.Builder validationBuilder = new FormValidation.Builder().instance(instance).submission(submission);
+        Validation.Builder validationBuilder = new Validation.Builder().process(process).instance(instance).submission(submission).task(task);
 
         Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
 
@@ -165,8 +161,7 @@ public class ValidationService {
         return validationBuilder.build();
     }
 
-
-    public static List<? extends Value> append(List<? extends Value> values, List<? extends Value> previousValues) {
+    private static List<? extends Value> append(List<? extends Value> values, List<? extends Value> previousValues) {
         if (values == null)
             return previousValues;
 
@@ -179,22 +174,25 @@ public class ValidationService {
         return combined;
     }
 
-    public List<? extends Value> users(List<? extends Value> values) {
-        if (values.isEmpty())
-            return Collections.emptyList();
 
-        List<User> list = new ArrayList<User>(values.size());
-        for (Value value : values) {
-            if (value instanceof User) {
-                list.add(User.class.cast(value));
-            } else {
-                User user = identityService.getUser(value.getValue());
-                if (user != null)
-                    list.add(user);
-            }
-        }
 
-        return list;
-    }
+
+//    public List<? extends Value> users(List<? extends Value> values) {
+//        if (values.isEmpty())
+//            return Collections.emptyList();
+//
+//        List<User> list = new ArrayList<User>(values.size());
+//        for (Value value : values) {
+//            if (value instanceof User) {
+//                list.add(User.class.cast(value));
+//            } else {
+//                User user = identityService.getUser(value.getValue());
+//                if (user != null)
+//                    list.add(user);
+//            }
+//        }
+//
+//        return list;
+//    }
 
 }

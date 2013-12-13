@@ -26,6 +26,7 @@ import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.Resource;
 import piecework.authorization.AuthorizationRole;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.exception.StatusCodeError;
 import piecework.model.Process;
@@ -42,9 +43,9 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
 	Response create(Process process) throws StatusCodeError;
 	
 	@GET
-	@Path("{processDefinitionKey}")
+    @Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response read(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+	Response read(@PathParam("processDefinitionKey") String processDefinitionKey) throws PieceworkException;
 
     @POST
 	@PUT
@@ -68,7 +69,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @POST
     @Path("{processDefinitionKey}/deployment")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response createDeployment(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+    Response createDeployment(@PathParam("processDefinitionKey") String processDefinitionKey) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/deployment/{deploymentId}/clone")
@@ -108,7 +109,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     @Consumes({"multipart/form-data"})
-    Response createDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, MultipartBody body) throws StatusCodeError;
+    Response createDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, MultipartBody body) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")

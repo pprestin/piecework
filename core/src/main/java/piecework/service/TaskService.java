@@ -23,20 +23,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import piecework.Command;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.PageHandler;
+import piecework.command.*;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
-import piecework.exception.ForbiddenError;
-import piecework.exception.StatusCodeError;
+import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.CommandExecutor;
-import piecework.command.TaskCommand;
 import piecework.identity.IdentityHelper;
-import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.DataFilterService;
@@ -45,7 +42,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskFactory;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
-import piecework.validation.FormValidation;
+import piecework.validation.Validation;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
@@ -57,6 +54,9 @@ import java.util.*;
 public class TaskService {
 
     private static final Logger LOG = Logger.getLogger(TaskService.class);
+
+    @Autowired
+    private CommandFactory commandFactory;
 
     @Autowired
     DataFilterService dataFilterService;
@@ -74,17 +74,80 @@ public class TaskService {
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
+    ProcessInstanceService processInstanceService;
+
+    @Autowired
     ProcessService processService;
+
+    @Autowired
+    RequestService requestService;
 
     @Autowired
     Sanitizer sanitizer;
 
     @Autowired
-    CommandExecutor commandExecutor;
-
-    @Autowired
     Versions versions;
 
+
+    public void complete(final String rawProcessDefinitionKey, final String rawTaskId, final String rawAction, final Submission rawSubmission, final RequestDetails requestDetails, final Entity principal) throws PieceworkException {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+        String taskId = sanitizer.sanitize(rawTaskId);
+        String action = sanitizer.sanitize(rawAction);
+
+        ActionType actionType = ActionType.COMPLETE;
+        if (StringUtils.isNotEmpty(action)) {
+            try {
+                actionType = ActionType.valueOf(action.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestError(Constants.ExceptionCodes.task_action_invalid);
+            }
+        }
+        if (rawSubmission != null && rawSubmission.getAction() != null)
+            actionType = rawSubmission.getAction();
+        String assigneeId = sanitizer.sanitize(rawSubmission.getAssignee());
+        String actingUser = null;
+        if (principal != null) {
+            if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(requestDetails.getActAsUser()))
+                actingUser = requestDetails.getActAsUser();
+            else
+                actingUser = principal.getEntityId();
+        }
+
+        Process process = processService.read(processDefinitionKey);
+        Task task = taskId != null ? read(process, taskId, true) : null;
+        if (task == null)
+            throw new NotFoundError();
+        ProcessInstance instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
+        FormRequest request;
+        ValidationCommand validate;
+        Validation validation;
+
+        Command<?> command;
+        switch (actionType) {
+            case ASSIGN:
+                User assignee = assigneeId != null ? identityService.getUser(assigneeId) : null;
+                command = commandFactory.assignment(principal, process, deployment, instance, task, assignee);
+                break;
+            case CLAIM:
+                User actingAs = actingUser != null ? identityService.getUser(actingUser) : null;
+                command = commandFactory.assignment(principal, process, deployment, instance, task, actingAs);
+                break;
+            case ATTACH:
+                request = requestService.create(requestDetails, process, instance, task, actionType);
+                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal).execute();
+                command = commandFactory.attachment(principal, deployment, validation);
+                break;
+            default:
+                request = requestService.create(requestDetails, process, instance, task, actionType);
+                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal).execute();
+                command = commandFactory.completeTask(principal, deployment, validation, actionType);
+                break;
+        }
+
+        command.execute();
+    }
 
     public Task read(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
         ProcessInstance instance = processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
@@ -112,12 +175,12 @@ public class TaskService {
         }
     }
 
-    public void completeIfTaskExists(Process process, ProcessInstance instance, Task task, ActionType action, FormValidation validation) throws StatusCodeError {
-        if (task != null) {
-            TaskCommand complete = new TaskCommand(process, instance, task, action, validation);
-            commandExecutor.execute(complete);
-        }
-    }
+//    public void completeIfTaskExists(Process process, ProcessInstance instance, Task task, ActionType action, Validation validation) throws StatusCodeError {
+//        if (task != null) {
+//            TaskCommand complete = new TaskCommand(process, instance, task, action, validation);
+//            commandExecutor.execute(complete);
+//        }
+//    }
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
         long time = 0;
@@ -209,7 +272,7 @@ public class TaskService {
             if (taskId != null && !task.getTaskInstanceId().equals(taskId))
                 continue;
 
-            if ( hasOversight || task.isCandidateOrAssignee(principal) ) {
+            if (hasOversight || task.isCandidateOrAssignee(principal) ) {
                 Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
                 return TaskFactory.task(task, new PassthroughSanitizer(), userMap, version1);
             }

@@ -20,7 +20,7 @@ import piecework.enumeration.ActionType;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.model.*;
 import piecework.util.ActivityUtil;
-import piecework.validation.FormValidation;
+import piecework.validation.Validation;
 
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class RequestFactory {
 
-    public FormRequest request(RequestDetails requestDetails, piecework.model.Process process, ProcessInstance processInstance, Task task, ActionType actionType, FormValidation validation) throws MisconfiguredProcessException {
+    public FormRequest request(RequestDetails requestDetails, piecework.model.Process process, ProcessInstance processInstance, Task task, ActionType actionType, Validation validation) throws MisconfiguredProcessException {
         Activity activity = ActivityUtil.activity(process, processInstance, task);
 
         // Don't allow anyone to issue a create request for a task that's not open

@@ -16,11 +16,13 @@
 package piecework.submission.concrete;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.service.IdentityService;
 import piecework.submission.SubmissionTemplate;
 
 import java.util.HashMap;

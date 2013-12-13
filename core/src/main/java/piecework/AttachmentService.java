@@ -20,17 +20,13 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
-import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
+import piecework.identity.IdentityHelper;
 import piecework.persistence.AttachmentRepository;
 import piecework.process.AttachmentQueryParameters;
 import piecework.service.ProcessInstanceService;
-import piecework.service.ValidationService;
-import piecework.validation.FormValidation;
-import piecework.submission.SubmissionTemplate;
+import piecework.validation.ValidationFactory;
 import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
@@ -40,8 +36,6 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.streaming.StreamingAttachmentContent;
 
 import java.util.*;
-
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -61,6 +55,9 @@ public class AttachmentService {
     Environment environment;
 
     @Autowired
+    IdentityHelper helper;
+
+    @Autowired
     IdentityService identityService;
 
     @Autowired
@@ -73,16 +70,11 @@ public class AttachmentService {
     Sanitizer sanitizer;
 
     @Autowired
-    ValidationService validationService;
+    ValidationFactory validationFactory;
 
     @Autowired
     Versions versions;
 
-    public ProcessInstance attach(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
-        FormValidation validation = validationService.validate(process, instance, task, template, submission, false);
-
-        return processInstanceService.store(process, submission, validation, instance, true);
-    }
 
     public StreamingAttachmentContent content(Process process, ProcessInstance processInstance, String attachmentId) {
 
@@ -101,7 +93,7 @@ public class AttachmentService {
         return null;
     }
 
-    public SearchResults search(piecework.model.Process process, ProcessInstance processInstance, AttachmentQueryParameters queryParameters) throws StatusCodeError {
+    public SearchResults search(ProcessInstance processInstance, AttachmentQueryParameters queryParameters) throws StatusCodeError {
         String paramName = sanitizer.sanitize(queryParameters.getName());
         String paramContentType = sanitizer.sanitize(queryParameters.getContentType());
         String paramUserId = sanitizer.sanitize(queryParameters.getUserId());

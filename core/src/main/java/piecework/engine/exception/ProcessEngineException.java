@@ -15,10 +15,12 @@
  */
 package piecework.engine.exception;
 
+import piecework.exception.PieceworkException;
+
 /**
  * @author James Renfro
  */
-public class ProcessEngineException extends Exception {
+public class ProcessEngineException extends PieceworkException {
 
     public ProcessEngineException() {
         super();

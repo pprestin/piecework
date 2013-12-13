@@ -17,8 +17,6 @@ package piecework.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Hours;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -29,12 +27,8 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
-import piecework.util.ActivityUtil;
 import piecework.util.AuthorizationUtility;
-import piecework.validation.FormValidation;
-
-import javax.ws.rs.core.MediaType;
-import java.util.*;
+import piecework.validation.Validation;
 
 /**
  * @author James Renfro
@@ -61,7 +55,7 @@ public class RequestService {
         return create(requestDetails, process, processInstance, task, actionType, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, FormValidation validation) throws MisconfiguredProcessException {
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, Validation validation) throws MisconfiguredProcessException {
         FormRequest formRequest = new RequestFactory().request(requestDetails, process, processInstance, task, actionType, validation);
         return requestRepository.save(formRequest);
     }

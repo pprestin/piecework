@@ -24,6 +24,7 @@ public final class AuthorizationRole {
 	public static final String CREATOR = "ROLE_CREATOR";
 	public static final String OWNER = "ROLE_OWNER";
 	public static final String USER = "ROLE_USER";
+    public static final String ADMIN = "ROLE_ADMIN";
 	public static final String INITIATOR = "ROLE_INITIATOR";
 	public static final String APPROVER = "ROLE_APPROVER";
 	public static final String WATCHER = "ROLE_WATCHER";

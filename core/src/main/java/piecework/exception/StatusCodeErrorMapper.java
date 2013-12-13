@@ -17,6 +17,7 @@ package piecework.exception;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.model.Explanation;
 import piecework.service.UserInterfaceService;
 
@@ -35,7 +36,7 @@ import java.io.IOException;
  * @date 8/18/2010
  */
 @Service
-public class StatusCodeErrorMapper implements ExceptionMapper<StatusCodeError> {
+public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException> {
 
 	private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(StatusCodeErrorMapper.class);
 
@@ -45,7 +46,19 @@ public class StatusCodeErrorMapper implements ExceptionMapper<StatusCodeError> {
 	/**
 	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
 	 */
-	public Response toResponse(StatusCodeError error) {
+	public Response toResponse(PieceworkException exception) {
+        StatusCodeError error = null;
+        if (exception instanceof StatusCodeError)
+            error = StatusCodeError.class.cast(exception);
+        else if (exception instanceof MisconfiguredProcessException)
+            error = new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        else if (exception instanceof AccessException)
+            error = new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        else {
+            error = new InternalServerError();
+            LOG.error("Handling uncaught piecework exception as internal server error", exception);
+        }
+
         // If the application is trying to return an object then don't get in the way
         // and return HTML
         if (error.getEntity() != null)

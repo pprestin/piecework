@@ -25,14 +25,16 @@ import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import piecework.config.ApplicationConfiguration;
+import org.springframework.core.env.StandardEnvironment;
+import piecework.config.*;
+import piecework.security.KeyManagerCabinet;
 import piecework.security.SecuritySettings;
-import piecework.util.KeyManagerCabinet;
 
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -47,9 +49,13 @@ public class LoadTester {
     public LoadTester(KeyStore keystore, SecuritySettings securitySettings) {
         ClientConnectionManager cm;
         try {
+            SSLSocketFactory sslSocketFactory = new SSLSocketFactory(keystore, new String(securitySettings.getKeystorePassword()));
+            X509HostnameVerifier hostnameVerifier = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+            sslSocketFactory.setHostnameVerifier(hostnameVerifier);
+
             SchemeRegistry schemeRegistry = new SchemeRegistry();
             schemeRegistry.register(
-                    new Scheme("https", 8443, new SSLSocketFactory(keystore, new String(securitySettings.getKeystorePassword()))));
+                    new Scheme("https", 8443, sslSocketFactory));
 
             cm = new PoolingClientConnectionManager(schemeRegistry);
         } catch (Exception e) {
@@ -59,17 +65,23 @@ public class LoadTester {
     }
 
     public void retrieveAllTasks() throws Exception {
-        HttpGet get = new HttpGet("https://localhost:8443/piecework/ui/form.json");
+        HttpGet get = new HttpGet("https://localhost:8443/piecework/api/v1/task.json");
         HttpResponse response = client.execute(get);
         System.out.println(response.getStatusLine());
     }
 
     public static final void main(String[] args) throws Exception {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ApplicationConfiguration.class);
-//        context.setEnvironment(environment);
+        String profile = args.length > 0 ? args[0] : "workstation";
 
-        KeyManagerCabinet cabinet = context.getBean(KeyManagerCabinet.class);
-        SecuritySettings securitySettings = context.getBean(SecuritySettings.class);
+        StandardEnvironment environment = new StandardEnvironment();
+        environment.setActiveProfiles(profile);
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+        ctx.setEnvironment(environment);
+        ctx.register(ClientConfiguration.class);
+        ctx.refresh();
+
+        KeyManagerCabinet cabinet = ctx.getBean(KeyManagerCabinet.class);
+        SecuritySettings securitySettings = ctx.getBean(SecuritySettings.class);
 
         LoadTester loadTester = new LoadTester(cabinet.getKeystore(), securitySettings);
         loadTester.retrieveAllTasks();

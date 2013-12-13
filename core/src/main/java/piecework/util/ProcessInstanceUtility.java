@@ -22,18 +22,18 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import piecework.Constants;
 import piecework.enumeration.OperationType;
-import piecework.exception.NotFoundError;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.validation.FormValidation;
+import piecework.ui.streaming.StreamingAttachmentContent;
+import piecework.validation.Validation;
 import piecework.model.*;
 import piecework.model.Process;
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.text.DateFormat;
 import java.util.*;
 
 /**
@@ -94,7 +94,7 @@ public class ProcessInstanceUtility {
         return StringEscapeUtils.unescapeXml(writer.toString());
     }
 
-    public static String processInstanceLabel(Process process, ProcessInstance instance, FormValidation validation, String submissionLabel) {
+    public static String processInstanceLabel(Process process, ProcessInstance instance, Map<String, List<Value>> validationData, String submissionLabel) {
         String processInstanceLabel = instance != null ? instance.getProcessInstanceLabel() : null;
         String processInstanceLabelTemplate = process.getProcessInstanceLabelTemplate();
 
@@ -102,10 +102,7 @@ public class ProcessInstanceUtility {
             processInstanceLabel = submissionLabel;
 
         if (StringUtils.isEmpty(processInstanceLabel) && processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
-
-
             Map<String, List<Value>> data = instance != null ? instance.getData() : null;
-            Map<String, List<Value>> validationData = validation.getData();
 
             processInstanceLabel = template(processInstanceLabelTemplate, data, validationData);
 
@@ -115,22 +112,6 @@ public class ProcessInstanceUtility {
 
         return processInstanceLabel;
     }
-
-//    public static Task task(ProcessInstance instance, String taskId) {
-//        if (instance != null && StringUtils.isNotEmpty(taskId)) {
-//            if (instance != null) {
-//                Set<Task> tasks = instance.getTasks();
-//                if (tasks != null) {
-//                    for (Task task : tasks) {
-//                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId))
-//                            return task;
-//                    }
-//                }
-//            }
-//        }
-//
-//        return null;
-//    }
 
     private static void scopes(Map<String, Value> scopes, Map<String, List<Value>> data) {
         if (data != null) {
@@ -191,5 +172,36 @@ public class ProcessInstanceUtility {
         return null;
     }
 
+    public static Value firstMatchingFileOrLink(String name, Map<String, List<Value>> map, String valueId) {
+        if (map != null && name != null && StringUtils.isNotEmpty(valueId)) {
+            List<Value> values = map.get(name);
+
+            if (values != null && !values.isEmpty()) {
+                for (Value value : values) {
+                    if (value == null)
+                        continue;
+
+                    if (value instanceof File) {
+                        File file = File.class.cast(value);
+
+                        if (StringUtils.isEmpty(file.getId()))
+                            continue;
+
+                        if (file.getId().equals(valueId))
+                            return file;
+                    } else {
+                        String link = value.getValue();
+                        String id = Base64Utility.safeBase64(link);
+                        if (id != null && id.equals(valueId)) {
+                            if (!link.startsWith("http"))
+                                link = "http://" + link;
+                            return new Value(link);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
 }

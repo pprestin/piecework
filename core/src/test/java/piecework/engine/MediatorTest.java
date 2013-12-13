@@ -18,7 +18,7 @@ package piecework.engine;
 import org.junit.Before;
 import org.mockito.Spy;
 import piecework.command.CommandListener;
-import piecework.command.InstanceStateCommand;
+import piecework.command.AbstractOperationCommand;
 import piecework.enumeration.StateChangeType;
 import piecework.model.Process;
 import org.junit.Test;
@@ -70,7 +70,7 @@ public class MediatorTest {
     Task task;
 
     @Mock
-    InstanceStateCommand command;
+    AbstractOperationCommand command;
 
     // Need two process definition keys for listeners so we can check that only
     // the first one receives events (i.e. that the second one doesn't inappropriately
