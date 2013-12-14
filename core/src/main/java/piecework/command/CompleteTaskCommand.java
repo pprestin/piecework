@@ -54,7 +54,7 @@ public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessIns
         if (task == null)
             throw new NotFoundError();
 
-        // This is an operation that anonymous users should never be able to cause
+        // This is an operation that anonymous users should not be able to take
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 

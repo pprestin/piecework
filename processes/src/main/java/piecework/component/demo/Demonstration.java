@@ -19,6 +19,7 @@ import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,9 @@ public class Demonstration implements TaskListener {
 
     private static String NAMESPACE = "activiti";
     private static String PROCESS_DEFINITION_KEY = "Demonstration";
+
+    @Autowired
+    Environment environment;
 
     @Autowired
     ProcessService processService;
@@ -100,6 +104,11 @@ public class Demonstration implements TaskListener {
 
     @PostConstruct
     public void configure() throws IOException, ProcessEngineException, StatusCodeError {
+        boolean isDemoMode = environment.getProperty("demo.mode", Boolean.class, Boolean.FALSE);
+
+        if (!isDemoMode)
+            return;
+
         Process process = demoProcess();
         ProcessDeployment deployment = demoProcessDeployment();
 

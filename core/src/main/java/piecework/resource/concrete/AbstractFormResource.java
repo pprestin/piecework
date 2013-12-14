@@ -151,7 +151,14 @@ public abstract class AbstractFormResource {
         }
 
         try {
-            return redirect(formService.submit(process, requestDetails, requestId, formData, Map.class, helper.getPrincipal()));
+            FormRequest receiptRequest = formService.submit(process, requestDetails, requestId, formData, Map.class, helper.getPrincipal());
+
+            // Anonymous form submissions are not redirected, since it's not possible to authorize access to the receipt form
+            // so for security reasons the response is forced to be a COMPLETE action and no restricted data can be returned
+            if (isAnonymous())
+                return response(process, receiptRequest, ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, false);
+
+            return redirect(receiptRequest);
         } catch (Exception e) {
             Validation validation = null;
             Explanation explanation = null;
@@ -181,7 +188,7 @@ public abstract class AbstractFormResource {
 
             try {
                 FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
-                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
+                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -228,7 +235,7 @@ public abstract class AbstractFormResource {
             try {
                 FormRequest formRequest = requestService.read(requestDetails, requestId);
                 FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
-                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation);
+                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -271,17 +278,16 @@ public abstract class AbstractFormResource {
     }
 
     private Response response(Process process, FormRequest request) throws StatusCodeError {
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null);
+        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, true);
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, Validation validation, Explanation explanation) throws StatusCodeError {
+    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData) throws StatusCodeError {
         if (!request.validate(process))
             throw new BadRequestError();
 
         Entity principal = helper.getPrincipal();
         try {
             ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-            boolean includeRestrictedData = true;
             Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, validation, explanation, includeRestrictedData, isAnonymous());
             FormDisposition formDisposition = form.getDisposition();
 

@@ -120,12 +120,12 @@ public class CommandFactory {
 
     public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, null);
+        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, null, null);
     }
 
-    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String fieldName) {
+    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, fieldName);
+        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, validationId, fieldName);
     }
 
 }

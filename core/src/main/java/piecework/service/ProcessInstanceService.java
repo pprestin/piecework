@@ -332,7 +332,7 @@ public class ProcessInstanceService {
         ProcessDeployment deployment = deploymentService.read(process, instance);
         Task task = taskService.allowedTask(process, instance, principal, true);
         FormRequest request = requestService.create(requestDetails, process);
-        Validation validation = commandFactory.validation(process, deployment, request, object, type, principal, fieldName).execute();
+        Validation validation = commandFactory.validation(process, deployment, request, object, type, principal, null, fieldName).execute();
 
         return commandFactory.updateValue(principal, task, validation).execute();
     }

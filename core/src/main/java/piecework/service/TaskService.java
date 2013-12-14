@@ -121,7 +121,6 @@ public class TaskService {
         ProcessDeployment deployment = deploymentService.read(process, instance);
 
         FormRequest request;
-        ValidationCommand validate;
         Validation validation;
 
         Command<?> command;

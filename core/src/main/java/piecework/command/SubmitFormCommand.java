@@ -36,7 +36,7 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
     private final FormRequest request;
 
     SubmitFormCommand(CommandExecutor commandExecutor, Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
-        super(commandExecutor, principal, validation.getProcess());
+        super(commandExecutor, principal, validation.getProcess(), validation.getInstance());
         this.deployment = deployment;
         this.validation = validation;
         this.actionType = actionType;
@@ -54,20 +54,25 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
     }
 
     FormRequest execute(CommandExecutor commandExecutor, CommandFactory commandFactory, RequestService requestService) throws PieceworkException {
-        // This is an operation that anonymous users should never be able to cause
-        if (principal == null)
+        // This is an operation that anonymous users should not be able to cause unless the process is set up to allow it explicitly
+        if (principal == null && !process.isAnonymousSubmissionAllowed())
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        // Nested task to allow processes to listen for command post-validation and do additional
-        // validation or service calls
-        CompleteTaskCommand complete = commandFactory.completeTask(principal, deployment, validation, actionType);
-        ProcessInstance updated = commandExecutor.execute(complete);
+        // Decide if this is a 'create instance' or 'complete task' form submission
+        ProcessInstance stored = null;
+        if (actionType == ActionType.CREATE)
+            stored = commandFactory.createInstance(principal, validation).execute();
+        else if (instance != null)
+            stored = commandFactory.completeTask(principal, deployment, validation, actionType).execute();
+
         Task task = validation.getTask();
 
         switch (actionType) {
+            case CREATE:
             case COMPLETE:
             case REJECT:
-                return requestService.create(requestDetails, process, updated, task, actionType);
+                if (stored != null)
+                    return requestService.create(requestDetails, process, stored, task, actionType);
             case SAVE:
             case VALIDATE:
                 return request;

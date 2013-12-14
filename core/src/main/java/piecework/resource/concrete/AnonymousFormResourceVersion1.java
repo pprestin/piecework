@@ -46,12 +46,6 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
     }
 
     @Override
-    public Response readReceipt(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws PieceworkException {
-        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
-        return receiptForm(context, process, rawRequestId);
-    }
-
-    @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 

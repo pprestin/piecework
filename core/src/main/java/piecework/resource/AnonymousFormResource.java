@@ -49,12 +49,6 @@ public interface AnonymousFormResource extends PublicApplicationResource {
     @Produces("text/html")
     Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws PieceworkException;
 
-    @GET
-    @Path("{processDefinitionKey}/receipt/{requestId}")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html"})
-    Response readReceipt(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws PieceworkException;
-
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")
     @Consumes("application/x-www-form-urlencoded")

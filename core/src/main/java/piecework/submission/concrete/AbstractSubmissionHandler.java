@@ -111,7 +111,7 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
 
         String submitterId = principalId;
-        if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(template.getActAsUser()))
+        if (principal != null && principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(template.getActAsUser()))
             submitterId = template.getActAsUser();
         else if (rawSubmission != null && StringUtils.isNotEmpty(rawSubmission.getSubmitterId()))
             submitterId = sanitizer.sanitize(rawSubmission.getSubmitterId());

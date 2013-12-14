@@ -42,15 +42,17 @@ public class ValidationCommand extends AbstractCommand<Validation> {
     private final FormRequest request;
     private final Object object;
     private final Class<?> type;
+    private final String validationId;
     private final String fieldName;
 
-    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String fieldName) {
+    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName) {
         super(commandExecutor, principal, process, request.getInstance());
         this.deployment = deployment;
         this.task = request.getTask();
         this.request = request;
         this.object = object;
         this.type = type;
+        this.validationId = validationId;
         this.fieldName = fieldName;
     }
 
@@ -68,7 +70,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         SubmissionTemplate template;
 
         if (StringUtils.isEmpty(fieldName)) {
-            template = submissionTemplateFactory.submissionTemplate(process, deployment, request);
+            template = submissionTemplateFactory.submissionTemplate(process, deployment, request, validationId);
         } else {
             Activity activity = request.getActivity();
             Map<String, Field> fieldMap = activity.getFieldKeyMap();
