@@ -101,7 +101,7 @@ public class ValuesService {
 
         Task task = taskService.allowedTask(process, instance, principal, true);
 
-        commandFactory.removeValue(principal, process, task, fieldName, valueId).execute();
+        commandFactory.removeValue(principal, process, instance, task, fieldName, valueId).execute();
     }
 
     public List<Value> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {

@@ -53,16 +53,21 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
 
     @Override
     ProcessDeployment execute(ServiceLocator serviceLocator) throws PieceworkException {
-
-        if (LOG.isDebugEnabled())
-            LOG.debug("Executing publication command " + this.toString());
-
-        // Instantiate local references to the service beans
-        ProcessEngineFacade facade = serviceLocator.getService(ProcessEngineFacade.class);
+        ActivityRepository activityRepository = serviceLocator.getService(ActivityRepository.class);
         ContentRepository contentRepository = serviceLocator.getService(ContentRepository.class);
         DeploymentRepository deploymentRepository = serviceLocator.getService(DeploymentRepository.class);
+        ProcessEngineFacade facade = serviceLocator.getService(ProcessEngineFacade.class);
         ProcessRepository processRepository = serviceLocator.getService(ProcessRepository.class);
         UuidGenerator uuidGenerator = serviceLocator.getService(UuidGenerator.class);
+        return execute(activityRepository, contentRepository, deploymentRepository, facade, processRepository, uuidGenerator);
+    }
+
+    ProcessDeployment execute(ActivityRepository activityRepository, ContentRepository contentRepository, DeploymentRepository deploymentRepository,
+                              ProcessEngineFacade facade, ProcessRepository processRepository,
+                              UuidGenerator uuidGenerator) throws PieceworkException {
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Executing deployment command " + this.toString());
 
         // Verify that this deployment belongs to this process
         ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
@@ -103,7 +108,7 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
             // the artifact is not formatted correctly, etc..
             persistedDeployment = facade.deploy(process, original, content);
 
-            persistedDeployment = cascadeSave(serviceLocator, persistedDeployment);
+            persistedDeployment = cascadeSave(activityRepository, deploymentRepository, persistedDeployment);
 
             // Assuming that we didn't hit an exception in the step above, then we can update the deployment
             // to indicated that it is deployed
@@ -127,15 +132,13 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
         return process != null ? process.getProcessDefinitionKey() : null;
     }
 
-    private ProcessDeployment cascadeSave(ServiceLocator serviceLocator, ProcessDeployment deployment) {
+    private ProcessDeployment cascadeSave(ActivityRepository activityRepository, DeploymentRepository deploymentRepository, ProcessDeployment deployment) {
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, null, passthroughSanitizer, false);
 
         builder.clearActivities();
         builder.published(false);
 
-        ActivityRepository activityRepository = serviceLocator.getService(ActivityRepository.class);
-        DeploymentRepository deploymentRepository = serviceLocator.getService(DeploymentRepository.class);
         Map<String, Activity> activityMap = deployment.getActivityMap();
         if (activityMap != null) {
             for (Map.Entry<String, Activity> entry : deployment.getActivityMap().entrySet()) {

@@ -88,9 +88,9 @@ public class CommandFactory {
         return new PublicationCommand(commandExecutor, process, deploymentId);
     }
 
-    public RemoveValueCommand removeValue(Entity principal, Process process, Task task, String fieldName, String valueId) {
+    public RemoveValueCommand removeValue(Entity principal, Process process, ProcessInstance instance, Task task, String fieldName, String valueId) {
 
-        return new RemoveValueCommand(commandExecutor, principal, process, task, fieldName, valueId);
+        return new RemoveValueCommand(commandExecutor, principal, process, instance, task, fieldName, valueId);
     }
 
     public SubmitFormCommand submitForm(Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {

@@ -46,8 +46,8 @@ public class RemoveValueCommand extends AbstractEngineStorageCommand<ProcessInst
     private final String fieldName;
     private final String valueId;
 
-    RemoveValueCommand(CommandExecutor commandExecutor, Entity principal, Process process, Task task, String fieldName, String valueId) {
-        super(commandExecutor, principal, process);
+    RemoveValueCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance, Task task, String fieldName, String valueId) {
+        super(commandExecutor, principal, process, instance);
         this.task = task;
         this.fieldName = fieldName;
         this.valueId = valueId;
