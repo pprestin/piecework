@@ -46,24 +46,27 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
 
     @Override
     FormRequest execute(ServiceLocator serviceLocator) throws PieceworkException {
-        CommandExecutor commandExecutor = serviceLocator.getService(CommandExecutor.class);
         CommandFactory commandFactory = serviceLocator.getService(CommandFactory.class);
         RequestService requestService = serviceLocator.getService(RequestService.class);
 
-        return execute(commandExecutor, commandFactory, requestService);
+        return execute(commandFactory, requestService);
     }
 
-    FormRequest execute(CommandExecutor commandExecutor, CommandFactory commandFactory, RequestService requestService) throws PieceworkException {
+    FormRequest execute(CommandFactory commandFactory, RequestService requestService) throws PieceworkException {
         // This is an operation that anonymous users should not be able to cause unless the process is set up to allow it explicitly
         if (principal == null && !process.isAnonymousSubmissionAllowed())
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         // Decide if this is a 'create instance' or 'complete task' form submission
         ProcessInstance stored = null;
+        AbstractCommand<ProcessInstance> command = null;
         if (actionType == ActionType.CREATE)
-            stored = commandFactory.createInstance(principal, validation).execute();
-        else if (instance != null)
-            stored = commandFactory.completeTask(principal, deployment, validation, actionType).execute();
+            command = commandFactory.createInstance(principal, validation);
+        else if (instance != null && principal != null)
+            command = commandFactory.completeTask(principal, deployment, validation, actionType);
+
+        if (command != null)
+            stored = command.execute();
 
         Task task = validation.getTask();
 
