@@ -133,6 +133,12 @@ public class ProcessInstanceService {
 //        }
     }
 
+    public void createSubTask(Process process, ProcessInstance instance, Task task, String parentTaskId, SubmissionTemplate template, Submission submission) throws StatusCodeError {
+        FormValidation validation = validationService.validate(process, instance, task, template, submission, true);
+        SubTaskCommand command = new SubTaskCommand(process, instance, parentTaskId, validation);
+        commandExecutor.execute(command);
+    }
+
     public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {
         if (process == null)
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
