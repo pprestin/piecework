@@ -102,6 +102,9 @@ public class Form {
     private final String cancellation;
 
     @XmlAttribute
+    private final String restart;
+
+    @XmlAttribute
     private final String suspension;
 
     @XmlAttribute
@@ -153,6 +156,7 @@ public class Form {
         this.attachment = builder.attachment;
         this.cancellation = builder.cancellation;
         this.history = builder.history;
+        this.restart = builder.restart;
         this.suspension = builder.suspension;
         this.attachmentCount = builder.attachmentCount;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : Collections.<Attachment>emptyList();
@@ -260,6 +264,10 @@ public class Form {
         return history;
     }
 
+    public String getRestart() {
+        return restart;
+    }
+
     public String getSuspension() {
         return suspension;
     }
@@ -307,6 +315,7 @@ public class Form {
         private String attachment;
         private String cancellation;
         private String history;
+        private String restart;
         private String suspension;
         private int attachmentCount;
         private List<Attachment> attachments;
@@ -370,6 +379,7 @@ public class Form {
                 this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
                 this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
                 this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+                this.restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
                 this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
                 if (attachments != null && !attachments.isEmpty()) {
                     PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
@@ -391,6 +401,7 @@ public class Form {
             this.attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
             this.cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
             this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+            this.restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
             this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
             if (attachments != null && !attachments.isEmpty()) {
                 PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();

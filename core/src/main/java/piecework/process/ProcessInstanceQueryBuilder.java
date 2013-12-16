@@ -69,9 +69,11 @@ public class ProcessInstanceQueryBuilder {
         if (StringUtils.isNotEmpty(searchCriteria.getInitiatedBy()))
             query.addCriteria(where("initiatorId").is(searchCriteria.getInitiatedBy()));
 
-        if (searchCriteria.getStartedBefore() != null)
+        if (searchCriteria.getStartedBefore() != null && searchCriteria.getStartedAfter() != null)
+            query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()).gt(searchCriteria.getStartedAfter()));
+        else if (searchCriteria.getStartedBefore() != null)
             query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()));
-        if (searchCriteria.getStartedAfter() != null)
+        else if (searchCriteria.getStartedAfter() != null)
             query.addCriteria(where("startTime").gt(searchCriteria.getStartedAfter()));
 
         if (searchCriteria.getCompletedBefore() != null)

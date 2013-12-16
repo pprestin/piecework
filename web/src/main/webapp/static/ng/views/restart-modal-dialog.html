@@ -1,0 +1,16 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Are you sure you want to restart this process?</h4>
+        </div>
+        <div class="modal-body">
+            <p>Restarting a process creates a new instance with the same data as the original and kicks it off</p>
+            <textarea class="form-control input-block-level" placeholder="Enter a reason" ng-model="reason" id="restart-reason" rows="4"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button ng-click="cancel()" type="button" class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+            <button ng-click="ok(reason)" type="button" id="restart-button" class="btn btn-primary">Restart</button>
+        </div>
+    </div>
+</div>

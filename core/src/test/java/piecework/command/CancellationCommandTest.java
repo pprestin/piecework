@@ -71,7 +71,7 @@ public class CancellationCommandTest {
         Mockito.when(processEngineFacade.cancel(process, deployment, instance))
                 .thenReturn(Boolean.TRUE);
 
-        OperationResult result = new OperationResult("Finito", Constants.ProcessStatuses.CANCELLED, "Because of a good reason");
+        OperationResult result = new OperationResult("Because of a good reason", "Finito", Constants.ProcessStatuses.CANCELLED, "Because of a good reason");
 
         Mockito.when(storageManager.store(OperationType.CANCELLATION, result, instance, principal))
                 .thenReturn(instance);
@@ -107,7 +107,7 @@ public class CancellationCommandTest {
         Mockito.when(processEngineFacade.cancel(process, deployment, instance))
                 .thenReturn(Boolean.TRUE);
 
-        OperationResult result = new OperationResult("Finito", Constants.ProcessStatuses.CANCELLED, "Because of a good reason");
+        OperationResult result = new OperationResult("Because of a good reason", "Finito", Constants.ProcessStatuses.CANCELLED, "Because of a good reason");
 
         Mockito.when(storageManager.store(OperationType.CANCELLATION, result, instance, principal))
                 .thenReturn(instance);

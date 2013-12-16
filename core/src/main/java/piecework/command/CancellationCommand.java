@@ -55,6 +55,6 @@ public class CancellationCommand extends AbstractOperationCommand {
 
         if (!facade.cancel(process, deployment, instance))
             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
-        return new OperationResult(deployment.getCancellationStatus(), Constants.ProcessStatuses.CANCELLED, applicationStatusExplanation);
+        return new OperationResult(applicationStatusExplanation, deployment.getCancellationStatus(), Constants.ProcessStatuses.CANCELLED, applicationStatusExplanation);
     }
 }

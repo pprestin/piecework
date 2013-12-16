@@ -51,7 +51,7 @@ public class ActivationCommand extends AbstractOperationCommand {
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         if (!facade.activate(process, deployment, instance))
             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
-        return new OperationResult(instance.getPreviousApplicationStatus(), Constants.ProcessStatuses.OPEN, applicationStatusExplanation);
+        return new OperationResult(applicationStatusExplanation, instance.getPreviousApplicationStatus(), Constants.ProcessStatuses.OPEN, applicationStatusExplanation);
     }
 
 }

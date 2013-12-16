@@ -70,7 +70,7 @@ public class StorageManager {
         return processInstanceRepository.save(builder.build());
     }
 
-    public ProcessInstance create(Process process, ProcessDeployment deployment, Map<String, List<Value>> data, List<Attachment> attachments, Submission submission, String initiatorId) {
+    public ProcessInstance create(Process process, ProcessDeployment deployment, Map<String, List<Value>> data, Collection<Attachment> attachments, Submission submission, String initiatorId) {
 
         if (attachments != null && !attachments.isEmpty()) {
             if (LOG.isDebugEnabled())
@@ -78,7 +78,8 @@ public class StorageManager {
             attachments = attachmentRepository.save(attachments);
         }
 
-        String label = ProcessInstanceUtility.processInstanceLabel(process, null, data, submission.getProcessInstanceLabel());
+        String submissionLabel = submission != null ? submission.getProcessInstanceLabel() : null;
+        String label = ProcessInstanceUtility.processInstanceLabel(process, null, data, submissionLabel);
         String initiationStatus = deployment.getInitiationStatus();
 
         ProcessInstance.Builder builder = new ProcessInstance.Builder()
@@ -138,7 +139,7 @@ public class StorageManager {
         if (operationType != OperationType.ASSIGNMENT && operationType != OperationType.UPDATE)
             tasks = ProcessInstanceUtility.tasks(instance.getTasks(), operationType);
 
-        return processInstanceRepository.update(instance.getProcessInstanceId(), new Operation(UUID.randomUUID().toString(), operationType, applicationStatusExplanation, new Date(), actingAsUserId), applicationStatus, applicationStatusExplanation, processStatus, tasks);
+        return processInstanceRepository.update(instance.getProcessInstanceId(), new Operation(UUID.randomUUID().toString(), operationType, result.getOperationDescription(), new Date(), actingAsUserId), applicationStatus, applicationStatusExplanation, processStatus, tasks);
     }
 
     public ProcessInstance store(Validation validation, ActionType actionType) throws PieceworkException {

@@ -93,7 +93,7 @@ public class SuspensionCommandTest {
                 .when(processEngineFacade).suspend(process, deployment, instance);
 
         String applicationStatusExplanation = "Testing 1,2,3";
-        OperationResult expected = new OperationResult("Suspended", Constants.ProcessStatuses.SUSPENDED, applicationStatusExplanation);
+        OperationResult expected = new OperationResult(applicationStatusExplanation, "Suspended", Constants.ProcessStatuses.SUSPENDED, applicationStatusExplanation);
 
         SuspensionCommand command = new SuspensionCommand(null, principal, process, deployment, instance, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);

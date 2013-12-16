@@ -256,6 +256,7 @@
                 <button data-ng-click="dialogs.openSuspendModal([form])" data-ng-show="form.history && form.task.active" class="btn btn-default navbar-btn" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
                 <button data-ng-click="dialogs.openCancelModal([form])" data-ng-show="form.history && form.task.active" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" data-target="#delete-dialog" data-backdrop="false" data-toggle="modal" title="Delete process" type="button"><i class="fa fa-trash-o"></i></button>
                 <button data-ng-click="dialogs.openActivateModal([form])" data-ng-show="form.history && form.task.taskStatus == 'Suspended'" class="btn btn-default navbar-btn" id="activate-dialog-button" data-target="#activate-dialog" data-backdrop="false" data-toggle="modal" title="Activate process" type="button"><i class="fa fa-play"></i></button>
+                <button data-ng-click="dialogs.openRestartModal([form])" data-ng-show="form.history && (form.task.taskStatus == 'Cancelled' || form.task.taskStatus == 'Completed')" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>
             </div>
             <div class="navbar-right">
                 <div class="responsive-pull-right">

@@ -278,7 +278,7 @@ public class ProcessInstanceSearchCriteria {
             this.contentParameters = new ManyMap<String, String>();
             this.sanitizedParameters = new ManyMap<String, String>();
             if (queryParameters != null && sanitizer != null) {
-                DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
+                DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeParser();
                 for (Map.Entry<String, List<String>> rawQueryParameterEntry : queryParameters.entrySet()) {
                     String key = sanitizer.sanitize(rawQueryParameterEntry.getKey());
                     if (StringUtils.isEmpty(key))

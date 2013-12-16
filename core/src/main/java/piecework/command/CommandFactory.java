@@ -24,6 +24,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.validation.Validation;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +74,11 @@ public class CommandFactory {
         return new CreateInstanceCommand(commandExecutor, principal, validation);
     }
 
+    public CreateInstanceCommand createInstance(Entity principal, Process process, Map<String, List<Value>> data, Collection<Attachment> attachments, Submission submission) {
+
+        return new CreateInstanceCommand(commandExecutor, principal, process, data, attachments, submission);
+    }
+
     public DeploymentCommand deployment(Process process, String deploymentId, ProcessDeploymentResource resource) {
 
         return new DeploymentCommand(commandExecutor, process, deploymentId, resource);
@@ -91,6 +97,11 @@ public class CommandFactory {
     public RemoveValueCommand removeValue(Entity principal, Process process, ProcessInstance instance, Task task, String fieldName, String valueId) {
 
         return new RemoveValueCommand(commandExecutor, principal, process, instance, task, fieldName, valueId);
+    }
+
+    public RestartCommand restart(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
+
+        return new RestartCommand(commandExecutor, principal, process, deployment, instance, applicationStatusExplanation);
     }
 
     public SubmitFormCommand submitForm(Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {

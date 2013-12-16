@@ -121,6 +121,9 @@ public class LdapIdentityService implements IdentityService {
     public User getUser(String id) {
         try {
             UserDetails userDetails = IdentityDetails.class.cast(userDetailsService.loadUserByUsername(id));
+            if (userDetails == null)
+                return null;
+
             return new User.Builder(userDetails).build();
         } catch (UsernameNotFoundException e) {
             return null;

@@ -400,7 +400,7 @@ angular.module('wf.services',
 
                         var failure = function(scope, data, status, headers, config, form) {
                             form._activationStatus = 'error';
-                            var message = '<em>' + form.task.processInstanceLabel + '</em> cannot be cancelled/deleted because it is in an inconsistent state';
+                            var message = '<em>' + form.task.processInstanceLabel + '</em> cannot be cancelled/deleted. ' + data.messageDetail;
                             var title = "Unable to cancel";
                             notificationService.notify($scope, message, title);
                             checkStatuses(scope);
@@ -495,6 +495,49 @@ angular.module('wf.services',
                     };
                     $scope.ok = function () {
 
+                    };
+
+                    $scope.cancel = function () {
+                        $modalInstance.dismiss('cancel');
+                    };
+                }],
+                'RestartModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
+                    $scope.selectedForms = selectedForms;
+                    $scope.ok = function (reason) {
+                        var checkActivationStatuses = function(scope) {
+                            var selectedForms = scope.selectedForms;
+                            var operationStatus = 'ok';
+                            angular.forEach(selectedForms, function(form) {
+                                if (typeof(form._activationStatus) === 'undefined')
+                                    operationStatus = 'incomplete';
+                                else if (form._activationStatus !== 'ok')
+                                    operationStatus = 'error';
+                            });
+
+                            if (operationStatus == 'ok') {
+                                $modalInstance.close(selectedForms);
+                                $rootScope.$broadcast('event:refresh', 'activation');
+                            }
+                        };
+
+                        var success = function(scope, data, status, headers, config, form) {
+                            form._activationStatus = 'ok';
+                            checkActivationStatuses(scope);
+                        };
+
+                        var failure = function(scope, data, status, headers, config, form) {
+                            form._activationStatus = 'error';
+                            var message = '<em>' + form.task.processInstanceLabel + '</em> cannot be restarted';
+                            var title = data.messageDetail;
+                            notificationService.notify($scope, message, title);
+                            checkActivationStatuses(scope);
+                        };
+
+                        notificationService.clear($scope);
+                        var selectedForms = $scope.selectedForms;
+                        angular.forEach(selectedForms, function(form) {
+                            instanceService.restart($scope, form, reason, success, failure);
+                        });
                     };
 
                     $scope.cancel = function () {
@@ -622,6 +665,20 @@ angular.module('wf.services',
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
+                openRestartModal: function(selectedForms) {
+                    var modalInstance = $modal.open({
+                        backdrop: true,
+                        templateUrl: root + '/static/ng/views/restart-modal-dialog.html',
+                        controller: controllerService.RestartModalController,
+                        resolve: {
+                            selectedForms: function () {
+                                return selectedForms;
+                            }
+                        },
+                        windowClass: 'in',
+                    });
+                    modalInstance.result.then(function () {}, function () {});
+                },
                 openSuspendModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
@@ -644,6 +701,8 @@ angular.module('wf.services',
             return {
                 activate: function($scope, form, reason, success, failure) {
                     var url = form.activation + ".json";
+                    if (typeof(reason) === 'undefined')
+                        reason = '';
                     var data = '{ "reason": "' + reason + '"}';
                     $http.post(url, data)
                         .success(function(data, status, headers, config) {
@@ -668,6 +727,8 @@ angular.module('wf.services',
                 },
                 cancel: function($scope, form, reason, success, failure) {
                     var url = form.cancellation + ".json";
+                    if (typeof(reason) === 'undefined')
+                        reason = '';
                     var data = '{ "reason": "' + reason + '"}';
                     $http.post(url, data)
                         .success(function(data, status, headers, config) {
@@ -683,8 +744,23 @@ angular.module('wf.services',
                         callback(response);
                     });
                 },
+                restart: function($scope, form, reason, success, failure) {
+                    var url = form.restart + ".json";
+                    if (typeof(reason) === 'undefined')
+                        reason = '';
+                    var data = '{ "reason": "' + reason + '"}';
+                    $http.post(url, data)
+                        .success(function(data, status, headers, config) {
+                            success($scope, data, status, headers, config, form, reason);
+                        })
+                        .error(function(data, status, headers, config) {
+                            failure($scope, data, status, headers, config, form, reason);
+                        });
+                },
                 suspend: function($scope, form, reason, success, failure) {
                     var url = form.suspension + ".json";
+                    if (typeof(reason) === 'undefined')
+                        reason = '';
                     var data = '{ "reason": "' + reason + '"}';
                     $http.post(url, data)
                         .success(function(data, status, headers, config) {
@@ -947,8 +1023,8 @@ angular.module('Form',
             }]);
         }
     ])
-    .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'attachmentService', 'personService', 'taskService', 'wizardService', 'dialogs',
-        function($scope, $window, $location, $resource, $http, $routeParams, attachmentService, personService, taskService, wizardService, dialogs) {
+    .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'attachmentService', 'notificationService', 'personService', 'taskService', 'wizardService', 'dialogs',
+        function($scope, $window, $location, $resource, $http, $routeParams, attachmentService, notificationService, personService, taskService, wizardService, dialogs) {
             console.log('started', 'Form controller started');
             $scope.context = window.piecework.context;
             $scope.assignTo = function(userId) {
@@ -1166,6 +1242,52 @@ angular.module('Form',
     .controller('ListController', ['$scope', '$window', '$resource', '$http', '$routeParams','$modal', 'personService', 'taskService', 'dialogs',
         function($scope, $window, $resource, $http, $routeParams, $modal, personService, taskService, dialogs) {
             $scope.context = $window.piecework.context;
+
+            $scope.dates = new Object();
+            $scope.dates.selectedDateRangeKey = 'any';
+            $scope.dates.dateRangeKeys = ['any', '1-hour', '1-day', '1-week', '1-month', '1-year', 'custom'];
+            $scope.dates.dateRanges = {
+                'any' : 'Any date',
+                '1-hour' : 'Past 1 hour',
+                '1-day' : 'Past 1 day',
+                '1-week' : 'Past 1 week',
+                '1-month' : 'Past 1 month',
+                '1-year' : 'Past 1 year',
+                'custom' : 'Custom date range'
+            };
+            $scope.dates.isNonCustomDateRange = function() {
+                return $scope.dates.selectedDateRangeKey != 'custom';
+            };
+            $scope.dates.refreshCustomDate = function() {
+                $scope.criteria.startedAfter = $scope.dates.customStartedAfter;
+                $scope.criteria.startedBefore = $scope.dates.customStartedBefore;
+                $scope.refreshSearch();
+            };
+            $scope.dates.selectDateRange = function(dateRangeKey) {
+                $scope.dates.selectedDateRangeKey = dateRangeKey;
+                $scope.criteria.startedAfter = null;
+                $scope.criteria.startedBefore = null;
+                if (dateRangeKey == '1-hour') {
+                    $scope.criteria.startedAfter = moment().subtract('hours', 1).toISOString();
+                } else if (dateRangeKey == '1-day') {
+                    $scope.criteria.startedAfter = moment().subtract('days', 1).toISOString();
+                } else if (dateRangeKey == '1-week') {
+                    $scope.criteria.startedAfter = moment().subtract('weeks', 1).toISOString();
+                } else if (dateRangeKey == '1-month') {
+                    $scope.criteria.startedAfter = moment().subtract('months', 1).toISOString();
+                } else if (dateRangeKey == '1-year') {
+                    $scope.criteria.startedAfter = moment().subtract('years', 1).toISOString();
+                } else if (dateRangeKey == 'custom') {
+                    $scope.dates.customStartedAfter = moment().subtract('years', 1).format('YYYY-MM-DDTHH:mm:ss.00');
+                    $scope.dates.customStartedBefore = moment().format('YYYY-MM-DDTHH:mm:ss.00');
+                }
+                if (dateRangeKey != 'custom')
+                    $scope.refreshSearch();
+            };
+            $scope.dates.showNonCustomDateRange = function() {
+                var selectedKey = $scope.dates.selectedDateRangeKey;
+                return $scope.dates.dateRanges[selectedKey];
+            };
             $scope.processSearchResults = function(results) {
                 $scope.definitions = results.definitions;
                 $scope.forms = results.list;

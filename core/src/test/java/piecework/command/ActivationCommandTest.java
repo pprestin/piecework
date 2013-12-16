@@ -15,7 +15,6 @@
  */
 package piecework.command;
 
-import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -73,7 +72,7 @@ public class ActivationCommandTest {
                 .thenReturn("1,2,3");
 
         String applicationStatusExplanation = "Testing 1,2,3";
-        OperationResult expected = new OperationResult("1,2,3", Constants.ProcessStatuses.OPEN, applicationStatusExplanation);
+        OperationResult expected = new OperationResult(applicationStatusExplanation, "1,2,3", Constants.ProcessStatuses.OPEN, applicationStatusExplanation);
 
         ActivationCommand command = new ActivationCommand(null, principal, process, deployment, instance, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);

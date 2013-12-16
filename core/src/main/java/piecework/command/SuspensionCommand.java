@@ -53,7 +53,7 @@ public class SuspensionCommand extends AbstractOperationCommand {
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         if (!facade.suspend(process, deployment, instance))
             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
-        return new OperationResult(deployment.getSuspensionStatus(), Constants.ProcessStatuses.SUSPENDED, applicationStatusExplanation, instance.getApplicationStatus());
+        return new OperationResult(applicationStatusExplanation, deployment.getSuspensionStatus(), Constants.ProcessStatuses.SUSPENDED, applicationStatusExplanation, instance.getApplicationStatus());
 
     }
 }
