@@ -29,9 +29,8 @@ import piecework.enumeration.ActionType;
 import piecework.exception.InternalServerError;
 import piecework.exception.StatusCodeError;
 import piecework.security.DataFilterService;
-import piecework.security.EncryptionService;
 import piecework.util.ProcessInstanceUtility;
-import piecework.validation.FormValidation;
+import piecework.validation.Validation;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -56,7 +55,7 @@ public class LegacyFormFactory {
     @Autowired
     Versions versions;
 
-    public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, FormValidation validation, ActionType actionType, Entity principal) throws StatusCodeError {
+    public Form form(FormRequest request, Process process, ProcessInstance instance, Task task, Validation validation, ActionType actionType, Entity principal) throws StatusCodeError {
         long start = 0;
 
         if (LOG.isDebugEnabled())

@@ -21,34 +21,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.CommandExecutor;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
-import piecework.enumeration.OperationType;
+import piecework.enumeration.ActionType;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.submission.SubmissionTemplate;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
-import piecework.validation.FormValidation;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.AttachmentRepository;
 import piecework.persistence.ProcessInstanceRepository;
+import piecework.security.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ProcessInstanceUtility;
+import piecework.submission.SubmissionTemplate;
+import piecework.validation.Validation;
+import piecework.validation.ValidationFactory;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
-
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
@@ -62,10 +58,25 @@ public class ProcessInstanceService {
     AttachmentRepository attachmentRepository;
 
     @Autowired
+    CommandFactory commandFactory;
+
+    @Autowired
+    DataFilterService dataFilterService;
+
+    @Autowired
+    DeploymentService deploymentService;
+
+    @Autowired
+    IdentityService identityService;
+
+    @Autowired
     ProcessService processService;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
+    RequestService requestService;
 
     @Autowired
     Sanitizer sanitizer;
@@ -74,69 +85,83 @@ public class ProcessInstanceService {
     TaskService taskService;
 
     @Autowired
-    CommandExecutor commandExecutor;
-
-    @Autowired
-    ValidationService validationService;
+    ValidationFactory validationFactory;
 
     @Autowired
     Versions versions;
 
-    public void activate(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
-        InstanceStateCommand activation = new InstanceStateCommand(process, instance, OperationType.ACTIVATION);
-        activation.reason(reason);
-        commandExecutor.execute(activation);
+    public void activate(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        String reason = sanitizer.sanitize(rawReason);
+        commandFactory.activation(principal, process, deployment, instance, reason).execute();
     }
 
-    public void assign(Process process, ProcessInstance instance, Task task, String assignee) throws StatusCodeError {
-        AssignmentCommand assignment = new AssignmentCommand(process, instance, task, assignee);
-        commandExecutor.execute(assignment);
+    public void assign(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, Task task, String assigneeId) throws BadRequestError, PieceworkException {
+        User assignee = assigneeId != null ? identityService.getUser(assigneeId) : null;
+        commandFactory.assignment(principal, process, deployment, instance, task, assignee).execute();
     }
 
-    public void cancel(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
-        InstanceStateCommand cancellation = new InstanceStateCommand(process, instance, OperationType.CANCELLATION);
-        cancellation.reason(reason);
-        commandExecutor.execute(cancellation);
+    public <T> ProcessInstance attach(Entity principal, RequestDetails requestDetails, String rawProcessDefinitionKey, String rawProcessInstanceId, T data, Class<T> type) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
+        Task task = taskService.allowedTask(process, instance, principal, true);
+        if (task == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.task_required);
+
+        FormRequest request = requestService.create(requestDetails, process, instance, task, ActionType.ATTACH);
+        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal).execute();
+
+        return commandFactory.attachment(principal, deployment, validation).execute();
+    }
+
+    public ProcessInstance cancel(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        String reason = sanitizer.sanitize(rawReason);
+
+        return commandFactory.cancellation(principal, process, deployment, instance, reason).execute();
     }
 
     public ProcessInstance complete(String processInstanceId) {
         try {
             ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
-            CompletionCommand completion = new CompletionCommand(instance);
-            return commandExecutor.execute(completion);
-        } catch (StatusCodeError error) {
+            if (instance != null) {
+                Map<String, List<Value>> data = dataFilterService.exclude(instance.getData());
+                return commandFactory.completion(instance, data).execute();
+            }
+        } catch (PieceworkException error) {
             LOG.error("Unable to mark instance as complete: " + processInstanceId, error);
         }
         return null;
     }
 
-    public void deleteAttachment(Process process, ProcessInstance instance, String attachmentId) throws StatusCodeError {
-        if (instance == null)
-            throw new InternalServerError();
+    public <T> ProcessInstance create(Entity principal, RequestDetails requestDetails, String rawProcessDefinitionKey, T data, Class<T> type) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
+        FormRequest request = requestService.create(requestDetails, process);
+        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal).execute();
 
-//        boolean skipOptimization = environment.getProperty(Constants.Settings.OPTIMIZATIONS_OFF, Boolean.class, Boolean.FALSE);
-
-//        if (skipOptimization) {
-            ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
-            builder.removeAttachment(attachmentId);
-
-            processInstanceRepository.save(builder.build());
-//        }
-//        else {
-//            Query query = new Query(where("_id").is(instance.getProcessInstanceId()));
-//            Update update = new Update();
-//
-//            if (attachmentId != null)
-//                update.pull("attachments", attachmentId);
-//
-//            mongoOperations.updateFirst(query, update, ProcessInstance.class);
-//        }
+        return commandFactory.createInstance(principal, validation).execute();
     }
 
-    public void createSubTask(Process process, ProcessInstance instance, Task task, String parentTaskId, SubmissionTemplate template, Submission submission) throws StatusCodeError {
-        FormValidation validation = validationService.validate(process, instance, task, template, submission, true);
-        SubTaskCommand command = new SubTaskCommand(process, instance, parentTaskId, validation);
-        commandExecutor.execute(command);
+    public void deleteAttachment(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws BadRequestError, PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+        String attachmentId = sanitizer.sanitize(rawAttachmentId);
+        Task task = taskService.allowedTask(process, instance, principal, true);
+
+        commandFactory.detachment(principal, process, instance, task, attachmentId).execute();
+    }
+
+    public void createSubTask(Entity principal, Process process, ProcessInstance instance, Task task, String parentTaskId, SubmissionTemplate template, Submission submission) throws PieceworkException {
+        Validation validation = validationFactory.validation(process, instance, task, template, submission, true);
+        ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
+        commandFactory.createsubtask(principal, process, instance, deployment, parentTaskId, validation).execute();
     }
 
     public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {
@@ -195,35 +220,38 @@ public class ProcessInstanceService {
         return instance;
     }
 
-    public void suspend(Process process, ProcessInstance instance, String reason) throws StatusCodeError {
-        InstanceStateCommand suspension = new InstanceStateCommand(process, instance, OperationType.SUSPENSION);
-        suspension.reason(reason);
-        commandExecutor.execute(suspension);
+    public void suspend(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        String reason = sanitizer.sanitize(rawReason);
+
+        commandFactory.suspension(principal, process, deployment, instance, reason).execute();
     }
 
-    public void update(String processDefinitionKey, String processInstanceId, ProcessInstance processInstance) throws StatusCodeError {
-        Process process = processService.read(processDefinitionKey);
-        ProcessInstance persisted = read(process, processInstanceId, false);
-        ProcessInstance sanitized = new ProcessInstance.Builder(processInstance).build();
+    public ProcessInstance update(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, ProcessInstance rawInstance) throws BadRequestError, PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
 
-        String processStatus = sanitized.getProcessStatus();
-        String applicationStatus = sanitized.getApplicationStatus();
-        String applicationStatusExplanation = sanitized.getApplicationStatusExplanation();
+        String processStatus = sanitizer.sanitize(rawInstance.getProcessStatus());
+        String applicationStatus = sanitizer.sanitize(rawInstance.getApplicationStatus());
+        String applicationStatusExplanation = sanitizer.sanitize(rawInstance.getApplicationStatusExplanation());
 
         if (StringUtils.isNotEmpty(processStatus) || StringUtils.isEmpty(applicationStatus)) {
-            OperationType operationType = OperationType.UPDATE;
-            if (processStatus != null && !processStatus.equalsIgnoreCase(persisted.getProcessStatus())) {
+            AbstractOperationCommand command = null;
+            if (processStatus != null && !processStatus.equalsIgnoreCase(instance.getProcessStatus())) {
                 if (processStatus.equals(Constants.ProcessStatuses.OPEN))
-                    operationType = OperationType.ACTIVATION;
+                    command = commandFactory.activation(principal, process, deployment, instance, applicationStatusExplanation);
                 else if (processStatus.equals(Constants.ProcessStatuses.CANCELLED))
-                    operationType = OperationType.CANCELLATION;
+                    command = commandFactory.cancellation(principal, process, deployment, instance, applicationStatusExplanation);
                 else if (processStatus.equals(Constants.ProcessStatuses.SUSPENDED))
-                    operationType = OperationType.SUSPENSION;
+                    command = commandFactory.suspension(principal, process, deployment, instance, applicationStatusExplanation);
             }
-            InstanceStateCommand command = new InstanceStateCommand(process, persisted, operationType);
-            command.applicationStatus(applicationStatus);
-            command.reason(applicationStatusExplanation);
-            commandExecutor.execute(command);
+            if (command == null)
+                command = commandFactory.updateStatus(principal, process, instance, applicationStatus, applicationStatusExplanation);
+
+            return command.execute();
         } else {
             throw new BadRequestError(Constants.ExceptionCodes.instance_cannot_be_modified);
         }
@@ -305,66 +333,22 @@ public class ProcessInstanceService {
         return resultsBuilder.build();
     }
 
-    public ProcessInstance reject(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
-        FormValidation validation = validationService.validate(process, instance, task, template, submission, false);
-        taskService.completeIfTaskExists(process, instance, task, submission.getAction(), validation);
-        return store(process, submission, validation, instance, false);
+    public ProcessInstance updateField(RequestDetails requestDetails, String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldName, Object object, Class<?> type, Entity principal) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        Task task = taskService.allowedTask(process, instance, principal, true);
+        FormRequest request = requestService.create(requestDetails, process);
+        Validation validation = commandFactory.validation(process, deployment, request, object, type, principal, null, fieldName).execute();
+
+        return commandFactory.updateValue(principal, task, validation).execute();
     }
 
-    public ProcessInstance save(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
-        FormValidation validation = validationService.validate(process, instance, task, template, submission, false);
-        return store(process, submission, validation, instance, false);
-    }
-
-    public ProcessInstance submit(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission) throws StatusCodeError {
-        FormValidation validation = validationService.validate(process, instance, task, template, submission, true);
-        taskService.completeIfTaskExists(process, instance, task, submission.getAction(), validation);
-        return store(process, submission, validation, instance, false);
-    }
-
-    public ProcessInstance store(Process process, Submission submission, FormValidation validation, ProcessInstance previous, boolean isAttachment) throws StatusCodeError {
-        long time = 0;
-        if (LOG.isDebugEnabled())
-            time = System.currentTimeMillis();
-
-        List<Attachment> attachments = validation.getAttachments();
-        if (attachments != null && !attachments.isEmpty()) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Persisting " + attachments.size() + " attachments");
-            attachments = attachmentRepository.save(attachments);
-        }
-
-        Map<String, List<Value>> data = isAttachment ? null : validation.getData();
-        String label = ProcessInstanceUtility.processInstanceLabel(process, previous, validation, submission.getProcessInstanceLabel());
-        ProcessInstance instance = doStore(process, previous, label, data, null, null, attachments, submission, true);
-
-        if (LOG.isDebugEnabled())
-            LOG.debug("Storage took " + (System.currentTimeMillis() - time) + " ms");
-
-        return instance;
-    }
-
-    public ProcessInstance updateData(String processDefinitionKey, String processInstanceId, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) throws StatusCodeError {
+    public ProcessInstance updateData(Entity principal, String processDefinitionKey, String processInstanceId, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) throws PieceworkException {
         Process process = processService.read(processDefinitionKey);
         ProcessInstance instance = read(process, processInstanceId, true);
-
-        return doStore(process, instance, null, data, messages, applicationStatusExplanation, null, null, false);
-    }
-
-    private ProcessInstance doStore(Process process, ProcessInstance previous, String label, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation, List<Attachment> attachments, Submission submission, boolean modifyLabel) throws StatusCodeError {
-        InstanceCommand persist = previous == null ? new StartInstanceCommand(process) : new UpdateInstanceCommand(process, previous);
-
-        if (modifyLabel)
-            persist.label(label);
-
-        persist.applicationStatusExplanation(applicationStatusExplanation)
-                .attachments(attachments)
-                .data(data)
-                .submission(submission)
-                .messages(messages);
-
-        ProcessInstance instance = commandExecutor.execute(persist);
-        return instance;
+        Task task = taskService.allowedTask(process, instance, principal, true);
+        return commandFactory.updateData(principal, process, instance, task, data, messages, applicationStatusExplanation).execute();
     }
 
 }

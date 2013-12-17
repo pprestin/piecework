@@ -15,29 +15,25 @@
  */
 package piecework.service;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
-import piecework.CommandExecutor;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
-import piecework.command.DeploymentCommand;
-import piecework.command.PublicationCommand;
+import piecework.command.CommandFactory;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.enumeration.ActionType;
 import piecework.enumeration.CacheName;
-import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.*;
-import piecework.identity.IdentityHelper;
+import piecework.persistence.ActivityRepository;
+import piecework.persistence.ContentRepository;
+import piecework.persistence.ProcessInstanceRepository;
+import piecework.persistence.ProcessRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.Streamable;
@@ -61,7 +57,7 @@ public class ProcessService {
     CacheService cacheService;
 
     @Autowired
-    CommandExecutor commandExecutor;
+    CommandFactory commandFactory;
 
     @Autowired
     DeploymentService deploymentService;
@@ -98,8 +94,16 @@ public class ProcessService {
     public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting) throws StatusCodeError {
         Process process = create(rawProcess);
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
-        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
-        publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        try {
+            deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
+        } catch (PieceworkException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        try {
+            publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        } catch (PieceworkException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         process = read(process.getProcessDefinitionKey());
 
         if (migrateExisting)
@@ -254,22 +258,18 @@ public class ProcessService {
         return new ProcessDeploymentResource.Builder(content).build();
     }
 
-    public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws StatusCodeError {
+    public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws PieceworkException {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        DeploymentCommand deploy = new DeploymentCommand(process, deploymentId, resource);
-
-        return commandExecutor.execute(deploy);
+        return commandFactory.deployment(process, deploymentId, resource).execute();
     }
 
-    public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
+    public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws PieceworkException {
         Process process = read(rawProcessDefinitionKey);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        PublicationCommand publish = new PublicationCommand(process, deploymentId);
-
-        return commandExecutor.execute(publish);
+        return commandFactory.publication(process, deploymentId).execute();
     }
 
     public Process read(String rawProcessDefinitionKey) throws StatusCodeError {
@@ -349,8 +349,16 @@ public class ProcessService {
     public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting) throws StatusCodeError {
         Process process = read(rawProcess.getProcessDefinitionKey());
         ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
-        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
-        publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        try {
+            deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
+        } catch (PieceworkException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        try {
+            publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
+        } catch (PieceworkException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         process = read(process.getProcessDefinitionKey());
 
         if (migrateExisting)

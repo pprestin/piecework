@@ -28,7 +28,7 @@ import piecework.model.*;
 import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ManyMap;
-import piecework.validation.FormValidation;
+import piecework.validation.Validation;
 
 import javax.annotation.PostConstruct;
 import java.io.UnsupportedEncodingException;
@@ -58,7 +58,7 @@ public class DataFilterService {
             encryptionService = new PassthroughEncryptionService();
     }
 
-    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, FormValidation validation, boolean includeRestrictedData, boolean includeInstanceData) {
+    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, Validation validation, boolean includeRestrictedData, boolean includeInstanceData) {
         Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, includeRestrictedData, includeInstanceData);
         if (validation != null) {
             // Always decrypt the validation data

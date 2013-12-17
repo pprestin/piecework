@@ -76,6 +76,10 @@ public class SubmissionTemplateFactory {
         return submissionTemplate(process, deployment, formRequest, formRequest.getActivity(), null);
     }
 
+    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, FormRequest formRequest, String validationId) throws MisconfiguredProcessException {
+        return submissionTemplate(process, deployment, formRequest, formRequest.getActivity(), validationId);
+    }
+
     /*
      * Takes an activity and generates the appropriate submission template for it,
      * limiting to a specific section id

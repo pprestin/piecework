@@ -18,7 +18,7 @@ package piecework.exception;
 /**
  * @author James Renfro
  */
-public class MisconfiguredProcessException extends Exception {
+public class MisconfiguredProcessException extends PieceworkException {
 
     private final String processDefinitionKey;
 

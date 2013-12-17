@@ -47,8 +47,8 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
 
 			Set<String> authorizationIds = new HashSet<String>();
             for (GrantedAuthority authority : authorities) {
-                if (authority instanceof DebugAccessAuthority) {
-                    return Collections.singletonList((DebugAccessAuthority)authority);
+                if (authority instanceof SuperUserAccessAuthority) {
+                    return Collections.singletonList((SuperUserAccessAuthority)authority);
                 } else {
 				    String authorizationId = authority.getAuthority();
                     authorizationIds.add(authorizationId);

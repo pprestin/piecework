@@ -171,6 +171,6 @@ public class SubmissionStorageService {
         if (button == null)
             throw new MisconfiguredProcessException("Button of this name (" + name + ") exists, but the button value (" + value + ") has not been configured");
 
-        submissionBuilder.action(button.getAction());
+        submissionBuilder.actionType(button.getAction());
     }
 }

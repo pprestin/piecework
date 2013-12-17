@@ -120,7 +120,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     }
 
     @Override
-    public boolean update(String id, Operation operation, String applicationStatus, String applicationStatusExplanation, String processStatus, Set<Task> tasks) {
+    public ProcessInstance update(String id, Operation operation, String applicationStatus, String applicationStatusExplanation, String processStatus, Set<Task> tasks) {
         Query query = new Query(where("_id").is(id));
         Update update = new Update();
 
@@ -139,14 +139,10 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
 
         update.push("operations", operation);
 
-        WriteResult result = mongoOperations.updateFirst(query, update, ProcessInstance.class);
+        FindAndModifyOptions options = new FindAndModifyOptions();
+        options.returnNew(true);
 
-        String error = result.getError();
-        if (StringUtils.isNotEmpty(error)) {
-            LOG.error("Unable to correctly save applicationStatus " + applicationStatus + ", processStatus " + processStatus + ", and reason " + operation.getReason() + " for " + id + ": " + error);
-            return false;
-        }
-        return true;
+        return mongoOperations.findAndModify(query, update, options, ProcessInstance.class);
     }
 
     @Override

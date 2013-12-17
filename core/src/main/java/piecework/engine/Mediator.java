@@ -24,9 +24,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import piecework.Command;
+import piecework.command.AbstractCommand;
 import piecework.command.CommandListener;
 import piecework.exception.AbortCommandException;
 import piecework.exception.BadRequestError;
+import piecework.exception.PieceworkException;
 import piecework.model.Process;
 import piecework.util.ManyMap;
 
@@ -90,16 +92,16 @@ public class Mediator implements ApplicationContextAware, InitializingBean {
         }
     }
 
-    public <T> Command<T> before(piecework.Command<T> command) throws BadRequestError {
+    public <T, C extends AbstractCommand<T>> C before(C command) throws PieceworkException {
         String processDefinitionKey = command.getProcessDefinitionKey();
-        piecework.Command<T> updatedCommand = command;
+        C updatedCommand = command;
         if (StringUtils.isNotEmpty(processDefinitionKey)) {
             List<CommandListener> listenerList = commandListenerMap.get(processDefinitionKey);
             if (listenerList != null) {
                 BadRequestError badRequestError = null;
                 for (CommandListener listener : listenerList) {
                     try {
-                        piecework.Command<T> beforeCommand = updatedCommand;
+                        C beforeCommand = updatedCommand;
                         updatedCommand = listener.before(beforeCommand);
                         if (updatedCommand == null)
                             updatedCommand = beforeCommand;

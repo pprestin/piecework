@@ -33,6 +33,7 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 
 import piecework.PublicApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 
 import java.util.List;
@@ -46,13 +47,7 @@ public interface AnonymousFormResource extends PublicApplicationResource {
     @GET
     @Path("{processDefinitionKey}")
     @Produces("text/html")
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
-
-    @GET
-    @Path("{processDefinitionKey}/receipt/{requestId}")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html"})
-    Response readReceipt(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/submission/{requestId}")
@@ -64,6 +59,6 @@ public interface AnonymousFormResource extends PublicApplicationResource {
     @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
     @Consumes("application/x-www-form-urlencoded")
     @Produces("application/json")
-    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws StatusCodeError;
+    Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws PieceworkException;
 
 }

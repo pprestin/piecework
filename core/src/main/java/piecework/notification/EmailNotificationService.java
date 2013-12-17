@@ -62,9 +62,9 @@ public class EmailNotificationService implements NotificationService {
     /** 
      * expand any macros in notifications and send the notification to recipients.
      * @param  notification notification to send.
-     * @param  context      a map of key-value pairs to be used for macro expansion.
+     * @param  scope      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Notification notification, Map<String, String> context, StateChangeType type) {
+    public void send(Notification notification, Map<String, Object> scope, StateChangeType type) {
         // sanity check
         if ( notification == null ) {
             return;
@@ -97,7 +97,7 @@ public class EmailNotificationService implements NotificationService {
         MustacheFactory mf = new DefaultMustacheFactory();
         StringWriter writer = new StringWriter();
         Mustache mustache = mf.compile(new StringReader(recipientStr), "recipient");
-        mustache.execute(writer, context);
+        mustache.execute(writer, scope);
         recipientStr = writer.toString();
         List<User> recipients = getUsers(recipientStr);
         if ( recipients == null || recipients.isEmpty() ) {
@@ -113,14 +113,14 @@ public class EmailNotificationService implements NotificationService {
         mf = new DefaultMustacheFactory();
         writer = new StringWriter();
         mustache = mf.compile(new StringReader(subject), "subject");
-        mustache.execute(writer, context);
+        mustache.execute(writer, scope);
         subject = writer.toString();
 
         // get body
         String body = notification.getText();
         writer = new StringWriter();
         mustache = mf.compile(new StringReader(body), "text");
-        mustache.execute(writer, context);
+        mustache.execute(writer, scope);
         body = writer.toString();
 
         try {
@@ -164,9 +164,9 @@ public class EmailNotificationService implements NotificationService {
      * a convenience method for sending out a list of notifications. It simpply loops through
      * each notification and calls send(Notification) for each notification.
      * @param  notifications a list of notification to send out.
-     * @param  context      a map of key-value pairs to be used for macro expansion.
+     * @param  scope      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Collection<Notification> notifications, Map<String, String> context, StateChangeType type) {
+    public void send(Collection<Notification> notifications, Map<String, Object> scope, StateChangeType type) {
 
          // sanity check
          if ( notifications == null ) {
@@ -174,7 +174,7 @@ public class EmailNotificationService implements NotificationService {
          }
 
          for (Notification n : notifications) {
-             send(n, context, type);
+             send(n, scope, type);
          }
     }
 

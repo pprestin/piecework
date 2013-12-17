@@ -4,6 +4,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.exception.PieceworkException;
 import piecework.model.OperationDetails;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
@@ -32,139 +33,139 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes({"application/xml","application/json"})
-    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, Submission submission) throws StatusCodeError;
+    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, Submission submission) throws PieceworkException;
 
     @POST
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("application/x-www-form-urlencoded")
-    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws StatusCodeError;
+    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws PieceworkException;
 	
 	@POST
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.INITIATOR})
 	@Consumes("multipart/form-data")
-	Response createMultipart(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultipartBody body) throws StatusCodeError;
+	Response createMultipart(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultipartBody body) throws PieceworkException;
 	
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}")
-    @RolesAllowed({AuthorizationRole.OVERSEER})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+    @RolesAllowed({AuthorizationRole.ADMIN})
+    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
 
     @PUT
     @Path("{processDefinitionKey}/{processInstanceId}")
-    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/json", "application/xml"})
-    Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, ProcessInstance instance) throws StatusCodeError;
+    Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, ProcessInstance instance) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}")
-    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/xml","application/json"})
-    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
 
     @GET
     @Path("")
-    @RolesAllowed({AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.ADMIN})
     @Produces({"application/xml","application/json", "text/csv"})
-    Response search(@Context MessageContext context) throws StatusCodeError;
+    Response search(@Context MessageContext context) throws PieceworkException;
 
     /*
      * SUBRESOURCES
      */
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/activation")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/x-www-form-urlencoded"})
-    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("applicationStatusExplanation") String reason) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/activation")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/xml","application/json"})
-    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws StatusCodeError;
+    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("application/x-www-form-urlencoded")
-    Response attach(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultivaluedMap<String, String> parameters) throws StatusCodeError;
+    Response attach(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultivaluedMap<String, String> parameters) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("multipart/form-data")
-    Response attach(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultipartBody body) throws StatusCodeError;
+    Response attach(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultipartBody body) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response attachments(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @QueryParam("") AttachmentQueryParameters queryParameters) throws StatusCodeError;
+    Response attachments(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @QueryParam("") AttachmentQueryParameters queryParameters) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response attachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws StatusCodeError;
+    Response attachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/cancellation")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.ADMIN})
     @Consumes("application/x-www-form-urlencoded")
-    Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+    Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("applicationStatusExplanation") String reason) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/cancellation")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes({"application/xml","application/json"})
-    Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws StatusCodeError;
+    Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response detach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws StatusCodeError;
+    Response detach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/history")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+    Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response remove(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws StatusCodeError;
+    Response remove(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes({"application/x-www-form-urlencoded"})
-    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws StatusCodeError;
+    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("applicationStatusExplanation") String reason) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/xml","application/json"})
-    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws StatusCodeError;
+    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response value(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws StatusCodeError;
+    Response value(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("text/plain")
-    Response value(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, String value) throws StatusCodeError;
+    Response value(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, String value) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("multipart/form-data")
-    Response value(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, MultipartBody body) throws StatusCodeError;
+    Response value(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, MultipartBody body) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response values(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldId") String fieldId) throws StatusCodeError;
+    Response values(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldId") String fieldId) throws PieceworkException;
 
 }

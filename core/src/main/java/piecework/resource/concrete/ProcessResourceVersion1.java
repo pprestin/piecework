@@ -31,6 +31,7 @@ import piecework.Versions;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.exception.BadRequestError;
 import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
@@ -103,7 +104,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	}
 
 	@Override
-	public Response read(String rawProcessDefinitionKey) throws StatusCodeError {
+    public Response read(String rawProcessDefinitionKey) throws PieceworkException {
         Process result = processService.read(rawProcessDefinitionKey);
 				
 		ResponseBuilder responseBuilder = Response.ok(new Process.Builder(result, new PassthroughSanitizer()).build(versions.getVersion1()));
@@ -111,7 +112,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 	}
 
     @Override
-    public Response createDeployment(String rawProcessDefinitionKey) throws StatusCodeError {
+    public Response createDeployment(String rawProcessDefinitionKey) throws PieceworkException {
         ProcessDeployment result = processService.createDeployment(rawProcessDefinitionKey);
 
         ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, null, new PassthroughSanitizer(), true).build());
@@ -119,7 +120,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
     }
 
     @Override
-    public Response createDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId, MultipartBody body) throws StatusCodeError {
+    public Response createDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId, MultipartBody body) throws PieceworkException {
         ProcessDeploymentResource.Builder builder = new ProcessDeploymentResource.Builder();
 
         List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
@@ -234,7 +235,11 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
-        processService.publishDeployment(rawProcessDefinitionKey, rawDeploymentId);
+        try {
+            processService.publishDeployment(rawProcessDefinitionKey, rawDeploymentId);
+        } catch (piecework.exception.PieceworkException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
 
         ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         return responseBuilder.build();

@@ -21,9 +21,9 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
+import piecework.exception.PieceworkException;
 import piecework.model.Entity;
 import piecework.model.SearchResults;
-import piecework.exception.StatusCodeError;
 import piecework.resource.FormResource;
 import piecework.model.Process;
 import piecework.identity.IdentityHelper;
@@ -49,14 +49,14 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     Versions versions;
 
     @Override
-    public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+    public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return startForm(context, process);
     }
 
     @Override
-    public Response readTask(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws StatusCodeError {
+    public Response readTask(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws PieceworkException {
         Entity principal = identityHelper.getPrincipal();
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
@@ -64,49 +64,49 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public Response readReceipt(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws StatusCodeError {
+    public Response readReceipt(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return receiptForm(context, process, requestId);
     }
 
     @Override
-    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
+    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return saveForm(context, process, rawRequestId, body);
     }
 
     @Override
-    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
+    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return submitForm(context, process, rawRequestId, formData);
     }
 
     @Override
-    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
+    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return submitForm(context, process, rawRequestId, body);
     }
 
     @Override
-    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
+    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return validateForm(context, process, formData, rawRequestId, rawValidationId);
     }
 
     @Override
-    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws StatusCodeError {
+    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = identityHelper.findProcess(processDefinitionKey, true);
         return validateForm(context, process, body, rawRequestId, rawValidationId);
     }
 
     @Override
-    public SearchResults search(MessageContext context) throws StatusCodeError {
+    public SearchResults search(MessageContext context) throws PieceworkException {
         UriInfo uriInfo = context.getContext(UriInfo.class);
 
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;

@@ -22,9 +22,6 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
-import org.activiti.engine.form.FormProperty;
-import org.activiti.engine.form.StartFormData;
-import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.history.*;
 import org.activiti.engine.impl.task.TaskDefinition;
 import org.activiti.engine.query.Query;
@@ -42,7 +39,6 @@ import piecework.Constants;
 import piecework.engine.exception.TaskAlreadyClaimedException;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.FlowElementType;
-import piecework.identity.*;
 import piecework.model.*;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
@@ -54,7 +50,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.util.ManyMap;
-import piecework.validation.FormValidation;
+import piecework.validation.Validation;
 
 /**
  * @author James Renfro
@@ -175,8 +171,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException {
-        Entity principal = helper.getPrincipal();
+    public boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, Validation validation, Entity principal) throws ProcessEngineException {
         String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
@@ -203,7 +198,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 variables(variables, data);
                 processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
                 // Always assign the task to the user before completing it
-                if (StringUtils.isNotEmpty(userId))
+                String currentAssignee = activitiTask.getAssignee();
+                if ( StringUtils.isNotEmpty(userId) && ( currentAssignee == null || ! userId.equals(currentAssignee) ) )
                     processEngine.getTaskService().setAssignee(taskId, userId);
 
                 processEngine.getTaskService().complete(taskId);
@@ -219,7 +215,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, FormValidation validation) throws ProcessEngineException {
+    public Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, Validation validation) throws ProcessEngineException {
         Entity principal = helper.getPrincipal();
         String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);

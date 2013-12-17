@@ -20,12 +20,14 @@ import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 import piecework.model.Submission;
 import piecework.persistence.ActivityRepository;
 import piecework.persistence.SubmissionRepository;
 import piecework.security.Sanitizer;
+import piecework.service.IdentityService;
 import piecework.service.SubmissionStorageService;
 import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionTemplate;
@@ -45,6 +47,9 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
     ActivityRepository activityRepository;
 
     @Autowired
+    IdentityService identityService;
+
+    @Autowired
     Sanitizer sanitizer;
 
     @Autowired
@@ -54,12 +59,12 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
     SubmissionStorageService submissionStorageService;
 
     @Override
-    public Submission handle(T data, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    public Submission handle(T data, SubmissionTemplate template, Entity principal) throws PieceworkException {
         Submission submission = handleInternal(data, template, principal);
         return submissionRepository.save(submission);
     }
 
-    protected abstract Submission handleInternal(T data, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError;
+    protected abstract Submission handleInternal(T data, SubmissionTemplate template, Entity principal) throws PieceworkException;
 
     protected void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws MisconfiguredProcessException, StatusCodeError {
         String contentType = MediaType.TEXT_PLAIN;
@@ -106,7 +111,7 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
 
         String submitterId = principalId;
-        if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(template.getActAsUser()))
+        if (principal != null && principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(template.getActAsUser()))
             submitterId = template.getActAsUser();
         else if (rawSubmission != null && StringUtils.isNotEmpty(rawSubmission.getSubmitterId()))
             submitterId = sanitizer.sanitize(rawSubmission.getSubmitterId());
@@ -122,7 +127,7 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
                 .requestId(template.getRequestId())
                 .taskId(template.getTaskId())
                 .submissionDate(new Date())
-                .submitterId(submitterId);
+                .submitter(identityService.getUser(submitterId));
 
         return submissionBuilder;
     }

@@ -39,16 +39,10 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
     ProcessRepository processRepository;
 
     @Override
-    public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+    public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
         return startForm(context, process);
-    }
-
-    @Override
-    public Response readReceipt(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
-        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
-        return receiptForm(context, process, rawRequestId);
     }
 
     @Override
@@ -59,7 +53,7 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
     }
 
     @Override
-    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
+    public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
         return validateForm(context, process, formData, rawRequestId, rawValidationId);

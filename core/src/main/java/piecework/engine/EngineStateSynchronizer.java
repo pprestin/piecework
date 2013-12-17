@@ -155,51 +155,38 @@ public class EngineStateSynchronizer {
         }
     }
 
-    private Map<String, String> createContext(StateChangeType type, Process process, ProcessInstance instance, Task task, EngineContext engineContext) {
-        // set up context
-        Map<String, String> context = new HashMap<String, String>();
-        context.put("PIECEWORK_PROCESS_INSTANCE_LABEL", instance.getProcessInstanceLabel());
-        context.put("TASK_ID", task.getTaskInstanceId());
-        context.put("TASK_KEY", task.getTaskDefinitionKey());
-        context.put("TASK_LABEL", task.getTaskLabel());
+    // scope is a key-value pairs used for template substitution
+    private Map<String, Object> createScope(StateChangeType type, Process process, ProcessInstance instance, Task task) {
+        // set up scope
+        Map<String, Object> scope = new HashMap<String, Object>();
+        scope.put("PIECEWORK_PROCESS_INSTANCE_LABEL", instance.getProcessInstanceLabel());
+        scope.put("TASK_ID", task.getTaskInstanceId());
+        scope.put("TASK_KEY", task.getTaskDefinitionKey());
+        scope.put("TASK_LABEL", task.getTaskLabel());
 
         // task URL
         ViewContext viewContext = versions.getVersion1();
         String taskUrl = viewContext.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), task.getTaskInstanceId());
-        context.put("TASK_URL", taskUrl);
+        scope.put("TASK_URL", taskUrl);
 
-        // add instance data into context
+        // add instance data into scope
         Map<String, List<Value>> data = instance.getData();
         if (data != null && !data.isEmpty()) {
             for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
                 String key = entry.getKey();
                 List<Value> values = entry.getValue();
-                if (values != null) {
-                    Map<String, StringBuilder> lmap = new HashMap<String, StringBuilder>();
-                    for (Value value : values) {
-                        if (value != null && value instanceof User) {
-                            User u = User.class.cast(value);
-                            appendValue(lmap, key+".userId", u.getUserId());
-                            appendValue(lmap, key+".visibleId", u.getVisibleId());
-                            appendValue(lmap, key+".displayName", u.getDisplayName());
-                            appendValue(lmap, key+".emailAddress", u.getEmailAddress());
-                        } else if (value != null && value.getValue() == null) {
-                            appendValue(lmap, key, value.getValue());
-                        }
-                    }   
-
-                    // add values into context
-                    if ( ! lmap.isEmpty() ) {
-                        for (Map.Entry<String,StringBuilder> e : lmap.entrySet()) {
-                            context.put(e.getKey(), e.getValue().toString());
-                        }
-                    } 
+                if (values != null && !values.isEmpty() ) {
+                    if ( values.size() == 1 ) {
+                        scope.put(key, values.get(0));  // flattern it
+                    } else {
+                        scope.put(key, values);
+                    }
                 }   
             }   
         }   
 
 
-        // put assignee IDs into context
+        // put assignee IDs into scope
         String assigneeId = task.getAssigneeId();
         if ( assigneeId == null || assigneeId.isEmpty() ) {
             Set<String> strs = task.getCandidateAssigneeIds();
@@ -220,10 +207,10 @@ public class EngineStateSynchronizer {
         if ( assigneeId == null || assigneeId.isEmpty() ) {
             return null; // we don't send notifications if there is no assignee
         } else {
-            context.put("ASSIGNEE", assigneeId);
+            scope.put("ASSIGNEE", assigneeId);
         }
 
-        return context;
+        return scope;
     }
 
     private void doTaskNotification(StateChangeType type, Process process, ProcessInstance instance, Task task, EngineContext engineContext) {
@@ -256,14 +243,14 @@ public class EngineStateSynchronizer {
             return;
         }
         
-        Map<String, String> context = createContext(type, process, instance, task, engineContext);
+        Map<String, Object> scope = createScope(type, process, instance, task);
 
-        if ( context == null || context.isEmpty() ) {
+        if ( scope == null || scope.isEmpty() ) {
             return;
         }
         
         // send out notifications
-        notificationService.send(notifications, context, type);
+        notificationService.send(notifications, scope, type);
     }
 
 }

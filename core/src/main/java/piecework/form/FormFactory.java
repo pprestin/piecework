@@ -23,7 +23,6 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
-import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.FormBuildingException;
 import piecework.model.*;
 import piecework.model.Process;
@@ -32,7 +31,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ConstraintUtil;
 import piecework.util.FormUtility;
 import piecework.util.ProcessInstanceUtility;
-import piecework.validation.FormValidation;
+import piecework.validation.Validation;
 
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
@@ -54,7 +53,7 @@ public class FormFactory {
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, FormValidation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous) throws FormBuildingException {
+    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous) throws FormBuildingException {
         ViewContext version = versions.getVersion1();
         Activity activity = request.getActivity();
 

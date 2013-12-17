@@ -20,12 +20,13 @@ import java.util.*;
 
 import piecework.Constants;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.util.ManyMap;
 
 /**
  * @author James Renfro
  */
-public class FormValidation implements Serializable {
+public class Validation implements Serializable {
 
 	private static final long serialVersionUID = 8445504602269832413L;
 
@@ -41,24 +42,30 @@ public class FormValidation implements Serializable {
 
     private final Submission submission;
 
+    private final Process process;
+
     private final ProcessInstance instance;
+
+    private final Task task;
 
     private final String applicationStatusExplanation;
 
     private final boolean hasError;
 	
-	private FormValidation() {
+	private Validation() {
 		this(new Builder());
 	}
 	
-	private FormValidation(Builder builder) {
+	private Validation(Builder builder) {
         this.title = builder.title;
 		this.results = builder.results != null ? Collections.unmodifiableMap(builder.results) : null;
         this.data = builder.data;
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
 		this.unchangedFields = builder.unchangedFields != null ? Collections.unmodifiableSet(builder.unchangedFields) : null;
 	    this.submission = builder.submission;
+        this.process = builder.process;
         this.instance = builder.instance;
+        this.task = builder.task;
         this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.hasError = builder.hasError;
     }
@@ -87,8 +94,16 @@ public class FormValidation implements Serializable {
         return submission;
     }
 
+    public Process getProcess() {
+        return process;
+    }
+
     public ProcessInstance getInstance() {
         return instance;
+    }
+
+    public Task getTask() {
+        return task;
     }
 
     public String getApplicationStatusExplanation() {
@@ -107,7 +122,9 @@ public class FormValidation implements Serializable {
         private List<Attachment> attachments;
         private Set<String> unchangedFields;
         private Submission submission;
+        private Process process;
         private ProcessInstance instance;
+        private Task task;
         private String applicationStatusExplanation;
         private boolean hasError;
 
@@ -118,7 +135,7 @@ public class FormValidation implements Serializable {
             this.results = new ManyMap<String, Message>();
         }
 
-        public Builder(FormValidation validation) {
+        public Builder(Validation validation) {
             this.attachments = validation.getAttachments() != null ? new ArrayList<Attachment>(validation.getAttachments()) : new ArrayList<Attachment>();
             this.data = validation.getData() != null ? new ManyMap<String, Value>(validation.getData()) : new ManyMap<String, Value>();
             this.results = validation.getResults() != null ? new ManyMap<String, Message>(validation.getResults()) : new ManyMap<String, Message>();
@@ -126,12 +143,14 @@ public class FormValidation implements Serializable {
             this.applicationStatusExplanation = validation.getApplicationStatusExplanation();
             this.unchangedFields = validation.getUnchangedFields() != null ? new HashSet<String>(validation.getUnchangedFields()) : new HashSet<String>();
             this.hasError = validation.isHasError();
+            this.process = validation.getProcess();
             this.instance = validation.getInstance();
+            this.task = validation.getTask();
             this.submission = validation.getSubmission();
         }
         
-        public FormValidation build() {
-        	return new FormValidation(this);
+        public Validation build() {
+        	return new Validation(this);
         }
 
         public Builder title(String title) {
@@ -212,8 +231,18 @@ public class FormValidation implements Serializable {
             return this;
         }
 
+        public Builder process(Process process) {
+            this.process = process;
+            return this;
+        }
+
         public Builder instance(ProcessInstance instance) {
             this.instance = instance;
+            return this;
+        }
+
+        public Builder task(Task task) {
+            this.task = task;
             return this;
         }
 

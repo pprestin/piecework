@@ -7,10 +7,7 @@ import piecework.model.Process;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
-import piecework.validation.FormValidation;
-
-import java.io.InputStream;
-import java.util.Map;
+import piecework.validation.Validation;
 
 /**
  * @author James Renfro
@@ -35,9 +32,9 @@ public interface ProcessEngineCapabilities {
 
     TaskResults findTasks(TaskCriteria ... criterias) throws ProcessEngineException;
 
-    boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, FormValidation validation) throws ProcessEngineException;
+    boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, Validation validation, Entity principal) throws ProcessEngineException;
 
-    Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, FormValidation validation) throws ProcessEngineException;
+    Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, Validation validation) throws ProcessEngineException;
 
     ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
 

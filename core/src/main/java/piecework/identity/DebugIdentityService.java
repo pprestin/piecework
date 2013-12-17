@@ -15,18 +15,11 @@
  */
 package piecework.identity;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.apache.cxf.common.util.StringUtils;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import piecework.authorization.DebugAccessAuthority;
 import piecework.model.User;
-import piecework.persistence.ProcessRepository;
 import piecework.service.IdentityService;
-import piecework.service.ProcessService;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -42,7 +35,8 @@ public class DebugIdentityService implements IdentityService {
 
     @Override
     public User getUser(String internalId) {
-
+        if (StringUtils.isEmpty(internalId))
+            return null;
         return new User.Builder(userDetailsService.loadUserByUsername(internalId)).build();
     }
 

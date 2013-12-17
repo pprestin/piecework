@@ -59,8 +59,6 @@ public class FormTemplateService {
     @Autowired
     Environment environment;
 
-    private enum ResourceType { SCRIPT, HTML };
-
     private final static String SCRIPTS_CLASSPATH_PREFIX = "META-INF/piecework/scripts/";
     private final static String TEMPLATES_CLASSPATH_PREFIX = "META-INF/piecework/templates/";
 

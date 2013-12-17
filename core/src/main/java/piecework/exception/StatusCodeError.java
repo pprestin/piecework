@@ -27,7 +27,7 @@ import java.util.ResourceBundle;
  * 
  * @author James Renfro
  */
-public class StatusCodeError extends Exception {
+public class StatusCodeError extends PieceworkException {
 
 	private static final long serialVersionUID = 1L;
 	

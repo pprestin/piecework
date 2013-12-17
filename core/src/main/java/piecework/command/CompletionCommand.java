@@ -15,16 +15,11 @@
  */
 package piecework.command;
 
-import piecework.Command;
-import piecework.CommandExecutor;
-import piecework.Constants;
-import piecework.exception.StatusCodeError;
-import piecework.model.ProcessDeployment;
+import piecework.engine.ProcessEngineFacade;
+import piecework.exception.PieceworkException;
+import piecework.manager.StorageManager;
 import piecework.model.ProcessInstance;
 import piecework.model.Value;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.security.DataFilterService;
 
 import java.util.List;
 import java.util.Map;
@@ -32,32 +27,19 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class CompletionCommand implements Command<ProcessInstance> {
+public class CompletionCommand extends AbstractEngineStorageCommand<ProcessInstance> {
 
-    private final ProcessInstance instance;
+    private final Map<String, List<Value>> data;
 
-    public CompletionCommand(ProcessInstance instance) {
-        this.instance = instance;
+    CompletionCommand(CommandExecutor commandExecutor, ProcessInstance instance, Map<String, List<Value>> data) {
+        super(commandExecutor, instance);
+        this.data = data;
     }
 
-    @Override
-    public ProcessInstance execute(CommandExecutor commandExecutor) throws StatusCodeError {
-        if (instance != null) {
-            DataFilterService dataFilterService = commandExecutor.getDataFilterService();
-            DeploymentRepository deploymentRepository = commandExecutor.getDeploymentRepository();
-            ProcessInstanceRepository processInstanceRepository = commandExecutor.getProcessInstanceRepository();
-
-            String deploymentId = instance.getDeploymentId();
-            ProcessDeployment deployment = deploymentRepository.findOne(deploymentId);
-            String completionStatus = null;
-            if (deployment != null) {
-                completionStatus = deployment.getCompletionStatus();
-            }
-            // Exclude all restricted data from final storage - i.e. all restricted data is purged from the data store when a process completes
-            Map<String, List<Value>> data = dataFilterService.exclude(instance.getData());
-            return processInstanceRepository.update(instance.getProcessInstanceId(), Constants.ProcessStatuses.COMPLETE, completionStatus, data);
-        }
-        return null;
+    ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
+        // This is obviously a trivial implementation but in case we have additional logic on
+        // instance completion this is available
+        return storageManager.archive(instance, data);
     }
 
     @Override

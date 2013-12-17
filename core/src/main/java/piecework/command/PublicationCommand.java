@@ -16,15 +16,9 @@
 package piecework.command;
 
 import org.apache.log4j.Logger;
-import piecework.Command;
-import piecework.CommandExecutor;
 import piecework.Constants;
-import piecework.engine.ProcessEngineFacade;
-import piecework.engine.exception.ProcessEngineException;
-import piecework.exception.BadRequestError;
-import piecework.exception.ForbiddenError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
+import piecework.ServiceLocator;
+import piecework.exception.*;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessDeploymentVersion;
@@ -38,28 +32,28 @@ import piecework.util.ProcessUtility;
  *
  * @author James Renfro
  */
-public class PublicationCommand implements Command<ProcessDeployment> {
+public class PublicationCommand extends AbstractCommand<ProcessDeployment> {
 
     private static final Logger LOG = Logger.getLogger(PublicationCommand.class);
 
-    private final Process process;
     private final String deploymentId;
 
-    public PublicationCommand(Process process, String deploymentId) {
-        this.process = process;
+    PublicationCommand(CommandExecutor commandExecutor, Process process, String deploymentId) {
+        super(commandExecutor, null, process);
         this.deploymentId = deploymentId;
     }
 
     @Override
-    public ProcessDeployment execute(CommandExecutor commandExecutor) throws StatusCodeError {
+    ProcessDeployment execute(ServiceLocator serviceLocator) throws PieceworkException {
+        DeploymentRepository deploymentRepository = serviceLocator.getService(DeploymentRepository.class);
+        ProcessRepository processRepository = serviceLocator.getService(ProcessRepository.class);
 
+        return execute(deploymentRepository, processRepository);
+    }
+
+    ProcessDeployment execute(DeploymentRepository deploymentRepository, ProcessRepository processRepository) throws PieceworkException {
         if (LOG.isDebugEnabled())
             LOG.debug("Executing publication command " + this.toString());
-
-        // Instantiate local references to the service beans
-        ProcessEngineFacade facade = commandExecutor.getFacade();
-        DeploymentRepository deploymentRepository = commandExecutor.getDeploymentRepository();
-        ProcessRepository processRepository = commandExecutor.getProcessRepository();
 
         // Verify that this deployment belongs to this process
         ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
@@ -90,7 +84,6 @@ public class PublicationCommand implements Command<ProcessDeployment> {
                 .build();
         // Persist that too
         processRepository.save(updatedProcess);
-
 
         return persistedDeployment;
     }

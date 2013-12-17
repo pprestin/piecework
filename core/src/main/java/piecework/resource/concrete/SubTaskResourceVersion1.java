@@ -40,6 +40,7 @@ import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplate;
 import piecework.submission.SubmissionTemplateFactory;
+import piecework.validation.ValidationFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
@@ -83,7 +84,7 @@ public class SubTaskResourceVersion1 implements SubTaskResource {
     TaskService taskService;
 
     @Autowired
-    ValidationService validationService;
+    ValidationFactory validationFactory;
 
     @Autowired
     Versions versions;
@@ -126,12 +127,12 @@ public class SubTaskResourceVersion1 implements SubTaskResource {
             Submission submission = handler.handle(rawSubmission, template, principal);
 
 
-            processInstanceService.createSubTask(process, instance, task, taskId, template, submission);
+            processInstanceService.createSubTask(principal, process, instance, task, taskId, template, submission);
 
             return Response.noContent().build();
-        } catch (MisconfiguredProcessException mpe) {
-            LOG.error("Unable to complete task because process is misconfigured", mpe);
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+        } catch (Exception mpe) {
+            LOG.error("Unable to create subtask", mpe);
+            throw new InternalServerError(Constants.ExceptionCodes.subtask_create_invalid);
         }
     }
 

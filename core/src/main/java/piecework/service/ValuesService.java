@@ -18,19 +18,22 @@ package piecework.service;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import piecework.CommandExecutor;
+import piecework.Constants;
 import piecework.Versions;
+import piecework.authorization.AuthorizationRole;
+import piecework.command.CommandFactory;
 import piecework.common.ViewContext;
+import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
-import piecework.command.InstanceCommand;
-import piecework.command.UpdateInstanceCommand;
+import piecework.security.Sanitizer;
 import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.util.Base64Utility;
-import piecework.util.ManyMap;
+import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
@@ -48,84 +51,57 @@ public class ValuesService {
     ContentRepository contentRepository;
 
     @Autowired
-    CommandExecutor commandExecutor;
+    CommandFactory commandFactory;
+
+    @Autowired
+    ProcessService processService;
+
+    @Autowired
+    ProcessInstanceService processInstanceService;
+
+    @Autowired
+    Sanitizer sanitizer;
+
+    @Autowired
+    TaskService taskService;
 
     @Autowired
     Versions versions;
 
-    public Response read(piecework.model.Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
+    public Response read(ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
         Map<String, List<Value>> data = instance.getData();
-        List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
+        Value value = ProcessInstanceUtility.firstMatchingFileOrLink(fieldName, data, fileId);
 
-        if (values == null || values.isEmpty() || StringUtils.isEmpty(fileId))
-            throw new NotFoundError();
-
-        for (Value value : values) {
-            if (value == null)
-                continue;
-
+        if (value != null) {
             if (value instanceof File) {
                 File file = File.class.cast(value);
-
-                if (StringUtils.isEmpty(file.getId()))
-                    continue;
-
-                if (file.getId().equals(fileId)) {
-                    Content content = contentRepository.findByLocation(file.getLocation());
-                    if (content != null) {
-                        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
-                        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getName()).toString();
-                        return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
-                    }
+                Content content = contentRepository.findByLocation(file.getLocation());
+                if (content != null) {
+                    StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+                    String contentDisposition = new StringBuilder("attachment; filename=").append(content.getName()).toString();
+                    return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
                 }
-            } else {
-                String link = value.getValue();
-                String id = Base64Utility.safeBase64(link);
-                if (id != null && id.equals(fileId)) {
-                    if (!link.startsWith("http"))
-                        link = "http://" + link;
-                    return Response.status(Response.Status.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, link).build();
-                }
+            } else if (StringUtils.isNotEmpty(value.getValue())) {
+                return Response.status(Response.Status.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, value.getValue()).build();
             }
         }
 
         throw new NotFoundError();
     }
 
-    public void delete(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
-        Map<String, List<Value>> data = instance.getData();
-        List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
+    public void delete(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, RequestDetails requestDetails, Entity principal) throws PieceworkException {
 
-        if (values == null || values.isEmpty() || StringUtils.isEmpty(fileId))
-            throw new NotFoundError();
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+        String fieldName = sanitizer.sanitize(rawFieldName);
+        String valueId = sanitizer.sanitize(rawValueId);
 
-        List<Value> remainingValues = new ArrayList<Value>();
-        for (Value value : values) {
-            if (value == null)
-                continue;
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-            if (value instanceof File) {
-                File file = File.class.cast(value);
+        Task task = taskService.allowedTask(process, instance, principal, true);
 
-                if (StringUtils.isEmpty(file.getId()))
-                    continue;
-
-                if (!file.getId().equals(fileId))
-                    remainingValues.add(value);
-            } else {
-                String link = value.getValue();
-                String id = Base64Utility.safeBase64(link);
-                if (id == null || !id.equals(fileId))
-                    remainingValues.add(value);
-            }
-        }
-
-        ManyMap<String, Value> update = new ManyMap<String, Value>();
-        update.put(fieldName, remainingValues);
-
-        InstanceCommand persist = new UpdateInstanceCommand(process, instance);
-        persist.data(update);
-        commandExecutor.execute(persist);
+        commandFactory.removeValue(principal, process, instance, task, fieldName, valueId).execute();
     }
 
     public List<Value> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {

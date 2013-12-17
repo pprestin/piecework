@@ -19,7 +19,6 @@ import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -78,6 +77,9 @@ public class Submission {
     @XmlTransient
     private final Date submissionDate;
 
+    @Transient
+    private final User submitter;
+
     @XmlElement
     private final String submitterId;
 
@@ -97,9 +99,10 @@ public class Submission {
         this.processInstanceLabel = builder.processInstanceLabel;
         this.attachments = Collections.unmodifiableList(builder.attachments);
         this.activityMap = builder.activityMap != null ? Collections.unmodifiableMap(builder.activityMap) : null;
-        this.action = builder.action;
+        this.action = builder.actionType;
         this.data = builder.data;
         this.submissionDate = builder.submissionDate;
+        this.submitter = builder.submitter;
         this.submitterId = builder.submitterId;
         this.assignee = builder.assignee;
     }
@@ -157,6 +160,11 @@ public class Submission {
         return submissionDate;
     }
 
+    @JsonIgnore
+    public User getSubmitter() {
+        return submitter;
+    }
+
     public String getSubmitterId() {
         return submitterId;
     }
@@ -169,19 +177,20 @@ public class Submission {
         private String processDefinitionKey;
         private String processInstanceLabel;
         private String alias;
-        private ActionType action;
+        private ActionType actionType;
         private ManyMap<String, Value> data;
         private Map<String, String> descriptionMap;
         private List<Attachment> attachments;
         private Map<String, Activity> activityMap;
         private Date submissionDate;
+        private User submitter;
         private String submitterId;
         private String assignee;
 
         public Builder() {
             super();
             this.attachments = new ArrayList<Attachment>();
-            this.action = null;
+            this.actionType = null;
             this.data = new ManyMap<String, Value>();
             this.descriptionMap = new HashMap<String, String>();
         }
@@ -196,7 +205,7 @@ public class Submission {
             this.submissionDate = submission.submissionDate;
             this.submissionId = sanitizer.sanitize(submissionId);
             this.submitterId = sanitizer.sanitize(submission.submitterId);
-            this.action = submission.getAction();
+            this.actionType = submission.getAction();
             this.descriptionMap = new HashMap<String, String>();
 
             if (!ignoreData && submission.data != null && !submission.data.isEmpty()) {
@@ -245,7 +254,7 @@ public class Submission {
                     this.activityMap.put(key, new Activity.Builder(entry.getValue(), sanitizer).build());
                 }
             }
-            this.assignee = submission.assignee;
+            this.assignee = sanitizer.sanitize(submission.assignee);
         }
 
         public Submission build() {
@@ -287,6 +296,13 @@ public class Submission {
             return this;
         }
 
+        public Builder submitter(User submitter) {
+            this.submitter = submitter;
+            if (submitter != null)
+                this.submitterId = submitter.getUserId();
+            return this;
+        }
+
         public Builder submitterId(String submitterId) {
             this.submitterId = submitterId;
             return this;
@@ -297,14 +313,31 @@ public class Submission {
             return this;
         }
 
-        public Builder action(String action) {
-            if (action != null)
-                this.action = ActionType.valueOf(action);
+        public Builder attachments(Collection<Attachment> attachments) {
+            if (attachments != null)
+                this.attachments = new ArrayList<Attachment>(attachments);
+            return this;
+        }
+
+        public Builder actionType(String actionType) {
+            if (actionType != null)
+                this.actionType = ActionType.valueOf(actionType);
+            return this;
+        }
+
+        public Builder actionType(ActionType actionType) {
+            this.actionType = actionType;
             return this;
         }
 
         public Builder description(String key, String value) {
             descriptionMap.put(key, value);
+            return this;
+        }
+
+        public Builder data(Map<String, List<Value>> data) {
+            if (data != null)
+                this.data = new ManyMap<String, Value>(data);
             return this;
         }
 

@@ -24,56 +24,55 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.exception.ConflictError;
 import piecework.exception.InternalServerError;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
+import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.CommandExecutor;
 import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.task.TaskCriteria;
-import piecework.validation.FormValidation;
+import piecework.validation.Validation;
+import piecework.validation.Validation;
 
-public class SubTaskCommand implements Command<Boolean> {
+public class SubTaskCommand extends AbstractEngineStorageCommand<ProcessInstance> {
 
-    private static final Logger LOG = Logger.getLogger(TaskCommand.class);
+    private static final Logger LOG = Logger.getLogger(SubTaskCommand.class);
 
     private final Process process;
     private final ProcessInstance instance;
     private final String parentTaskId;
-    private final FormValidation validation;
+    private final Validation validation;
+    private final CommandExecutor executor;
+    private final ProcessDeployment deployment;
+    private final Entity principal;
 
-    public SubTaskCommand(Process process, ProcessInstance instance, String parentTaskId, FormValidation validation) {
+    public SubTaskCommand(CommandExecutor executor, Entity principal, Process process, ProcessInstance instance, ProcessDeployment deployment, String parentTaskId, Validation validation) {
+        super(executor, principal, validation.getProcess());
+        this.principal = principal;
+        this.executor = executor;
         this.process = process;
         this.instance = instance;
         this.parentTaskId = parentTaskId;
         this.validation = validation;
+        this.deployment = deployment;
     }
 
     @Override
-    public Boolean execute(CommandExecutor commandExecutor) throws StatusCodeError {
-        ProcessEngineFacade facade = commandExecutor.getFacade();
-        DeploymentRepository deploymentRepository = commandExecutor.getDeploymentRepository();
-        ProcessInstanceRepository instanceRepository = commandExecutor.getProcessInstanceRepository();
-
-        ProcessDeployment deployment = process.getDeployment();
-        if (instance.getDeploymentId() != null && !instance.getDeploymentId().equals(process.getDeploymentId()))
-            deployment = deploymentRepository.findOne(instance.getDeploymentId());
-
-        if (deployment == null)
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+    ProcessInstance execute(final ProcessEngineFacade processEngineFacade, final StorageManager storageManager) throws PieceworkException {
 
         Task result = null;
-
+        ProcessInstance iresult = null;
         if (StringUtils.isNotEmpty(parentTaskId)) {
             try {
-                result = facade.createSubTask(process, deployment, parentTaskId, instance, validation);
+                result = processEngineFacade.createSubTask(process, deployment, parentTaskId, instance, validation);
 
                 ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
                 builder.task(result);
 
-                instanceRepository.save(builder.build());
+                iresult = storageManager.store(builder.build());
 
-                if (result == null) {
+                if (result == null || iresult == null) {
                     throw new InternalServerError(Constants.ExceptionCodes.subtask_create_invalid);
                 }
             } catch (ProcessEngineException e) {
@@ -82,7 +81,7 @@ public class SubTaskCommand implements Command<Boolean> {
             }
         }
 
-        return true;
+        return instance;
 
     }
 

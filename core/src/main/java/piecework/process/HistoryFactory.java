@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.service;
+package piecework.process;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +23,10 @@ import piecework.enumeration.OperationType;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.service.IdentityService;
+import piecework.service.ProcessInstanceService;
+import piecework.service.ProcessService;
+import piecework.service.TaskService;
 import piecework.task.TaskFactory;
 
 import java.util.*;
@@ -31,7 +35,7 @@ import java.util.*;
  * @author James Renfro
  */
 @Service
-public class ProcessHistoryService {
+public class HistoryFactory {
 
     @Autowired
     IdentityService identityService;
@@ -48,7 +52,7 @@ public class ProcessHistoryService {
     @Autowired
     Versions versions;
 
-    public History read(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
+    public History history(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
         piecework.model.Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
 

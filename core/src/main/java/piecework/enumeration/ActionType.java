@@ -9,7 +9,10 @@ import java.io.Serializable;
  * @author James Renfro
  */
 public enum ActionType implements Serializable {
-    ASSIGN("Assigned"), ATTACH("Attached"), CLAIM("Claimed"), COMPLETE("Completed"), REJECT("Rejected"), SAVE("Saved"), VALIDATE("Validated"), CREATE("Created"), VIEW("Reviewed"), SUBCREATE("Sub Task Created");
+    ASSIGN("Assigned"), ATTACH("Attached"), CLAIM("Claimed"), COMPLETE("Completed"), REJECT("Rejected"),
+    SAVE("Saved"), VALIDATE("Validated"), CREATE("Created"), VIEW("Reviewed"), REMOVE("Removed"),
+    UPDATE("Updated"), SUBCREATE("Sub Task Created");
+
     private final String description;
 
     private ActionType(String description) {

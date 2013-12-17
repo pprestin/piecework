@@ -15,6 +15,7 @@
  */
 package piecework;
 
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 
 /**
@@ -22,7 +23,7 @@ import piecework.exception.StatusCodeError;
  */
 public interface Command<T> {
 
-    <T> T execute(CommandExecutor commandExecutor) throws StatusCodeError;
+    <T> T execute() throws PieceworkException;
 
     String getProcessDefinitionKey();
 

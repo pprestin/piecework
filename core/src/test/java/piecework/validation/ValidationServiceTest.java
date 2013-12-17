@@ -30,7 +30,6 @@ import piecework.identity.IdentityHelper;
 import piecework.security.DataFilterService;
 import piecework.service.IdentityService;
 import piecework.service.TaskService;
-import piecework.service.ValidationService;
 import piecework.submission.SubmissionTemplateFactory;
 import piecework.util.ManyMap;
 
@@ -48,7 +47,7 @@ public class ValidationServiceTest {
     SubmissionTemplateFactory submissionTemplateFactory;
 
     @InjectMocks
-	ValidationService validationService;
+    ValidationFactory validationFactory;
 
     @Mock
     Registry registry;
@@ -86,7 +85,7 @@ public class ValidationServiceTest {
 //			.build();
 //
 //        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleContainer(Constants.ScreenTypes.WIZARD), "A");
-//		FormValidation validation = validationService.validate(process, instance, null, template, submission, true);
+//		Validation validation = validationFactory.validate(process, instance, null, template, submission, true);
 //
 //        Map<String, List<Message>> results = validation.getResults();
 //		Assert.assertTrue(results.isEmpty());
@@ -101,7 +100,7 @@ public class ValidationServiceTest {
 //                .build();
 //
 //        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleContainer(Constants.ScreenTypes.WIZARD), "A");
-//        FormValidation validation = validationService.validate(process, instance, null, template, submission, false);
+//        Validation validation = validationFactory.validate(process, instance, null, template, submission, false);
 //
 //        Map<String, List<Message>> results = validation.getResults();
 //        Assert.assertNotNull(results);
@@ -119,7 +118,7 @@ public class ValidationServiceTest {
 //                .build();
 //
 //        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleContainer(Constants.ScreenTypes.WIZARD));
-//        FormValidation validation = validationService.validate(process, instance, null, template, submission, true);
+//        Validation validation = validationFactory.validate(process, instance, null, template, submission, true);
 //
 //        Map<String, List<Message>> results = validation.getResults();
 //        Assert.assertTrue(results.isEmpty());
@@ -135,7 +134,7 @@ public class ValidationServiceTest {
 //                .build();
 //
 //        SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, ExampleFactory.exampleContainer(Constants.ScreenTypes.WIZARD));
-//        FormValidation validation = validationService.validate(process, instance, null, template, submission, false);
+//        Validation validation = validationFactory.validate(process, instance, null, template, submission, false);
 //
 //        Map<String, List<Message>> results = validation.getResults();
 //        Assert.assertNotNull(results);
