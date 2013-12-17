@@ -69,6 +69,8 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
         if (LOG.isDebugEnabled())
             LOG.debug("Executing deployment command " + this.toString());
 
+        String processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
+
         // Verify that this deployment belongs to this process
         ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
         if (selectedDeploymentVersion == null)
@@ -96,13 +98,13 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
                     .build();
 
             try {
-                contentRepository.save(content);
+                contentRepository.save(process, content);
             } catch (IOException ioe) {
                 LOG.error("Error saving to content repo", ioe);
                 throw new InternalServerError(Constants.ExceptionCodes.attachment_could_not_be_saved);
             }
 
-            content = contentRepository.findByLocation(location);
+            content = contentRepository.findByLocation(process, location);
 
             // Try to deploy it in the engine -- this is the step that's most likely to fail because
             // the artifact is not formatted correctly, etc..

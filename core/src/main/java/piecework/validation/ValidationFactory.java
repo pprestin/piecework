@@ -32,7 +32,7 @@ import piecework.model.Process;
 import com.google.common.collect.Sets;
 import piecework.security.DataFilterService;
 import piecework.service.TaskService;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 import piecework.submission.SubmissionTemplate;
 
 /**

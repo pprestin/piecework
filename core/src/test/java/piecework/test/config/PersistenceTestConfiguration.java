@@ -17,8 +17,6 @@ package piecework.test.config;
 
 import org.springframework.context.annotation.*;
 import piecework.config.MongoConfiguration;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.concrete.GridFSContentRepository;
 
 /**
  * @author James Renfro
@@ -29,9 +27,6 @@ import piecework.persistence.concrete.GridFSContentRepository;
 @PropertySource("classpath:META-INF/mongo.test.properties")
 public class PersistenceTestConfiguration {
 
-    @Bean
-    public ContentRepository contentRepository() {
-        return new GridFSContentRepository();
-    }
+
 
 }

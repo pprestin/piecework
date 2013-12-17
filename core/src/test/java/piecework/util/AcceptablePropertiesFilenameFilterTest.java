@@ -23,6 +23,7 @@ import java.io.FilenameFilter;
 
 import org.junit.Test;
 import org.springframework.core.env.Environment;
+import piecework.common.AcceptablePropertiesFilenameFilter;
 
 /**
  * @author James Renfro

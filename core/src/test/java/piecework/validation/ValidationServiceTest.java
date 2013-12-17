@@ -31,7 +31,7 @@ import piecework.security.DataFilterService;
 import piecework.service.IdentityService;
 import piecework.service.TaskService;
 import piecework.submission.SubmissionTemplateFactory;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.List;
 import java.util.Map;

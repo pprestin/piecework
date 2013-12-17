@@ -22,7 +22,7 @@ import piecework.model.Button;
 import piecework.model.Field;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 import piecework.validation.ValidationRule;
 
 import java.util.*;

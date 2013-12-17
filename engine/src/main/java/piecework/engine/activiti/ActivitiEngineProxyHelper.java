@@ -17,14 +17,13 @@ package piecework.engine.activiti;
 
 import com.google.common.collect.Sets;
 import org.activiti.engine.ProcessEngine;
-import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.Collections;
 import java.util.HashSet;

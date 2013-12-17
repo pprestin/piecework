@@ -80,7 +80,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
             return processScript(form);
         }
 
-        Resource scriptResource = userInterfaceService.getScriptResource(templateName, null, isAnonymous());
+        Resource scriptResource = userInterfaceService.getScriptResource(null, templateName, null, isAnonymous());
         return response(scriptResource, "text/javascript");
     }
 
@@ -94,7 +94,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
             return processStylesheet(form);
         }
 
-        Resource stylesheetResource = userInterfaceService.getStylesheetResource(templateName, null, isAnonymous());
+        Resource stylesheetResource = userInterfaceService.getStylesheetResource(null, templateName, null, isAnonymous());
         return response(stylesheetResource, "text/css");
     }
 

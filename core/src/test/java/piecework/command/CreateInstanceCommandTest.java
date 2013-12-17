@@ -15,7 +15,6 @@
  */
 package piecework.command;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,14 +23,12 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.authorization.AuthorizationRole;
 import piecework.engine.ProcessEngineFacade;
-import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
-import piecework.model.Process;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 import piecework.validation.Validation;
 
 import java.util.ArrayList;

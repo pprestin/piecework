@@ -97,7 +97,7 @@ public class SubmissionStorageService {
                         .build();
 
                 try {
-                    content = contentRepository.save(content);
+                    content = contentRepository.save(template.getProcess(), content);
 
                 } catch (MongoException mongoException) {
                     Throwable cause = mongoException.getCause();

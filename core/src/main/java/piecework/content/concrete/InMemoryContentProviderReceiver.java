@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.persistence.concrete;
+package piecework.content.concrete;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.compress.utils.IOUtils;
-import piecework.persistence.ContentRepository;
-import piecework.model.Content;
+import piecework.content.ContentProvider;
+import piecework.content.ContentReceiver;
+import piecework.enumeration.Scheme;
+import piecework.model.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,39 +34,28 @@ import java.util.regex.Pattern;
 /**
  * @author James Renfro
  */
-public class InMemoryContentRepository implements ContentRepository {
+public class InMemoryContentProviderReceiver implements ContentProvider, ContentReceiver {
 
-    Map<String, Content> contentMap;
-    Map<String, Content> contentLocationMap;
+    private Map<String, Content> contentMap;
+    private Map<String, Content> contentLocationMap;
 
-    public InMemoryContentRepository() {
+    public InMemoryContentProviderReceiver() {
         this.contentMap = new Hashtable<String, Content>();
         this.contentLocationMap = new Hashtable<String, Content>();
     }
 
     @Override
-    public Content findByLocation(String location) {
+    public synchronized Content findByPath(piecework.model.Process process, String location) throws IOException {
         return contentLocationMap.get(location);
     }
 
     @Override
-    public List<Content> findByLocationPattern(String locationPattern) throws IOException {
-        List<Content> contents = new ArrayList<Content>();
-
-        if (locationPattern.contains("*"))
-            locationPattern = locationPattern.replace("*", ".*");
-
-        Pattern pattern = Pattern.compile(locationPattern, 0);
-
-        for (Map.Entry<String, Content> entry : contentLocationMap.entrySet()) {
-            if (pattern.matcher(entry.getKey()).matches())
-                contents.add(entry.getValue());
-        }
-        return contents;
+    public synchronized Scheme getScheme() {
+        return Scheme.REPOSITORY;
     }
 
     @Override
-    public Content save(Content content) {
+    public synchronized Content save(Content content) throws IOException {
         String contentId = content.getContentId() == null ? UUID.randomUUID().toString() : content.getContentId();
 
         long contentLength = 0;
@@ -102,4 +93,21 @@ public class InMemoryContentRepository implements ContentRepository {
 
         return stored;
     }
+
+    public List<Content> findByLocationPattern(String locationPattern) throws IOException {
+        List<Content> contents = new ArrayList<Content>();
+
+        if (locationPattern.contains("*"))
+            locationPattern = locationPattern.replace("*", ".*");
+
+        Pattern pattern = Pattern.compile(locationPattern, 0);
+
+        for (Map.Entry<String, Content> entry : contentLocationMap.entrySet()) {
+            if (pattern.matcher(entry.getKey()).matches())
+                contents.add(entry.getValue());
+        }
+        return contents;
+    }
+
+
 }

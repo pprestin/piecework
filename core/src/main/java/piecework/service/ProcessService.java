@@ -254,7 +254,7 @@ public class ProcessService {
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
         ProcessDeployment deployment = deploymentService.read(process, deploymentId);
-        Content content = contentRepository.findByLocation(deployment.getEngineProcessDefinitionLocation());
+        Content content = contentRepository.findByLocation(process, deployment.getEngineProcessDefinitionLocation());
         return new ProcessDeploymentResource.Builder(content).build();
     }
 

@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.util;
+package piecework.common;
 
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 public class ManyMap<K, V> extends Hashtable<K, List<V>> implements Map<K, List<V>> {
     
@@ -54,5 +51,15 @@ public class ManyMap<K, V> extends Hashtable<K, List<V>> implements Map<K, List<
 		return list.size();
 	}
 
+    public synchronized Map<K, List<V>> unmodifiableMap() {
+        Map<K, List<V>> temporary = new HashMap<K, List<V>>();
+        if (!this.isEmpty()) {
+            for (Map.Entry<K, List<V>> entry : this.entrySet()) {
+                List<V> unmodifiableList = Collections.unmodifiableList(entry.getValue());
+                temporary.put(entry.getKey(), unmodifiableList);
+            }
+        }
+        return Collections.unmodifiableMap(temporary);
+    }
 
 }

@@ -21,7 +21,7 @@ import java.util.*;
 import piecework.Constants;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 /**
  * @author James Renfro

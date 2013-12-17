@@ -26,13 +26,13 @@ import piecework.process.AttachmentQueryParameters;
  * @author James Renfro
  */
 @Path("instance")
-@Produces({"application/xml","application/json"})
+@Produces({"application/json"})
 public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
 
     @POST
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
-    @Consumes({"application/xml","application/json"})
+    @Consumes({"application/json"})
     Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, Submission submission) throws PieceworkException;
 
     @POST
@@ -55,19 +55,19 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @PUT
     @Path("{processDefinitionKey}/{processInstanceId}")
     @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/json", "application/xml"})
+    @Consumes({"application/json"})
     Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, ProcessInstance instance) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}")
     @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/xml","application/json"})
+    @Consumes({"application/json"})
     Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
 
     @GET
     @Path("")
     @RolesAllowed({AuthorizationRole.ADMIN})
-    @Produces({"application/xml","application/json", "text/csv"})
+    @Produces({"application/json", "text/csv"})
     Response search(@Context MessageContext context) throws PieceworkException;
 
     /*
@@ -82,7 +82,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/activation")
     @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/xml","application/json"})
+    @Consumes({"application/json"})
     Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @POST
@@ -116,7 +116,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/cancellation")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    @Consumes({"application/xml","application/json"})
+    @Consumes({"application/json"})
     Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @DELETE
@@ -149,13 +149,13 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/restart")
     @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/xml","application/json"})
+    @Consumes({"application/json"})
     Response restart(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
     @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/xml","application/json"})
+    @Consumes({"application/json"})
     Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @GET

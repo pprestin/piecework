@@ -18,15 +18,13 @@ package piecework.util;
 import org.junit.Assert;
 import org.junit.Test;
 import piecework.Constants;
+import piecework.common.ManyMap;
 import piecework.model.Constraint;
 import piecework.model.Field;
-import piecework.model.FormValue;
 import piecework.model.Value;
 import piecework.test.ExampleFactory;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

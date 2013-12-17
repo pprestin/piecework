@@ -28,9 +28,9 @@ import piecework.model.*;
 /**
  * @author James Renfro
  */
-public class AuthorizationUtility {
+public class SecurityUtility {
 
-    private static final Logger LOG = Logger.getLogger(AuthorizationUtility.class);
+    private static final Logger LOG = Logger.getLogger(SecurityUtility.class);
 
     public static void verifyEntityIsAuthorized(piecework.model.Process process, Task task, Entity principal) throws ForbiddenError, BadRequestError {
         if (process == null)

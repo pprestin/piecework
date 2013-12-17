@@ -32,7 +32,7 @@ import piecework.enumeration.OperationType;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.common.ViewContext;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 /**
  * @author James Renfro

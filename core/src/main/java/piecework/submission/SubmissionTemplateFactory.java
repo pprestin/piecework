@@ -23,13 +23,11 @@ import piecework.Constants;
 import piecework.Registry;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.FieldTag;
-import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.util.ActivityUtil;
-import piecework.util.OptionResolver;
+import piecework.form.OptionResolver;
 import piecework.util.ProcessUtility;
 import piecework.validation.ValidationRule;
 
@@ -148,19 +146,18 @@ public class SubmissionTemplateFactory {
                     }
                 }
             }
-        }
 
-        // If we're not validating a single container, or if we weren't able to find the container to validate,
-        // then simply validate all fields for this activity
-        if (fields == null)
-            fields = activity.getFields();
+            // If we're not validating a single container, or if we weren't able to find the container to validate,
+            // then simply validate all fields for this activity
+            if (fields == null)
+                fields = activity.getFields();
 
-        if (fields != null) {
-            for (Field field : fields) {
-                addField(builder, field);
+            if (fields != null) {
+                for (Field field : fields) {
+                    addField(builder, field);
+                }
             }
         }
-
         return builder.build();
     }
 

@@ -84,7 +84,7 @@ public class AttachmentService {
                 if (StringUtils.isEmpty(attachmentId) || StringUtils.isEmpty(storedAttachment.getAttachmentId()) || !attachmentId.equals(storedAttachment.getAttachmentId()))
                     continue;
 
-                Content content = contentRepository.findByLocation(storedAttachment.getLocation());
+                Content content = contentRepository.findByLocation(process, storedAttachment.getLocation());
                 if (content != null)
                     return new StreamingAttachmentContent(storedAttachment, content);
             }

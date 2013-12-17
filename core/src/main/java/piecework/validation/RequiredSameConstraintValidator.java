@@ -29,7 +29,8 @@ import piecework.util.PropertyValueReader;
 /**
  * @author James Renfro
  */
-@Service
+@Deprecated
+//@Service
 public class RequiredSameConstraintValidator implements ConstraintValidator<Constraint> {
 
 	@Override

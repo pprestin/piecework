@@ -27,7 +27,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.enumeration.ActionType;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;

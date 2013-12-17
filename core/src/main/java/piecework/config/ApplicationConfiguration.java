@@ -120,7 +120,7 @@ public class ApplicationConfiguration {
 	public Server apiServer() {
 		Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
 		extensionMappings.put("json", "application/json");
-		extensionMappings.put("xml", "application/xml");
+//		extensionMappings.put("xml", "application/xml");
 		
 		JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
 		sf.setServiceBeanObjects((Object[])apiResources);
@@ -146,7 +146,7 @@ public class ApplicationConfiguration {
     public Server applicationServer() {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
         extensionMappings.put("json", "application/json");
-        extensionMappings.put("xml", "application/xml");
+//        extensionMappings.put("xml", "application/xml");
         extensionMappings.put("html", "text/html");
         extensionMappings.put("csv", "text/csv");
 

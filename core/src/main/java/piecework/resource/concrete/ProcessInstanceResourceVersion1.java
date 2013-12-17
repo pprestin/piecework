@@ -41,7 +41,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.*;
 import piecework.ui.streaming.ExportStreamingOutput;
 import piecework.ui.streaming.StreamingAttachmentContent;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.*;
@@ -60,6 +60,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Autowired
     AttachmentService attachmentService;
+
+    @Autowired
+    DeploymentService deploymentService;
 
     @Autowired
     IdentityHelper helper;
@@ -288,7 +291,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        return valuesService.read(instance, fieldName, valueId);
+        return valuesService.read(process, instance, fieldName, valueId);
     }
 
     @Override

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import piecework.common.ViewContext;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 @XmlRootElement(name = SearchResults.Constants.ROOT_ELEMENT_NAME)
 @XmlType(name = SearchResults.Constants.TYPE_NAME)

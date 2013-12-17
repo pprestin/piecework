@@ -27,7 +27,7 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
-import piecework.util.AuthorizationUtility;
+import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
 /**
@@ -67,7 +67,7 @@ public class RequestService {
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
         Task task = taskService.read(instance, taskId);
-        AuthorizationUtility.verifyEntityIsAuthorized(process, task, principal);
+        SecurityUtility.verifyEntityIsAuthorized(process, task, principal);
 
         ActionType actionType = ActionType.CREATE;
         if (task != null)
@@ -82,7 +82,7 @@ public class RequestService {
         if (formRequest == null)
             return null;
 
-        AuthorizationUtility.verifyRequestIntegrity(formRequest, request);
+        SecurityUtility.verifyRequestIntegrity(formRequest, request);
         ProcessInstance instance = formRequest.getInstance();
 
         if (instance == null && StringUtils.isNotEmpty(formRequest.getProcessDefinitionKey()) && StringUtils.isNotEmpty(formRequest.getProcessInstanceId()))

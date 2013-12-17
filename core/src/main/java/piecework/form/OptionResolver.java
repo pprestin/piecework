@@ -13,24 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.validation;
+package piecework.form;
 
-import piecework.model.Field;
-import piecework.model.FormValue;
+import java.util.List;
+
+import piecework.Registrant;
+import piecework.model.Option;
 
 /**
  * @author James Renfro
  */
-public class FieldValidator {
+public interface OptionResolver extends Registrant<Option> {
 
-    private final Field field;
-
-    public FieldValidator(Field field) {
-        this.field = field;
-    }
-
-    public FormValue validate(FormValue currentValue, FormValue previousValue) {
-        return null;
-    }
+	List<Option> getOptions();
 
 }

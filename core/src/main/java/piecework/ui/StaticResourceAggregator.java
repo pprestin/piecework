@@ -25,6 +25,7 @@ import org.mozilla.javascript.EvaluatorException;
 import org.springframework.core.io.Resource;
 import piecework.enumeration.Scheme;
 import piecework.model.Content;
+import piecework.model.Process;
 import piecework.persistence.ContentRepository;
 import piecework.util.PathUtility;
 
@@ -45,12 +46,14 @@ public class StaticResourceAggregator {
     private static final String NEWLINE = System.getProperty("line.separator");
     private static final Logger LOG = Logger.getLogger(StaticResourceAggregator.class);
 
+    private final Process process;
     private final ContentRepository contentRepository;
     private final StringBuffer buffer;
     private final UserInterfaceSettings settings;
     private final String base;
 
-    public StaticResourceAggregator(ContentRepository contentRepository, UserInterfaceSettings settings, String base) {
+    public StaticResourceAggregator(Process process, ContentRepository contentRepository, UserInterfaceSettings settings, String base) {
+        this.process = process;
         this.contentRepository = contentRepository;
         this.buffer = new StringBuffer();
         this.settings = settings;
@@ -181,7 +184,7 @@ public class StaticResourceAggregator {
         }
 
         if (!PathUtility.checkForStaticPath(path)) {
-            Content content = contentRepository.findByLocation(fullPath);
+            Content content = contentRepository.findByLocation(process, base, fullPath);
             if (content != null) {
                 return new BufferedReader(new InputStreamReader(content.getInputStream()));
             }

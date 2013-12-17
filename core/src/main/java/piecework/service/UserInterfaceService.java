@@ -112,7 +112,7 @@ public class UserInterfaceService {
             ObjectMapper objectMapper = jsonProvider.locateMapper(Explanation.class, MediaType.APPLICATION_JSON_TYPE);
             InlinePageModelSerializer modelSerializer = new InlinePageModelSerializer(settings, explanation, Explanation.class, user, objectMapper);
             StaticResourceAggregatingVisitor aggregatingVisitor =
-                    new StaticResourceAggregatingVisitor(null, settings, contentRepository, true);
+                    new StaticResourceAggregatingVisitor(null, null, settings, contentRepository, true);
 
             InputStream inputStream = template.getInputStream();
             // Sanity check
@@ -159,8 +159,7 @@ public class UserInterfaceService {
         if (form == null)
             throw new MisconfiguredProcessException("No form");
 
-        FormDisposition disposition = form.getDisposition();
-        Content content = getContentFromDisposition(disposition);
+        Content content = getContentFromDisposition(form.getProcess(), form.getDisposition());
         return new ContentResource(content);
     }
 
@@ -170,7 +169,7 @@ public class UserInterfaceService {
             throw new MisconfiguredProcessException("No form");
 
         FormDisposition disposition = form.getDisposition();
-        Content content = getContentFromDisposition(disposition);
+        Content content = getContentFromDisposition(process, disposition);
 
         TagNodeVisitor visitor;
         switch (disposition.getStrategy()) {
@@ -214,12 +213,12 @@ public class UserInterfaceService {
         return null;
     }
 
-    public Resource getScriptResource(String templateName, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getScriptResource(Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(templateName);
-        return getScriptResource(template, base, isAnonymous);
+        return getScriptResource(process, template, base, isAnonymous);
     }
 
-    public Resource getScriptResource(Resource template, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getScriptResource(Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
         if (!template.exists())
             throw new NotFoundError();
 
@@ -238,7 +237,7 @@ public class UserInterfaceService {
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new StaticResourceAggregatingVisitor(base, settings, contentRepository, isAnonymous);
+            visitor = new StaticResourceAggregatingVisitor(process, base, settings, contentRepository, isAnonymous);
 
             inputStream = template.getInputStream();
             TagNode node = cleaner.clean(inputStream);
@@ -258,12 +257,12 @@ public class UserInterfaceService {
         return null;
     }
 
-    public Resource getStylesheetResource(String templateName, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getStylesheetResource(Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(templateName);
-        return getStylesheetResource(template, base, isAnonymous);
+        return getStylesheetResource(process, template, base, isAnonymous);
     }
 
-    public Resource getStylesheetResource(Resource template, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getStylesheetResource(Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
         if (!template.exists())
             throw new NotFoundError();
 
@@ -281,7 +280,7 @@ public class UserInterfaceService {
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new StaticResourceAggregatingVisitor(base, settings, contentRepository, isAnonymous);
+            visitor = new StaticResourceAggregatingVisitor(process, base, settings, contentRepository, isAnonymous);
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(visitor);
 
@@ -333,7 +332,7 @@ public class UserInterfaceService {
         return getResourceSize(resource);
     }
 
-    private Content getContentFromDisposition(FormDisposition disposition) throws MisconfiguredProcessException {
+    private Content getContentFromDisposition(Process process, FormDisposition disposition) throws MisconfiguredProcessException {
         if (disposition == null)
             throw new MisconfiguredProcessException("No form disposition");
         if (disposition.getType() != FormDisposition.FormDispositionType.CUSTOM)
@@ -341,7 +340,7 @@ public class UserInterfaceService {
         if (StringUtils.isEmpty(disposition.getPath()))
             throw new MisconfiguredProcessException("Form disposition path is empty");
 
-        Content content = contentRepository.findByLocation(disposition.getPath());
+        Content content = contentRepository.findByLocation(process, disposition.getPath());
         if (content == null)
             throw new MisconfiguredProcessException("No content found for disposition path: " + disposition.getPath());
 

@@ -21,14 +21,12 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import piecework.authorization.AuthorizationRole;
 import piecework.engine.ProcessEngineFacade;
-import piecework.enumeration.ActionType;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.security.DataFilterService;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 import piecework.validation.Validation;
 
 import java.util.Collections;

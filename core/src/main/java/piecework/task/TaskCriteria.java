@@ -22,9 +22,8 @@ import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
 import piecework.security.Sanitizer;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 /**
  * @author James Renfro

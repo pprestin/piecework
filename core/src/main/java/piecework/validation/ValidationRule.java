@@ -19,7 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import piecework.exception.ValidationRuleException;
 import piecework.model.*;
 import piecework.util.ConstraintUtil;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.*;
 import java.util.regex.Pattern;

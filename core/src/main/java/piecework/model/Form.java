@@ -18,13 +18,14 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import piecework.form.FormDisposition;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -121,6 +122,11 @@ public class Form {
 
     @XmlTransient
     @JsonIgnore
+    @Transient
+    private final Process process;
+
+    @XmlTransient
+    @JsonIgnore
     private final List<Attachment> attachments;
 
     @JsonIgnore
@@ -133,6 +139,7 @@ public class Form {
     }
 
     private Form(Form.Builder builder, ViewContext context) {
+        this.process = builder.process;
         this.formInstanceId = builder.formInstanceId;
         this.processInstanceId = builder.processInstanceId;
         this.submissionType = builder.submissionType;
@@ -185,6 +192,11 @@ public class Form {
 
     public Container getContainer() {
         return container;
+    }
+
+    @JsonIgnore
+    public Process getProcess() {
+        return process;
     }
 
     public String getApplicationStatusExplanation() {
@@ -325,6 +337,7 @@ public class Form {
         private boolean allowAttachments;
         private boolean readonly;
         private FormDisposition disposition;
+        private Process process;
 
         public Builder() {
             super();
@@ -359,6 +372,7 @@ public class Form {
             this.external = form.external;
             this.allowAttachments = form.allowAttachments;
             this.anonymous = form.anonymous;
+            this.process = form.process;
         }
 
         public Form build() {
@@ -367,6 +381,13 @@ public class Form {
 
         public Form build(ViewContext context) {
             return new Form(this, context);
+        }
+
+        public Builder process(Process process) {
+            this.process = process;
+            if (process != null)
+                this.processDefinitionKey = process.getProcessDefinitionKey();
+            return this;
         }
 
         public Builder instance(ProcessInstance instance, ViewContext context) {

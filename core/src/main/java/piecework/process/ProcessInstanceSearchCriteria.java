@@ -21,7 +21,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.data.domain.Sort;
 import piecework.security.Sanitizer;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.*;
 

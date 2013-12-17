@@ -23,7 +23,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePropertySource;
-import piecework.util.AcceptablePropertiesFilenameFilter;
 
 import java.io.File;
 import java.io.IOException;

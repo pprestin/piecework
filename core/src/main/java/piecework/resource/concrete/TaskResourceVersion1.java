@@ -96,68 +96,6 @@ public class TaskResourceVersion1 implements TaskResource {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         taskService.complete(rawProcessDefinitionKey, rawTaskId, rawAction, rawSubmission, requestDetails, principal);
         return Response.noContent().build();
-
-//        piecework.model.Process process = processService.read(processDefinitionKey);
-//
-//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-//
-//        String actingUser = null;
-//        Entity principal = helper.getPrincipal();
-//        if (principal != null) {
-//            if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(requestDetails.getActAsUser()))
-//                actingUser = requestDetails.getActAsUser();
-//            else
-//                actingUser = principal.getEntityId();
-//        }
-//
-//        Task task = taskId != null ? taskService.read(process, taskId, true) : null;
-//
-//        if (task == null)
-//            throw new NotFoundError();
-//
-//        ProcessInstance instance = null;
-//
-//        if (task != null && task.getProcessInstanceId() != null)
-//            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
-//
-//        SubmissionHandler handler = submissionHandlerRegistry.handler(Submission.class);
-//        try {
-//            FormRequest formRequest = requestService.create(requestDetails, process, instance, task, validatedAction);
-//            ProcessDeployment deployment = deploymentService.read(process, instance);
-//
-//            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, formRequest);
-//            Submission submission = handler.handle(rawSubmission, template, principal);
-//
-//            if (submission != null && submission.getAction() != null)
-//                validatedAction = submission.getAction();
-//
-//            switch (validatedAction) {
-//                case ASSIGN:
-//                    processInstanceService.assign(principal, process, deployment, instance, task, submission.getAssignee());
-//                    break;
-//                case CLAIM:
-//                    processInstanceService.assign(principal, process, deployment, instance, task, actingUser);
-//                    break;
-//                case SAVE:
-//                    processInstanceService.save(principal, process, instance, task, template, submission);
-//                    break;
-//                case REJECT:
-//                    processInstanceService.reject(principal, process, instance, task, template, submission);
-//                    break;
-//                case VALIDATE:
-//                    validationFactory.validate(process, instance, task, template, submission, true);
-//                    break;
-//                default:
-//                    processInstanceService.submit(principal, process, instance, task, template, submission);
-//                    break;
-//            }
-//            return Response.noContent().build();
-//        } catch (MisconfiguredProcessException mpe) {
-//            LOG.error("Unable to complete task because process is misconfigured", mpe);
-//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-//        } catch (PieceworkException e) {
-//            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//        }
     }
 
     public Response read(String rawProcessDefinitionKey, String rawTaskId) throws StatusCodeError {

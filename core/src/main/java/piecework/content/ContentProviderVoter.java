@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.util;
+package piecework.content;
 
-import java.util.List;
-
-import piecework.Registrant;
-import piecework.model.Option;
+import piecework.enumeration.ContentHandlerPriority;
 
 /**
+ * Implement this class if you wish to make decisions about which providers to make use of in the
+ * ContentHandlerRepository -- the primary use case for this is when you've implemented a
+ * ContentProvider that connects to an external content repository and want to disable
+ * the default GridFSContentProvider or make it into a backup for your external repo.
+ *
  * @author James Renfro
  */
-public interface OptionResolver extends Registrant<Option> {
+public interface ContentProviderVoter {
 
-	List<Option> getOptions();
+    <P extends ContentProvider> ContentHandlerPriority vote(P provider);
 
 }

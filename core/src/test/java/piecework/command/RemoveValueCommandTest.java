@@ -27,7 +27,7 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.Map;
 

@@ -22,6 +22,7 @@ import piecework.util.PropertyValueReader;
 /**
  * @author James Renfro
  */
+@Deprecated
 public interface ConstraintValidator<C> extends Registrant<C> {
 
 	AttributeValidation validate(String propertyName, C constraint, PropertyValueReader propertyValueReader, boolean isFieldSpecificUpdate, boolean isRestricted, boolean isText, boolean isUnchanged);

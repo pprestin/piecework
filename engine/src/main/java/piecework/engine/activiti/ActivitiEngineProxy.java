@@ -48,7 +48,7 @@ import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 import piecework.validation.Validation;
 
 /**

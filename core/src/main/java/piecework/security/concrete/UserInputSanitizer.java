@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.security.Sanitizer;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 /**
  * @author James Renfro

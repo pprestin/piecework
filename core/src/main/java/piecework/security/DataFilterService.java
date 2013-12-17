@@ -27,7 +27,7 @@ import piecework.Versions;
 import piecework.model.*;
 import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 import piecework.validation.Validation;
 
 import javax.annotation.PostConstruct;

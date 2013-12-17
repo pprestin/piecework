@@ -16,7 +16,7 @@
 package piecework.model.bind;
 
 import piecework.model.Value;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.util.ArrayList;

@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
@@ -35,14 +34,15 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ConstraintUtil;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.*;
 
 /**
  * @author James Renfro
  */
-@Service
+//@Service
+@Deprecated
 public class LegacyFormFactory {
 
     private static final Logger LOG = Logger.getLogger(LegacyFormFactory.class);

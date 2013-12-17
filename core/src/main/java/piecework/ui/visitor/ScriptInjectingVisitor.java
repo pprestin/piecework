@@ -19,9 +19,8 @@ import com.google.common.collect.Sets;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
-import piecework.enumeration.DataInjectionStrategy;
 import piecework.model.Form;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.List;
 import java.util.Set;

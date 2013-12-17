@@ -69,6 +69,7 @@ public class FormFactory {
             actionType = ActionType.VIEW;
 
         Form.Builder builder = new Form.Builder()
+                .process(process)
                 .formInstanceId(formInstanceId)
                 .processDefinitionKey(processDefinitionKey);
 

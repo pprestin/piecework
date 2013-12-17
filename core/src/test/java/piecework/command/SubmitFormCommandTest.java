@@ -22,18 +22,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.authorization.AuthorizationRole;
-import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
-import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.service.RequestService;
-import piecework.util.ManyMap;
 import piecework.validation.Validation;
-
-import java.util.Map;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;

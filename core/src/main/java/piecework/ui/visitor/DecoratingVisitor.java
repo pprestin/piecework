@@ -22,13 +22,11 @@ import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
-import piecework.designer.model.view.IndexView;
 import piecework.enumeration.FieldTag;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.ui.TagDecorator;
 import piecework.ui.UserInterfaceSettings;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.*;
 

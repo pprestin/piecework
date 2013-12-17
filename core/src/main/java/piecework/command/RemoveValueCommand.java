@@ -28,7 +28,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.submission.SubmissionFactory;
 import piecework.util.Base64Utility;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.util.ArrayList;
 import java.util.List;

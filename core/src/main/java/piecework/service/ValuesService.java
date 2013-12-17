@@ -68,14 +68,14 @@ public class ValuesService {
     @Autowired
     Versions versions;
 
-    public Response read(ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
+    public Response read(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
         Map<String, List<Value>> data = instance.getData();
         Value value = ProcessInstanceUtility.firstMatchingFileOrLink(fieldName, data, fileId);
 
         if (value != null) {
             if (value instanceof File) {
                 File file = File.class.cast(value);
-                Content content = contentRepository.findByLocation(file.getLocation());
+                Content content = contentRepository.findByLocation(process, file.getLocation());
                 if (content != null) {
                     StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
                     String contentDisposition = new StringBuilder("attachment; filename=").append(content.getName()).toString();

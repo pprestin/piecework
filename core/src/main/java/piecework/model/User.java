@@ -15,7 +15,6 @@
  */
 package piecework.model;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +25,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.springframework.data.annotation.Id;
 
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import piecework.authorization.AccessAuthority;
 import piecework.identity.IdentityDetails;
 import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 /**
  * @author James Renfro

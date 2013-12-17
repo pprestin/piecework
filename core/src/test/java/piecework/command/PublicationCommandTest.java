@@ -23,7 +23,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.UuidGenerator;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
-import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
@@ -118,7 +117,7 @@ public class PublicationCommandTest {
         PublicationCommand publication = new PublicationCommand(null, process, deploymentId);
         publication.execute(deploymentRepository, processRepository);
 
-        verify(contentRepository).save(any(Content.class));
+        verify(contentRepository).save(process, any(Content.class));
         verify(facade).deploy(eq(process), eq(processDeployment), any(Content.class));
         verify(processRepository).save(any(Process.class));
     }

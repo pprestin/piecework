@@ -99,7 +99,7 @@ public abstract class AbstractScriptResource {
         try {
             FormDisposition formDisposition = form.getDisposition();
             Resource pageResource = userInterfaceService.getCustomPage(form);
-            Resource scriptResource = userInterfaceService.getScriptResource(pageResource, formDisposition.getBase(), form.isAnonymous());
+            Resource scriptResource = userInterfaceService.getScriptResource(form.getProcess(), pageResource, formDisposition.getBase(), form.isAnonymous());
             return response(scriptResource, "text/javascript");
         } catch (IOException ioe) {
             LOG.error("Caught io exception", ioe);
@@ -114,7 +114,7 @@ public abstract class AbstractScriptResource {
         try {
             FormDisposition formDisposition = form.getDisposition();
             Resource pageResource = userInterfaceService.getCustomPage(form);
-            Resource stylesheetResource = userInterfaceService.getStylesheetResource(pageResource, formDisposition.getBase(), isAnonymous());
+            Resource stylesheetResource = userInterfaceService.getStylesheetResource(form.getProcess(), pageResource, formDisposition.getBase(), isAnonymous());
             return response(stylesheetResource, "text/css");
         } catch (IOException ioe) {
             LOG.error("Caught io exception", ioe);
@@ -191,7 +191,7 @@ public abstract class AbstractScriptResource {
             // resource thru the public url
             if (StringUtils.isNotEmpty(base)) {
                 String requestLocation = base + "/" + name;
-                Content content = contentRepository.findByLocation(requestLocation);
+                Content content = contentRepository.findByLocation(process, requestLocation);
 
                 // Ensure that content that is retrieved wasn't sneakily different from what was
                 // requested (i.e. by some other mechanism of substituting

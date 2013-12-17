@@ -33,7 +33,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import java.io.IOException;
 import java.util.List;

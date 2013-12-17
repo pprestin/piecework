@@ -23,14 +23,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
-import piecework.Command;
 import piecework.command.AbstractCommand;
 import piecework.command.CommandListener;
 import piecework.exception.AbortCommandException;
 import piecework.exception.BadRequestError;
 import piecework.exception.PieceworkException;
 import piecework.model.Process;
-import piecework.util.ManyMap;
+import piecework.common.ManyMap;
 
 import javax.annotation.PostConstruct;
 import java.util.Collection;
