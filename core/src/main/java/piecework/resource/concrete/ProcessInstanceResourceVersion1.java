@@ -258,6 +258,18 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
+    public Response restart(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        processInstanceService.restart(helper.getPrincipal(), rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response restart(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws PieceworkException {
+        String reason = sanitizer.sanitize(details.getReason());
+        return restart(rawProcessDefinitionKey, rawProcessInstanceId, reason);
+    }
+
+    @Override
     public Response remove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
         Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();

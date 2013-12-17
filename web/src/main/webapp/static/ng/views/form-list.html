@@ -1,7 +1,7 @@
 <div class="navbar main-navbar">
     <div class="user-information">
         <div id="user-information-name" class="user-information-name pull-right">
-            {{context.user.displayName}}
+           {{context.user.displayName}}
         </div>
     </div>
 
@@ -147,6 +147,28 @@
                                     </ul>
                                 </div>
                             </li>
+                            <li>
+                                <div data-ng-hide="dates.isNonCustomDateRange()">
+                                    <input type="datetime-local" data-ng-model="dates.customStartedAfter" data-ng-change="dates.refreshCustomDate()" />
+                                    <input type="datetime-local" data-ng-model="dates.customStartedBefore" data-ng-change="dates.refreshCustomDate()" />
+                                    <button type="button" class="close" data-ng-click="dates.selectDateRange('any')" aria-hidden="true" style="float:none;">&times;</button>
+                                </div>
+                                <div data-ng-show="dates.isNonCustomDateRange()" class="dropdown">
+                                    <a id="date-limit-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">
+                                        <span class="dropdown-toggle-text">{{dates.showNonCustomDateRange()}}</span>
+                                        <b class="caret"></b>
+                                    </a>
+                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">
+                                        <li data-ng-repeat="dateRangeKey in dates.dateRangeKeys" role="presentation">
+                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">
+                                                <label class="checkbox">
+                                                    <input type="checkbox" data-ng-change="dates.selectDateRange(dateRangeKey)" data-ng-model="dates.selectedDateRange" data-ng-true-value="{{dateRangeKey}}" role="menuitem" checked="dates.selectedDateRangeKey = dateRangeKey"/> &nbsp;{{dates.dateRanges[dateRangeKey]}}
+                                                </label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </form>
@@ -156,7 +178,8 @@
                     <button data-ng-click="dialogs.openActivateModal(getFormsSelected(['Suspended']))" data-ng-show="isFormSelected(['Suspended'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>
                     <button data-ng-click="dialogs.openSuspendModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
                     <button data-ng-click="dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))" data-ng-show="isFormSelected(['Open','Suspended'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>
-                    <button data-ng-click="exportCsv(getFormsSelected())" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>
+                    <button data-ng-click="dialogs.openRestartModal(getFormsSelected(['Cancelled', 'Completed']))" data-ng-show="isFormSelected(['Cancelled', 'Completed'])" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>
+                    <button data-ng-click="exportCsv(getFormsSelected())" data-ng-show="!isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>
                 </div>
             </div>
         </div>

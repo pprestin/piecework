@@ -29,6 +29,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.validation.Validation;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -40,20 +41,24 @@ import java.util.Map;
 public class CreateInstanceCommand extends AbstractEngineStorageCommand<ProcessInstance> {
 
     private static final Logger LOG = Logger.getLogger(CreateInstanceCommand.class);
-    private final Validation validation;
+//    private final Validation validation;
+    private final Submission submission;
+    private final Map<String, List<Value>> data;
+    private final Collection<Attachment> attachments;
 
     CreateInstanceCommand(CommandExecutor commandExecutor, Entity principal, Validation validation) {
-        super(commandExecutor, principal, validation.getProcess());
-        this.validation = validation;
+        this(commandExecutor, principal, validation.getProcess(), validation.getData(), validation.getAttachments(), validation.getSubmission());
+    }
+
+    CreateInstanceCommand(CommandExecutor commandExecutor, Entity principal, Process process, Map<String, List<Value>> data, Collection<Attachment> attachments, Submission submission) {
+        super(commandExecutor, principal, process);
+        this.data = data;
+        this.attachments = attachments;
+        this.submission = submission;
     }
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
-        // Local variables at top to avoid confusion about what is passed in validation object
-        Submission submission = validation.getSubmission();
-        Map<String, List<Value>> data = validation.getData();
-        List<Attachment> attachments = validation.getAttachments();
-
         if (process == null)
             throw new MisconfiguredProcessException("No process provided to create new instance");
         if (StringUtils.isEmpty(process.getProcessDefinitionKey()))

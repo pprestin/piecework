@@ -15,7 +15,6 @@
  */
 package piecework.command;
 
-import org.apache.commons.lang.StringUtils;
 import piecework.Constants;
 import piecework.common.OperationResult;
 import piecework.engine.ProcessEngineFacade;
@@ -47,16 +46,17 @@ public class AssignmentCommand extends AbstractOperationCommand {
 
     protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
         boolean isAssignmentRestricted = process.isAssignmentRestrictedToCandidates();
-        if (isAssignmentRestricted && StringUtils.isNotEmpty(applicationStatusExplanation)) {
+        if (isAssignmentRestricted && assignee != null) {
             Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
-            if (!candidateAssigneeIds.contains(applicationStatusExplanation))
+            if (!candidateAssigneeIds.contains(assignee.getUserId()))
                 throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
         }
         if (!facade.assign(process, deployment, task.getTaskInstanceId(), assignee)) {
             throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
         }
 
-        return new OperationResult();
+        String displayName = assignee != null ? assignee.getDisplayName() : null;
+        return new OperationResult(displayName, null, null, null, null);
     }
 
 }

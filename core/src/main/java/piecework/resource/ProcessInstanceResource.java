@@ -141,6 +141,18 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("applicationStatusExplanation") String reason) throws PieceworkException;
 
     @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/restart")
+    @RolesAllowed({AuthorizationRole.ADMIN})
+    @Consumes({"application/x-www-form-urlencoded"})
+    Response restart(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("applicationStatusExplanation") String reason) throws PieceworkException;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/restart")
+    @RolesAllowed({AuthorizationRole.ADMIN})
+    @Consumes({"application/xml","application/json"})
+    Response restart(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
+
+    @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
     @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/xml","application/json"})

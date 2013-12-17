@@ -131,7 +131,7 @@ public class ProcessInstanceService {
         try {
             ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
             if (instance != null) {
-                Map<String, List<Value>> data = dataFilterService.exclude(instance.getData());
+                Map<String, List<Value>> data = instance.getData();
                 return commandFactory.completion(instance, data).execute();
             }
         } catch (PieceworkException error) {
@@ -218,6 +218,14 @@ public class ProcessInstanceService {
             LOG.debug("Retrieved instance for " + processInstanceId + " in " + (System.currentTimeMillis() - start) + " ms");
 
         return instance;
+    }
+
+    public void restart(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        String reason = sanitizer.sanitize(rawReason);
+        commandFactory.restart(principal, process, deployment, instance, reason).execute();
     }
 
     public void suspend(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {

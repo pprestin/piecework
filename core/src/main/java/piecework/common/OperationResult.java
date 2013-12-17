@@ -20,24 +20,30 @@ package piecework.common;
  */
 public class OperationResult {
 
+    private final String operationDescription;
     private final String defaultApplicationStatus;
     private final String processStatus;
     private final String applicationStatusExplanation;
     private final String previousApplicationStatus;
 
     public OperationResult() {
-        this(null, null, null, null);
+        this(null, null, null, null, null);
     }
 
-    public OperationResult(String defaultApplicationStatus, String processStatus, String applicationStatusExplanation) {
-        this(defaultApplicationStatus, processStatus, applicationStatusExplanation, null);
+    public OperationResult(String operationDescription, String defaultApplicationStatus, String processStatus, String applicationStatusExplanation) {
+        this(operationDescription, defaultApplicationStatus, processStatus, applicationStatusExplanation, null);
     }
 
-    public OperationResult(String defaultApplicationStatus, String processStatus, String applicationStatusExplanation, String previousApplicationStatus) {
+    public OperationResult(String operationDescription, String defaultApplicationStatus, String processStatus, String applicationStatusExplanation, String previousApplicationStatus) {
+        this.operationDescription = operationDescription;
         this.defaultApplicationStatus = defaultApplicationStatus;
         this.processStatus = processStatus;
         this.applicationStatusExplanation = applicationStatusExplanation;
         this.previousApplicationStatus = previousApplicationStatus;
+    }
+
+    public String getOperationDescription() {
+        return operationDescription;
     }
 
     public String getDefaultApplicationStatus() {

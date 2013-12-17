@@ -87,7 +87,7 @@ public abstract class AbstractFormResource {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         FormRequest request = requestService.create(requestDetails, process);
 
-        return response(process, request);
+        return response(process, request, ActionType.CREATE);
     }
 
     protected Response receiptForm(MessageContext context, Process process, String rawRequestId) throws PieceworkException {
@@ -100,7 +100,7 @@ public abstract class AbstractFormResource {
         if (actionType == null || (isAnonymous() && (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT)))
             throw new ForbiddenError();
 
-        return response(process, request);
+        return response(process, request, actionType);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws PieceworkException {
@@ -109,7 +109,7 @@ public abstract class AbstractFormResource {
         String taskId = sanitizer.sanitize(rawTaskId);
         FormRequest request = requestService.create(principal, requestDetails, process, taskId, null);
 
-        return response(process, request);
+        return response(process, request, ActionType.CREATE);
     }
 
     protected SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException {
@@ -277,8 +277,8 @@ public abstract class AbstractFormResource {
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, location).build();
     }
 
-    private Response response(Process process, FormRequest request) throws StatusCodeError {
-        return response(process, request, request.getAction(), MediaType.TEXT_HTML_TYPE, null, null, true);
+    private Response response(Process process, FormRequest request, ActionType actionType) throws StatusCodeError {
+        return response(process, request, actionType, MediaType.TEXT_HTML_TYPE, null, null, true);
     }
 
     private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData) throws StatusCodeError {
