@@ -192,5 +192,10 @@ public class StorageManager {
         return processInstanceRepository.update(instance.getProcessInstanceId(), task);
     }
 
+    public ProcessInstance store(ProcessInstance instance) {
+        if (instance == null)
+            return null;
 
+        return processInstanceRepository.save(instance);
+    }
 }

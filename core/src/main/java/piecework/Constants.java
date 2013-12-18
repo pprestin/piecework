@@ -112,6 +112,7 @@ public interface Constants {
         public static final String screen_id_invalid = "screen_id_invalid";
         public static final String system_action_only = "system_action_only";
         public static final String task_action_invalid = "task_action_invalid";
+        public static final String subtask_create_invalid = "subtask_create_invalid";
         public static final String task_does_not_exist = "task_does_not_exist";
         public static final String task_id_required = "task_id_required";
         public static final String task_required = "task_required";

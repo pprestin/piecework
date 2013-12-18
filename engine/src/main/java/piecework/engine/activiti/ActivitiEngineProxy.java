@@ -23,6 +23,7 @@ import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
+import org.activiti.engine.impl.task.TaskDefinition;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -212,6 +213,42 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
         return false;
     }
+
+    @Override
+    public Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, Validation validation) throws ProcessEngineException {
+        Entity principal = helper.getPrincipal();
+        String userId = principal != null ? principal.getEntityId() : null;
+        processEngine.getIdentityService().setAuthenticatedUserId(userId);
+
+        if (deployment == null)
+            throw new ProcessEngineException("Deployment missing for " + process.getProcessDefinitionKey());
+
+        String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
+
+        try {
+            org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().taskId(parentTaskId).singleResult();
+
+            if (activitiTask != null)  {
+                Map<String, Object> variables = new HashMap<String, Object>();
+                Map<String, List<Value>> data = validation.getData();
+                variables(variables, data);
+
+                org.activiti.engine.task.Task subTask =  processEngine.getTaskService().newTask();
+                subTask.setParentTaskId(parentTaskId);
+
+                processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
+                processEngine.getTaskService().saveTask(subTask);
+
+                return convert(subTask, process, true);
+            }
+        } catch (ActivitiException exception) {
+            throw new ProcessEngineException("Activiti unable to create sub task ", exception);
+        }
+
+        return null;
+    }
+
+
 
     @Override
     public ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException {

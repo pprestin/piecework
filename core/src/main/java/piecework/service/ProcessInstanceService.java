@@ -39,6 +39,7 @@ import piecework.persistence.ProcessInstanceRepository;
 import piecework.security.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.submission.SubmissionTemplate;
 import piecework.validation.Validation;
 import piecework.validation.ValidationFactory;
 
@@ -155,6 +156,12 @@ public class ProcessInstanceService {
         Task task = taskService.allowedTask(process, instance, principal, true);
 
         commandFactory.detachment(principal, process, instance, task, attachmentId).execute();
+    }
+
+    public void createSubTask(Entity principal, Process process, ProcessInstance instance, Task task, String parentTaskId, SubmissionTemplate template, Submission submission) throws PieceworkException {
+        Validation validation = validationFactory.validation(process, instance, task, template, submission, true);
+        ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
+        commandFactory.createsubtask(principal, process, instance, deployment, parentTaskId, validation).execute();
     }
 
     public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {

@@ -11,7 +11,7 @@ import java.io.Serializable;
 public enum ActionType implements Serializable {
     ASSIGN("Assigned"), ATTACH("Attached"), CLAIM("Claimed"), COMPLETE("Completed"), REJECT("Rejected"),
     SAVE("Saved"), VALIDATE("Validated"), CREATE("Created"), VIEW("Reviewed"), REMOVE("Removed"),
-    UPDATE("Updated");
+    UPDATE("Updated"), SUBCREATE("Sub Task Created");
 
     private final String description;
 

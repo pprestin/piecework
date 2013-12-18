@@ -89,6 +89,11 @@ public class CommandFactory {
         return new DetachmentCommand(commandExecutor, principal, process, instance, task, attachmentId);
     }
 
+    public SubTaskCommand createsubtask(Entity principal, Process process, ProcessInstance instance, ProcessDeployment deployment, String taskid, Validation validation) {
+
+        return new SubTaskCommand(commandExecutor, principal, process, instance, deployment, taskid, validation);
+    }
+
     public PublicationCommand publication(Process process, String deploymentId) {
 
         return new PublicationCommand(commandExecutor, process, deploymentId);

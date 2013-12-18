@@ -34,6 +34,8 @@ public interface ProcessEngineCapabilities {
 
     boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, Validation validation, Entity principal) throws ProcessEngineException;
 
+    Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, Validation validation) throws ProcessEngineException;
+
     ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
 
     ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException;
