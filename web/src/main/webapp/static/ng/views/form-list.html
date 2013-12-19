@@ -5,17 +5,17 @@
         </div>
     </div>
 
-    <nav class="navbar pw-navbar-collapse" style="margin-bottom: 0px">
+    <nav class="navbar navbar-default navbar-ex1-collapse" style="margin-bottom: 0px;border-radius: 0px">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
-                <span class="sr-only">Toggle search</span>
+            <button data-ng-click="state.toggleCollapse()" type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
         </div>
-        <div class="container collapse navbar-collapse navbar-ex1-collapse">
-            <div class="row">
+        <div data-ng-class="state.isCollapsed ? '' : 'collapse'" class="navbar-collapse navbar-ex1-collapse">
+            <div class="container">
                 <form class="navbar-form navbar-left form-inline" role="search">
                     <div class="row">
                         <input style="width: 200px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="criteria.keyword" placeholder="Search" id="keyword" type="text">
@@ -180,6 +180,7 @@
                     <button data-ng-click="dialogs.openSuspendModal(getFormsSelected(['Open']))" data-ng-show="isFormSelected(['Open'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>
                     <button data-ng-click="dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))" data-ng-show="isFormSelected(['Open','Suspended'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>
                     <button data-ng-click="dialogs.openRestartModal(getFormsSelected(['Cancelled', 'Complete']))" data-ng-show="isFormSelected(['Cancelled', 'Complete'])" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>
+                    <a data-ng-show="false && !isFormSelected()" href="report.html" rel="external" target="_self" class="btn btn-default navbar-btn" id="report-button"><i class="fa fa-bar-chart-o"></i></a>
                     <button data-ng-click="exportCsv(getFormsSelected())" data-ng-show="!isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>
                 </div>
             </div>
@@ -197,9 +198,9 @@
             <tr>
                 <th><i class="icon-check"></i></th>
                 <th>Label</th>
-                <th class="hidden-xs">Status</th>
-                <th class="hidden-sm">Task</th>
-                <th class="hidden-sm">Assignee</th>
+                <th class="hidden-sm hidden-xs">Status</th>
+                <th class="hidden-sm hidden-xs">Task</th>
+                <th class="hidden-xs">Assignee</th>
                 <th>Date</th>
             </tr>
             </thead>
@@ -210,9 +211,9 @@
                         <a data-ng-if="form.external" href="{{form.link}}" target="_self">{{form.task.processInstanceLabel}}</a>
                         <a data-ng-if="!form.external" href="{{form.link}}">{{form.task.processInstanceLabel}}</a>
                     </td>
-                    <td class="hidden-xs">{{form.task.taskStatus}}</td>
-                    <td class="hidden-sm" style="cursor:pointer"><span class="use-tooltip" title="{{form.task.taskDescription}}" data-placement="right" data-trigger="hover">{{form.task.taskLabel}}</span></td>
-                    <td class="hidden-sm">{{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</td>
+                    <td class="hidden-sm hidden-xs">{{form.task.taskStatus}}</td>
+                    <td class="hidden-sm hidden-xs" style="cursor:pointer"><span class="use-tooltip" title="{{form.task.taskDescription}}" data-placement="right" data-trigger="hover">{{form.task.taskLabel}}</span></td>
+                    <td class="hidden-xs">{{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</td>
                     <td>{{form.task.startTime|date:'MMM d, y H:mm'}}<span data-ng-if="form.task.endTime"> - {{form.task.endTime|date:'MMM d, y H:mm'}}</span></td>
                 </tr>
             </tbody>

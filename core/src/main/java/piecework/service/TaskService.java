@@ -174,13 +174,6 @@ public class TaskService {
         }
     }
 
-//    public void completeIfTaskExists(Process process, ProcessInstance instance, Task task, ActionType action, Validation validation) throws StatusCodeError {
-//        if (task != null) {
-//            TaskCommand complete = new TaskCommand(process, instance, task, action, validation);
-//            commandExecutor.execute(complete);
-//        }
-//    }
-
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
         long time = 0;
         if (LOG.isDebugEnabled())
@@ -191,10 +184,6 @@ public class TaskService {
 
         Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
         Set<Process> allowedProcesses = processService.findProcesses(allProcessDefinitionKeys);
-
-//        Set<Process> overseerProcesses = processService.findProcesses(overseerProcessDefinitionKeys);
-//        Set<Process> userProcesses = Sets.difference(processService.findProcesses(userProcessDefinitionKeys), overseerProcesses);
-//        Set<Process> allowedProcesses = Sets.union(overseerProcesses, userProcesses);
 
         ViewContext version = versions.getVersion1();
 

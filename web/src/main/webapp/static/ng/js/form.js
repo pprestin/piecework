@@ -1013,6 +1013,7 @@ angular.module('Form',
                 .when('/form/:processDefinitionKey', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
                 .when('/form/:processDefinitionKey/:requestId', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
                 .when('/form/:processDefinitionKey/:state/:requestId', {controller: 'FormController', templateUrl: root + '/static/ng/views/form.html'})
+                .when('/report.html', {controller: 'ReportController', templateUrl: root + '/static/ng/views/report.html'})
                 .otherwise({redirectTo:'/form.html'});
 
             $locationProvider.html5Mode(true).hashPrefix('!');
@@ -1047,6 +1048,9 @@ angular.module('Form',
             };
             $scope.state = new Object();
             $scope.state.isCollapsed = false;
+            $scope.state.toggleCollapse = function() {
+                $scope.state.isCollapsed = !$scope.state.isCollapsed;
+            };
             $scope.state.isEditingAttachments = false;
             $scope.state.isViewingAttachments = false;
             $scope.state.sending = false;
@@ -1117,12 +1121,6 @@ angular.module('Form',
                     for (var i=0;i<values.length;i++) {
                         var value = values[i];
                         field.values[i] = value;
-//                        if (value != null) {
-//                            var option = field.optionMap[value];
-//                            if (option != null) {
-//
-//                            }
-//                        }
                     }
                 }
 
@@ -1242,6 +1240,11 @@ angular.module('Form',
     .controller('ListController', ['$scope', '$window', '$resource', '$http', '$routeParams','$modal', 'personService', 'taskService', 'dialogs',
         function($scope, $window, $resource, $http, $routeParams, $modal, personService, taskService, dialogs) {
             $scope.context = $window.piecework.context;
+            $scope.state = new Object();
+            $scope.state.isCollapsed = false;
+            $scope.state.toggleCollapse = function() {
+                $scope.state.isCollapsed = !$scope.state.isCollapsed;
+            };
 
             $scope.dates = new Object();
             $scope.dates.selectedDateRangeKey = 'any';
@@ -1326,6 +1329,10 @@ angular.module('Form',
                 'Rejected': 'Rejected tasks',
                 'Suspended': 'Suspended tasks',
                 'all': 'All tasks'
+            };
+
+            $scope.showReportPanel = function() {
+
             };
 
             $scope.selectedFormMap = new Object();

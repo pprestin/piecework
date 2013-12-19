@@ -105,31 +105,35 @@ public class UserInterfaceService {
         }
     }
 
-    public StreamingOutput getExplanationAsStreaming(Explanation explanation) throws IOException, NotFoundError {
-        Resource template = formTemplateService.getTemplateResource(Explanation.class, explanation);
-        if (template.exists()) {
-            Entity user = helper.getPrincipal();
-            ObjectMapper objectMapper = jsonProvider.locateMapper(Explanation.class, MediaType.APPLICATION_JSON_TYPE);
-            InlinePageModelSerializer modelSerializer = new InlinePageModelSerializer(settings, explanation, Explanation.class, user, objectMapper);
-            StaticResourceAggregatingVisitor aggregatingVisitor =
-                    new StaticResourceAggregatingVisitor(null, null, settings, contentRepository, true);
+    public StreamingOutput getExplanationAsStreaming(Explanation explanation) {
+        try {
+            Resource template = formTemplateService.getTemplateResource(Explanation.class, explanation);
+            if (template.exists()) {
+                Entity user = helper.getPrincipal();
+                ObjectMapper objectMapper = jsonProvider.locateMapper(Explanation.class, MediaType.APPLICATION_JSON_TYPE);
+                InlinePageModelSerializer modelSerializer = new InlinePageModelSerializer(settings, explanation, Explanation.class, user, objectMapper);
+                StaticResourceAggregatingVisitor aggregatingVisitor =
+                        new StaticResourceAggregatingVisitor(null, null, settings, contentRepository, true);
 
-            InputStream inputStream = template.getInputStream();
-            // Sanity check
-            if (inputStream == null) {
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+                InputStream inputStream = template.getInputStream();
+                // Sanity check
+                if (inputStream == null) {
+                    throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+                }
+
+                CleanerProperties cleanerProperties = new CleanerProperties();
+                cleanerProperties.setOmitXmlDeclaration(true);
+                HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
+                TagNode node = cleaner.clean(inputStream);
+                node.traverse(aggregatingVisitor);
+
+                ResourceInliningVisitor visitor =
+                        new ResourceInliningVisitor(settings, modelSerializer, aggregatingVisitor, true);
+
+                return new HtmlCleanerStreamingOutput(template.getInputStream(), visitor);
             }
-
-            CleanerProperties cleanerProperties = new CleanerProperties();
-            cleanerProperties.setOmitXmlDeclaration(true);
-            HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            TagNode node = cleaner.clean(inputStream);
-            node.traverse(aggregatingVisitor);
-
-            ResourceInliningVisitor visitor =
-                    new ResourceInliningVisitor(settings, modelSerializer, aggregatingVisitor, true);
-
-            return new HtmlCleanerStreamingOutput(template.getInputStream(), visitor);
+        } catch (Exception e) {
+            LOG.error("Exception handling exception", e);
         }
         return null;
     }

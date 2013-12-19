@@ -1,0 +1,38 @@
+<nav class="navbar navbar-default navbar-inverse pw-navbar-collapse" style="min-height: 20px;margin-bottom: 0px">
+    <div class="user-information">
+        <div id="user-information-name" class="user-information-name pull-right">
+            {{context.user.displayName}}
+        </div>
+    </div>
+</nav>
+<nav class="navbar navbar-default pw-navbar-collapse">
+    <div class="navbar-header">
+        <button data-ng-click="state.isCollapsed = !state.isCollapsed" type="button" class="navbar-toggle">
+            <span class="sr-only">Toggle</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+    </div>
+    <div collapse="state.isCollapsed" class="container collapse navbar-collapse navbar-ex1-collapse">
+        <div class="row">
+            <div class="navbar-left">
+                <h2>Reports</h2>
+            </div>
+            <div class="navbar-right">
+                <div class="responsive-pull-right">
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+<div class="main-content container">
+    <select ng-model="chartType" class="input ng-valid ng-dirty">
+        <option value="pie">Pie</option>
+        <option value="bar">Bar</option>
+        <option value="line">Line</option>
+        <option value="point">Point</option>
+        <option value="area">Area</option>
+    </select>
+    <div ac-chart="chartType" ac-data="data" ac-config="config" class="chart-sm"></div>
+</div>

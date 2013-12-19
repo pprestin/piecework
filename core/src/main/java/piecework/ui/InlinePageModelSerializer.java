@@ -22,10 +22,7 @@ import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
 import org.springframework.core.io.Resource;
 import piecework.designer.model.view.IndexView;
-import piecework.model.Entity;
-import piecework.model.Explanation;
-import piecework.model.Form;
-import piecework.model.SearchResults;
+import piecework.model.*;
 
 import java.io.IOException;
 
@@ -115,7 +112,8 @@ public class InlinePageModelSerializer {
                 script.addAttribute("src", settings.getPublicUrl() + "/resource/script/Form.js");
             else
                 script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/Form.js");
-
+        } else if (type.equals(Report.class)) {
+            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/Report.js");
         } else if (type.equals(SearchResults.class)) {
             script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/SearchResults.form.js");
         } else if (type.equals(IndexView.class)) {
@@ -151,7 +149,8 @@ public class InlinePageModelSerializer {
                 link.addAttribute("href", settings.getPublicUrl() + "/resource/css/Form.css");
             else
                 link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/Form.css");
-
+        } else if (type.equals(Report.class)) {
+            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/Report.css");
         } else if (type.equals(SearchResults.class)) {
             link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/SearchResults.form.css");
         } else if (type.equals(IndexView.class)) {

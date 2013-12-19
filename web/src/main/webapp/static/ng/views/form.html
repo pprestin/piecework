@@ -240,16 +240,16 @@
         </div>
     </div>
 </nav>
-<nav class="navbar navbar-default pw-navbar-collapse">
+<nav class="navbar navbar-default navbar-ex1-collapse" style="margin-bottom: 0px;border-radius: 0px">
     <div class="navbar-header">
-        <button data-ng-click="state.isCollapsed = !state.isCollapsed" type="button" class="navbar-toggle">
-            <span class="sr-only">Toggle search</span>
+        <button data-ng-click="state.toggleCollapse()" type="button" class="navbar-toggle">
+            <span class="sr-only">Toggle</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
     </div>
-    <div collapse="state.isCollapsed" class="container collapse navbar-collapse navbar-ex1-collapse">
+    <div data-ng-class="state.isCollapsed ? '' : 'collapse'" class="container navbar-collapse navbar-ex1-collapse">
         <div class="row">
             <div class="navbar-left">
                 <button data-ng-click="dialogs.openHistoryModal([form])" data-ng-show="form.history" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>
@@ -282,7 +282,7 @@
                         </form>
                     </div>
                     <button data-ng-click="viewAttachments()" data-ng-show="form.allowAttachments && form.history" class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i ng-class="state.isViewingAttachments ? 'fa-folder-open' : 'fa-folder'" class="fa fa-folder"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>
-                    <a class="btn btn-default navbar-btn" href="{{root}}.html" rel="external" id="back-button" title="Return to task list"><i class="fa fa-arrow-left"></i></a>
+                    <a class="btn btn-default navbar-btn" href="form.html" rel="external" id="back-button" title="Return to task list"><i class="fa fa-arrow-left"></i></a>
                 </div>
             </div>
         </div>

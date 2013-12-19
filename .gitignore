@@ -33,5 +33,6 @@ web/data:storage
 web/data/linux
 
 # Modules -- comment out to commit changes #
+migration
 processes
 integration

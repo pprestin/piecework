@@ -36,12 +36,6 @@ import java.util.List;
 @Path("resource")
 public interface ScriptResource extends ApplicationResource {
 
-//    @GET
-//    @Path("{processDefinitionKey}.js")
-//    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-//    @Produces({"text/javascript"})
-//    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
-
     @GET
     @Path("{processDefinitionKey}/{requestId}.js")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})

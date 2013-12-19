@@ -28,6 +28,7 @@ import piecework.designer.model.view.IndexView;
 import piecework.exception.NotFoundError;
 import piecework.model.Explanation;
 import piecework.model.Form;
+import piecework.model.Report;
 import piecework.model.SearchResults;
 
 import javax.annotation.PostConstruct;
@@ -43,7 +44,7 @@ import java.util.Set;
 public class FormTemplateService {
 
     private static final Set<Class<?>> ACCEPTABLE_TEMPLATE_CLASSES =
-            Sets.newHashSet(Explanation.class, Form.class, IndexView.class, SearchResults.class);
+            Sets.newHashSet(Explanation.class, Form.class, IndexView.class, Report.class, SearchResults.class);
     private static final Map<String, Class<?>> ACCEPTABLE_TEMPLATE_NAME_MAP;
 
     static {

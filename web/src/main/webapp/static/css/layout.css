@@ -18,7 +18,7 @@
 }
 @media (min-width:  769px) {
     .main-content {
-        padding-top: 0px;
+        padding-top: 10px;
         padding-bottom: 100px;
     }
     .responsive-pull-right {
@@ -188,6 +188,11 @@ div.screen-footer {
     background-color: transparent;
     padding: 0px;
     margin-bottom: 20px;
+}
+
+.chart-sm {
+    height: 300px;
+    width: 500px;
 }
 
 .checkbox-menu-item label {
@@ -366,6 +371,10 @@ select.form-control {
 
 .navbar h2 {
     margin-top: 10px;
+}
+
+.navbar-ex1-collapse {
+    margin-radius: 0px;
 }
 
 .navbar-ex1-collapse .row .navbar-form {

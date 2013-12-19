@@ -93,7 +93,7 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
             LOG.error("Unable to get explanation page as a streaming output", ioe);
         }
 
-		return Response.status(status).entity(explanation).build();
+		return Response.status(status).entity(userInterfaceService.getExplanationAsStreaming(explanation)).build();
 	}
 
 }

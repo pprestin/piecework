@@ -37,7 +37,8 @@ import javax.ws.rs.core.Response;
 /**
  * @author James Renfro
  */
-@Service
+// Disabled - not sure if this is necessary or not
+//@Service
 public class FormRequestResourceVersion1 implements FormRequestResource {
 
     private static final Logger LOG = Logger.getLogger(FormRequestResourceVersion1.class);

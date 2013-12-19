@@ -31,7 +31,7 @@ public class Registry {
 
 	private MultiKeyMap map = new MultiKeyMap();
 	
-	@Autowired
+	@Autowired(required = false)
 	Registrant<?>[] registrants;
 
     @SuppressWarnings("unchecked")
@@ -46,6 +46,9 @@ public class Registry {
 	
 	@PostConstruct
 	public void register() {
+        if (registrants == null)
+            return;
+
 		for (Registrant<?> registrant : registrants) {
 			map.put(registrant.getType(), registrant.getKey(), registrant);
 		}
