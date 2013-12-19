@@ -18,21 +18,16 @@ package piecework.resource.concrete;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import piecework.enumeration.ActionType;
 import piecework.exception.*;
-import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessRepository;
 import piecework.resource.AnonymousScriptResource;
 import piecework.service.FormTemplateService;
-import piecework.service.RequestService;
 
-import javax.ws.rs.core.MediaType;
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 
 /**
  * @author James Renfro
@@ -51,13 +46,15 @@ public class AnonymousScriptResourceVersion1 extends AbstractScriptResource impl
     @Override
     public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         Form form = getForm(rawProcessDefinitionKey, context);
-        return processScript(form);
+        ServletContext servletContext = context.getServletContext();
+        return processScript(servletContext, form);
     }
 
     @Override
     public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
         Form form = getForm(rawProcessDefinitionKey, context);
-        return processStylesheet(form);
+        ServletContext servletContext = context.getServletContext();
+        return processStylesheet(servletContext, form);
     }
 
     private Form getForm(final String rawProcessDefinitionKey, final MessageContext context) throws NotFoundError {

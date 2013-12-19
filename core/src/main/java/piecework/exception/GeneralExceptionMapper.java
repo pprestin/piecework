@@ -16,6 +16,7 @@
 package piecework.exception;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -46,6 +47,9 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
 
     @Autowired
     private UserInterfaceService userInterfaceService;
+
+    @Context
+    private javax.servlet.ServletContext servletContext;
 
 	/**
 	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
@@ -93,7 +97,7 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
             LOG.error("Unable to get explanation page as a streaming output", ioe);
         }
 
-		return Response.status(status).entity(userInterfaceService.getExplanationAsStreaming(explanation)).build();
+		return Response.status(status).entity(userInterfaceService.getExplanationAsStreaming(servletContext, explanation)).build();
 	}
 
 }

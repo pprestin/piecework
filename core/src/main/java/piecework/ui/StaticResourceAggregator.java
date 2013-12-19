@@ -23,12 +23,14 @@ import org.apache.log4j.Logger;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 import org.springframework.core.io.Resource;
+import org.springframework.web.context.support.ServletContextResource;
 import piecework.enumeration.Scheme;
 import piecework.model.Content;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
 import piecework.util.PathUtility;
 
+import javax.servlet.ServletContext;
 import java.io.*;
 import java.nio.charset.Charset;
 
@@ -46,13 +48,15 @@ public class StaticResourceAggregator {
     private static final String NEWLINE = System.getProperty("line.separator");
     private static final Logger LOG = Logger.getLogger(StaticResourceAggregator.class);
 
+    private final ServletContext servletContext;
     private final Process process;
     private final ContentRepository contentRepository;
     private final StringBuffer buffer;
     private final UserInterfaceSettings settings;
     private final String base;
 
-    public StaticResourceAggregator(Process process, ContentRepository contentRepository, UserInterfaceSettings settings, String base) {
+    public StaticResourceAggregator(ServletContext servletContext, Process process, ContentRepository contentRepository, UserInterfaceSettings settings, String base) {
+        this.servletContext = servletContext;
         this.process = process;
         this.contentRepository = contentRepository;
         this.buffer = new StringBuffer();
@@ -197,13 +201,20 @@ public class StaticResourceAggregator {
             return null;
 
         String adjustedPath = path.substring(indexOf);
-        File file = new File(settings.getAssetsDirectoryPath(), adjustedPath);
-        String absolutePath = file.getAbsolutePath();
-        LOG.debug("Reading from " + absolutePath);
-        if (!file.exists())
+        ServletContextResource servletContextResource = new ServletContextResource(servletContext, adjustedPath);
+
+        if (!servletContextResource.exists())
             return null;
 
-        return new BufferedReader(new FileReader(file));
+        return new BufferedReader(new InputStreamReader(servletContextResource.getInputStream()));
+
+//        File file = new File(settings.getAssetsDirectoryPath(), adjustedPath);
+//        String absolutePath = file.getAbsolutePath();
+//        LOG.debug("Reading from " + absolutePath);
+//        if (!file.exists())
+//            return null;
+//
+//        return new BufferedReader(new FileReader(file));
     }
 
     public static class Options {

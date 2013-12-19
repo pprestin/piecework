@@ -39,6 +39,7 @@ import piecework.ui.*;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
 import piecework.ui.visitor.*;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -105,7 +106,7 @@ public class UserInterfaceService {
         }
     }
 
-    public StreamingOutput getExplanationAsStreaming(Explanation explanation) {
+    public StreamingOutput getExplanationAsStreaming(ServletContext servletContext, Explanation explanation) {
         try {
             Resource template = formTemplateService.getTemplateResource(Explanation.class, explanation);
             if (template.exists()) {
@@ -113,7 +114,7 @@ public class UserInterfaceService {
                 ObjectMapper objectMapper = jsonProvider.locateMapper(Explanation.class, MediaType.APPLICATION_JSON_TYPE);
                 InlinePageModelSerializer modelSerializer = new InlinePageModelSerializer(settings, explanation, Explanation.class, user, objectMapper);
                 StaticResourceAggregatingVisitor aggregatingVisitor =
-                        new StaticResourceAggregatingVisitor(null, null, settings, contentRepository, true);
+                        new StaticResourceAggregatingVisitor(servletContext, null, null, settings, contentRepository, true);
 
                 InputStream inputStream = template.getInputStream();
                 // Sanity check
@@ -217,12 +218,12 @@ public class UserInterfaceService {
         return null;
     }
 
-    public Resource getScriptResource(Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getScriptResource(ServletContext servletContext, Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(templateName);
-        return getScriptResource(process, template, base, isAnonymous);
+        return getScriptResource(servletContext, process, template, base, isAnonymous);
     }
 
-    public Resource getScriptResource(Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getScriptResource(ServletContext servletContext, Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
         if (!template.exists())
             throw new NotFoundError();
 
@@ -241,7 +242,7 @@ public class UserInterfaceService {
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new StaticResourceAggregatingVisitor(process, base, settings, contentRepository, isAnonymous);
+            visitor = new StaticResourceAggregatingVisitor(servletContext, process, base, settings, contentRepository, isAnonymous);
 
             inputStream = template.getInputStream();
             TagNode node = cleaner.clean(inputStream);
@@ -261,12 +262,12 @@ public class UserInterfaceService {
         return null;
     }
 
-    public Resource getStylesheetResource(Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getStylesheetResource(ServletContext servletContext, Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(templateName);
-        return getStylesheetResource(process, template, base, isAnonymous);
+        return getStylesheetResource(servletContext, process, template, base, isAnonymous);
     }
 
-    public Resource getStylesheetResource(Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getStylesheetResource(ServletContext servletContext, Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
         if (!template.exists())
             throw new NotFoundError();
 
@@ -284,7 +285,7 @@ public class UserInterfaceService {
             CleanerProperties cleanerProperties = new CleanerProperties();
             cleanerProperties.setOmitXmlDeclaration(true);
             HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new StaticResourceAggregatingVisitor(process, base, settings, contentRepository, isAnonymous);
+            visitor = new StaticResourceAggregatingVisitor(servletContext, process, base, settings, contentRepository, isAnonymous);
             TagNode node = cleaner.clean(template.getInputStream());
             node.traverse(visitor);
 

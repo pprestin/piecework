@@ -36,6 +36,7 @@ import piecework.security.SecuritySettings;
 import piecework.service.*;
 import piecework.ui.streaming.ResourceStreamingOutput;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.util.Date;
@@ -95,11 +96,11 @@ public abstract class AbstractScriptResource {
         }
     }
 
-    protected Response processScript(Form form) throws StatusCodeError {
+    protected Response processScript(ServletContext servletContext, Form form) throws StatusCodeError {
         try {
             FormDisposition formDisposition = form.getDisposition();
             Resource pageResource = userInterfaceService.getCustomPage(form);
-            Resource scriptResource = userInterfaceService.getScriptResource(form.getProcess(), pageResource, formDisposition.getBase(), form.isAnonymous());
+            Resource scriptResource = userInterfaceService.getScriptResource(servletContext, form.getProcess(), pageResource, formDisposition.getBase(), form.isAnonymous());
             return response(scriptResource, "text/javascript");
         } catch (IOException ioe) {
             LOG.error("Caught io exception", ioe);
@@ -110,11 +111,11 @@ public abstract class AbstractScriptResource {
         }
     }
 
-    protected Response processStylesheet(Form form) throws StatusCodeError {
+    protected Response processStylesheet(ServletContext servletContext, Form form) throws StatusCodeError {
         try {
             FormDisposition formDisposition = form.getDisposition();
             Resource pageResource = userInterfaceService.getCustomPage(form);
-            Resource stylesheetResource = userInterfaceService.getStylesheetResource(form.getProcess(), pageResource, formDisposition.getBase(), isAnonymous());
+            Resource stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form.getProcess(), pageResource, formDisposition.getBase(), isAnonymous());
             return response(stylesheetResource, "text/css");
         } catch (IOException ioe) {
             LOG.error("Caught io exception", ioe);

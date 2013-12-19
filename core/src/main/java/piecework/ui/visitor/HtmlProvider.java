@@ -21,14 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import piecework.exception.NotFoundError;
 import piecework.model.Explanation;
 import piecework.service.UserInterfaceService;
-import piecework.ui.streaming.StreamingPageContent;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.*;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import java.io.*;
@@ -43,6 +39,9 @@ import java.lang.reflect.Type;
 public class HtmlProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
 
 	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
+
+    @Context
+    private javax.servlet.ServletContext servletContext;
 
     @Autowired
     UserInterfaceService userInterfaceService;
@@ -68,7 +67,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             StreamingOutput streamingOutput;
 
             if (type.equals(Explanation.class))
-                streamingOutput = userInterfaceService.getExplanationAsStreaming(Explanation.class.cast(t));
+                streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, Explanation.class.cast(t));
             else
                 streamingOutput = userInterfaceService.getDefaultPageAsStreaming(type, t);
 

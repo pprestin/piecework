@@ -26,6 +26,7 @@ import piecework.ui.TagAttributeAction;
 import piecework.ui.UserInterfaceSettings;
 import piecework.util.PathUtility;
 
+import javax.servlet.ServletContext;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,10 +43,10 @@ public class StaticResourceAggregatingVisitor extends HtmlProviderVisitor {
     private final Map<String, TagAttributeAction> scriptAttributeActionMap;
     private final Map<String, TagAttributeAction> linkAttributeActionMap;
 
-    public StaticResourceAggregatingVisitor(Process process, String base, UserInterfaceSettings settings, ContentRepository contentRepository, boolean isAnonymous) {
+    public StaticResourceAggregatingVisitor(ServletContext servletContext, Process process, String base, UserInterfaceSettings settings, ContentRepository contentRepository, boolean isAnonymous) {
         super(settings, isAnonymous);
-        this.scriptAggregator = new StaticResourceAggregator(process, contentRepository, settings, base);
-        this.stylesheetAggregator = new StaticResourceAggregator(process, contentRepository, settings, base);
+        this.scriptAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, base);
+        this.stylesheetAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, base);
         this.scriptAttributeActionMap = new HashMap<String, TagAttributeAction>();
         this.linkAttributeActionMap = new HashMap<String, TagAttributeAction>();
     }

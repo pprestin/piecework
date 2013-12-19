@@ -32,6 +32,7 @@ import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
 import piecework.service.FormTemplateService;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
@@ -75,12 +76,13 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
         String scriptId = sanitizer.sanitize(rawScriptId);
         Entity principal = identityHelper.getPrincipal();
         String templateName = formTemplateService.getTemplateName(scriptId, isAnonymous());
+        ServletContext servletContext = context.getServletContext();
         if (templateName == null) {
             Form form = getForm(scriptId, principal, context);
-            return processScript(form);
+            return processScript(servletContext, form);
         }
 
-        Resource scriptResource = userInterfaceService.getScriptResource(null, templateName, null, isAnonymous());
+        Resource scriptResource = userInterfaceService.getScriptResource(servletContext, null, templateName, null, isAnonymous());
         return response(scriptResource, "text/javascript");
     }
 
@@ -89,12 +91,13 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
         String stylesheetId = sanitizer.sanitize(rawStylesheetId);
         Entity principal = identityHelper.getPrincipal();
         String templateName = formTemplateService.getTemplateName(stylesheetId, isAnonymous());
+        ServletContext servletContext = context.getServletContext();
         if (templateName == null) {
             Form form = getForm(stylesheetId, principal, context);
-            return processStylesheet(form);
+            return processStylesheet(servletContext, form);
         }
 
-        Resource stylesheetResource = userInterfaceService.getStylesheetResource(null, templateName, null, isAnonymous());
+        Resource stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, null, templateName, null, isAnonymous());
         return response(stylesheetResource, "text/css");
     }
 
