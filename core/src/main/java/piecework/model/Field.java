@@ -294,7 +294,7 @@ public class Field implements Serializable, Comparable<Field> {
 
     @Override
     public int compareTo(Field o) {
-        int result = Integer.compare(ordinal, o.ordinal);
+        int result = (ordinal < o.ordinal) ? -1 : ((ordinal == o.ordinal) ? 0 : 1);
 
         if (result == 0 && fieldId != null && o.fieldId != null)
             result = fieldId.compareTo(o.fieldId);
