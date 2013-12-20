@@ -20,6 +20,7 @@ import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -54,6 +55,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     private static final FindAndModifyOptions OPTIONS = new FindAndModifyOptions().returnNew(true);
 
     @Autowired
+    @Qualifier(value="mongoTemplate")
     MongoTemplate mongoOperations;
 
     @Override

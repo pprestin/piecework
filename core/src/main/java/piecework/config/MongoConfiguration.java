@@ -31,6 +31,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import piecework.model.ProcessInstance;
@@ -52,7 +54,27 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
 
     private EmbeddedMongoInstance mongoInstance;
 
+    @Bean
+    @Primary
+    public MongoTemplate mongoTemplate() throws Exception {
+        return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    }
+
+    @Bean
+    @Primary
+    public SimpleMongoDbFactory mongoDbFactory() throws Exception {
+
+        UserCredentials credentials = getUserCredentials();
+
+        if (credentials == null) {
+            return new SimpleMongoDbFactory(mongo(), getDatabaseName());
+        } else {
+            return new SimpleMongoDbFactory(mongo(), getDatabaseName(), credentials);
+        }
+    }
+
 	@Bean
+    @Primary
     public Mongo mongo() throws Exception {
         if (environment.acceptsProfiles("embedded-mongo")) {
             mongoInstance = embeddedMongo();

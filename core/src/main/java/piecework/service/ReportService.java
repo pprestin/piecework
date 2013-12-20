@@ -16,6 +16,7 @@
 package piecework.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
@@ -41,6 +42,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 public class ReportService {
 
     @Autowired
+    @Qualifier(value="mongoTemplate")
     MongoOperations operations;
 
     public Report getReport(Process process, String reportName) throws PieceworkException {

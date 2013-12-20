@@ -18,6 +18,7 @@ package piecework;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,7 @@ public class AttachmentService {
     IdentityService identityService;
 
     @Autowired
+    @Qualifier(value="mongoTemplate")
     MongoTemplate mongoOperations;
 
     @Autowired

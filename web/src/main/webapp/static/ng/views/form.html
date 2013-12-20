@@ -83,7 +83,7 @@
             </select>
         </div>
         <div data-ng-switch-when="file">
-            <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}" data-ng-show="{{field.value}}"/>
+            <img class="thumbnail" data-ng-src="{{field.value.link ? field.value.link : field.value}}" data-ng-show="field.value"/>
             <input data-ng-change="onFieldChange(field)" data-ng-disabled="!field.editable" data-ng-model="file" data-ng-readonly="field.readonly" class="form-control" name="{{field.name}}" type="file"/>
         </div>
         <div data-ng-switch-when="person">

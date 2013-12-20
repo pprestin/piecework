@@ -27,6 +27,7 @@ import javax.annotation.PostConstruct;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -47,6 +48,7 @@ public class DataConfiguration {
 	private static final Logger LOG = Logger.getLogger(DataConfiguration.class);
 			
 	@Autowired
+    @Qualifier(value="mongoTemplate")
 	MongoTemplate mongoTemplate;
 
     @Autowired
