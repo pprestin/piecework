@@ -331,6 +331,9 @@ public class ProcessService {
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
         Process original = processRepository.findOne(processDefinitionKey);
+        if (original == null)
+            throw new NotFoundError();
+
         Process update = new Process.Builder(rawProcess, sanitizer).build();
 
         Process.Builder builder = new Process.Builder(original, passthroughSanitizer);
