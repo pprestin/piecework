@@ -346,7 +346,7 @@ public class ProcessInstanceService {
         ProcessInstance instance = read(process, rawProcessInstanceId, true);
         ProcessDeployment deployment = deploymentService.read(process, instance);
         Task task = taskService.allowedTask(process, instance, principal, true);
-        FormRequest request = requestService.create(requestDetails, process);
+        FormRequest request = requestService.create(requestDetails, process, instance, task, ActionType.UPDATE);
         Validation validation = commandFactory.validation(process, deployment, request, object, type, principal, null, fieldName).execute();
 
         return commandFactory.updateValue(principal, task, validation).execute();

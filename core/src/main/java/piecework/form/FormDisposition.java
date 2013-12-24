@@ -44,8 +44,8 @@ public class FormDisposition {
         this(FormDispositionType.DEFAULT, null, null, null, DataInjectionStrategy.NONE);
     }
 
-    public FormDisposition(URI uri) {
-        this(FormDispositionType.REMOTE, uri, null, null, DataInjectionStrategy.INCLUDE_SCRIPT);
+    public FormDisposition(URI uri, DataInjectionStrategy strategy) {
+        this(FormDispositionType.REMOTE, uri, null, null, strategy);
     }
 
     public FormDisposition(String base, String path, DataInjectionStrategy strategy) {

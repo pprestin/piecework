@@ -188,7 +188,7 @@ public class StaticResourceAggregator {
         }
 
         if (!PathUtility.checkForStaticPath(path)) {
-            Content content = contentRepository.findByLocation(process, base, fullPath);
+            Content content = contentRepository.findByLocation(process, base, path);
             if (content != null) {
                 return new BufferedReader(new InputStreamReader(content.getInputStream()));
             }

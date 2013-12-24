@@ -78,6 +78,8 @@ public class AttachmentService {
     Versions versions;
 
 
+//    private String template = "";
+
     public StreamingAttachmentContent content(Process process, ProcessInstance processInstance, String attachmentId) {
 
         Set<Attachment> storedAttachments = processInstance.getAttachments();

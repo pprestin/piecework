@@ -70,8 +70,8 @@ public class RequestService {
         SecurityUtility.verifyEntityIsAuthorized(process, task, principal);
 
         ActionType actionType = ActionType.CREATE;
-        if (task != null)
-            actionType = ActionType.COMPLETE;
+//        if (task != null)
+//            actionType = ActionType.COMPLETE;
 
         return create(requestDetails, process, instance, task, actionType);
     }

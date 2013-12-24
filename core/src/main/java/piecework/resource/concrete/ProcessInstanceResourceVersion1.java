@@ -35,6 +35,7 @@ import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.process.HistoryFactory;
 import piecework.resource.ProcessInstanceResource;
+import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -57,6 +58,9 @@ import java.util.Map;
 public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource {
 
     private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
+
+    @Autowired
+    AccessTracker accessTracker;
 
     @Autowired
     AttachmentService attachmentService;
@@ -243,6 +247,9 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 	@Override
 	public Response search(MessageContext context) throws PieceworkException {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, false);
+
         Entity principal = helper.getPrincipal();
         UriInfo uriInfo = context.getContext(UriInfo.class);
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
@@ -274,19 +281,23 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response remove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        valuesService.delete(rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, requestDetails, principal);
+        accessTracker.track(requestDetails, true, false);
+        valuesService.delete(rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, requestDetails, helper.getPrincipal());
         return Response.noContent().build();
     }
 
     @Override
-    public Response value(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
+    public Response readValue(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, false);
+
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
+
+        Entity principal = helper.getPrincipal();
 
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
@@ -296,24 +307,25 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String value) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         data.putOne(fieldName, new Value(sanitizer.sanitize(value)));
-        processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, data, Map.class, principal);
+        processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, data, Map.class, helper.getPrincipal());
 
         return Response.noContent().build();
     }
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        ProcessInstance stored = processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, body, MultipartBody.class, principal);
+        ProcessInstance stored = processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, body, MultipartBody.class, helper.getPrincipal());
         return valueLocation(stored, fieldName);
     }
 
@@ -368,10 +380,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     private <T> Response doAttach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, T data, Class<T> type) throws PieceworkException {
 
-        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
 
-        ProcessInstance instance = processInstanceService.attach(principal, requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, data, type);
+        ProcessInstance instance = processInstanceService.attach(helper.getPrincipal(), requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, data, type);
         SearchResults searchResults = attachmentService.search(instance, new AttachmentQueryParameters());
 
         return Response.ok(searchResults).build();
@@ -379,10 +391,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     private <T> Response doCreate(MessageContext context, String rawProcessDefinitionKey, T data, Class<T> type) throws PieceworkException {
 
-        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
 
-        ProcessInstance instance = processInstanceService.create(principal, requestDetails, rawProcessDefinitionKey, data, type);
+        ProcessInstance instance = processInstanceService.create(helper.getPrincipal(), requestDetails, rawProcessDefinitionKey, data, type);
 
         return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
     }

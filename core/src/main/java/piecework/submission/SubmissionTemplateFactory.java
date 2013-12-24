@@ -92,7 +92,10 @@ public class SubmissionTemplateFactory {
             builder.requestId(formRequest.getRequestId()).taskId(formRequest.getTaskId()).actAsUser(formRequest.getActAsUser());
             ActionType actionType = formRequest.getAction();
             includeFields = actionType == ActionType.CREATE || actionType == ActionType.COMPLETE || actionType == ActionType.VALIDATE || actionType == ActionType.SAVE;
+            builder.attachmentTemplate(actionType == ActionType.ATTACH);
         }
+
+        builder.allowAny(activity.isAllowAny());
 
         if (activity.isAllowAttachments()) {
             builder.allowAttachments();

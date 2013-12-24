@@ -41,6 +41,7 @@ public class SubmissionTemplate {
     private final Map<String, Button> buttonValueMap;
     private final Map<Field, List<ValidationRule>> fieldRuleMap;
     private final Map<String, Field> fieldMap;
+    private final boolean isAttachmentTemplate;
     private final boolean isAttachmentAllowed;
     private final boolean anyFieldAllowed;
     private final long maxAttachmentSize;
@@ -58,6 +59,7 @@ public class SubmissionTemplate {
         this.buttonNames = Collections.unmodifiableSet(builder.buttonNames);
         this.buttonValueMap = Collections.unmodifiableMap(builder.buttonValueMap);
         this.fieldMap = Collections.unmodifiableMap(builder.fieldMap);
+        this.isAttachmentTemplate = builder.isAttachmentTemplate;
         this.isAttachmentAllowed = builder.isAttachmentAllowed;
         this.anyFieldAllowed = builder.anyFieldAllowed;
         this.fieldRuleMap = Collections.unmodifiableMap(builder.fieldRuleMap);
@@ -102,6 +104,9 @@ public class SubmissionTemplate {
                 if (this.fieldMap.containsKey(fieldName))
                     return FieldSubmissionType.DESCRIPTION;
             }
+
+            if (isAttachmentTemplate)
+                return FieldSubmissionType.ATTACHMENT;
 
             if (anyFieldAllowed)
                 return FieldSubmissionType.RANDOM;
@@ -156,6 +161,7 @@ public class SubmissionTemplate {
         private Map<String, Button> buttonValueMap;
         private ManyMap<Field, ValidationRule> fieldRuleMap;
         private Map<String, Field> fieldMap;
+        private boolean isAttachmentTemplate;
         private boolean isAttachmentAllowed;
         private boolean anyFieldAllowed;
         private long maxAttachmentSize;
@@ -209,6 +215,11 @@ public class SubmissionTemplate {
         public Builder rules(Field field, List<ValidationRule> rules) {
             if (rules != null && !rules.isEmpty())
                 this.fieldRuleMap.put(field, rules);
+            return this;
+        }
+
+        public Builder attachmentTemplate(boolean isAttachmentTemplate) {
+            this.isAttachmentTemplate = isAttachmentTemplate;
             return this;
         }
 

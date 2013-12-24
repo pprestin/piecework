@@ -29,7 +29,7 @@ public interface TaskResource extends ApplicationResource, ApiResource {
     @GET
     @Path("{processDefinitionKey}/{taskId}")
     @RolesAllowed({AuthorizationRole.USER})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId) throws PieceworkException;
+    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId) throws PieceworkException;
 
     @PUT
     @Path("{processDefinitionKey}/{taskId}")
@@ -45,7 +45,7 @@ public interface TaskResource extends ApplicationResource, ApiResource {
     @GET
     @Path("")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    SearchResults search(@Context UriInfo uriInfo) throws PieceworkException;
+    SearchResults search(@Context MessageContext context) throws PieceworkException;
 
     SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException;
 

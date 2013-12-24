@@ -275,10 +275,10 @@
                     <a data-ng-click="dialogs.openCommentModal([form])" data-ng-show="form.allowAttachments && form.history" class="btn btn-default navbar-btn" id="comment-button" data-target="#comment-dialog" data-backdrop="false" data-toggle="modal" title="Add comment" type="button"><i class="fa fa-comment-o"></i></a>
                     <div class="btn-group">
                         <form data-ng-show="form.allowAttachments && form.history" class="navbar-form navbar-left form-inline" id="fileupload" action="{{form.attachment}}" method="POST" enctype="multipart/form-data" data-file-upload="fileUploadOptions">
-                            <span class="btn btn-default navbar-btn fileinput-button" data-ng-class="{disabled: disabled}">
-                                  <i ng-hide="state.sending" class="fa fa-paperclip"></i>  <i ng-show="state.sending" class='fa fa-paperclip fa-spin'></i>
-                                  <input type="file" name="attachment" multiple="" ng-disabled="disabled">
-                            </span>
+                                <span class="btn btn-default navbar-btn fileinput-button" data-ng-class="{disabled: disabled}">
+                                      <i ng-hide="state.sending" class="fa fa-paperclip"></i>  <i ng-show="state.sending" class='fa fa-paperclip fa-spin'></i>
+                                      <input type="file" name="attachment" multiple="" ng-disabled="disabled">
+                                </span>
                         </form>
                     </div>
                     <button data-ng-click="viewAttachments()" data-ng-show="form.allowAttachments && form.history" class="btn btn-default navbar-btn" id="attachments-button" title="View comments and attachments"><i ng-class="state.isViewingAttachments ? 'fa-folder-open' : 'fa-folder'" class="fa fa-folder"></i>&nbsp;<span id="attachment-count">{{form.attachmentCount}}</span></button>

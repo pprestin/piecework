@@ -15,9 +15,11 @@
  */
 package piecework.command;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.ServiceLocator;
+import piecework.enumeration.ActionType;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
@@ -35,6 +37,8 @@ import java.util.*;
  * @author James Renfro
  */
 public class ValidationCommand extends AbstractCommand<Validation> {
+
+    private static final Set<ActionType> UNEXCEPTIONAL_ACTION_TYPES = Sets.newHashSet(ActionType.ASSIGN, ActionType.CLAIM, ActionType.SAVE, ActionType.REJECT);
 
     private static final Logger LOG = Logger.getLogger(ValidationCommand.class);
     private final ProcessDeployment deployment;
@@ -83,8 +87,9 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         }
 
         Submission submission = handler.handle(object, template, principal);
+        boolean throwException = submission.getAction() != null && UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
 
-        return validationFactory.validation(process, instance, task, template, submission, true);
+        return validationFactory.validation(process, instance, task, template, submission, throwException);
     }
 
 }

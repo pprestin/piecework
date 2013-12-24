@@ -110,7 +110,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
         UriInfo uriInfo = context.getContext(UriInfo.class);
 
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        return search(rawQueryParameters);
+        return search(context, rawQueryParameters);
     }
 
     @Override

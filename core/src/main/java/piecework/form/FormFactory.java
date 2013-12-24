@@ -82,13 +82,22 @@ public class FormFactory {
             // Never include instance data if the user is anonymous -- shouldn't ever happen anyway, since anonymous users can only submit data,
             // but just in case
             boolean includeInstanceData = !anonymous;
-            Map<String, List<Value>> data = dataFilterService.filter(fieldMap, instance, task, principal, validation, includeRestrictedData, includeInstanceData);
-            Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, version, unmodifiable);
+            Map<String, List<Value>> data;
+            // If an activity is set up to allow "any" input then it also has to be provided with the full set of data currently stored for the instance
+            // but just to be safe, exclude any restricted data that could have been attached
+            if (activity.isAllowAny())
+                data = instance != null ? dataFilterService.exclude(instance.getData()) : null;
+            else
+                data = dataFilterService.filter(fieldMap, instance, task, principal, validation, includeRestrictedData, includeInstanceData);
 
+            Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, version, unmodifiable);
             container(builder, data, decoratedFieldMap, action);
             builder.data(data);
             builder.allowAttachments(activity.isAllowAttachments());
         }
+
+        if (principal instanceof User)
+            builder.currentUser(User.class.cast(principal));
 
         builder.taskSubresources(processDefinitionKey, task, version)
                 .instance(instance, version)
@@ -147,9 +156,10 @@ public class FormFactory {
                 case DECORATE_HTML:
                     formDisposition = new FormDisposition(deployment.getBase(), deployment.getBase() + "/" + action.getLocation(), action.getStrategy());
                     break;
+                case INCLUDE_DIRECTIVES:
                 case INCLUDE_SCRIPT:
                     if (external)
-                        formDisposition = new FormDisposition(uri);
+                        formDisposition = new FormDisposition(uri, action.getStrategy());
                     if (action.getLocation() != null)
                         formDisposition = new FormDisposition(deployment.getBase(), deployment.getBase() + "/" + action.getLocation(), action.getStrategy());
                     break;

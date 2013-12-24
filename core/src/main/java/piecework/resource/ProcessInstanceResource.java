@@ -161,7 +161,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response value(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
+    Response readValue(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}")
