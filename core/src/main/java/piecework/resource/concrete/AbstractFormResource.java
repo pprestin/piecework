@@ -27,6 +27,7 @@ import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.form.FormFactory;
+import piecework.security.AccessTracker;
 import piecework.service.RequestService;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
@@ -53,6 +54,9 @@ import java.util.Map;
 public abstract class AbstractFormResource {
 
     private static final Logger LOG = Logger.getLogger(AbstractFormResource.class);
+
+    @Autowired
+    AccessTracker accessTracker;
 
     @Autowired
     DeploymentService deploymentService;
@@ -85,13 +89,16 @@ public abstract class AbstractFormResource {
 
     protected Response startForm(MessageContext context, Process process) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, isAnonymous());
         FormRequest request = requestService.create(requestDetails, process);
-
-        return response(process, request, ActionType.CREATE);
+        List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
+        MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
+        return response(process, request, ActionType.CREATE, mediaType);
     }
 
     protected Response receiptForm(MessageContext context, Process process, String rawRequestId) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, isAnonymous());
         String requestId = sanitizer.sanitize(rawRequestId);
         FormRequest request = requestService.read(requestDetails, requestId);
 
@@ -100,19 +107,25 @@ public abstract class AbstractFormResource {
         if (actionType == null || (isAnonymous() && (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT)))
             throw new ForbiddenError();
 
-        return response(process, request, actionType);
+        return response(process, request, actionType, MediaType.TEXT_HTML_TYPE);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, isAnonymous());
         String taskId = sanitizer.sanitize(rawTaskId);
+        Entity principal = helper.getPrincipal();
         FormRequest request = requestService.create(principal, requestDetails, process, taskId, null);
 
-        return response(process, request, ActionType.CREATE);
+        List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
+        MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
+
+        return response(process, request, ActionType.CREATE, mediaType);
     }
 
-    protected SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException {
+    protected SearchResults search(MessageContext context, MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, isAnonymous());
         Entity principal = helper.getPrincipal();
         return formService.search(rawQueryParameters, principal);
     }
@@ -124,6 +137,7 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, isAnonymous());
         FormRequest formRequest = requestService.read(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
@@ -144,6 +158,7 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, isAnonymous());
         FormRequest formRequest = requestService.read(requestDetails, requestId);
         if (formRequest == null) {
             LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
@@ -203,6 +218,7 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, isAnonymous());
         try {
             return redirect(formService.submit(process, requestDetails, requestId, body, MultipartBody.class, helper.getPrincipal()));
         } catch (Exception e) {
@@ -249,6 +265,7 @@ public abstract class AbstractFormResource {
         String validationId = sanitizer.sanitize(rawValidationId);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, isAnonymous());
         formService.validate(process, requestDetails, requestId, formData, Map.class, validationId, principal);
         return Response.noContent().build();
     }
@@ -259,6 +276,7 @@ public abstract class AbstractFormResource {
         String validationId = sanitizer.sanitize(rawValidationId);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, isAnonymous());
         formService.validate(process, requestDetails, requestId, body, MultipartBody.class, validationId, principal);
         return Response.noContent().build();
     }
@@ -277,8 +295,8 @@ public abstract class AbstractFormResource {
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, location).build();
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType) throws StatusCodeError {
-        return response(process, request, actionType, MediaType.TEXT_HTML_TYPE, null, null, true);
+    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType) throws StatusCodeError {
+        return response(process, request, actionType, mediaType, null, null, true);
     }
 
     private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData) throws StatusCodeError {

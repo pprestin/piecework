@@ -35,6 +35,8 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
     private final RequestDetails requestDetails;
     private final FormRequest request;
 
+//    String template =
+
     SubmitFormCommand(CommandExecutor commandExecutor, Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
         super(commandExecutor, principal, validation.getProcess(), validation.getInstance());
         this.deployment = deployment;
@@ -60,7 +62,7 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
         // Decide if this is a 'create instance' or 'complete task' form submission
         ProcessInstance stored = null;
         AbstractCommand<ProcessInstance> command = null;
-        if (actionType == ActionType.CREATE)
+        if (validation.getTask() == null)
             command = commandFactory.createInstance(principal, validation);
         else if (instance != null && principal != null)
             command = commandFactory.completeTask(principal, deployment, validation, actionType);
@@ -70,12 +72,19 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
 
         Task task = validation.getTask();
 
-        switch (actionType) {
+        ActionType validatedActionType = actionType;
+        Submission submission = validation.getSubmission();
+        if (submission != null && submission.getAction() != null)
+            validatedActionType = submission.getAction();
+        else if (actionType == ActionType.CREATE)
+            validatedActionType = ActionType.COMPLETE;
+
+        switch (validatedActionType) {
             case CREATE:
             case COMPLETE:
             case REJECT:
                 if (stored != null)
-                    return requestService.create(requestDetails, process, stored, task, actionType);
+                    return requestService.create(requestDetails, process, stored, task, validatedActionType);
             case SAVE:
             case VALIDATE:
                 return request;

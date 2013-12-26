@@ -139,7 +139,10 @@ public class SubmissionStorageService {
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.RANDOM) {
-                submissionBuilder.formValue(name, value);
+                if (file != null)
+                    submissionBuilder.formValue(name, file);
+                else
+                    submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
                 if (file != null) {
                     contentType = file.getContentType();

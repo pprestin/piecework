@@ -99,6 +99,10 @@ public class Activity implements Serializable {
         return actionMap;
     }
 
+    public boolean isAllowAny() {
+        return allowAny;
+    }
+
     public boolean isAllowAttachments() {
         return allowAttachments;
     }
