@@ -29,6 +29,8 @@ import piecework.model.Process;
 import piecework.util.ActivityUtil;
 import piecework.form.OptionResolver;
 import piecework.util.ProcessUtility;
+import piecework.util.ValidationUtility;
+import piecework.validation.Validation;
 import piecework.validation.ValidationRule;
 
 import java.util.*;
@@ -39,8 +41,6 @@ import java.util.regex.Pattern;
  */
 @Service
 public class SubmissionTemplateFactory {
-
-    private static final Set<FieldTag> FREEFORM_INPUT_TYPES = Sets.newHashSet(FieldTag.FILE, FieldTag.EMAIL, FieldTag.NUMBER, FieldTag.TEXT, FieldTag.TEXTAREA);
 
     @Autowired(required=false)
     Registry registry;
@@ -163,7 +163,7 @@ public class SubmissionTemplateFactory {
 
     private void addField(SubmissionTemplate.Builder builder, Field field) {
         if (!field.isDeleted() && field.isEditable()) {
-            builder.rules(field, new ArrayList<ValidationRule>(validationRules(field)));
+            builder.rules(field, new ArrayList<ValidationRule>(ValidationUtility.validationRules(field, registry)));
             builder.field(field);
         }
     }
@@ -181,74 +181,6 @@ public class SubmissionTemplateFactory {
         }
     }
 
-    private Set<ValidationRule> validationRules(Field field) {
-        FieldTag fieldTag = FieldTag.getInstance(field.getType());
 
-        String fieldName = field.getName();
-        Set<ValidationRule> rules = new HashSet<ValidationRule>();
-
-        if (!field.isEditable())
-            return rules;
-
-        OptionResolver optionResolver = null;
-        List<Constraint> constraints = field.getConstraints();
-        Constraint onlyRequiredWhenConstraint = null;
-        if (constraints != null && !constraints.isEmpty()) {
-            for (Constraint constraint : constraints) {
-                String type = constraint.getType();
-                if (type == null)
-                    continue;
-
-                if (type.equals(Constants.ConstraintTypes.IS_ONLY_REQUIRED_WHEN)) {
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.CONSTRAINED_REQUIRED)
-                            .name(fieldName)
-                            .constraint(constraint)
-                            .build());
-                    onlyRequiredWhenConstraint = constraint;
-                } else if (type.equals(Constants.ConstraintTypes.IS_NUMERIC))
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMERIC).name(fieldName).build());
-                else if (type.equals(Constants.ConstraintTypes.IS_EMAIL_ADDRESS))
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.EMAIL).name(fieldName).build());
-                else if (type.equals(Constants.ConstraintTypes.IS_ALL_VALUES_MATCH))
-                    rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALUES_MATCH).name(fieldName).constraint(onlyRequiredWhenConstraint).build());
-                else if (type.equals(Constants.ConstraintTypes.IS_LIMITED_TO))
-                    optionResolver = registry.retrieve(Option.class, constraint.getName());
-            }
-        }
-
-        if (onlyRequiredWhenConstraint == null && field.isRequired()) {
-            if (fieldTag == FieldTag.FILE)
-                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS).name(fieldName).build());
-            else
-                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
-        }
-
-        if (!FREEFORM_INPUT_TYPES.contains(fieldTag)) {
-            List<Option> options = field.getOptions();
-
-            if (optionResolver != null)
-                options = optionResolver.getOptions();
-
-            // If no options are stored, then assume that any option is valid
-            if (options != null && !options.isEmpty()) {
-                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.LIMITED_OPTIONS)
-                        .name(fieldName)
-                        .options(options).build());
-            }
-        } else if (fieldTag == FieldTag.PERSON) {
-            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALID_USER).name(fieldName).build());
-        } else {
-            Pattern pattern = field.getPattern() != null ? Pattern.compile(field.getPattern()) : null;
-            if (pattern != null)
-                rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.PATTERN).name(fieldName).pattern(pattern).build());
-
-            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALUE_LENGTH).name(fieldName).valueLength(field.getMaxValueLength(), field.getMinValueLength()).build());
-        }
-
-        if (field.getMaxInputs() > 1 || field.getMinInputs() > 1)
-            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMBER_OF_INPUTS).name(fieldName).numberOfInputs(field.getMaxInputs(), field.getMinInputs()).constraint(onlyRequiredWhenConstraint).required(field.isRequired()).build());
-
-        return rules;
-    }
 
 }

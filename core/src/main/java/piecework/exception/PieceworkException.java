@@ -36,8 +36,8 @@ public class PieceworkException extends Exception {
         super(cause);
     }
 
-    protected PieceworkException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
+//    protected PieceworkException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+//        super(message, cause, enableSuppression, writableStackTrace);
+//    }
 
 }

@@ -19,19 +19,18 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Command;
 import piecework.Constants;
+import piecework.authorization.AuthorizationRole;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
-import piecework.exception.ConflictError;
-import piecework.exception.InternalServerError;
-import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
+import piecework.exception.*;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.DeploymentRepository;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.task.TaskCriteria;
+import piecework.util.TaskUtility;
 import piecework.validation.Validation;
 import piecework.validation.Validation;
 
@@ -60,6 +59,21 @@ public class SubTaskCommand extends AbstractEngineStorageCommand<ProcessInstance
 
     @Override
     ProcessInstance execute(final ProcessEngineFacade processEngineFacade, final StorageManager storageManager) throws PieceworkException {
+        if (StringUtils.isEmpty(parentTaskId))
+            throw new NotFoundError();
+
+        // This is an operation that anonymous users should not be able to take
+        if (principal == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+        Task task = instance.getTask(parentTaskId);
+
+        // Users are only allowed to complete tasks if they have been assigned a task, and
+        // only process overseers or superusers are allowed to complete tasks otherwise
+        if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
+            if (task == null || !task.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
+                throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        }
 
         Task result = null;
         ProcessInstance iresult = null;

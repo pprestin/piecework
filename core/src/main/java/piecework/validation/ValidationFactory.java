@@ -174,25 +174,4 @@ public class ValidationFactory {
         return combined;
     }
 
-
-
-
-//    public List<? extends Value> users(List<? extends Value> values) {
-//        if (values.isEmpty())
-//            return Collections.emptyList();
-//
-//        List<User> list = new ArrayList<User>(values.size());
-//        for (Value value : values) {
-//            if (value instanceof User) {
-//                list.add(User.class.cast(value));
-//            } else {
-//                User user = identityService.getUser(value.getValue());
-//                if (user != null)
-//                    list.add(user);
-//            }
-//        }
-//
-//        return list;
-//    }
-
 }

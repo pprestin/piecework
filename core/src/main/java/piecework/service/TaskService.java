@@ -42,6 +42,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskFactory;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
+import piecework.util.TaskUtility;
 import piecework.validation.Validation;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -155,14 +156,14 @@ public class TaskService {
             return null;
 
         Entity principal = helper.getPrincipal();
-        return findTask(process, instance, taskId, principal, limitToActive);
+        return TaskUtility.findTask(identityService, process, instance, taskId, principal, limitToActive, versions.getVersion1());
     }
 
     /*
      * Returns the first task for the passed instance that the user is allowed to access
      */
     public Task allowedTask(Process process, ProcessInstance instance, Entity principal, boolean limitToActive) throws StatusCodeError {
-        return findTask(process, instance, null, principal, limitToActive);
+        return TaskUtility.findTask(identityService, process, instance, null, principal, limitToActive, versions.getVersion1());
     }
 
     public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
@@ -245,28 +246,6 @@ public class TaskService {
 
     public boolean update(String processInstanceId, Task task) {
         return processInstanceRepository.update(processInstanceId, task);
-    }
-
-    private Task findTask(Process process, ProcessInstance instance, String taskId, Entity principal, boolean limitToActive) throws StatusCodeError {
-
-        Set<Task> tasks = instance.getTasks();
-        boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
-        ViewContext version1 = versions.getVersion1();
-
-        for (Task task : tasks) {
-            if (limitToActive && !task.isActive())
-                continue;
-
-            if (taskId != null && !task.getTaskInstanceId().equals(taskId))
-                continue;
-
-            if (hasOversight || task.isCandidateOrAssignee(principal) ) {
-                Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
-                return TaskFactory.task(task, new PassthroughSanitizer(), userMap, version1);
-            }
-        }
-
-        return null;
     }
 
 }
