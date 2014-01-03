@@ -96,8 +96,6 @@ public class SubmitFormCommandTest {
                 .thenReturn(process);
         Mockito.when(validation.getInstance())
                 .thenReturn(instance);
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -115,7 +113,7 @@ public class SubmitFormCommandTest {
         SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
         submit.execute(commandFactory, requestService);
 
-        Mockito.verify(requestService).create(requestDetails, process, instance, task, ActionType.CREATE);
+        Mockito.verify(requestService).create(requestDetails, process, instance, null, ActionType.COMPLETE);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -135,6 +133,8 @@ public class SubmitFormCommandTest {
 
     @Test
     public void testComplete() throws PieceworkException {
+        Mockito.when(validation.getTask())
+                .thenReturn(task);
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
         SubmitFormCommand submit = new SubmitFormCommand(null, principal, deployment, validation, ActionType.COMPLETE, requestDetails, formRequest);
