@@ -68,6 +68,14 @@ public class InlinePageModelSerializer {
         this.isExplanation = isExplanation;
     }
 
+    public <T> T getObject(Class<T> type) {
+        return type.cast(t);
+    }
+
+    public boolean isExplanation() {
+        return isExplanation;
+    }
+
     public TagNode getPageModelScript() {
         StringBuilder buffer = new StringBuilder();
         buffer.append("piecework = {};")

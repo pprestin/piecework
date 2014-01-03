@@ -60,17 +60,16 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         // Decide if this is a 'create instance' or 'complete task' form submission
+        Task task = validation.getTask();
         ProcessInstance stored = null;
         AbstractCommand<ProcessInstance> command = null;
-        if (validation.getTask() == null)
+        if (task == null)
             command = commandFactory.createInstance(principal, validation);
         else if (instance != null && principal != null)
             command = commandFactory.completeTask(principal, deployment, validation, actionType);
 
         if (command != null)
             stored = command.execute();
-
-        Task task = validation.getTask();
 
         ActionType validatedActionType = actionType;
         Submission submission = validation.getSubmission();

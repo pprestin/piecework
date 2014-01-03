@@ -47,7 +47,6 @@ public class FormService {
     @Autowired
     TaskService taskService;
 
-
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws PieceworkException {
         return taskService.search(rawQueryParameters, principal, true, false);
     }
