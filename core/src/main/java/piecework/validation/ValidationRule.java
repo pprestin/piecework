@@ -16,6 +16,7 @@
 package piecework.validation;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.validator.routines.EmailValidator;
 import piecework.exception.ValidationRuleException;
 import piecework.model.*;
 import piecework.util.ConstraintUtil;
@@ -140,7 +141,11 @@ public class ValidationRule {
     }
 
     private void evaluateEmail(ManyMap<String, Value> submissionData) throws ValidationRuleException {
-
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value != null && StringUtils.isNotEmpty(value.getValue()) && !EmailValidator.getInstance().isValid(value.getValue()))
+                throw new ValidationRuleException(this, "Must be a valid email address");
+        }
     }
 
     private void evaluateOptions(ManyMap<String, Value> submissionData) throws ValidationRuleException {
@@ -250,7 +255,13 @@ public class ValidationRule {
     }
 
     private void evaluateValidUser(ManyMap<String, Value> submissionData) throws ValidationRuleException {
-
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value != null) {
+                if (!(value instanceof User))
+                    throw new ValidationRuleException(this, "Must be a valid user");
+            }
+        }
     }
 
     private void evaluateValueLength(ManyMap<String, Value> submissionData) throws ValidationRuleException {
@@ -283,7 +294,7 @@ public class ValidationRule {
     private List<? extends Value> safeValues(String name, ManyMap<String, Value> submissionData) {
         List<? extends Value> values = null;
 
-        if (name != null)
+        if (name != null && submissionData != null)
             values = submissionData.get(name);
 
         if (values == null)

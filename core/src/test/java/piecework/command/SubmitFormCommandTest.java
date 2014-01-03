@@ -118,6 +118,8 @@ public class SubmitFormCommandTest {
 
     @Test(expected = ForbiddenError.class)
     public void testUnauthorizedUser() throws PieceworkException {
+        Mockito.when(validation.getTask())
+                .thenReturn(task);
         doReturn(Boolean.FALSE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER);
