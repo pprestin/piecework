@@ -61,6 +61,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     @Autowired
     SecuritySettings securitySettings;
 
+
     @Override
     public Response read(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
         Entity principal = identityHelper.getPrincipal();

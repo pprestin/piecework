@@ -134,6 +134,9 @@ public class Form {
 
     private final FormDisposition disposition;
 
+    private final User currentUser;
+
+
     private Form() {
         this(new Form.Builder(), new ViewContext());
     }
@@ -172,6 +175,7 @@ public class Form {
         this.allowAttachments = builder.allowAttachments;
         this.anonymous = builder.anonymous;
         this.disposition = builder.disposition;
+        this.currentUser = builder.currentUser;
     }
 
     public String getFormInstanceId() {
@@ -309,6 +313,10 @@ public class Form {
         return disposition;
     }
 
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
     public final static class Builder {
 
         private String formInstanceId;
@@ -338,6 +346,7 @@ public class Form {
         private boolean readonly;
         private FormDisposition disposition;
         private Process process;
+        private User currentUser;
 
         public Builder() {
             super();
@@ -373,6 +382,7 @@ public class Form {
             this.allowAttachments = form.allowAttachments;
             this.anonymous = form.anonymous;
             this.process = form.process;
+            this.currentUser = form.currentUser;
         }
 
         public Form build() {
@@ -547,6 +557,11 @@ public class Form {
 
         public Builder disposition(FormDisposition disposition) {
             this.disposition = disposition;
+            return this;
+        }
+
+        public Builder currentUser(User currentUser) {
+            this.currentUser = currentUser;
             return this;
         }
     }

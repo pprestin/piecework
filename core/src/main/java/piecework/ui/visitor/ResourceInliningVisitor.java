@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.htmlcleaner.TagNode;
 import piecework.model.Entity;
+import piecework.model.Explanation;
 import piecework.persistence.ContentRepository;
 import piecework.ui.InlinePageModelSerializer;
 import piecework.ui.TagAttributeAction;
@@ -45,6 +46,12 @@ public class ResourceInliningVisitor extends HtmlProviderVisitor {
 
     @Override
     protected void handleBody(String tagName, TagNode tagNode) {
+        if (modelSerializer.isExplanation()) {
+            Explanation explanation = modelSerializer.getObject(Explanation.class);
+            tagNode.addAttribute("message", explanation.getMessage());
+            tagNode.addAttribute("messageDetail", explanation.getMessageDetail());
+        }
+//        tagNode.addChild(modelSerializer.getPageModelScript());
         tagNode.addChild(modelSerializer.getScriptContent(visitor.getScriptResource()));
     }
 

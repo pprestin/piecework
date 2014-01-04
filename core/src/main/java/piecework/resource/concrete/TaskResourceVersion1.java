@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.model.Process;
+import piecework.security.AccessTracker;
 import piecework.service.*;
 import piecework.model.RequestDetails;
 import piecework.submission.SubmissionHandlerRegistry;
@@ -50,6 +51,9 @@ import java.util.List;
 public class TaskResourceVersion1 implements TaskResource {
 
     private static final Logger LOG = Logger.getLogger(TaskResourceVersion1.class);
+
+    @Autowired
+    AccessTracker accessTracker;
 
     @Autowired
     DeploymentService deploymentService;
@@ -94,11 +98,15 @@ public class TaskResourceVersion1 implements TaskResource {
     public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, Submission rawSubmission) throws PieceworkException {
         Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
         taskService.complete(rawProcessDefinitionKey, rawTaskId, rawAction, rawSubmission, requestDetails, principal);
         return Response.noContent().build();
     }
 
-    public Response read(String rawProcessDefinitionKey, String rawTaskId) throws StatusCodeError {
+    public Response read(MessageContext context, String rawProcessDefinitionKey, String rawTaskId) throws StatusCodeError {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, false);
+
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String taskId = sanitizer.sanitize(rawTaskId);
 
@@ -117,8 +125,11 @@ public class TaskResourceVersion1 implements TaskResource {
     }
 
     @Override
-    public SearchResults search(UriInfo uriInfo) throws StatusCodeError {
+    public SearchResults search(MessageContext context) throws StatusCodeError {
+        UriInfo uriInfo = context != null ? context.getContext(UriInfo.class) : null;
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, false);
 
         return search(rawQueryParameters);
     }

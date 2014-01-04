@@ -181,6 +181,9 @@ public class UserInterfaceService {
             case DECORATE_HTML:
                 visitor = new DecoratingVisitor(settings, process, form);
                 break;
+            case INCLUDE_DIRECTIVES:
+                visitor = new StaticPathAdjustingVisitor(form);
+                break;
             default:
                 visitor = new ScriptInjectingVisitor(form);
                 break;
