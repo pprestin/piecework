@@ -62,14 +62,6 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
         // Decide if this is a 'create instance' or 'complete task' form submission
         Task task = validation.getTask();
         ProcessInstance stored = null;
-        AbstractCommand<ProcessInstance> command = null;
-        if (task == null)
-            command = commandFactory.createInstance(principal, validation);
-        else if (instance != null && principal != null)
-            command = commandFactory.completeTask(principal, deployment, validation, actionType);
-
-        if (command != null)
-            stored = command.execute();
 
         ActionType validatedActionType = actionType;
         Submission submission = validation.getSubmission();
@@ -77,6 +69,15 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
             validatedActionType = submission.getAction();
         else if (actionType == ActionType.CREATE)
             validatedActionType = ActionType.COMPLETE;
+
+        AbstractCommand<ProcessInstance> command = null;
+        if (task == null)
+            command = commandFactory.createInstance(principal, validation);
+        else if (instance != null && principal != null)
+            command = commandFactory.completeTask(principal, deployment, validation, validatedActionType);
+
+        if (command != null)
+            stored = command.execute();
 
         switch (validatedActionType) {
             case CREATE:

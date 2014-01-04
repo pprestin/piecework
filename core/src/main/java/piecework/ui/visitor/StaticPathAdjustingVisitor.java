@@ -15,7 +15,6 @@
  */
 package piecework.ui.visitor;
 
-import com.google.common.collect.Sets;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
@@ -23,7 +22,6 @@ import piecework.common.ManyMap;
 import piecework.model.Form;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author James Renfro
@@ -40,8 +38,9 @@ public class StaticPathAdjustingVisitor implements TagNodeVisitor {
     }
 
     public void initialize() {
-        decoratorMap.putOne("script", new ScriptDecorator());
-        decoratorMap.putOne("link", new StyleSheetDecorator());
+        decoratorMap.putOne("script", new SrcDecorator());
+        decoratorMap.putOne("link", new HrefDecorator());
+        decoratorMap.putOne("img", new SrcDecorator());
     }
 
     public boolean visit(TagNode tagNode, HtmlNode htmlNode) {
@@ -65,7 +64,7 @@ public class StaticPathAdjustingVisitor implements TagNodeVisitor {
 
     }
 
-    class ScriptDecorator implements TagDecorator {
+    class SrcDecorator implements TagDecorator {
 
         @Override
         public void decorate(TagNode tag) {
@@ -77,7 +76,7 @@ public class StaticPathAdjustingVisitor implements TagNodeVisitor {
         }
     }
 
-    class StyleSheetDecorator implements TagDecorator {
+    class HrefDecorator implements TagDecorator {
 
         @Override
         public void decorate(TagNode tag) {
