@@ -103,7 +103,7 @@ public class SubmitFormCommandTest {
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
         SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService);
+        submit.execute(commandFactory, requestService, storageManager);
     }
 
     @Test
@@ -111,7 +111,7 @@ public class SubmitFormCommandTest {
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.TRUE);
         SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService);
+        submit.execute(commandFactory, requestService, storageManager);
 
         Mockito.verify(requestService).create(requestDetails, process, instance, null, ActionType.COMPLETE);
     }
@@ -130,7 +130,7 @@ public class SubmitFormCommandTest {
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
         SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService);
+        submit.execute(commandFactory, requestService, storageManager);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class SubmitFormCommandTest {
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
         SubmitFormCommand submit = new SubmitFormCommand(null, principal, deployment, validation, ActionType.COMPLETE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService);
+        submit.execute(commandFactory, requestService, storageManager);
 
         Mockito.verify(requestService).create(requestDetails, process, instance, task, ActionType.COMPLETE);
     }
