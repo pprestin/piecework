@@ -20,6 +20,7 @@ import piecework.ServiceLocator;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
+import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.service.RequestService;
 import piecework.validation.Validation;
@@ -35,8 +36,6 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
     private final RequestDetails requestDetails;
     private final FormRequest request;
 
-//    String template =
-
     SubmitFormCommand(CommandExecutor commandExecutor, Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
         super(commandExecutor, principal, validation.getProcess(), validation.getInstance());
         this.deployment = deployment;
@@ -50,11 +49,12 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
     FormRequest execute(ServiceLocator serviceLocator) throws PieceworkException {
         CommandFactory commandFactory = serviceLocator.getService(CommandFactory.class);
         RequestService requestService = serviceLocator.getService(RequestService.class);
+        StorageManager storageManager = serviceLocator.getService(StorageManager.class);
 
-        return execute(commandFactory, requestService);
+        return execute(commandFactory, requestService, storageManager);
     }
 
-    FormRequest execute(CommandFactory commandFactory, RequestService requestService) throws PieceworkException {
+    FormRequest execute(CommandFactory commandFactory, RequestService requestService, StorageManager storageManager) throws PieceworkException {
         // This is an operation that anonymous users should not be able to cause unless the process is set up to allow it explicitly
         if (principal == null && !process.isAnonymousSubmissionAllowed())
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -73,7 +73,7 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
         AbstractCommand<ProcessInstance> command = null;
         if (task == null)
             command = commandFactory.createInstance(principal, validation);
-        else if (instance != null && principal != null)
+        else if (instance != null && principal != null && (validatedActionType == ActionType.COMPLETE || validatedActionType == ActionType.REJECT))
             command = commandFactory.completeTask(principal, deployment, validation, validatedActionType);
 
         if (command != null)
@@ -86,6 +86,7 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
                 if (stored != null)
                     return requestService.create(requestDetails, process, stored, task, validatedActionType);
             case SAVE:
+                storageManager.store(instance, validation.getData(), submission);
             case VALIDATE:
                 return request;
         }

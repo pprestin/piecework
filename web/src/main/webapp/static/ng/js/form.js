@@ -454,7 +454,7 @@ angular.module('wf.services',
                         angular.forEach(selectedForms, function(form) {
                             var data = new FormData();
                             data.append("comment", comment);
-                            instanceService.attach($scope, form, data, success, failure);
+                            instanceService.comment($scope, form, comment, success, failure);
                         });
                     };
 
@@ -717,6 +717,20 @@ angular.module('wf.services',
                     $http.post(url, formData, {
                             headers: {'Content-Type': 'multipart/form-data'},
                             transformRequest: angular.identity
+                        })
+                        .success(function(data, status, headers, config) {
+                            success($scope, data, status, headers, config, form, formData);
+                        })
+                        .error(function(data, status, headers, config) {
+                            failure($scope, data, status, headers, config, form, formData);
+                        });
+                },
+                comment: function($scope, form, comment, success, failure) {
+                    var formData = 'comment=' + comment;
+                    var url = form.attachment + ".json";
+                    $http.post(url, formData, {
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+//                            transformRequest: angular.identity
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);
