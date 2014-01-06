@@ -79,6 +79,7 @@ public class EmailNotificationService implements NotificationService {
         int mailServerPort = environment.getProperty("mail.server.port", Integer.class, 25);
         String mailFromAddress = environment.getProperty("mail.from.address");
         String mailFromLabel = environment.getProperty("mail.from.label");
+        String mailToOverride = environment.getProperty("mail.to.override");
 
         // get sender email
         String senderEmail = notification.getSenderEmail();
@@ -99,6 +100,11 @@ public class EmailNotificationService implements NotificationService {
         Mustache mustache = mf.compile(new StringReader(recipientStr), "recipient");
         mustache.execute(writer, scope);
         recipientStr = writer.toString();
+
+        // override recipients in test environment (e.g. on dev)
+        if ( mailToOverride != null && ! mailToOverride.isEmpty() ) {
+            recipientStr = mailToOverride;
+        }
         List<User> recipients = getUsers(recipientStr);
         if ( recipients == null || recipients.isEmpty() ) {
             return; // recipients are required
@@ -106,6 +112,9 @@ public class EmailNotificationService implements NotificationService {
 
         // bcc 
         String bccStr = notification.getBcc();
+        if ( mailToOverride != null && ! mailToOverride.isEmpty() ) {
+            bccStr = null; // no bcc if mailToOverride is set
+        }
         List<User> bcc = getUsers(bccStr);
 
         // get subject
