@@ -160,7 +160,7 @@ public class StorageManager {
         Submission submission = validation.getSubmission();
         Map<String, List<Value>> data = isAttachment ? null : validation.getData();
         String submissionLabel = submission != null ? submission.getProcessInstanceLabel() : null;
-        String label = ProcessInstanceUtility.processInstanceLabel(process, null, data, submissionLabel);
+        String label = ProcessInstanceUtility.processInstanceLabel(process, instance, data, submissionLabel);
 
         return processInstanceRepository.update(processInstanceId, label, data, messages, attachments, submission, applicationStatusExplanation);
     }

@@ -35,8 +35,6 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
     private final RequestDetails requestDetails;
     private final FormRequest request;
 
-//    String template =
-
     SubmitFormCommand(CommandExecutor commandExecutor, Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
         super(commandExecutor, principal, validation.getProcess(), validation.getInstance());
         this.deployment = deployment;
@@ -73,7 +71,7 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
         AbstractCommand<ProcessInstance> command = null;
         if (task == null)
             command = commandFactory.createInstance(principal, validation);
-        else if (instance != null && principal != null)
+        else if (instance != null && principal != null && (validatedActionType == ActionType.COMPLETE || validatedActionType == ActionType.REJECT))
             command = commandFactory.completeTask(principal, deployment, validation, validatedActionType);
 
         if (command != null)

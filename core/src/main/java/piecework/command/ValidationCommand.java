@@ -87,7 +87,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         }
 
         Submission submission = handler.handle(object, template, principal);
-        boolean throwException = submission.getAction() != null && UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
+        boolean throwException = submission.getAction() != null && !UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
 
         return validationFactory.validation(process, instance, task, template, submission, throwException);
     }
