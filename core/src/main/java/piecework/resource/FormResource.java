@@ -50,7 +50,7 @@ public interface FormResource extends ApplicationResource {
     @GET
     @Path("{processDefinitionKey}/receipt/{requestId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html"})
+    @Produces({"text/html","application/json"})
     Response readReceipt(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws PieceworkException;
 
     @POST

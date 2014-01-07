@@ -19,6 +19,7 @@ import piecework.Constants;
 import piecework.enumeration.ActionType;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.util.ActivityUtil;
 import piecework.validation.Validation;
 
@@ -30,7 +31,7 @@ import java.util.List;
  */
 public class RequestFactory {
 
-    public FormRequest request(RequestDetails requestDetails, piecework.model.Process process, ProcessInstance processInstance, Task task, ActionType actionType, Validation validation) throws MisconfiguredProcessException {
+    public FormRequest request(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, Validation validation, Explanation explanation) throws MisconfiguredProcessException {
         Activity activity = ActivityUtil.activity(process, processInstance, task);
 
         // Don't allow anyone to issue a create request for a task that's not open
@@ -42,7 +43,8 @@ public class RequestFactory {
                 .instance(processInstance)
                 .task(task)
                 .activity(activity)
-                .action(actionType);
+                .action(actionType)
+                .explanation(explanation);
 
         if (requestDetails != null) {
             String contentType = requestDetails.getContentType() != null ? requestDetails.getContentType().toString() : null;

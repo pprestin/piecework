@@ -85,10 +85,7 @@ public class FormFactory {
             Map<String, List<Value>> data;
             // If an activity is set up to allow "any" input then it also has to be provided with the full set of data currently stored for the instance
             // but just to be safe, exclude any restricted data that could have been attached
-            if (activity.isAllowAny())
-                data = instance != null ? dataFilterService.exclude(instance.getData()) : null;
-            else
-                data = dataFilterService.filter(fieldMap, instance, task, principal, validation, includeRestrictedData, includeInstanceData);
+            data = dataFilterService.filter(fieldMap, instance, task, principal, validation, includeRestrictedData, includeInstanceData, activity.isAllowAny());
 
             Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, version, unmodifiable);
             container(builder, data, decoratedFieldMap, action);
@@ -98,6 +95,8 @@ public class FormFactory {
 
         if (principal instanceof User)
             builder.currentUser(User.class.cast(principal));
+
+        explanation = explanation == null ? request.getExplanation() : explanation;
 
         builder.taskSubresources(processDefinitionKey, task, version)
                 .instance(instance, version)
@@ -160,7 +159,7 @@ public class FormFactory {
                 case INCLUDE_SCRIPT:
                     if (external)
                         formDisposition = new FormDisposition(uri, action.getStrategy());
-                    if (action.getLocation() != null)
+                    else if (action.getLocation() != null)
                         formDisposition = new FormDisposition(deployment.getBase(), deployment.getBase() + "/" + action.getLocation(), action.getStrategy());
                     break;
             }

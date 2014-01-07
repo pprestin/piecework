@@ -60,9 +60,6 @@ public class FormRequest {
 
     private final ActionType action;
 
-    @DBRef
-    private final Screen screen;
-
     private final String contentType;
 
     private final List<String> acceptableMediaTypes;
@@ -74,6 +71,8 @@ public class FormRequest {
     private final String userAgent;
 
     private final Date requestDate;
+
+    private final Explanation explanation;
 
     @Transient
     private final ProcessInstance instance;
@@ -102,7 +101,6 @@ public class FormRequest {
         this.certificateIssuer = builder.certificateIssuer;
         this.action = builder.action;
         this.activity = builder.activity;
-        this.screen = builder.screen;
         this.contentType= builder.contentType;
         this.acceptableMediaTypes = Collections.unmodifiableList(builder.acceptableMediaTypes);
         this.messages = Collections.unmodifiableMap(builder.messages);
@@ -110,6 +108,7 @@ public class FormRequest {
         this.instance = builder.instance;
         this.referrer = builder.referrer;
         this.userAgent = builder.userAgent;
+        this.explanation = builder.explanation;
         this.task = builder.task;
         this.requestDate = new Date();
     }
@@ -171,8 +170,8 @@ public class FormRequest {
         return activity;
     }
 
-    public Screen getScreen() {
-        return screen;
+    public Explanation getExplanation() {
+        return explanation;
     }
 
     public String getContentType() {
@@ -234,7 +233,7 @@ public class FormRequest {
         private Task task;
         private Activity activity;
         private ActionType action;
-        private Screen screen;
+        private Explanation explanation;
         private String contentType;
         private List<String> acceptableMediaTypes;
         private ManyMap<String, Message> messages;
@@ -262,6 +261,7 @@ public class FormRequest {
             this.action = request.action;
             this.activity = request.activity;
             this.contentType = request.contentType;
+            this.explanation = request.explanation;
             this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
             this.messages = new ManyMap<String, Message>(request.getMessages());
             this.referrer = request.referrer;
@@ -282,7 +282,8 @@ public class FormRequest {
             this.taskId = sanitizer.sanitize(request.taskId);
             this.action = request.action != null ? request.action : ActionType.CREATE;
             this.activity = request.activity != null ? new Activity.Builder(request.activity, sanitizer).build() : null;
-            this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
+            this.explanation = request.explanation;
+//            this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.contentType = sanitizer.sanitize(request.contentType);
             this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
             this.messages = new ManyMap<String, Message>(request.getMessages());
@@ -354,8 +355,8 @@ public class FormRequest {
             return this;
         }
 
-        public Builder screen(Screen screen) {
-            this.screen = screen;
+        public Builder explanation(Explanation explanation) {
+            this.explanation = explanation;
             return this;
         }
 

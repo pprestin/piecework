@@ -58,8 +58,8 @@ public class DataFilterService {
             encryptionService = new PassthroughEncryptionService();
     }
 
-    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, Validation validation, boolean includeRestrictedData, boolean includeInstanceData) {
-        Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, includeRestrictedData, includeInstanceData);
+    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, Validation validation, boolean includeRestrictedData, boolean includeInstanceData, boolean allowAny) {
+        Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, includeRestrictedData, includeInstanceData, allowAny);
         if (validation != null) {
             // Always decrypt the validation data
             Map<String, List<Value>> validationData = decrypt(validation.getData());
@@ -72,9 +72,31 @@ public class DataFilterService {
         return data;
     }
 
-    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData, boolean includeInstanceData) {
+//    public Map<String, List<Value>> filter(ProcessInstance instance, Task task, Entity principal, Validation validation, boolean includeRestrictedData, boolean includeInstanceData) {
+//        Map<String, List<Value>> data = filter(null, instance, task, principal, includeRestrictedData, includeInstanceData);
+//        if (validation != null) {
+//            // Always decrypt the validation data
+//            Map<String, List<Value>> validationData = decrypt(validation.getData());
+//            if (validationData != null) {
+//                for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
+//                    data.put(entry.getKey(), entry.getValue());
+//                }
+//            }
+//        }
+//        return data;
+//    }
+
+    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData, boolean includeInstanceData, boolean allowAny) {
         Map<String, List<Value>> data = includeInstanceData && instance != null ? instance.getData() : new ManyMap<String, Value>();
         Map<String, List<Value>> filtered = new ManyMap<String, Value>();
+        if (allowAny) {
+            for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
+                String fieldName = entry.getKey();
+                List<Value> values = values(instance, fieldName, entry.getValue(), null, principal);
+                filtered.put(fieldName, values);
+            }
+        }
+
         if (fieldMap != null) {
             for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
                 Field field = entry.getValue();
@@ -87,6 +109,7 @@ public class DataFilterService {
                 filtered.put(fieldName, values);
             }
         }
+
 
         if (includeRestrictedData && task != null) {
             if (isAuthorizedForRestrictedData(task, principal)) {
@@ -113,6 +136,9 @@ public class DataFilterService {
                     Value currentDateValue = new Value(dateTimeFormatter.print(new Date().getTime()));
                     return Collections.singletonList(currentDateValue);
                 }
+                if (instance != null && defaultValue.contains("{{ConfirmationNumber}}"))
+                    defaultValue = defaultValue.replaceAll("\\{\\{ConfirmationNumber\\}\\}", instance.getProcessInstanceId());
+
                 return Collections.singletonList(new Value(defaultValue));
             }
 

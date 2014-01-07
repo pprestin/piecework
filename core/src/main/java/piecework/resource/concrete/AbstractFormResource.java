@@ -44,6 +44,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -107,7 +109,9 @@ public abstract class AbstractFormResource {
         if (actionType == null || (isAnonymous() && (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT)))
             throw new ForbiddenError();
 
-        return response(process, request, actionType, MediaType.TEXT_HTML_TYPE);
+        List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
+        MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
+        return response(process, request, actionType, mediaType);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws PieceworkException {
@@ -202,7 +206,7 @@ public abstract class AbstractFormResource {
                 throw (BadRequestError)e;
 
             try {
-                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
+                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
                 return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
@@ -250,7 +254,7 @@ public abstract class AbstractFormResource {
 
             try {
                 FormRequest formRequest = requestService.read(requestDetails, requestId);
-                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation);
+                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
                 return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
@@ -311,12 +315,24 @@ public abstract class AbstractFormResource {
 
             switch (formDisposition.getType()) {
                 case REMOTE:
-                    return Response.seeOther(formDisposition.getUri()).build();
+                    String taskId = request.getTaskId();
+                    String query = null;
+                    if (explanation == null && StringUtils.isNotEmpty(taskId))
+                        query = "taskId=" + taskId;
+                    else if (request != null && StringUtils.isNotEmpty(request.getRequestId()))
+                        query = "requestId=" + request.getRequestId();
+
+                    URI uri = formDisposition.getUri();
+                    uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), query, uri.getFragment());
+                    return Response.seeOther(uri).build();
                 case CUSTOM:
                     return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
             }
 
             return Response.ok(form).build();
+        } catch (URISyntaxException use) {
+            LOG.error("URISyntaxException serving page", use);
+            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         } catch (IOException ioe) {
             LOG.error("IOException serving page", ioe);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);

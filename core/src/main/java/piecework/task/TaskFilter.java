@@ -20,7 +20,6 @@ import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
-import piecework.model.Process;
 import piecework.security.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
 
@@ -56,7 +55,7 @@ public class TaskFilter {
             Map<String, List<Value>> data = null;
 
             if (includeData)
-                data = dataFilterService.filter(activity.getFieldMap(), deployment.getInstance(), null, principal, false, includeData);
+                data = dataFilterService.filter(activity.getFieldMap(), deployment.getInstance(), null, principal, false, includeData, false);
 
             return new Form.Builder()
                     .formInstanceId(rebuilt.getTaskInstanceId())

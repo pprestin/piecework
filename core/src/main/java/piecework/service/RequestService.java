@@ -48,15 +48,15 @@ public class RequestService {
     TaskService taskService;
 
     public FormRequest create(RequestDetails requestDetails, Process process) throws MisconfiguredProcessException {
-        return create(requestDetails, process, null, (Task)null, ActionType.CREATE, null);
+        return create(requestDetails, process, null, (Task)null, ActionType.CREATE, null, null);
     }
 
     public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType) throws MisconfiguredProcessException {
-        return create(requestDetails, process, processInstance, task, actionType, null);
+        return create(requestDetails, process, processInstance, task, actionType, null, null);
     }
 
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, Validation validation) throws MisconfiguredProcessException {
-        FormRequest formRequest = new RequestFactory().request(requestDetails, process, processInstance, task, actionType, validation);
+    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, Validation validation, Explanation explanation) throws MisconfiguredProcessException {
+        FormRequest formRequest = new RequestFactory().request(requestDetails, process, processInstance, task, actionType, validation, explanation);
         return requestRepository.save(formRequest);
     }
 
