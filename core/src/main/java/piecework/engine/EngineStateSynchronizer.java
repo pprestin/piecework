@@ -22,6 +22,7 @@ import piecework.enumeration.StateChangeType;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.model.Form;
 import piecework.service.ProcessInstanceService;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.service.ProcessService;
@@ -166,7 +167,7 @@ public class EngineStateSynchronizer {
 
         // task URL
         ViewContext viewContext = versions.getVersion1();
-        String taskUrl = viewContext.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), task.getTaskInstanceId());
+        String taskUrl = viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), task.getTaskInstanceId());
         scope.put("TASK_URL", taskUrl);
 
         // add instance data into scope
