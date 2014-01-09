@@ -16,7 +16,11 @@
 package piecework.engine.activiti;
 
 import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.ExecutionListener;
+import org.activiti.engine.impl.pvm.PvmActivity;
+import org.activiti.engine.impl.pvm.delegate.ActivityExecution;
+import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.engine.EngineContext;
@@ -54,8 +58,36 @@ public class GeneralExecutionListener implements ExecutionListener {
             String pieceworkProcessInstanceId = execution.getProcessBusinessKey();
             StateChangeType event = EVENT_MAP.get(eventName);
             if (event != null) {
-                EngineContext context = new ActivitiEngineContext(execution.getEngineServices(), execution.getProcessDefinitionId(), execution.getProcessInstanceId());
-                engineStateSynchronizer.onProcessInstanceEvent(event, pieceworkProcessInstanceId, context);
+                // Some logic to decide if it's a task
+                boolean isTask = false;
+
+                if (execution instanceof ActivityExecution) {
+                    ActivityExecution activityExecution = ActivityExecution.class.cast(execution);
+                    PvmActivity activity = activityExecution.getActivity();
+                    String activityType = String.class.cast(activity.getProperty("type"));
+
+                    if (activityType != null) {
+                        if (activityType.equals("manualTask") || activityType.equals("userTask")) {
+                            if (eventName.equals("start"))
+                                event = StateChangeType.START_TASK;
+                            else if (eventName.equals("end"))
+                                event = StateChangeType.END_TASK;
+
+                            Task task = execution.getEngineServices().getTaskService().createTaskQuery().taskId(activityExecution.getParentId()).singleResult();
+                            if (task instanceof DelegateTask) {
+                                DelegateEngineTask engineTask = new DelegateEngineTask(DelegateTask.class.cast(task));
+                                EngineContext context = new ActivitiEngineContext(execution.getEngineServices(), execution.getProcessDefinitionId(), execution.getProcessInstanceId());
+                                engineStateSynchronizer.onTaskEvent(event, engineTask, context);
+                                isTask = true;
+                            }
+                        }
+                    }
+                }
+
+                if (!isTask) {
+                    EngineContext context = new ActivitiEngineContext(execution.getEngineServices(), execution.getProcessDefinitionId(), execution.getProcessInstanceId());
+                    engineStateSynchronizer.onProcessInstanceEvent(event, pieceworkProcessInstanceId, context);
+                }
             }
         }
     }

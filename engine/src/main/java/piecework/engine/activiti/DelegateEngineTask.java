@@ -15,6 +15,7 @@
  */
 package piecework.engine.activiti;
 
+import org.activiti.bpmn.model.Task;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.task.IdentityLink;
 import org.apache.commons.lang.StringUtils;
