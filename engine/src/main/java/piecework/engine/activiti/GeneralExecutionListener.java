@@ -67,19 +67,18 @@ public class GeneralExecutionListener implements ExecutionListener {
                     String activityType = String.class.cast(activity.getProperty("type"));
 
                     if (activityType != null) {
-                        if (activityType.equals("manualTask") || activityType.equals("userTask")) {
+                        if (activityType.equals("manualTask")) {
                             if (eventName.equals("start"))
-                                event = StateChangeType.START_TASK;
+                                event = StateChangeType.CREATE_TASK;
                             else if (eventName.equals("end"))
-                                event = StateChangeType.END_TASK;
+                                event = StateChangeType.COMPLETE_TASK;
 
-                            Task task = execution.getEngineServices().getTaskService().createTaskQuery().taskId(activityExecution.getParentId()).singleResult();
-                            if (task instanceof DelegateTask) {
-                                DelegateEngineTask engineTask = new DelegateEngineTask(DelegateTask.class.cast(task));
-                                EngineContext context = new ActivitiEngineContext(execution.getEngineServices(), execution.getProcessDefinitionId(), execution.getProcessInstanceId());
-                                engineStateSynchronizer.onTaskEvent(event, engineTask, context);
-                                isTask = true;
-                            }
+                            ManualEngineTask engineTask = new ManualEngineTask.Builder()
+                                    .activityExecution(activityExecution)
+                                    .build();
+                            EngineContext context = new ActivitiEngineContext(execution.getEngineServices(), execution.getProcessDefinitionId(), execution.getProcessInstanceId());
+                            engineStateSynchronizer.onTaskEvent(event, engineTask, context);
+                            isTask = true;
                         }
                     }
                 }
