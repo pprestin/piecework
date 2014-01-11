@@ -22,4 +22,18 @@ import piecework.Registrant;
  */
 public interface ProcessEngineProxy extends Registrant<ProcessEngineProxy>, ProcessEngineCapabilities {
 
+    String template = "<div class=\"main-content container\" data-ng-switch on=\"form.layout\">\n" +
+            "        <div class=\"row\" data-ng-switch-when=\"multipage\">\n" +
+            "            <wf-multipage form=\"form\" state=\"state\"></wf-multipage>\n" +
+            "        </div>\n" +
+            "        <div class=\"row\" data-ng-switch-when=\"multistep\">\n" +
+            "            <wf-multistep form=\"form\" state=\"state\"></wf-multistep>\n" +
+            "        </div>\n" +
+            "        <div class=\"row\" data-ng-switch-when=\"review\">\n" +
+            "            <wf-review form=\"form\" state=\"state\"></wf-review>\n" +
+            "        </div>\n" +
+            "        <div class=\"row\" data-ng-switch-when=\"normal\">\n" +
+            "            <wf-container form=\"form\" container=\"form.container\" state=\"state\"/>\n" +
+            "        </div>\n" +
+            "    </div>";
 }

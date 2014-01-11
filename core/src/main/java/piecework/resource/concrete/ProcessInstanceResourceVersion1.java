@@ -28,6 +28,7 @@ import piecework.common.ViewContext;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
+import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
@@ -40,11 +41,13 @@ import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.*;
+import piecework.ui.Streamable;
 import piecework.ui.streaming.ExportStreamingOutput;
 import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.common.ManyMap;
 import piecework.util.ProcessInstanceUtility;
 
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -183,6 +186,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Entity principal = helper.getPrincipal();
         processInstanceService.deleteAttachment(principal, rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId);
         return Response.noContent().build();
+    }
+
+    @Override
+    public Response diagram(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
+        Streamable diagram = processInstanceService.getDiagram(rawProcessDefinitionKey, rawProcessInstanceId);
+        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(diagram);
+        ResponseBuilder responseBuilder = Response.ok(streamingAttachmentContent);
+        return responseBuilder.build();
     }
 
     @Override

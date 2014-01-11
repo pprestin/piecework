@@ -567,6 +567,9 @@ public class ProcessInstance implements Serializable {
                     this.data.put(entry.getKey(), values);
 
                     for (Value value : values) {
+                        if (value == null)
+                            continue;
+
                         if (value instanceof File) {
                             File file = File.class.cast(value);
                             if (StringUtils.isNotEmpty(file.getName()))

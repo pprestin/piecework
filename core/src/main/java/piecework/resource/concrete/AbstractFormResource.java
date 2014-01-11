@@ -22,22 +22,24 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.command.CommandFactory;
 import piecework.form.FormDisposition;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.form.FormFactory;
+import piecework.persistence.ProcessInstanceRepository;
+import piecework.persistence.SubmissionRepository;
 import piecework.security.AccessTracker;
-import piecework.service.RequestService;
+import piecework.service.*;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
-import piecework.service.DeploymentService;
-import piecework.service.FormService;
-import piecework.service.UserInterfaceService;
+import piecework.util.TaskUtility;
 import piecework.validation.Validation;
+import piecework.validation.ValidationFactory;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -61,6 +63,9 @@ public abstract class AbstractFormResource {
     AccessTracker accessTracker;
 
     @Autowired
+    CommandFactory commandFactory;
+
+    @Autowired
     DeploymentService deploymentService;
 
     @Autowired
@@ -73,7 +78,16 @@ public abstract class AbstractFormResource {
     IdentityHelper helper;
 
     @Autowired
+    IdentityService identityService;
+
+    @Autowired
+    ProcessInstanceRepository processInstanceRepository;
+
+    @Autowired
     RequestService requestService;
+
+    @Autowired
+    SubmissionRepository submissionRepository;
 
     @Autowired
     protected Sanitizer sanitizer;
@@ -98,20 +112,54 @@ public abstract class AbstractFormResource {
         return response(process, request, ActionType.CREATE, mediaType);
     }
 
-    protected Response receiptForm(MessageContext context, Process process, String rawRequestId) throws PieceworkException {
+//    protected Response receiptForm(MessageContext context, Process process, String rawRequestId) throws PieceworkException {
+//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+//        accessTracker.track(requestDetails, false, isAnonymous());
+//        String requestId = sanitizer.sanitize(rawRequestId);
+//        FormRequest request = requestService.read(requestDetails, requestId);
+//
+//        ActionType actionType = request.getAction();
+//
+//        if (actionType == null || (isAnonymous() && (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT)))
+//            throw new ForbiddenError();
+//
+//        List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
+//        MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
+//        return response(process, request, actionType, mediaType);
+//    }
+
+    protected Response submissionForm(MessageContext context, Process process, String rawSubmissionId) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
-        String requestId = sanitizer.sanitize(rawRequestId);
+        String submissionId = sanitizer.sanitize(rawSubmissionId);
+
+        Submission submission = submissionRepository.findOne(submissionId);
+
+        if (submission == null)
+            throw new NotFoundError();
+
+        String requestId = submission.getRequestId();
+
+        if (StringUtils.isEmpty(requestId))
+            throw new NotFoundError();
+
         FormRequest request = requestService.read(requestDetails, requestId);
+
+        if (request == null)
+            throw new NotFoundError();
 
         ActionType actionType = request.getAction();
 
         if (actionType == null || (isAnonymous() && (actionType != ActionType.COMPLETE && actionType != ActionType.REJECT)))
             throw new ForbiddenError();
 
+
+        // When returning the JSON for a submission it's necessary to rerun the validation
+        Validation validation = commandFactory.validation(process, process.getDeployment(), request, submission, helper.getPrincipal()).execute();
+
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
-        return response(process, request, actionType, mediaType);
+        return response(process, request, actionType, mediaType, validation, null, true);
     }
 
     protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws PieceworkException {
@@ -134,26 +182,26 @@ public abstract class AbstractFormResource {
         return formService.search(rawQueryParameters, principal);
     }
 
-    protected Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws PieceworkException {
-        String requestId = sanitizer.sanitize(rawRequestId);
-
-        if (StringUtils.isEmpty(requestId))
-            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, isAnonymous());
-        FormRequest formRequest = requestService.read(requestDetails, requestId);
-        if (formRequest == null) {
-            LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
-        }
-        try {
-            return redirect(formService.save(process, requestDetails, requestId, body, MultipartBody.class, helper.getPrincipal()));
-        } catch (MisconfiguredProcessException mpe) {
-            LOG.error("Unable to create new instance because process is misconfigured", mpe);
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-        }
-    }
+//    protected Response saveForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws PieceworkException {
+//        String requestId = sanitizer.sanitize(rawRequestId);
+//
+//        if (StringUtils.isEmpty(requestId))
+//            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+//
+//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+//        accessTracker.track(requestDetails, true, isAnonymous());
+//        FormRequest formRequest = requestService.read(requestDetails, requestId);
+//        if (formRequest == null) {
+//            LOG.error("Forbidden: Attempting to save a form for a request id that doesn't exist");
+//            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+//        }
+//        try {
+//            return redirect(formRequest, formService.save(process, requestDetails, requestId, body, MultipartBody.class, helper.getPrincipal()));
+//        } catch (MisconfiguredProcessException mpe) {
+//            LOG.error("Unable to create new instance because process is misconfigured", mpe);
+//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+//        }
+//    }
 
     protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultivaluedMap<String, String> formData) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
@@ -170,14 +218,15 @@ public abstract class AbstractFormResource {
         }
 
         try {
-            FormRequest receiptRequest = formService.submit(process, requestDetails, requestId, formData, Map.class, helper.getPrincipal());
+            Submission submission = formService.submit(process, requestDetails, requestId, formData, Map.class, helper.getPrincipal());
+//            FormRequest receiptRequest = formService.submit(process, requestDetails, requestId, formData, Map.class, helper.getPrincipal());
 
             // Anonymous form submissions are not redirected, since it's not possible to authorize access to the receipt form
             // so for security reasons the response is forced to be a COMPLETE action and no restricted data can be returned
             if (isAnonymous())
-                return response(process, receiptRequest, ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, false);
+                return response(process, formRequest, ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, false);
 
-            return redirect(receiptRequest);
+            return redirect(formRequest, submission);
         } catch (Exception e) {
             Validation validation = null;
             Explanation explanation = null;
@@ -207,7 +256,11 @@ public abstract class AbstractFormResource {
 
             try {
                 FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
-                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
+                if (isAnonymous())
+                    return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
+
+                Submission submission = validation != null ? validation.getSubmission() : null;
+                return redirect(invalidRequest, submission);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -223,8 +276,9 @@ public abstract class AbstractFormResource {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, isAnonymous());
+        FormRequest formRequest = requestService.read(requestDetails, requestId);
         try {
-            return redirect(formService.submit(process, requestDetails, requestId, body, MultipartBody.class, helper.getPrincipal()));
+            return redirect(formRequest, formService.submit(process, requestDetails, requestId, body, MultipartBody.class, helper.getPrincipal()));
         } catch (Exception e) {
             Validation validation = null;
             Explanation explanation = null;
@@ -253,9 +307,14 @@ public abstract class AbstractFormResource {
                 throw (BadRequestError)e;
 
             try {
-                FormRequest formRequest = requestService.read(requestDetails, requestId);
+//                FormRequest formRequest = requestService.read(requestDetails, requestId);
                 FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
-                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
+//                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, submission, true);
+                if (isAnonymous())
+                    return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
+
+                Submission submission = validation != null ? validation.getSubmission() : null;
+                return redirect(invalidRequest, submission);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -285,16 +344,18 @@ public abstract class AbstractFormResource {
         return Response.noContent().build();
     }
 
-    private Response redirect(FormRequest formRequest) throws StatusCodeError {
+    private Response redirect(FormRequest formRequest, Submission submission) throws StatusCodeError {
         if (formRequest == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
         String location;
 
         if (isAnonymous())
-            location = versions.getVersion1().getPublicUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "receipt", formRequest.getRequestId());
+            throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
+        else if (submission != null)
+            location = versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey()) + "?submissionId=" + submission.getSubmissionId();
         else
-            location = versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey(), "receipt", formRequest.getRequestId());
+            location = versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey()) + "?taskId=" + formRequest.getTaskId();
 
         return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, location).build();
     }

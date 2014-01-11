@@ -154,9 +154,9 @@ public class Form {
         this.data = builder.data;
         this.validation = builder.validation;
         this.root = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME) : null;
-        this.action = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, "submission", builder.formInstanceId) : null;
+        this.action = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.formInstanceId) : null;
         if (task != null && task.getTaskInstanceId() != null)
-            this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, task.getTaskInstanceId()) : null;
+            this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) + "?taskId=" + task.getTaskInstanceId() : null;
         else
             this.link = context != null ? context.getApplicationOrPublicUri(builder.anonymous, Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
         this.src = context != null ? context.getApplicationOrPublicUri(builder.anonymous, "resource", builder.processDefinitionKey, builder.formInstanceId) : null;

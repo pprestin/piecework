@@ -26,6 +26,9 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
+import piecework.engine.ProcessDeploymentResource;
+import piecework.engine.ProcessEngineFacade;
+import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
@@ -40,6 +43,8 @@ import piecework.security.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.submission.SubmissionTemplate;
+import piecework.ui.Streamable;
+import piecework.util.ProcessUtility;
 import piecework.validation.Validation;
 import piecework.validation.ValidationFactory;
 
@@ -68,6 +73,9 @@ public class ProcessInstanceService {
 
     @Autowired
     IdentityService identityService;
+
+    @Autowired
+    ProcessEngineFacade facade;
 
     @Autowired
     ProcessService processService;
@@ -169,6 +177,25 @@ public class ProcessInstanceService {
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
 
         return processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
+    }
+
+    public Streamable getDiagram(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+
+        ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, instance.getDeploymentId());
+        if (selectedDeploymentVersion == null)
+            throw new NotFoundError();
+
+        ProcessDeployment deployment = deploymentService.read(process, instance.getDeploymentId());
+
+        try {
+            ProcessDeploymentResource resource = facade.resource(process, deployment, "image/png");
+            return resource;
+        } catch (ProcessEngineException e) {
+            LOG.error("Could not generate diagram", e);
+            throw new InternalServerError(e);
+        }
     }
 
     public ProcessInstance read(String processDefinitionKey, String processInstanceId, boolean full) throws StatusCodeError {

@@ -201,20 +201,25 @@ public class StaticResourceAggregator {
             return null;
 
         String adjustedPath = path.substring(indexOf);
+
+        if (StringUtils.isNotEmpty(settings.getAssetsDirectoryPath())) {
+            File file = new File(settings.getAssetsDirectoryPath(), adjustedPath);
+            if (file.exists()) {
+                String absolutePath = file.getAbsolutePath();
+                LOG.debug("Reading from " + absolutePath);
+                if (!file.exists())
+                    return null;
+
+                return new BufferedReader(new FileReader(file));
+            }
+        }
+
         ServletContextResource servletContextResource = new ServletContextResource(servletContext, adjustedPath);
 
         if (!servletContextResource.exists())
             return null;
 
         return new BufferedReader(new InputStreamReader(servletContextResource.getInputStream()));
-
-//        File file = new File(settings.getAssetsDirectoryPath(), adjustedPath);
-//        String absolutePath = file.getAbsolutePath();
-//        LOG.debug("Reading from " + absolutePath);
-//        if (!file.exists())
-//            return null;
-//
-//        return new BufferedReader(new FileReader(file));
     }
 
     public static class Options {

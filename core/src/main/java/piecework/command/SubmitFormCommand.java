@@ -28,7 +28,7 @@ import piecework.validation.Validation;
 /**
  * @author James Renfro
  */
-public class SubmitFormCommand extends AbstractCommand<FormRequest> {
+public class SubmitFormCommand extends AbstractCommand<Submission> {
 
     private final ProcessDeployment deployment;
     private final Validation validation;
@@ -46,7 +46,7 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
     }
 
     @Override
-    FormRequest execute(ServiceLocator serviceLocator) throws PieceworkException {
+    Submission execute(ServiceLocator serviceLocator) throws PieceworkException {
         CommandFactory commandFactory = serviceLocator.getService(CommandFactory.class);
         RequestService requestService = serviceLocator.getService(RequestService.class);
         StorageManager storageManager = serviceLocator.getService(StorageManager.class);
@@ -54,7 +54,7 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
         return execute(commandFactory, requestService, storageManager);
     }
 
-    FormRequest execute(CommandFactory commandFactory, RequestService requestService, StorageManager storageManager) throws PieceworkException {
+    Submission execute(CommandFactory commandFactory, RequestService requestService, StorageManager storageManager) throws PieceworkException {
         // This is an operation that anonymous users should not be able to cause unless the process is set up to allow it explicitly
         if (principal == null && !process.isAnonymousSubmissionAllowed())
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -84,14 +84,15 @@ public class SubmitFormCommand extends AbstractCommand<FormRequest> {
             case COMPLETE:
             case REJECT:
                 if (stored != null)
-                    return requestService.create(requestDetails, process, stored, task, validatedActionType);
+                    return submission;
+//                    return requestService.create(requestDetails, process, stored, task, validatedActionType);
             case SAVE:
                 storageManager.store(instance, validation.getData(), submission);
             case VALIDATE:
-                return request;
+                return submission;
         }
 
-        return request;
+        return submission;
     }
 
 }

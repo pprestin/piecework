@@ -125,6 +125,12 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     Response detach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws PieceworkException;
 
     @GET
+    @Path("{processDefinitionKey}/{processInstanceId}/diagram.png")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
+    @Produces({"image/png"})
+    Response diagram(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws StatusCodeError;
+
+    @GET
     @Path("{processDefinitionKey}/{processInstanceId}/history")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     Response history(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;

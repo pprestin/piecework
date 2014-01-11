@@ -247,7 +247,7 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfToolbar', ['wizardService',
+    .directive('wfButtonbar', ['wizardService',
         function(wizardService) {
             return {
                 restrict: 'AE',

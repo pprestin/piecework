@@ -15,6 +15,7 @@
  */
 package piecework.resource.concrete;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
@@ -28,6 +29,7 @@ import piecework.resource.FormResource;
 import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
+import piecework.service.ProcessService;
 
 import javax.ws.rs.core.*;
 
@@ -43,65 +45,73 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     IdentityHelper identityHelper;
 
     @Autowired
+    ProcessService processService;
+
+    @Autowired
     Sanitizer sanitizer;
 
     @Autowired
     Versions versions;
 
     @Override
-    public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
+    public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawSubmissionId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+
+        if (StringUtils.isNotEmpty(rawTaskId))
+            return taskForm(context, process, rawTaskId);
+        if (StringUtils.isNotEmpty(rawSubmissionId))
+            return submissionForm(context, process, rawSubmissionId);
+
         return startForm(context, process);
     }
 
-    @Override
-    public Response readTask(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws PieceworkException {
-        Entity principal = identityHelper.getPrincipal();
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return taskForm(context, process, taskId);
-    }
+//    @Override
+//    public Response readTask(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws PieceworkException {
+//        Entity principal = identityHelper.getPrincipal();
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//        Process process = identityHelper.findProcess(processDefinitionKey, true);
+//        return taskForm(context, process, taskId);
+//    }
+//
+//    @Override
+//    public Response readReceipt(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws PieceworkException {
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//        Process process = identityHelper.findProcess(processDefinitionKey, true);
+//        return receiptForm(context, process, requestId);
+//    }
 
-    @Override
-    public Response readReceipt(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return receiptForm(context, process, requestId);
-    }
-
-    @Override
-    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
-        return saveForm(context, process, rawRequestId, body);
-    }
+//    @Override
+//    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//        Process process = identityHelper.findProcess(processDefinitionKey, true);
+//        return saveForm(context, process, rawRequestId, body);
+//    }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        Process process = processService.read(rawProcessDefinitionKey);
         return submitForm(context, process, rawRequestId, formData);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        Process process = processService.read(rawProcessDefinitionKey);
         return submitForm(context, process, rawRequestId, body);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        Process process = processService.read(rawProcessDefinitionKey);
         return validateForm(context, process, formData, rawRequestId, rawValidationId);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
+        Process process = processService.read(rawProcessDefinitionKey);
         return validateForm(context, process, body, rawRequestId, rawValidationId);
     }
 

@@ -42,6 +42,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
 
     private static final Logger LOG = Logger.getLogger(ValidationCommand.class);
     private final ProcessDeployment deployment;
+    private final Submission submission;
     private final Task task;
     private final FormRequest request;
     private final Object object;
@@ -55,9 +56,22 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         this.task = request.getTask();
         this.request = request;
         this.object = object;
+        this.submission = null;
         this.type = type;
         this.validationId = validationId;
         this.fieldName = fieldName;
+    }
+
+    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal) {
+        super(commandExecutor, principal, process, request.getInstance());
+        this.deployment = deployment;
+        this.task = request.getTask();
+        this.request = request;
+        this.object = null;
+        this.type = null;
+        this.submission = submission;
+        this.validationId = null;
+        this.fieldName = null;
     }
 
     @Override
@@ -70,7 +84,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
     }
 
     Validation execute(SubmissionHandlerRegistry submissionHandlerRegistry, SubmissionTemplateFactory submissionTemplateFactory, ValidationFactory validationFactory) throws PieceworkException {
-        SubmissionHandler handler = submissionHandlerRegistry.handler(type);
+        SubmissionHandler handler = type != null ? submissionHandlerRegistry.handler(type) : null;
         SubmissionTemplate template;
 
         if (StringUtils.isEmpty(fieldName)) {
@@ -86,7 +100,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
             template = submissionTemplateFactory.submissionTemplate(process, field, request);
         }
 
-        Submission submission = handler.handle(object, template, principal);
+        Submission submission = this.submission == null ? handler.handle(object, template, principal) : this.submission;
         boolean throwException = submission.getAction() != null && !UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
 
         return validationFactory.validation(process, instance, task, template, submission, throwException);

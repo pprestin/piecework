@@ -39,50 +39,50 @@ public interface FormResource extends ApplicationResource {
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
     @Produces({"text/html","application/json"})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws PieceworkException;
+    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
 
-    @GET
-    @Path("{processDefinitionKey}/{taskId}")
-	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html","application/json"})
-    Response readTask(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context MessageContext context) throws PieceworkException;
+//    @GET
+//    @Path("{processDefinitionKey}/{taskId}")
+//	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+//    @Produces({"text/html","application/json"})
+//    Response readTask(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context MessageContext context) throws PieceworkException;
+//
+//    @GET
+//    @Path("{processDefinitionKey}/receipt/{requestId}")
+//    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+//    @Produces({"text/html","application/json"})
+//    Response readReceipt(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws PieceworkException;
 
-    @GET
-    @Path("{processDefinitionKey}/receipt/{requestId}")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/html","application/json"})
-    Response readReceipt(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws PieceworkException;
+//    @POST
+//    @Path("{processDefinitionKey}/save/{requestId}")
+//    @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+//    @Consumes("multipart/form-data")
+//    @Produces({"text/html","application/json"})
+//    Response save(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws PieceworkException;
 
     @POST
-    @Path("{processDefinitionKey}/save/{requestId}")
-    @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Consumes("multipart/form-data")
-    @Produces({"text/html","application/json"})
-    Response save(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws PieceworkException;
-
-    @POST
-    @Path("{processDefinitionKey}/submission/{requestId}")
+    @Path("{processDefinitionKey}/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("application/x-www-form-urlencoded")
     @Produces({"text/html","application/json"})
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws PieceworkException;
 
     @POST
-    @Path("{processDefinitionKey}/submission/{requestId}")
+    @Path("{processDefinitionKey}/{requestId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("multipart/form-data")
     @Produces({"text/html","application/json"})
     Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws PieceworkException;
 
     @POST
-    @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
+    @Path("{processDefinitionKey}/{requestId}/{validationId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces("application/json")
     @Consumes("application/x-www-form-urlencoded")
     Response validate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @PathParam("validationId") String validationId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws PieceworkException;
 
     @POST
-    @Path("{processDefinitionKey}/submission/{requestId}/{validationId}")
+    @Path("{processDefinitionKey}/{requestId}/{validationId}")
     @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces("application/json")
     @Consumes("multipart/form-data")

@@ -23,6 +23,8 @@ import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
+import org.activiti.engine.impl.bpmn.diagram.ProcessDiagramGenerator;
+import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.impl.task.TaskDefinition;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.Deployment;
@@ -517,9 +519,13 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     @Override
     public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
         InputStream inputStream = processEngine.getRepositoryService().getProcessDiagram(deployment.getEngineProcessDefinitionId());
+        return new ProcessDeploymentResource.Builder().name("").inputStream(inputStream).contentType("image/png").build();
+    }
 
-        //BpmnModel model = processEngine.getRepositoryService().getBpmnModel(deployment.getEngineProcessDefinitionId());
-
+    @Override
+    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException {
+        BpmnModel bpmnModel = processEngine.getRepositoryService().getBpmnModel(deployment.getEngineProcessDefinitionId());
+        InputStream inputStream = ProcessDiagramGenerator.generateDiagram(bpmnModel, "png", processEngine.getRuntimeService().getActiveActivityIds(instance.getEngineProcessInstanceId()));
         return new ProcessDeploymentResource.Builder().name("").inputStream(inputStream).contentType("image/png").build();
     }
 

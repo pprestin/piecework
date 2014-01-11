@@ -134,6 +134,11 @@ public class CommandFactory {
         return new UpdateValueCommand(commandExecutor, principal, task, validation);
     }
 
+    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal) {
+
+        return new ValidationCommand(commandExecutor, process, deployment, request, submission, principal);
+    }
+
     public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal) {
 
         return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, null, null);

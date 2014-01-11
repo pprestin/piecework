@@ -1,7 +1,7 @@
 angular.module('wf.services',
     [])
-    .factory('attachmentService', ['$http',
-        function($http) {
+    .factory('attachmentService', ['$http', '$rootScope',
+        function($http, $rootScope) {
             return {
                 deleteAttachment : function(form, attachment) {
                     var attachmentService = this;
@@ -11,6 +11,7 @@ angular.module('wf.services',
                     $http.get(form.attachment).then(function(response) {
                         form.attachments = response.data.list;
                         form.attachmentCount = response.data.total;
+                        $rootScope.$broadcast('event:attachments', form.attachments);
                     });
                 }
             };
@@ -34,6 +35,7 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
+                                $rootScope.$broadcast("event:search");
                                 $rootScope.$broadcast('event:refresh', 'activation');
                             }
                         };
@@ -78,6 +80,7 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(assignee, selectedForms);
+                                $rootScope.$broadcast("event:search");
                                 $rootScope.$broadcast('event:refresh', 'assignment');
                                 scope.assigning = false;
                             }
@@ -125,6 +128,7 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
+                                $rootScope.$broadcast("event:search");
                                 $rootScope.$broadcast('event:refresh', 'cancellation');
                             }
                         };
@@ -190,7 +194,7 @@ angular.module('wf.services',
                         angular.forEach(selectedForms, function(form) {
                             var data = new FormData();
                             data.append("comment", comment);
-                            instanceService.comment($scope, form, data, success, failure);
+                            instanceService.comment($scope, form, comment, success, failure);
                         });
                     };
 
@@ -252,6 +256,7 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
+                                $rootScope.$broadcast("event:search");
                                 $rootScope.$broadcast('event:refresh', 'activation');
                             }
                         };
@@ -295,6 +300,7 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
+                                $rootScope.$broadcast("event:search");
                                 $rootScope.$broadcast('event:refresh', 'suspension');
                             }
                         };
@@ -328,13 +334,11 @@ angular.module('wf.services',
     ])
     .factory('dialogs', ['$modal','controllerService','notificationService', 'personService','taskService',
         function($modal, controllerService, notificationService, personService, taskService) {
-            var context = window.piecework.context;
-            var root = context['static'];
             return {
                 openActivateModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: root + '/static/ng/views/activate-modal-dialog.html',
+                        templateUrl: 'templates/activate-modal-dialog.html',
                         controller: controllerService.ActivationModalController,
                         resolve: {
                             selectedForms: function () {
@@ -348,7 +352,7 @@ angular.module('wf.services',
                 openAssignModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: root + '/static/ng/views/assign-modal-dialog.html',
+                        templateUrl: 'templates/assign-modal-dialog.html',
                         controller: controllerService.AssignmentModalController,
                         resolve: {
                             selectedForms: function () {
@@ -362,7 +366,7 @@ angular.module('wf.services',
                 openCancelModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: root + '/static/ng/views/cancel-modal-dialog.html',
+                        templateUrl: 'templates/cancel-modal-dialog.html',
                         controller: controllerService.CancellationModalController,
                         resolve: {
                             selectedForms: function () {
@@ -376,7 +380,7 @@ angular.module('wf.services',
                 openCommentModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: root + '/static/ng/views/comment-modal-dialog.html',
+                        templateUrl: 'templates/comment-modal-dialog.html',
                         controller: controllerService.CommentModalController,
                         resolve: {
                             selectedForms: function () {
@@ -390,7 +394,7 @@ angular.module('wf.services',
                 openHistoryModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: root + '/static/ng/views/history-modal-dialog.html',
+                        templateUrl: 'templates/history-modal-dialog.html',
                         controller: controllerService.HistoryModalController,
                         resolve: {
                             selectedForms: function () {
@@ -404,7 +408,7 @@ angular.module('wf.services',
                 openRestartModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: root + '/static/ng/views/restart-modal-dialog.html',
+                        templateUrl: 'templates/restart-modal-dialog.html',
                         controller: controllerService.RestartModalController,
                         resolve: {
                             selectedForms: function () {
@@ -418,7 +422,7 @@ angular.module('wf.services',
                 openSuspendModal: function(selectedForms) {
                     var modalInstance = $modal.open({
                         backdrop: true,
-                        templateUrl: root + '/static/ng/views/suspend-modal-dialog.html',
+                        templateUrl: 'templates/suspend-modal-dialog.html',
                         controller: controllerService.SuspensionModalController,
                         resolve: {
                             selectedForms: function () {
@@ -432,8 +436,8 @@ angular.module('wf.services',
             };
         }
     ])
-    .factory('instanceService', ['$http',
-        function($http) {
+    .factory('instanceService', ['$http', '$rootScope',
+        function($http, $rootScope) {
             return {
                 activate: function($scope, form, reason, success, failure) {
                     var url = form.activation + ".json";
@@ -456,19 +460,21 @@ angular.module('wf.services',
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);
+                            $rootScope.$broadcast('event:attachments', data.list);
                         })
                         .error(function(data, status, headers, config) {
                             failure($scope, data, status, headers, config, form, formData);
                         });
                 },
-                comment: function($scope, form, formData, success, failure) {
+                comment: function($scope, form, comment, success, failure) {
+                    var formData = 'comment=' + comment;
                     var url = form.attachment + ".json";
                     $http.post(url, formData, {
-//                            headers: {'Content-Type': 'multipart/form-data'},
-                            transformRequest: angular.identity
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);
+                            $rootScope.$broadcast('event:attachments', data.list);
                         })
                         .error(function(data, status, headers, config) {
                             failure($scope, data, status, headers, config, form, formData);
@@ -522,25 +528,23 @@ angular.module('wf.services',
             };
         }
     ])
-    .factory('notificationService', ['$http',
-        function($http) {
+    .factory('notificationService', ['$http', '$rootScope',
+        function($http, $rootScope) {
             return {
                 clear: function($scope) {
                     delete $scope['notifications'];
                 },
                 notify: function($scope, message, title) {
-                    // Don't bother to do anything unless $scope and message are defined
-                    if (typeof($scope) !== 'undefined' && typeof(message) !== 'undefined') {
-                        // Ensure that our notifications array exists in this scope
-                        if (typeof($scope.notifications) === 'undefined')
-                            $scope.notifications = new Array();
+                    // Don't bother to do anything unless message is defined
+                    if (typeof(message) !== 'undefined') {
+
                         // Create the notification as an object
                         var notification = new Object();
                         notification.message = message;
                         if (typeof(title) !== 'undefined')
                             notification.title = title;
-                        // Add this notification to the array
-                        $scope.notifications.push(notification);
+
+                        $rootScope.$broadcast("event:notification", notification);
                     }
                 }
             }
@@ -572,8 +576,8 @@ angular.module('wf.services',
             };
         }
     ])
-    .factory('taskService', ['$http', 'notificationService',
-        function($http, notificationService) {
+    .factory('taskService', ['$http', '$rootScope', 'notificationService',
+        function($http, $rootScope, notificationService) {
             return {
                 assignTask: function($scope, form, assignee, success, failure) {
                     if (form.task != null) {
@@ -594,14 +598,15 @@ angular.module('wf.services',
             }
         }
     ])
-    .factory('wizardService', ['$http',
-        function($http) {
+    .factory('wizardService', ['$http', '$rootScope',
+        function($http, $rootScope) {
             return {
                 changeStep : function(form, ordinal) {
                     if (form.layout == 'multipage' && ordinal > form.container.activeChildIndex)
                         return;
 
                     form.activeStepOrdinal = ordinal;
+                    $rootScope.$broadcast("event:step-changed", ordinal);
                 },
                 clickButton : function(form, container, button) {
                     if (button.action == 'next') {

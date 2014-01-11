@@ -217,12 +217,12 @@ public class Validation implements Serializable {
         	return this;
         }
         
-        public Builder unchangedField(String unchangedField) {
-        	if (this.unchangedFields == null)
-        		this.unchangedFields = new HashSet<String>();
-        	this.unchangedFields.add(unchangedField);
-        	return this;
-        }
+//        public Builder unchangedField(String unchangedField) {
+//        	if (this.unchangedFields == null)
+//        		this.unchangedFields = new HashSet<String>();
+//        	this.unchangedFields.add(unchangedField);
+//        	return this;
+//        }
 
         public Builder submission(Submission submission) {
             this.submission = submission;

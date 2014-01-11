@@ -293,8 +293,10 @@ select.form-control {
     border-right: 0px solid transparent;
     border-bottom: 1px solid #CCCCCC;
     border-radius: 0px;
+    margin-bottom: 0px;
     padding-left: 0px;
     padding-right: 0px;
+    padding-bottom: 0px;
 }
 
 .main-toolbar {
@@ -382,7 +384,7 @@ select.form-control {
 }
 
 .pw-attachments {
-    margin-top: 20px;
+    /*margin-top: 20px;*/
 }
 
 .pw-attachment-file {

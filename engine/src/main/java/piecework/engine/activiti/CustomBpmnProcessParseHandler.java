@@ -41,6 +41,7 @@ public class CustomBpmnProcessParseHandler extends AbstractBpmnParseHandler<Proc
     protected void executeParse(BpmnParse bpmnParse, Process element) {
         if (generalExecutionListener != null) {
             ProcessDefinitionEntity processDefinitionEntity = bpmnParse.getCurrentProcessDefinition();
+            processDefinitionEntity.addExecutionListener(ExecutionListener.EVENTNAME_START, generalExecutionListener);
             processDefinitionEntity.addExecutionListener(ExecutionListener.EVENTNAME_END, generalExecutionListener);
         }
     }

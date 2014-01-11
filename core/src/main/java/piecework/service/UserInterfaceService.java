@@ -54,7 +54,6 @@ import java.util.Map;
 @Service
 public class UserInterfaceService {
 
-    //private final static CacheManager cacheManager = new org.springframework.cache.concurrent.ConcurrentMapCacheManager();
     private static final Logger LOG = Logger.getLogger(UserInterfaceService.class);
 
     @Autowired
@@ -77,7 +76,6 @@ public class UserInterfaceService {
 
     @Autowired
     private UserInterfaceSettings settings;
-
 
     public boolean hasPage(Class<?> type) {
         if (type.equals(SearchResults.class))
