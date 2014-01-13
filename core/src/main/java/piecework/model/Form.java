@@ -165,6 +165,7 @@ public class Form {
         this.activation = builder.activation;
         this.attachment = builder.attachment;
         this.cancellation = builder.cancellation;
+
         this.history = builder.history;
         this.restart = builder.restart;
         this.suspension = builder.suspension;

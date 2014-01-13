@@ -424,6 +424,51 @@ angular.module('wf.directives',
                                             subFieldName = fieldName.substring(indexOfPeriod+1);
                                             fieldName = fieldName.substring(0, indexOfPeriod);
                                         }
+                                        if (input.type == 'file') {
+                                            var $input = $(input);
+                                            if ($input.attr('data-auto-upload')) {
+                                                $input.unbind('change');
+                                                $input.on('change', function(event) {
+                                                   var files = $(event.target)[0].files;
+                                                   var data = new FormData();
+                                                   var descriptionSelector = ':input.process-variable-description[data-element="' + input.name + '"]';
+                                                   var description = $(descriptionSelector).val();
+                                                   if (typeof(description) !== 'undefined')
+                                                       data.append(input.name + '!description', description);
+
+                                                   $.each(files, function(i, file) {
+                                                       data.append(input.name, file);
+                                                   });
+
+                                                   var url = form.attachment;
+                                                   var indexOf = url.indexOf('/attachment');
+                                                   if (indexOf != -1)
+                                                        url = url.substring(0, indexOf) + '/value/' + input.name;
+                                                   $.ajax({
+                                                       url : url,
+                                                       data : data,
+                                                       processData : false,
+                                                       contentType : 'multipart/form-data',
+                                                       type : 'POST'
+                                                   })
+                                                   .done(function(data, textStatus, jqXHR) {
+                                                       $(descriptionSelector).val('');
+//                                                       var location = jqXHR.getResponseHeader('Location');
+                                                       scope.$root.$broadcast('event:value-updated:' + input.name, data);
+                                                   })
+                                                   .fail(function(jqXHR, textStatus, errorThrown) {
+                                                       var data = $.parseJSON(jqXHR.responseText);
+                                                       var selector = '.process-alert[data-element="' + input.name + '"]';
+                                                       var message = data.messageDetail;
+                                                       var $alert = $(selector);
+                                                       $alert.show();
+                                                       $alert.text(message);
+                                                   });
+
+                                                   return false;
+                                                });
+                                            }
+                                        }
                                         var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
                                         if (values != null) {
                                             angular.forEach(values, function(value) {
@@ -432,7 +477,9 @@ angular.module('wf.directives',
                                                         input.checked = true;
                                                     else if (input.type == 'radio')
                                                         input.checked = true;
-                                                    else {
+                                                    else if (input.type == 'file') {
+
+                                                    } else {
                                                         if (subFieldName != null)
                                                             input.value = value[subFieldName];
                                                         else
@@ -517,10 +564,89 @@ angular.module('wf.directives',
                         if (values != null) {
                             angular.forEach(values, function(value) {
                                 if (value != null) {
+                                    var imageObject = value;
                                     if (subFieldName != null)
-                                        element.attr('src', value[subFieldName]);
-                                    else
-                                        element.attr('src', value);
+                                        imageObject = value[subFieldName];
+
+                                    element.attr('src', value.link);
+                                    scope.$on('event:value-updated:' + fieldName, function(event, value) {
+                                        element.attr('src', value.link);
+                                    });
+                                }
+                            });
+                        }
+
+                    });
+                }
+            }
+        }
+    ])
+    .directive('wfList', [
+        function() {
+            return {
+                restrict: 'A',
+                scope: {
+
+                },
+                link: function (scope, element, attr) {
+                    scope.$root.$on('event:form-loaded', function(event, form) {
+                        scope.form = form;
+                        var data = form.data;
+                        var fieldName = attr.wfList;
+                        var subFieldName = null;
+                        var indexOfPeriod = fieldName.indexOf('.');
+                        if (indexOfPeriod != -1) {
+                            subFieldName = fieldName.substring(indexOfPeriod+1);
+                            fieldName = fieldName.substring(0, indexOfPeriod);
+                        }
+                        var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
+                        if (values != null) {
+                            var childHtml = element.contents();
+                            element.empty();
+                            scope.$on('event:value-updated:' + fieldName, function(event, updatedValue) {
+                                var current = childHtml.clone();
+                                var anchor = current.find('a');
+                                anchor.attr('href', updatedValue.link);
+                                anchor.text(updatedValue.name);
+
+                                var deleteBtn = current.find('[data-wf-delete]').click(function(event) {
+                                    $.ajax({
+                                        url : updatedValue.link,
+                                        type : 'DELETE',
+                                        success: function() {
+                                            var $attachmentList = $(event.target).closest('ul');
+                                            $(event.target).closest('li').remove();
+                                        }
+                                    });
+                                });
+
+                                element.append(current);
+                            });
+                            angular.forEach(values, function(value) {
+                                if (value != null) {
+                                    var realValue = value;
+                                    if (subFieldName != null)
+                                        realValue = value[subFieldName];
+                                    var current = childHtml.clone();
+                                    var anchor = current.find('a');
+                                    anchor.attr('href', realValue.link);
+                                    anchor.text(realValue.name);
+
+                                    var deleteBtn = current.find('[data-wf-delete]').click(function(event) {
+                                        $.ajax({
+                                            url : realValue.link,
+                                            type : 'DELETE',
+                                            success: function() {
+                                                var $attachmentList = $(event.target).closest('ul');
+                                                $(event.target).closest('li').remove();
+//                                                if ($attachmentList.find('li').length == 0)
+//                                                    utils.$attachmentFallback.show();
+                                            }
+                                        });
+                                    });
+
+                                    element.append(current);
+
                                 }
                             });
                         }

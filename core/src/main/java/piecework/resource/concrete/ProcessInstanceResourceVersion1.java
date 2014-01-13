@@ -345,20 +345,21 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         ViewContext version1 = versions.getVersion1();
         String location = null;
+        File file = null;
         if (data != null) {
-            File file = ProcessInstanceUtility.firstFile(fieldName, data);
+            file = ProcessInstanceUtility.firstFile(fieldName, data);
 
             if (file != null) {
-                location = new File.Builder(file, new PassthroughSanitizer())
+                file = new File.Builder(file, new PassthroughSanitizer())
                                 .processDefinitionKey(stored.getProcessDefinitionKey())
                                 .processInstanceId(stored.getProcessInstanceId())
                                 .fieldName(fieldName)
-                                .build(version1)
-                                .getLink();
+                                .build(version1);
+                location = file.getLink();
             }
         }
 
-        ResponseBuilder builder = Response.noContent();
+        ResponseBuilder builder = file != null ? Response.ok(file) : Response.noContent();
 
         if (location != null)
             builder.header(HttpHeaders.LOCATION, location);
