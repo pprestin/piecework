@@ -27,16 +27,6 @@ angular.module('wf',
 //                .otherwise({redirectTo:'/form.html'});
         }
     ])
-//    .controller('FormController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'attachmentService', 'notificationService', 'personService', 'taskService', 'wizardService', 'dialogs',
-//        function($scope, $window, $location, $resource, $http, $routeParams, attachmentService, notificationService, personService, taskService, wizardService, dialogs) {
-//            console.log('started', 'Default form controller started');
-//        }
-//    ])
-//    .controller('ListController', ['$scope', '$window', '$location', '$resource', '$http', '$routeParams', 'attachmentService', 'notificationService', 'personService', 'taskService', 'wizardService', 'dialogs',
-//        function($scope, $window, $location, $resource, $http, $routeParams, attachmentService, notificationService, personService, taskService, wizardService, dialogs) {
-//            console.log('started', 'List controller started');
-//        }
-//    ])
     .directive('wfKeypressEvents', ['$document', '$rootScope',
         function($document, $rootScope) {
               return {

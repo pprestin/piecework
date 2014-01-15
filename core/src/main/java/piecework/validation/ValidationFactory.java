@@ -128,7 +128,7 @@ public class ValidationFactory {
                     List<? extends Value> values = submissionData.get(fieldName);
                     List<? extends Value> previousValues = instanceData.get(fieldName);
 
-                    boolean isFileField = field.getType() != null && field.getType().equals(Constants.FieldTypes.FILE);
+                    boolean isFileField = field.getType() != null && (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
                     if (values == null) {
                         // Files are a special case, in that we don't want to wipe them out if they aren't resubmitted
                         // on every request

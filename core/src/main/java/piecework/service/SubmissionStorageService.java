@@ -122,6 +122,15 @@ public class SubmissionStorageService {
                         .location(location)
                         .contentType(contentType)
                         .build();
+            } else if (field != null && field.getType().equals(Constants.FieldTypes.URL)) {
+                String id = uuidGenerator.getNextId();
+                String description = submissionBuilder.getDescription(name);
+                file = new File.Builder()
+                        .id(id)
+                        .name(value)
+                        .description(description)
+                        .contentType("text/url")
+                        .build();
             }
 
             if (fieldSubmissionType == FieldSubmissionType.RESTRICTED) {
