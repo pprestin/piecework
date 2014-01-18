@@ -21,6 +21,7 @@ import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
 import piecework.enumeration.Scheme;
 import piecework.model.*;
+import piecework.model.Process;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -45,7 +46,7 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
-    public synchronized Content findByPath(piecework.model.Process process, String location) throws IOException {
+    public synchronized Content findByPath(Process process, String base, String location) throws IOException {
         return contentLocationMap.get(location);
     }
 
@@ -109,5 +110,8 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
         return contents;
     }
 
-
+    @Override
+    public String getKey() {
+        return "default-memory";
+    }
 }

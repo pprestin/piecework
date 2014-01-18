@@ -216,6 +216,11 @@ angular.module('wf.directives',
                 templateUrl: 'templates/field.html',
                 transclude: true,
                 link: function (scope, element) {
+                    scope.getInlineUrl = function(value) {
+                        var url = value.link ? value.link : value;
+                        url += '?inline=true';
+                        return url;
+                    };
                     scope.getPeople = personService.getPeople;
                     scope.onFieldChange = function(field) {
                         field.cssClass = null;
@@ -465,6 +470,7 @@ angular.module('wf.directives',
 
                                 element.attr("action", form.action);
                                 element.attr("method", "POST");
+                                element.attr("enctype", "multipart/form-data");
                                 var data = form.data;
                                 var validation = form.validation;
                                 var formElement = element[0];
@@ -1169,7 +1175,9 @@ angular.module('wf.directives',
                  },
                  templateUrl: 'templates/status.html',
                  link: function (scope, element) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    if (typeof(scope.form) === 'undefined')
+                        scope.form = scope.$root.form;
+                    scope.$on('event:form-loaded', function(event, form) {
                         scope.form = form;
                     });
                     scope.claim = function() {

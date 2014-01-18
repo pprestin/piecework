@@ -50,9 +50,10 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
         StatusCodeError error = null;
         if (exception instanceof StatusCodeError)
             error = StatusCodeError.class.cast(exception);
-        else if (exception instanceof MisconfiguredProcessException)
+        else if (exception instanceof MisconfiguredProcessException) {
             error = new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-        else if (exception instanceof AccessException)
+            LOG.warn("Misconfigured process", exception);
+        } else if (exception instanceof AccessException)
             error = new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         else {
             error = new InternalServerError();

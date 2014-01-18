@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,25 @@
  */
 package piecework.util;
 
-import java.io.Serializable;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author James Renfro
  */
-@Deprecated
-public interface UserContract extends Serializable {
+public final class FileUtility {
 
-	String getId();
-	
-	String getVisibleId();
-	
-	String getDisplayName();
-	
-	String getSortName();
-	
-	String getFirstName();
-	
-	String getMiddleName();
-	
-	String getLastName();
-	
-	String getEmailAddress();
-	
-	Map<String, String> getIdentifiers();
-	
-	boolean isFakeUser();
-	
-	String getProvider();
-	
+    public static final boolean isAncestorOf(File parent, File child) throws IOException {
+        File canonicalParent = parent.getCanonicalFile();
+        File canonicalChild = child.getCanonicalFile();
+
+        File p = canonicalChild.getParentFile();
+        while (p != null) {
+            if (canonicalParent.equals(p))
+                return true;
+            p = p.getParentFile();
+        }
+        return false;
+    }
+
 }

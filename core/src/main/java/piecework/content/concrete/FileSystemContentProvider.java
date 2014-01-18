@@ -15,15 +15,18 @@
  */
 package piecework.content.concrete;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import piecework.content.ContentProvider;
 import piecework.enumeration.Scheme;
 import piecework.model.*;
-import piecework.model.File;
+import piecework.model.Process;
+import piecework.util.FileUtility;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
-import java.net.URLConnection;
 
 /**
  * @author James Renfro
@@ -31,12 +34,27 @@ import java.net.URLConnection;
 @Service
 public class FileSystemContentProvider implements ContentProvider {
 
+    @Autowired
+    private Environment environment;
+
+    private java.io.File root;
+
+    @PostConstruct
+    public void init() {
+        String filesystemRoot = environment.getProperty("base.filesystem.root", ".");
+        this.root = new java.io.File(filesystemRoot);
+    }
+
     @Override
-    public Content findByPath(piecework.model.Process process, String location) throws IOException {
+    public Content findByPath(Process process, String base, String location) throws IOException {
         if (!location.startsWith("file:"))
             return null;
 
         java.io.File file = new java.io.File(location.substring("file:".length()));
+
+        if (!FileUtility.isAncestorOf(root, file))
+            throw new IOException("Cannot retrieve a file that is located outside of the content file system");
+
         FileSystemResource resource = new FileSystemResource(file);
 
         String contentType = null;
@@ -55,4 +73,10 @@ public class FileSystemContentProvider implements ContentProvider {
     public Scheme getScheme() {
         return Scheme.FILESYSTEM;
     }
+
+   @Override
+   public String getKey() {
+       return "default-filesystem";
+   }
+
 }

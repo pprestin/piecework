@@ -120,6 +120,8 @@ public class Field implements Serializable, Comparable<Field> {
     @XmlElementWrapper(name="options")
     @XmlElementRef
     private final List<Option> options;
+
+    private final Map<String, String> metadataTemplates;
     
     @XmlAttribute
     private final int ordinal;
@@ -162,6 +164,7 @@ public class Field implements Serializable, Comparable<Field> {
         this.constraints = builder.constraints != null ? Collections.unmodifiableList(builder.constraints) : null;
         this.options = builder.options != null ? Collections.unmodifiableList(builder.options) : null;
         this.link = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.name) : null;
+        this.metadataTemplates = builder.metadataTemplates != null ? Collections.unmodifiableMap(builder.metadataTemplates) : null;
     }
 
     public String getFieldId() {
@@ -292,6 +295,10 @@ public class Field implements Serializable, Comparable<Field> {
         return fieldId != null ? fieldId.hashCode() : 0;
     }
 
+    public Map<String, String> getMetadataTemplates() {
+        return metadataTemplates;
+    }
+
     @Override
     public int compareTo(Field o) {
         int result = (ordinal < o.ordinal) ? -1 : ((ordinal == o.ordinal) ? 0 : 1);
@@ -332,6 +339,7 @@ public class Field implements Serializable, Comparable<Field> {
         private int minInputs;
         private List<Constraint> constraints;
         private List<Option> options;
+        private Map<String, String> metadataTemplates;
         private int ordinal;
         private boolean isDeleted;
 
@@ -396,6 +404,9 @@ public class Field implements Serializable, Comparable<Field> {
             } else {
                 this.options = new ArrayList<Option>();
             }
+
+            if (field.metadataTemplates != null && !field.metadataTemplates.isEmpty())
+                this.metadataTemplates = new HashMap<String, String>(field.metadataTemplates);
         }
 
         public Field build() {
@@ -571,6 +582,13 @@ public class Field implements Serializable, Comparable<Field> {
 
         public Builder invisible() {
             this.visible = false;
+            return this;
+        }
+
+        public Builder metadataTemplate(String name, String value) {
+            if (this.metadataTemplates == null)
+                this.metadataTemplates = new HashMap<String, String>();
+            this.metadataTemplates.put(name, value);
             return this;
         }
     }

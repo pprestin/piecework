@@ -65,25 +65,6 @@ public class PathUtility {
         return new TagAttributeAction(TagAttributeAction.TagAttributeActionType.LEAVE, attributeName, attributeValue, null);
     }
 
-//    public static void handleAttribute(TagNode tagNode, StaticResourceAggregator aggregator, String attributeName) {
-//        // Sanity checks
-//        if (tagNode == null)
-//            return;
-//        if (aggregator == null)
-//            return;
-//        if (StringUtils.isEmpty(attributeName))
-//            return;
-//
-//        String attributeValue = tagNode.getAttributeByName(attributeName);
-//        if (attributeValue != null) {
-//            String result = aggregator.handle(attributeValue);
-//            if (result == null)
-//                tagNode.removeFromTree();
-//            else
-//                tagNode.addAttribute(attributeName, result);
-//        }
-//    }
-
     public static boolean checkForSecurePath(String path) {
         if (path == null)
             return false;

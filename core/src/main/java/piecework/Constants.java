@@ -80,6 +80,11 @@ public interface Constants {
         public static final String SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE = "SCREEN_IS_DISPLAYED_WHEN_ACTION_TYPE";
 	}
 
+    public static class ContentMetadataKeys {
+        public static final String CONTENT_PROVIDER = "CONTENT_PROVIDER";
+        public static final String CONTENT_RECEIVER = "CONTENT_RECEIVER";
+    }
+
     public static class DeleteReasons {
         public static final String CANCELLED = "Cancelled";
     }
@@ -124,6 +129,7 @@ public interface Constants {
         public static final String DATE = "date";
         public static final String EMAIL = "email";
         public static final String FILE = "file";
+        public static final String IFRAME = "iframe";
         public static final String HTML = "html";
         public static final String NUMBER = "number";
         public static final String PERSON = "person";

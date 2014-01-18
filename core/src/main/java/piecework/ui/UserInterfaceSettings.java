@@ -37,6 +37,7 @@ public class UserInterfaceSettings {
     private String assetsDirectoryPath;
     private boolean doOptimization;
     private boolean disableResourceCaching;
+    private String customStylesheetUrl;
 
     @PostConstruct
     public void init() {
@@ -47,6 +48,7 @@ public class UserInterfaceSettings {
         this.disableResourceCaching = environment.getProperty("disable.resource.caching", Boolean.class, Boolean.FALSE);
         this.assetsDirectoryPath = environment.getProperty("assets.directory");
         this.doOptimization = environment.getProperty("javascript.minification", Boolean.class, Boolean.FALSE);
+        this.customStylesheetUrl = environment.getProperty("custom.stylesheet.url");
     }
 
     public String getApplicationTitle() {
@@ -67,6 +69,10 @@ public class UserInterfaceSettings {
 
     public String getAssetsDirectoryPath() {
         return assetsDirectoryPath;
+    }
+
+    public String getCustomStylesheetUrl() {
+        return customStylesheetUrl;
     }
 
     public boolean isDoOptimization() {

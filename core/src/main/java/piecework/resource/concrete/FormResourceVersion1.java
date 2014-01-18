@@ -54,11 +54,13 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     Versions versions;
 
     @Override
-    public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawSubmissionId) throws PieceworkException {
+    public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawRequestId, final String rawSubmissionId) throws PieceworkException {
         Process process = processService.read(rawProcessDefinitionKey);
 
         if (StringUtils.isNotEmpty(rawTaskId))
             return taskForm(context, process, rawTaskId);
+        if (StringUtils.isNotEmpty(rawRequestId))
+            return requestForm(context, process, rawRequestId);
         if (StringUtils.isNotEmpty(rawSubmissionId))
             return submissionForm(context, process, rawSubmissionId);
 

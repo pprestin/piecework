@@ -35,6 +35,8 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -89,11 +91,19 @@ public class SubmissionStorageService {
                 else if (field.getMaxValueLength() > 0)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(field.getMaxValueLength()).longValue() * 1024l);
 
+                Map<String, String> metadata = new HashMap<String, String>();
+
+                if (field != null && field.getMetadataTemplates() != null) {
+                    // FIXME: Need to pass context to templates and compile them to provide instance metadata for content
+                    metadata = new HashMap<String, String>(field.getMetadataTemplates());
+                }
+
                 Content content = new Content.Builder()
                         .contentType(contentType)
                         .filename(value)
                         .location(location)
                         .inputStream(inputStream)
+                        .metadata(metadata)
                         .build();
 
                 try {

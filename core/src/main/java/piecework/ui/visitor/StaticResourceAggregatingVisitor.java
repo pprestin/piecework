@@ -64,6 +64,8 @@ public class StaticResourceAggregatingVisitor extends HtmlProviderVisitor {
     }
 
     public Resource getStylesheetResource() {
+        if (StringUtils.isNotEmpty(settings.getCustomStylesheetUrl()))
+            this.stylesheetAggregator.handle(settings.getCustomStylesheetUrl());
         return this.stylesheetAggregator.getStaticResource();
     }
 

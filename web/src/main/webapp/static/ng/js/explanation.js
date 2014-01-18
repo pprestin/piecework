@@ -7,10 +7,13 @@ angular.module('Explanation',
              return {
                  restrict: 'A',
                  scope: {
-                     message : '=',
-                     messageDetail : '=',
+
                  },
                  link: function (scope, element) {
+                     scope.message = element.attr('data-message');
+                     scope.messageDetail = element.attr('data-messagedetail');
+                     element.find('[data-wf-message]').text(scope.message);
+                     element.find('[data-wf-message-detail]').text(scope.messageDetail);
                      scope.deleteAttachment = function(attachment) {
                          attachmentService.deleteAttachment(scope.form, attachment);
                      };

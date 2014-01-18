@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.enumeration.Scheme;
 import piecework.model.*;
@@ -90,7 +91,7 @@ public class ContentHandlerRepository implements ContentRepository {
 
         for (ContentProvider contentProvider : contentProviders) {
             try {
-                Content content = contentProvider.findByPath(process, path);
+                Content content = contentProvider.findByPath(process, base, location);
                 if (content != null)
                     return content;
             } catch (IOException e) {
@@ -103,8 +104,16 @@ public class ContentHandlerRepository implements ContentRepository {
 
     @Override
     public Content save(Process process, Content content) throws IOException {
-        // Return the result from the primary receiver
-        ContentReceiver contentReceiver = contentHandlerRegistry.primaryReceiver();
+        String contentProviderKey = null;
+        String contentReceiverKey = null;
+
+        if (content.getMetadata() != null) {
+            contentProviderKey = content.getMetadata().get(Constants.ContentMetadataKeys.CONTENT_PROVIDER);
+            contentReceiverKey = content.getMetadata().get(Constants.ContentMetadataKeys.CONTENT_RECEIVER);
+        }
+
+        // Return the result from the specified receiver (or primary receiver if key is null)
+        ContentReceiver contentReceiver = contentHandlerRegistry.contentReceiver(contentReceiverKey);
         Content saved = contentReceiver.save(content);
         // Backup receivers should also be saved to, but IOExceptions from them
         // should not bubble up

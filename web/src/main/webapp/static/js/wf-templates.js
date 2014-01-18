@@ -304,6 +304,9 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <!--<img class=\"thumbnail\" data-ng-src=\"{{field.value.link ? field.value.link : field.value}}\" data-ng-show=\"field.value\"/>-->\n" +
     "            <input data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"file\" data-ng-readonly=\"field.readonly\" class=\"form-control\" name=\"{{field.name}}\" type=\"file\"/>\n" +
     "        </div>\n" +
+    "        <div data-ng-switch-when=\"iframe\">\n" +
+    "            <iframe data-ng-repeat=\"value in field.values\" src=\"{{getInlineUrl(value)}}\"></iframe>\n" +
+    "        </div>\n" +
     "        <div data-ng-switch-when=\"person\">\n" +
     "            <input data-ng-model=\"field.value.displayName\" data-ng-show=\"field.readonly\" class=\"form-control\" type=\"text\" disabled/>\n" +
     "            <input data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-maxlength=\"{{field.maxValueLength}}\" data-ng-minlength=\"{{field.minValueLength}}\" data-ng-pattern=\"{{field.pattern}}\" ng-show=\"!field.readonly\" ng-required=\"field.required\" class=\"form-control\" placeholder=\"{{field.placeholder ? field.placeholder : 'Enter name'}}\" type=\"text\" typeahead=\"person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8\" typeahead-wait-ms=\"300\" />\n" +

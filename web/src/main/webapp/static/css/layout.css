@@ -41,6 +41,11 @@ form.main-form h2 {
     margin-left: 10px;
 }
 
+iframe {
+    height: 500px;
+    width: 100%;
+}
+
 input, .uneditable-input {
     width: auto;
 }

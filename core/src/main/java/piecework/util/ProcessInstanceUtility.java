@@ -105,10 +105,10 @@ public class ProcessInstanceUtility {
             Map<String, List<Value>> data = instance != null ? instance.getData() : null;
 
             processInstanceLabel = template(processInstanceLabelTemplate, data, validationData);
-
-            if (StringUtils.isEmpty(processInstanceLabel))
-                processInstanceLabel = "Submission " + dateTimeFormatter.print(System.currentTimeMillis());
         }
+
+        if (StringUtils.isEmpty(processInstanceLabel))
+            processInstanceLabel = "Submission " + dateTimeFormatter.print(System.currentTimeMillis());
 
         return processInstanceLabel;
     }

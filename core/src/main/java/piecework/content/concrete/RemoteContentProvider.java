@@ -31,7 +31,7 @@ import org.apache.log4j.Logger;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.stereotype.Service;
 import piecework.enumeration.Scheme;
-import piecework.model.Content;
+import piecework.model.*;
 import piecework.util.ContentUtility;
 
 import javax.annotation.PostConstruct;
@@ -70,7 +70,7 @@ public class RemoteContentProvider extends GridFSContentProviderReceiver {
     }
 
     @Override
-    public Content findByPath(piecework.model.Process process, String location) {
+    public Content findByPath(piecework.model.Process process, String base, String location) {
         URI uri;
         try {
             uri = URI.create(location);
@@ -125,6 +125,11 @@ public class RemoteContentProvider extends GridFSContentProviderReceiver {
     @Override
     public Scheme getScheme() {
         return Scheme.REMOTE;
+    }
+
+    @Override
+    public String getKey() {
+        return "default-remote";
     }
 
 }

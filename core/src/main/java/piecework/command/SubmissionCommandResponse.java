@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 University of Washington
+ * Copyright 2013 University of Washington
  *
  * Licensed under the Educational Community License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,29 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.util;
+package piecework.command;
 
-import java.io.Serializable;
-import java.util.List;
+import piecework.model.FormRequest;
+import piecework.model.Submission;
 
 /**
  * @author James Renfro
  */
-@Deprecated
-public interface GroupContract<U extends UserContract> extends Serializable {
+public class SubmissionCommandResponse {
 
-	String getId();
-	
-	String getVisibleId();
-	
-	String getProvider();
-	
-	String getComponent();
-	
-	String getName();
-	
-	String getDescription();
-	
-	List<? extends UserContract> getMembers();
-	
+    private final Submission submission;
+    private final FormRequest nextRequest;
+
+    public SubmissionCommandResponse(Submission submission, FormRequest nextRequest) {
+        this.submission = submission;
+        this.nextRequest = nextRequest;
+    }
+
+    public Submission getSubmission() {
+        return submission;
+    }
+
+    public FormRequest getNextRequest() {
+        return nextRequest;
+    }
 }

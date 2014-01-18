@@ -36,8 +36,10 @@ public class ContentHandlerRegistry {
     private final ContentProviderVoter contentProviderVoter;
     private final ContentReceiverVoter contentReceiverVoter;
 
+    private Map<String, ContentProvider> contentProviderKeyMap;
     private Map<Scheme, ContentProvider> contentProviderPrimaryMap;
     private ManyMap<Scheme, ContentProvider> contentProviderBackupMap;
+    private Map<String, ContentReceiver> contentReceiverKeyMap;
     private ContentReceiver contentReceiver;
     private Set<ContentReceiver> contentReceiverBackupSet;
 
@@ -46,13 +48,15 @@ public class ContentHandlerRegistry {
     public ContentHandlerRegistry(ContentProviderVoter contentProviderVoter, ContentReceiverVoter contentReceiverVoter) {
         this.contentProviderVoter = contentProviderVoter;
         this.contentReceiverVoter = contentReceiverVoter;
+        this.contentProviderKeyMap = new Hashtable<String, ContentProvider>();
         this.contentProviderPrimaryMap = new Hashtable<Scheme, ContentProvider>();
         this.contentProviderBackupMap = new ManyMap<Scheme, ContentProvider>();
         this.contentReceiverBackupSet = new HashSet<ContentReceiver>();
+        this.contentReceiverKeyMap = new Hashtable<String, ContentReceiver>();
     }
 
     public void init() {
-        this.storage = new Storage(contentProviderPrimaryMap, contentProviderBackupMap, contentReceiver, contentReceiverBackupSet);
+        this.storage = new Storage(contentProviderKeyMap, contentProviderPrimaryMap, contentProviderBackupMap, contentReceiver, contentReceiverBackupSet, contentReceiverKeyMap);
     }
 
     public List<ContentProvider> providers(Scheme scheme) {
@@ -65,6 +69,18 @@ public class ContentHandlerRegistry {
         if (storage == null)
             throw new RuntimeException("Storage is not initialized");
         return storage.primaryReceiver();
+    }
+
+    public ContentReceiver contentReceiver(String key) {
+        if (storage == null)
+            throw new RuntimeException("Storage is not initialized");
+        return storage.receiver(key);
+    }
+
+    public List<ContentProvider> contentProviders(Scheme scheme, String key) {
+        if (storage == null)
+            throw new RuntimeException("Storage is not initialized");
+        return storage.providers(scheme, key);
     }
 
     public Set<ContentReceiver> backupReceivers() {
@@ -103,6 +119,9 @@ public class ContentHandlerRegistry {
                     contentProviderBackupMap.putOne(scheme, provider);
                     break;
             }
+
+            if (provider.getKey() != null)
+                contentProviderKeyMap.put(provider.getKey(), provider);
         }
     }
 
@@ -129,6 +148,9 @@ public class ContentHandlerRegistry {
                     contentReceiverBackupSet.add(receiver);
                     break;
             }
+
+            if (receiver.getKey() != null)
+                contentReceiverKeyMap.put(receiver.getKey(), receiver);
         }
     }
 
@@ -136,15 +158,20 @@ public class ContentHandlerRegistry {
      * Internal immutable to hold data for retrieval
      */
     public class Storage {
+        private final Map<String, ContentProvider> contentProviderKeyMap;
         private final Map<Scheme, List<ContentProvider>> contentProviderMap;
         private final ContentReceiver contentReceiver;
         private final Set<ContentReceiver> contentReceiverBackupSet;
+        private final Map<String, ContentReceiver> contentReceiverKeyMap;
 
-        public Storage(Map<Scheme, ContentProvider> contentProviderPrimaryMap,
-                                   ManyMap<Scheme, ContentProvider> contentProviderBackupMap,
-                                   ContentReceiver contentReceiver,
-                                   Set<ContentReceiver> contentReceiverBackupSet) {
+        public Storage(Map<String, ContentProvider> contentProviderKeyMap,
+                       Map<Scheme, ContentProvider> contentProviderPrimaryMap,
+                       ManyMap<Scheme, ContentProvider> contentProviderBackupMap,
+                       ContentReceiver contentReceiver,
+                       Set<ContentReceiver> contentReceiverBackupSet,
+                       Map<String, ContentReceiver> contentReceiverKeyMap) {
 
+            Map<String, ContentProvider> temporaryProviderKeyMap = new HashMap<String, ContentProvider>();
             // Build a new many map that has the primary first, followed by any backups
             ManyMap<Scheme, ContentProvider> temporaryProviderMap = new ManyMap<Scheme, ContentProvider>();
             if (contentProviderPrimaryMap != null && !contentProviderPrimaryMap.isEmpty()) {
@@ -159,9 +186,17 @@ public class ContentHandlerRegistry {
                 }
             }
 
+            this.contentProviderKeyMap = Collections.unmodifiableMap(contentProviderKeyMap);
             this.contentProviderMap = temporaryProviderMap.unmodifiableMap();
             this.contentReceiver = contentReceiver;
             this.contentReceiverBackupSet = Collections.unmodifiableSet(contentReceiverBackupSet);
+            this.contentReceiverKeyMap = Collections.unmodifiableMap(contentReceiverKeyMap);
+        }
+
+        public List<ContentProvider> providers(Scheme scheme, String key) {
+            if (key == null || contentProviderKeyMap == null || contentProviderKeyMap.isEmpty())
+                return providers(scheme);
+            return Collections.singletonList(contentProviderKeyMap.get(key));
         }
 
         public List<ContentProvider> providers(Scheme scheme) {
@@ -169,6 +204,12 @@ public class ContentHandlerRegistry {
             if (providers == null)
                 return Collections.emptyList();
             return providers;
+        }
+
+        public ContentReceiver receiver(String key) {
+            if (key == null || contentReceiverKeyMap == null || contentReceiverKeyMap.isEmpty())
+                return primaryReceiver();
+            return contentReceiverKeyMap.get(key);
         }
 
         public ContentReceiver primaryReceiver() {

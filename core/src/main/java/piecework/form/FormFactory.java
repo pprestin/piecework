@@ -153,14 +153,14 @@ public class FormFactory {
         if (mediaType.equals(MediaType.TEXT_HTML_TYPE) && !revertToDefaultUI) {
             switch (action.getStrategy()) {
                 case DECORATE_HTML:
-                    formDisposition = new FormDisposition(deployment.getBase(), deployment.getBase() + "/" + action.getLocation(), action.getStrategy());
+                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
                     break;
                 case INCLUDE_DIRECTIVES:
                 case INCLUDE_SCRIPT:
                     if (external)
                         formDisposition = new FormDisposition(uri, action.getStrategy());
                     else if (action.getLocation() != null)
-                        formDisposition = new FormDisposition(deployment.getBase(), deployment.getBase() + "/" + action.getLocation(), action.getStrategy());
+                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
                     break;
             }
         }

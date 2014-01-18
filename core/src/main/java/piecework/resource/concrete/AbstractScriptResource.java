@@ -192,7 +192,9 @@ public abstract class AbstractScriptResource {
             // resource thru the public url
             if (StringUtils.isNotEmpty(base)) {
                 String requestLocation = base + "/" + name;
-                Content content = contentRepository.findByLocation(process, requestLocation);
+                // Note that the content providers should be doing additional checking to ensure
+                // that resources are retrieved only from below the approved filesystem base and root
+                Content content = contentRepository.findByLocation(process, base, name);
 
                 // Ensure that content that is retrieved wasn't sneakily different from what was
                 // requested (i.e. by some other mechanism of substituting

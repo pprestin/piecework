@@ -15,11 +15,14 @@
  */
 package piecework.content.concrete;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import piecework.content.ContentProvider;
 import piecework.enumeration.Scheme;
 import piecework.model.*;
+import piecework.model.Process;
 
 /**
  * @author James Renfro
@@ -27,15 +30,37 @@ import piecework.model.*;
 @Service
 public class ClasspathContentProvider implements ContentProvider {
 
-    @Override
-    public Content findByPath(piecework.model.Process process, String location) {
-        if (!location.startsWith("classpath:"))
-            return null;
+    private static final Logger LOG = Logger.getLogger(ClasspathContentProvider.class);
 
-        String classpathLocation = location.substring("classpath:".length());
-        ClassPathResource resource = new ClassPathResource(classpathLocation);
+    @Override
+    public Content findByPath(Process process, String base, String path) {
+        if (StringUtils.isEmpty(base)) {
+            LOG.warn("Cannot retrieve a classpath resource without a base path");
+            return null;
+        }
+
+        if (!base.startsWith("classpath:")) {
+            LOG.error("Should not be looking for a classpath resource without the classpath prefix");
+            return null;
+        }
+
+        String classpathBase = base.substring("classpath:".length());
+
+        // Make sure that the base ends with a slash
+        if (!classpathBase.endsWith("/"))
+            classpathBase += "/";
+
+        String location = org.springframework.util.StringUtils.applyRelativePath(classpathBase, path);
+        ClassPathResource resource = new ClassPathResource(location);
+
+        location = "classpath:" + resource.getPath();
 
         String contentType = null;
+
+        if (!resource.exists()) {
+            LOG.warn("No classpath resource exists for " + location);
+            return null;
+        }
 
         if (location.endsWith(".css"))
             contentType = "text/css";
@@ -44,12 +69,19 @@ public class ClasspathContentProvider implements ContentProvider {
         else if (location.endsWith(".html"))
             contentType = "text/html";
 
-        return new Content.Builder().resource(resource).contentType(contentType).location(location).filename(location).build();
+        return new Content.Builder().resource(resource).contentType(contentType).location(location).filename(resource.getFilename()).build();
     }
+
+
 
     @Override
     public Scheme getScheme() {
         return Scheme.CLASSPATH;
+    }
+
+    @Override
+    public String getKey() {
+        return "default-classpath";
     }
 
 }

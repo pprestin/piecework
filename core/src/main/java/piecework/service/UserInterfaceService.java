@@ -346,9 +346,9 @@ public class UserInterfaceService {
         if (StringUtils.isEmpty(disposition.getPath()))
             throw new MisconfiguredProcessException("Form disposition path is empty");
 
-        Content content = contentRepository.findByLocation(process, disposition.getPath());
+        Content content = contentRepository.findByLocation(process, disposition.getBase(), disposition.getPath());
         if (content == null)
-            throw new MisconfiguredProcessException("No content found for disposition path: " + disposition.getPath());
+            throw new MisconfiguredProcessException("No content found for disposition base: " + disposition.getBase() + " and path: " + disposition.getPath());
 
         return content;
     }

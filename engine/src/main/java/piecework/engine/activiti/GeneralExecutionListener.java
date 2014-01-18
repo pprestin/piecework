@@ -64,7 +64,7 @@ public class GeneralExecutionListener implements ExecutionListener {
                 if (execution instanceof ActivityExecution) {
                     ActivityExecution activityExecution = ActivityExecution.class.cast(execution);
                     PvmActivity activity = activityExecution.getActivity();
-                    String activityType = String.class.cast(activity.getProperty("type"));
+                    String activityType = activity != null ? String.class.cast(activity.getProperty("type")) : null;
 
                     if (activityType != null) {
                         if (activityType.equals("manualTask")) {

@@ -23,7 +23,10 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Abstraction on GridFSFile or GridFSResource -- not a document, but to make GridFS resources
@@ -44,6 +47,7 @@ public class Content implements Serializable, Streamable {
     private final String md5;
     private final Date lastModified;
     private final Long length;
+    private final Map<String, String> metadata;
 
     private Content() {
         this(new Builder());
@@ -59,6 +63,7 @@ public class Content implements Serializable, Streamable {
         this.md5 = builder.md5;
         this.lastModified = builder.lastModified;
         this.length = builder.length;
+        this.metadata = Collections.unmodifiableMap(builder.metadata);
     }
 
     public String getContentId() {
@@ -79,6 +84,10 @@ public class Content implements Serializable, Streamable {
 
     public String getLocation() {
         return location;
+    }
+
+    public Map<String, String> getMetadata() {
+        return metadata;
     }
 
     @Deprecated
@@ -122,9 +131,10 @@ public class Content implements Serializable, Streamable {
         private String md5;
         private Date lastModified;
         private Long length;
+        private Map<String, String> metadata;
 
         public Builder() {
-
+            this.metadata = new HashMap<String, String>();
         }
 
         public Builder(Content content) {
@@ -137,6 +147,7 @@ public class Content implements Serializable, Streamable {
             this.md5 = content.md5;
             this.lastModified = content.lastModified;
             this.length = content.length;
+            this.metadata = content.metadata != null ? new HashMap<String, String>(content.metadata) : new HashMap<String, String>();
         }
 
         public Content build() {
@@ -190,6 +201,17 @@ public class Content implements Serializable, Streamable {
 
         public Builder length(Long length) {
             this.length = length;
+            return this;
+        }
+
+        public Builder metadata(String name, String value) {
+            this.metadata.put(name, value);
+            return this;
+        }
+
+        public Builder metadata(Map<String, String> metadata) {
+            if (metadata != null)
+                this.metadata = new HashMap<String, String>(metadata);
             return this;
         }
     }

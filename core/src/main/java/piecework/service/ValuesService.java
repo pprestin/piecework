@@ -68,7 +68,7 @@ public class ValuesService {
     @Autowired
     Versions versions;
 
-    public Response read(Process process, ProcessInstance instance, String fieldName, String fileId) throws StatusCodeError {
+    public Response read(Process process, ProcessInstance instance, String fieldName, String fileId, Boolean inline) throws StatusCodeError {
         Map<String, List<Value>> data = instance.getData();
         Value value = ProcessInstanceUtility.firstMatchingFileOrLink(fieldName, data, fileId);
 
@@ -77,7 +77,11 @@ public class ValuesService {
                 File file = File.class.cast(value);
                 Content content = contentRepository.findByLocation(process, file.getLocation());
                 if (content != null) {
+                    boolean isInline = inline != null && inline.booleanValue();
                     StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(null, content);
+                    if (isInline)
+                        return Response.ok(streamingAttachmentContent).header("Content-Type", content.getContentType()).build();
+
                     String contentDisposition = new StringBuilder("attachment; filename=").append(content.getName()).toString();
                     return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
                 }

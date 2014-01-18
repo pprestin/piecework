@@ -11,8 +11,10 @@ import java.io.IOException;
  */
 public interface ContentProvider {
 
-    Content findByPath(Process process, String location) throws IOException;
+    Content findByPath(Process process, String base, String location) throws IOException;
 
     Scheme getScheme();
+
+    String getKey();
 
 }

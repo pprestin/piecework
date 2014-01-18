@@ -24,7 +24,7 @@ import piecework.content.ContentReceiver;
 import piecework.content.ContentReceiverVoter;
 import piecework.enumeration.ContentHandlerPriority;
 import piecework.enumeration.Scheme;
-import piecework.model.Content;
+import piecework.model.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -91,13 +91,18 @@ public class ContentHandlerRegistryTest {
     public class TestExternalContentProvider implements ContentProvider {
 
         @Override
-        public Content findByPath(piecework.model.Process process, String location) throws IOException {
+        public Content findByPath(piecework.model.Process process, String base, String location) throws IOException {
             throw new NotImplementedException();
         }
 
         @Override
         public Scheme getScheme() {
             return Scheme.REPOSITORY;
+        }
+
+        @Override
+        public String getKey() {
+            return null;
         }
     }
 
@@ -106,6 +111,11 @@ public class ContentHandlerRegistryTest {
         @Override
         public Content save(Content content) throws IOException {
             throw new NotImplementedException();
+        }
+
+        @Override
+        public String getKey() {
+            return null;
         }
 
     }

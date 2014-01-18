@@ -39,7 +39,7 @@ public interface FormResource extends ApplicationResource {
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
     @Produces({"text/html","application/json"})
-    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
+    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
 
 //    @GET
 //    @Path("{processDefinitionKey}/{taskId}")

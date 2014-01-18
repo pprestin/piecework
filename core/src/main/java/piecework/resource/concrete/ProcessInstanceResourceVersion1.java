@@ -47,7 +47,6 @@ import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.common.ManyMap;
 import piecework.util.ProcessInstanceUtility;
 
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -299,7 +298,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
-    public Response readValue(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
+    public Response readValue(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, Boolean inline) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, false);
 
@@ -313,7 +312,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        return valuesService.read(process, instance, fieldName, valueId);
+        return valuesService.read(process, instance, fieldName, valueId, inline);
     }
 
     @Override

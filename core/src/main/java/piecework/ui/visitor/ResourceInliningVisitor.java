@@ -48,8 +48,8 @@ public class ResourceInliningVisitor extends HtmlProviderVisitor {
     protected void handleBody(String tagName, TagNode tagNode) {
         if (modelSerializer.isExplanation()) {
             Explanation explanation = modelSerializer.getObject(Explanation.class);
-            tagNode.addAttribute("message", explanation.getMessage());
-            tagNode.addAttribute("messageDetail", explanation.getMessageDetail());
+            tagNode.addAttribute("data-message", explanation.getMessage());
+            tagNode.addAttribute("data-messageDetail", explanation.getMessageDetail());
         }
 //        tagNode.addChild(modelSerializer.getPageModelScript());
         tagNode.addChild(modelSerializer.getScriptContent(visitor.getScriptResource()));

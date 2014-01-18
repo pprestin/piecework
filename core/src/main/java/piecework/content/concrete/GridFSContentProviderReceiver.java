@@ -22,12 +22,11 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
 import piecework.enumeration.Scheme;
-import piecework.model.Content;
+import piecework.model.*;
 import piecework.util.ContentUtility;
 
 import java.io.IOException;
@@ -46,7 +45,7 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     GridFsOperations gridFsOperations;
 
     @Override
-    public Content findByPath(piecework.model.Process process, String location) {
+    public Content findByPath(piecework.model.Process process, String base, String location) {
         GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
         return ContentUtility.toContent(file);
     }
@@ -70,6 +69,11 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     @Override
     public Scheme getScheme() {
         return Scheme.REPOSITORY;
+    }
+
+    @Override
+    public String getKey() {
+        return "default-gridfs";
     }
 
 }
