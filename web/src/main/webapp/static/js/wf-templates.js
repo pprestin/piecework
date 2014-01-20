@@ -227,7 +227,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                <li class=\"list-group-item\" data-ng-repeat=\"attachment in state.attachments\">\n" +
     "                    <div class=\"row\">\n" +
     "                        <div class=\"col-md-12\">\n" +
-    "                            <button data-ng-show=\"state.isEditingAttachments\" data-ng-click=\"deleteAttachment(attachment)\" class=\"text-danger close \" type=\"button\">&times;</button>\n" +
+    "                            <button data-ng-show=\"state.isEditingAttachments\" data-ng-click=\"deleteAttachment(attachment)\" class=\"delete-attachments-button text-danger close \" type=\"button\">&times;</button>\n" +
     "                            <span data-ng-switch on=\"attachment.contentType\">\n" +
     "                                <span data-ng-switch-when=\"text/plain\"  title=\"{{attachment.description}}\">{{attachment.description}}</span>\n" +
     "                                <span data-ng-switch-default class=\"pw-attachment-file\">\n" +

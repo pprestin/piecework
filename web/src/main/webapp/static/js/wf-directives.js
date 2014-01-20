@@ -30,6 +30,7 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/attachments.html',
                 link: function (scope, element) {
+                    console.log("Initialized wfAttachments");
                     if (typeof(scope.state) == 'undefined') {
                         scope.state = {};
                         scope.state.isViewingAttachments = false;
@@ -38,21 +39,33 @@ angular.module('wf.directives',
                         scope.state.attachments = scope.form.attachments;
                     }
                     scope.deleteAttachment = function(attachment) {
-                        attachmentService.deleteAttachment(scope.form, attachment);
+                        if (scope.state.isEditingAttachments) {
+                            console.log('wfAttachment deleteAttachment clicked');
+                            attachmentService.deleteAttachment(scope.form, attachment);
+                        }
                     };
                     scope.editAttachments = function() {
+                        console.log('wfAttachment editAttachments clicked');
                         scope.state.isEditingAttachments = !scope.state.isEditingAttachments;
                     };
                     scope.$on('event:attachments', function(event, attachments) {
+                        console.log("wfAttachments caught an attachments event!");
                         scope.state.attachments = attachments;
                     });
                     scope.$on('event:form-loaded', function(event, form) {
-                        scope.form = form;
+                        console.log("wfAttachments attached form to its scope");
+                        if (typeof(form) !== 'undefined') {
+                            if (form.loadedBy == null)
+                                form.loadedBy = [];
+                            form.loadedBy.push('wfAttachments');
+                            scope.form = form;
+                        }
                     });
                     scope.$root.$on('event:view-attachments', function() {
-                        if (typeof(scope.form === 'undefined'))
+                        console.log("wfAttachments toggling visibility of attachments");
+                        if (typeof(scope.form) === 'undefined')
                             scope.form = $rootScope.form;
-                        if (!scope.state.isViewingAttachments)
+                        if (typeof(scope.form) !== 'undefined' && !scope.state.isViewingAttachments)
                             attachmentService.refreshAttachments(scope.form);
                         scope.state.isViewingAttachments = !scope.state.isViewingAttachments;
                         scope.$root.$broadcast('event:toggle-attachments', scope.state.isViewingAttachments);
