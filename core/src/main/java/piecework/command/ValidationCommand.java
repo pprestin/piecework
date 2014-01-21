@@ -49,6 +49,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
     private final Class<?> type;
     private final String validationId;
     private final String fieldName;
+    private final boolean ignoreThrowException;
 
     ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName) {
         super(commandExecutor, principal, process, request.getInstance());
@@ -60,6 +61,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         this.type = type;
         this.validationId = validationId;
         this.fieldName = fieldName;
+        this.ignoreThrowException = false;
     }
 
     ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal) {
@@ -72,6 +74,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         this.submission = submission;
         this.validationId = null;
         this.fieldName = null;
+        this.ignoreThrowException = true;
     }
 
     @Override
@@ -101,7 +104,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         }
 
         Submission submission = this.submission == null ? handler.handle(object, template, principal) : this.submission;
-        boolean throwException = submission.getAction() != null && !UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
+        boolean throwException = !ignoreThrowException && submission.getAction() != null && !UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
 
         return validationFactory.validation(process, instance, task, template, submission, throwException);
     }

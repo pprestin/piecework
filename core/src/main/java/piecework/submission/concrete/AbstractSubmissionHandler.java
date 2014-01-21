@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import piecework.enumeration.ActionType;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
@@ -121,7 +122,7 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         if (rawSubmission != null)
             submissionBuilder = new Submission.Builder(rawSubmission, sanitizer, true);
         else
-            submissionBuilder = new Submission.Builder();
+            submissionBuilder = new Submission.Builder().actionType(ActionType.COMPLETE);
 
         submissionBuilder.processDefinitionKey(template.getProcess().getProcessDefinitionKey())
                 .requestId(template.getRequestId())

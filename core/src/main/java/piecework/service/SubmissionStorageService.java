@@ -133,6 +133,10 @@ public class SubmissionStorageService {
                         .contentType(contentType)
                         .build();
             } else if (field != null && field.getType().equals(Constants.FieldTypes.URL)) {
+                // Don't bother to store empty urls
+                if (StringUtils.isEmpty(value))
+                    return false;
+
                 String id = uuidGenerator.getNextId();
                 String description = submissionBuilder.getDescription(name);
                 file = new File.Builder()
@@ -169,6 +173,9 @@ public class SubmissionStorageService {
                 } else {
                     contentType = MediaType.TEXT_PLAIN;
                     location = null;
+                    // Don't bother to save 'notes' if they're empty
+                    if (StringUtils.isEmpty(value))
+                        return false;
                 }
                 Attachment attachmentDetails = new Attachment.Builder()
                         .contentType(contentType)

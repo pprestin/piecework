@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.common.ManyMap;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.FormBuildingException;
@@ -98,9 +99,15 @@ public class FormFactory {
 
         explanation = explanation == null ? request.getExplanation() : explanation;
 
+        ManyMap<String, Message> messages = new ManyMap<String, Message>();
+        if (request.getMessages() != null && !request.getMessages().isEmpty())
+            messages.putAll(request.getMessages());
+        if (validation != null && validation.getResults() != null && !validation.getResults().isEmpty())
+            messages.putAll(validation.getResults());
+
         builder.taskSubresources(processDefinitionKey, task, version)
                 .instance(instance, version)
-                .messages(request.getMessages())
+                .messages(messages)
                 .explanation(explanation)
                 .anonymous(anonymous);
 
@@ -130,41 +137,42 @@ public class FormFactory {
             return null;
 
         Action action = activity.action(actionType);
-        boolean revertToDefaultUI = false;
+//        boolean revertToDefaultUI = false;
+//
+//        // If there is no action defined, then revert to CREATE_TASK
+//        if (action == null) {
+//            action = activity.action(ActionType.CREATE);
+//            // If the action type was VIEW then revert to the default ui, use create as the action, but make it unmodifiable
+//            if (actionType == ActionType.VIEW) {
+//                revertToDefaultUI = true;
+//                builder.readonly();
+//            }
+//        }
+//
+//        if (action == null)
+//            throw new FormBuildingException("Action is null for this activity and type " + actionType);
+//
+//        URI uri = FormUtility.safeUri(action, task);
+//        boolean external = FormUtility.isExternal(uri);
+//
+//        FormDisposition formDisposition = null;
+//
+//        if (mediaType.equals(MediaType.TEXT_HTML_TYPE) && !revertToDefaultUI) {
+//            switch (action.getStrategy()) {
+//                case DECORATE_HTML:
+//                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
+//                    break;
+//                case INCLUDE_DIRECTIVES:
+//                case INCLUDE_SCRIPT:
+//                    if (external)
+//                        formDisposition = new FormDisposition(uri, action.getStrategy());
+//                    else if (action.getLocation() != null)
+//                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
+//                    break;
+//            }
+//        }
 
-        // If there is no action defined, then revert to CREATE_TASK
-        if (action == null) {
-            action = activity.action(ActionType.CREATE);
-            // If the action type was VIEW then revert to the default ui, use create as the action, but make it unmodifiable
-            if (actionType == ActionType.VIEW) {
-                revertToDefaultUI = true;
-                builder.readonly();
-            }
-        }
-
-        if (action == null)
-            throw new FormBuildingException("Action is null for this activity and type " + actionType);
-
-        URI uri = FormUtility.safeUri(action, task);
-        boolean external = FormUtility.isExternal(uri);
-
-        FormDisposition formDisposition = null;
-
-        if (mediaType.equals(MediaType.TEXT_HTML_TYPE) && !revertToDefaultUI) {
-            switch (action.getStrategy()) {
-                case DECORATE_HTML:
-                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
-                    break;
-                case INCLUDE_DIRECTIVES:
-                case INCLUDE_SCRIPT:
-                    if (external)
-                        formDisposition = new FormDisposition(uri, action.getStrategy());
-                    else if (action.getLocation() != null)
-                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
-                    break;
-            }
-        }
-
+        FormDisposition formDisposition = FormUtility.disposition(builder, deployment, activity, task, actionType, mediaType);
         // Tacking this on at the end - could be somewhere better
         if (formDisposition == null) {
             formDisposition = new FormDisposition();

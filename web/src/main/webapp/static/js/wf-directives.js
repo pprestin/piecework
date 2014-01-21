@@ -21,6 +21,41 @@ angular.module('wf.directives',
             }
         }
     ])
+    .directive('wfAlert', [
+        function() {
+            return {
+                restrict: 'A',
+                scope: {
+
+                },
+                link: function (scope, element, attr) {
+                    scope.$root.$on('event:form-loaded', function(event, form) {
+                        scope.form = form;
+                        var validation = form.validation;
+                        var fieldName = attr.wfAlert;
+                        var subFieldName = null;
+                        var indexOfPeriod = fieldName.indexOf('.');
+                        if (indexOfPeriod != -1) {
+                            subFieldName = fieldName.substring(indexOfPeriod+1);
+                            fieldName = fieldName.substring(0, indexOfPeriod);
+                        }
+                        var messages = typeof(validation) !== 'undefined' ? validation[fieldName] : null;
+                        if (messages != null) {
+                            var html = '';
+                            angular.forEach(messages, function(message) {
+                                if (message != null) {
+                                    element.text(message.text);
+                                }
+                            });
+                        }
+//                        scope.$on('event:value-updated:' + fieldName, function(event, value) {
+//                            element.text('');
+//                        });
+                    });
+                }
+            }
+        }
+    ])
     .directive('wfAttachments', ['attachmentService', '$rootScope',
         function(attachmentService, $rootScope) {
             return {
@@ -173,8 +208,14 @@ angular.module('wf.directives',
                                     html += typeof(current) === 'string' ? current : current.name;
                                 }
                             });
+                            if (html == '')
+                                html = attr.wfPlaceholder;
                             element.html(html);
                         }
+                        scope.$on('event:value-updated:' + fieldName, function(event, value) {
+                            var html = typeof(value) === 'string' ? value : value.name;
+                            element.html(html);
+                        });
                     });
                 }
             }
@@ -502,12 +543,14 @@ angular.module('wf.directives',
                                 element.attr("enctype", "multipart/form-data");
 
                                 var created = form.task != null ? form.task.startTime : null;
-                                element.attr('data-process-task-started', created);
+                                element.attr('data-wf-task-started', created);
 
                                 var data = form.data;
                                 var validation = form.validation;
                                 var formElement = element[0];
                                 angular.forEach(formElement.elements, function(input) {
+                                    if (input.attributes['data-wf-blank'])
+                                        return;
                                     if (input.name != null) {
                                         var fieldName = input.name;
                                         var subFieldName = null;
@@ -583,12 +626,12 @@ angular.module('wf.directives',
                                                 }
                                             });
                                         }
-                                        var messages = typeof(validation) !== 'undefined' ? validation[fieldName] : null;
-                                        if (messages != null) {
-                                            angular.forEach(messages, function(message) {
-                                                element.after('<span class="help-block text-danger">' + message.text + '</span>');
-                                            });
-                                        }
+//                                        var messages = typeof(validation) !== 'undefined' ? validation[fieldName] : null;
+//                                        if (messages != null) {
+//                                            angular.forEach(messages, function(message) {
+//                                                element.after('<span class="help-block text-danger">' + message.text + '</span>');
+//                                            });
+//                                        }
                                     }
                                 });
 
@@ -668,7 +711,7 @@ angular.module('wf.directives',
                                     scope.$on('event:value-updated:' + fieldName, function(event, value) {
                                         var src = typeof(value) === 'string' ? value : value.link;
                                         element.attr('src', src);
-//                                        element.attr('data-process-attachment-modified', value.lastModified);
+//                                        element.attr('data-wf-last-modified', value.lastModified);
                                     });
                                 }
                             });
@@ -679,8 +722,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfList', ['attachmentService',
-        function(attachmentService) {
+    .directive('wfList', ['attachmentService', 'dateFilter',
+        function(attachmentService, dateFilter) {
             return {
                 restrict: 'A',
                 scope: {
@@ -712,9 +755,10 @@ angular.module('wf.directives',
                                 descriptionTag.text(realValue.description);
                             }
 
-                            if (typeof(realValue.lastModified) !== 'undefined') {
-                                var lastModifiedTag = current.find('[data-wf-lastmodified]');
-                                lastModifiedTag.text(realValue.lastModified);
+                            if (typeof(realValue.lastModified) !== 'undefined' && realValue.lastModified != null) {
+                                var lastModifiedTag = current.find('[data-wf-last-modified]');
+                                lastModifiedTag.attr('data-wf-last-modified', realValue.lastModified);
+                                lastModifiedTag.text(dateFilter(realValue.lastModified, 'MMM d, y H:mm a'));
                             }
 
                             if (typeof(realValue.user) !== 'undefined' && typeof(realValue.user.displayName) !== 'undefined') {
@@ -739,6 +783,9 @@ angular.module('wf.directives',
                             });
 
                             $listElement.append(current);
+                            if (element.length > 0)
+                                element.scrollTop(element[0].scrollHeight);
+
                             var $listItems = $listElement.find('li');
                             if ($listItems.length > 0)
                                 $fallbackHtml.hide();

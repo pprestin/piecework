@@ -17,9 +17,13 @@ package piecework.util;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
+import piecework.exception.FormBuildingException;
+import piecework.form.FormDisposition;
 import piecework.model.*;
 
+import javax.ws.rs.core.MediaType;
 import java.net.URI;
 
 /**
@@ -87,6 +91,47 @@ public class FormUtility {
                 .option(new Option.Builder().value("WV").label("West Virginia").build())
                 .option(new Option.Builder().value("WI").label("Wisconsin").build())
                 .option(new Option.Builder().value("WY").label("Wyoming").build());
+    }
+
+    public static FormDisposition disposition(Form.Builder builder, ProcessDeployment deployment, Activity activity, Task task, ActionType actionType, MediaType mediaType) throws FormBuildingException {
+        Action action = activity.action(actionType);
+        boolean revertToDefaultUI = false;
+
+        // If there is no action defined, then revert to CREATE_TASK
+        if (action == null) {
+            action = activity.action(ActionType.CREATE);
+            // If the action type was VIEW then revert to the default ui, use create as the action, but make it unmodifiable
+            if (actionType == ActionType.VIEW) {
+                revertToDefaultUI = true;
+                if (builder != null)
+                    builder.readonly();
+            }
+        }
+
+        if (action == null)
+            throw new FormBuildingException("Action is null for this activity and type " + actionType);
+
+        URI uri = FormUtility.safeUri(action, task);
+        boolean external = FormUtility.isExternal(uri);
+
+        FormDisposition formDisposition = null;
+
+        if ((mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) && !revertToDefaultUI) {
+            switch (action.getStrategy()) {
+                case DECORATE_HTML:
+                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
+                    break;
+                case INCLUDE_DIRECTIVES:
+                case INCLUDE_SCRIPT:
+                    if (external)
+                        formDisposition = new FormDisposition(uri, action.getStrategy());
+                    else if (action.getLocation() != null)
+                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
+                    break;
+            }
+        }
+
+        return formDisposition;
     }
 
     public static void layout(Form.Builder builder, Activity activity) {

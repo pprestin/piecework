@@ -21,6 +21,7 @@ import piecework.Constants;
 import piecework.model.Explanation;
 import piecework.service.UserInterfaceService;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -42,6 +43,9 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
 
     @Autowired
     private UserInterfaceService userInterfaceService;
+
+    @Context
+    private javax.servlet.ServletContext servletContext;
 
 	/**
 	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
@@ -77,17 +81,9 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
         }
 
 		Explanation explanation = ErrorResponseBuilder.buildExplanation(statusCode, error.getLocalizedMessage(), error.getMessageDetail());
-        return Response.status(statusCode).entity(explanation).build();
 
-//        try {
-//            StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(explanation);
-//            return Response.status(error.getStatusCode()).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();
-//        } catch (NotFoundError nfe) {
-//            return Response.status(Response.Status.NOT_FOUND).build();
-//        } catch (IOException ioe) {
-//            LOG.error("Unable to get explanation page as a streaming output", ioe);
-//        }
-//        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation);
+        return Response.status(statusCode).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();
 	}
 	
 }

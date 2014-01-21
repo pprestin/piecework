@@ -782,9 +782,6 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                <td><input data-ng-click=\"selectForm(form)\" type=\"checkbox\" class=\"result-checkbox\"/></td>\n" +
     "                <td>\n" +
     "                    <a href=\"{{form.link}}\" target=\"_self\" rel=\"external\">{{form.task.processInstanceLabel}}</a>\n" +
-
-//    "                    <a data-ng-if=\"form.external\" href=\"{{form.link}}\" target=\"_self\">{{form.task.processInstanceLabel}}</a>\n" +
-//    "                    <a data-ng-if=\"!form.external\" href=\"{{form.link}}\">{{form.task.processInstanceLabel}}</a>\n" +
     "                </td>\n" +
     "                <td class=\"hidden-sm hidden-xs\">{{form.task.taskStatus}}</td>\n" +
     "                <td class=\"hidden-sm hidden-xs\" style=\"cursor:pointer\"><span class=\"use-tooltip\" title=\"{{form.task.taskDescription}}\" data-placement=\"right\" data-trigger=\"hover\">{{form.task.taskLabel}}</span></td>\n" +

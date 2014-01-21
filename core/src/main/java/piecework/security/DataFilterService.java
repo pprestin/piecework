@@ -65,7 +65,9 @@ public class DataFilterService {
             Map<String, List<Value>> validationData = decrypt(validation.getData());
             if (validationData != null) {
                 for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
-                    data.put(entry.getKey(), entry.getValue());
+                    String fieldName = entry.getKey();
+                    List<Value> values = values(instance, fieldName, entry.getValue(), null, principal);
+                    data.put(fieldName, values);
                 }
             }
         }

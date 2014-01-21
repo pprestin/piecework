@@ -67,28 +67,6 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
         return startForm(context, process);
     }
 
-//    @Override
-//    public Response readTask(final String rawProcessDefinitionKey, final String taskId, final MessageContext context) throws PieceworkException {
-//        Entity principal = identityHelper.getPrincipal();
-//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-//        Process process = identityHelper.findProcess(processDefinitionKey, true);
-//        return taskForm(context, process, taskId);
-//    }
-//
-//    @Override
-//    public Response readReceipt(final String rawProcessDefinitionKey, final String requestId, final MessageContext context) throws PieceworkException {
-//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-//        Process process = identityHelper.findProcess(processDefinitionKey, true);
-//        return receiptForm(context, process, requestId);
-//    }
-
-//    @Override
-//    public Response save(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
-//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-//        Process process = identityHelper.findProcess(processDefinitionKey, true);
-//        return saveForm(context, process, rawRequestId, body);
-//    }
-
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
