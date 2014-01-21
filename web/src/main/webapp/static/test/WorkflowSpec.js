@@ -119,3 +119,233 @@ describe('Unit testing wf-attachments', function() {
         expect(scope.$broadcast).toHaveBeenCalledWith('event:toggle-attachments', true);
     });
 });
+
+describe('Unit testing wf-breadcrumbs', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+      $element = $compile("<div data-wf-breadcrumbs></div>")($rootScope);
+      $rootScope.$digest();
+    }));
+
+    it('Should set form on local scope form-loaded event is broadcast', function() {
+        var scope = $rootScope;
+        var form = { test: 'ok' };
+        scope.$broadcast('event:form-loaded', form);
+        expect(form).toEqual({ test : 'ok', loadedBy: [ 'wfBreadcrumbs' ]});
+    });
+
+    it('Should not contain any list-group-item tags if no steps exist', function() {
+        expect($element.html()).not.toContain('list-group-item-text');
+    });
+
+    it('Should contain a breadcrumb if a step for that breadcrumb exists', function() {
+        var scope = $rootScope;
+        var form = { container: { activeStepOrdinal: 1 }, steps: [ { isStep: false, leaf: false, breadcrumb: 'My Example Breadcrumb', ordinal: 1, reviewChildIndex: 1} ] };
+        $rootScope.$broadcast('event:form-loaded', form);
+        scope.$digest();
+        expect($element.html()).toContain('My Example Breadcrumb');
+    });
+
+});
+
+
+describe('Unit testing wf-buttonbar', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should not contain any buttons if container is readonly', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok' };
+        scope.form.container = { activeStepOrdinal: 1, readonly: true, buttons: [ { name: 'OK', primary: true, value: 'submit', type: 'button', label: 'Yes' }] };
+        var element = $compile("<div data-wf-buttonbar form=\"form\" container=\"form.container\"></div>")($rootScope);
+        $rootScope.$digest();
+        expect(element.html()).not.toContain('<button');
+    });
+
+    it('Should not contain any buttons if container has no buttons', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok' };
+        scope.form.container = { activeStepOrdinal: 1, readonly: false };
+        var element = $compile("<div data-wf-buttonbar form=\"form\" container=\"form.container\"></div>")($rootScope);
+        $rootScope.$digest();
+        expect(element.html()).not.toContain('<button');
+    });
+
+    it('Should contain button if container has button', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok' };
+        scope.form.container = { activeStepOrdinal: 1, readonly: false, buttons: [ { name: 'OK', primary: true, value: 'submit', type: 'button', label: 'Yes' }] };
+        var element = $compile("<div data-wf-buttonbar form=\"form\" container=\"form.container\"></div>")($rootScope);
+        $rootScope.$digest();
+        expect(element.html()).toContain('<button');
+    });
+
+});
+
+
+describe('Unit testing wf-container', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should set form on local scope form-loaded event is broadcast', function() {
+        var scope = $rootScope;
+        scope.container = {};
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        var form = { test: 'ok' };
+        scope.$broadcast('event:form-loaded', form);
+        expect(form).toEqual({ test : 'ok', loadedBy: [ 'wfContainer', 'wfStatus', 'wfAttachments' ]});
+    });
+
+    it('Should contract main div when toggle-attachments true event is broadcast', function() {
+        var scope = $rootScope;
+        scope.container = {};
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        var form = { test: 'ok' };
+        scope.$broadcast('event:toggle-attachments', true);
+        scope.$digest();
+        expect(element.html()).toContain('class="wf-expanded');
+    });
+
+    it('Should expand main div when toggle-attachments false event is broadcast', function() {
+        var scope = $rootScope;
+        scope.container = {};
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        var form = { test: 'ok' };
+        scope.$broadcast('event:toggle-attachments', false);
+        scope.$digest();
+        expect(element.html()).not.toContain('class="wf-expanded');
+    });
+
+    it('Should show who is assigned in the nested wf-status when state is assigned', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'assigned', task: { assignee: { displayName : 'Joe Q Tester' } }  };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('This form is assigned to Joe Q Tester');
+    });
+
+});
+
+
+describe('Unit testing wf-status', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should set form on local scope form-loaded event is broadcast', function() {
+        var scope = $rootScope;
+        scope.container = {};
+        var element = $compile("<div wf-status></div>")(scope);
+        scope.$digest();
+        var form = { test: 'ok' };
+        scope.$broadcast('event:form-loaded', form);
+        expect(form).toEqual({ test : 'ok', loadedBy: [ 'wfStatus' ]});
+    });
+
+    it('Should show who is assigned when state is assigned', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'assigned', task: { assignee: { displayName : 'Joe Q Tester' } }  };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('This form is assigned to Joe Q Tester');
+    });
+
+    it('Should show who completed it when state is completed', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'completed', task: { assignee: { displayName : 'Joe Q Tester' } }  };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('it was completed by Joe Q Tester');
+    });
+
+    it('Should show it was suspended when state is suspended', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'suspended', task: { assignee: { displayName : 'Joe Q Tester' } }  };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('it has been suspended');
+    });
+
+    it('Should show it was cancelled when state is cancelled', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'cancelled', task: { assignee: { displayName : 'Joe Q Tester' } }  };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('it has been cancelled');
+    });
+
+    it('Should show the form applicationStatusExplanation if one is set', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'cancelled', task: { assignee: { displayName : 'Joe Q Tester' } }, applicationStatusExplanation: 'Some special explanation'  };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('Some special explanation');
+    });
+
+    it('Should not show the form applicationStatusExplanation warning box if one is not set', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'cancelled', task: { assignee: { displayName : 'Joe Q Tester' } } , applicationStatusExplanation: '' };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).not.toContain('alert alert-warning');
+    });
+
+    it('Should show the form explanation if one is set', function() {
+        var scope = $rootScope;
+        scope.form = { test: 'ok', state: 'cancelled', task: { assignee: { displayName : 'Joe Q Tester' } }, explanation: { message: 'Some special explanation', messageDetail: 'Some detail' }  };
+        var element = $compile("<div wf-container container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('Some special explanation');
+        expect(element.html()).toContain('Some detail');
+    });
+
+});

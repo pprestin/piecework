@@ -262,7 +262,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<wf-notifications notifications=\"notifications\"></wf-notifications>\n" +
     "    <h2>{{container.title}}</h2>\n" +
     "    <wf-status form=\"form\"></wf-status>\n" +
-    "    <div ng-class=\"state.isViewingAttachments && 'col-md-8'\">\n" +
+    "    <div ng-class=\"state.isViewingAttachments && 'wf-expanded col-md-8'\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"screen\" id=\"{{container.containerId}}\">\n" +
     "                <wf-fieldset form=\"form\" container=\"container\"></wf-fieldset>\n" +
@@ -362,27 +362,27 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
 //    "        </form>\n" +
     "    </div>");
   $templateCache.put("templates/status.html",
-    "   <div class=\"container\"><div class=\"row\" data-ng-show=\"form.container.readonly\">\n" +
-    "        <div data-ng-show=\"form.state == 'assigned'\" class=\"alert alert-warning\">\n" +
+    "   <div class=\"container\"><div class=\"row\" data-ng-show=\"form.container.readonly\" data-ng-switch=\"form.state\">\n" +
+    "        <div data-ng-switch-when=\"assigned\" class=\"alert alert-warning\">\n" +
     "            <strong>This form is assigned to {{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</strong> - to take action, you will need to assign it to yourself.\n" +
     "            <button data-ng-click=\"claim()\" class=\"btn btn-default pull-right\" type=\"button\">Assign to me</button>\n" +
     "            <div class=\"clearfix\"></div>\n" +
     "        </div>\n" +
-    "        <div data-ng-show=\"form.state == 'unassigned'\" class=\"alert alert-warning\">\n" +
+    "        <div data-ng-switch-when=\"unassigned\" class=\"alert alert-warning\">\n" +
     "            <strong>This form is not currently assigned</strong> - to modify it, you will need to assign it to yourself.\n" +
     "            <button data-ng-click=\"claim()\" class=\"btn btn-default pull-right\" type=\"button\">Assign to me</button>\n" +
     "            <div class=\"clearfix\"></div>\n" +
     "        </div>\n" +
-    "        <div data-ng-show=\"form.state == 'completed'\" class=\"alert alert-warning\"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>\n" +
-    "        <div data-ng-show=\"form.state == 'suspended'\"class=\"alert alert-danger\"><strong>This form can no longer be modified</strong> - it has been suspended</div>\n" +
-    "        <div data-ng-show=\"form.state == 'cancelled'\"class=\"alert alert-danger\"><strong>This form can no longer be modified</strong> - it has been cancelled</div>\n" +
+    "        <div data-ng-switch-when=\"completed\" class=\"alert alert-warning\"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>\n" +
+    "        <div data-ng-switch-when=\"suspended\" class=\"alert alert-danger\"><strong>This form can no longer be modified</strong> - it has been suspended</div>\n" +
+    "        <div data-ng-switch-when=\"cancelled\" class=\"alert alert-danger\"><strong>This form can no longer be modified</strong> - it has been cancelled</div>\n" +
     "    </div>\n" +
-    "    <div data-ng-show=\"form.applicationStatusExplanation\" class=\"row\">\n" +
+    "    <div data-ng-if=\"form.applicationStatusExplanation != null && form.applicationStatusExplanation != ''\" class=\"row\">\n" +
     "        <div class=\"alert alert-warning\">\n" +
     "        <button type=\"button\" class=\"close\" data-ng-click=\"form.applicationStatusExplanation = null\" aria-hidden=\"true\">&times;</button>\n" +
     "           {{form.applicationStatusExplanation}}\n" +
     "    </div>\n" +
-    "    </div><div class=\"row\"><div data-ng-show=\"form.explanation\" class=\"alert alert-danger\">\n" +
+    "    </div><div class=\"row\"><div data-ng-if=\"form.explanation != null && form.explanation.message != null && form.explanation.message != ''\" class=\"alert alert-danger\">\n" +
     "        <h4 data-ng-if=\"form.explanation.message\">{{form.explanation.message}}</h4>\n" +
     "        <p>{{form.explanation.messageDetail}}</p>\n" +
     "    </div></div></div>")

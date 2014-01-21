@@ -74,61 +74,7 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfFieldForm', ['attachmentService', '$rootScope',
-        function(attachmentService, $rootScope) {
-            return {
-                restrict: 'A',
-                scope: {
-                    form : '='
-                },
-                link: function (scope, element, attr) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
-                        scope.form = form;
-                    });
-                    var fieldName = attr.wfFieldForm;
-
-                    element.find('button').click(function(event) {
-                        var data = new FormData();
-                        var $inputs = element.find(':input');
-                        $inputs.each(function(index, input) {
-                            var $input = $(input);
-                            data.append(input.name, $input.val());
-                        });
-
-                        var url = scope.form.attachment;
-                        if (fieldName != 'attachments') {
-                            url = url.replace('/attachment', '/value');
-                            url += '/' + fieldName;
-                        }
-
-                        $.ajax({
-                           url : url,
-                           data : data,
-                           processData : false,
-                           contentType : 'multipart/form-data',
-                           type : 'POST'
-                        })
-                        .done(function(data, textStatus, jqXHR) {
-                           $inputs.val('');
-                           if (fieldName == 'attachments')
-                                scope.$root.$broadcast('event:attachments', data.list);
-                           else
-                                scope.$root.$broadcast('event:value-updated:' + fieldName, data);
-                        })
-                        .fail(function(jqXHR, textStatus, errorThrown) {
-                           var data = $.parseJSON(jqXHR.responseText);
-                           var selector = '.process-alert[data-element="' + input.name + '"]';
-                           var message = data.messageDetail;
-                           var $alert = $(selector);
-                           $alert.show();
-                           $alert.text(message);
-                        });
-                    });
-                }
-            }
-        }
-    ])
-    .directive('wfBreadcrumbs', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
+     .directive('wfBreadcrumbs', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
         function(attachmentService, dialogs, notificationService, taskService, wizardService) {
             return {
                 restrict: 'AE',
@@ -139,7 +85,13 @@ angular.module('wf.directives',
                 link: function (scope, element) {
                     scope.wizard = wizardService;
                     scope.$root.$on('event:form-loaded', function(event, form) {
-                        scope.form = form;
+                        console.log("wfBreadcrumbs attached form to its scope");
+                        if (typeof(form) !== 'undefined') {
+                            if (form.loadedBy == null)
+                                form.loadedBy = [];
+                            form.loadedBy.push('wfBreadcrumbs');
+                            scope.form = form;
+                        }
                     });
                 }
             }
@@ -168,10 +120,15 @@ angular.module('wf.directives',
                     container : '=',
                 },
                 templateUrl: 'templates/container.html',
-                //transclude: true,
                 link: function (scope, element) {
                     scope.$on('event:form-loaded', function(event, form) {
-                        scope.form = form;
+                        console.log("wfContainer attached form to its scope");
+                        if (typeof(form) !== 'undefined') {
+                            if (form.loadedBy == null)
+                                form.loadedBy = [];
+                            form.loadedBy.push('wfContainer');
+                            scope.form = form;
+                        }
                     });
                     if (typeof(scope.state) == 'undefined') {
                         scope.state = {};
@@ -253,6 +210,60 @@ angular.module('wf.directives',
                         for (var i=min; i<=max; i++) input.push(i);
                         return input;
                     };
+                }
+            }
+        }
+    ])
+    .directive('wfFieldForm', ['attachmentService', '$rootScope',
+        function(attachmentService, $rootScope) {
+            return {
+                restrict: 'A',
+                scope: {
+                    form : '='
+                },
+                link: function (scope, element, attr) {
+                    scope.$root.$on('event:form-loaded', function(event, form) {
+                        scope.form = form;
+                    });
+                    var fieldName = attr.wfFieldForm;
+
+                    element.find('button').click(function(event) {
+                        var data = new FormData();
+                        var $inputs = element.find(':input');
+                        $inputs.each(function(index, input) {
+                            var $input = $(input);
+                            data.append(input.name, $input.val());
+                        });
+
+                        var url = scope.form.attachment;
+                        if (fieldName != 'attachments') {
+                            url = url.replace('/attachment', '/value');
+                            url += '/' + fieldName;
+                        }
+
+                        $.ajax({
+                           url : url,
+                           data : data,
+                           processData : false,
+                           contentType : 'multipart/form-data',
+                           type : 'POST'
+                        })
+                        .done(function(data, textStatus, jqXHR) {
+                           $inputs.val('');
+                           if (fieldName == 'attachments')
+                                scope.$root.$broadcast('event:attachments', data.list);
+                           else
+                                scope.$root.$broadcast('event:value-updated:' + fieldName, data);
+                        })
+                        .fail(function(jqXHR, textStatus, errorThrown) {
+                           var data = $.parseJSON(jqXHR.responseText);
+                           var selector = '.process-alert[data-element="' + input.name + '"]';
+                           var message = data.messageDetail;
+                           var $alert = $(selector);
+                           $alert.show();
+                           $alert.text(message);
+                        });
+                    });
                 }
             }
         }
@@ -767,6 +778,22 @@ angular.module('wf.directives',
             }
         }
     ])
+    .directive('wfLogin', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
+        function(attachmentService, dialogs, notificationService, taskService, wizardService) {
+            return {
+                restrict: 'AE',
+                scope: {
+
+                },
+                templateUrl: 'templates/form-login.html',
+                link: function (scope, element) {
+                    scope.$on('event:form-loaded', function(event, form) {
+                        scope.form = form;
+                    });
+                }
+            }
+        }
+    ])
     .directive('wfMultipage', ['wizardService',
          function(wizardService) {
              return {
@@ -809,22 +836,6 @@ angular.module('wf.directives',
              }
          }
     ])
-    .directive('wfLogin', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
-        function(attachmentService, dialogs, notificationService, taskService, wizardService) {
-            return {
-                restrict: 'AE',
-                scope: {
-
-                },
-                templateUrl: 'templates/form-login.html',
-                link: function (scope, element) {
-                    scope.$on('event:form-loaded', function(event, form) {
-                        scope.form = form;
-                    });
-                }
-            }
-        }
-    ])
     .directive('wfNamebar', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
         function(attachmentService, dialogs, notificationService, taskService, wizardService) {
             return {
@@ -835,6 +846,101 @@ angular.module('wf.directives',
                 templateUrl: 'templates/form-namebar.html',
                 link: function (scope, element) {
 
+                }
+            }
+        }
+    ])
+    .directive('wfNotifications', ['wizardService',
+         function(wizardService) {
+             return {
+                 restrict: 'AE',
+                 scope: {
+                     notifications : '='
+                 },
+                 templateUrl: 'templates/notifications.html',
+                 link: function (scope, element) {
+                    scope.$root.$on('event:notification', function(event, notification) {
+                        // Ensure that our notifications array exists in this scope
+                        if (typeof(scope.notifications) === 'undefined')
+                            scope.notifications = new Array();
+                        // Add this notification to the array
+                        scope.notifications.push(notification);
+                    });
+                 }
+             }
+         }
+    ])
+    .directive('wfPage', [
+        function() {
+            return {
+                restrict: 'AE',
+                scope: {
+
+                },
+                templateUrl: 'templates/page.html',
+                link: function (scope, element) {
+                    scope.$root.$on('event:form-loaded', function(event, form) {
+                        scope.form = form;
+                    });
+                }
+            }
+        }
+    ])
+    .directive('wfReview', ['wizardService',
+         function(wizardService) {
+             return {
+                 restrict: 'AE',
+                 scope: {
+                     form : '=',
+                 },
+                 templateUrl: 'templates/review.html',
+                 link: function (scope, element) {
+                    if (typeof(scope.state) == 'undefined') {
+                        scope.state = {};
+                        scope.state.isViewingAttachments = false;
+                    }
+                    scope.$root.$on('event:toggle-attachments', function(event, isViewingAttachments) {
+                        scope.state.isViewingAttachments = isViewingAttachments;
+                    });
+                    scope.wizard = wizardService;
+                 }
+             }
+         }
+    ])
+    .directive('wfScreen', [
+        function() {
+            return {
+                restrict: 'A',
+                scope: {
+                    form : '='
+                },
+                link: function (scope, element, attr) {
+
+                    var step = attr.wfScreen;
+                    if (typeof(step) === 'undefined')
+                        step = '-1';
+
+                    var indexOf = step.indexOf('+');
+                    var upwards = false;
+                    if (indexOf == (step.length-1)) {
+                        step = step.substring(0, indexOf);
+                        upwards = true;
+                    }
+
+                    step = parseInt(step);
+
+                    scope.$root.$on('event:step-changed', function(event, ordinal) {
+                        if (attr.wfScreen == 'confirmation' && typeof(ordinal) === 'undefined')
+                            return;
+                        element.removeClass('ng-hide');
+
+                        if (upwards) {
+                            if (typeof(ordinal) === 'undefined' || step > ordinal)
+                                element.addClass('ng-hide');
+                        } else if (step != ordinal) {
+                            element.addClass('ng-hide');
+                        }
+                    });
                 }
             }
         }
@@ -1058,6 +1164,63 @@ angular.module('wf.directives',
             }
         }
     ])
+    .directive('wfStatus', ['$rootScope', '$window', 'notificationService', 'taskService', 'wizardService',
+         function($rootScope, $window, notificationService, taskService, wizardService) {
+             return {
+                 restrict: 'AE',
+                 scope: {
+                    form : '='
+                 },
+                 templateUrl: 'templates/status.html',
+                 link: function (scope, element) {
+                    if (typeof(scope.form) === 'undefined')
+                        scope.form = scope.$root.form;
+
+                    scope.$on('event:form-loaded', function(event, form) {
+                        console.log("wfStatus attached form to its scope");
+                        if (typeof(form) !== 'undefined') {
+                            if (form.loadedBy == null)
+                                form.loadedBy = [];
+                            form.loadedBy.push('wfStatus');
+                            scope.form = form;
+                        }
+                    });
+                    scope.claim = function() {
+                        var success = function(scope, data, status, headers, config, form, assignee) {
+                            $rootScope.$broadcast('event:refresh', 'assignment');
+                        };
+
+                        var failure = function(scope, data, status, headers, config, form, assignee) {
+                            form._assignmentStatus = 'error';
+                            var displayName = typeof(assignee.displayName) === 'undefined' ? assignee : assignee.displayName;
+                            var message = form.task.processInstanceLabel + ' cannot be assigned ';
+                            var title = data.messageDetail;
+                            notificationService.notify(scope, title, message);
+                        };
+                        taskService.assignTask(scope, scope.form, scope.form.currentUser.userId, success, failure);
+                    };
+                 }
+             }
+         }
+    ])
+    .directive('wfStep', ['wizardService',
+        function(wizardService) {
+            return {
+                restrict: 'AE',
+                scope: {
+                    form : '=',
+                    step : '=',
+                    active: '=',
+                    current: '='
+                },
+                templateUrl: 'templates/step.html',
+                //transclude: true,
+                link: function (scope, element) {
+                    scope.wizard = wizardService;
+                }
+            }
+        }
+    ])
     .directive('wfToolbar', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
         function(attachmentService, dialogs, notificationService, taskService, wizardService) {
             return {
@@ -1118,151 +1281,6 @@ angular.module('wf.directives',
                         scope.$root.$broadcast('event:view-attachments');
                     };
 
-                }
-            }
-        }
-    ])
-    .directive('wfNotifications', ['wizardService',
-         function(wizardService) {
-             return {
-                 restrict: 'AE',
-                 scope: {
-                     notifications : '='
-                 },
-                 templateUrl: 'templates/notifications.html',
-                 link: function (scope, element) {
-                    scope.$root.$on('event:notification', function(event, notification) {
-                        // Ensure that our notifications array exists in this scope
-                        if (typeof(scope.notifications) === 'undefined')
-                            scope.notifications = new Array();
-                        // Add this notification to the array
-                        scope.notifications.push(notification);
-                    });
-                 }
-             }
-         }
-    ])
-    .directive('wfPage', [
-        function() {
-            return {
-                restrict: 'AE',
-                scope: {
-
-                },
-                templateUrl: 'templates/page.html',
-                link: function (scope, element) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
-                        scope.form = form;
-                    });
-                }
-            }
-        }
-    ])
-    .directive('wfReview', ['wizardService',
-         function(wizardService) {
-             return {
-                 restrict: 'AE',
-                 scope: {
-                     form : '=',
-                 },
-                 templateUrl: 'templates/review.html',
-                 link: function (scope, element) {
-                    if (typeof(scope.state) == 'undefined') {
-                        scope.state = {};
-                        scope.state.isViewingAttachments = false;
-                    }
-                    scope.$root.$on('event:toggle-attachments', function(event, isViewingAttachments) {
-                        scope.state.isViewingAttachments = isViewingAttachments;
-                    });
-                    scope.wizard = wizardService;
-                 }
-             }
-         }
-    ])
-    .directive('wfStatus', ['$rootScope', '$window', 'notificationService', 'taskService', 'wizardService',
-         function($rootScope, $window, notificationService, taskService, wizardService) {
-             return {
-                 restrict: 'AE',
-                 scope: {
-                    form : '='
-                 },
-                 templateUrl: 'templates/status.html',
-                 link: function (scope, element) {
-                    if (typeof(scope.form) === 'undefined')
-                        scope.form = scope.$root.form;
-                    scope.$on('event:form-loaded', function(event, form) {
-                        scope.form = form;
-                    });
-                    scope.claim = function() {
-                        var success = function(scope, data, status, headers, config, form, assignee) {
-                            $rootScope.$broadcast('event:refresh', 'assignment');
-                        };
-
-                        var failure = function(scope, data, status, headers, config, form, assignee) {
-                            form._assignmentStatus = 'error';
-                            var displayName = typeof(assignee.displayName) === 'undefined' ? assignee : assignee.displayName;
-                            var message = form.task.processInstanceLabel + ' cannot be assigned ';
-                            var title = data.messageDetail;
-                            notificationService.notify(scope, title, message);
-                        };
-                        taskService.assignTask(scope, scope.form, scope.form.currentUser.userId, success, failure);
-                    };
-                 }
-             }
-         }
-    ])
-    .directive('wfStep', ['wizardService',
-        function(wizardService) {
-            return {
-                restrict: 'AE',
-                scope: {
-                    form : '=',
-                    step : '=',
-                    active: '=',
-                    current: '='
-                },
-                templateUrl: 'templates/step.html',
-                //transclude: true,
-                link: function (scope, element) {
-                    scope.wizard = wizardService;
-                }
-            }
-        }
-    ])
-    .directive('wfScreen', [
-        function() {
-            return {
-                restrict: 'A',
-                scope: {
-                    form : '='
-                },
-                link: function (scope, element, attr) {
-
-                    var step = attr.wfScreen;
-                    if (typeof(step) === 'undefined')
-                        step = '-1';
-
-                    var indexOf = step.indexOf('+');
-                    var upwards = false;
-                    if (indexOf == (step.length-1)) {
-                        step = step.substring(0, indexOf);
-                        upwards = true;
-                    }
-
-                    step = parseInt(step);
-
-                    scope.$root.$on('event:step-changed', function(event, ordinal) {
-                        if (attr.wfScreen == 'confirmation' && typeof(ordinal) === 'undefined')
-                            return;
-                        element.removeClass('ng-hide');
-
-                        if (upwards) {
-                            if (typeof(ordinal) === 'undefined' || step > ordinal)
-                                element.addClass('ng-hide');
-                        } else if (step != ordinal) {
-                            element.addClass('ng-hide');
-                        }
-                    });
                 }
             }
         }
