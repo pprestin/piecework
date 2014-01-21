@@ -33,7 +33,7 @@
         <div class="navbar main-navbar">
             <div class="user-information">
                 <div id="user-information-name" class="user-information-name pull-right">
-                    {{currentUser.displayName}}
+                    {{piecework.context.user.displayName}}
                 </div>
             </div>
 
@@ -41,7 +41,7 @@
         </div>
         <div class="container">
             <div class="main-content row">
-                <div data-ng-show="notification" class="alert alert-danger">
+                <div data-ng-if="notification" class="alert alert-danger">
                     <strong>{{notification.title}}</strong> {{notification.message}}
                 </div>
                 <div data-wf-searchresults></div>

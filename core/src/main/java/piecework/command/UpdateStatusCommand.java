@@ -46,6 +46,6 @@ public class UpdateStatusCommand extends AbstractOperationCommand {
         if (!principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        return new OperationResult();
+        return new OperationResult(applicationStatusExplanation, applicationStatus, null, null);
     }
 }

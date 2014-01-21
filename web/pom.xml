@@ -20,6 +20,27 @@
 	<build>
         <finalName>piecework</finalName>
 		<plugins>
+            <!-- Not working yet, low-level htmlunit getAttribute bug -->
+            <!--plugin>
+                <groupId>com.github.searls</groupId>
+                <artifactId>jasmine-maven-plugin</artifactId>
+                <version>1.3.1.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <webDriverClassName>org.openqa.selenium.firefox.FirefoxDriver</webDriverClassName>
+                    <jsSrcDir>src/main/webapp/static/js</jsSrcDir>
+                    <jsTestSrcDir>src/main/webapp/static/test</jsTestSrcDir>
+                    <specIncludes>
+                        <include>*Spec.js</include>
+                    </specIncludes>
+                </configuration>
+            </plugin-->
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>

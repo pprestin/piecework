@@ -264,6 +264,59 @@ describe('Unit testing wf-container', function() {
 
 });
 
+describe('Unit testing wf-element', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should add text of all values that exist in data map', function() {
+        var scope = $rootScope;
+        var form = { data: { 'myElement' : [ 'Blam!', 'Kazam!', 'Pow!'] } };
+        var element = $compile("<span data-wf-element=\"myElement\"></span>")($rootScope);
+        scope.$broadcast('event:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('Blam!Kazam!Pow!');
+    });
+
+    it('Should add html of all values that exist in data map', function() {
+        var scope = $rootScope;
+        var form = { data: { 'myElement' : [ '<p></p>', '<br>', '<span>Test</span>'] } };
+        var element = $compile("<span data-wf-element=\"myElement\"></span>")($rootScope);
+        scope.$broadcast('event:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('<p></p><br><span>Test</span>');
+    });
+
+    it('Should add blank text if no values exist in data map', function() {
+        var scope = $rootScope;
+        var form = { data: {  } };
+        var element = $compile("<span data-wf-element=\"myElement\"></span>")($rootScope);
+        scope.$broadcast('event:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('');
+    });
+
+    it('Should add text of all values that exist as sub fields in data map', function() {
+        var scope = $rootScope;
+        var form = { data: { 'myElement' : [ { displayName: 'Joe' }] } };
+        var element = $compile("<span data-wf-element=\"myElement.displayName\"></span>")($rootScope);
+        scope.$broadcast('event:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('Joe');
+    });
+
+});
 
 describe('Unit testing wf-status', function() {
     var $compile;

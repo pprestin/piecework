@@ -161,14 +161,19 @@ angular.module('wf.directives',
                         }
                         var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
                         if (values != null) {
+                            var html = '';
                             angular.forEach(values, function(value) {
                                 if (value != null) {
+                                    var current;
                                     if (subFieldName != null)
-                                        element.html(value[subFieldName]);
+                                        current = value[subFieldName];
                                     else
-                                        element.html(value);
+                                        current = value;
+
+                                    html += typeof(current) === 'string' ? current : current.name;
                                 }
                             });
+                            element.html(html);
                         }
                     });
                 }
@@ -435,7 +440,7 @@ angular.module('wf.directives',
                                               toString: function() {
                                                   return this.displayName;
                                               }
-                                          };
+                                        };
                                     } else {
                                         field.value = values[0];
                                     }
@@ -495,6 +500,10 @@ angular.module('wf.directives',
                                 element.attr("action", form.action);
                                 element.attr("method", "POST");
                                 element.attr("enctype", "multipart/form-data");
+
+                                var created = form.task != null ? form.task.startTime : null;
+                                element.attr('data-process-task-started', created);
+
                                 var data = form.data;
                                 var validation = form.validation;
                                 var formElement = element[0];
@@ -563,10 +572,13 @@ angular.module('wf.directives',
                                                     else if (input.type == 'file') {
 
                                                     } else {
+                                                        var current;
                                                         if (subFieldName != null)
-                                                            input.value = value[subFieldName];
+                                                            current = value[subFieldName];
                                                         else
-                                                            input.value = value;
+                                                            current = value;
+
+                                                        input.value = typeof(current) === 'string' ? current : current.name;
                                                     }
                                                 }
                                             });
@@ -651,9 +663,12 @@ angular.module('wf.directives',
                                     if (subFieldName != null)
                                         imageObject = value[subFieldName];
 
-                                    element.attr('src', value.link);
+                                    var src = typeof(value) === 'string' ? value : value.link;
+                                    element.attr('src', src);
                                     scope.$on('event:value-updated:' + fieldName, function(event, value) {
-                                        element.attr('src', value.link);
+                                        var src = typeof(value) === 'string' ? value : value.link;
+                                        element.attr('src', src);
+//                                        element.attr('data-process-attachment-modified', value.lastModified);
                                     });
                                 }
                             });
