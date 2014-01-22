@@ -118,6 +118,16 @@ public class TaskService {
         Task task = taskId != null ? read(process, taskId, true) : null;
         if (task == null)
             throw new NotFoundError();
+
+        // [jira wws-154] simply returns for identical assignee
+        if ( StringUtils.isEmpty(assigneeId) ) {
+            assigneeId = null; // to be consistent with task.getAssigneeId() to facilitate later comparison
+        }
+        if (    actionType == ActionType.ASSIGN && StringUtils.equals(assigneeId, task.getAssigneeId()) 
+             || actionType == ActionType.CLAIM && StringUtils.equals(actingUser, task.getAssigneeId()) ) {
+            return; // no change in assignee
+        }
+
         ProcessInstance instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
         ProcessDeployment deployment = deploymentService.read(process, instance);
 
