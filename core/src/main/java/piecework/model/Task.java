@@ -123,6 +123,10 @@ public class Task implements Serializable, Comparable<Task> {
     @JsonIgnore
     private final boolean isDeleted;
 
+    @XmlTransient
+    @JsonIgnore
+    private final boolean disconnected;
+
     private Task() {
         this(new Task.Builder(), new ViewContext());
     }
@@ -153,6 +157,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.taskInstanceId) : null;
         this.isDeleted = builder.isDeleted;
+        this.disconnected = builder.disconnected;
     }
 
     @JsonIgnore
@@ -356,7 +361,12 @@ public class Task implements Serializable, Comparable<Task> {
 		return isDeleted;
 	}
 
-	public final static class Builder {
+    @JsonIgnore
+    public boolean isDisconnected() {
+        return disconnected;
+    }
+
+    public final static class Builder {
 
         private String taskInstanceId;
         private String taskDefinitionKey;
@@ -381,6 +391,7 @@ public class Task implements Serializable, Comparable<Task> {
         private int priority;
         private boolean active;
         private boolean isDeleted;
+        private boolean disconnected;
 
         public Builder() {
             super();
@@ -419,6 +430,7 @@ public class Task implements Serializable, Comparable<Task> {
             this.priority = task.priority;
             this.active = task.active;
             this.isDeleted = task.isDeleted;
+            this.disconnected = task.disconnected;
         }
 
         public Task build() {
@@ -557,6 +569,11 @@ public class Task implements Serializable, Comparable<Task> {
 
         public Builder active() {
             this.active = true;
+            return this;
+        }
+
+        public Builder disconnected() {
+            this.disconnected = true;
             return this;
         }
 

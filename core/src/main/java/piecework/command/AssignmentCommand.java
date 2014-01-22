@@ -51,7 +51,7 @@ public class AssignmentCommand extends AbstractOperationCommand {
             if (!candidateAssigneeIds.contains(assignee.getUserId()))
                 throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
         }
-        if (!facade.assign(process, deployment, task.getTaskInstanceId(), assignee)) {
+        if (!task.isDisconnected() && !facade.assign(process, deployment, task.getTaskInstanceId(), assignee)) {
             throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
         }
 

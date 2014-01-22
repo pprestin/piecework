@@ -207,7 +207,7 @@ public class ContentHandlerRegistry {
         }
 
         public ContentReceiver receiver(String key) {
-            if (key == null || contentReceiverKeyMap == null || contentReceiverKeyMap.isEmpty())
+            if (key == null || contentReceiverKeyMap == null || contentReceiverKeyMap.isEmpty() || !contentReceiverKeyMap.containsKey(key))
                 return primaryReceiver();
             return contentReceiverKeyMap.get(key);
         }

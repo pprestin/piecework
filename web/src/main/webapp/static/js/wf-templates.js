@@ -161,11 +161,11 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                        </td>\n" +
     "                    </tr>\n" +
     "\n" +
-    "                    <tr ng-if=\"event.endTime\">\n" +
-    "                        <td><i class=\"fa fa-off\"></i></td>\n" +
+    "                    <tr ng-if=\"history.endTime\">\n" +
+    "                        <td><i class=\"fa fa-power-off\"></i></td>\n" +
     "                        <td>Complete</td>\n" +
     "                        <td></td>\n" +
-    "                        <td>{{event.endTime|date:'MMM d, y H:mm'}}</td>\n" +
+    "                        <td>{{history.endTime|date:'MMM d, y H:mm'}}</td>\n" +
     "                    </tr>\n" +
     "                </table>\n" +
     "            </div>\n" +
@@ -686,6 +686,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                                        <li role=\"presentation\">\n" +
     "                                            <div class=\"checkbox-menu-item\" role=\"menuitem\" tabindex=\"-1\">\n" +
     "                                                <label class=\"checkbox\">\n" +
+    "                                                    <input type=\"checkbox\" data-ng-change=\"refreshSearch()\" data-ng-model=\"criteria.taskStatus\" data-ng-true-value=\"Rejected\" role=\"menuitem\"> &nbsp;{{taskStatusDescription['Rejected']}}\n" +
+    "                                                </label>\n" +
+    "                                            </div>\n" +
+    "                                        </li>\n" +
+    "                                        <li role=\"presentation\">\n" +
+    "                                            <div class=\"checkbox-menu-item\" role=\"menuitem\" tabindex=\"-1\">\n" +
+    "                                                <label class=\"checkbox\">\n" +
     "                                                    <input type=\"checkbox\" data-ng-change=\"refreshSearch()\" data-ng-model=\"criteria.taskStatus\" data-ng-true-value=\"Suspended\" role=\"menuitem\"> &nbsp;{{taskStatusDescription['Suspended']}}\n" +
     "                                                </label>\n" +
     "                                            </div>\n" +
@@ -757,7 +764,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                    <button data-ng-click=\"dialogs.openActivateModal(getFormsSelected(['Suspended']))\" data-ng-show=\"isFormSelected(['Suspended'])\" class=\"btn btn-default navbar-btn\" id=\"activate-dialog-button\" title=\"Activate process\" type=\"button\"><i class=\"fa fa-play fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openSuspendModal(getFormsSelected(['Open']))\" data-ng-show=\"isFormSelected(['Open'])\" class=\"btn btn-default navbar-btn\" id=\"suspend-dialog-button\" title=\"Suspend process\" type=\"button\"><i class=\"fa fa-pause fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))\" data-ng-show=\"isFormSelected(['Open','Suspended'])\" class=\"btn btn-danger navbar-btn incomplete-selected-result-btn\" id=\"delete-dialog-button\" title=\"Cancel process\" type=\"button\"><i class=\"fa fa-trash-o fa-white\"></i></button>\n" +
-    "                    <button data-ng-click=\"dialogs.openRestartModal(getFormsSelected(['Cancelled', 'Complete']))\" data-ng-show=\"isFormSelected(['Cancelled', 'Complete'])\" class=\"btn btn-default navbar-btn\" title=\"Restart process\" type=\"button\"><i class=\"fa fa-rotate-left\"></i></button>\n" +
+    "                    <button data-ng-click=\"dialogs.openRestartModal(getFormsSelected(['Cancelled', 'Complete', 'Rejected']))\" data-ng-show=\"isFormSelected(['Cancelled', 'Complete', 'Rejected'])\" class=\"btn btn-default navbar-btn\" title=\"Restart process\" type=\"button\"><i class=\"fa fa-rotate-left\"></i></button>\n" +
     "                    <a data-ng-show=\"false && !isFormSelected()\" href=\"report.html\" rel=\"external\" target=\"_self\" class=\"btn btn-default navbar-btn\" id=\"report-button\"><i class=\"fa fa-bar-chart-o\"></i></a>\n" +
     "                    <button data-ng-click=\"exportCsv(getFormsSelected())\" data-ng-show=\"!isFormSelected()\" data-ng-disabled=\"!isSingleProcessSelected()\" class=\"btn btn-default navbar-btn\" title=\"Export as CSV\" type=\"button\"><i class=\"fa fa-download\"></i> Export</button>\n" +
     "                </div>\n" +

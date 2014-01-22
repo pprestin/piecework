@@ -636,17 +636,19 @@ angular.module('wf.directives',
                                 });
 
                                 var data = form.data;
-                                var readonly = form.container.readonly;
+                                var readonly = form.container != null ? form.container.readonly : false;
                                 var rootContainer = form.container;
                                 var fields = new Array();
-                                scope.markLeaves(rootContainer);
-                                if (rootContainer.children != null && rootContainer.children.length > 1 && rootContainer.activeChildIndex != -1) {
-                                    form.steps = rootContainer.children;
-                                    form.activeStepOrdinal = rootContainer.activeChildIndex;
-                                    scope.addFields(fields, form, rootContainer, true);
-                                } else {
-                                    fields = form.container.fields;
-                                    form.layout = 'normal';
+                                if (rootContainer != null) {
+                                    scope.markLeaves(rootContainer);
+                                    if (rootContainer.children != null && rootContainer.children.length > 1 && rootContainer.activeChildIndex != -1) {
+                                        form.steps = rootContainer.children;
+                                        form.activeStepOrdinal = rootContainer.activeChildIndex;
+                                        scope.addFields(fields, form, rootContainer, true);
+                                    } else {
+                                        fields = form.container != null ? form.container.fields : [];
+                                        form.layout = 'normal';
+                                    }
                                 }
                                 form.fieldMap = new Object();
                                 angular.forEach(fields, function(field) {
