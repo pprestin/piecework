@@ -167,10 +167,11 @@ public class EngineStateSynchronizer {
 
         // task URL
         ViewContext viewContext = versions.getVersion1();
-        String taskUrl = viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), task.getTaskInstanceId());
+        String taskUrl = viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), "?taskId=" + task.getTaskInstanceId());
         scope.put("TASK_URL", taskUrl);
 
         // add instance data into scope
+        // skip empty strings to accommodate mustache
         Map<String, List<Value>> data = instance.getData();
         if (data != null && !data.isEmpty()) {
             for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
@@ -178,7 +179,11 @@ public class EngineStateSynchronizer {
                 List<Value> values = entry.getValue();
                 if (values != null && !values.isEmpty() ) {
                     if ( values.size() == 1 ) {
-                        scope.put(key, values.get(0));  // flattern it
+                        Value val = values.get(0);
+                        // getValue returns null for value of User type 
+                        if ( val != null && ( val.getValue() == null || val.getValue().length() > 0 ) ) {
+                            scope.put(key, val);  // flattern it
+                        }
                     } else {
                         scope.put(key, values);
                     }
