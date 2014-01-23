@@ -93,7 +93,7 @@ public class FormUtility {
                 .option(new Option.Builder().value("WY").label("Wyoming").build());
     }
 
-    public static FormDisposition disposition(Form.Builder builder, ProcessDeployment deployment, Activity activity, Task task, ActionType actionType, MediaType mediaType) throws FormBuildingException {
+    public static FormDisposition disposition(Form.Builder builder, ProcessDeployment deployment, Task task, Activity activity, ActionType actionType, MediaType mediaType) throws FormBuildingException {
         Action action = activity.action(actionType);
         boolean revertToDefaultUI = false;
 
@@ -103,8 +103,7 @@ public class FormUtility {
             // If the action type was VIEW then revert to the default ui, use create as the action, but make it unmodifiable
             if (actionType == ActionType.VIEW) {
                 revertToDefaultUI = true;
-                if (builder != null)
-                    builder.readonly();
+                builder.readonly();
             }
         }
 
@@ -119,16 +118,22 @@ public class FormUtility {
         if ((mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) && !revertToDefaultUI) {
             switch (action.getStrategy()) {
                 case DECORATE_HTML:
-                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
+                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
                     break;
                 case INCLUDE_DIRECTIVES:
                 case INCLUDE_SCRIPT:
                     if (external)
-                        formDisposition = new FormDisposition(uri, action.getStrategy());
+                        formDisposition = new FormDisposition(uri, action.getStrategy(), action);
                     else if (action.getLocation() != null)
-                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
+                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
                     break;
             }
+        }
+
+        // Tacking this on at the end - could be somewhere better
+        if (formDisposition == null) {
+            formDisposition = new FormDisposition(action);
+            FormUtility.layout(builder, activity);
         }
 
         return formDisposition;

@@ -28,6 +28,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.validation.Validation;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -66,9 +67,15 @@ public class RequeueInstanceCommand extends AbstractEngineStorageCommand<Process
 
         String initiatorId = principal != null ? principal.getEntityId() : null;
 
+        ProcessInstance updated = new ProcessInstance.Builder(instance)
+                .tasks(new ArrayList<Task>())
+                .processStatus(Constants.ProcessStatuses.OPEN)
+                .build();
+        updated = storageManager.store(updated);
+
         String processInstanceId = instance.getProcessInstanceId();
-        String engineInstanceId = processEngineFacade.start(process, deployment, instance);
-        boolean isUpdated = storageManager.store(instance.getProcessInstanceId(), engineInstanceId);
+        String engineInstanceId = processEngineFacade.start(process, deployment, updated);
+        boolean isUpdated = storageManager.store(updated.getProcessInstanceId(), engineInstanceId);
 
         LOG.info("Requeued process instance " + processInstanceId + " mapped to engine id " + engineInstanceId);
         if (!isUpdated)

@@ -15,6 +15,7 @@
  */
 package piecework.exception;
 
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -27,6 +28,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.ext.ExceptionMapper;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * This provider maps StatusCodeError exceptions to 
@@ -46,6 +48,9 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
 
     @Context
     private javax.servlet.ServletContext servletContext;
+
+    @Context
+    private MessageContext messageContext;
 
 	/**
 	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
@@ -80,7 +85,13 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
             LOG.warn("Building response for status code error ", error);
         }
 
-		Explanation explanation = ErrorResponseBuilder.buildExplanation(statusCode, error.getLocalizedMessage(), error.getMessageDetail());
+        List<MediaType> mediaTypes = messageContext.getHttpHeaders().getAcceptableMediaTypes();
+        MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
+
+        Explanation explanation = ErrorResponseBuilder.buildExplanation(statusCode, error.getLocalizedMessage(), error.getMessageDetail());
+
+        if (!mediaType.equals(MediaType.TEXT_HTML_TYPE))
+            return Response.status(statusCode).entity(explanation).build();
 
         StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation);
         return Response.status(statusCode).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();

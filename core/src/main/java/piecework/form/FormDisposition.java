@@ -16,6 +16,7 @@
 package piecework.form;
 
 import piecework.enumeration.DataInjectionStrategy;
+import piecework.model.Action;
 
 import java.net.URI;
 
@@ -31,25 +32,27 @@ public class FormDisposition {
     private final String base;
     private final String path;
     private final DataInjectionStrategy strategy;
+    private final Action action;
 
-    public FormDisposition(FormDispositionType type, URI uri, String base, String path, DataInjectionStrategy strategy) {
+    public FormDisposition(FormDispositionType type, URI uri, String base, String path, DataInjectionStrategy strategy, Action action) {
         this.type = type;
         this.uri = uri;
         this.base = base;
         this.path = path;
         this.strategy = strategy;
+        this.action = action;
     }
 
-    public FormDisposition() {
-        this(FormDispositionType.DEFAULT, null, null, null, DataInjectionStrategy.NONE);
+    public FormDisposition(Action action) {
+        this(FormDispositionType.DEFAULT, null, null, null, DataInjectionStrategy.NONE, action);
     }
 
-    public FormDisposition(URI uri, DataInjectionStrategy strategy) {
-        this(FormDispositionType.REMOTE, uri, null, null, strategy);
+    public FormDisposition(URI uri, DataInjectionStrategy strategy, Action action) {
+        this(FormDispositionType.REMOTE, uri, null, null, strategy, action);
     }
 
-    public FormDisposition(String base, String path, DataInjectionStrategy strategy) {
-        this(FormDispositionType.CUSTOM, null, base, path, strategy);
+    public FormDisposition(String base, String path, DataInjectionStrategy strategy, Action action) {
+        this(FormDispositionType.CUSTOM, null, base, path, strategy, action);
     }
 
     public FormDispositionType getType() {
@@ -70,5 +73,9 @@ public class FormDisposition {
 
     public DataInjectionStrategy getStrategy() {
         return strategy;
+    }
+
+    public Action getAction() {
+        return action;
     }
 }

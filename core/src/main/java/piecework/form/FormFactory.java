@@ -136,7 +136,7 @@ public class FormFactory {
         if (activity == null)
             return null;
 
-        Action action = activity.action(actionType);
+//        Action action = activity.action(actionType);
 //        boolean revertToDefaultUI = false;
 //
 //        // If there is no action defined, then revert to CREATE_TASK
@@ -172,17 +172,11 @@ public class FormFactory {
 //            }
 //        }
 
-        FormDisposition formDisposition = FormUtility.disposition(builder, deployment, activity, task, actionType, mediaType);
-
-        // Tacking this on at the end - could be somewhere better
-        if (formDisposition == null) {
-            formDisposition = new FormDisposition();
-            FormUtility.layout(builder, activity);
-        }
+        FormDisposition formDisposition = FormUtility.disposition(builder, deployment, task, activity, actionType, mediaType);
 
         builder.disposition(formDisposition);
 
-        return action;
+        return formDisposition.getAction();
     }
 
     private Map<String, Field> decorate(Map<String, Field> fieldMap, String processDefinitionKey, String processInstanceId, Map<String, List<Value>> data, ViewContext version, boolean unmodifiable) {

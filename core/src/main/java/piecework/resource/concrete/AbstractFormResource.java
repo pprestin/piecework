@@ -227,7 +227,71 @@ public abstract class AbstractFormResource {
 //        }
 //    }
 
-    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultivaluedMap<String, String> formData) throws StatusCodeError {
+//    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultivaluedMap<String, String> formData) throws StatusCodeError {
+//        String requestId = sanitizer.sanitize(rawRequestId);
+//
+//        if (StringUtils.isEmpty(requestId))
+//            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
+//
+//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+//        accessTracker.track(requestDetails, true, isAnonymous());
+//        FormRequest formRequest = requestService.read(requestDetails, requestId);
+//        if (formRequest == null) {
+//            LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
+//            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+//        }
+//
+//        try {
+//            SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, formData, Map.class, helper.getPrincipal());
+//
+//            // Anonymous form submissions are not redirected, since it's not possible to authorize access to the receipt form
+//            // so for security reasons the response is forced to be a COMPLETE action and no restricted data can be returned
+//            if (isAnonymous())
+//                return response(process, formRequest, ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, false);
+//
+//            return redirect(process, submissionCommandResponse);
+//        } catch (Exception e) {
+//            Validation validation = null;
+//            Explanation explanation = null;
+//
+//            if (e instanceof BadRequestError)
+//                validation = ((BadRequestError)e).getValidation();
+//            else {
+//                String detail = e.getMessage() != null ? e.getMessage() : "";
+//                explanation = new Explanation();
+//                explanation.setMessage("Unable to complete task");
+//                explanation.setMessageDetail("Caught an unexpected exception trying to process form submission " + detail);
+//            }
+//
+//            Map<String, List<Message>> results = validation != null ? validation.getResults() : null;
+//
+//            if (results != null && !results.isEmpty()) {
+//                for (Map.Entry<String, List<Message>> result : results.entrySet()) {
+//                    LOG.warn("Validation error " + result.getKey() + " : " + result.getValue().iterator().next().getText());
+//                }
+//            }
+//
+//            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
+//            boolean isJSON = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(MediaType.APPLICATION_JSON_TYPE);
+//
+//            if (isJSON && e instanceof BadRequestError)
+//                throw (BadRequestError)e;
+//
+//            try {
+//                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
+//                if (isAnonymous())
+//                    return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
+//
+//                Submission submission = validation != null ? validation.getSubmission() : null;
+//                return redirect(process, new SubmissionCommandResponse(submission, invalidRequest));
+//            } catch (MisconfiguredProcessException mpe) {
+//                LOG.error("Unable to create new instance because process is misconfigured", mpe);
+//                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+//            }
+//        }
+//    }
+
+    protected <T> Response submitForm(MessageContext context, Process process, String rawRequestId, T data, Class<T> type) throws StatusCodeError {
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
@@ -236,73 +300,9 @@ public abstract class AbstractFormResource {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, isAnonymous());
         FormRequest formRequest = requestService.read(requestDetails, requestId);
-        if (formRequest == null) {
-            LOG.error("Forbidden: Attempting to submit a form for a request id that doesn't exist");
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
-        }
-
         try {
-            SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, formData, Map.class, helper.getPrincipal());
-
-            // Anonymous form submissions are not redirected, since it's not possible to authorize access to the receipt form
-            // so for security reasons the response is forced to be a COMPLETE action and no restricted data can be returned
-            if (isAnonymous())
-                return response(process, formRequest, ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, false);
-
-            return redirect(process, submissionCommandResponse);
-        } catch (Exception e) {
-            Validation validation = null;
-            Explanation explanation = null;
-
-            if (e instanceof BadRequestError)
-                validation = ((BadRequestError)e).getValidation();
-            else {
-                String detail = e.getMessage() != null ? e.getMessage() : "";
-                explanation = new Explanation();
-                explanation.setMessage("Unable to complete task");
-                explanation.setMessageDetail("Caught an unexpected exception trying to process form submission " + detail);
-            }
-
-            Map<String, List<Message>> results = validation != null ? validation.getResults() : null;
-
-            if (results != null && !results.isEmpty()) {
-                for (Map.Entry<String, List<Message>> result : results.entrySet()) {
-                    LOG.warn("Validation error " + result.getKey() + " : " + result.getValue().iterator().next().getText());
-                }
-            }
-
-            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
-            boolean isJSON = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(MediaType.APPLICATION_JSON_TYPE);
-
-            if (isJSON && e instanceof BadRequestError)
-                throw (BadRequestError)e;
-
-            try {
-                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
-                if (isAnonymous())
-                    return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
-
-                Submission submission = validation != null ? validation.getSubmission() : null;
-                return redirect(process, new SubmissionCommandResponse(submission, invalidRequest));
-            } catch (MisconfiguredProcessException mpe) {
-                LOG.error("Unable to create new instance because process is misconfigured", mpe);
-                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-            }
-        }
-    }
-
-    protected Response submitForm(MessageContext context, Process process, String rawRequestId, MultipartBody body) throws StatusCodeError {
-        String requestId = sanitizer.sanitize(rawRequestId);
-
-        if (StringUtils.isEmpty(requestId))
-            throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
-
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, isAnonymous());
-        FormRequest formRequest = requestService.read(requestDetails, requestId);
-        try {
-            SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, body, MultipartBody.class, helper.getPrincipal());
-            return redirect(process, submissionCommandResponse);
+            SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, data, type, helper.getPrincipal());
+            return redirect(process, submissionCommandResponse, false);
         } catch (Exception e) {
             Validation validation = null;
             Explanation explanation = null;
@@ -332,14 +332,12 @@ public abstract class AbstractFormResource {
                 throw (BadRequestError)e;
 
             try {
-//                FormRequest formRequest = requestService.read(requestDetails, requestId);
                 FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
-//                return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, submission, true);
                 if (isAnonymous())
                     return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
 
                 Submission submission = validation != null ? validation.getSubmission() : null;
-                return redirect(process, new SubmissionCommandResponse(submission, invalidRequest));
+                return redirect(process, new SubmissionCommandResponse(submission, invalidRequest), true);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -369,7 +367,7 @@ public abstract class AbstractFormResource {
         return Response.noContent().build();
     }
 
-    private Response redirect(Process process, SubmissionCommandResponse submissionCommandResponse) throws StatusCodeError {
+    private Response redirect(Process process, SubmissionCommandResponse submissionCommandResponse, boolean isInvalidSubmission) throws StatusCodeError {
         if (submissionCommandResponse.getNextRequest() == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
@@ -385,12 +383,14 @@ public abstract class AbstractFormResource {
 
         try {
             ProcessDeployment deployment = deploymentService.read(process, formRequest.getInstance());
-            FormDisposition formDisposition = FormUtility.disposition(null, deployment, formRequest.getActivity(), null, formRequest.getAction(), null);
+            FormDisposition formDisposition = FormUtility.disposition(null, deployment, null, formRequest.getActivity(), formRequest.getAction(), null);
 
             if (formDisposition != null && formDisposition.getType() == FormDisposition.FormDispositionType.REMOTE) {
                 String query = null;
-                if (submission != null && StringUtils.isNotEmpty(submission.getSubmissionId()))
+                if (isInvalidSubmission && submission != null && StringUtils.isNotEmpty(submission.getSubmissionId()))
                     query = "submissionId=" + submission.getSubmissionId();
+                else if (formRequest != null && StringUtils.isNotEmpty(formRequest.getRequestId()))
+                    query = "requestId=" + formRequest.getRequestId();
 
                 URI uri = formDisposition.getUri();
                 uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), query, uri.getFragment());

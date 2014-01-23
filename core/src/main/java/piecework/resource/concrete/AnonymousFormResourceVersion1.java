@@ -28,6 +28,8 @@ import piecework.model.Process;
 import piecework.resource.AnonymousFormResource;
 import piecework.security.AccessTracker;
 
+import java.util.Map;
+
 /**
  * @author James Renfro
  */
@@ -50,7 +52,7 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
         Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
 
-        return submitForm(context, process, rawRequestId, formData);
+        return submitForm(context, process, rawRequestId, formData, Map.class);
     }
 
     @Override

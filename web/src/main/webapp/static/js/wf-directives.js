@@ -1260,7 +1260,7 @@ angular.module('wf.directives',
                             var displayName = typeof(assignee.displayName) === 'undefined' ? assignee : assignee.displayName;
                             var message = form.task.processInstanceLabel + ' cannot be assigned ';
                             var title = data.messageDetail;
-                            notificationService.notify(scope, title, message);
+                            notificationService.notify(scope, message, title);
                         };
                         taskService.assignTask(scope, scope.form, scope.form.currentUser.userId, success, failure);
                     };

@@ -32,6 +32,7 @@ import piecework.security.Sanitizer;
 import piecework.service.ProcessService;
 
 import javax.ws.rs.core.*;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -71,14 +72,14 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = processService.read(rawProcessDefinitionKey);
-        return submitForm(context, process, rawRequestId, formData);
+        return submitForm(context, process, rawRequestId, formData, Map.class);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = processService.read(rawProcessDefinitionKey);
-        return submitForm(context, process, rawRequestId, body);
+        return submitForm(context, process, rawRequestId, body, MultipartBody.class);
     }
 
     @Override
