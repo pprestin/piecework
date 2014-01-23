@@ -167,7 +167,7 @@ public class EngineStateSynchronizer {
 
         // task URL
         ViewContext viewContext = versions.getVersion1();
-        String taskUrl = viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), task.getTaskInstanceId());
+        String taskUrl = viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), "?taskId=" + task.getTaskInstanceId());
         scope.put("TASK_URL", taskUrl);
 
         // add instance data into scope
