@@ -291,7 +291,7 @@ angular.module('wf.directives',
                            url : url,
                            data : data,
                            processData : false,
-                           contentType : 'multipart/form-data',
+                           contentType : false,
                            type : 'POST'
                         })
                         .done(function(data, textStatus, jqXHR) {
@@ -583,7 +583,7 @@ angular.module('wf.directives',
                                                        url : url,
                                                        data : data,
                                                        processData : false,
-                                                       contentType : 'multipart/form-data',
+                                                       contentType : false,
                                                        type : 'POST'
                                                    })
                                                    .done(function(data, textStatus, jqXHR) {
