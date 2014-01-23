@@ -643,6 +643,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                                                </label>\n" +
     "                                            </div>\n" +
     "                                        </li>\n" +
+        "                                        <li role=\"presentation\" class=\"disabled\">\n" +
+        "                                            <div class=\"checkbox-menu-item\" role=\"menuitem\" tabindex=\"-1\">\n" +
+        "                                                <label class=\"checkbox\">\n" +
+        "                                                    <input type=\"checkbox\" id=\"statusQueued\" data-ng-change=\"refreshSearch()\" data-ng-model=\"criteria.processStatus\" data-ng-true-value=\"queued\" role=\"menuitem\" checked=\"\"/> &nbsp;{{processStatusDescription['queued']}}\n" +
+        "                                                </label>\n" +
+        "                                            </div>\n" +
+        "                                        </li>\n" +
     "                                        <li role=\"presentation\">\n" +
     "                                            <div class=\"checkbox-menu-item\" role=\"menuitem\" tabindex=\"-1\">\n" +
     "                                                <label class=\"checkbox\">\n" +
@@ -764,7 +771,8 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                    <button data-ng-click=\"dialogs.openActivateModal(getFormsSelected(['Suspended']))\" data-ng-show=\"isFormSelected(['Suspended'])\" class=\"btn btn-default navbar-btn\" id=\"activate-dialog-button\" title=\"Activate process\" type=\"button\"><i class=\"fa fa-play fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openSuspendModal(getFormsSelected(['Open']))\" data-ng-show=\"isFormSelected(['Open'])\" class=\"btn btn-default navbar-btn\" id=\"suspend-dialog-button\" title=\"Suspend process\" type=\"button\"><i class=\"fa fa-pause fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openCancelModal(getFormsSelected(['Open','Suspended']))\" data-ng-show=\"isFormSelected(['Open','Suspended'])\" class=\"btn btn-danger navbar-btn incomplete-selected-result-btn\" id=\"delete-dialog-button\" title=\"Cancel process\" type=\"button\"><i class=\"fa fa-trash-o fa-white\"></i></button>\n" +
-    "                    <button data-ng-click=\"dialogs.openRestartModal(getFormsSelected(['Cancelled', 'Complete', 'Rejected']))\" data-ng-show=\"isFormSelected(['Cancelled', 'Complete', 'Rejected'])\" class=\"btn btn-default navbar-btn\" title=\"Restart process\" type=\"button\"><i class=\"fa fa-rotate-left\"></i></button>\n" +
+    //"                    <button data-ng-click=\"dialogs.openRestartModal(getFormsSelected(['Cancelled', 'Complete', 'Rejected']))\" data-ng-show=\"isFormSelected(['Cancelled', 'Complete', 'Rejected'])\" class=\"btn btn-default navbar-btn\" title=\"Restart process\" type=\"button\"><i class=\"fa fa-rotate-left\"></i></button>\n" +
+    "                    <button data-ng-click=\"dialogs.openRestartModal(getFormsSelected())\" data-ng-show=\"isFormSelected()\" class=\"btn btn-default navbar-btn\" title=\"Restart process\" type=\"button\"><i class=\"fa fa-rotate-left\"></i></button>\n" +
     "                    <a data-ng-show=\"false && !isFormSelected()\" href=\"report.html\" rel=\"external\" target=\"_self\" class=\"btn btn-default navbar-btn\" id=\"report-button\"><i class=\"fa fa-bar-chart-o\"></i></a>\n" +
     "                    <button data-ng-click=\"exportCsv(getFormsSelected())\" data-ng-show=\"!isFormSelected()\" data-ng-disabled=\"!isSingleProcessSelected()\" class=\"btn btn-default navbar-btn\" title=\"Export as CSV\" type=\"button\"><i class=\"fa fa-download\"></i> Export</button>\n" +
     "                </div>\n" +

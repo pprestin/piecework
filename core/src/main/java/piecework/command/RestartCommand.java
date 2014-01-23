@@ -63,26 +63,34 @@ public class RestartCommand extends AbstractCommand<ProcessInstance> {
         if (LOG.isDebugEnabled())
             LOG.debug("Executing instance state command " + this.toString());
 
-        Collection<Attachment> attachments = instance.getAttachments();
-        ProcessInstance restarted = commandFactory.createInstance(principal, process, instance.getData(), attachments, null).execute();
-        if (this.applicationStatusExplanation == null)
-            this.applicationStatusExplanation = "";
-        this.applicationStatusExplanation += " Restarted as " + restarted.getProcessInstanceId();
+        String processStatus = instance.getProcessStatus();
 
-        ProcessInstance updated = null;
-        try {
-            OperationResult result = operation(processEngineFacade);
-            updated = storageManager.store(operation, result, instance, principal);
+        if (processStatus != null && processStatus.equals(Constants.ProcessStatuses.QUEUED)) {
 
-            if (LOG.isDebugEnabled())
-                LOG.debug("Executed instance state command " + this.toString());
+            return commandFactory.requeueInstance(principal, process, instance).execute();
+        } else {
 
-        } catch (ProcessEngineException e) {
-            LOG.error("Process engine unable to cancel execution ", e);
-            throw new PieceworkException("Unable to cancel execution");
+            Collection<Attachment> attachments = instance.getAttachments();
+            ProcessInstance restarted = commandFactory.createInstance(principal, process, instance.getData(), attachments, null).execute();
+            if (this.applicationStatusExplanation == null)
+                this.applicationStatusExplanation = "";
+            this.applicationStatusExplanation += " Restarted as " + restarted.getProcessInstanceId();
+
+            ProcessInstance updated = null;
+            try {
+                OperationResult result = operation(processEngineFacade);
+                updated = storageManager.store(operation, result, instance, principal);
+
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Executed instance state command " + this.toString());
+
+            } catch (ProcessEngineException e) {
+                LOG.error("Process engine unable to restart execution ", e);
+                throw new PieceworkException("Unable to restart execution");
+            }
+
+            return updated;
         }
-
-        return updated;
     }
 
     protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {

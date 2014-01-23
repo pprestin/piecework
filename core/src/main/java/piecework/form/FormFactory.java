@@ -131,7 +131,7 @@ public class FormFactory {
         builder.container(container);
     }
 
-    private Action action(Form.Builder builder, ProcessDeployment deployment, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version, boolean unmodifiable) throws FormBuildingException {
+    private static Action action(Form.Builder builder, ProcessDeployment deployment, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version, boolean unmodifiable) throws FormBuildingException {
         // Can't do any of this processing without an activity
         if (activity == null)
             return null;
@@ -173,6 +173,7 @@ public class FormFactory {
 //        }
 
         FormDisposition formDisposition = FormUtility.disposition(builder, deployment, activity, task, actionType, mediaType);
+
         // Tacking this on at the end - could be somewhere better
         if (formDisposition == null) {
             formDisposition = new FormDisposition();

@@ -70,9 +70,11 @@ public class TaskFilter {
     }
 
     public boolean include(Task task, String processStatus, String taskStatus) {
-        if (!processStatus.equals(Constants.ProcessStatuses.ALL) &&
-                !processStatus.equalsIgnoreCase(task.getTaskStatus()))
-            return false;
+        if (!processStatus.equals(Constants.ProcessStatuses.QUEUED)) {
+            if (!processStatus.equals(Constants.ProcessStatuses.ALL) &&
+                    !processStatus.equalsIgnoreCase(task.getTaskStatus()))
+                return false;
+        }
 
         if (!taskStatus.equals(Constants.TaskStatuses.ALL) &&
                 !taskStatus.equalsIgnoreCase(task.getTaskStatus()))
@@ -92,9 +94,13 @@ public class TaskFilter {
             return deploymentIds;
         }
         return Collections.emptySet();
-    }
+        }
 
     public boolean isWrapWithForm() {
         return wrapWithForm;
+    }
+
+    public Entity getPrincipal() {
+        return principal;
     }
 }

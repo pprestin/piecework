@@ -63,6 +63,10 @@ public class StorageManager {
         return processInstanceRepository.update(instance.getProcessInstanceId(), Constants.ProcessStatuses.COMPLETE, completionStatus, data);
     }
 
+    public ProcessInstance get(String processInstanceId) {
+        return processInstanceRepository.findOne(processInstanceId);
+    }
+
     public ProcessInstance minusAttachment(ProcessInstance instance, String attachmentId, Entity principal) {
         ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
         builder.removeAttachment(attachmentId);

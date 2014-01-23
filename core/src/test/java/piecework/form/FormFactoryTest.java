@@ -20,8 +20,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.Versions;
+import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.FormBuildingException;
 import piecework.model.*;
@@ -46,6 +48,9 @@ public class FormFactoryTest {
     Process process;
 
     @Mock
+    ProcessInstance instance;
+
+    @Mock
     ProcessDeployment deployment;
 
     @Mock
@@ -54,17 +59,29 @@ public class FormFactoryTest {
     @Mock
     Entity user;
 
-
     @Test
     public void testFormInitial() throws FormBuildingException {
-        FormRequest request = new FormRequest.Builder().build();
+        Mockito.when(process.getProcessDefinitionKey())
+               .thenReturn("TESTPROCESS1");
+        Mockito.when(instance.getProcessDefinitionKey())
+                .thenReturn("TESTPROCESS1");
+        Mockito.when(instance.getProcessInstanceId())
+                .thenReturn("987");
+        Mockito.when(versions.getVersion1())
+                .thenReturn(new ViewContext("http://localhost", "/static", "/api/v1", "/public", "v1"));
+
+        FormRequest request = new FormRequest.Builder()
+                .requestId("123")
+                .processDefinitionKey(process.getProcessDefinitionKey())
+                .instance(instance).build();
 
         Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, MediaType.TEXT_HTML_TYPE, null, null, false, false);
 
         Assert.assertNotNull(form);
-//        Assert.assertEquals("First screen", form.getScreen().getTitle());
-//        Assert.assertEquals(1, form.getScreen().getGroupings().size());
-//        Assert.assertEquals(1, form.getScreen().getSections().size());
+        Assert.assertEquals("123", form.getFormInstanceId());
+        Assert.assertEquals("TESTPROCESS1", form.getProcess().getProcessDefinitionKey());
+        Assert.assertEquals("987", form.getProcessInstanceId());
+
     }
 
 }

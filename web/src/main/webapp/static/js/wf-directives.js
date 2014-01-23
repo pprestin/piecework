@@ -803,10 +803,10 @@ angular.module('wf.directives',
 
                         listElement.empty();
 
+                        scope.$on('event:value-updated:' + fieldName, function(event, updatedValue) {
+                            scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
+                        });
                         if (values != null && values.length > 0) {
-                            scope.$on('event:value-updated:' + fieldName, function(event, updatedValue) {
-                                scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
-                            });
                             angular.forEach(values, function(value) {
                                 scope.loadValue(listElement, value, fieldName, subFieldName, childHtml, fallbackHtml);
                             });
@@ -1086,6 +1086,7 @@ angular.module('wf.directives',
                         'complete': 'Completed',
                         'cancelled': 'Cancelled',
                         'suspended': 'Suspended',
+                        'queued': 'Queued',
                         'all': 'Any status'
                     };
                     scope.taskStatusDescription = {
@@ -1153,7 +1154,7 @@ angular.module('wf.directives',
                         scope.searching = false;
                         scope.definitions = results.definitions;
                         scope.selectedFormMap = {};
-                        scope.user = results.user;
+                        scope.$root.currentUser = results.currentUser;
                         scope.processDefinitionDescription = new Object();
                         angular.forEach(results.definitions, function(definition) {
                             scope.processDefinitionDescription[definition.task.processDefinitionKey] = definition.task.processDefinitionLabel;

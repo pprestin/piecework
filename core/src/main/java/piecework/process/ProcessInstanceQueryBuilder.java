@@ -63,6 +63,8 @@ public class ProcessInstanceQueryBuilder {
             query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.SUSPENDED));
         else if (searchCriteria.getCancelled() != null && searchCriteria.getCancelled().booleanValue())
             query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.CANCELLED));
+        else if (searchCriteria.getQueued() != null && searchCriteria.getQueued().booleanValue())
+            query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.QUEUED));
         else if (searchCriteria.getAll() == null || !searchCriteria.getAll().booleanValue())
             query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.OPEN));
 

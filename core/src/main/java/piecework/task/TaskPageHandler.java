@@ -127,6 +127,9 @@ public abstract class TaskPageHandler implements PageHandler<ProcessInstance> {
                 resultsBuilder.total(Long.valueOf(count));
             }
         }
+        if (taskFilter.getPrincipal() != null && taskFilter.getPrincipal() instanceof User)
+            resultsBuilder.currentUser(User.class.cast(taskFilter.getPrincipal()));
+
         return resultsBuilder.build(version);
     }
 

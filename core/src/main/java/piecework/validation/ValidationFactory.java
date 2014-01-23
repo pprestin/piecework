@@ -34,6 +34,7 @@ import piecework.security.DataFilterService;
 import piecework.service.TaskService;
 import piecework.common.ManyMap;
 import piecework.submission.SubmissionTemplate;
+import piecework.util.ValidationUtility;
 
 /**
  * @author James Renfro
@@ -58,8 +59,14 @@ public class ValidationFactory {
 
         taskService.checkIsActiveIfTaskExists(process, task);
 
+        Map<String, List<Value>> submissionData = submission.getData();
+        Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
+
+        ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData);
+        ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData);
+
         // Validate the submission
-        Validation validation = doValidate(process, instance, task, template, submission, throwException);
+        Validation validation = ValidationUtility.validate(process, instance, task, submission, template, decryptedSubmissionData, decryptedInstanceData, throwException);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
@@ -71,107 +78,6 @@ public class ValidationFactory {
         }
 
         return validation;
-    }
-
-    private Validation doValidate(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean onlyAcceptValidInputs) {
-
-        Validation.Builder validationBuilder = new Validation.Builder().process(process).instance(instance).submission(submission).task(task);
-
-        Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
-
-        Set<String> allFieldNames = Collections.unmodifiableSet(new HashSet<String>(template.getFieldMap().keySet()));
-        Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
-        Map<String, List<Value>> submissionData = submission.getData();
-        Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
-
-        ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData);
-        ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData);
-
-        if (fieldRuleMap != null) {
-            for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
-                Field field = entry.getKey();
-                List<ValidationRule> rules = entry.getValue();
-                if (rules != null) {
-                    for (ValidationRule rule : rules) {
-                        try {
-                            rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
-                        } catch (ValidationRuleException e) {
-                            LOG.warn("Invalid input: " + e.getMessage() + " " + e.getRule());
-
-                            validationBuilder.error(rule.getName(), e.getMessage());
-                            if (onlyAcceptValidInputs) {
-                                fieldNames.remove(rule.getName());
-                            }
-                        }
-                    }
-                }
-                String fieldName = field.getName();
-
-                if (fieldName == null) {
-                    if (field.getType() != null && field.getType().equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
-                        List<Option> options = field.getOptions();
-                        if (options != null) {
-                            for (Option option : options) {
-                                if (StringUtils.isNotEmpty(option.getName()) && submissionData.containsKey(option.getName()))
-                                    fieldName = option.getName();
-                            }
-                        }
-                    }
-                }
-
-                if (fieldName == null) {
-                    LOG.warn("Field is missing name " + field.getFieldId());
-                    continue;
-                }
-
-                if (fieldNames.contains(fieldName)) {
-                    List<? extends Value> values = submissionData.get(fieldName);
-                    List<? extends Value> previousValues = instanceData.get(fieldName);
-
-                    boolean isFileField = field.getType() != null && (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
-                    if (values == null) {
-                        // Files are a special case, in that we don't want to wipe them out if they aren't resubmitted
-                        // on every request
-                        if (isFileField)
-                            values = previousValues;
-
-                    } else if (isFileField && field.getMaxInputs() > 1) {
-                        // With file fields that accept multiple files, we want to append each submission
-                        values = append(values, previousValues);
-                    }
-
-                    if (values == null)
-                        values = Collections.emptyList();
-
-                    validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
-                }
-            }
-        }
-
-        if (template.isAnyFieldAllowed() && !decryptedSubmissionData.isEmpty()) {
-            for (Map.Entry<String, List<Value>> entry : decryptedSubmissionData.entrySet()) {
-                String fieldName = entry.getKey();
-
-                if (!allFieldNames.contains(fieldName)) {
-                    validationBuilder.formValue(fieldName, entry.getValue());
-                }
-            }
-        }
-
-        return validationBuilder.build();
-    }
-
-    private static List<? extends Value> append(List<? extends Value> values, List<? extends Value> previousValues) {
-        if (values == null)
-            return previousValues;
-
-        List<Value> combined = new ArrayList<Value>();
-        if (values != null)
-            combined.addAll(values);
-        if (previousValues != null)
-            combined.addAll(previousValues);
-
-        return combined;
     }
 
 }

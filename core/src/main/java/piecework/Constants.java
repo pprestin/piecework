@@ -142,6 +142,7 @@ public interface Constants {
     }
 
     public static class ProcessStatuses {
+        public static final String QUEUED = "queued";
         public static final String OPEN = "open";
         public static final String COMPLETE = "complete";
         public static final String CANCELLED = "cancelled";

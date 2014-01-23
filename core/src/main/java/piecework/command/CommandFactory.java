@@ -99,6 +99,11 @@ public class CommandFactory {
         return new PublicationCommand(commandExecutor, process, deploymentId);
     }
 
+    public RequeueInstanceCommand requeueInstance(Entity principal, Process process, ProcessInstance instance) {
+
+        return new RequeueInstanceCommand(commandExecutor, principal, process, instance);
+    }
+
     public RemoveValueCommand removeValue(Entity principal, Process process, ProcessInstance instance, Task task, String fieldName, String valueId) {
 
         return new RemoveValueCommand(commandExecutor, principal, process, instance, task, fieldName, valueId);

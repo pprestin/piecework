@@ -49,6 +49,7 @@ public class ProcessInstanceSearchCriteria {
     private final Boolean complete;
     private final Boolean suspended;
     private final Boolean cancelled;
+    private final Boolean queued;
     private final Boolean all;
     private final Date startedBefore;
     private final Date startedAfter;
@@ -82,6 +83,7 @@ public class ProcessInstanceSearchCriteria {
         this.executionIds = builder.executionIds;
         this.complete = builder.complete;
         this.cancelled = builder.cancelled;
+        this.queued = builder.queued;
         this.suspended = builder.suspended;
         this.all = builder.all;
         this.startedBefore = builder.startedBefore;
@@ -169,6 +171,10 @@ public class ProcessInstanceSearchCriteria {
         return cancelled;
     }
 
+    public Boolean getQueued() {
+        return queued;
+    }
+
     public Boolean getAll() {
         return all;
     }
@@ -250,6 +256,7 @@ public class ProcessInstanceSearchCriteria {
         private Boolean complete;
         private Boolean suspended;
         private Boolean cancelled;
+        private Boolean queued;
         private Boolean all;
         private Date startedBefore;
         private Date startedAfter;
@@ -305,6 +312,8 @@ public class ProcessInstanceSearchCriteria {
                                     this.cancelled = Boolean.valueOf(value);
                                 else if (key.equals("suspended"))
                                     this.suspended = Boolean.valueOf(value);
+                                else if (key.equals("queued"))
+                                    this.queued = Boolean.valueOf(value);
                                 else if (key.equals("all"))
                                     this.all = Boolean.valueOf(value);
                                 else if (key.equals("processDefinitionLabel"))
