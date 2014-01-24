@@ -11,6 +11,12 @@
         <property name="url" value="${activiti.datasource.url}" />
         <property name="username" value="${activiti.datasource.username}" />
         <property name="password" value="${activiti.datasource.password}" />
+        <property name="connectionProperties">
+            <map>
+                <entry key="requireSSL" value="${activiti.datasource.require.ssl}"/>
+                <entry key="useSSL" value="${activiti.datasource.use.ssl}"/>
+            </map>
+        </property>
     </bean>
 
     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
@@ -42,10 +48,4 @@
         <property name="processEngineConfiguration" ref="processEngineConfiguration" />
     </bean>
 
-    <!--<bean id="identityService" factory-bean="processEngine" factory-method="getIdentityService" />-->
-    <!--<bean id="repositoryService" factory-bean="processEngine" factory-method="getRepositoryService" />-->
-    <!--<bean id="runtimeService" factory-bean="processEngine" factory-method="getRuntimeService" />-->
-    <!--<bean id="taskService" factory-bean="processEngine" factory-method="getTaskService" />-->
-    <!--<bean id="historyService" factory-bean="processEngine" factory-method="getHistoryService" />-->
-    <!--<bean id="managementService" factory-bean="processEngine" factory-method="getManagementService" />-->
 </beans>
