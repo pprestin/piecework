@@ -308,9 +308,9 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <iframe data-ng-repeat=\"value in field.values\" src=\"{{getInlineUrl(value)}}\"></iframe>\n" +
     "        </div>\n" +
     "        <div data-ng-switch-when=\"person\">\n" +
-    "            <input data-ng-model=\"field.value.displayName\" data-ng-show=\"field.readonly\" class=\"form-control\" type=\"text\" disabled/>\n" +
+    "            <input data-ng-model=\"field.value.displayName\" data-ng-if=\"field.readonly\" class=\"form-control\" type=\"text\" disabled/>\n" +
     "            <input data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-maxlength=\"{{field.maxValueLength}}\" data-ng-minlength=\"{{field.minValueLength}}\" data-ng-pattern=\"{{field.pattern}}\" ng-show=\"!field.readonly\" ng-required=\"field.required\" class=\"form-control\" placeholder=\"{{field.placeholder ? field.placeholder : 'Enter name'}}\" type=\"text\" typeahead=\"person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8\" typeahead-wait-ms=\"300\" />\n" +
-    "            <input data-ng-disabled=\"!field.editable\" data-ng-show=\"!field.readonly\" value=\"{{field.value.userId ? field.value.userId : field.value}}\" name=\"{{field.name}}\" type=\"hidden\"/>\n" +
+    "            <input data-ng-disabled=\"!field.editable\" data-ng-if=\"!field.readonly\" value=\"{{field.value.userId ? field.value.userId : field.value}}\" name=\"{{field.name}}\" type=\"hidden\"/>\n" +
     "        </div>\n" +
     "        <textarea data-ng-change=\"onFieldChange(field)\" data-ng-switch-when=\"textarea\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-maxlength=\"{{field.maxValueLength}}\" data-ng-minlength=\"{{field.minValueLength}}\" data-ng-pattern=\"/{{field.pattern}}/\" data-ng-readonly=\"{{field.readonly}}\" data-ng-required=\"field.required\" class=\"form-control\" name=\"{{field.name}}\" placeholder=\"{{field.placeholder}}\"></textarea>\n" +
     "        <div data-ng-switch-default>\n" +

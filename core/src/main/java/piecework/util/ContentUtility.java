@@ -17,10 +17,14 @@ package piecework.util;
 
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import piecework.model.Content;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.Date;
 
 /**
  * @author James Renfro
@@ -33,6 +37,7 @@ public class ContentUtility {
         return new Content.Builder()
                 .contentId(resourceId)
                 .contentType(resource.getContentType())
+                .filename(resource.getFilename())
                 .location(resource.getFilename())
                 .inputStream(resource.getInputStream())
                 .lastModified(resource.lastModified())
@@ -59,5 +64,27 @@ public class ContentUtility {
                 .md5(file.getMD5())
                 .build();
     }
+
+    public static Content toContent(URI uri, HttpEntity entity, Date lastModified, String eTag) throws IOException {
+        if (entity == null)
+            return null;
+
+        String fileId = uri.toString();
+        String originalFileName = FileUtility.resolveFilenameFromPath(uri.getPath());
+        String contentType = entity.getContentType() != null ? entity.getContentType().getValue() : "application/octet-stream";
+
+        return new Content.Builder()
+                .contentId(fileId)
+                .contentType(contentType)
+                .filename(originalFileName)
+                .location(null)
+                .inputStream(entity.getContent())
+                .lastModified(lastModified)
+                .length(entity.getContentLength())
+                .md5(eTag)
+                .build();
+    }
+
+
 
 }

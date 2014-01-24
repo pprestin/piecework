@@ -74,4 +74,24 @@ public class FileUtilityTest {
         Assert.assertFalse(FileUtility.isAncestorOf(a, b));
     }
 
+    @Test
+    public void resolveFilenameHappyPath() {
+        Assert.assertEquals("file.html", FileUtility.resolveFilenameFromPath("/some/longer/path/file.html"));
+    }
+
+    @Test
+    public void resolveFilenameNone() {
+        Assert.assertEquals("", FileUtility.resolveFilenameFromPath("/some/longer/path/"));
+    }
+
+    @Test
+    public void resolveFilenameNull() {
+        Assert.assertEquals("", FileUtility.resolveFilenameFromPath(null));
+    }
+
+    @Test
+    public void resolveFilenameEmpty() {
+        Assert.assertEquals("", FileUtility.resolveFilenameFromPath(""));
+    }
+
 }

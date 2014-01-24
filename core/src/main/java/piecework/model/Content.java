@@ -90,7 +90,6 @@ public class Content implements Serializable, Streamable {
         return metadata;
     }
 
-    @Deprecated
     // Use getResource instead where possible
     public InputStream getInputStream() {
         if (resource != null) {

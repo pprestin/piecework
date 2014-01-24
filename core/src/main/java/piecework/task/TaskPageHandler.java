@@ -15,6 +15,7 @@
  */
 package piecework.task;
 
+import org.apache.cxf.common.util.StringUtils;
 import org.springframework.data.domain.Page;
 import piecework.Constants;
 import piecework.common.PageHandler;
@@ -138,7 +139,21 @@ public abstract class TaskPageHandler implements PageHandler<ProcessInstance> {
     protected abstract Map<String, User> getUserMap(Set<String> userIds);
 
     private void addDefinitions(ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder, SearchResults.Builder resultsBuilder, Set<Process> allowedProcesses) {
-        for (Process allowedProcess : allowedProcesses) {
+        if (allowedProcesses == null || allowedProcesses.isEmpty())
+            return;
+
+        List<Process> alphabetical = new ArrayList<Process>(allowedProcesses);
+        Collections.sort(alphabetical, new Comparator<Process>() {
+            @Override
+            public int compare(Process o1, Process o2) {
+                if (StringUtils.isEmpty(o1.getProcessDefinitionLabel()))
+                    return 0;
+                if (StringUtils.isEmpty(o2.getProcessDefinitionLabel()))
+                    return 1;
+                return o1.getProcessDefinitionLabel().compareTo(o2.getProcessDefinitionLabel());
+            }
+        });
+        for (Process allowedProcess : alphabetical) {
             if (allowedProcess.getProcessDefinitionKey() != null) {
                 executionCriteriaBuilder.processDefinitionKey(allowedProcess.getProcessDefinitionKey());
                 Process definition = new Process.Builder(allowedProcess, passthroughSanitizer).build(version);

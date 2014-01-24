@@ -140,7 +140,7 @@ public class FormUtility {
     }
 
     public static void layout(Form.Builder builder, Activity activity) {
-        if (activity == null)
+        if (activity == null || builder == null)
             return;
 
         ActivityUsageType usageType = activity.getUsageType() != null ? activity.getUsageType() : ActivityUsageType.USER_FORM;

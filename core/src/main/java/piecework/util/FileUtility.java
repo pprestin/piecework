@@ -15,6 +15,8 @@
  */
 package piecework.util;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -34,6 +36,21 @@ public final class FileUtility {
             p = p.getParentFile();
         }
         return false;
+    }
+
+    public static String resolveFilenameFromPath(String path) {
+        String filename = path != null ? path : "";
+        if (StringUtils.isNotEmpty(filename)) {
+            int lastIndexOf = filename.lastIndexOf('/');
+            if (lastIndexOf != -1) {
+                if ((lastIndexOf+1) < filename.length())
+                    filename = filename.substring(lastIndexOf + 1);
+                else
+                    filename = "";
+            }
+
+        }
+        return filename;
     }
 
 }
