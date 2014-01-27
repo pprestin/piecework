@@ -24,8 +24,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.authorization.config.AuthorizationConfiguration;
 import piecework.model.Authorization;
 import piecework.persistence.AuthorizationRepository;
 
@@ -36,56 +40,12 @@ import java.util.Set;
 /**
  * @author James Renfro
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes={AuthorizationConfiguration.class})
 public class AuthorizationRoleMapperTest {
 
-    @InjectMocks
+    @Autowired
     private AuthorizationRoleMapper authorizationRoleMapper;
-
-    @Mock
-    private AuthorizationRepository authorizationRepository;
-
-    @Mock
-    private Authorization testGroup1Authorization;
-
-    @Mock
-    private Authorization testGroup2Authorization;
-
-    @Mock
-    private ResourceAuthority resourceAuthority1;
-
-    @Mock
-    private ResourceAuthority resourceAuthority2;
-
-    @Before
-    public void setup() {
-        Mockito.when(resourceAuthority1.getRole())
-                .thenReturn(AuthorizationRole.USER);
-
-        Mockito.when(resourceAuthority1.getProcessDefinitionKeys())
-                .thenReturn(Sets.newHashSet("TESTPROCESS1"));
-
-        Mockito.when(resourceAuthority2.getRole())
-                .thenReturn(AuthorizationRole.USER);
-
-        Mockito.when(resourceAuthority2.getProcessDefinitionKeys())
-                .thenReturn(Sets.newHashSet("TESTPROCESS2"));
-
-        Mockito.when(testGroup1Authorization.getAuthorities())
-                .thenReturn(Collections.singletonList(resourceAuthority1));
-
-        Mockito.when(testGroup2Authorization.getAuthorities())
-                .thenReturn(Collections.singletonList(resourceAuthority2));
-
-        Mockito.when(authorizationRepository.findAll(Sets.newHashSet("ROLE_TESTGROUP1")))
-                .thenReturn(Sets.newHashSet(testGroup1Authorization));
-
-        Mockito.when(authorizationRepository.findAll(Sets.newHashSet("ROLE_TESTGROUP2")))
-                .thenReturn(Sets.newHashSet(testGroup2Authorization));
-
-        Mockito.when(authorizationRepository.findAll(Sets.newHashSet("ROLE_TESTGROUP1", "ROLE_TESTGROUP2")))
-                .thenReturn(Sets.newHashSet(testGroup1Authorization, testGroup2Authorization));
-    }
 
     @Test
     public void mapAuthoritiesForTestGroup1() {

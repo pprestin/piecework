@@ -20,6 +20,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 /**
  * @author James Renfro
  */
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 public class ServiceLocator implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
+    private Map<Class<?>, Object> serviceMap = new Hashtable<Class<?>, Object>();
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -34,7 +38,14 @@ public class ServiceLocator implements ApplicationContextAware {
     }
 
     public <T> T getService(Class<T> type) {
+        if (!serviceMap.isEmpty() && serviceMap.containsKey(type))
+            return type.cast(serviceMap.get(type));
+
         return applicationContext.getBean(type);
+    }
+
+    public <T> void setService(Class<T> type, T service) {
+        serviceMap.put(type, service);
     }
 
 }

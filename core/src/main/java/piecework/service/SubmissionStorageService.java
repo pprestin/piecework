@@ -53,7 +53,7 @@ public class SubmissionStorageService {
     EncryptionService encryptionService;
 
     @Autowired
-    IdentityService userDetailsService;
+    IdentityService identityService;
 
     @Autowired
     UuidGenerator uuidGenerator;
@@ -158,7 +158,7 @@ public class SubmissionStorageService {
                 if (file != null)
                     submissionBuilder.formValue(name, file);
                 else if (template.isUserField(name))
-                    submissionBuilder.formValue(name, userDetailsService.getUser(value));
+                    submissionBuilder.formValue(name, identityService.getUser(value));
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.RANDOM) {

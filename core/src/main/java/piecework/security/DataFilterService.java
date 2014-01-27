@@ -24,6 +24,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
+import piecework.common.ViewContext;
 import piecework.model.*;
 import piecework.security.concrete.PassthroughEncryptionService;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -46,16 +47,20 @@ public class DataFilterService {
     @Autowired(required = false)
     private EncryptionService encryptionService;
 
-    @Autowired
+    @Autowired(required = false)
     private Versions versions;
 
     private static final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
     private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
 
+    private ViewContext version;
+
     @PostConstruct
     public void init() {
         if (encryptionService == null)
             encryptionService = new PassthroughEncryptionService();
+        if (versions != null)
+            version = versions.getVersion1();
     }
 
     public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, Validation validation, boolean includeRestrictedData, boolean includeInstanceData, boolean allowAny) {
@@ -73,20 +78,6 @@ public class DataFilterService {
         }
         return data;
     }
-
-//    public Map<String, List<Value>> filter(ProcessInstance instance, Task task, Entity principal, Validation validation, boolean includeRestrictedData, boolean includeInstanceData) {
-//        Map<String, List<Value>> data = filter(null, instance, task, principal, includeRestrictedData, includeInstanceData);
-//        if (validation != null) {
-//            // Always decrypt the validation data
-//            Map<String, List<Value>> validationData = decrypt(validation.getData());
-//            if (validationData != null) {
-//                for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
-//                    data.put(entry.getKey(), entry.getValue());
-//                }
-//            }
-//        }
-//        return data;
-//    }
 
     public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData, boolean includeInstanceData, boolean allowAny) {
         Map<String, List<Value>> data = includeInstanceData && instance != null ? instance.getData() : new ManyMap<String, Value>();
@@ -156,7 +147,7 @@ public class DataFilterService {
                         .processDefinitionKey(instance.getProcessDefinitionKey())
                         .processInstanceId(instance.getProcessInstanceId())
                         .fieldName(fieldName)
-                        .build(versions.getVersion1()));
+                        .build(version));
             } else {
                 list.add(value);
             }

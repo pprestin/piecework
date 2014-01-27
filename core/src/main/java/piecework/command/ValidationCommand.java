@@ -24,6 +24,7 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.service.TaskService;
 import piecework.validation.ValidationFactory;
 import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
@@ -81,12 +82,13 @@ public class ValidationCommand extends AbstractCommand<Validation> {
     Validation execute(ServiceLocator serviceLocator) throws PieceworkException {
         SubmissionHandlerRegistry submissionHandlerRegistry = serviceLocator.getService(SubmissionHandlerRegistry.class);
         SubmissionTemplateFactory submissionTemplateFactory = serviceLocator.getService(SubmissionTemplateFactory.class);
+        TaskService taskService = serviceLocator.getService(TaskService.class);
         ValidationFactory validationFactory = serviceLocator.getService(ValidationFactory.class);
 
-        return execute(submissionHandlerRegistry, submissionTemplateFactory, validationFactory);
+        return execute(submissionHandlerRegistry, submissionTemplateFactory, taskService, validationFactory);
     }
 
-    Validation execute(SubmissionHandlerRegistry submissionHandlerRegistry, SubmissionTemplateFactory submissionTemplateFactory, ValidationFactory validationFactory) throws PieceworkException {
+    Validation execute(SubmissionHandlerRegistry submissionHandlerRegistry, SubmissionTemplateFactory submissionTemplateFactory, TaskService taskService, ValidationFactory validationFactory) throws PieceworkException {
         SubmissionHandler handler = type != null ? submissionHandlerRegistry.handler(type) : null;
         SubmissionTemplate template;
 
@@ -105,6 +107,8 @@ public class ValidationCommand extends AbstractCommand<Validation> {
 
         Submission submission = this.submission == null ? handler.handle(object, template, principal) : this.submission;
         boolean throwException = !ignoreThrowException && submission.getAction() != null && !UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
+
+        taskService.checkIsActiveIfTaskExists(process, task);
 
         return validationFactory.validation(process, instance, task, template, submission, throwException);
     }

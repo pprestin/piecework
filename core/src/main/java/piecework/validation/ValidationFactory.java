@@ -48,16 +48,11 @@ public class ValidationFactory {
     @Autowired
     DataFilterService dataFilterService;
 
-    @Autowired
-    TaskService taskService;
-
     public Validation validation(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
         long time = 0;
 
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
-
-        taskService.checkIsActiveIfTaskExists(process, task);
 
         Map<String, List<Value>> submissionData = submission.getData();
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();

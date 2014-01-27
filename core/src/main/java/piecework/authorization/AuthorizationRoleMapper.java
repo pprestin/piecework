@@ -33,7 +33,7 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
     private static final Logger LOG = Logger.getLogger(AuthorizationRoleMapper.class);
 
     @Autowired
-    AuthorizationRepository repository;
+    private AccessFactory accessFactory;
 
 	@Override
 	public Collection<? extends GrantedAuthority> mapAuthorities(Collection<? extends GrantedAuthority> authorities) {
@@ -43,37 +43,12 @@ public class AuthorizationRoleMapper implements GrantedAuthoritiesMapper {
             if (LOG.isDebugEnabled())
                 start = System.currentTimeMillis();
 
-            AccessAuthority.Builder builder = new AccessAuthority.Builder();
-
-			Set<String> authorizationIds = new HashSet<String>();
-            for (GrantedAuthority authority : authorities) {
-                if (authority instanceof SuperUserAccessAuthority) {
-                    return Collections.singletonList((SuperUserAccessAuthority)authority);
-                } else {
-				    String authorizationId = authority.getAuthority();
-                    authorizationIds.add(authorizationId);
-                    builder.groupId(authorizationId);
-                }
-			}
-
-            Iterable<Authorization> authorizations = repository.findAll(authorizationIds);
-            if (authorizations != null) {
-                for (Authorization authorization : authorizations) {
-                    if (authorization != null) {
-                        List<ResourceAuthority> resourceAuthorities = authorization.getAuthorities();
-                        if (resourceAuthorities != null && !resourceAuthorities.isEmpty()) {
-                            for (ResourceAuthority resourceAuthority : resourceAuthorities) {
-                                builder.resourceAuthority(resourceAuthority);
-                            }
-                        }
-                    }
-                }
-            }
+            AccessAuthority accessAuthority = accessFactory.authority(authorities);
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Mapped authorization roles in " + (System.currentTimeMillis() - start) + " ms");
 
-			return Collections.singletonList(builder.build());
+			return Collections.singletonList(accessAuthority);
 		}
 		
 		return null;
