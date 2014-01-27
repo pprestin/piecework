@@ -296,6 +296,9 @@ public class ProcessInstanceService {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
+        executionCriteriaBuilder.processStatus(Constants.ProcessStatuses.ALL);
+        executionCriteriaBuilder.maxResults(50000);
+
         Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
         Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
         if (!allowedProcesses.isEmpty()) {

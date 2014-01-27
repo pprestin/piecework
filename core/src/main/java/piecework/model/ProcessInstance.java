@@ -463,6 +463,11 @@ public class ProcessInstance implements Serializable {
             return new ProcessInstance(this, context);
         }
 
+        public Builder clearTasks() {
+            this.tasks = new HashMap<String, Task>();
+            return this;
+        }
+
         public Builder processInstanceId(String processInstanceId) {
             this.processInstanceId = processInstanceId;
             if (StringUtils.isNotEmpty(this.processInstanceId))
