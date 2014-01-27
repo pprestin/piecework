@@ -24,12 +24,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <h4 class=\"modal-title\">Assign Task</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\" style=\"min-height:120px\">\n" +
-    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
-    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
-    "                <ul>\n" +
-    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
-    "                </ul>\n" +
-    "            </div>\n" +
+    "            <div data-wf-notifications notifications=\"notifications\"></div>" +
+//    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
+//    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
+//    "                <ul>\n" +
+//    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
+//    "                </ul>\n" +
+//    "            </div>\n" +
     "            <div class=\"form-group\">\n" +
     "                <label>Assignee</label>\n" +
     "                <div>\n" +
@@ -274,7 +275,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "    </div>\n" +
     "    <wf-attachments form=\"form\"></wf-attachments>\n");
   $templateCache.put("templates/field.html",
-    "<label data-ng-if=\"field.label\">{{field.label}}</label>\n" +
+    "    <label data-ng-if=\"field.label\">{{field.label}}</label>\n" +
     "    <div data-ng-class=\"field.cssClass\" data-ng-repeat=\"n in range(1, field.maxInputs)\" data-ng-switch on=\"field.type\" class=\"form-group\">\n" +
     "        <div data-ng-switch-when=\"html\" data-ng-bind-html=\"field.defaultValue\">{{field.defaultValue}}</div>\n" +
     "        <div data-ng-switch-when=\"checkbox\">\n" +
@@ -309,8 +310,8 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </div>\n" +
     "        <div data-ng-switch-when=\"person\">\n" +
     "            <input data-ng-model=\"field.value.displayName\" data-ng-if=\"field.readonly\" class=\"form-control\" type=\"text\" disabled/>\n" +
-    "            <input data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-maxlength=\"{{field.maxValueLength}}\" data-ng-minlength=\"{{field.minValueLength}}\" data-ng-pattern=\"{{field.pattern}}\" ng-show=\"!field.readonly\" ng-required=\"field.required\" class=\"form-control\" placeholder=\"{{field.placeholder ? field.placeholder : 'Enter name'}}\" type=\"text\" typeahead=\"person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8\" typeahead-wait-ms=\"300\" />\n" +
-    "            <input data-ng-disabled=\"!field.editable\" data-ng-if=\"!field.readonly\" value=\"{{field.value.userId ? field.value.userId : field.value}}\" name=\"{{field.name}}\" type=\"hidden\"/>\n" +
+    "            <input data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-maxlength=\"{{field.maxValueLength}}\" data-ng-minlength=\"{{field.minValueLength}}\" data-ng-pattern=\"{{field.pattern}}\" ng-if=\"!field.readonly\" ng-required=\"field.required\" class=\"form-control\" placeholder=\"{{field.placeholder ? field.placeholder : 'Enter name'}}\" type=\"text\" typeahead=\"person for person in getPeople($viewValue) | filter:$viewValue | limitTo:8\" typeahead-wait-ms=\"300\" />\n" +
+    "            <input data-ng-if=\"field.editable\" value=\"{{field.value.userId ? field.value.userId : field.value}}\" name=\"{{field.name}}\" type=\"hidden\"/>\n" +
     "        </div>\n" +
     "        <textarea data-ng-change=\"onFieldChange(field)\" data-ng-switch-when=\"textarea\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-maxlength=\"{{field.maxValueLength}}\" data-ng-minlength=\"{{field.minValueLength}}\" data-ng-pattern=\"/{{field.pattern}}/\" data-ng-readonly=\"{{field.readonly}}\" data-ng-required=\"field.required\" class=\"form-control\" name=\"{{field.name}}\" placeholder=\"{{field.placeholder}}\"></textarea>\n" +
     "        <div data-ng-switch-default>\n" +
@@ -322,7 +323,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
   $templateCache.put("templates/fieldset.html",
     "<ul data-ng-model=\"container.fields\">\n" +
     "        <li data-ng-show=\"isVisible(field)\" data-ng-class=\"field.cssClass\" data-ng-repeat=\"field in container.fields\" class=\"pw-field\">\n" +
-    "            <wf-field field=\"field\"/>\n" +
+    "            <div data-wf-field field=\"field\"></div>\n" +
     "        </li>\n" +
     "    </ul>");
   $templateCache.put("templates/notifications.html",

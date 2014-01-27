@@ -84,24 +84,6 @@ public class ProcessDeployment implements Serializable {
     @XmlAttribute
     private final String base;
 
-//    @XmlElementWrapper(name="interactions")
-//    @XmlElementRef
-//    private final List<Interaction> interactions;
-//
-//    @XmlElementWrapper(name="sections")
-//    @XmlElementRef
-//    @DBRef
-//    private final List<Section> sections;
-//
-//    @XmlElementWrapper(name="notifications")
-//    @XmlElementRef
-//    @DBRef
-//    private final List<Notification> notifications;
-//
-//    @XmlElement
-//    @DBRef
-//    private final Screen defaultScreen;
-
     @XmlAttribute
     private final boolean deployed;
 
@@ -310,12 +292,6 @@ public class ProcessDeployment implements Serializable {
     public boolean isEditable() {
         return editable;
     }
-
-//    @XmlTransient
-//    @JsonIgnore
-//    public boolean isEmpty() {
-//        return StringUtils.isEmpty(engine) && StringUtils.isEmpty(engineProcessDefinitionKey) && (interactions == null || interactions.isEmpty());
-//    }
 
     @JsonIgnore
     public Collection<Notification> getNotifications(String notificationKey) {

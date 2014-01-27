@@ -302,6 +302,9 @@ public abstract class AbstractFormResource {
         FormRequest formRequest = requestService.read(requestDetails, requestId);
         try {
             SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, data, type, helper.getPrincipal());
+            if (isAnonymous())
+                return response(process, submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true);
+
             return redirect(process, submissionCommandResponse, false);
         } catch (Exception e) {
             Validation validation = null;

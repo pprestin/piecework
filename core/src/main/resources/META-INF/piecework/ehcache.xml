@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache>
+    <defaultCache
+        eternal="false"
+        maxElementsInMemory="10000"
+        overflowToDisk="false"
+        timeToIdleSeconds="300"
+        timeToLiveSeconds="600" />
+
+    <cache name="ACCESS_ANONYMOUS"
+        eternal="false"
+        maxElementsInMemory="10000"
+        overflowToDisk="false"
+        timeToIdleSeconds="300"
+        timeToLiveSeconds="600" />
+
+    <cache name="ACCESS_AUTHENTICATED"
+           eternal="false"
+           maxElementsInMemory="10000"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="GROUP"
+           eternal="false"
+           maxElementsInMemory="1000"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="PROCESS"
+           eternal="false"
+           maxElementsInMemory="200"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="PROCESS_BASIC"
+           eternal="false"
+           maxElementsInMemory="200"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="PROCESS_DEPLOYMENT"
+           eternal="false"
+           maxElementsInMemory="1000"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="SCRIPT"
+           eternal="false"
+           maxElementsInMemory="100"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="STYLESHEET"
+           eternal="false"
+           maxElementsInMemory="100"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="MULTI_USER"
+           eternal="false"
+           maxElementsInMemory="10000"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+    <cache name="IDENTITY"
+           eternal="false"
+           maxElementsInMemory="10000"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
+</ehcache>

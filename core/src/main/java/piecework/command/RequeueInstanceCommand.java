@@ -68,8 +68,8 @@ public class RequeueInstanceCommand extends AbstractEngineStorageCommand<Process
         String initiatorId = principal != null ? principal.getEntityId() : null;
 
         ProcessInstance updated = new ProcessInstance.Builder(instance)
-                .tasks(new ArrayList<Task>())
                 .processStatus(Constants.ProcessStatuses.OPEN)
+                .clearTasks()
                 .build();
         updated = storageManager.store(updated);
 

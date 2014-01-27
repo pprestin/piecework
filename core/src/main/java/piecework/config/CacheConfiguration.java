@@ -15,12 +15,18 @@
  */
 package piecework.config;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.ehcache.EhCacheCacheManager;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import piecework.service.CacheService;
 
 /**
@@ -28,11 +34,20 @@ import piecework.service.CacheService;
  */
 @Configuration
 @EnableCaching(proxyTargetClass=true)
+@EnableScheduling
 public class CacheConfiguration {
 
     @Bean
+    public EhCacheManagerFactoryBean ehCacheManagerFactoryBean() {
+        EhCacheManagerFactoryBean ehCacheManagerFactoryBean = new EhCacheManagerFactoryBean();
+        ehCacheManagerFactoryBean.setConfigLocation(new ClassPathResource("META-INF/piecework/ehcache.xml"));
+        return ehCacheManagerFactoryBean;
+    }
+    @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager();
+        EhCacheCacheManager cacheManager = new EhCacheCacheManager();
+        cacheManager.setCacheManager(ehCacheManagerFactoryBean().getObject());
+        return cacheManager;
     }
 
     @Bean

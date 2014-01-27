@@ -224,7 +224,7 @@ angular.module('wf.directives',
     .directive('wfField', ['personService',
         function(personService) {
             return {
-                require: '^ngModel',
+//                require: '^ngModel',
                 restrict: 'AE',
                 scope: {
                     field : '='
@@ -233,7 +233,7 @@ angular.module('wf.directives',
                 transclude: true,
                 link: function (scope, element) {
                     scope.getInlineUrl = function(value) {
-                        var url = value.link ? value.link : value;
+                        var url = typeof(value.link) !== 'undefined' ? value.link : value;
                         url += '?inline=true';
                         return url;
                     };

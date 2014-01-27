@@ -28,6 +28,7 @@ import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceQueryBuilder;
 import piecework.process.ProcessInstanceSearchCriteria;
 
+import java.io.BufferedWriter;
 import java.util.*;
 
 /**
@@ -143,7 +144,8 @@ public class ExportInstanceProvider implements IteratingDataProvider<String> {
                     builder.append(", ");
             }
         }
-        return builder.append("\\n").toString();
+        String crLf = Character.toString((char)13) + Character.toString((char)10);
+        return builder.append(crLf).toString();
     }
 
 }

@@ -318,6 +318,162 @@ describe('Unit testing wf-element', function() {
 
 });
 
+describe('Unit testing wf-field', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should display html if field.type is html', function() {
+        var scope = $rootScope;
+        var field = { defaultValue: '<span>Some random html</span>', maxInputs : 1, type : 'html' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('<span>Some random html</span>');
+    });
+
+    it('Should display html label if field.label is defined', function() {
+        var scope = $rootScope;
+        var field = { label: 'This is a test label', maxInputs : 1, type : 'html' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('This is a test label');
+    });
+
+    it('Should display checkbox if field.type is checkbox and at least one option is provided', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, options: [ { value: 'Value123' }], type : 'checkbox' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="checkbox"');
+    });
+
+    it('Should display checkbox label if field.type is checkbox and at least one option with a label is provided', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, options: [ { label : 'Checkbox Label', value: 'Value 123' }], type : 'checkbox' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('Checkbox Label');
+    });
+
+    it('Should display local datetime input if field.type is date', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, type : 'date' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="datetime-local"');
+    });
+
+    it('Should display radio input if field.type is radio and at least one option is provided', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, options: [ { value: 'Value123' }], type : 'radio' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="radio"');
+    });
+
+    it('Should display radio label if field.type is radio and at least one option with a label is provided', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, options: [ { label : 'Radio Label', value: 'Value 123' }], type : 'radio' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('Radio Label');
+    });
+
+    it('Should display file input if field.type is file', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, type : 'file' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="file"');
+    });
+
+    it('Should display link if field.type is file and values contains at least one item', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, type : 'file', values : [ { link : 'http://localhost/value' } ] };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('href="http://localhost/value');
+    });
+
+    it('Should display iframe if field.type is iframe and values contains at least one item', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, type : 'iframe', values : [ { link : 'http://localhost/value' } ] };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('iframe');
+        expect(element.html()).toContain('src="http://localhost/value?inline=true');
+    });
+
+    it('Should display text input if field.type is person', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, type : 'person' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="text"');
+    });
+
+    it('Should display disabled text input if field.type is person and field is readonly', function() {
+        var scope = $rootScope;
+        var field = { editable : false, maxInputs : 1, readonly: true, type : 'person' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="text"');
+        expect(element.html()).toContain('disabled');
+    });
+
+    it('Should display typeahead text input if field.type is person and field is not readonly', function() {
+        var scope = $rootScope;
+        var field = { editable : true, maxInputs : 1, readonly: false, type : 'person' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="text"');
+        expect(element.html()).toContain('typeahead=');
+    });
+
+    it('Should display textarea if field.type is textarea', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, type : 'textarea' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('<textarea');
+    });
+
+    it('Should display specific type input if field.type is anything else', function() {
+        var scope = $rootScope;
+        var field = { maxInputs : 1, type : 'email' };
+        scope.field = field;
+        var element = $compile("<div data-wf-field=\"myElement\" data-field=\"field\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('type="email"');
+    });
+
+});
+
 describe('Unit testing wf-status', function() {
     var $compile;
     var $rootScope;

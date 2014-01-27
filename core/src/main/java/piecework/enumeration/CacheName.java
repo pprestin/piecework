@@ -19,14 +19,28 @@ package piecework.enumeration;
  * @author James Renfro
  */
 public enum CacheName {
-    ACCESS_ANONYMOUS,
-    ACCESS_AUTHENTICATED,
-    GROUP,
+    ACCESS_ANONYMOUS(true),
+    ACCESS_AUTHENTICATED(true),
+    GROUP(true),
     PROCESS,
     PROCESS_BASIC,
     PROCESS_DEPLOYMENT,
-    SCRIPT,
-    STYLESHEET,
-    MULTI_USER,
-    IDENTITY
+    SCRIPT(true),
+    STYLESHEET(true),
+    MULTI_USER(true),
+    IDENTITY(true);
+
+    private boolean local;
+
+    private CacheName() {
+        this.local = false;
+    }
+
+    private CacheName(boolean local) {
+        this.local = local;
+    }
+
+    public boolean isLocal() {
+        return local;
+    }
 }
