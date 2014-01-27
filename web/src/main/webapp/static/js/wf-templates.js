@@ -24,12 +24,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <h4 class=\"modal-title\">Assign Task</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\" style=\"min-height:120px\">\n" +
-    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
-    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
-    "                <ul>\n" +
-    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
-    "                </ul>\n" +
-    "            </div>\n" +
+    "            <div data-wf-notifications notifications=\"notifications\"></div>" +
+//    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
+//    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
+//    "                <ul>\n" +
+//    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
+//    "                </ul>\n" +
+//    "            </div>\n" +
     "            <div class=\"form-group\">\n" +
     "                <label>Assignee</label>\n" +
     "                <div>\n" +

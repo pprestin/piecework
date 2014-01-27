@@ -84,6 +84,12 @@ angular.module('wf.services',
                                 $rootScope.$broadcast('event:refresh', 'assignment');
                                 scope.assigning = false;
                             }
+//                            else {
+//                                var displayName = typeof(assignee.displayName) === 'undefined' ? assignee : assignee.displayName;
+//                                var message = 'Cannot assign task(s) to ' + displayName;
+//                                var title = data.messageDetail;
+//                                notificationService.notify($scope, message, title);
+//                            }
                         };
 
                         var success = function(scope, data, status, headers, config, form, assignee) {
