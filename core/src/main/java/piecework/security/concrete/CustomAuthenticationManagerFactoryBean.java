@@ -26,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetailsByNameServiceWra
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import piecework.authorization.AuthorizationRoleMapper;
+import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.ldap.CustomLdapUserDetailsService;
 import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
 import piecework.security.AuthorityMappingPreAuthenticatedProvider;
@@ -42,6 +43,9 @@ public class CustomAuthenticationManagerFactoryBean implements FactoryBean<Authe
 
     private static final Logger LOG = Logger.getLogger(CustomAuthenticationManagerFactoryBean.class);
     private enum AuthenticationType { NONE, PREAUTH, NORMAL }
+
+    @Autowired(required = false)
+    AuthenticationPrincipalConverter authenticationPrincipalConverter;
 
     @Autowired
     AuthenticationProvider[] authenticationProviders;
@@ -64,7 +68,7 @@ public class CustomAuthenticationManagerFactoryBean implements FactoryBean<Authe
             case NONE:
             case PREAUTH:
                 List<AuthenticationProvider> providers = new ArrayList<AuthenticationProvider>();
-                AuthorityMappingPreAuthenticatedProvider authorityMappingPreAuthenticatedProvider = new AuthorityMappingPreAuthenticatedProvider();
+                AuthorityMappingPreAuthenticatedProvider authorityMappingPreAuthenticatedProvider = new AuthorityMappingPreAuthenticatedProvider(authenticationPrincipalConverter);
                 authorityMappingPreAuthenticatedProvider.setAuthoritiesMapper(authorizationRoleMapper);
                 authorityMappingPreAuthenticatedProvider.setPreAuthenticatedUserDetailsService(new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(userDetailsService));
 

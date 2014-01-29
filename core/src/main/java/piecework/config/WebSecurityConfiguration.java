@@ -42,6 +42,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
+import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.ldap.LdapSettings;
 import piecework.security.*;
 import piecework.security.concrete.AuthenticationFilterFactoryBean;
@@ -72,6 +73,9 @@ public class WebSecurityConfiguration {
 
     private static final Logger LOG = Logger.getLogger(WebSecurityConfiguration.class);
     private enum AuthenticationType { NONE, PREAUTH, NORMAL }
+
+    @Autowired(required = false)
+    AuthenticationPrincipalConverter authenticationPrincipalConverter;
 
     @Autowired
     AuthenticationProvider[] authenticationProviders;
@@ -108,7 +112,7 @@ public class WebSecurityConfiguration {
             case NONE:
             case PREAUTH:
                 List<AuthenticationProvider> providers = new ArrayList<AuthenticationProvider>();
-                AuthorityMappingPreAuthenticatedProvider authorityMappingPreAuthenticatedProvider = new AuthorityMappingPreAuthenticatedProvider();
+                AuthorityMappingPreAuthenticatedProvider authorityMappingPreAuthenticatedProvider = new AuthorityMappingPreAuthenticatedProvider(authenticationPrincipalConverter);
                 authorityMappingPreAuthenticatedProvider.setAuthoritiesMapper(authorizationRoleMapper);
                 authorityMappingPreAuthenticatedProvider.setPreAuthenticatedUserDetailsService(new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(userDetailsService));
 

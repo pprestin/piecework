@@ -28,6 +28,7 @@ import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import piecework.identity.AuthenticationPrincipalConverter;
 
 /**
  * Handles the remapping of authorities using a GrantedAuthoritiesMapper the same way that it's done in other
@@ -38,7 +39,12 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 public class AuthorityMappingPreAuthenticatedProvider extends PreAuthenticatedAuthenticationProvider {
 
 	private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
-	
+	private final AuthenticationPrincipalConverter authenticationPrincipalConverter;
+
+    public AuthorityMappingPreAuthenticatedProvider(AuthenticationPrincipalConverter authenticationPrincipalConverter) {
+        this.authenticationPrincipalConverter = authenticationPrincipalConverter;
+    }
+
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         PreAuthenticatedAuthenticationToken result;
         if (authentication != null && authentication.getCredentials() != null && authentication.getCredentials() instanceof X509Certificate) {
@@ -48,7 +54,12 @@ public class AuthorityMappingPreAuthenticatedProvider extends PreAuthenticatedAu
         } else {
             PreAuthenticatedAuthenticationToken token = PreAuthenticatedAuthenticationToken.class.cast(super.authenticate(authentication));
             Collection<? extends GrantedAuthority> authorities = authoritiesMapper.mapAuthorities(token.getAuthorities());
-            result = new PreAuthenticatedAuthenticationToken(token.getPrincipal(), token.getCredentials(), authorities);
+            String principal = String.class.cast(token.getPrincipal());
+
+            if (principal != null && authenticationPrincipalConverter != null)
+                principal = authenticationPrincipalConverter.convert(principal);
+
+            result = new PreAuthenticatedAuthenticationToken(principal, token.getCredentials(), authorities);
             result.setDetails(token.getDetails());
         }
         return result;
