@@ -451,7 +451,14 @@ public abstract class AbstractFormResource {
                     return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
             }
 
-            return Response.ok(form).build();
+            Response.ResponseBuilder builder = Response.ok(form);
+
+            if (!isAnonymous()) {
+                builder.header("Access-Control-Allow-Origin", "*");
+                builder.header("Access-Control-Allow-Credentials", "true");
+            }
+
+            return builder.build();
         } catch (URISyntaxException use) {
             LOG.error("URISyntaxException serving page", use);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
