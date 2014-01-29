@@ -39,11 +39,6 @@ import piecework.identity.AuthenticationPrincipalConverter;
 public class AuthorityMappingPreAuthenticatedProvider extends PreAuthenticatedAuthenticationProvider {
 
 	private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
-	private final AuthenticationPrincipalConverter authenticationPrincipalConverter;
-
-    public AuthorityMappingPreAuthenticatedProvider(AuthenticationPrincipalConverter authenticationPrincipalConverter) {
-        this.authenticationPrincipalConverter = authenticationPrincipalConverter;
-    }
 
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         PreAuthenticatedAuthenticationToken result;
@@ -54,12 +49,7 @@ public class AuthorityMappingPreAuthenticatedProvider extends PreAuthenticatedAu
         } else {
             PreAuthenticatedAuthenticationToken token = PreAuthenticatedAuthenticationToken.class.cast(super.authenticate(authentication));
             Collection<? extends GrantedAuthority> authorities = authoritiesMapper.mapAuthorities(token.getAuthorities());
-            String principal = String.class.cast(token.getPrincipal());
-
-            if (principal != null && authenticationPrincipalConverter != null)
-                principal = authenticationPrincipalConverter.convert(principal);
-
-            result = new PreAuthenticatedAuthenticationToken(principal, token.getCredentials(), authorities);
+            result = new PreAuthenticatedAuthenticationToken(token.getPrincipal(), token.getCredentials(), authorities);
             result.setDetails(token.getDetails());
         }
         return result;

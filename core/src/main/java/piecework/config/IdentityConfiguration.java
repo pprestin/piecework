@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
@@ -35,9 +34,7 @@ import piecework.security.KeyManagerCabinet;
 import piecework.security.SSLSocketFactoryWrapper;
 import piecework.security.SecuritySettings;
 import piecework.service.CacheService;
-import piecework.service.GroupService;
 import piecework.service.IdentityService;
-import piecework.service.ProcessService;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -55,6 +52,9 @@ import java.util.List;
 public class IdentityConfiguration {
 
     private static final Logger LOG = Logger.getLogger(IdentityConfiguration.class);
+
+    @Autowired(required = false)
+    AuthenticationPrincipalConverter authenticationPrincipalConverter;
 
     @Autowired
     CacheService cacheService;
@@ -114,7 +114,7 @@ public class IdentityConfiguration {
         LdapUserSearch userSearch = LdapUtility.userSearch(contextSource, ldapSettings);
         LdapAuthoritiesPopulator authoritiesPopulator = LdapUtility.authoritiesPopulator(ldapSettings, sslSocketFactory);
         CustomLdapUserDetailsMapper userDetailsMapper = new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), displayNameConverter, ldapSettings);
-        return new CustomLdapUserDetailsService(cacheService, userSearch, authoritiesPopulator, userDetailsMapper);
+        return new CustomLdapUserDetailsService(authenticationPrincipalConverter, cacheService, userSearch, authoritiesPopulator, userDetailsMapper);
     }
 
 

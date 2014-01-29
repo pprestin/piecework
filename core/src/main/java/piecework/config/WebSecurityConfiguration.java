@@ -74,9 +74,6 @@ public class WebSecurityConfiguration {
     private static final Logger LOG = Logger.getLogger(WebSecurityConfiguration.class);
     private enum AuthenticationType { NONE, PREAUTH, NORMAL }
 
-    @Autowired(required = false)
-    AuthenticationPrincipalConverter authenticationPrincipalConverter;
-
     @Autowired
     AuthenticationProvider[] authenticationProviders;
 
@@ -112,7 +109,7 @@ public class WebSecurityConfiguration {
             case NONE:
             case PREAUTH:
                 List<AuthenticationProvider> providers = new ArrayList<AuthenticationProvider>();
-                AuthorityMappingPreAuthenticatedProvider authorityMappingPreAuthenticatedProvider = new AuthorityMappingPreAuthenticatedProvider(authenticationPrincipalConverter);
+                AuthorityMappingPreAuthenticatedProvider authorityMappingPreAuthenticatedProvider = new AuthorityMappingPreAuthenticatedProvider();
                 authorityMappingPreAuthenticatedProvider.setAuthoritiesMapper(authorizationRoleMapper);
                 authorityMappingPreAuthenticatedProvider.setPreAuthenticatedUserDetailsService(new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(userDetailsService));
 

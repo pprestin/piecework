@@ -26,7 +26,6 @@ import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import piecework.ServiceLocator;
 import piecework.ldap.*;
 import piecework.service.CacheService;
-import piecework.service.ProcessService;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -34,6 +33,9 @@ import javax.net.ssl.SSLSocketFactory;
  * @author James Renfro
  */
 public class UserDetailsServiceFactoryBean implements FactoryBean<UserDetailsService> {
+
+    @Autowired(required = false)
+    AuthenticationPrincipalConverter authenticationPrincipalConverter;
 
     @Autowired
     CacheService cacheService;
@@ -70,7 +72,7 @@ public class UserDetailsServiceFactoryBean implements FactoryBean<UserDetailsSer
         LdapUserSearch userSearch = LdapUtility.userSearch(contextSource, ldapSettings);
         LdapAuthoritiesPopulator authoritiesPopulator = LdapUtility.authoritiesPopulator(ldapSettings, sslSocketFactory);
         CustomLdapUserDetailsMapper userDetailsMapper = new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), displayNameConverter, ldapSettings);
-        return new CustomLdapUserDetailsService(cacheService, userSearch, authoritiesPopulator, userDetailsMapper);
+        return new CustomLdapUserDetailsService(authenticationPrincipalConverter, cacheService, userSearch, authoritiesPopulator, userDetailsMapper);
     }
 
     @Override
