@@ -88,7 +88,7 @@ public class SubmissionStorageService {
 
                 if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(template.getMaxAttachmentSize()) * 1024l);
-                else if (field.getMaxValueLength() > 0)
+                else if (field != null && field.getMaxValueLength() > 0)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(field.getMaxValueLength()).longValue() * 1024l);
 
                 Map<String, String> metadata = new HashMap<String, String>();
