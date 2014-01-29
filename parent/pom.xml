@@ -205,6 +205,12 @@
                 <type>jar</type>
             </dependency>
             <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>${commons-http-components-client.version}</version>
+                <type>jar</type>
+            </dependency>
+            <dependency>
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>${commons-io.version}</version>

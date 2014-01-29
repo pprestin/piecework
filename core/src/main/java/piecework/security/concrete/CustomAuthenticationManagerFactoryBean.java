@@ -26,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetailsByNameServiceWra
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import piecework.authorization.AuthorizationRoleMapper;
+import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.ldap.CustomLdapUserDetailsService;
 import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
 import piecework.security.AuthorityMappingPreAuthenticatedProvider;

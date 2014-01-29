@@ -26,6 +26,7 @@ import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import piecework.enumeration.CacheName;
+import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.service.CacheService;
 
 /**
@@ -35,10 +36,12 @@ public class CustomLdapUserDetailsService extends LdapUserDetailsService {
 
     private static final Logger LOG = Logger.getLogger(CustomLdapUserDetailsService.class);
 
+    private final AuthenticationPrincipalConverter authenticationPrincipalConverter;
     private final CacheService cacheService;
 
-    public CustomLdapUserDetailsService(CacheService cacheService, LdapUserSearch userSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper) {
+    public CustomLdapUserDetailsService(AuthenticationPrincipalConverter authenticationPrincipalConverter, CacheService cacheService, LdapUserSearch userSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper) {
         super(userSearch, authoritiesPopulator);
+        this.authenticationPrincipalConverter = authenticationPrincipalConverter;
         this.cacheService = cacheService;
         setUserDetailsMapper(userDetailsMapper);
     }
@@ -50,6 +53,9 @@ public class CustomLdapUserDetailsService extends LdapUserDetailsService {
 
         if (StringUtils.isEmpty(username))
             return null;
+
+        if (authenticationPrincipalConverter != null)
+            username = authenticationPrincipalConverter.convert(username);
 
         Cache.ValueWrapper wrapper = cacheService.get(CacheName.IDENTITY, username);
 

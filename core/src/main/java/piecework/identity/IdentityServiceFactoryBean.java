@@ -32,7 +32,6 @@ import piecework.ldap.LdapUtility;
 import piecework.security.KeyManagerCabinet;
 import piecework.service.CacheService;
 import piecework.service.IdentityService;
-import piecework.service.ProcessService;
 
 import javax.net.ssl.SSLSocketFactory;
 

@@ -42,6 +42,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
+import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.ldap.LdapSettings;
 import piecework.security.*;
 import piecework.security.concrete.AuthenticationFilterFactoryBean;

@@ -32,6 +32,7 @@ import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import piecework.enumeration.CacheName;
+import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.identity.IdentityDetails;
 import piecework.model.User;
 import piecework.service.CacheService;
@@ -55,15 +56,6 @@ public class LdapIdentityService implements IdentityService {
     private final LdapAuthoritiesPopulator authoritiesPopulator;
     private final CustomLdapUserDetailsMapper userDetailsMapper;
     private final UserDetailsService userDetailsService;
-
-//    public LdapIdentityService() {
-//        this.personLdapContextSource = null;
-//        this.delegate = null;
-//        this.userDetailsMapper = null;
-//        this.userSearch = null;
-//        this.authoritiesPopulator = null;
-//        this.ldapSettings = null;
-//    }
 
     public LdapIdentityService(UserDetailsService userDetailsService, CacheService cacheService, LdapContextSource personLdapContextSource, LdapUserSearch userSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, LdapSettings ldapSettings) {
         this.userDetailsService = userDetailsService;

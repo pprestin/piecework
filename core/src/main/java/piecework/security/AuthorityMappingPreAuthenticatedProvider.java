@@ -28,6 +28,7 @@ import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import piecework.identity.AuthenticationPrincipalConverter;
 
 /**
  * Handles the remapping of authorities using a GrantedAuthoritiesMapper the same way that it's done in other
@@ -38,7 +39,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 public class AuthorityMappingPreAuthenticatedProvider extends PreAuthenticatedAuthenticationProvider {
 
 	private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
-	
+
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         PreAuthenticatedAuthenticationToken result;
         if (authentication != null && authentication.getCredentials() != null && authentication.getCredentials() instanceof X509Certificate) {
