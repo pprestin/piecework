@@ -197,6 +197,7 @@ angular.module('wf.directives',
                         var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
                         if (values != null) {
                             var html = '';
+                            var href = '';
                             angular.forEach(values, function(value) {
                                 if (value != null) {
                                     var current;
@@ -206,10 +207,16 @@ angular.module('wf.directives',
                                         current = value;
 
                                     html += typeof(current) === 'string' ? current : current.name;
+
+                                    if (typeof(current) !== 'string')
+                                        href = current.link;
                                 }
                             });
                             if (html == '')
                                 html = attr.wfPlaceholder;
+                            if (href != '')
+                                element.attr('href', href);
+
                             element.html(html);
                         }
                         scope.$on('event:value-updated:' + fieldName, function(event, value) {
