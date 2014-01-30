@@ -458,7 +458,9 @@ public abstract class AbstractFormResource {
             if (!isAnonymous() && formDisposition.getUri() != null) {
                 URI pageUri = formDisposition.getUri();
                 URI hostUri = new URI(pageUri.getScheme(), pageUri.getHost(), null, null);
-                builder.header("Access-Control-Allow-Origin", hostUri.toString());
+                String hostUriStr = hostUri.toString();
+                LOG.debug("Setting Access-Control-Allow-Origin to " + hostUriStr);
+                builder.header("Access-Control-Allow-Origin", hostUriStr);
                 builder.header("Access-Control-Allow-Credentials", "true");
             }
 
