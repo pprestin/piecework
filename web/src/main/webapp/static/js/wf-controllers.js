@@ -12,6 +12,7 @@ angular.module('wf',
     ])
     .config(['$httpProvider', '$routeProvider', '$locationProvider', '$logProvider','$provide',
         function($httpProvider, $routeProvider, $locationProvider, $logProvider, $provide) {
+            $httpProvider.defaults.withCredentials = true;
             $httpProvider.defaults.useXDomain = true;
 
 //            $locationProvider.html5Mode(true).hashPrefix('!');
