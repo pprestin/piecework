@@ -541,7 +541,7 @@ angular.module('wf.directives',
                             url += '.json' + query;
                         }
 
-                        $http.get($sce.trustAsUrl(url))
+                        $http.get($sce.trustAsResourceUrl(url))
                             .then(function(response) {
                                 var form = response.data;
 

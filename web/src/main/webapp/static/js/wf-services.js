@@ -5,10 +5,10 @@ angular.module('wf.services',
             return {
                 deleteAttachment : function(form, attachment) {
                     var attachmentService = this;
-                    $http['delete']($sce.trustAsUrl(attachment.link)).then(function() { attachmentService.refreshAttachments(form); });
+                    $http['delete']($sce.trustAsResourceUrl(attachment.link)).then(function() { attachmentService.refreshAttachments(form); });
                 },
                 refreshAttachments : function(form) {
-                    $http.get($sce.trustAsUrl(form.attachment)).then(function(response) {
+                    $http.get($sce.trustAsResourceUrl(form.attachment)).then(function(response) {
                         form.attachments = response.data.list;
                         form.attachmentCount = response.data.total;
                         $rootScope.$broadcast('event:attachments', form.attachments);
@@ -450,7 +450,7 @@ angular.module('wf.services',
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsUrl(url), data)
+                    $http.post($sce.trustAsResourceUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -460,7 +460,7 @@ angular.module('wf.services',
                 },
                 attach: function($scope, form, formData, success, failure) {
                     var url = form.attachment + ".json";
-                    $http.post($sce.trustAsUrl(url), formData, {
+                    $http.post($sce.trustAsResourceUrl(url), formData, {
                             headers: {'Content-Type': 'multipart/form-data'},
                             transformRequest: angular.identity
                         })
@@ -475,7 +475,7 @@ angular.module('wf.services',
                 comment: function($scope, form, comment, success, failure) {
                     var formData = 'comment=' + comment;
                     var url = form.attachment + ".json";
-                    $http.post($sce.trustAsUrl(url), formData, {
+                    $http.post($sce.trustAsResourceUrl(url), formData, {
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                         })
                         .success(function(data, status, headers, config) {
@@ -491,7 +491,7 @@ angular.module('wf.services',
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsUrl(url), data)
+                    $http.post($sce.trustAsResourceUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -501,7 +501,7 @@ angular.module('wf.services',
                 },
                 getHistory: function(form, callback) {
                     var url = form.history + '.json';
-                    return $http.get($sce.trustAsUrl(url)).then(function(response) {
+                    return $http.get($sce.trustAsResourceUrl(url)).then(function(response) {
                         callback(response);
                     });
                 },
@@ -510,7 +510,7 @@ angular.module('wf.services',
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsUrl(url), data)
+                    $http.post($sce.trustAsResourceUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -523,7 +523,7 @@ angular.module('wf.services',
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsUrl(url), data)
+                    $http.post($sce.trustAsResourceUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -562,7 +562,7 @@ angular.module('wf.services',
                 getPeople: function(displayNameLike) {
                     var url = './person.json?displayNameLike=' + displayNameLike;
 
-                    return $http.get($sce.trustAsUrl(url)).then(function(response) {
+                    return $http.get($sce.trustAsResourceUrl(url)).then(function(response) {
                         var people = new Array();
                         if (response != null && response.data != null && response.data.list != null) {
                             angular.forEach(response.data.list, function(item) {
@@ -592,7 +592,7 @@ angular.module('wf.services',
 
                         var url = form.assignment + ".json";
                         var data = '{ "assignee": "' + assignee + '"}';
-                        $http.post($sce.trustAsUrl(url), data)
+                        $http.post($sce.trustAsResourceUrl(url), data)
                             .success(function(data, status, headers, config) {
                                 success($scope, data, status, headers, config, form, assignee);
                             })
@@ -704,7 +704,7 @@ angular.module('wf.services',
                     var url = form.action + '/' + step.containerId;
                     $http({
                              method: 'POST',
-                             url: $sce.trustAsUrl(url),
+                             url: $sce.trustAsResourceUrl(url),
                              data: {},
                              transformRequest: function() { return data; },
                              headers: {'Content-Type': 'multipart/form-data'}
