@@ -38,6 +38,13 @@ public class E2eTestHelper {
                 e1.sendKeys(v);
             } else if ( t.equals("checkbox") ) {
                 element.click();
+            } else if ( t.equals("radio") ) {
+                if ( v != null && !v.isEmpty() ) {
+                    WebElement el = element.findElement(By.xpath("//input[@type='radio' and @value='"+v+"']"));
+                    el.click();
+                } else {
+                    element.click();
+                }
             }
         }
     }
