@@ -1,14 +1,14 @@
 angular.module('wf.services',
     [])
-    .factory('attachmentService', ['$http', '$rootScope',
-        function($http, $rootScope) {
+    .factory('attachmentService', ['$http', '$rootScope', '$sce',
+        function($http, $rootScope, $sce) {
             return {
                 deleteAttachment : function(form, attachment) {
                     var attachmentService = this;
-                    $http['delete'](attachment.link).then(function() { attachmentService.refreshAttachments(form); });
+                    $http['delete']($sce.trustAsUrl(attachment.link)).then(function() { attachmentService.refreshAttachments(form); });
                 },
                 refreshAttachments : function(form) {
-                    $http.get(form.attachment).then(function(response) {
+                    $http.get($sce.trustAsUrl(form.attachment)).then(function(response) {
                         form.attachments = response.data.list;
                         form.attachmentCount = response.data.total;
                         $rootScope.$broadcast('event:attachments', form.attachments);
@@ -442,15 +442,15 @@ angular.module('wf.services',
             };
         }
     ])
-    .factory('instanceService', ['$http', '$rootScope',
-        function($http, $rootScope) {
+    .factory('instanceService', ['$http', '$rootScope', '$sce',
+        function($http, $rootScope, $sce) {
             return {
                 activate: function($scope, form, reason, success, failure) {
                     var url = form.activation + ".json";
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post(url, data)
+                    $http.post($sce.trustAsUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -460,7 +460,7 @@ angular.module('wf.services',
                 },
                 attach: function($scope, form, formData, success, failure) {
                     var url = form.attachment + ".json";
-                    $http.post(url, formData, {
+                    $http.post($sce.trustAsUrl(url), formData, {
                             headers: {'Content-Type': 'multipart/form-data'},
                             transformRequest: angular.identity
                         })
@@ -475,7 +475,7 @@ angular.module('wf.services',
                 comment: function($scope, form, comment, success, failure) {
                     var formData = 'comment=' + comment;
                     var url = form.attachment + ".json";
-                    $http.post(url, formData, {
+                    $http.post($sce.trustAsUrl(url), formData, {
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                         })
                         .success(function(data, status, headers, config) {
@@ -491,7 +491,7 @@ angular.module('wf.services',
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post(url, data)
+                    $http.post($sce.trustAsUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -501,7 +501,7 @@ angular.module('wf.services',
                 },
                 getHistory: function(form, callback) {
                     var url = form.history + '.json';
-                    return $http.get(url).then(function(response) {
+                    return $http.get($sce.trustAsUrl(url)).then(function(response) {
                         callback(response);
                     });
                 },
@@ -510,7 +510,7 @@ angular.module('wf.services',
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post(url, data)
+                    $http.post($sce.trustAsUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -523,7 +523,7 @@ angular.module('wf.services',
                     if (typeof(reason) === 'undefined')
                         reason = '';
                     var data = '{ "reason": "' + reason + '"}';
-                    $http.post(url, data)
+                    $http.post($sce.trustAsUrl(url), data)
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, reason);
                         })
@@ -556,13 +556,13 @@ angular.module('wf.services',
             }
         }
     ])
-    .factory('personService', ['$http',
-        function($http) {
+    .factory('personService', ['$http', '$sce',
+        function($http, $sce) {
             return {
                 getPeople: function(displayNameLike) {
                     var url = './person.json?displayNameLike=' + displayNameLike;
 
-                    return $http.get(url).then(function(response) {
+                    return $http.get($sce.trustAsUrl(url)).then(function(response) {
                         var people = new Array();
                         if (response != null && response.data != null && response.data.list != null) {
                             angular.forEach(response.data.list, function(item) {
@@ -582,8 +582,8 @@ angular.module('wf.services',
             };
         }
     ])
-    .factory('taskService', ['$http', '$rootScope', 'notificationService',
-        function($http, $rootScope, notificationService) {
+    .factory('taskService', ['$http', '$rootScope', '$sce', 'notificationService',
+        function($http, $rootScope, $sce, notificationService) {
             return {
                 assignTask: function($scope, form, assignee, success, failure) {
                     if (form.task != null) {
@@ -592,7 +592,7 @@ angular.module('wf.services',
 
                         var url = form.assignment + ".json";
                         var data = '{ "assignee": "' + assignee + '"}';
-                        $http.post(url, data)
+                        $http.post($sce.trustAsUrl(url), data)
                             .success(function(data, status, headers, config) {
                                 success($scope, data, status, headers, config, form, assignee);
                             })
@@ -604,8 +604,8 @@ angular.module('wf.services',
             }
         }
     ])
-    .factory('wizardService', ['$http', '$rootScope',
-        function($http, $rootScope) {
+    .factory('wizardService', ['$http', '$rootScope', '$sce',
+        function($http, $rootScope, $sce) {
             return {
                 changeStep : function(form, ordinal) {
                     if (form.layout == 'multipage' && ordinal > form.container.activeChildIndex)
@@ -704,7 +704,7 @@ angular.module('wf.services',
                     var url = form.action + '/' + step.containerId;
                     $http({
                              method: 'POST',
-                             url: url,
+                             url: $sce.trustAsUrl(url),
                              data: {},
                              transformRequest: function() { return data; },
                              headers: {'Content-Type': 'multipart/form-data'}

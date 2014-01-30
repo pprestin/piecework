@@ -425,8 +425,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfForm', ['$http', '$location', 'wizardService',
-        function($http, $location, wizardService) {
+    .directive('wfForm', ['$http', '$location', '$sce', 'wizardService',
+        function($http, $location, $sce, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -541,7 +541,7 @@ angular.module('wf.directives',
                             url += '.json' + query;
                         }
 
-                        $http.get(url)
+                        $http.get($sce.trustAsUrl(url))
                             .then(function(response) {
                                 var form = response.data;
 

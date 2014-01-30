@@ -14,7 +14,11 @@ angular.module('wf',
         function($httpProvider, $routeProvider, $locationProvider, $logProvider, $provide) {
             $httpProvider.defaults.withCredentials = true;
             $httpProvider.defaults.useXDomain = true;
-
+//            $sceDelegateProvider.resourceUrlWhitelist([
+//                // Allow same origin resource loads.
+//                'self',
+//                // Allow loading from our assets domain.  Notice the difference between * and **.
+//                'http://srv*.assets.example.com/**']);
 //            $locationProvider.html5Mode(true).hashPrefix('!');
 //
 //            $provide.decorator('$sniffer', ['$delegate', function($delegate) {
