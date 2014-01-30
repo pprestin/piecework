@@ -10,8 +10,10 @@ angular.module('wf',
         'wf.directives',
         'wf.services'
     ])
-    .config(['$routeProvider', '$locationProvider', '$logProvider','$provide',
-        function($routeProvider, $locationProvider, $logProvider, $provide) {
+    .config(['$httpProvider', '$routeProvider', '$locationProvider', '$logProvider','$provide',
+        function($httpProvider, $routeProvider, $locationProvider, $logProvider, $provide) {
+            $httpProvider.defaults.useXDomain = true;
+
 //            $locationProvider.html5Mode(true).hashPrefix('!');
 //
 //            $provide.decorator('$sniffer', ['$delegate', function($delegate) {
