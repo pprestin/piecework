@@ -433,28 +433,32 @@ public abstract class AbstractFormResource {
             Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, validation, explanation, includeRestrictedData, isAnonymous());
             FormDisposition formDisposition = form.getDisposition();
 
-            switch (formDisposition.getType()) {
-                case REMOTE:
-                    String taskId = request.getTaskId();
-                    String query = null;
-                    if (explanation == null && StringUtils.isNotEmpty(taskId))
-                        query = "taskId=" + taskId;
-                    else if (request != null && StringUtils.isNotEmpty(request.getRequestId()))
-                        query = "requestId=" + request.getRequestId();
-                    else if (validation != null && validation.getSubmission() != null && StringUtils.isNotEmpty(validation.getSubmission().getSubmissionId()))
-                        query = "submissionId=" + validation.getSubmission().getSubmissionId();
+            if (mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) {
+                switch (formDisposition.getType()) {
+                    case REMOTE:
+                        String taskId = request.getTaskId();
+                        String query = null;
+                        if (explanation == null && StringUtils.isNotEmpty(taskId))
+                            query = "taskId=" + taskId;
+                        else if (request != null && StringUtils.isNotEmpty(request.getRequestId()))
+                            query = "requestId=" + request.getRequestId();
+                        else if (validation != null && validation.getSubmission() != null && StringUtils.isNotEmpty(validation.getSubmission().getSubmissionId()))
+                            query = "submissionId=" + validation.getSubmission().getSubmissionId();
 
-                    URI uri = formDisposition.getUri();
-                    uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), query, uri.getFragment());
-                    return Response.seeOther(uri).build();
-                case CUSTOM:
-                    return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
+                        URI uri = formDisposition.getUri();
+                        uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), query, uri.getFragment());
+                        return Response.seeOther(uri).build();
+                    case CUSTOM:
+                        return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
+                }
             }
 
             Response.ResponseBuilder builder = Response.ok(form);
 
-            if (!isAnonymous()) {
-                builder.header("Access-Control-Allow-Origin", "*");
+            if (!isAnonymous() && formDisposition.getUri() != null) {
+                URI pageUri = formDisposition.getUri();
+                URI hostUri = new URI(pageUri.getScheme(), pageUri.getHost(), null, null);
+                builder.header("Access-Control-Allow-Origin", hostUri.toString());
                 builder.header("Access-Control-Allow-Credentials", "true");
             }
 

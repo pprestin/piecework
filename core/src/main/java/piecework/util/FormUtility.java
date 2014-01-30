@@ -115,7 +115,7 @@ public class FormUtility {
 
         FormDisposition formDisposition = null;
 
-        if ((mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) && !revertToDefaultUI) {
+        if (!revertToDefaultUI) {
             switch (action.getStrategy()) {
                 case DECORATE_HTML:
                     formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
