@@ -1,6 +1,8 @@
 package piecework.resource;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.cxf.rs.security.cors.CrossOriginResourceSharing;
+import org.apache.cxf.rs.security.cors.LocalPreflight;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
@@ -25,6 +27,7 @@ import piecework.process.AttachmentQueryParameters;
 /**
  * @author James Renfro
  */
+@CrossOriginResourceSharing(allowCredentials=true, maxAge = 10)
 @Path("instance")
 @Produces({"application/json"})
 public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
@@ -168,6 +171,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
     @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/json"})
+    @LocalPreflight
     Response suspendOptions(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
 
     @GET

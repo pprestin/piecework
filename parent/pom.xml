@@ -297,6 +297,12 @@
 				<type>jar</type>
 				<!-- <scope>provided</scope> -->
 			</dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-cors</artifactId>
+                <version>${cxf.version}</version>
+                <type>jar</type>
+            </dependency>
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-rs-extension-providers</artifactId>

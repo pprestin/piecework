@@ -26,6 +26,7 @@ import org.apache.cxf.configuration.security.FiltersType;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
+import org.apache.cxf.rs.security.cors.CrossOriginResourceSharingFilter;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -146,7 +147,6 @@ public class ApplicationConfiguration {
     public Server applicationServer() {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
         extensionMappings.put("json", "application/json");
-//        extensionMappings.put("xml", "application/xml");
         extensionMappings.put("html", "text/html");
         extensionMappings.put("csv", "text/csv");
 
@@ -156,6 +156,7 @@ public class ApplicationConfiguration {
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
+        providers.add(new CrossOriginResourceSharingFilter());
         providers.add(generalExceptionMapper);
         providers.add(statusCodeErrorMapper);
         providers.add(new AccessDeniedExceptionMapper());
