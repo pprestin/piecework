@@ -179,6 +179,7 @@ angular.module('wf.services',
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
                                 $rootScope.$broadcast('event:refresh', 'comment');
+                                $rootScope.$broadcast('event:attachments', data.list);
                             }
                         };
 
@@ -442,21 +443,40 @@ angular.module('wf.services',
             };
         }
     ])
-    .factory('instanceService', ['$http', '$rootScope', '$sce',
-        function($http, $rootScope, $sce) {
+    .factory('httpHelper', ['$http', '$sce',
+        function($http, $sce) {
             return {
-                activate: function($scope, form, reason, success, failure) {
-                    var url = form.activation + ".json";
+                send: function(url, $scope, form, reason, success, failure) {
                     if (typeof(reason) === 'undefined')
                         reason = '';
-                    var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsResourceUrl(url), data)
-                        .success(function(data, status, headers, config) {
-                            success($scope, data, status, headers, config, form, reason);
-                        })
-                        .error(function(data, status, headers, config) {
-                            failure($scope, data, status, headers, config, form, reason);
-                        });
+                    var data = { "reason": reason };
+                    $http({
+                        method: 'POST',
+                        url: $sce.trustAsResourceUrl(url),
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        transformRequest: function(obj) {
+                            var str = [];
+                            for(var p in obj)
+                                str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+                            return str.join("&");
+                        },
+                        data: data
+                    }).success(function(data, status, headers, config) {
+                        success($scope, data, status, headers, config, form, reason);
+                    })
+                    .error(function(data, status, headers, config) {
+                        failure($scope, data, status, headers, config, form, reason);
+                    });
+                }
+            }
+        }
+    ])
+    .factory('instanceService', ['$http', '$rootScope', '$sce', 'httpHelper',
+        function($http, $rootScope, $sce, httpHelper) {
+            return {
+                activate: function($scope, form, reason, success, failure) {
+                    var url = form.activation;
+                    httpHelper.send(url, $scope, form, reason, success, failure);
                 },
                 attach: function($scope, form, formData, success, failure) {
                     var url = form.attachment + ".json";
@@ -480,24 +500,15 @@ angular.module('wf.services',
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);
-                            $rootScope.$broadcast('event:attachments', data.list);
+                            //$rootScope.$broadcast('event:attachments', data.list);
                         })
                         .error(function(data, status, headers, config) {
                             failure($scope, data, status, headers, config, form, formData);
                         });
                 },
                 cancel: function($scope, form, reason, success, failure) {
-                    var url = form.cancellation + ".json";
-                    if (typeof(reason) === 'undefined')
-                        reason = '';
-                    var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsResourceUrl(url), data)
-                        .success(function(data, status, headers, config) {
-                            success($scope, data, status, headers, config, form, reason);
-                        })
-                        .error(function(data, status, headers, config) {
-                            failure($scope, data, status, headers, config, form, reason);
-                        });
+                    var url = form.cancellation;
+                    httpHelper.send(url, $scope, form, reason, success, failure);
                 },
                 getHistory: function(form, callback) {
                     var url = form.history + '.json';
@@ -506,30 +517,12 @@ angular.module('wf.services',
                     });
                 },
                 restart: function($scope, form, reason, success, failure) {
-                    var url = form.restart + ".json";
-                    if (typeof(reason) === 'undefined')
-                        reason = '';
-                    var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsResourceUrl(url), data)
-                        .success(function(data, status, headers, config) {
-                            success($scope, data, status, headers, config, form, reason);
-                        })
-                        .error(function(data, status, headers, config) {
-                            failure($scope, data, status, headers, config, form, reason);
-                        });
+                    var url = form.restart;
+                    httpHelper.send(url, $scope, form, reason, success, failure);
                 },
                 suspend: function($scope, form, reason, success, failure) {
-                    var url = form.suspension + ".json";
-                    if (typeof(reason) === 'undefined')
-                        reason = '';
-                    var data = '{ "reason": "' + reason + '"}';
-                    $http.post($sce.trustAsResourceUrl(url), data)
-                        .success(function(data, status, headers, config) {
-                            success($scope, data, status, headers, config, form, reason);
-                        })
-                        .error(function(data, status, headers, config) {
-                            failure($scope, data, status, headers, config, form, reason);
-                        });
+                    var url = form.suspension;
+                    httpHelper.send(url, $scope, form, reason, success, failure);
                 }
             };
         }
@@ -590,15 +583,25 @@ angular.module('wf.services',
                         if (typeof(form.task.taskStatus) !== 'undefined' && form.task.taskStatus == 'Suspended')
                             notificationService.notify($scope, 'Cannot assign a suspended task');
 
-                        var url = form.assignment + ".json";
+                        var url = form.assignment;
                         var data = '{ "assignee": "' + assignee + '"}';
-                        $http.post($sce.trustAsResourceUrl(url), data)
-                            .success(function(data, status, headers, config) {
+                        $http({
+                             method: 'POST',
+                             url: $sce.trustAsResourceUrl(url),
+                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                             transformRequest: function(obj) {
+                                 var str = [];
+                                 for(var p in obj)
+                                     str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+                                 return str.join("&");
+                             },
+                             data: data
+                        }).success(function(data, status, headers, config) {
                                 success($scope, data, status, headers, config, form, assignee);
-                            })
-                            .error(function(data, status, headers, config) {
-                                failure($scope, data, status, headers, config, form, assignee);
-                            });
+                        })
+                        .error(function(data, status, headers, config) {
+                            failure($scope, data, status, headers, config, form, assignee);
+                        });
                     }
                 }
             }

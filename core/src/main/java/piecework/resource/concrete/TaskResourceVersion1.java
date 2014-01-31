@@ -95,6 +95,15 @@ public class TaskResourceVersion1 implements TaskResource {
     Versions versions;
 
     @Override
+    public Response assign(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, String rawAssigneeId) throws PieceworkException {
+        String assigneeId = sanitizer.sanitize(rawAssigneeId);
+        Submission submission = new Submission.Builder()
+                .assignee(assigneeId)
+                .build();
+        return complete(rawProcessDefinitionKey, rawTaskId, rawAction, context, submission);
+    }
+
+    @Override
     public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, Submission rawSubmission) throws PieceworkException {
         Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();

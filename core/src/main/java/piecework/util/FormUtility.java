@@ -234,7 +234,8 @@ public class FormUtility {
         URI uri = null;
         String location = StringUtils.isNotEmpty(remoteHost) ? remoteHost + action.getLocation() : action.getLocation();
         try {
-            uri = new URI(location);
+            if (StringUtils.isNotEmpty(location))
+                uri = new URI(location);
         } catch (URISyntaxException iae) {
             LOG.error("Failed to convert location into uri:" + location, iae);
         }

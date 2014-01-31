@@ -40,7 +40,14 @@ public interface TaskResource extends ApplicationResource, ApiResource {
     @POST
     @Path("{processDefinitionKey}/{taskId}/{action}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.SYSTEM})
+    @Consumes("application/x-www-form-urlencoded")
+    Response assign(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @PathParam("action") String action, @Context MessageContext context, @FormParam("assignee") String assignee) throws PieceworkException;
+
+    @POST
+    @Path("{processDefinitionKey}/{taskId}/{action}")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.SYSTEM})
     Response complete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @PathParam("action") String action, @Context MessageContext context, Submission submission) throws PieceworkException;
+
 
     @GET
     @Path("")

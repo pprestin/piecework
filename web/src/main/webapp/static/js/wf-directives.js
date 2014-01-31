@@ -1333,7 +1333,10 @@ angular.module('wf.directives',
                          taskService.assignTask(scope, scope.form, userId, success, failure);
                     };
                     scope.fileUploadOptions = {
-                        autoUpload: true
+                        autoUpload: true,
+                        xhrFields: {
+                            withCredentials: true
+                        }
                     };
                     scope.$on('fileuploaddone', function(event, data) {
                         attachmentService.refreshAttachments(scope.form);
