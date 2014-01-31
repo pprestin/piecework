@@ -24,13 +24,17 @@ import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.exception.PieceworkException;
 import piecework.model.Entity;
+import piecework.model.ProcessDeployment;
 import piecework.model.SearchResults;
 import piecework.resource.FormResource;
 import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
 import piecework.service.ProcessService;
+import piecework.util.FormUtility;
 
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.*;
 import java.util.Map;
 
@@ -53,6 +57,16 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
 
     @Autowired
     Versions versions;
+
+    @Override
+    public Response options(MessageContext context, String rawProcessDefinitionKey, String taskId, String requestId, String submissionId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessDeployment deployment = process.getDeployment();
+
+        LOG.debug("Options for " + process.getProcessDefinitionKey());
+
+        return isAnonymous() ? Response.ok().build() : FormUtility.allowCrossOriginResponse(deployment, null);
+    }
 
     @Override
     public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawRequestId, final String rawSubmissionId) throws PieceworkException {

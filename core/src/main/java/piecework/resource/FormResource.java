@@ -35,30 +35,17 @@ import java.util.List;
 @Path("form")
 public interface FormResource extends ApplicationResource {
 
+    @OPTIONS
+    @Path("{processDefinitionKey}")
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+    @Produces({"text/html","application/json"})
+    Response options(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
+
     @GET
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
     @Produces({"text/html","application/json"})
     Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
-
-//    @GET
-//    @Path("{processDefinitionKey}/{taskId}")
-//	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-//    @Produces({"text/html","application/json"})
-//    Response readTask(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @Context MessageContext context) throws PieceworkException;
-//
-//    @GET
-//    @Path("{processDefinitionKey}/receipt/{requestId}")
-//    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-//    @Produces({"text/html","application/json"})
-//    Response readReceipt(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws PieceworkException;
-
-//    @POST
-//    @Path("{processDefinitionKey}/save/{requestId}")
-//    @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-//    @Consumes("multipart/form-data")
-//    @Produces({"text/html","application/json"})
-//    Response save(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultipartBody body) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{requestId}")

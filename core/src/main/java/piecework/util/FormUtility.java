@@ -173,7 +173,7 @@ public class FormUtility {
     }
 
     public static Response allowCrossOriginResponse(ProcessDeployment deployment, Object entity) {
-        Response.ResponseBuilder builder = Response.ok(entity);
+        Response.ResponseBuilder builder = entity != null ? Response.ok(entity) : Response.ok();
 
         URI remoteHost = remoteHost(deployment);
 
@@ -182,6 +182,8 @@ public class FormUtility {
             LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
             builder.header("Access-Control-Allow-Origin", hostUri);
             builder.header("Access-Control-Allow-Credentials", "true");
+            if (entity == null)
+                builder.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         }
 
         return builder.build();
