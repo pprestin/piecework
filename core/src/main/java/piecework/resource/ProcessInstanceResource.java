@@ -27,7 +27,6 @@ import piecework.process.AttachmentQueryParameters;
 /**
  * @author James Renfro
  */
-@CrossOriginResourceSharing(allowCredentials=true, maxAge = 10)
 @Path("instance")
 @Produces({"application/json"})
 public interface ProcessInstanceResource extends ApplicationResource, ApiResource {

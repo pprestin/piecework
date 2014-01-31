@@ -156,7 +156,7 @@ public class ApplicationConfiguration {
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
-        providers.add(new CrossOriginResourceSharingFilter());
+//        providers.add(new CrossOriginResourceSharingFilter());
         providers.add(generalExceptionMapper);
         providers.add(statusCodeErrorMapper);
         providers.add(new AccessDeniedExceptionMapper());
