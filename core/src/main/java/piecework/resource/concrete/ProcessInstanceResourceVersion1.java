@@ -237,7 +237,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
-    public Response suspensionOptions(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+    public Response suspendOptions(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessDeployment deployment = process.getDeployment();
 

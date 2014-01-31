@@ -140,14 +140,9 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     Response remove(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
 
-    @OPTIONS
-    @Path("{processDefinitionKey}/{processInstanceId}/suspension")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response suspensionOptions(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("applicationStatusExplanation") String reason) throws PieceworkException;
-
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/x-www-form-urlencoded"})
     Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("applicationStatusExplanation") String reason) throws PieceworkException;
 
@@ -168,6 +163,12 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/json"})
     Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
+
+    @OPTIONS
+    @Path("{processDefinitionKey}/{processInstanceId}/suspension")
+    @RolesAllowed({AuthorizationRole.ADMIN})
+    @Consumes({"application/json"})
+    Response suspendOptions(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")
