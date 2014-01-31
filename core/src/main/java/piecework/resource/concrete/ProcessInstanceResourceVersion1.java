@@ -237,6 +237,16 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 	}
 
     @Override
+    public Response suspensionOptions(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessDeployment deployment = process.getDeployment();
+
+        LOG.debug("Options for " + process.getProcessDefinitionKey());
+
+        return FormUtility.allowCrossOriginResponse(deployment, null);
+    }
+
+    @Override
     public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
