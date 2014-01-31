@@ -17,6 +17,8 @@ package piecework.resource.concrete;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -143,6 +145,8 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
         if (!taskService.hasAllowedTask(process, instance, principal, true))
@@ -154,13 +158,18 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
             throw new NotFoundError(Constants.ExceptionCodes.attachment_does_not_exist, attachmentId);
 
         String contentDisposition = new StringBuilder("attachment; filename=").append(content.getAttachment().getDescription()).toString();
-        return Response.ok(content, content.getAttachment().getContentType()).header("Content-Disposition", contentDisposition).build();
+
+        return FormUtility.allowCrossOriginResponse(deployment, content, content.getAttachment().getContentType(), new BasicHeader("Content-Disposition", contentDisposition));
     }
 
     @Override
     public Response cancel(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         processInstanceService.cancel(helper.getPrincipal(), rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return Response.noContent().build();
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     @Override
@@ -185,9 +194,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response detach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         Entity principal = helper.getPrincipal();
         processInstanceService.deleteAttachment(principal, rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId);
-        return Response.noContent().build();
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     @Override
@@ -200,8 +213,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response history(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         History history = historyFactory.history(rawProcessDefinitionKey, rawProcessInstanceId);
-        return Response.ok(history).build();
+        return FormUtility.allowCrossOriginResponse(deployment, history);
     }
 
     @Override
@@ -221,9 +238,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-        processInstanceService.suspend(principal, rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return Response.noContent().build();
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
+        processInstanceService.suspend(helper.getPrincipal(), rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     @Override
@@ -282,8 +302,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response restart(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         processInstanceService.restart(helper.getPrincipal(), rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return Response.noContent().build();
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     @Override
@@ -294,10 +318,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response remove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
         valuesService.delete(rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, requestDetails, helper.getPrincipal());
-        return Response.noContent().build();
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     @Override
@@ -320,6 +348,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String value) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
 
@@ -329,7 +361,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         data.putOne(fieldName, new Value(sanitizer.sanitize(value)));
         processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, data, Map.class, helper.getPrincipal());
 
-        return Response.noContent().build();
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     @Override
@@ -374,6 +406,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
@@ -384,7 +417,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
                 .items(files)
                 .build();
 
-        return Response.ok(searchResults).build();
+        return FormUtility.allowCrossOriginResponse(deployment, searchResults);
     }
 
     @Override
@@ -397,10 +430,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
 
+        Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.attach(helper.getPrincipal(), requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, data, type);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         SearchResults searchResults = attachmentService.search(instance, new AttachmentQueryParameters());
 
-        return Response.ok(searchResults).build();
+        return FormUtility.allowCrossOriginResponse(deployment, searchResults);
     }
 
     private <T> Response doCreate(MessageContext context, String rawProcessDefinitionKey, T data, Class<T> type) throws PieceworkException {

@@ -16,6 +16,7 @@
 package piecework.util;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.Header;
 import org.apache.log4j.Logger;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
@@ -172,8 +173,27 @@ public class FormUtility {
         return false;
     }
 
+    public static Response allowCrossOriginNoContentResponse(ProcessDeployment deployment) {
+        Response.ResponseBuilder builder = Response.noContent();
+
+        URI remoteHost = remoteHost(deployment);
+
+        if (remoteHost != null) {
+            String hostUri = remoteHost.toString();
+            LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
+            builder.header("Access-Control-Allow-Origin", hostUri);
+            builder.header("Access-Control-Allow-Credentials", "true");
+        }
+
+        return builder.build();
+    }
+
     public static Response allowCrossOriginResponse(ProcessDeployment deployment, Object entity) {
-        Response.ResponseBuilder builder = entity != null ? Response.ok(entity) : Response.ok();
+        return allowCrossOriginResponse(deployment, entity, null);
+    }
+
+    public static Response allowCrossOriginResponse(ProcessDeployment deployment, Object entity, String contentType, Header ... headers) {
+        Response.ResponseBuilder builder = entity != null ? Response.ok(entity, contentType) : Response.ok();
 
         URI remoteHost = remoteHost(deployment);
 
@@ -184,6 +204,13 @@ public class FormUtility {
             builder.header("Access-Control-Allow-Credentials", "true");
             if (entity == null)
                 builder.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+        }
+
+        if (headers != null) {
+            for (Header header : headers) {
+                if (StringUtils.isNotEmpty(header.getName()) && StringUtils.isNotEmpty(header.getValue()))
+                    builder.header(header.getName(), header.getValue());
+            }
         }
 
         return builder.build();
