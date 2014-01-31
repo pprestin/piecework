@@ -115,7 +115,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
     public Response createDeployment(String rawProcessDefinitionKey) throws PieceworkException {
         ProcessDeployment result = processService.createDeployment(rawProcessDefinitionKey);
 
-        ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, null, new PassthroughSanitizer(), true).build());
+        ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, new PassthroughSanitizer(), true).build());
         return responseBuilder.build();
     }
 
@@ -154,7 +154,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
     public Response cloneDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
         ProcessDeployment result = processService.cloneDeployment(rawProcessDefinitionKey, rawDeploymentId);
 
-        ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, null, new PassthroughSanitizer(), true).build());
+        ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, new PassthroughSanitizer(), true).build());
         return responseBuilder.build();
     }
 
@@ -191,7 +191,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessDeployment result = deploymentService.read(process, rawDeploymentId);
 
-        ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, null, new PassthroughSanitizer(), true).build());
+        ResponseBuilder responseBuilder = Response.ok(new ProcessDeployment.Builder(result, new PassthroughSanitizer(), true).build());
         return responseBuilder.build();
     }
 

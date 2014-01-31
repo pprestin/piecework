@@ -263,7 +263,7 @@ public class Process implements Serializable {
             this.processSummary = sanitizer.sanitize(process.processSummary);
             this.participantSummary = sanitizer.sanitize(process.participantSummary);
             this.repository = process.repository != null ? new ProcessCodeRepository.Builder(process.repository, sanitizer).build() : null;
-            this.deployment = process.deployment != null ? new ProcessDeployment.Builder(process.deployment, process.processDefinitionKey, sanitizer, true).build() : null;
+            this.deployment = process.deployment != null ? new ProcessDeployment.Builder(process.deployment, sanitizer, true).build() : null;
             if (process.versions == null || process.versions.isEmpty())
                 this.versions = new ArrayList<ProcessDeploymentVersion>();
             else

@@ -35,7 +35,6 @@ import piecework.util.ProcessInstanceUtility;
 import piecework.validation.Validation;
 
 import javax.ws.rs.core.MediaType;
-import java.net.URI;
 import java.util.*;
 
 /**
@@ -78,7 +77,17 @@ public class FormFactory {
             builder.readonly();
 
         if (activity != null) {
-            Action action = action(builder, deployment, activity, task, actionType, mediaType, version, unmodifiable);
+//            Action action = action(builder, deployment, activity, task, actionType, mediaType, version, unmodifiable);
+
+//            if (activity == null)
+//                return null;
+
+            FormDisposition formDisposition = FormUtility.disposition(builder, deployment, activity, actionType);
+
+            builder.disposition(formDisposition);
+
+            Action action = formDisposition.getAction();
+
             Map<String, Field> fieldMap = activity.getFieldMap();
             // Never include instance data if the user is anonymous -- shouldn't ever happen anyway, since anonymous users can only submit data,
             // but just in case
@@ -131,53 +140,17 @@ public class FormFactory {
         builder.container(container);
     }
 
-    private static Action action(Form.Builder builder, ProcessDeployment deployment, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version, boolean unmodifiable) throws FormBuildingException {
-        // Can't do any of this processing without an activity
-        if (activity == null)
-            return null;
-
-//        Action action = activity.action(actionType);
-//        boolean revertToDefaultUI = false;
+//    private static Action action(Form.Builder builder, ProcessDeployment deployment, Activity activity, Task task, ActionType actionType, MediaType mediaType, ViewContext version, boolean unmodifiable) throws FormBuildingException {
+//        // Can't do any of this processing without an activity
+//        if (activity == null)
+//            return null;
 //
-//        // If there is no action defined, then revert to CREATE_TASK
-//        if (action == null) {
-//            action = activity.action(ActionType.CREATE);
-//            // If the action type was VIEW then revert to the default ui, use create as the action, but make it unmodifiable
-//            if (actionType == ActionType.VIEW) {
-//                revertToDefaultUI = true;
-//                builder.readonly();
-//            }
-//        }
+//        FormDisposition formDisposition = FormUtility.disposition(builder, deployment, activity, actionType);
 //
-//        if (action == null)
-//            throw new FormBuildingException("Action is null for this activity and type " + actionType);
+//        builder.disposition(formDisposition);
 //
-//        URI uri = FormUtility.safeUri(action, task);
-//        boolean external = FormUtility.isExternal(uri);
-//
-//        FormDisposition formDisposition = null;
-//
-//        if (mediaType.equals(MediaType.TEXT_HTML_TYPE) && !revertToDefaultUI) {
-//            switch (action.getStrategy()) {
-//                case DECORATE_HTML:
-//                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
-//                    break;
-//                case INCLUDE_DIRECTIVES:
-//                case INCLUDE_SCRIPT:
-//                    if (external)
-//                        formDisposition = new FormDisposition(uri, action.getStrategy());
-//                    else if (action.getLocation() != null)
-//                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy());
-//                    break;
-//            }
-//        }
-
-        FormDisposition formDisposition = FormUtility.disposition(builder, deployment, task, activity, actionType, mediaType);
-
-        builder.disposition(formDisposition);
-
-        return formDisposition.getAction();
-    }
+//        return formDisposition.getAction();
+//    }
 
     private Map<String, Field> decorate(Map<String, Field> fieldMap, String processDefinitionKey, String processInstanceId, Map<String, List<Value>> data, ViewContext version, boolean unmodifiable) {
         Map<String, Field> decoratedFieldMap = new HashMap<String, Field>();

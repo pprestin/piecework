@@ -24,8 +24,6 @@ import org.activiti.engine.*;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.history.*;
 import org.activiti.engine.impl.bpmn.diagram.ProcessDiagramGenerator;
-import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
-import org.activiti.engine.impl.task.TaskDefinition;
 import org.activiti.engine.query.Query;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -270,7 +268,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         List<ProcessDefinition> processDefinitions = processEngine.getRepositoryService().createProcessDefinitionQuery().deploymentId(activitiDeployment.getId()).list();
         ProcessDefinition deployedProcessDefinition = processDefinitions != null && !processDefinitions.isEmpty() ? processDefinitions.iterator().next() : null;
 
-        ProcessDeployment.Builder updated = new ProcessDeployment.Builder(deployment, null, new PassthroughSanitizer(), true);
+        ProcessDeployment.Builder updated = new ProcessDeployment.Builder(deployment, new PassthroughSanitizer(), true);
 
         if (deployedProcessDefinition != null && StringUtils.isNotEmpty(activitiDeployment.getId())) {
 

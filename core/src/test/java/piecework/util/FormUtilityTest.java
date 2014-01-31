@@ -19,7 +19,6 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.DataInjectionStrategy;
@@ -47,7 +46,7 @@ public class FormUtilityTest {
                 .action(ActionType.CREATE, action)
                 .build();
 
-        FormDisposition disposition = FormUtility.disposition(builder, deployment, task, activity, ActionType.CREATE, null);
+        FormDisposition disposition = FormUtility.disposition(builder, deployment, activity, ActionType.CREATE);
         Assert.assertEquals(action, disposition.getAction());
         Assert.assertEquals(URI.create(location), disposition.getUri());
     }

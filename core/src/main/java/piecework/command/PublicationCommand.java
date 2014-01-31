@@ -70,7 +70,7 @@ public class PublicationCommand extends AbstractCommand<ProcessDeployment> {
 
         // Update the deployment to indicate that it is published
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessDeployment updatedDeployment = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true)
+        ProcessDeployment updatedDeployment = new ProcessDeployment.Builder(original, passthroughSanitizer, true)
                 .publish()
                 .build();
 

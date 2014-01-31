@@ -136,7 +136,7 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
 
     private ProcessDeployment cascadeSave(ActivityRepository activityRepository, DeploymentRepository deploymentRepository, ProcessDeployment deployment) {
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, null, passthroughSanitizer, false);
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, passthroughSanitizer, false);
 
         builder.clearActivities();
         builder.published(false);

@@ -29,6 +29,7 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
+import piecework.form.FormDisposition;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
@@ -45,6 +46,7 @@ import piecework.ui.Streamable;
 import piecework.ui.streaming.ExportStreamingOutput;
 import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.common.ManyMap;
+import piecework.util.FormUtility;
 import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.*;
@@ -127,12 +129,13 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
 
         if (!taskService.hasAllowedTask(process, instance, principal, false))
             throw new ForbiddenError();
 
         SearchResults searchResults = attachmentService.search(instance, queryParameters);
-        return Response.ok(searchResults).build();
+        return FormUtility.allowCrossOriginResponse(deployment, searchResults);
     }
 
     @Override

@@ -425,8 +425,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfForm', ['$http', '$location', '$sce', 'wizardService',
-        function($http, $location, $sce, wizardService) {
+    .directive('wfForm', ['$http', '$location', '$sce', '$window', 'wizardService',
+        function($http, $location, $sce, $window, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -530,6 +530,7 @@ angular.module('wf.directives',
                         var absUrl = $location.absUrl();
                         var indexOf = absUrl.indexOf('?');
                         var query = indexOf != -1 ? absUrl.substring(indexOf) : "";
+                        var redirectUrl = attr.wfForm + query;
 
                         var url = link;
                         if (typeof(link) === 'undefined' || link == '') {
@@ -542,9 +543,11 @@ angular.module('wf.directives',
                         }
 
                         $http.get($sce.trustAsResourceUrl(url))
-                            .then(function(response) {
-                                var form = response.data;
-
+                            .error(function(data, status, headers, config) {
+                                if (status == 0 || status == 302)
+                                    $window.location.href = redirectUrl;
+                            })
+                            .success(function(form) {
                                 element.attr("action", form.action);
                                 element.attr("method", "POST");
                                 element.attr("enctype", "multipart/form-data");

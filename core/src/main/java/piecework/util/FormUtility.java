@@ -24,7 +24,9 @@ import piecework.form.FormDisposition;
 import piecework.model.*;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author James Renfro
@@ -93,7 +95,7 @@ public class FormUtility {
                 .option(new Option.Builder().value("WY").label("Wyoming").build());
     }
 
-    public static FormDisposition disposition(Form.Builder builder, ProcessDeployment deployment, Task task, Activity activity, ActionType actionType, MediaType mediaType) throws FormBuildingException {
+    public static FormDisposition disposition(Form.Builder builder, ProcessDeployment deployment, Activity activity, ActionType actionType) throws FormBuildingException {
         Action action = activity.action(actionType);
         boolean revertToDefaultUI = false;
 
@@ -110,7 +112,7 @@ public class FormUtility {
         if (action == null)
             throw new FormBuildingException("Action is null for this activity and type " + actionType);
 
-        URI uri = FormUtility.safeUri(action, task);
+        URI uri = FormUtility.safeUri(deployment.getRemoteHost(), action);
         boolean external = FormUtility.isExternal(uri);
 
         FormDisposition formDisposition = null;
@@ -170,12 +172,42 @@ public class FormUtility {
         return false;
     }
 
-    public static URI safeUri(Action action, Task task) {
+    public static Response allowCrossOriginResponse(ProcessDeployment deployment, Object entity) {
+        Response.ResponseBuilder builder = Response.ok(entity);
+
+        URI remoteHost = remoteHost(deployment);
+
+        if (remoteHost != null) {
+            String hostUri = remoteHost.toString();
+            LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
+            builder.header("Access-Control-Allow-Origin", hostUri);
+            builder.header("Access-Control-Allow-Credentials", "true");
+        }
+
+        return builder.build();
+    }
+
+
+    public static URI remoteHost(ProcessDeployment deployment) {
         URI uri = null;
+        String remoteHost = deployment.getRemoteHost();
+        String location = StringUtils.isNotEmpty(remoteHost) ? remoteHost : null;
         try {
-            uri = action.getUri(task);
-        } catch (IllegalArgumentException iae) {
-            LOG.error("Failed to convert location into uri:" + action.getLocation(), iae);
+            if (location != null)
+                uri = new URI(location);
+        } catch (URISyntaxException iae) {
+            LOG.error("Failed to convert location into uri:" + location, iae);
+        }
+        return uri;
+    }
+
+    public static URI safeUri(String remoteHost, Action action) {
+        URI uri = null;
+        String location = StringUtils.isNotEmpty(remoteHost) ? remoteHost + action.getLocation() : action.getLocation();
+        try {
+            uri = new URI(location);
+        } catch (URISyntaxException iae) {
+            LOG.error("Failed to convert location into uri:" + location, iae);
         }
         return uri;
     }

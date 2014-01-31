@@ -386,7 +386,7 @@ public abstract class AbstractFormResource {
 
         try {
             ProcessDeployment deployment = deploymentService.read(process, formRequest.getInstance());
-            FormDisposition formDisposition = FormUtility.disposition(null, deployment, null, formRequest.getActivity(), formRequest.getAction(), null);
+            FormDisposition formDisposition = FormUtility.disposition(null, deployment, formRequest.getActivity(), formRequest.getAction());
 
             if (formDisposition != null && formDisposition.getType() == FormDisposition.FormDispositionType.REMOTE) {
                 String query = null;
@@ -455,16 +455,17 @@ public abstract class AbstractFormResource {
 
             Response.ResponseBuilder builder = Response.ok(form);
 
-            if (!isAnonymous() && formDisposition.getUri() != null) {
-                URI pageUri = formDisposition.getUri();
-                URI hostUri = new URI(pageUri.getScheme(), pageUri.getHost(), null, null);
-                String hostUriStr = hostUri.toString();
-                LOG.debug("Setting Access-Control-Allow-Origin to " + hostUriStr);
-                builder.header("Access-Control-Allow-Origin", hostUriStr);
-                builder.header("Access-Control-Allow-Credentials", "true");
-            }
+//            if (!isAnonymous() && formDisposition.getUri() != null) {
+//                URI pageUri = formDisposition.getUri();
+//                URI hostUri = new URI(pageUri.getScheme(), pageUri.getHost(), null, null);
+//                String hostUriStr = hostUri.toString();
+//                LOG.debug("Setting Access-Control-Allow-Origin to " + hostUriStr);
+//                builder.header("Access-Control-Allow-Origin", hostUriStr);
+//                builder.header("Access-Control-Allow-Credentials", "true");
+//            }
 
-            return builder.build();
+            return isAnonymous() ? Response.ok(form).build() : FormUtility.allowCrossOriginResponse(deployment, form);
+
         } catch (URISyntaxException use) {
             LOG.error("URISyntaxException serving page", use);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);

@@ -136,7 +136,7 @@ public class DeploymentService {
 
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), passthroughSanitizer, true);
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, passthroughSanitizer, true);
 
         return builder.build();
     }
@@ -180,9 +180,9 @@ public class DeploymentService {
         if (original == null)
             throw new NotFoundError();
 
-        ProcessDeployment update = new ProcessDeployment.Builder(rawDeployment, process.getProcessDefinitionKey(), sanitizer, true).build();
+        ProcessDeployment update = new ProcessDeployment.Builder(rawDeployment, sanitizer, true).build();
 
-        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, sanitizer, true);
         builder.deploymentLabel(update.getDeploymentLabel());
 
         return cascadeSave(builder.build(), selectedDeploymentVersion.getVersion(), false);
@@ -194,7 +194,7 @@ public class DeploymentService {
         if (deleted == null)
             return null;
 
-        ProcessDeployment stored = deploymentRepository.save(new ProcessDeployment.Builder(deployment, null, sanitizer, true).deleteActivity(activityKey).build());
+        ProcessDeployment stored = deploymentRepository.save(new ProcessDeployment.Builder(deployment, sanitizer, true).deleteActivity(activityKey).build());
         cache(stored);
         return deleted;
     }
@@ -210,7 +210,7 @@ public class DeploymentService {
         if (!deployment.isEditable())
             throw new ForbiddenError(Constants.ExceptionCodes.not_editable);
 
-        ProcessDeployment updated = new ProcessDeployment.Builder(deployment, null, sanitizer, true)
+        ProcessDeployment updated = new ProcessDeployment.Builder(deployment, sanitizer, true)
                 .deleteContainer(activityKey, containerId)
                 .build();
 
@@ -274,7 +274,7 @@ public class DeploymentService {
             }
         }
 
-        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, process.getProcessDefinitionKey(), sanitizer, true);
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(original, sanitizer, true);
         builder.activity(activityKey, modified.build());
 
         return cascadeSave(builder.build(), selectedDeploymentVersion.getVersion(), false);
@@ -319,7 +319,7 @@ public class DeploymentService {
     }
 
     private ProcessDeployment cascadeSave(ProcessDeployment deployment, String deploymentVersion, boolean createNew) {
-        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, null, sanitizer, false)
+        ProcessDeployment.Builder builder = new ProcessDeployment.Builder(deployment, sanitizer, false)
                 .deploymentVersion(deploymentVersion);
 
         builder.clearActivities();

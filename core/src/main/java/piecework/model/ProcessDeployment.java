@@ -84,6 +84,8 @@ public class ProcessDeployment implements Serializable {
     @XmlAttribute
     private final String base;
 
+    private final String remoteHost;
+
     @XmlAttribute
     private final boolean deployed;
 
@@ -128,6 +130,7 @@ public class ProcessDeployment implements Serializable {
         this.activityMap = Collections.unmodifiableMap(builder.activityMap);
         this.notificationMap = builder.notificationMap;
         this.flowElements = Collections.unmodifiableList(builder.flowElements);
+        this.remoteHost = builder.remoteHost;
         this.base = builder.base;
         this.editable = builder.editable;
         this.published = builder.published;
@@ -160,6 +163,10 @@ public class ProcessDeployment implements Serializable {
 
     public String getBase() {
         return base;
+    }
+
+    public String getRemoteHost() {
+        return remoteHost;
     }
 
     public String getEngineProcessDefinitionKey() {
@@ -234,36 +241,6 @@ public class ProcessDeployment implements Serializable {
         return flowElements;
     }
 
-//    public List<Interaction> getInteractions() {
-//        return interactions;
-//    }
-//
-//    public List<Section> getSections() {
-//        return sections;
-//    }
-//
-//    @JsonIgnore
-//    public Map<String, Section> getSectionMap() {
-//        Map<String, Section> sectionMap = new HashMap<String, Section>();
-//        if (sections != null) {
-//            for (Section section : sections) {
-//                if (section == null)
-//                    continue;
-//
-//                sectionMap.put(section.getSectionId(), section);
-//            }
-//        }
-//        return sectionMap;
-//    }
-//
-//    public List<Notification> getNotifications() {
-//        return notifications;
-//    }
-//
-//    public Screen getDefaultScreen() {
-//        return defaultScreen;
-//    }
-
     public boolean isPublished() {
         return published;
     }
@@ -313,14 +290,11 @@ public class ProcessDeployment implements Serializable {
         private String engineProcessDefinitionResource;
         private String engineDeploymentId;
         private String base;
+        private String remoteHost;
         private String startActivityKey;
         private Map<String, Activity> activityMap;
         private List<FlowElement> flowElements;
         private Map<State, String> applicationStatus;
-//        private List<Interaction> interactions;
-//        private List<Section> sections;
-//        private List<Notification> notifications;
-//        private Screen defaultScreen;
         private boolean isDeleted;
         private boolean deployed;
         private boolean published;
@@ -336,16 +310,13 @@ public class ProcessDeployment implements Serializable {
             this.notificationMap = new ManyMap<String, Notification>();
             this.flowElements = new ArrayList<FlowElement>();
             this.applicationStatus = new HashMap<State, String>();
-//            this.interactions = new ArrayList<Interaction>();
-//            this.sections = new ArrayList<Section>();
-//            this.notifications = new ArrayList<Notification>();
             this.dateCreated = new Date();
             this.deployed = false;
             this.published = false;
             this.editable = true;
         }
 
-        public Builder(ProcessDeployment deployment, String processDefinitionKey, Sanitizer sanitizer, boolean includeDetails) {
+        public Builder(ProcessDeployment deployment, Sanitizer sanitizer, boolean includeDetails) {
             this.deploymentId = deployment.deploymentId;
             this.deploymentLabel = deployment.deploymentLabel;
             this.deploymentVersion = deployment.deploymentVersion;
@@ -357,6 +328,7 @@ public class ProcessDeployment implements Serializable {
             this.engineProcessDefinitionResource = sanitizer.sanitize(deployment.engineProcessDefinitionResource);
             this.engineDeploymentId = sanitizer.sanitize(deployment.engineDeploymentId);
             this.base = sanitizer.sanitize(deployment.base);
+            this.remoteHost = sanitizer.sanitize(deployment.remoteHost);
             this.applicationStatus = new HashMap<State, String>();
             this.startActivityKey = sanitizer.sanitize(deployment.startActivityKey);
             this.activityMap = new HashMap<String, Activity>();
@@ -391,33 +363,6 @@ public class ProcessDeployment implements Serializable {
                     this.applicationStatus.put(key, value);
                 }
             }
-//            this.defaultScreen = deployment.defaultScreen != null ? new Screen.Builder(deployment.defaultScreen, sanitizer).processDefinitionKey(processDefinitionKey).build() : null;
-//            if (includeDetails && deployment.interactions != null && !deployment.interactions.isEmpty()) {
-//                this.interactions = new ArrayList<Interaction>(deployment.interactions.size());
-//                for (Interaction interaction : deployment.interactions) {
-//                    this.interactions.add(new Interaction.Builder(interaction, sanitizer).processDefinitionKey(processDefinitionKey).build());
-//                }
-//            } else {
-//                this.interactions = new ArrayList<Interaction>();
-//            }
-//            if (includeDetails && deployment.notifications != null && !deployment.notifications.isEmpty()) {
-//                this.notifications = new ArrayList<Notification>(deployment.notifications.size());
-//                for (Notification notification : deployment.notifications) {
-//                    if (notification != null)
-//                        this.notifications.add(new Notification.Builder(notification, sanitizer).build());
-//                }
-//            } else {
-//                this.notifications = new ArrayList<Notification>();
-//            }
-//            if (includeDetails && deployment.sections != null && !deployment.sections.isEmpty()) {
-//                this.sections = new ArrayList<Section>(deployment.sections.size());
-//                for (Section section : deployment.sections) {
-//                    if (section != null)
-//                        this.sections.add(new Section.Builder(section, sanitizer).processDefinitionKey(processDefinitionKey).build());
-//                }
-//            } else {
-//                this.sections = new ArrayList<Section>();
-//            }
 
             this.notificationMap = new ManyMap<String, Notification>();
             if ( deployment.getNotificationMap() != null && deployment.getNotificationMap().size() > 0 ) {
@@ -511,48 +456,17 @@ public class ProcessDeployment implements Serializable {
             return this;
         }
 
+        public Builder remoteHost(String remoteHost) {
+            this.remoteHost = remoteHost;
+            return this;
+        }
+
         public Builder flowElement(String taskDefinitionKey, String label, FlowElementType type) {
             FlowElement flowElement = new FlowElement(taskDefinitionKey, label, type);
             if (!this.flowElements.contains(flowElement))
                 this.flowElements.add(flowElement);
             return this;
         }
-
-//        public Builder interaction(Interaction interaction) {
-//            if (this.interactions == null)
-//                this.interactions = new ArrayList<Interaction>();
-//            this.interactions.add(interaction);
-//            return this;
-//        }
-//
-//        public Builder interactions(List<Interaction> interactions) {
-//            this.interactions = interactions;
-//            return this;
-//        }
-//
-//        public Builder section(Section section) {
-//            if (this.sections == null)
-//                this.sections = new ArrayList<Section>();
-//            this.sections.add(section);
-//            return this;
-//        }
-//
-//        public Builder notification(Notification notification) {
-//            if (this.notifications == null)
-//                this.notifications = new ArrayList<Notification>();
-//            this.notifications.add(notification);
-//            return this;
-//        }
-//
-//        public Builder notifications(List<Notification> notifications) {
-//            this.notifications = notifications;
-//            return this;
-//        }
-//
-//        public Builder defaultScreen(Screen defaultScreen) {
-//            this.defaultScreen = defaultScreen;
-//            return this;
-//        }
 
         public Builder publish() {
             this.published = true;
@@ -593,21 +507,6 @@ public class ProcessDeployment implements Serializable {
             this.notificationMap = new ManyMap<String, Notification>();
             return this;
         }
-
-//        public Builder clearInteractions() {
-//            this.interactions = new ArrayList<Interaction>();
-//            return this;
-//        }
-//
-//        public Builder clearNotifications() {
-//            this.notifications = new ArrayList<Notification>();
-//            return this;
-//        }
-//
-//        public Builder clearSections() {
-//            this.sections = new ArrayList<Section>();
-//            return this;
-//        }
 
         public Builder deleteActivity(String activityKey) {
             this.activityMap.remove(activityKey);
