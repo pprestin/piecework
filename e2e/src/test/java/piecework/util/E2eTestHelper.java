@@ -16,6 +16,9 @@
 
 package piecework.util;
 
+import java.util.Date;
+import java.text.SimpleDateFormat;
+
 import static org.testng.AssertJUnit.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -24,26 +27,41 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class E2eTestHelper {
+    public static final long MILLISECONDS_IN_ONE_DAY = 24*60*60*1000;
+
     public static void fillForm(WebDriver driver, String[][] data) {
         for ( String[] e : data ) { 
             String k = e[0];
             String v = e[1];
             WebElement element = driver.findElement(By.name(k));
+            String tagName = element.getTagName();
             String t = element.getAttribute("type");
             //System.out.println(k + "'s type =" + a);
-            if ( t.startsWith("text") ) {
+            if ( tagName.equals("input") ) {
+                if ( t.startsWith("text") ) {
+                    element.sendKeys(v);
+                } else if ( t.equals("hidden") ) {
+                    WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
+                    e1.sendKeys(v);
+                } else if ( t.equals("checkbox") ) {
+                    element.click();
+                } else if ( t.equals("radio") ) {
+                    if ( v != null && !v.isEmpty() ) {
+                        WebElement el = element.findElement(By.xpath("//input[@name='" + k + "' and @type='radio' and @value='"+v+"']"));
+                        el.click();
+                    } else {
+                        element.click();
+                    }
+                }
+            } else if ( tagName.startsWith("text") ) {
                 element.sendKeys(v);
-            } else if ( t.equals("hidden") ) {
-                WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
-                e1.sendKeys(v);
-            } else if ( t.equals("checkbox") ) {
-                element.click();
-            } else if ( t.equals("radio") ) {
+            } else if ( tagName.equals("select") ) {
                 if ( v != null && !v.isEmpty() ) {
-                    WebElement el = element.findElement(By.xpath("//input[@type='radio' and @value='"+v+"']"));
+                    WebElement el = element.findElement(By.xpath(".//option[@value='"+v+"']"));
                     el.click();
                 } else {
-                    element.click();
+                    WebElement el = element.findElement(By.xpath(".//option[1]"));
+                    el.click();
                 }
             }
         }
@@ -99,5 +117,22 @@ public class E2eTestHelper {
         } catch (InterruptedException e) {
             // task is already assigned.
         }
+    }
+
+    // misc helper methods
+    public static String getDate(int days) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+        Date dt = new Date();
+        dt.setTime(dt.getTime() + days*MILLISECONDS_IN_ONE_DAY);
+        return dateFormat.format(dt);
+    }
+
+    public static String getCurrentDate() {
+        return getDate(0);
+    }
+
+    public static String getCurrentDateTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm a");
+        return dateFormat.format(new Date());
     }
 }
