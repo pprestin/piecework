@@ -95,6 +95,9 @@ public class FormDisposition {
         else if (validation != null && validation.getSubmission() != null && StringUtils.isNotEmpty(validation.getSubmission().getSubmissionId()))
             query = "submissionId=" + validation.getSubmission().getSubmissionId();
 
+        if (pageUri == null)
+            return null;
+
         return new URI(pageUri.getScheme(), pageUri.getUserInfo(), pageUri.getHost(), pageUri.getPort(), pageUri.getPath(), query, null);
     }
 

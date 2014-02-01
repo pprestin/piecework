@@ -87,6 +87,9 @@ public class PathUtility {
 
         String base = isAnonymous ? settings.getPublicUrl() : settings.getApplicationUrl();
 
+        if (base == null)
+            base = "";
+
         String adjustedPath = path.substring(indexOf+3);
         return new StringBuilder(base).append("/").append(adjustedPath).toString();
     }
@@ -98,7 +101,9 @@ public class PathUtility {
             return path;
 
         String adjustedPath = indexOf != -1 ? path.substring(indexOf) : path;
-        return new StringBuilder(settings.getAssetsUrl()).append("/").append(adjustedPath).toString();
+
+        return new StringBuilder(settings.getAssetsUrl() != null ? settings.getAssetsUrl() : "")
+                .append("/").append(adjustedPath).toString();
     }
 
 }

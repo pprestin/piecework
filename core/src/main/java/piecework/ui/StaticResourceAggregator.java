@@ -73,7 +73,8 @@ public class StaticResourceAggregator {
     }
 
     public Resource getStaticResource() {
-        return new DatedByteArrayResource(this.buffer.toString().getBytes(Charset.forName("UTF-8")));
+        String content = this.buffer.toString();
+        return new DatedByteArrayResource(content.getBytes(Charset.forName("UTF-8")));
     }
 
     public String handle(String path) {
@@ -126,10 +127,12 @@ public class StaticResourceAggregator {
                 if (!settings.isDoOptimization() || cleanPath.contains(".min.")) {
                     StringBuilder builder = new StringBuilder();
                     // Don't bother to compress files that are already compressed
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        builder.append(line).append(NEWLINE);
-                    }
+//                    String line;
+//                    while ((line = reader.readLine()) != null) {
+//                        builder.append(line).append(NEWLINE);
+//                    }
+
+                    builder.append(IOUtils.toString(reader));
 
                     if (cleanPath.endsWith(".css"))
                         buffer.append(rebaseStylesheetUrls(builder.toString(), path));
@@ -155,7 +158,6 @@ public class StaticResourceAggregator {
         // externally
         return PathUtility.recomputeStaticPath(path, settings);
     }
-
 
     private static String compressStylesheet(Reader in, Options o) {
         StringWriter out = new StringWriter();

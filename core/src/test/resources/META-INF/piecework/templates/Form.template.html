@@ -1,0 +1,54 @@
+<!doctype html>
+<html data-ng-app="wf">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Workflow</title>
+        <link href="../static/css/vendor/bootstrap.min.css" rel="stylesheet"/>
+        <link href="../static/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
+        <link href="../static/css/layout.css" rel="stylesheet"/>
+        <base href="../ui/form"/>
+        <script src="../static/js/vendor/jquery-1.10.2.min.js"></script>
+        <script src="../static/js/vendor/jquery-ui-1.10.3.custom.min.js"></script>
+        <script src="../static/js/vendor/angular.min.js"></script>
+        <script src="../static/js/vendor/angular-resource.min.js"></script>
+        <script src="../static/js/vendor/angular-route.min.js"></script>
+        <script src="../static/js/vendor/angular-sanitize.min.js"></script>
+        <script src="../static/js/vendor/ui-bootstrap-0.6.0.min.js"></script>
+        <script src="../static/js/vendor/ui-bootstrap-tpls-0.6.0.js"></script>
+        <script src="../static/js/vendor/jquery.inputmask.js"></script>
+        <script src="../static/js/vendor/moment.min.js"></script>
+        <script src="../static/js/vendor/jquery.iframe-transport.js"></script>
+        <script src="../static/js/vendor/jquery.fileupload.js"></script>
+        <script src="../static/js/vendor/jquery.fileupload-process.js"></script>
+        <script src="../static/js/vendor/jquery.fileupload-validate.js"></script>
+        <script src="../static/js/vendor/jquery.fileupload-angular.js"></script>
+        <script src="../static/js/wf-services.js"></script>
+        <script src="../static/js/wf-templates.js"></script>
+        <script src="../static/js/wf-directives.js"></script>
+        <script src="../static/js/wf-form.js"></script>
+    </head>
+    <body role="application">
+        <div>
+            <div class="user-information">
+                <div id="user-information-name" class="user-information-name pull-right">
+                    {{form.currentUser.displayName}}
+                </div>
+            </div>
+            <div data-wf-toolbar></div>
+        </div>
+
+        <form data-wf-form="" name="myForm" action="/" method="POST" novalidate="novalidate">
+            <div data-wf-page></div>
+        </form>
+        <div class="main-footer navbar navbar-fixed-bottom">
+            <div class="navbar-inner">
+                <ul>
+                    <li class="nav pull-left institutional-logo"></li>
+                    <li class="nav pull-right"><h1 style="font-weight: normal;margin-top:15px;margin-right:20px">Workflow&nbsp;&nbsp;</h1></li>
+                </ul>
+            </div>
+        </div>
+    </body>
+</html>
