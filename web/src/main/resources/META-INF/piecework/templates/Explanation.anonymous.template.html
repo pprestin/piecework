@@ -1,7 +1,7 @@
 <!doctype html>
-<html ng-app="Explanation">
+<html data-ng-app="Explanation">
 <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
@@ -10,22 +10,10 @@
     <link href="../static/css/layout.css" rel="stylesheet"/>
     <base href=""/>
     <script src="../static/js/vendor/jquery-1.10.2.min.js"></script>
-    <script src="../static/js/vendor/jquery-ui-1.10.3.custom.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular-resource.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular-sanitize.min.js"></script>
-    <script src="../static/js/vendor/ui-bootstrap-0.6.0.min.js"></script>
-    <script src="../static/js/vendor/ui-bootstrap-tpls-0.6.0.js"></script>
-    <script src="../static/js/vendor/ui-sortable.js"></script>
-    <script src="../static/js/vendor/jquery.iframe-transport.js"></script>
-    <script src="../static/js/vendor/jquery.fileupload.js"></script>
-    <script src="../static/js/vendor/jquery.fileupload-process.js"></script>
-    <script src="../static/js/vendor/jquery.fileupload-validate.js"></script>
-    <script src="../static/js/vendor/jquery.fileupload-angular.js"></script>
+    <script src="../static/js/vendor/angular.min.js"></script>
     <script src="../static/ng/js/explanation.js"></script>
 </head>
-</head>
-<body role="application">
+<body data-wf-explanation role="application">
 <div class="navbar main-navbar">
     <div class="user-information">
         <div id="user-information-name" class="user-information-name pull-right">
@@ -33,18 +21,21 @@
     </div>
     <div class="container">
         <div class="row">
-            <h1><i class="icon-tasks icon-1x"></i> Test</h1>
+            <h1><i class="fa fa-exclamation-triangle fa-3"></i> <span data-wf-message></span></h1>
         </div>
     </div>
 </div>
 <div class="container">
-    <div ng-view class="main-content row"></div>
+    <div class="main-content row">
+        <div class="text-danger">
+            <h3 data-wf-message-detail></h3></div>
+    </div>
 </div>
 
 <div class="main-footer navbar navbar-fixed-bottom">
     <div class="navbar-inner">
         <ul>
-            <li class="nav"></li>
+            <li class="nav pull-left institutional-logo"></li>
             <li class="nav pull-right"><h1 style="font-weight: normal">Workflow&nbsp;&nbsp;</h1></li>
         </ul>
     </div>

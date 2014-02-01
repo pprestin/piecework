@@ -36,11 +36,11 @@ import java.util.List;
 @Path("resource")
 public interface ScriptResource extends ApplicationResource {
 
-    @GET
-    @Path("{processDefinitionKey}/{requestId}.js")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
-    @Produces({"text/javascript"})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
+//    @GET
+//    @Path("{processDefinitionKey}/{requestId}.js")
+//    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+//    @Produces({"text/javascript"})
+//    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context) throws StatusCodeError;
 
     @GET
     @Path("css/{id}.css")
@@ -54,10 +54,10 @@ public interface ScriptResource extends ApplicationResource {
     @Produces({"text/javascript"})
     Response readScript(@PathParam("id") String scriptId, @Context MessageContext context) throws StatusCodeError;
 
-    @GET
-    @Path("static/{processDefinitionKey}/{segments:.*}")
-    @RolesAllowed({AuthorizationRole.USER})
-    @Produces("*/*")
-    Response readStatic(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
+//    @GET
+//    @Path("static/{processDefinitionKey}/{segments:.*}")
+//    @RolesAllowed({AuthorizationRole.USER})
+//    @Produces("*/*")
+//    Response readStatic(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("segments") List<PathSegment> pathSegments, @Context MessageContext context) throws StatusCodeError;
 
 }

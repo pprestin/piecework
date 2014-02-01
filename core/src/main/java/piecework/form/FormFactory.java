@@ -53,7 +53,7 @@ public class FormFactory {
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous) throws FormBuildingException {
+    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous) throws FormBuildingException {
         ViewContext version = versions.getVersion1();
         Activity activity = request.getActivity();
 
@@ -77,12 +77,8 @@ public class FormFactory {
             builder.readonly();
 
         if (activity != null) {
-//            Action action = action(builder, deployment, activity, task, actionType, mediaType, version, unmodifiable);
-
-//            if (activity == null)
-//                return null;
-
-            FormDisposition formDisposition = FormUtility.disposition(builder, deployment, activity, actionType);
+            ViewContext context = versions.getVersion1();
+            FormDisposition formDisposition = FormUtility.disposition(process, deployment, activity, actionType, context, builder);
 
             builder.disposition(formDisposition);
 

@@ -41,12 +41,10 @@ import piecework.security.SecuritySettings;
 import piecework.util.FormUtility;
 import piecework.validation.Validation;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
@@ -273,31 +271,19 @@ public abstract class AbstractFormResource {
         if (submissionCommandResponse.getNextRequest() == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
-        String location;
-
         FormRequest formRequest = submissionCommandResponse.getNextRequest();
-
-        boolean isCreate = formRequest.getAction() != null && formRequest.getAction() == ActionType.CREATE;
-
         Submission submission = submissionCommandResponse.getSubmission();
         if (isAnonymous())
             throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
 
         try {
             ProcessDeployment deployment = deploymentService.read(process, formRequest.getInstance());
-            FormDisposition formDisposition = FormUtility.disposition(null, deployment, formRequest.getActivity(), formRequest.getAction());
+            FormDisposition formDisposition = FormUtility.disposition(process, deployment, formRequest.getActivity(), formRequest.getAction(), versions.getVersion1(), null);
 
-            if (formDisposition != null && formDisposition.getType() == FormDisposition.FormDispositionType.REMOTE) {
-                String query = null;
-                if (isInvalidSubmission && submission != null && StringUtils.isNotEmpty(submission.getSubmissionId()))
-                    query = "submissionId=" + submission.getSubmissionId();
-                else if (formRequest != null && StringUtils.isNotEmpty(formRequest.getRequestId()))
-                    query = "requestId=" + formRequest.getRequestId();
+            if (isInvalidSubmission)
+                return Response.seeOther(formDisposition.getInvalidPageUri(submission)).build();
 
-                URI uri = formDisposition.getUri();
-                uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), query, uri.getFragment());
-                return Response.seeOther(uri).build();
-            }
+            return Response.seeOther(formDisposition.getResponsePageUri(formRequest)).build();
         } catch (URISyntaxException use) {
             LOG.error("URISyntaxException serving page", use);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -306,16 +292,8 @@ public abstract class AbstractFormResource {
             throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
         } catch (FormBuildingException fbe) {
             LOG.error("Error finding disposition", fbe);
+            throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
         }
-
-        if (isCreate && submission != null)
-            location = versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, submission.getProcessDefinitionKey()) + "?submissionId=" + submission.getSubmissionId();
-        else if (formRequest.getRequestId() != null)
-            location = versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey()) + "?requestId=" + formRequest.getRequestId();
-        else
-            location = versions.getVersion1().getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, formRequest.getProcessDefinitionKey()) + "?taskId=" + formRequest.getTaskId();
-
-        return Response.status(Response.Status.SEE_OTHER).header(HttpHeaders.LOCATION, location).build();
     }
 
     private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType) throws StatusCodeError {
@@ -329,24 +307,13 @@ public abstract class AbstractFormResource {
         Entity principal = helper.getPrincipal();
         try {
             ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-            Form form = formFactory.form(process, deployment, request, actionType, principal, mediaType, validation, explanation, includeRestrictedData, isAnonymous());
+            Form form = formFactory.form(process, deployment, request, actionType, principal, validation, explanation, includeRestrictedData, isAnonymous());
             FormDisposition formDisposition = form.getDisposition();
 
             if (mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) {
                 switch (formDisposition.getType()) {
                     case REMOTE:
-                        String taskId = request.getTaskId();
-                        String query = null;
-                        if (explanation == null && StringUtils.isNotEmpty(taskId))
-                            query = "taskId=" + taskId;
-                        else if (request != null && StringUtils.isNotEmpty(request.getRequestId()))
-                            query = "requestId=" + request.getRequestId();
-                        else if (validation != null && validation.getSubmission() != null && StringUtils.isNotEmpty(validation.getSubmission().getSubmissionId()))
-                            query = "submissionId=" + validation.getSubmission().getSubmissionId();
-
-                        URI uri = formDisposition.getUri();
-                        uri = new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), query, uri.getFragment());
-                        return Response.seeOther(uri).build();
+                        return Response.seeOther(formDisposition.getPageUri(request, validation, explanation)).build();
                     case CUSTOM:
                         return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
                 }

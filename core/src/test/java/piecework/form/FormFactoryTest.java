@@ -30,8 +30,6 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.DataFilterService;
 
-import javax.ws.rs.core.MediaType;
-
 /**
  * @author James Renfro
  */
@@ -75,13 +73,12 @@ public class FormFactoryTest {
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .instance(instance).build();
 
-        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, MediaType.TEXT_HTML_TYPE, null, null, false, false);
+        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, null, null, false, false);
 
         Assert.assertNotNull(form);
         Assert.assertEquals("123", form.getFormInstanceId());
         Assert.assertEquals("TESTPROCESS1", form.getProcess().getProcessDefinitionKey());
         Assert.assertEquals("987", form.getProcessInstanceId());
-
     }
 
 }

@@ -425,8 +425,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfForm', ['$http', '$location', '$sce', '$window', 'wizardService',
-        function($http, $location, $sce, $window, wizardService) {
+    .directive('wfForm', ['$http', '$location', '$sce', '$window', 'formPageUri', 'formResourceUri', 'wizardService',
+        function($http, $location, $sce, $window, formPageUri, formResourceUri, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -526,11 +526,11 @@ angular.module('wf.directives',
                     scope.wizard = wizardService;
                     scope.$root.$on('event:refresh', function(event, message) {
                         scope.$root.refreshing = true;
-                        var link = attr.wfForm;
+                        var link = formResourceUri;
                         var absUrl = $location.absUrl();
                         var indexOf = absUrl.indexOf('?');
                         var query = indexOf != -1 ? absUrl.substring(indexOf) : "";
-                        var redirectUrl = attr.wfForm + query;
+                        var redirectUrl = formResourceUri + query;
 
                         var url = link;
                         if (typeof(link) === 'undefined' || link == '') {
@@ -598,7 +598,6 @@ angular.module('wf.directives',
                                                    })
                                                    .done(function(data, textStatus, jqXHR) {
                                                        $(descriptionSelector).val('');
-//                                                       var location = jqXHR.getResponseHeader('Location');
                                                        scope.$root.$broadcast('event:value-updated:' + input.name, data);
                                                    })
                                                    .fail(function(jqXHR, textStatus, errorThrown) {
@@ -636,12 +635,6 @@ angular.module('wf.directives',
                                                 }
                                             });
                                         }
-//                                        var messages = typeof(validation) !== 'undefined' ? validation[fieldName] : null;
-//                                        if (messages != null) {
-//                                            angular.forEach(messages, function(message) {
-//                                                element.after('<span class="help-block text-danger">' + message.text + '</span>');
-//                                            });
-//                                        }
                                     }
                                 });
 

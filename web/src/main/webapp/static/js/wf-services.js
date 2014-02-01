@@ -5,7 +5,13 @@ angular.module('wf.services',
             return {
                 deleteAttachment : function(form, attachment) {
                     var attachmentService = this;
-                    $http['delete']($sce.trustAsResourceUrl(attachment.link)).then(function() { attachmentService.refreshAttachments(form); });
+                    var url = attachment.link + '/removal';
+                    $http.post($sce.trustAsResourceUrl(url), null, {
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    })
+                    .success(function() {
+                        attachmentService.refreshAttachments(form);
+                    });
                 },
                 refreshAttachments : function(form) {
                     $http.get($sce.trustAsResourceUrl(form.attachment)).then(function(response) {
@@ -179,7 +185,6 @@ angular.module('wf.services',
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
                                 $rootScope.$broadcast('event:refresh', 'comment');
-                                $rootScope.$broadcast('event:attachments', data.list);
                             }
                         };
 
@@ -500,7 +505,7 @@ angular.module('wf.services',
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);
-                            //$rootScope.$broadcast('event:attachments', data.list);
+                            $rootScope.$broadcast('event:attachments', data.list);
                         })
                         .error(function(data, status, headers, config) {
                             failure($scope, data, status, headers, config, form, formData);
@@ -584,7 +589,7 @@ angular.module('wf.services',
                             notificationService.notify($scope, 'Cannot assign a suspended task');
 
                         var url = form.assignment;
-                        var data = '{ "assignee": "' + assignee + '"}';
+                        var data = { "assignee" : assignee };
                         $http({
                              method: 'POST',
                              url: $sce.trustAsResourceUrl(url),

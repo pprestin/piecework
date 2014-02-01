@@ -15,16 +15,22 @@
  */
 package piecework.ui;
 
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.support.ServletContextResource;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.enumeration.Scheme;
+import piecework.form.FormDisposition;
 import piecework.model.Content;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
@@ -33,6 +39,8 @@ import piecework.util.PathUtility;
 import javax.servlet.ServletContext;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Takes paths from repeated calls to the handle() method and looks up the resources
@@ -53,15 +61,15 @@ public class StaticResourceAggregator {
     private final ContentRepository contentRepository;
     private final StringBuffer buffer;
     private final UserInterfaceSettings settings;
-    private final String base;
+    private final FormDisposition formDisposition;
 
-    public StaticResourceAggregator(ServletContext servletContext, Process process, ContentRepository contentRepository, UserInterfaceSettings settings, String base) {
+    public StaticResourceAggregator(ServletContext servletContext, Process process, ContentRepository contentRepository, UserInterfaceSettings settings, FormDisposition formDisposition) {
         this.servletContext = servletContext;
         this.process = process;
         this.contentRepository = contentRepository;
         this.buffer = new StringBuffer();
         this.settings = settings;
-        this.base = base;
+        this.formDisposition = formDisposition;
     }
 
     public Resource getStaticResource() {
@@ -77,6 +85,35 @@ public class StaticResourceAggregator {
             reader = reader(path);
 
             if (reader != null) {
+
+                // Special handling for the wf controllers, which needs to be compiled as a template
+                if (path.endsWith("/wf-form.js") && formDisposition != null) {
+                    StringBuilder dynamicConfigurationBuilder = new StringBuilder();
+                    String hostUri = formDisposition.getHostUri() != null ? formDisposition.getHostUri().toString() : "";
+                    String pageUri = formDisposition.getPageUri() != null ? formDisposition.getPageUri().toString() : "";
+                    String resourceUri = formDisposition.getResourceUri() != null ? formDisposition.getResourceUri().toString() : "";
+
+                    if (formDisposition.getType() == FormDisposition.FormDispositionType.REMOTE) {
+                        dynamicConfigurationBuilder
+                                .append("$httpProvider.defaults.withCredentials = true;")
+                                .append("$httpProvider.defaults.useXDomain = true;")
+                                .append("$sceDelegateProvider.resourceUrlWhitelist(['self','")
+                                .append(hostUri)
+                                .append("/**']);");
+                    }
+
+                    Map<String, String> scopes = new HashMap<String, String>();
+                    scopes.put("HOST_URI", hostUri);
+                    scopes.put("FORM_PAGE_URI", pageUri);
+                    scopes.put("FORM_RESOURCE_URI", resourceUri);
+                    scopes.put("DYNAMIC_CONFIGURATION", dynamicConfigurationBuilder.toString());
+                    StringWriter writer = new StringWriter();
+                    MustacheFactory mf = new DefaultMustacheFactory();
+                    Mustache mustache = mf.compile(reader, "my-template");
+                    mustache.execute(writer, scopes);
+
+                    reader = new BufferedReader(new StringReader(StringEscapeUtils.unescapeXml(writer.toString())));
+                }
 
                 String cleanPath;
                 // Strip off query string for the purpose of deciding if it's javascript or css
@@ -175,6 +212,7 @@ public class StaticResourceAggregator {
 
     private BufferedReader reader(String path) throws Exception {
         String fullPath;
+        String base = formDisposition != null ? formDisposition.getBase() : null;
         if (StringUtils.isNotEmpty(base)) {
             // Only add the base if we're looking for the resource in the
             // repository

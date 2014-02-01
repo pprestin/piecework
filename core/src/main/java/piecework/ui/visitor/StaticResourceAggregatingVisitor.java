@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.TagNode;
 import org.springframework.core.io.Resource;
+import piecework.form.FormDisposition;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
 import piecework.ui.StaticResourceAggregator;
@@ -43,10 +44,10 @@ public class StaticResourceAggregatingVisitor extends HtmlProviderVisitor {
     private final Map<String, TagAttributeAction> scriptAttributeActionMap;
     private final Map<String, TagAttributeAction> linkAttributeActionMap;
 
-    public StaticResourceAggregatingVisitor(ServletContext servletContext, Process process, String base, UserInterfaceSettings settings, ContentRepository contentRepository, boolean isAnonymous) {
+    public StaticResourceAggregatingVisitor(ServletContext servletContext, Process process, FormDisposition disposition, UserInterfaceSettings settings, ContentRepository contentRepository, boolean isAnonymous) {
         super(settings, isAnonymous);
-        this.scriptAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, base);
-        this.stylesheetAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, base);
+        this.scriptAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, disposition);
+        this.stylesheetAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, disposition);
         this.scriptAttributeActionMap = new HashMap<String, TagAttributeAction>();
         this.linkAttributeActionMap = new HashMap<String, TagAttributeAction>();
     }

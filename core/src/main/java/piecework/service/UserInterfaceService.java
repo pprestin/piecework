@@ -16,7 +16,6 @@
 package piecework.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.*;
@@ -38,6 +37,7 @@ import piecework.persistence.ContentRepository;
 import piecework.ui.*;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
 import piecework.ui.visitor.*;
+import piecework.util.UserInterfaceUtility;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.WebApplicationException;
@@ -76,6 +76,7 @@ public class UserInterfaceService {
 
     @Autowired
     private UserInterfaceSettings settings;
+
 
     public boolean hasPage(Class<?> type) {
         if (type.equals(SearchResults.class))
@@ -175,11 +176,11 @@ public class UserInterfaceService {
         Content content = getContentFromDisposition(process, disposition);
 
         TagNodeVisitor visitor;
-        switch (disposition.getStrategy()) {
-            case DECORATE_HTML:
+        switch (disposition.getType()) {
+            case CUSTOM:
                 visitor = new DecoratingVisitor(settings, process, form);
                 break;
-            case INCLUDE_DIRECTIVES:
+            case REMOTE:
                 visitor = new StaticPathAdjustingVisitor(form);
                 break;
             default:
@@ -189,154 +190,87 @@ public class UserInterfaceService {
         return new HtmlCleanerStreamingOutput(content.getInputStream(), visitor);
     }
 
-    public StreamingOutput getExternalScriptAsStreaming(Class<?> type, Object t) throws IOException {
-        if (type.equals(Form.class)) {
-            Form form = Form.class.cast(t);
-            if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
-                Entity user = helper.getPrincipal();
-                Resource script = formTemplateService.getExternalScriptResource(type, t);
+//    public StreamingOutput getExternalScriptAsStreaming(Class<?> type, Object t) throws IOException {
+//        if (type.equals(Form.class)) {
+//            Form form = Form.class.cast(t);
+//            if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
+//                Entity user = helper.getPrincipal();
+//                Resource script = formTemplateService.getExternalScriptResource(type, t);
+//
+//                PageContext pageContext = new PageContext.Builder()
+//                        .applicationTitle(settings.getApplicationTitle())
+//                        .assetsUrl(settings.getAssetsUrl())
+//                        .user(user)
+//                        .build();
+//
+//                ObjectMapper objectMapper = jsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
+//
+//                final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
+//                final String modelAsJson = objectMapper.writer().writeValueAsString(t);
+//                final boolean isExplanation = type != null && type.equals(Explanation.class);
+//
+//                Map<String, String> scopes = new HashMap<String, String>();
+//
+//                scopes.put("pageContext", pageContextAsJson);
+//                scopes.put("model", modelAsJson);
+//
+//                return new TemplateResourceStreamingOutput(script, scopes);
+//            }
+//        }
+//        return null;
+//    }
 
-                PageContext pageContext = new PageContext.Builder()
-                        .applicationTitle(settings.getApplicationTitle())
-                        .assetsUrl(settings.getAssetsUrl())
-                        .user(user)
-                        .build();
-
-                ObjectMapper objectMapper = jsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
-
-                final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
-                final String modelAsJson = objectMapper.writer().writeValueAsString(t);
-                final boolean isExplanation = type != null && type.equals(Explanation.class);
-
-                Map<String, String> scopes = new HashMap<String, String>();
-
-                scopes.put("pageContext", pageContextAsJson);
-                scopes.put("model", modelAsJson);
-
-                return new TemplateResourceStreamingOutput(script, scopes);
-            }
-        }
-        return null;
+    public Resource getScriptResource(ServletContext servletContext, Form form) throws StatusCodeError {
+        Resource template = formTemplateService.getTemplateResource(Form.class, form);
+        return getResource(CacheName.SCRIPT, servletContext, form, template);
     }
 
-    public Resource getScriptResource(ServletContext servletContext, Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getScriptResource(ServletContext servletContext, String templateName, boolean isAnonymous) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(templateName);
-        return getScriptResource(servletContext, process, template, base, isAnonymous);
+        return getResource(CacheName.SCRIPT, servletContext, null, template);
     }
 
-    public Resource getScriptResource(ServletContext servletContext, Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
-        if (!template.exists())
-            throw new NotFoundError();
-
-        StaticResourceAggregatingVisitor visitor = null;
-        InputStream inputStream = null;
-        try {
-            Cache.ValueWrapper wrapper = settings.isDisableResourceCaching() ? null : cacheService.get(CacheName.SCRIPT, template.getFilename());
-
-            if (wrapper != null) {
-                Resource scriptResource = (Resource) wrapper.get();
-
-                if (scriptResource != null && scriptResource.exists() && scriptResource.lastModified() >= template.lastModified())
-                    return scriptResource;
-            }
-
-            CleanerProperties cleanerProperties = new CleanerProperties();
-            cleanerProperties.setOmitXmlDeclaration(true);
-            HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new StaticResourceAggregatingVisitor(servletContext, process, base, settings, contentRepository, isAnonymous);
-
-            inputStream = template.getInputStream();
-            TagNode node = cleaner.clean(inputStream);
-            node.traverse(visitor);
-
-            if (visitor != null) {
-                Resource scriptResource = visitor.getScriptResource();
-                cacheService.put(CacheName.SCRIPT, template.getFilename(), scriptResource);
-
-                return scriptResource;
-            }
-        } catch (IOException ioe) {
-            LOG.error("Unable to read template", ioe);
-        } finally {
-            IOUtils.closeQuietly(inputStream);
-        }
-        return null;
+    public Resource getStylesheetResource(ServletContext servletContext, Form form) throws StatusCodeError {
+        Resource template = formTemplateService.getTemplateResource(Form.class, form);
+        return getResource(CacheName.STYLESHEET, servletContext, form, template);
     }
 
-    public Resource getStylesheetResource(ServletContext servletContext, Process process, String templateName, String base, boolean isAnonymous) throws StatusCodeError {
+    public Resource getStylesheetResource(ServletContext servletContext, String templateName) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(templateName);
-        return getStylesheetResource(servletContext, process, template, base, isAnonymous);
+        return getResource(CacheName.STYLESHEET, servletContext, null, template);
     }
 
-    public Resource getStylesheetResource(ServletContext servletContext, Process process, Resource template, String base, boolean isAnonymous) throws StatusCodeError {
-        if (!template.exists())
-            throw new NotFoundError();
+//    public boolean serveExternalScriptResource(Class<?> type, Object t, OutputStream out) throws IOException {
+//        StreamingOutput streamingOutput = getExternalScriptAsStreaming(type, t);
+//        if (streamingOutput != null) {
+//            streamingOutput.write(out);
+//            return true;
+//        }
+//        return false;
+//    }
 
-        StaticResourceAggregatingVisitor visitor = null;
-        try {
-            Cache.ValueWrapper wrapper = settings.isDisableResourceCaching() ? null : cacheService.get(CacheName.STYLESHEET, template.getFilename());
-
-            if (wrapper != null) {
-                Resource stylesheetResource = (Resource) wrapper.get();
-
-                if (stylesheetResource != null && stylesheetResource.exists() && stylesheetResource.lastModified() >= template.lastModified())
-                    return stylesheetResource;
-            }
-
-            CleanerProperties cleanerProperties = new CleanerProperties();
-            cleanerProperties.setOmitXmlDeclaration(true);
-            HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-            visitor = new StaticResourceAggregatingVisitor(servletContext, process, base, settings, contentRepository, isAnonymous);
-            TagNode node = cleaner.clean(template.getInputStream());
-            node.traverse(visitor);
-
-            if (visitor != null) {
-                Resource stylesheetResource = visitor.getStylesheetResource();
-                cacheService.put(CacheName.STYLESHEET, template.getFilename(), stylesheetResource);
-                return stylesheetResource;
-            }
-        } catch (IOException ioe) {
-            LOG.error("Unable to read template", ioe);
-        }
-
-        return null;
-    }
-
-    public boolean serveExternalScriptResource(Class<?> type, Object t, OutputStream out) throws IOException {
-        StreamingOutput streamingOutput = getExternalScriptAsStreaming(type, t);
+    public boolean servePage(StreamingOutput streamingOutput, OutputStream out) throws IOException {
         if (streamingOutput != null) {
             streamingOutput.write(out);
             return true;
         }
-        return false;
-    }
 
-    public boolean servePage(StreamingOutput streamingOutput, OutputStream out) throws IOException {
-//        try {
-
-            if (streamingOutput != null) {
-                streamingOutput.write(out);
-                return true;
-            }
-//        } catch (NotFoundError nfe) {
-//            throw new IOException();
-//        }
         return false;
     }
 
     public long getPageSize(Class<?> type, Object t) {
         try {
             Resource resource = formTemplateService.getTemplateResource(type, t);
-            return getResourceSize(resource);
+            return UserInterfaceUtility.resourceSize(resource);
         } catch (NotFoundError nfe) {
             return 0;
         }
     }
 
-    public long getExternalScriptSize(Class<?> type, Object t) {
-        Resource resource = formTemplateService.getExternalScriptResource(type, t);
-        return getResourceSize(resource);
-    }
+//    public long getExternalScriptSize(Class<?> type, Object t) {
+//        Resource resource = formTemplateService.getExternalScriptResource(type, t);
+//        return UserInterfaceUtility.resourceSize(resource);
+//    }
 
     private Content getContentFromDisposition(Process process, FormDisposition disposition) throws MisconfiguredProcessException {
         if (disposition == null)
@@ -353,16 +287,34 @@ public class UserInterfaceService {
         return content;
     }
 
-    private long getResourceSize(Resource resource) {
-        long size = 0;
-        if (resource.exists()) {
-            try {
-                size = resource.contentLength();
-            } catch (IOException e) {
-                LOG.error("Unable to determine size of template for " + resource.getFilename(), e);
+    private Resource getResourceFromCache(Resource template, CacheName cacheName) {
+        try {
+            Cache.ValueWrapper wrapper = settings.isDisableResourceCaching() ? null : cacheService.get(cacheName, template.getFilename());
+
+            if (wrapper != null) {
+                Resource resource = (Resource) wrapper.get();
+
+                if (resource != null && resource.exists() && resource.lastModified() >= template.lastModified())
+                    return resource;
             }
+        } catch (IOException ioe) {
+            LOG.error("Unable to read template", ioe);
         }
-        return size;
+        return null;
+    }
+
+    private Resource getResource(CacheName cacheName, ServletContext servletContext, Form form, Resource template) throws StatusCodeError {
+        if (!template.exists())
+            throw new NotFoundError();
+
+        Resource scriptResource = getResourceFromCache(template, CacheName.SCRIPT);
+        if (scriptResource != null)
+            return scriptResource;
+
+        scriptResource = UserInterfaceUtility.resource(cacheName, form, template, contentRepository, servletContext, settings);
+        cacheService.put(cacheName, template.getFilename(), scriptResource);
+
+        return scriptResource;
     }
 
 }

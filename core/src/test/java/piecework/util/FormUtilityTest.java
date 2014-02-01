@@ -19,11 +19,14 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.DataInjectionStrategy;
 import piecework.form.FormDisposition;
 import piecework.model.*;
+import piecework.model.Process;
 
 import java.net.URI;
 
@@ -34,21 +37,31 @@ import java.net.URI;
 public class FormUtilityTest {
 
     @Mock
+    Process process;
+
+    @Mock
     ProcessDeployment deployment;
 
     @Test
     public void testDispositionNoFormBuilderNoTaskNoMediaType() throws Exception {
-        String location = "http://piecework.test/";
-        Action action = new Action(null, location, DataInjectionStrategy.INCLUDE_DIRECTIVES);
+        Mockito.doReturn("TEST")
+               .when(process).getProcessDefinitionKey();
+        Mockito.doReturn("http://piecework.test")
+               .when(deployment).getRemoteHost();
+
+        String location = "/something.html";
+        Action action = new Action(null, location, DataInjectionStrategy.REMOTE);
         Form.Builder builder = null;
         Task task = null;
         Activity activity = new Activity.Builder()
                 .action(ActionType.CREATE, action)
                 .build();
 
-        FormDisposition disposition = FormUtility.disposition(builder, deployment, activity, ActionType.CREATE);
+        ViewContext context = new ViewContext("http://localhost", "/piecework/ui", "/piecework/api", "/piecework/public", "v2");
+
+        FormDisposition disposition = FormUtility.disposition(process, deployment, activity, ActionType.CREATE, context, builder);
         Assert.assertEquals(action, disposition.getAction());
-        Assert.assertEquals(URI.create(location), disposition.getUri());
+        Assert.assertEquals(URI.create("http://piecework.test/something.html"), disposition.getPageUri());
     }
 
 

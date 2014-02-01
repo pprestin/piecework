@@ -18,13 +18,14 @@ package piecework.util;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.log4j.Logger;
+import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
 import piecework.exception.FormBuildingException;
 import piecework.form.FormDisposition;
 import piecework.model.*;
+import piecework.model.Process;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -96,7 +97,7 @@ public class FormUtility {
                 .option(new Option.Builder().value("WY").label("Wyoming").build());
     }
 
-    public static FormDisposition disposition(Form.Builder builder, ProcessDeployment deployment, Activity activity, ActionType actionType) throws FormBuildingException {
+    public static FormDisposition disposition(Process process, ProcessDeployment deployment, Activity activity, ActionType actionType, ViewContext context, Form.Builder builder) throws FormBuildingException {
         Action action = activity.action(actionType);
         boolean revertToDefaultUI = false;
 
@@ -113,31 +114,33 @@ public class FormUtility {
         if (action == null)
             throw new FormBuildingException("Action is null for this activity and type " + actionType);
 
-        URI uri = FormUtility.safeUri(deployment.getRemoteHost(), action);
-        boolean external = FormUtility.isExternal(uri);
+//        URI uri = FormUtility.safeUri(deployment.getRemoteHost(), action);
+//        boolean external = FormUtility.isExternal(uri);
 
-        FormDisposition formDisposition = null;
+        FormDisposition formDisposition = FormDisposition.Builder.build(process, deployment, action, context);
+        FormUtility.layout(builder, activity);
 
-        if (!revertToDefaultUI) {
-            switch (action.getStrategy()) {
-                case DECORATE_HTML:
-                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
-                    break;
-                case INCLUDE_DIRECTIVES:
-                case INCLUDE_SCRIPT:
-                    if (external)
-                        formDisposition = new FormDisposition(uri, action.getStrategy(), action);
-                    else if (action.getLocation() != null)
-                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
-                    break;
-            }
-        }
-
-        // Tacking this on at the end - could be somewhere better
-        if (formDisposition == null) {
-            formDisposition = new FormDisposition(action);
-            FormUtility.layout(builder, activity);
-        }
+//        if (!revertToDefaultUI) {
+//            switch (action.getStrategy()) {
+//                case DECORATE_HTML:
+//                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
+//                    break;
+//                case INCLUDE_DIRECTIVES:
+//                case INCLUDE_SCRIPT:
+//                case REMOTE:
+//                    if (external)
+//                        formDisposition = new FormDisposition(uri, action.getStrategy(), action);
+//                    else if (action.getLocation() != null)
+//                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
+//                    break;
+//            }
+//        }
+//
+//        // Tacking this on at the end - could be somewhere better
+//        if (formDisposition == null) {
+//            formDisposition = new FormDisposition(action);
+//            FormUtility.layout(builder, activity);
+//        }
 
         return formDisposition;
     }

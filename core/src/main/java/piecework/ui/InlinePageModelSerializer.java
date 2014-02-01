@@ -116,10 +116,10 @@ public class InlinePageModelSerializer {
 
         if (type.equals(Form.class)) {
             Form form = Form.class.cast(t);
-            if (form.isAnonymous())
-                script.addAttribute("src", settings.getPublicUrl() + "/resource/script/Form.js");
-            else
-                script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/Form.js");
+//            if (form.isAnonymous())
+                script.addAttribute("src", settings.getPublicUrl() + "/resource/script/" + form.getProcess().getProcessDefinitionKey() + ".js");
+//            else
+//                script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/" + form.getProcess().getProcessDefinitionKey() + ".js");
         } else if (type.equals(Report.class)) {
             script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/Report.js");
         } else if (type.equals(SearchResults.class)) {

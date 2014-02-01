@@ -121,6 +121,12 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Consumes({"application/json"})
     Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}/removal")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response detachment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws PieceworkException;
+
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})

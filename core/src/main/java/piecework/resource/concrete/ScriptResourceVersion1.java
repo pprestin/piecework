@@ -22,7 +22,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import piecework.authorization.AuthorizationRole;
 import piecework.service.RequestService;
-import piecework.model.RequestDetails;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
@@ -31,10 +30,9 @@ import piecework.resource.ScriptResource;
 import piecework.security.Sanitizer;
 import piecework.security.SecuritySettings;
 import piecework.service.FormTemplateService;
+import piecework.util.UserInterfaceUtility;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
@@ -62,53 +60,55 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     SecuritySettings securitySettings;
 
 
-    @Override
-    public Response read(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
-        Entity principal = identityHelper.getPrincipal();
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String requestId = sanitizer.sanitize(rawRequestId);
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest request = requestService.read(requestDetails, requestId);
-        return response(request, principal, new MediaType("text", "javascript"));
-    }
+//    @Override
+//    public Response read(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
+//        Entity principal = identityHelper.getPrincipal();
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//        String requestId = sanitizer.sanitize(rawRequestId);
+//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+//        FormRequest request = requestService.read(requestDetails, requestId);
+//        return response(request, principal, new MediaType("text", "javascript"));
+//    }
 
     @Override
     public Response readScript(String rawScriptId, MessageContext context) throws StatusCodeError {
         String scriptId = sanitizer.sanitize(rawScriptId);
-        Entity principal = identityHelper.getPrincipal();
-        String templateName = formTemplateService.getTemplateName(scriptId, isAnonymous());
+//        Entity principal = identityHelper.getPrincipal();
+        String templateName = UserInterfaceUtility.templateName(scriptId, isAnonymous());
         ServletContext servletContext = context.getServletContext();
         if (templateName == null) {
-            Form form = getForm(scriptId, principal, context);
-            return processScript(servletContext, form);
+            throw new NotFoundError();
+//            Form form = getForm(scriptId, principal, context);
+//            return processScript(servletContext, form);
         }
 
-        Resource scriptResource = userInterfaceService.getScriptResource(servletContext, null, templateName, null, isAnonymous());
+        Resource scriptResource = userInterfaceService.getScriptResource(servletContext, templateName, isAnonymous());
         return response(scriptResource, "text/javascript");
     }
 
     @Override
     public Response readStylesheet(String rawStylesheetId, MessageContext context) throws StatusCodeError {
         String stylesheetId = sanitizer.sanitize(rawStylesheetId);
-        Entity principal = identityHelper.getPrincipal();
-        String templateName = formTemplateService.getTemplateName(stylesheetId, isAnonymous());
+//        Entity principal = identityHelper.getPrincipal();
+        String templateName = UserInterfaceUtility.templateName(stylesheetId, isAnonymous());
         ServletContext servletContext = context.getServletContext();
         if (templateName == null) {
-            Form form = getForm(stylesheetId, principal, context);
-            return processStylesheet(servletContext, form);
+            throw new NotFoundError();
+//            Form form = getForm(stylesheetId, principal, context);
+//            return processStylesheet(servletContext, form);
         }
 
-        Resource stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, null, templateName, null, isAnonymous());
+        Resource stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, templateName);
         return response(stylesheetResource, "text/css");
     }
 
-    @Override
-    public Response readStatic(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = identityHelper.findProcess(processDefinitionKey, true);
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        return staticResponse(process, requestDetails, pathSegments);
-    }
+//    @Override
+//    public Response readStatic(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//        Process process = identityHelper.findProcess(processDefinitionKey, true);
+//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+//        return staticResponse(process, requestDetails, pathSegments);
+//    }
 
     @Override
     protected boolean isAnonymous() {
