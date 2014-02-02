@@ -41,6 +41,68 @@ public class ValidationUtility {
     private static final Set<FieldTag> FREEFORM_INPUT_TYPES = Sets.newHashSet(FieldTag.FILE, FieldTag.EMAIL, FieldTag.NUMBER, FieldTag.TEXT, FieldTag.TEXTAREA);
     private static final Logger LOG = Logger.getLogger(ValidationUtility.class);
 
+    public static void validateField(Validation.Builder validationBuilder, Field field,
+                                     List<ValidationRule> rules, Set<String> fieldNames,
+                                     ManyMap<String, Value> decryptedSubmissionData,
+                                     ManyMap<String, Value> decryptedInstanceData,
+                                     boolean onlyAcceptValidInputs) {
+
+        if (rules != null) {
+            for (ValidationRule rule : rules) {
+                try {
+                    rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
+                } catch (ValidationRuleException e) {
+                    LOG.warn("Invalid input: " + e.getMessage() + " " + e.getRule());
+
+                    validationBuilder.error(rule.getName(), e.getMessage());
+                    if (onlyAcceptValidInputs) {
+                        fieldNames.remove(rule.getName());
+                    }
+                }
+            }
+        }
+        String fieldName = field.getName();
+
+        if (fieldName == null) {
+            if (field.getType() != null && field.getType().equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
+                List<Option> options = field.getOptions();
+                if (options != null) {
+                    for (Option option : options) {
+                        if (StringUtils.isNotEmpty(option.getName()) && decryptedSubmissionData.containsKey(option.getName()))
+                            fieldName = option.getName();
+                    }
+                }
+            }
+        }
+
+        if (fieldName == null) {
+            LOG.warn("Field is missing name " + field.getFieldId());
+            return;
+        }
+
+        if (fieldNames.contains(fieldName)) {
+            List<? extends Value> values = decryptedSubmissionData.get(fieldName);
+            List<? extends Value> previousValues = decryptedInstanceData.get(fieldName);
+
+            boolean isFileField = field.getType() != null && (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
+            if (values == null) {
+                // Files are a special case, in that we don't want to wipe them out if they aren't resubmitted
+                // on every request
+                if (isFileField)
+                    values = previousValues;
+
+            } else if (isFileField && field.getMaxInputs() > 1) {
+                // With file fields that accept multiple files, we want to append each submission
+                values = append(values, previousValues);
+            }
+
+            if (values == null)
+                values = Collections.emptyList();
+
+            validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
+        }
+    }
+
     public static Validation validate(Process process, ProcessInstance instance, Task task, Submission submission,
                                       SubmissionTemplate template, ManyMap<String, Value> decryptedSubmissionData, ManyMap<String, Value> decryptedInstanceData,
                                       boolean onlyAcceptValidInputs) {
@@ -54,60 +116,7 @@ public class ValidationUtility {
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();
                 List<ValidationRule> rules = entry.getValue();
-                if (rules != null) {
-                    for (ValidationRule rule : rules) {
-                        try {
-                            rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
-                        } catch (ValidationRuleException e) {
-                            LOG.warn("Invalid input: " + e.getMessage() + " " + e.getRule());
-
-                            validationBuilder.error(rule.getName(), e.getMessage());
-                            if (onlyAcceptValidInputs) {
-                                fieldNames.remove(rule.getName());
-                            }
-                        }
-                    }
-                }
-                String fieldName = field.getName();
-
-                if (fieldName == null) {
-                    if (field.getType() != null && field.getType().equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
-                        List<Option> options = field.getOptions();
-                        if (options != null) {
-                            for (Option option : options) {
-                                if (StringUtils.isNotEmpty(option.getName()) && decryptedSubmissionData.containsKey(option.getName()))
-                                    fieldName = option.getName();
-                            }
-                        }
-                    }
-                }
-
-                if (fieldName == null) {
-                    LOG.warn("Field is missing name " + field.getFieldId());
-                    continue;
-                }
-
-                if (fieldNames.contains(fieldName)) {
-                    List<? extends Value> values = decryptedSubmissionData.get(fieldName);
-                    List<? extends Value> previousValues = decryptedInstanceData.get(fieldName);
-
-                    boolean isFileField = field.getType() != null && (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
-                    if (values == null) {
-                        // Files are a special case, in that we don't want to wipe them out if they aren't resubmitted
-                        // on every request
-                        if (isFileField)
-                            values = previousValues;
-
-                    } else if (isFileField && field.getMaxInputs() > 1) {
-                        // With file fields that accept multiple files, we want to append each submission
-                        values = append(values, previousValues);
-                    }
-
-                    if (values == null)
-                        values = Collections.emptyList();
-
-                    validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
-                }
+                validateField(validationBuilder, field, rules, fieldNames, decryptedSubmissionData, decryptedInstanceData, onlyAcceptValidInputs);
             }
         }
 
@@ -137,15 +146,8 @@ public class ValidationUtility {
         return combined;
     }
 
-    public static Set<ValidationRule> validationRules(Field field, Registry registry) {
-        FieldTag fieldTag = FieldTag.getInstance(field.getType());
-
+    public static OptionResolver resolveConstraints(Field field, FieldTag fieldTag, Set<ValidationRule> rules, Registry registry) {
         String fieldName = field.getName();
-        Set<ValidationRule> rules = new HashSet<ValidationRule>();
-
-        if (!field.isEditable())
-            return rules;
-
         OptionResolver optionResolver = null;
         List<Constraint> constraints = field.getConstraints();
         Constraint onlyRequiredWhenConstraint = null;
@@ -179,6 +181,23 @@ public class ValidationUtility {
                 rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.REQUIRED).name(fieldName).build());
         }
 
+        if (field.getMaxInputs() > 1 || field.getMinInputs() > 1)
+            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMBER_OF_INPUTS).name(fieldName).numberOfInputs(field.getMaxInputs(), field.getMinInputs()).constraint(onlyRequiredWhenConstraint).required(field.isRequired()).build());
+
+        return optionResolver;
+    }
+
+    public static Set<ValidationRule> validationRules(Field field, Registry registry) {
+        FieldTag fieldTag = FieldTag.getInstance(field.getType());
+
+        String fieldName = field.getName();
+        Set<ValidationRule> rules = new HashSet<ValidationRule>();
+
+        if (!field.isEditable())
+            return rules;
+
+        OptionResolver optionResolver = resolveConstraints(field, fieldTag, rules, registry);
+
         if (!FREEFORM_INPUT_TYPES.contains(fieldTag)) {
             List<Option> options = field.getOptions();
 
@@ -200,9 +219,6 @@ public class ValidationUtility {
 
             rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.VALUE_LENGTH).name(fieldName).valueLength(field.getMaxValueLength(), field.getMinValueLength()).build());
         }
-
-        if (field.getMaxInputs() > 1 || field.getMinInputs() > 1)
-            rules.add(new ValidationRule.Builder(ValidationRule.ValidationRuleType.NUMBER_OF_INPUTS).name(fieldName).numberOfInputs(field.getMaxInputs(), field.getMinInputs()).constraint(onlyRequiredWhenConstraint).required(field.isRequired()).build());
 
         return rules;
     }

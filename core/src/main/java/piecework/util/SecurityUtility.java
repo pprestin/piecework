@@ -73,7 +73,7 @@ public class SecurityUtility {
         if (request.getRemoteAddr() != null && formRequest.getRemoteAddr() != null && !request.getRemoteAddr().equals(formRequest.getRemoteAddr()))
             LOG.warn("This should not happen -- submission remote address (" + request.getRemoteAddr() + ") does not match request (" + formRequest.getRemoteAddr() + ")");
 
-        if (formRequest.getCertificateIssuer() != null && formRequest.getCertificateSubject() != null) {
+        if (formRequest.getCertificateIssuer() != null || formRequest.getCertificateSubject() != null) {
             String certificateIssuer = request.getCertificateIssuer();
             String certificateSubject = request.getCertificateSubject();
 
