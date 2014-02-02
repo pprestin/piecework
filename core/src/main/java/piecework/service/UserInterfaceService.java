@@ -158,7 +158,7 @@ public class UserInterfaceService {
         return null;
     }
 
-    public Resource getCustomPage(Form form) throws MisconfiguredProcessException, IOException {
+    public Resource getCustomPage(Form form) throws MisconfiguredProcessException {
         // Sanity checks
         if (form == null)
             throw new MisconfiguredProcessException("No form");
@@ -222,6 +222,10 @@ public class UserInterfaceService {
 
     public Resource getScriptResource(ServletContext servletContext, Form form) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(Form.class, form);
+        return getScriptResource(servletContext, form, template);
+    }
+
+    public Resource getScriptResource(ServletContext servletContext, Form form, Resource template) throws StatusCodeError {
         return getResource(CacheName.SCRIPT, servletContext, form, template);
     }
 
@@ -232,6 +236,10 @@ public class UserInterfaceService {
 
     public Resource getStylesheetResource(ServletContext servletContext, Form form) throws StatusCodeError {
         Resource template = formTemplateService.getTemplateResource(Form.class, form);
+        return getStylesheetResource(servletContext, form, template);
+    }
+
+    public Resource getStylesheetResource(ServletContext servletContext, Form form, Resource template) throws StatusCodeError {
         return getResource(CacheName.STYLESHEET, servletContext, form, template);
     }
 
