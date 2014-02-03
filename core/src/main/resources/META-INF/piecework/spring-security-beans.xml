@@ -21,6 +21,7 @@
     </security:http>
 
     <security:http pattern="/ui/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html">
+        <security:intercept-url pattern="/instance/*" access="permitAll" method="OPTIONS"/>
         <security:intercept-url pattern="/**" access="authenticated"/>
 
         <security:form-login
