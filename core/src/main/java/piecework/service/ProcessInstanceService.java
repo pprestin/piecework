@@ -172,9 +172,10 @@ public class ProcessInstanceService {
         commandFactory.createsubtask(principal, process, instance, deployment, parentTaskId, validation).execute();
     }
 
-    public ProcessInstance findByTaskId(Process process, String taskId) throws StatusCodeError {
+    public ProcessInstance findByTaskId(Process process, String rawTaskId) throws StatusCodeError {
         if (process == null)
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
+        String taskId = sanitizer.sanitize(rawTaskId);
 
         return processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
     }

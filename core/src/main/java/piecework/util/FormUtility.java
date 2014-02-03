@@ -210,6 +210,8 @@ public class FormUtility {
             LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
             builder.header("Access-Control-Allow-Origin", hostUri);
             builder.header("Access-Control-Allow-Credentials", "true");
+            // For file upload
+            builder.header("Access-Control-Allow-Headers", "Content-Type, Content-Range, Content-Disposition, Content-Description");
             if (entity == null)
                 builder.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         }

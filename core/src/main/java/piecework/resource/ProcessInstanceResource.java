@@ -99,6 +99,13 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @Consumes("multipart/form-data")
     Response attach(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, MultipartBody body) throws PieceworkException;
 
+    @OPTIONS
+    @Path("{processDefinitionKey}/{processInstanceId}/attachment")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes({"*/*"})
+    @LocalPreflight
+    Response attachOptions(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
+
     @GET
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})

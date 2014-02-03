@@ -49,6 +49,7 @@ import piecework.common.ManyMap;
 import piecework.util.FormUtility;
 import piecework.util.ProcessInstanceUtility;
 
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -128,10 +129,21 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
+    public Response attachOptions(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
+        LOG.debug("Options for " + process.getProcessDefinitionKey());
+
+        return FormUtility.allowCrossOriginResponse(deployment, null);
+    }
+
+    @Override
     public Response attachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws PieceworkException {
         Entity principal = helper.getPrincipal();
         Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         ProcessDeployment deployment = deploymentService.read(process, instance);
 
         if (!taskService.hasAllowedTask(process, instance, principal, false))

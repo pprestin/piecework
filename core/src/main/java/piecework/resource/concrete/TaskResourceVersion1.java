@@ -36,6 +36,7 @@ import piecework.model.*;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.resource.TaskResource;
+import piecework.util.FormUtility;
 import piecework.validation.ValidationFactory;
 
 import javax.servlet.http.HttpServletRequest;
@@ -108,8 +109,12 @@ public class TaskResourceVersion1 implements TaskResource {
         Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.findByTaskId(process, rawTaskId);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
         taskService.complete(rawProcessDefinitionKey, rawTaskId, rawAction, rawSubmission, requestDetails, principal);
-        return Response.noContent().build();
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     public Response read(MessageContext context, String rawProcessDefinitionKey, String rawTaskId) throws StatusCodeError {
