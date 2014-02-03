@@ -407,7 +407,9 @@ angular.module('wf.directives',
                     scope.fileUploadOptions = {
                         autoUpload: true
                     };
-                    scope.attachmentUrl = $sce.getTrustedResourceUrl(scope.form.attachment);
+                    scope.getAttachmentUrl = function() {
+                        return $sce.getTrustedResourceUrl(scope.form.attachment);
+                    };
                     scope.$on('fileuploaddone', function(event, data) {
                         attachmentService.refreshAttachments(scope.form);
                     });
@@ -1346,7 +1348,9 @@ angular.module('wf.directives',
                             withCredentials: true
                         }
                     };
-                    scope.attachmentUrl = $sce.getTrustedResourceUrl(scope.form.attachment);
+                    scope.getAttachmentUrl = function() {
+                        return $sce.getTrustedResourceUrl(scope.form.attachment);
+                    };
                     scope.$on('fileuploaddone', function(event, data) {
                         attachmentService.refreshAttachments(scope.form);
                     });
