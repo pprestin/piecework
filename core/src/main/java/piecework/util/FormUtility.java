@@ -179,15 +179,7 @@ public class FormUtility {
     public static Response allowCrossOriginNoContentResponse(ProcessDeployment deployment) {
         Response.ResponseBuilder builder = Response.noContent();
 
-        URI remoteHost = remoteHost(deployment);
-
-        if (remoteHost != null) {
-            String hostUri = remoteHost.toString();
-            LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
-            builder.header("Access-Control-Allow-Origin", hostUri);
-            builder.header("Access-Control-Allow-Credentials", "true");
-        }
-
+        addCrossOriginHeaders(builder, deployment, null);
         return builder.build();
     }
 
@@ -198,6 +190,19 @@ public class FormUtility {
     public static Response allowCrossOriginResponse(ProcessDeployment deployment, Object entity, String contentType, Header ... headers) {
         Response.ResponseBuilder builder = entity != null ? Response.ok(entity, contentType) : Response.ok();
 
+        addCrossOriginHeaders(builder, deployment, entity);
+
+        if (headers != null) {
+            for (Header header : headers) {
+                if (StringUtils.isNotEmpty(header.getName()) && StringUtils.isNotEmpty(header.getValue()))
+                    builder.header(header.getName(), header.getValue());
+            }
+        }
+
+        return builder.build();
+    }
+
+    public static void addCrossOriginHeaders(Response.ResponseBuilder builder, ProcessDeployment deployment, Object entity) {
         URI remoteHost = remoteHost(deployment);
 
         if (remoteHost != null) {
@@ -208,15 +213,6 @@ public class FormUtility {
             if (entity == null)
                 builder.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         }
-
-        if (headers != null) {
-            for (Header header : headers) {
-                if (StringUtils.isNotEmpty(header.getName()) && StringUtils.isNotEmpty(header.getValue()))
-                    builder.header(header.getName(), header.getValue());
-            }
-        }
-
-        return builder.build();
     }
 
 

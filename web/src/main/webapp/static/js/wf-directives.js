@@ -408,6 +408,9 @@ angular.module('wf.directives',
                         autoUpload: true
                     };
                     scope.getAttachmentUrl = function() {
+                        if (typeof(scope.form) === 'undefined') {
+                            return '/';
+                        }
                         return $sce.getTrustedResourceUrl(scope.form.attachment);
                     };
                     scope.$on('fileuploaddone', function(event, data) {
@@ -1349,6 +1352,9 @@ angular.module('wf.directives',
                         }
                     };
                     scope.getAttachmentUrl = function() {
+                        if (typeof(scope.form) === 'undefined') {
+                            return '/';
+                        }
                         return $sce.getTrustedResourceUrl(scope.form.attachment);
                     };
                     scope.$on('fileuploaddone', function(event, data) {

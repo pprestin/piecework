@@ -104,8 +104,11 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
     @Override
     public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
         processInstanceService.activate(helper.getPrincipal(), rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return Response.noContent().build();
+        return FormUtility.allowCrossOriginNoContentResponse(deployment);
     }
 
     @Override
@@ -383,11 +386,14 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         accessTracker.track(requestDetails, true, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
+        Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance stored = processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, body, MultipartBody.class, helper.getPrincipal());
-        return valueLocation(stored, fieldName);
+        ProcessDeployment deployment = deploymentService.read(process, stored);
+
+        return valueLocation(deployment, stored, fieldName);
     }
 
-    private Response valueLocation(ProcessInstance stored, String fieldName) {
+    private Response valueLocation(ProcessDeployment deployment, ProcessInstance stored, String fieldName) {
         Map<String, List<Value>> data = stored.getData();
 
         ViewContext version1 = versions.getVersion1();
@@ -408,6 +414,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
         ResponseBuilder builder = file != null ? Response.ok(file) : Response.noContent();
 
+        FormUtility.addCrossOriginHeaders(builder, deployment, null);
         if (location != null)
             builder.header(HttpHeaders.LOCATION, location);
 
@@ -457,9 +464,16 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
 
+        Process process = processService.read(rawProcessDefinitionKey);
         ProcessInstance instance = processInstanceService.create(helper.getPrincipal(), requestDetails, rawProcessDefinitionKey, data, type);
 
-        return Response.ok(new ProcessInstance.Builder(instance).build(versions.getVersion1())).build();
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+        ProcessInstance decorated = new ProcessInstance.Builder(instance).build(versions.getVersion1());
+
+
+        ResponseBuilder builder = Response.ok(decorated);
+        FormUtility.addCrossOriginHeaders(builder, deployment, decorated);
+        return builder.build();
     }
 
 }
