@@ -479,7 +479,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                         </div>\n" +
     "                         <div class=\"btn-group\"><a data-ng-click=\"dialogs.openCommentModal([form])\" data-ng-show=\"form.allowAttachments && form.history\" class=\"btn btn-default navbar-btn\" id=\"comment-button\" data-target=\"#comment-dialog\" data-backdrop=\"false\" data-toggle=\"modal\" title=\"Add comment\" type=\"button\"><i class=\"fa fa-comment-o\"></i></a></div>\n" +
     "                         <div class=\"btn-group\">\n" +
-    "                             <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{form.attachment}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +
+    "                             <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{getAttachmentUrl()}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +
     "                                 <span class=\"btn btn-default navbar-btn fileinput-button\" data-ng-class=\"{disabled: disabled}\">\n" +
     "                                       <i ng-hide=\"state.sending\" class=\"fa fa-paperclip\"></i>  <i ng-show=\"state.sending\" class='fa fa-paperclip fa-spin'></i>\n" +
     "                                       <input type=\"file\" name=\"attachment\" multiple=\"\" ng-disabled=\"disabled\">\n" +
@@ -494,7 +494,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "         </div>\n" +
     "     </nav>");
   $templateCache.put("templates/fileupload.html",
-    "   <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{form.attachment}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +
+    "   <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{getAttachmentUrl()}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +
     "       <span class=\"btn btn-default navbar-btn fileinput-button\" data-ng-class=\"{disabled: disabled}\">\n" +
     "           <i ng-hide=\"state.sending\" class=\"fa fa-paperclip\"></i>  <i ng-show=\"state.sending\" class='fa fa-paperclip fa-spin'></i>\n" +
     "           <input type=\"file\" name=\"attachment\" multiple=\"\" ng-disabled=\"disabled\">\n" +

@@ -392,8 +392,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfFileUpload', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
-        function(attachmentService, dialogs, notificationService, taskService, wizardService) {
+    .directive('wfFileUpload', ['$sce', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
+        function($sce, attachmentService, dialogs, notificationService, taskService, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -406,6 +406,9 @@ angular.module('wf.directives',
                     });
                     scope.fileUploadOptions = {
                         autoUpload: true
+                    };
+                    scope.getAttachmentUrl = function() {
+                        return $sce.getTrustedResourceUrl(scope.form.attachment);
                     };
                     scope.$on('fileuploaddone', function(event, data) {
                         attachmentService.refreshAttachments(scope.form);
@@ -1303,8 +1306,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfToolbar', ['attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
-        function(attachmentService, dialogs, notificationService, taskService, wizardService) {
+    .directive('wfToolbar', ['$sce', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
+        function($sce, attachmentService, dialogs, notificationService, taskService, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -1344,6 +1347,9 @@ angular.module('wf.directives',
                         xhrFields: {
                             withCredentials: true
                         }
+                    };
+                    scope.getAttachmentUrl = function() {
+                        return $sce.getTrustedResourceUrl(scope.form.attachment);
                     };
                     scope.$on('fileuploaddone', function(event, data) {
                         attachmentService.refreshAttachments(scope.form);
