@@ -564,8 +564,8 @@ angular.module('wf.directives',
 
                         $http.get($sce.trustAsResourceUrl(url))
                             .error(function(data, status, headers, config) {
-                                if (status == 0 || status == 302)
-                                    $window.location.href = redirectUrl;
+//                                if (status == 0 || status == 302)
+//                                    $window.location.href = redirectUrl;
                             })
                             .success(function(form) {
                                 element.attr("action", form.action);
@@ -637,11 +637,15 @@ angular.module('wf.directives',
                                         if (values != null) {
                                             angular.forEach(values, function(value) {
                                                 if (value != null) {
-                                                    if (input.type == 'checkbox')
-                                                        input.checked = true;
-                                                    else if (input.type == 'radio')
-                                                        input.checked = true;
-                                                    else if (input.type == 'file') {
+                                                    if (input.type == 'checkbox' || input.type == 'radio') {
+                                                        if (input.value == value)
+                                                            input.checked = true;
+                                                    } else if (input.type == 'select') {
+                                                        angular.forEach(input.options, function(option) {
+                                                           if (option.value == value)
+                                                                option.selected = true;
+                                                        });
+                                                    } else if (input.type == 'file') {
 
                                                     } else {
                                                         var current;

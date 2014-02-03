@@ -23,6 +23,8 @@ import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -81,6 +83,39 @@ public class ActivityUtil {
         }
 
         return parent;
+    }
+
+    public static List<String> fieldIds(Container container, Container parentContainer) {
+        List<String> fieldIds = new ArrayList<String>();
+
+        // These fieldIds ultimately determine which fields will be validated
+        int reviewChildIndex = parentContainer.getReviewChildIndex();
+        if (reviewChildIndex > -1 && reviewChildIndex == container.getOrdinal()) {
+            // If we're at a review step then we need to gather the fields of all
+            // previous containers owned by the parent
+            List<Container> children = parentContainer.getChildren();
+            for (Container child : children) {
+                if (child.getOrdinal() <= reviewChildIndex)
+                    ActivityUtil.gatherFieldIds(child, fieldIds);
+            }
+        } else {
+            // Otherwise we only need to gather the fieldIds from the container that is being validated
+            ActivityUtil.gatherFieldIds(container, fieldIds);
+        }
+        return fieldIds;
+    }
+
+    public static void gatherFieldIds(Container container, List<String> allFieldIds) {
+        List<String> fieldIds = container.getFieldIds();
+        if (fieldIds != null) {
+            allFieldIds.addAll(fieldIds);
+        }
+
+        if (container.getChildren() != null && !container.getChildren().isEmpty()) {
+            for (Container child : container.getChildren()) {
+                gatherFieldIds(child, allFieldIds);
+            }
+        }
     }
 
 }

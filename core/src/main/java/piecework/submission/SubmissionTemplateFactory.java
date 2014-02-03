@@ -111,22 +111,7 @@ public class SubmissionTemplateFactory {
 
                 if (container != null) {
                     Map<String, Field> fieldMap = activity.getFieldMap();
-                    List<String> fieldIds = new ArrayList<String>();
-
-                    // These fieldIds ultimately determine which fields will be validated
-                    int reviewChildIndex = parentContainer.getReviewChildIndex();
-                    if (reviewChildIndex > -1 && reviewChildIndex == container.getOrdinal()) {
-                        // If we're at a review step then we need to gather the fields of all
-                        // previous containers owned by the parent
-                        List<Container> children = parentContainer.getChildren();
-                        for (Container child : children) {
-                            if (child.getOrdinal() <= reviewChildIndex)
-                                gatherFieldIds(child, fieldIds);
-                        }
-                    } else {
-                        // Otherwise we only need to gather the fieldIds from the container that is being validated
-                        gatherFieldIds(container, fieldIds);
-                    }
+                    List<String> fieldIds = ActivityUtil.fieldIds(container, parentContainer);
 
                     if (fieldIds != null) {
                         fields = new TreeSet<Field>();
@@ -170,20 +155,6 @@ public class SubmissionTemplateFactory {
             builder.field(field);
         }
     }
-
-    private void gatherFieldIds(Container container, List<String> allFieldIds) {
-        List<String> fieldIds = container.getFieldIds();
-        if (fieldIds != null) {
-            allFieldIds.addAll(fieldIds);
-        }
-
-        if (container.getChildren() != null && !container.getChildren().isEmpty()) {
-            for (Container child : container.getChildren()) {
-                gatherFieldIds(child, allFieldIds);
-            }
-        }
-    }
-
 
 
 }
