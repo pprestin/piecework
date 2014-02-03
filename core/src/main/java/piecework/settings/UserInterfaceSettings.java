@@ -30,6 +30,7 @@ public class UserInterfaceSettings {
     @Autowired
     Environment environment;
 
+    private String hostUri;
     private String applicationTitle;
     private String applicationUrl;
     private String publicUrl;
@@ -41,6 +42,7 @@ public class UserInterfaceSettings {
 
     @PostConstruct
     public void init() {
+        this.hostUri = environment.getProperty("host.uri");
         this.applicationTitle = environment.getProperty("application.name");
         this.applicationUrl = environment.getProperty("base.application.uri");
         this.publicUrl = environment.getProperty("base.public.uri");
@@ -49,6 +51,10 @@ public class UserInterfaceSettings {
         this.assetsDirectoryPath = environment.getProperty("assets.directory");
         this.doOptimization = environment.getProperty("javascript.minification", Boolean.class, Boolean.FALSE);
         this.customStylesheetUrl = environment.getProperty("custom.stylesheet.url");
+    }
+
+    public String getHostUri() {
+        return hostUri;
     }
 
     public String getApplicationTitle() {

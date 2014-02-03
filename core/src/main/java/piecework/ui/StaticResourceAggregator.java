@@ -99,7 +99,8 @@ public class StaticResourceAggregator {
                                 .append("$httpProvider.defaults.withCredentials = true;")
                                 .append("$httpProvider.defaults.useXDomain = true;")
                                 .append("$sceDelegateProvider.resourceUrlWhitelist(['self','")
-                                .append(hostUri)
+                                .append(hostUri).append("/**,")
+                                .append(settings.getHostUri())
                                 .append("/**']);");
                     }
 
