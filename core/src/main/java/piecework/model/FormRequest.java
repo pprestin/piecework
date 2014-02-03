@@ -262,7 +262,7 @@ public class FormRequest {
             this.activity = request.activity;
             this.contentType = request.contentType;
             this.explanation = request.explanation;
-            this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
+            this.acceptableMediaTypes = request.acceptableMediaTypes != null && !request.acceptableMediaTypes.isEmpty() ? new ArrayList<String>(request.acceptableMediaTypes) : new ArrayList<String>();
             this.messages = new ManyMap<String, Message>(request.getMessages());
             this.referrer = request.referrer;
             this.userAgent = request.userAgent;

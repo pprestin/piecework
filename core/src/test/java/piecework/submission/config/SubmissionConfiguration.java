@@ -21,6 +21,7 @@ import org.mockito.stubbing.Answer;
 import org.owasp.validator.html.Policy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import piecework.common.UuidGenerator;
 import piecework.model.Submission;
@@ -28,6 +29,7 @@ import piecework.model.User;
 import piecework.persistence.ActivityRepository;
 import piecework.persistence.ContentRepository;
 import piecework.persistence.SubmissionRepository;
+import piecework.persistence.config.MockRepositoryConfiguration;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.UserInputSanitizer;
 import piecework.service.IdentityService;
@@ -45,6 +47,7 @@ import static org.mockito.Matchers.any;
  * @author James Renfro
  */
 @Configuration
+@Import(MockRepositoryConfiguration.class)
 public class SubmissionConfiguration {
 
     @Bean
@@ -52,18 +55,6 @@ public class SubmissionConfiguration {
         ClassPathResource policyResource = new ClassPathResource("META-INF/piecework/antisamy-piecework-1.4.4.xml");
         URL policyUrl = policyResource.getURL();
         return Policy.getInstance(policyUrl);
-    }
-
-    @Bean
-    public ActivityRepository activityRepository() {
-        ActivityRepository mock = Mockito.mock(ActivityRepository.class);
-        return mock;
-    }
-
-    @Bean
-    public ContentRepository contentRepository() {
-        ContentRepository mock = Mockito.mock(ContentRepository.class);
-        return mock;
     }
 
     @Bean
@@ -92,18 +83,6 @@ public class SubmissionConfiguration {
     @Bean
     public SubmissionHandlerRegistry submissionHandlerRegistry() {
         return new SubmissionHandlerRegistry();
-    }
-
-    @Bean
-    public SubmissionRepository submissionRepository() {
-        SubmissionRepository mock = Mockito.mock(SubmissionRepository.class);
-        Mockito.doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                return invocation.getArguments()[0];
-            }
-        }).when(mock).save(any(Submission.class));
-        return mock;
     }
 
     @Bean

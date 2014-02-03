@@ -15,10 +15,8 @@
  */
 package piecework.resource.concrete;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.cxf.jaxrs.ext.RequestHandler;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,26 +25,18 @@ import piecework.Versions;
 import piecework.resource.SubTaskResource;
 import piecework.service.*;
 import piecework.enumeration.ActionType;
-import piecework.model.SearchResults;
-import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
-import piecework.security.SecuritySettings;
+import piecework.settings.SecuritySettings;
 import piecework.model.*;
 import piecework.security.Sanitizer;
-import piecework.security.concrete.PassthroughSanitizer;
-import piecework.resource.TaskResource;
 import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplate;
 import piecework.submission.SubmissionTemplateFactory;
 import piecework.validation.ValidationFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.util.List;
 
 @Service
 public class SubTaskResourceVersion1 implements SubTaskResource {

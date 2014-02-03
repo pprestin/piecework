@@ -84,28 +84,24 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = processService.read(rawProcessDefinitionKey);
         return submitForm(context, process, rawRequestId, formData, Map.class);
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = processService.read(rawProcessDefinitionKey);
         return submitForm(context, process, rawRequestId, body, MultipartBody.class);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = processService.read(rawProcessDefinitionKey);
         return validateForm(context, process, formData, rawRequestId, rawValidationId);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         Process process = processService.read(rawProcessDefinitionKey);
         return validateForm(context, process, body, rawRequestId, rawValidationId);
     }
@@ -113,7 +109,6 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     @Override
     public SearchResults search(MessageContext context) throws PieceworkException {
         UriInfo uriInfo = context.getContext(UriInfo.class);
-
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         return search(context, rawQueryParameters);
     }

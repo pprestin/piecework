@@ -31,7 +31,7 @@ import piecework.model.SearchResults;
 import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
-import piecework.security.SecuritySettings;
+import piecework.settings.SecuritySettings;
 import piecework.model.*;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;

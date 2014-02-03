@@ -524,6 +524,12 @@ angular.module('wf.directives',
                         }
                     };
                     scope.wizard = wizardService;
+                    scope.hasDatePickerSupport = function() {
+                        var elem = document.createElement('input');
+                        elem.setAttribute('type','date');
+                        elem.value = 'foo';
+                        return (elem.type == 'date' && elem.value != 'foo');
+                    }
                     scope.$root.$on('event:refresh', function(event, message) {
                         scope.$root.refreshing = true;
                         var link = formResourceUri;
@@ -541,6 +547,14 @@ angular.module('wf.directives',
                         } else {
                             url += '.json' + query;
                         }
+
+                        // FIXME: Reduce cost by customizing to only use on fields that have a mask
+                        window.setTimeout(function() {
+                            $(':input[data-inputmask][type="text"]').inputmask();
+                            if (!scope.hasDatePickerSupport()) {
+                                $(':input[data-inputmask][type="date"]').inputmask();
+                            }
+                        }, 500);
 
                         $http.get($sce.trustAsResourceUrl(url))
                             .error(function(data, status, headers, config) {

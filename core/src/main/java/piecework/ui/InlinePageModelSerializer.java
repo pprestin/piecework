@@ -23,6 +23,7 @@ import org.htmlcleaner.TagNode;
 import org.springframework.core.io.Resource;
 import piecework.designer.model.view.IndexView;
 import piecework.model.*;
+import piecework.settings.UserInterfaceSettings;
 
 import java.io.IOException;
 

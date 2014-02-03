@@ -21,7 +21,7 @@ import piecework.enumeration.Scheme;
 import piecework.model.Content;
 import piecework.ui.StaticResourceAggregator;
 import piecework.ui.TagAttributeAction;
-import piecework.ui.UserInterfaceSettings;
+import piecework.settings.UserInterfaceSettings;
 
 /**
  * @author James Renfro

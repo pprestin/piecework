@@ -16,12 +16,11 @@
 package piecework.ui.visitor;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
-import piecework.ui.UserInterfaceSettings;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
 
 import java.util.Map;

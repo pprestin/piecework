@@ -21,14 +21,9 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import piecework.common.CustomPropertySourcesConfigurer;
 import piecework.security.KeyManagerCabinet;
-import piecework.security.SecuritySettings;
+import piecework.settings.SecuritySettings;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 
 /**
  * @author James Renfro

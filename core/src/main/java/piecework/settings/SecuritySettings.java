@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security;
+package piecework.settings;
 
 import org.springframework.core.env.Environment;
 import piecework.Constants;

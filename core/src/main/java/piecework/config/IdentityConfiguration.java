@@ -32,7 +32,7 @@ import piecework.identity.*;
 import piecework.ldap.*;
 import piecework.security.KeyManagerCabinet;
 import piecework.security.SSLSocketFactoryWrapper;
-import piecework.security.SecuritySettings;
+import piecework.settings.SecuritySettings;
 import piecework.service.CacheService;
 import piecework.service.IdentityService;
 

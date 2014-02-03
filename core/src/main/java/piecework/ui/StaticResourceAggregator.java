@@ -28,12 +28,12 @@ import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.support.ServletContextResource;
-import piecework.enumeration.DataInjectionStrategy;
 import piecework.enumeration.Scheme;
 import piecework.form.FormDisposition;
 import piecework.model.Content;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
 
 import javax.servlet.ServletContext;

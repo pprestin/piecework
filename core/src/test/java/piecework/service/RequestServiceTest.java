@@ -33,10 +33,8 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.RequestRepository;
-import piecework.security.SecuritySettings;
+import piecework.settings.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.service.RequestService;
-import piecework.service.TaskService;
 import piecework.test.ExampleFactory;
 
 import javax.servlet.http.HttpServletRequest;

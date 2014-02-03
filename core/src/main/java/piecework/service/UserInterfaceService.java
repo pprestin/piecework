@@ -34,6 +34,7 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
+import piecework.settings.UserInterfaceSettings;
 import piecework.ui.*;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
 import piecework.ui.visitor.*;
@@ -45,8 +46,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author James Renfro

@@ -41,7 +41,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 @Service
 public class ReportService {
 
-    @Autowired
+    @Autowired(required = false)
     @Qualifier(value="mongoTemplate")
     MongoOperations operations;
 
@@ -60,7 +60,6 @@ public class ReportService {
 
         return new Report(reportName, data);
     }
-
 
     private Report getMonthlyProcessStatusReport(String processDefinitionKey) {
         String mapFunction = "function() {         " +

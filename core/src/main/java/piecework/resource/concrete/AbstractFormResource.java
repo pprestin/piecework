@@ -37,7 +37,7 @@ import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
-import piecework.security.SecuritySettings;
+import piecework.settings.SecuritySettings;
 import piecework.util.FormUtility;
 import piecework.validation.Validation;
 

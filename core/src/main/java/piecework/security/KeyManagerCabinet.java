@@ -16,6 +16,7 @@
 package piecework.security;
 
 import org.apache.commons.lang.StringUtils;
+import piecework.settings.SecuritySettings;
 
 import java.io.FileInputStream;
 import java.io.IOException;

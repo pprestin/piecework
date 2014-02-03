@@ -15,15 +15,11 @@
  */
 package piecework.ui.visitor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang.StringUtils;
 import org.htmlcleaner.TagNode;
-import piecework.model.Entity;
 import piecework.model.Explanation;
-import piecework.persistence.ContentRepository;
 import piecework.ui.InlinePageModelSerializer;
 import piecework.ui.TagAttributeAction;
-import piecework.ui.UserInterfaceSettings;
+import piecework.settings.UserInterfaceSettings;
 
 /**
  * @author James Renfro

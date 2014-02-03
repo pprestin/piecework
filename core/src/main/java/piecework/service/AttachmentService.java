@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
+package piecework.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -22,13 +22,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
+import piecework.Versions;
 import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
 import piecework.persistence.AttachmentRepository;
 import piecework.process.AttachmentQueryParameters;
-import piecework.service.ProcessInstanceService;
 import piecework.validation.ValidationFactory;
-import piecework.service.IdentityService;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
@@ -62,10 +61,6 @@ public class AttachmentService {
     IdentityService identityService;
 
     @Autowired
-    @Qualifier(value="mongoTemplate")
-    MongoTemplate mongoOperations;
-
-    @Autowired
     ProcessInstanceService processInstanceService;
 
     @Autowired
@@ -76,9 +71,6 @@ public class AttachmentService {
 
     @Autowired
     Versions versions;
-
-
-//    private String template = "";
 
     public StreamingAttachmentContent content(Process process, ProcessInstance processInstance, String attachmentId) {
 

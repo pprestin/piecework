@@ -33,8 +33,7 @@ import piecework.model.Form;
 import piecework.model.Report;
 import piecework.model.SearchResults;
 import piecework.persistence.ContentRepository;
-import piecework.ui.UserInterfaceSettings;
-import piecework.ui.visitor.StaticResourceAggregatingVisitor;
+import piecework.settings.UserInterfaceSettings;
 
 import javax.servlet.ServletContext;
 import java.io.File;

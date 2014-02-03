@@ -25,7 +25,7 @@ import org.htmlcleaner.TagNodeVisitor;
 import piecework.enumeration.FieldTag;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.ui.UserInterfaceSettings;
+import piecework.settings.UserInterfaceSettings;
 import piecework.common.ManyMap;
 
 import java.util.*;

@@ -28,7 +28,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.resource.ScriptResource;
 import piecework.security.Sanitizer;
-import piecework.security.SecuritySettings;
+import piecework.settings.SecuritySettings;
 import piecework.service.FormTemplateService;
 import piecework.util.UserInterfaceUtility;
 

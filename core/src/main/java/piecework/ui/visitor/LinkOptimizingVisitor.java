@@ -17,12 +17,9 @@ package piecework.ui.visitor;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
-import piecework.designer.model.view.IndexView;
-import piecework.model.*;
 import piecework.ui.InlinePageModelSerializer;
-import piecework.ui.UserInterfaceSettings;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
 
 import java.util.Map;

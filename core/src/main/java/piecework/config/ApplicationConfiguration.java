@@ -15,66 +15,25 @@
  */
 package piecework.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.binding.BindingFactoryManager;
-import org.apache.cxf.configuration.jsse.SSLUtils;
-import org.apache.cxf.configuration.security.FiltersType;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSBindingFactory;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.rs.security.cors.CrossOriginResourceSharingFilter;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
-import org.springframework.ldap.authentication.DefaultValuesAuthenticationSourceDecorator;
-import org.springframework.ldap.core.AuthenticationSource;
-import org.springframework.ldap.core.support.DirContextAuthenticationStrategy;
-import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
-import org.springframework.ldap.core.support.LdapContextSource;
-import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.ldap.authentication.*;
-import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
-import org.springframework.security.ldap.search.LdapUserSearch;
-import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
-import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
-import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
-import piecework.authorization.AuthorizationRoleMapper;
 import piecework.exception.AccessDeniedExceptionMapper;
 import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
-import piecework.identity.DebugUserDetailsService;
-import piecework.identity.IdentityServiceFactoryBean;
-import piecework.ldap.*;
 import piecework.resource.AnonymousFormResource;
 import piecework.resource.AnonymousScriptResource;
-import piecework.identity.DebugIdentityService;
-import piecework.security.CustomAuthenticationSource;
-import piecework.security.SSLSocketFactoryWrapper;
-import piecework.security.SecuritySettings;
-import piecework.service.CacheService;
-import piecework.service.GroupService;
-import piecework.service.IdentityService;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.visitor.HtmlProvider;
-import piecework.security.KeyManagerCabinet;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.security.*;
-import java.security.cert.CertificateException;
 import java.util.*;
 
 /**

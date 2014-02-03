@@ -75,9 +75,6 @@ public class CacheService {
         long thirtySecondsAgo = System.currentTimeMillis() - 30000;
         if (events != null) {
             for (CacheEvent event : events) {
-//                if (event.getCacheAgentId().equals(CACHE_AGENT_ID))
-//                    continue;
-
                 long eventTime = event.getEventDate() != null ? event.getEventDate().getTime() : -1;
                 if (eventTime > thirtySecondsAgo) {
                     if (LOG.isDebugEnabled())
@@ -96,16 +93,18 @@ public class CacheService {
 
     public Cache.ValueWrapper get(CacheName cacheName, String key) {
         Cache cache = cacheManager.getCache(cacheName.name());
-        return cache.get(key);
+        return cache != null ? cache.get(key) : null;
     }
 
     public synchronized void put(CacheName cacheName, String key, Object value) {
         String cacheId = cacheName.name();
         Cache cache = cacheManager.getCache(cacheId);
-        cache.put(key, value);
+        if (cache != null) {
+            cache.put(key, value);
 
-        if (!cacheName.isLocal())
-            this.cacheKeyMap.putOne(cacheId, key);
+            if (!cacheName.isLocal())
+                this.cacheKeyMap.putOne(cacheId, key);
+        }
     }
 
     public void evict(CacheName cacheName, String key) {

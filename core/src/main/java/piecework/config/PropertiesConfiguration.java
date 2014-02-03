@@ -16,22 +16,14 @@
 package piecework.config;
 
 import org.apache.log4j.Logger;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import piecework.common.CustomPropertySourcesConfigurer;
-import piecework.security.KeyManagerCabinet;
-import piecework.security.SecuritySettings;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 
 /**
  * @author James Renfro

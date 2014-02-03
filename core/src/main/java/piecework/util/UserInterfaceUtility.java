@@ -32,7 +32,7 @@ import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentRepository;
-import piecework.ui.UserInterfaceSettings;
+import piecework.settings.UserInterfaceSettings;
 import piecework.ui.visitor.StaticResourceAggregatingVisitor;
 
 import javax.servlet.ServletContext;

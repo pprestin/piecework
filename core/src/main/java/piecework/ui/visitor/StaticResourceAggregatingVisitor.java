@@ -24,7 +24,7 @@ import piecework.model.Process;
 import piecework.persistence.ContentRepository;
 import piecework.ui.StaticResourceAggregator;
 import piecework.ui.TagAttributeAction;
-import piecework.ui.UserInterfaceSettings;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
 
 import javax.servlet.ServletContext;
