@@ -99,9 +99,9 @@ public class StaticResourceAggregator {
                                 .append("$httpProvider.defaults.withCredentials = true;")
                                 .append("$httpProvider.defaults.useXDomain = true;")
                                 .append("$sceDelegateProvider.resourceUrlWhitelist(['self','")
-                                .append(hostUri).append("/**,")
+                                .append(hostUri).append("/**','")
                                 .append(settings.getHostUri())
-                                .append("/**']);");
+                                .append("/**', 'self']);");
                     }
 
                     Map<String, String> scopes = new HashMap<String, String>();
