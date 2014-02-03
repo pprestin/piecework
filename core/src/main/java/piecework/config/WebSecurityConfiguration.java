@@ -184,6 +184,7 @@ public class WebSecurityConfiguration {
 
         SingleSignOnAuthenticationFilter singleSignOnAuthenticationFilter = new SingleSignOnAuthenticationFilter();
         singleSignOnAuthenticationFilter.setAuthenticationManager(authenticationManager());
+        singleSignOnAuthenticationFilter.setExceptionIfHeaderMissing(false);
         return singleSignOnAuthenticationFilter;
     }
 

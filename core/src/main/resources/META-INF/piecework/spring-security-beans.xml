@@ -21,8 +21,11 @@
     </security:http>
 
     <security:http pattern="/ui/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html">
-        <security:intercept-url pattern="/instance/*" access="permitAll" method="OPTIONS"/>
-        <security:intercept-url pattern="/**" access="authenticated"/>
+        <security:intercept-url pattern="/**" access="permitAll" method="OPTIONS"/>
+        <security:intercept-url pattern="/**" access="authenticated" method="GET"/>
+        <security:intercept-url pattern="/**" access="authenticated" method="POST"/>
+        <security:intercept-url pattern="/**" access="authenticated" method="PUT"/>
+        <security:intercept-url pattern="/**" access="authenticated" method="DELETE"/>
 
         <security:form-login
                 login-page="/static/login.html"
@@ -31,19 +34,6 @@
 
         <security:custom-filter ref="pieceworkPreAuthFilter" position="PRE_AUTH_FILTER"/>
     </security:http>
-
-    <!--<security:authentication-manager>-->
-        <!--<security:authentication-provider ref="anonymousAuthenticationProvider" />-->
-    <!--</security:authentication-manager>-->
-
-    <!--<bean id="ssoHeaderFilter" class="org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter">
-        <property name="principalRequestHeader" value="REMOTE_USER"/>
-        <property name="authenticationManager" ref="org.springframework.security.authenticationManager"/>
-    </bean>-->
-
-    <!--<bean id="ssoHeaderFilter" class="piecework.security.concrete.SingleSignOnAuthenticationFilter">-->
-        <!--<property name="authenticationManager" ref="org.springframework.security.authenticationManager"/>-->
-    <!--</bean>-->
 
     <bean id="pieceworkAnonymousAuthFilter"
           class="org.springframework.security.web.authentication.AnonymousAuthenticationFilter">
