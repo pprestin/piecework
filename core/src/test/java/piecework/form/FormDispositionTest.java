@@ -197,7 +197,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(request, null, null, count);
-        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?taskId=5634", pageUri.toString());
+        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?taskId=5634&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -207,7 +207,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(request, null, null, count);
-        Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?taskId=5634", pageUri.toString());
+        Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?taskId=5634&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -217,7 +217,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(request, null, null, count);
-        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?taskId=5634", pageUri.toString());
+        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?taskId=5634&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -227,7 +227,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(null, validation, null, count);
-        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?submissionId=9803", pageUri.toString());
+        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?submissionId=9803&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -237,7 +237,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(null, validation, null, count);
-        Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?submissionId=9803", pageUri.toString());
+        Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?submissionId=9803&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -247,7 +247,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(null, validation, null, count);
-        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?submissionId=9803", pageUri.toString());
+        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?submissionId=9803&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -257,7 +257,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(request, validation, explanation, count);
-        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?requestId=2345", pageUri.toString());
+        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?requestId=2345&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -267,7 +267,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(request, validation, explanation, count);
-        Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?requestId=2345", pageUri.toString());
+        Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?requestId=2345&redirectCount=0", pageUri.toString());
     }
 
     @Test
@@ -277,7 +277,7 @@ public class FormDispositionTest {
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
         URI pageUri = disposition.getPageUri(request, validation, explanation, count);
-        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?requestId=2345", pageUri.toString());
+        Assert.assertEquals("http://localhost/piecework/ui/form/TEST?requestId=2345&redirectCount=0", pageUri.toString());
     }
 
 }
