@@ -17,6 +17,7 @@ package piecework.resource;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.apache.cxf.rs.security.cors.LocalPreflight;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.exception.PieceworkException;
@@ -38,7 +39,9 @@ public interface FormResource extends ApplicationResource {
     @OPTIONS
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
-    @Produces({"text/html","application/json"})
+    @Consumes("*/*")
+    @Produces("*/*")
+    @LocalPreflight
     Response options(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
 
     @GET

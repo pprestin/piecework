@@ -9,18 +9,18 @@
 
     <security:global-method-security jsr250-annotations="enabled" access-decision-manager-ref="pieceworkAccessDecisionManager"/>
 
-    <security:http pattern="/api/**" use-expressions="true" >
+    <security:http create-session="stateless" pattern="/api/**" use-expressions="true" >
         <security:intercept-url pattern="/**" access="authenticated"/>
         <security:x509/>
     </security:http>
 
-    <security:http pattern="/public/**" auto-config="true" use-expressions="true">
+    <security:http create-session="stateless" pattern="/public/**" auto-config="true" use-expressions="true">
         <security:intercept-url pattern="/**" access="permitAll"/>
         <security:anonymous enabled="false"/>
         <security:custom-filter ref="pieceworkAnonymousAuthFilter" position="ANONYMOUS_FILTER"/>
     </security:http>
 
-    <security:http pattern="/ui/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html">
+    <security:http create-session="stateless" pattern="/ui/**" auto-config="true" use-expressions="true" access-denied-page="/static/login_error.html">
         <security:intercept-url pattern="/**" access="permitAll" method="OPTIONS"/>
         <security:intercept-url pattern="/**" access="authenticated" method="GET"/>
         <security:intercept-url pattern="/**" access="authenticated" method="POST"/>

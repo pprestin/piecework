@@ -562,10 +562,11 @@ angular.module('wf.directives',
                             }
                         }, 500);
 
-                        $http.get($sce.trustAsResourceUrl(url))
+                        $http.get($sce.trustAsResourceUrl(url), { withCredentials: true })
                             .error(function(data, status, headers, config) {
 //                                if (status == 0 || status == 302)
 //                                    $window.location.href = redirectUrl;
+                                alert("Failed to access workflow server - probably because of single-sign-on")
                             })
                             .success(function(form) {
                                 element.attr("action", form.action);
