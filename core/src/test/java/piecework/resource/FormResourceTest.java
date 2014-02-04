@@ -64,12 +64,12 @@ public class FormResourceTest {
 
     @Test(expected = NotFoundError.class)
     public void readByTaskIdNoProcess() throws PieceworkException {
-        formResource.read(null, "INVALID_PROCESS_KEY", "INVALID_PROCESS_INSTANCE_ID", null, null);
+        formResource.read(null, "INVALID_PROCESS_KEY", "INVALID_PROCESS_INSTANCE_ID", null, null, null);
     }
 
     @Test(expected = ForbiddenError.class)
-     public void readByTaskIdNoInstance() throws PieceworkException {
-        formResource.read(null, "TEST", "INVALID_PROCESS_INSTANCE_ID", null, null);
+    public void readByTaskIdNoInstance() throws PieceworkException {
+        formResource.read(null, "TEST", "INVALID_PROCESS_INSTANCE_ID", null, null, null);
     }
 
 //    @Test

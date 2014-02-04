@@ -4,12 +4,9 @@ angular.module('wf.directives',
         function() {
             return {
                 restrict: 'A',
-                scope: {
-
-                },
                 link: function (scope, element, attr) {
                     var flowElement = attr.wfActive;
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         var task = typeof(form) !== 'undefined' ? form.task : null;
                         var active = (flowElement == 'start' && task == null) || (task != null && flowElement == task.taskDefinitionKey);
@@ -29,7 +26,7 @@ angular.module('wf.directives',
 
                 },
                 link: function (scope, element, attr) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         var validation = form.validation;
                         var fieldName = attr.wfAlert;
@@ -48,7 +45,7 @@ angular.module('wf.directives',
                                 }
                             });
                         }
-//                        scope.$on('event:value-updated:' + fieldName, function(event, value) {
+//                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
 //                            element.text('');
 //                        });
                     });
@@ -83,11 +80,11 @@ angular.module('wf.directives',
                         console.log('wfAttachment editAttachments clicked');
                         scope.state.isEditingAttachments = !scope.state.isEditingAttachments;
                     };
-                    scope.$on('event:attachments', function(event, attachments) {
+                    scope.$on('wfEvent:attachments', function(event, attachments) {
                         console.log("wfAttachments caught an attachments event!");
                         scope.state.attachments = attachments;
                     });
-                    scope.$on('event:form-loaded', function(event, form) {
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
                         console.log("wfAttachments attached form to its scope");
                         if (typeof(form) !== 'undefined') {
                             if (form.loadedBy == null)
@@ -96,14 +93,14 @@ angular.module('wf.directives',
                             scope.form = form;
                         }
                     });
-                    scope.$root.$on('event:view-attachments', function() {
+                    scope.$root.$on('wfEvent:view-attachments', function() {
                         console.log("wfAttachments toggling visibility of attachments");
                         if (typeof(scope.form) === 'undefined')
                             scope.form = $rootScope.form;
                         if (typeof(scope.form) !== 'undefined' && !scope.state.isViewingAttachments)
                             attachmentService.refreshAttachments(scope.form);
                         scope.state.isViewingAttachments = !scope.state.isViewingAttachments;
-                        scope.$root.$broadcast('event:toggle-attachments', scope.state.isViewingAttachments);
+                        scope.$root.$broadcast('wfEvent:toggle-attachments', scope.state.isViewingAttachments);
                     });
                 }
             }
@@ -119,7 +116,7 @@ angular.module('wf.directives',
                 templateUrl: 'templates/breadcrumbs.html',
                 link: function (scope, element) {
                     scope.wizard = wizardService;
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         console.log("wfBreadcrumbs attached form to its scope");
                         if (typeof(form) !== 'undefined') {
                             if (form.loadedBy == null)
@@ -156,7 +153,7 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/container.html',
                 link: function (scope, element) {
-                    scope.$on('event:form-loaded', function(event, form) {
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
                         console.log("wfContainer attached form to its scope");
                         if (typeof(form) !== 'undefined') {
                             if (form.loadedBy == null)
@@ -169,14 +166,14 @@ angular.module('wf.directives',
                         scope.state = {};
                         scope.state.isViewingAttachments = false;
                     }
-                    scope.$on('event:toggle-attachments', function(event, isViewingAttachments) {
+                    scope.$on('wfEvent:toggle-attachments', function(event, isViewingAttachments) {
                         scope.state.isViewingAttachments = isViewingAttachments;
                     });
                 }
             }
         }
     ])
-    .directive('wfElement', [
+    .directive('wfVariable', [
         function() {
             return {
                 restrict: 'A',
@@ -184,10 +181,10 @@ angular.module('wf.directives',
 
                 },
                 link: function (scope, element, attr) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         var data = form.data;
-                        var fieldName = attr.wfElement;
+                        var fieldName = attr.wfVariable;
                         var subFieldName = null;
                         var indexOfPeriod = fieldName.indexOf('.');
                         if (indexOfPeriod != -1) {
@@ -219,7 +216,7 @@ angular.module('wf.directives',
 
                             element.html(html);
                         }
-                        scope.$on('event:value-updated:' + fieldName, function(event, value) {
+                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
                             var html = typeof(value) === 'string' ? value : value.name;
                             element.html(html);
                         });
@@ -275,7 +272,7 @@ angular.module('wf.directives',
                     form : '='
                 },
                 link: function (scope, element, attr) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                     });
                     var fieldName = attr.wfFieldForm;
@@ -304,9 +301,9 @@ angular.module('wf.directives',
                         .done(function(data, textStatus, jqXHR) {
                            $inputs.val('');
                            if (fieldName == 'attachments')
-                                scope.$root.$broadcast('event:attachments', data.list);
+                                scope.$root.$broadcast('wfEvent:attachments', data.list);
                            else
-                                scope.$root.$broadcast('event:value-updated:' + fieldName, data);
+                                scope.$root.$broadcast('wfEvent:value-updated:' + fieldName, data);
                         })
                         .fail(function(jqXHR, textStatus, errorThrown) {
                            var data = $.parseJSON(jqXHR.responseText);
@@ -401,7 +398,7 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/fileupload.html',
                 link: function (scope, element) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                     });
                     scope.fileUploadOptions = {
@@ -431,6 +428,73 @@ angular.module('wf.directives',
             }
         }
     ])
+    .directive('wfFormFallback', [
+        function() {
+            return {
+                restrict: 'AE',
+                link: function(scope, element, attr) {
+                    element.hide();
+                    scope.$on('wfEvent:fallback', function(event) {
+                        element.show();
+                    });
+                }
+            }
+        
+        }
+    ])
+    .directive('wfFormLoading', [
+        function() {
+            return {
+                restrict: 'AE',
+                scope: {
+
+                },
+                link: function(scope, element, attr) {
+                    scope.$on('wfEvent:start-loading', function(event) {
+                        console.log("Loading...");
+                        element.show();
+                    });
+                    scope.$on('wfEvent:stop-loading', function(event) {
+                        console.log("Done loading");
+                        element.hide();
+                    });
+                }
+            }
+
+        }
+    ])
+    .directive('wfInputMask', [
+         function() {
+             return {
+                 restrict: 'AE',
+                 scope: {
+
+                 },
+                 link: function(scope, element, attr) {
+                     scope.hasDatePickerSupport = function() {
+                         var elem = document.createElement('input');
+                         elem.setAttribute('type','date');
+                         elem.value = 'foo';
+                         return (elem.type == 'date' && elem.value != 'foo');
+                     }
+
+                     var mask = attr.wfMask;
+                     var type = element.attr('type');
+                     var options = {};
+                     if (typeof(attr.wfMask) !== 'undefined')
+                        options['mask'] = attr.wfMask;
+                     if (typeof(attr.wfPlaceholder) !== 'undefined')
+                        options['placeholder'] = attr.wfPlaceholder;
+
+                     if (type == 'text')
+                        element.inputmask(options);
+                     else if ((type == 'date' || type == 'datetime' || type == 'datetime-local') && !scope.hasDatePickerSupport())
+                        element.inputmask(options);
+                 }
+             }
+
+         }
+     ])
     .directive('wfForm', ['$http', '$location', '$sce', '$window', 'formPageUri', 'formResourceUri', 'wizardService',
         function($http, $location, $sce, $window, formPageUri, formResourceUri, wizardService) {
             return {
@@ -439,12 +503,16 @@ angular.module('wf.directives',
 
                 },
                 link: function (scope, element, attr) {
+                    // Hide this form initially
+                    element.hide();
+                    scope.$root.$broadcast('wfEvent:start-loading');
+
                     if (typeof(scope.state) == 'undefined') {
                         scope.state = {};
                         scope.state.isCollapsed = false;
                         scope.state.isViewingAttachments = false;
                     }
-                    scope.$on('event:toggle-attachments', function(event, isViewingAttachments) {
+                    scope.$on('wfEvent:toggle-attachments', function(event, isViewingAttachments) {
                         scope.state.isViewingAttachments = isViewingAttachments;
                         scope.$root.isViewingAttachments = isViewingAttachments;
                     });
@@ -536,13 +604,46 @@ angular.module('wf.directives',
                         elem.value = 'foo';
                         return (elem.type == 'date' && elem.value != 'foo');
                     }
-                    scope.$root.$on('event:refresh', function(event, message) {
+                    scope.queryParams = function() {
+                        var urlParams = {};
+                        (function () {
+                      	    var e,
+                      	    a = /\+/g,  // Regex for replacing addition symbol with a space
+                      	    r = /([^&;=]+)=?([^&;]*)/g,
+                      	    d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+                      	    q = $window.location.search.substring(1);
+
+                      	    while (e = r.exec(q))
+                      		    urlParams[d(e[1])] = d(e[2]);
+                        })();
+                        return urlParams;
+                    };
+                    scope.doRedirect = function(formResourceUri, queryParams) {
+                        var redirectUrl = formResourceUri;
+                        var redirectCount = 1;
+                        var separator = '?';
+                        angular.forEach(queryParams, function(value, name) {
+                            if (name == 'redirectCount') {
+                                value = parseInt(value) + 1;
+                                redirectCount = value;
+                            } else {
+                                redirectUrl += separator + name + '=' + value;
+                            }
+                            separator = '&';
+                        });
+                        redirectUrl = redirectUrl + separator + 'redirectCount=' + redirectCount;
+                        if (redirectCount < 2)
+                            $window.location.href = redirectUrl;
+                        else
+                            scope.$root.$broadcast('wfEvent:fallback');
+                    };
+                    scope.$root.$on('wfEvent:refresh', function(event, message) {
                         scope.$root.refreshing = true;
                         var link = formResourceUri;
                         var absUrl = $location.absUrl();
                         var indexOf = absUrl.indexOf('?');
                         var query = indexOf != -1 ? absUrl.substring(indexOf) : "";
-                        var redirectUrl = formResourceUri + query;
+                        var queryParams = scope.queryParams();
 
                         var url = link;
                         if (typeof(link) === 'undefined' || link == '') {
@@ -554,21 +655,18 @@ angular.module('wf.directives',
                             url += '.json' + query;
                         }
 
-                        // FIXME: Reduce cost by customizing to only use on fields that have a mask
-                        window.setTimeout(function() {
-                            $(':input[data-inputmask][type="text"]').inputmask();
-                            if (!scope.hasDatePickerSupport()) {
-                                $(':input[data-inputmask][type="date"]').inputmask();
-                            }
-                        }, 500);
-
                         $http.get($sce.trustAsResourceUrl(url), { withCredentials: true })
                             .error(function(data, status, headers, config) {
-//                                if (status == 0 || status == 302)
-//                                    $window.location.href = redirectUrl;
-                                alert("Failed to access workflow server - probably because of single-sign-on")
+                                if (status == 0 || status == 302) {
+                                    $window.setTimeout(function() {
+                                        scope.$root.$broadcast('wfEvent:stop-loading');
+                                        scope.doRedirect(formResourceUri, queryParams);
+                                    }, 3000);
+                                }
                             })
                             .success(function(form) {
+                                element.show();
+                                scope.$root.$broadcast('wfEvent:stop-loading');
                                 element.attr("action", form.action);
                                 element.attr("method", "POST");
                                 element.attr("enctype", "multipart/form-data");
@@ -619,7 +717,7 @@ angular.module('wf.directives',
                                                    })
                                                    .done(function(data, textStatus, jqXHR) {
                                                        $(descriptionSelector).val('');
-                                                       scope.$root.$broadcast('event:value-updated:' + input.name, data);
+                                                       scope.$root.$broadcast('wfEvent:value-updated:' + input.name, data);
                                                    })
                                                    .fail(function(jqXHR, textStatus, errorThrown) {
                                                        var data = $.parseJSON(jqXHR.responseText);
@@ -700,12 +798,12 @@ angular.module('wf.directives',
                                 }
 
                                 scope.$root.form = form;
-                                scope.$root.$broadcast('event:form-loaded', form);
-                                scope.$root.$broadcast('event:step-changed', form.activeStepOrdinal);
+                                scope.$root.$broadcast('wfEvent:form-loaded', form);
+                                scope.$root.$broadcast('wfEvent:step-changed', form.activeStepOrdinal);
                             });
                     });
 
-                    scope.$root.$broadcast('event:refresh', 'form');
+                    scope.$root.$broadcast('wfEvent:refresh', 'form');
                 }
             }
         }
@@ -718,7 +816,7 @@ angular.module('wf.directives',
 
                 },
                 link: function (scope, element, attr) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         var data = form.data;
                         var fieldName = attr.wfImage;
@@ -738,7 +836,7 @@ angular.module('wf.directives',
 
                                     var src = typeof(value) === 'string' ? value : value.link;
                                     element.attr('src', src);
-                                    scope.$on('event:value-updated:' + fieldName, function(event, value) {
+                                    scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
                                         var src = typeof(value) === 'string' ? value : value.link;
                                         element.attr('src', src);
 //                                        element.attr('data-wf-last-modified', value.lastModified);
@@ -831,7 +929,7 @@ angular.module('wf.directives',
 
                         listElement.empty();
 
-                        scope.$on('event:value-updated:' + fieldName, function(event, updatedValue) {
+                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, updatedValue) {
                             scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
                         });
                         if (values != null && values.length > 0) {
@@ -842,7 +940,7 @@ angular.module('wf.directives',
                             fallbackHtml.show();
                         }
                     };
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         var data = form.data;
                         var fieldName = attr.wfList;
@@ -858,7 +956,7 @@ angular.module('wf.directives',
                         var fallbackHtml = element.find('[data-wf-fallback]');
 
                         if (fieldName == 'attachments') {
-                            scope.$on('event:attachments', function(event, attachments) {
+                            scope.$on('wfEvent:attachments', function(event, attachments) {
                                 scope.loadMultipleValues(element, attachments, fieldName, subFieldName, childHtml);
                             });
                             attachmentService.refreshAttachments(scope.form);
@@ -879,7 +977,7 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/form-login.html',
                 link: function (scope, element) {
-                    scope.$on('event:form-loaded', function(event, form) {
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                     });
                 }
@@ -899,7 +997,7 @@ angular.module('wf.directives',
                          scope.state = {};
                          scope.state.isViewingAttachments = false;
                      }
-                     scope.$root.$on('event:toggle-attachments', function(event, isViewingAttachments) {
+                     scope.$root.$on('wfEvent:toggle-attachments', function(event, isViewingAttachments) {
                          scope.state.isViewingAttachments = isViewingAttachments;
                      });
                     scope.wizard = wizardService;
@@ -920,7 +1018,7 @@ angular.module('wf.directives',
                          scope.state = {};
                          scope.state.isViewingAttachments = false;
                      }
-                     scope.$root.$on('event:toggle-attachments', function(event, isViewingAttachments) {
+                     scope.$root.$on('wfEvent:toggle-attachments', function(event, isViewingAttachments) {
                          scope.state.isViewingAttachments = isViewingAttachments;
                      });
                     scope.wizard = wizardService;
@@ -951,7 +1049,7 @@ angular.module('wf.directives',
                  },
                  templateUrl: 'templates/notifications.html',
                  link: function (scope, element) {
-                    scope.$root.$on('event:notification', function(event, notification) {
+                    scope.$root.$on('wfEvent:notification', function(event, notification) {
                         // Ensure that our notifications array exists in this scope
                         if (typeof(scope.notifications) === 'undefined')
                             scope.notifications = new Array();
@@ -971,7 +1069,7 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/page.html',
                 link: function (scope, element) {
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                     });
                 }
@@ -991,7 +1089,7 @@ angular.module('wf.directives',
                         scope.state = {};
                         scope.state.isViewingAttachments = false;
                     }
-                    scope.$root.$on('event:toggle-attachments', function(event, isViewingAttachments) {
+                    scope.$root.$on('wfEvent:toggle-attachments', function(event, isViewingAttachments) {
                         scope.state.isViewingAttachments = isViewingAttachments;
                     });
                     scope.wizard = wizardService;
@@ -1021,7 +1119,7 @@ angular.module('wf.directives',
 
                     step = parseInt(step);
 
-                    scope.$root.$on('event:step-changed', function(event, ordinal) {
+                    scope.$root.$on('wfEvent:step-changed', function(event, ordinal) {
                         if (attr.wfScreen == 'confirmation' && typeof(ordinal) === 'undefined')
                             return;
                         element.removeClass('ng-hide');
@@ -1174,11 +1272,11 @@ angular.module('wf.directives',
                         return typeof(scope.definitions) !== 'undefined' && scope.definitions.length == 1;
                     };
 
-                    scope.$on('event:change-selection', function(event, selectedFormMap) {
+                    scope.$on('wfEvent:change-selection', function(event, selectedFormMap) {
                         scope.selectedFormMap = selectedFormMap;
                     });
 
-                    scope.$on('event:found', function(event, results) {
+                    scope.$on('wfEvent:found', function(event, results) {
                         scope.searching = false;
                         scope.definitions = results.definitions;
                         scope.selectedFormMap = {};
@@ -1191,24 +1289,24 @@ angular.module('wf.directives',
                             scope.criteria.processDefinitionKey = results.definitions[0].task.processDefinitionKey;
                         scope.processDefinitionDescription[''] = 'Any process';
                     });
-                    scope.$on('event:search', function(event, criteria) {
+                    scope.$on('wfEvent:search', function(event, criteria) {
                         scope.searching = true;
                     });
 
                     scope.dialogs = dialogs;
 
                     scope.refreshSearch = function() {
-                        scope.$root.$broadcast('event:search', scope.criteria);
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     };
 
                     scope.model = $window.piecework.model;
                     if (typeof(scope.model) !== 'undefined' && typeof(scope.model.total) !== 'undefined') {
-                        scope.$on('event:results-linked', function(event) {
-                           scope.$root.$broadcast('event:found', scope.model);
+                        scope.$on('wfEvent:results-linked', function(event) {
+                           scope.$root.$broadcast('wfEvent:found', scope.model);
                            delete $window.piecework['model'];
                         });
                     } else {
-                        scope.$root.$broadcast('event:search', scope.criteria);
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     }
                 }
             }
@@ -1230,7 +1328,7 @@ angular.module('wf.directives',
                         return scope.criteria.processDefinitionKey != null && scope.criteria.processDefinitionKey != '';
                     };
                     scope.processSearchResults = function(results) {
-                        scope.$root.$broadcast('event:found', results);
+                        scope.$root.$broadcast('wfEvent:found', results);
                     };
                     scope.selectForm = function(form) {
                         if (scope.selectedFormMap[form.formInstanceId] == null)
@@ -1238,21 +1336,21 @@ angular.module('wf.directives',
                         else
                             delete scope.selectedFormMap[form.formInstanceId];
 
-                        scope.$root.$broadcast('event:change-selection', scope.selectedFormMap);
+                        scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
                     };
 
                     var SearchResults = $resource('./form', {processStatus:'@processStatus'});
-                    scope.$on('event:found', function(event, results) {
+                    scope.$on('wfEvent:found', function(event, results) {
                         scope.forms = results.list;
                         scope.selectedFormMap = new Object();
                     });
-                    scope.$on('event:search', function(event, criteria) {
+                    scope.$on('wfEvent:search', function(event, criteria) {
                         if (typeof(criteria) !== 'undefined')
                             scope.criteria = criteria;
                         SearchResults.get(scope.criteria, scope.processSearchResults);
                     });
 
-                    scope.$root.$broadcast('event:results-linked');
+                    scope.$root.$broadcast('wfEvent:results-linked');
                 }
             }
         }
@@ -1269,7 +1367,7 @@ angular.module('wf.directives',
                     if (typeof(scope.form) === 'undefined')
                         scope.form = scope.$root.form;
 
-                    scope.$on('event:form-loaded', function(event, form) {
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
                         console.log("wfStatus attached form to its scope");
                         if (typeof(form) !== 'undefined') {
                             if (form.loadedBy == null)
@@ -1280,7 +1378,7 @@ angular.module('wf.directives',
                     });
                     scope.claim = function() {
                         var success = function(scope, data, status, headers, config, form, assignee) {
-                            $rootScope.$broadcast('event:refresh', 'assignment');
+                            $rootScope.$broadcast('wfEvent:refresh', 'assignment');
                         };
 
                         var failure = function(scope, data, status, headers, config, form, assignee) {
@@ -1328,17 +1426,17 @@ angular.module('wf.directives',
                         scope.state.isCollapsed = false;
                         scope.state.isViewingAttachments = false;
                     }
-                    scope.$root.$on('event:toggle-attachments', function(event, isViewingAttachments) {
+                    scope.$root.$on('wfEvent:toggle-attachments', function(event, isViewingAttachments) {
                         scope.state.isViewingAttachments = isViewingAttachments;
                     });
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                     });
                     scope.dialogs = dialogs;
                     scope.wizard = wizardService;
                     scope.assignTo = function(userId) {
                          var success = function(scope, data, status, headers, config, form, assignee) {
-                             scope.$root.$broadcast('event:refresh', 'assignment');
+                             scope.$root.$broadcast('wfEvent:refresh', 'assignment');
                          };
 
                          var failure = function(scope, data, status, headers, config, form, assignee) {
@@ -1380,7 +1478,7 @@ angular.module('wf.directives',
                         scope.state.isCollapsed = !scope.state.isCollapsed;
                     };
                     scope.viewAttachments = function() {
-                        scope.$root.$broadcast('event:view-attachments');
+                        scope.$root.$broadcast('wfEvent:view-attachments');
                     };
 
                 }
@@ -1395,11 +1493,22 @@ angular.module('wf.directives',
 
                 },
                 link: function (scope, element, attr) {
-                    var flowElement = attr.wfActive;
-                    scope.$root.$on('event:form-loaded', function(event, form) {
+                    var flowElement = attr.wfVisible;
+                    if (typeof(flowElement) === 'undefined')
+                        return;
+
+                    var negate = flowElement.indexOf('!') == 0;
+                    if (negate) {
+                        formElement = flowElement.substring(1);
+                    }
+
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
+
                         var task = typeof(form) !== 'undefined' ? form.task : null;
                         var active = (flowElement == 'start' && task == null) || (task != null && flowElement == task.taskDefinitionKey);
+                        if (negate)
+                            active = !active;
                         if (!active) {
                             element.addClass('ng-hide')
                         }

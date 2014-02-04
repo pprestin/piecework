@@ -85,7 +85,7 @@ public class FormDisposition {
         return new URI(pageUri.getScheme(), pageUri.getUserInfo(), pageUri.getHost(), pageUri.getPort(), pageUri.getPath(), query, null);
     }
 
-    public URI getPageUri(FormRequest request, Validation validation, Explanation explanation) throws URISyntaxException {
+    public URI getPageUri(FormRequest request, Validation validation, Explanation explanation, int count) throws URISyntaxException {
         String taskId = request != null ? request.getTaskId() : null;
         String query = null;
         if (explanation == null && StringUtils.isNotEmpty(taskId))
@@ -95,7 +95,9 @@ public class FormDisposition {
         else if (validation != null && validation.getSubmission() != null && StringUtils.isNotEmpty(validation.getSubmission().getSubmissionId()))
             query = "submissionId=" + validation.getSubmission().getSubmissionId();
 
-        if (pageUri == null)
+        query += "&redirectCount=" + count;
+
+        if (pageUri == null || count >= 3)
             return null;
 
         return new URI(pageUri.getScheme(), pageUri.getUserInfo(), pageUri.getHost(), pageUri.getPort(), pageUri.getPath(), query, null);

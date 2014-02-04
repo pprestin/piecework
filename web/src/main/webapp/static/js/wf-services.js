@@ -17,7 +17,7 @@ angular.module('wf.services',
                     $http.get($sce.trustAsResourceUrl(form.attachment)).then(function(response) {
                         form.attachments = response.data.list;
                         form.attachmentCount = response.data.total;
-                        $rootScope.$broadcast('event:attachments', form.attachments);
+                        $rootScope.$broadcast('wfEvent:attachments', form.attachments);
                     });
                 }
             };
@@ -41,8 +41,8 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
-                                $rootScope.$broadcast("event:search");
-                                $rootScope.$broadcast('event:refresh', 'activation');
+                                $rootScope.$broadcast("wfEvent:search");
+                                $rootScope.$broadcast('wfEvent:refresh', 'activation');
                             }
                         };
 
@@ -86,8 +86,8 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(assignee, selectedForms);
-                                $rootScope.$broadcast("event:search");
-                                $rootScope.$broadcast('event:refresh', 'assignment');
+                                $rootScope.$broadcast("wfEvent:search");
+                                $rootScope.$broadcast('wfEvent:refresh', 'assignment');
                                 scope.assigning = false;
                             }
 //                            else {
@@ -140,8 +140,8 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
-                                $rootScope.$broadcast("event:search");
-                                $rootScope.$broadcast('event:refresh', 'cancellation');
+                                $rootScope.$broadcast("wfEvent:search");
+                                $rootScope.$broadcast('wfEvent:refresh', 'cancellation');
                             }
                         };
 
@@ -184,7 +184,7 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
-                                $rootScope.$broadcast('event:refresh', 'comment');
+                                $rootScope.$broadcast('wfEvent:refresh', 'comment');
                             }
                         };
 
@@ -268,8 +268,8 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
-                                $rootScope.$broadcast("event:search");
-                                $rootScope.$broadcast('event:refresh', 'activation');
+                                $rootScope.$broadcast("wfEvent:search");
+                                $rootScope.$broadcast('wfEvent:refresh', 'activation');
                             }
                         };
 
@@ -312,8 +312,8 @@ angular.module('wf.services',
 
                             if (operationStatus == 'ok') {
                                 $modalInstance.close(selectedForms);
-                                $rootScope.$broadcast("event:search");
-                                $rootScope.$broadcast('event:refresh', 'suspension');
+                                $rootScope.$broadcast("wfEvent:search");
+                                $rootScope.$broadcast('wfEvent:refresh', 'suspension');
                             }
                         };
 
@@ -491,7 +491,7 @@ angular.module('wf.services',
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);
-                            $rootScope.$broadcast('event:attachments', data.list);
+                            $rootScope.$broadcast('wfEvent:attachments', data.list);
                         })
                         .error(function(data, status, headers, config) {
                             failure($scope, data, status, headers, config, form, formData);
@@ -505,7 +505,7 @@ angular.module('wf.services',
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);
-                            $rootScope.$broadcast('event:attachments', data.list);
+                            $rootScope.$broadcast('wfEvent:attachments', data.list);
                         })
                         .error(function(data, status, headers, config) {
                             failure($scope, data, status, headers, config, form, formData);
@@ -548,7 +548,7 @@ angular.module('wf.services',
                         if (typeof(title) !== 'undefined')
                             notification.title = title;
 
-                        $rootScope.$broadcast("event:notification", notification);
+                        $rootScope.$broadcast("wfEvent:notification", notification);
                     }
                 }
             }
@@ -620,7 +620,7 @@ angular.module('wf.services',
                         return;
 
                     form.activeStepOrdinal = ordinal;
-                    $rootScope.$broadcast("event:step-changed", ordinal);
+                    $rootScope.$broadcast("wfEvent:step-changed", ordinal);
                 },
                 clickButton : function(form, container, button) {
                     if (button.action == 'next') {

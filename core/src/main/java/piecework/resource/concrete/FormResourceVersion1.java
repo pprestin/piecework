@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.exception.PieceworkException;
-import piecework.model.Entity;
 import piecework.model.ProcessDeployment;
 import piecework.model.SearchResults;
 import piecework.resource.FormResource;
@@ -33,8 +32,6 @@ import piecework.security.Sanitizer;
 import piecework.service.ProcessService;
 import piecework.util.FormUtility;
 
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.*;
 import java.util.Map;
 
@@ -69,11 +66,13 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawRequestId, final String rawSubmissionId) throws PieceworkException {
+    public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawRequestId, final String rawSubmissionId, final String redirectCount) throws PieceworkException {
         Process process = processService.read(rawProcessDefinitionKey);
 
+        int count = StringUtils.isNotEmpty(redirectCount) ? Integer.valueOf(redirectCount) : 1;
+
         if (StringUtils.isNotEmpty(rawTaskId))
-            return taskForm(context, process, rawTaskId);
+            return taskForm(context, process, rawTaskId, count);
         if (StringUtils.isNotEmpty(rawRequestId))
             return requestForm(context, process, rawRequestId);
         if (StringUtils.isNotEmpty(rawSubmissionId))

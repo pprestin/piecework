@@ -60,6 +60,8 @@ public class FormDispositionTest {
 
     private ViewContext context;
 
+    private int count;
+
     @Before
     public void setup() {
         Mockito.doReturn("TEST")
@@ -194,7 +196,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(request, null, null);
+        URI pageUri = disposition.getPageUri(request, null, null, count);
         Assert.assertEquals("http://localhost/piecework/ui/form/TEST?taskId=5634", pageUri.toString());
     }
 
@@ -204,7 +206,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(request, null, null);
+        URI pageUri = disposition.getPageUri(request, null, null, count);
         Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?taskId=5634", pageUri.toString());
     }
 
@@ -214,7 +216,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(request, null, null);
+        URI pageUri = disposition.getPageUri(request, null, null, count);
         Assert.assertEquals("http://localhost/piecework/ui/form/TEST?taskId=5634", pageUri.toString());
     }
 
@@ -224,7 +226,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(null, validation, null);
+        URI pageUri = disposition.getPageUri(null, validation, null, count);
         Assert.assertEquals("http://localhost/piecework/ui/form/TEST?submissionId=9803", pageUri.toString());
     }
 
@@ -234,7 +236,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(null, validation, null);
+        URI pageUri = disposition.getPageUri(null, validation, null, count);
         Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?submissionId=9803", pageUri.toString());
     }
 
@@ -244,7 +246,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(null, validation, null);
+        URI pageUri = disposition.getPageUri(null, validation, null, count);
         Assert.assertEquals("http://localhost/piecework/ui/form/TEST?submissionId=9803", pageUri.toString());
     }
 
@@ -254,7 +256,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(request, validation, explanation);
+        URI pageUri = disposition.getPageUri(request, validation, explanation, count);
         Assert.assertEquals("http://localhost/piecework/ui/form/TEST?requestId=2345", pageUri.toString());
     }
 
@@ -264,7 +266,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(request, validation, explanation);
+        URI pageUri = disposition.getPageUri(request, validation, explanation, count);
         Assert.assertEquals("https://some.remote.host.edu/this/is/the/path?requestId=2345", pageUri.toString());
     }
 
@@ -274,7 +276,7 @@ public class FormDispositionTest {
                 .when(action).getStrategy();
 
         FormDisposition disposition = FormDisposition.Builder.build(process, deployment, action, context);
-        URI pageUri = disposition.getPageUri(request, validation, explanation);
+        URI pageUri = disposition.getPageUri(request, validation, explanation, count);
         Assert.assertEquals("http://localhost/piecework/ui/form/TEST?requestId=2345", pageUri.toString());
     }
 

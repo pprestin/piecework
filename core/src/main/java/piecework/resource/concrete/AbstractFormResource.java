@@ -45,6 +45,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +108,7 @@ public abstract class AbstractFormResource {
         FormRequest request = requestService.create(requestDetails, process);
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
-        return response(process, request, ActionType.CREATE, mediaType);
+        return response(process, request, ActionType.CREATE, mediaType, 1);
     }
 
     protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws PieceworkException {
@@ -131,7 +132,7 @@ public abstract class AbstractFormResource {
 
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
-        return response(process, request, actionType, mediaType);
+        return response(process, request, actionType, mediaType, 1);
     }
 
     protected Response submissionForm(MessageContext context, Process process, String rawSubmissionId) throws PieceworkException {
@@ -165,10 +166,10 @@ public abstract class AbstractFormResource {
 
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
-        return response(process, request, actionType, mediaType, validation, null, true);
+        return response(process, request, actionType, mediaType, validation, null, true, 1);
     }
 
-    protected Response taskForm(MessageContext context, Process process, String rawTaskId) throws PieceworkException {
+    protected Response taskForm(MessageContext context, Process process, String rawTaskId, int count) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, isAnonymous());
         String taskId = sanitizer.sanitize(rawTaskId);
@@ -178,7 +179,7 @@ public abstract class AbstractFormResource {
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
 
-        return response(process, request, ActionType.CREATE, mediaType);
+        return response(process, request, ActionType.CREATE, mediaType, count);
     }
 
     protected SearchResults search(MessageContext context, MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException {
@@ -200,7 +201,7 @@ public abstract class AbstractFormResource {
         try {
             SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, data, type, helper.getPrincipal());
             if (isAnonymous())
-                return response(process, submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true);
+                return response(process, submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true, 1);
 
             return redirect(process, submissionCommandResponse, false);
         } catch (Exception e) {
@@ -234,7 +235,7 @@ public abstract class AbstractFormResource {
             try {
                 FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
                 if (isAnonymous())
-                    return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true);
+                    return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true, 1);
 
                 Submission submission = validation != null ? validation.getSubmission() : null;
                 return redirect(process, new SubmissionCommandResponse(submission, invalidRequest), true);
@@ -296,11 +297,11 @@ public abstract class AbstractFormResource {
         }
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType) throws StatusCodeError {
-        return response(process, request, actionType, mediaType, null, null, true);
+    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, int count) throws StatusCodeError {
+        return response(process, request, actionType, mediaType, null, null, true, count);
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData) throws StatusCodeError {
+    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData, int count) throws StatusCodeError {
         if (!request.validate(process))
             throw new BadRequestError();
 
@@ -313,7 +314,10 @@ public abstract class AbstractFormResource {
             if (mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) {
                 switch (formDisposition.getType()) {
                     case REMOTE:
-                        return Response.seeOther(formDisposition.getPageUri(request, validation, explanation)).build();
+                        URI pageUri = formDisposition.getPageUri(request, validation, explanation, count);
+                        if (pageUri == null)
+                            return Response.temporaryRedirect(formDisposition.getHostUri()).build();
+                        return Response.seeOther(pageUri).build();
                     case CUSTOM:
                         return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
                 }

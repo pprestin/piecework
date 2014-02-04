@@ -314,7 +314,7 @@ public class UserInterfaceService {
         if (!template.exists())
             throw new NotFoundError();
 
-        Resource scriptResource = getResourceFromCache(template, CacheName.SCRIPT);
+        Resource scriptResource = getResourceFromCache(template, cacheName);
         if (scriptResource != null)
             return scriptResource;
 
