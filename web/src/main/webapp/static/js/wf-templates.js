@@ -24,13 +24,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <h4 class=\"modal-title\">Assign Task</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\" style=\"min-height:120px\">\n" +
-    "            <div data-wf-notifications notifications=\"notifications\"></div>" +
-//    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
-//    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
-//    "                <ul>\n" +
-//    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
-//    "                </ul>\n" +
-//    "            </div>\n" +
+    "            <div data-wf-notifications></div>" +
     "            <div class=\"form-group\">\n" +
     "                <label>Assignee</label>\n" +
     "                <div>\n" +
@@ -54,12 +48,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <h4 class=\"modal-title\">Are you sure you want to cancel/delete this process?</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
-    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
-    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
-    "                <ul>\n" +
-    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
-    "                </ul>\n" +
-    "            </div>\n" +
+    "            <div data-wf-notifications></div>" +
     "            <p>Deleting a process <b>permanently</b> stops execution and <u>cannot</u> be reversed.</p>\n" +
     "            <textarea class=\"form-control input-block-level\" placeholder=\"Enter a reason\" ng-model=\"reason\" id=\"delete-reason\" rows=\"4\"></textarea>\n" +
     "        </div>\n" +
@@ -73,12 +62,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<div class=\"modal-dialog\">\n" +
     "    <div class=\"modal-content\">\n" +
     "        <div class=\"modal-body\">\n" +
-    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
-    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
-    "                <ul>\n" +
-    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
-    "                </ul>\n" +
-    "            </div>\n" +
+    "            <div data-wf-notifications></div>" +
     "            <div class=\"row\">\n" +
     "                <div class=\"col-lg-12 col-sm-12\">\n" +
     "                    <textarea class=\"form-control input-block-level\" placeholder=\"Enter a comment\" ng-model=\"comment\" id=\"attach-comment\" rows=\"4\"></textarea>\n" +
@@ -98,12 +82,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <h3>{{entityToDelete.title}}</h3>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
-    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
-    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
-    "                <ul>\n" +
-    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
-    "                </ul>\n" +
-    "            </div>\n" +
+    "            <div data-wf-notifications></div>" +
     "            <span ng-bind-html=\"entityToDelete.text\"></span>\n" +
     "        </div>\n" +
     "        <div class=\"modal-footer\">\n" +
@@ -201,12 +180,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <h4 class=\"modal-title\">Are you sure you want to suspend this process?</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
-    "            <div ng-show=\"notifications\" class=\"alert alert-danger\">\n" +
-    "                <h4 ng-if=\"notifications[0].title\">{{notifications[0].title}}</h4>\n" +
-    "                <ul>\n" +
-    "                    <li ng-repeat=\"notification in notifications\" ng-bind-html=\"notification.message\"></li>\n" +
-    "                </ul>\n" +
-    "            </div>\n" +
+    "            <div data-wf-notifications></div>" +
     "            <p>Suspending a process pauses execution.</p>\n" +
     "            <textarea class=\"form-control input-block-level\" placeholder=\"Enter a reason\" ng-model=\"reason\" id=\"suspend-reason\" rows=\"4\"></textarea>\n" +
     "        </div>\n" +
@@ -260,7 +234,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            </ul>\n" +
     "        </div>");
   $templateCache.put("templates/container.html",
-    "<wf-notifications notifications=\"notifications\"></wf-notifications>\n" +
+    "    <wf-notifications></wf-notifications>\n" +
     "    <h2>{{container.title}}</h2>\n" +
     "    <wf-status form=\"form\"></wf-status>\n" +
     "    <div ng-class=\"state.isViewingAttachments && 'wf-expanded col-md-8'\">\n" +
@@ -322,7 +296,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "    <span data-ng-repeat=\"message in field.messages\" class=\"help-block text-danger\">{{message.text}}</span>\n");
   $templateCache.put("templates/fieldset.html",
     "<ul data-ng-model=\"container.fields\">\n" +
-    "        <li data-ng-show=\"isVisible(field)\" data-ng-class=\"field.cssClass\" data-ng-repeat=\"field in container.fields\" class=\"pw-field\">\n" +
+    "        <li data-ng-if=\"isVisible(field)\" data-ng-class=\"field.cssClass\" data-ng-repeat=\"field in container.fields\" class=\"pw-field\">\n" +
     "            <div data-wf-field field=\"field\"></div>\n" +
     "        </li>\n" +
     "    </ul>");
@@ -335,7 +309,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </ul>\n" +
     "    </div>");
   $templateCache.put("templates/review.html",
-    "    <wf-notifications notifications=\"notifications\"></wf-notifications>\n" +
+    "    <wf-notifications></wf-notifications>\n" +
     "    <wf-status form=\"form\"></wf-status>\n" +
     "    <div>\n" +
 //    "        <form class=\"form form-default\" action=\"{{form.action}}\" method=\"POST\" enctype=\"multipart/form-data\" novalidate>\n" +
@@ -501,7 +475,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "       </span>\n" +
     "   </form>\n");
   $templateCache.put("templates/multipage.html",
-    "<wf-notifications notifications=\"notifications\"></wf-notifications>\n" +
+    "<wf-notifications></wf-notifications>\n" +
     "    <wf-status form=\"form\"></wf-status>\n" +
     "    <div>\n" +
 //    "        <form class=\"form form-default\" action=\"{{form.action}}\" method=\"POST\" enctype=\"multipart/form-data\" novalidate>\n" +
@@ -528,7 +502,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
 //    "        </form>\n" +
     "    </div>");
   $templateCache.put("templates/multistep.html",
-    "<wf-notifications notifications=\"notifications\"></wf-notifications>\n" +
+    "<wf-notifications></wf-notifications>\n" +
     "    <wf-status form=\"form\"></wf-status>\n" +
 //    "    <form class=\"form form-default\" action=\"{{form.action}}\" method=\"POST\" enctype=\"multipart/form-data\">\n" +
     "        <div class=\"row\">\n" +

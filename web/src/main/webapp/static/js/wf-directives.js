@@ -45,9 +45,6 @@ angular.module('wf.directives',
                                 }
                             });
                         }
-//                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
-//                            element.text('');
-//                        });
                     });
                 }
             }
@@ -173,62 +170,9 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfVariable', [
-        function() {
-            return {
-                restrict: 'A',
-                scope: {
-
-                },
-                link: function (scope, element, attr) {
-                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
-                        scope.form = form;
-                        var data = form.data;
-                        var fieldName = attr.wfVariable;
-                        var subFieldName = null;
-                        var indexOfPeriod = fieldName.indexOf('.');
-                        if (indexOfPeriod != -1) {
-                            subFieldName = fieldName.substring(indexOfPeriod+1);
-                            fieldName = fieldName.substring(0, indexOfPeriod);
-                        }
-                        var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
-                        if (values != null) {
-                            var html = '';
-                            var href = '';
-                            angular.forEach(values, function(value) {
-                                if (value != null) {
-                                    var current;
-                                    if (subFieldName != null)
-                                        current = value[subFieldName];
-                                    else
-                                        current = value;
-
-                                    html += typeof(current) === 'string' ? current : current.name;
-
-                                    if (typeof(current) !== 'string')
-                                        href = current.link;
-                                }
-                            });
-                            if (html == '')
-                                html = attr.wfPlaceholder;
-                            if (href != '')
-                                element.attr('href', href);
-
-                            element.html(html);
-                        }
-                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
-                            var html = typeof(value) === 'string' ? value : value.name;
-                            element.html(html);
-                        });
-                    });
-                }
-            }
-        }
-    ])
     .directive('wfField', ['personService',
         function(personService) {
             return {
-//                require: '^ngModel',
                 restrict: 'AE',
                 scope: {
                     field : '='
@@ -260,60 +204,6 @@ angular.module('wf.directives',
                         for (var i=min; i<=max; i++) input.push(i);
                         return input;
                     };
-                }
-            }
-        }
-    ])
-    .directive('wfFieldForm', ['attachmentService', '$rootScope',
-        function(attachmentService, $rootScope) {
-            return {
-                restrict: 'A',
-                scope: {
-                    form : '='
-                },
-                link: function (scope, element, attr) {
-                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
-                        scope.form = form;
-                    });
-                    var fieldName = attr.wfFieldForm;
-
-                    element.find('button').click(function(event) {
-                        var data = new FormData();
-                        var $inputs = element.find(':input');
-                        $inputs.each(function(index, input) {
-                            var $input = $(input);
-                            data.append(input.name, $input.val());
-                        });
-
-                        var url = scope.form.attachment;
-                        if (fieldName != 'attachments') {
-                            url = url.replace('/attachment', '/value');
-                            url += '/' + fieldName;
-                        }
-
-                        $.ajax({
-                           url : url,
-                           data : data,
-                           processData : false,
-                           contentType : false,
-                           type : 'POST'
-                        })
-                        .done(function(data, textStatus, jqXHR) {
-                           $inputs.val('');
-                           if (fieldName == 'attachments')
-                                scope.$root.$broadcast('wfEvent:attachments', data.list);
-                           else
-                                scope.$root.$broadcast('wfEvent:value-updated:' + fieldName, data);
-                        })
-                        .fail(function(jqXHR, textStatus, errorThrown) {
-                           var data = $.parseJSON(jqXHR.responseText);
-                           var selector = '.process-alert[data-element="' + input.name + '"]';
-                           var message = data.messageDetail;
-                           var $alert = $(selector);
-                           $alert.show();
-                           $alert.text(message);
-                        });
-                    });
                 }
             }
         }
@@ -478,10 +368,11 @@ angular.module('wf.directives',
                          return (elem.type == 'date' && elem.value != 'foo');
                      }
 
-                     var mask = attr.wfMask;
                      var type = element.attr('type');
                      var options = {};
-                     if (typeof(attr.wfMask) !== 'undefined')
+                     if (typeof(attr.wfInputMask) !== 'undefined')
+                        options['mask'] = attr.wfInputMask;
+                     else if (typeof(attr.wfMask) !== 'undefined')
                         options['mask'] = attr.wfMask;
                      if (typeof(attr.wfPlaceholder) !== 'undefined')
                         options['placeholder'] = attr.wfPlaceholder;
@@ -844,7 +735,6 @@ angular.module('wf.directives',
                                 }
                             });
                         }
-
                     });
                 }
             }
@@ -1035,7 +925,9 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/form-namebar.html',
                 link: function (scope, element) {
-
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
+                        scope.form = form;
+                    });
                 }
             }
         }
@@ -1045,7 +937,7 @@ angular.module('wf.directives',
              return {
                  restrict: 'AE',
                  scope: {
-                     notifications : '='
+
                  },
                  templateUrl: 'templates/notifications.html',
                  link: function (scope, element) {
@@ -1481,6 +1373,112 @@ angular.module('wf.directives',
                         scope.$root.$broadcast('wfEvent:view-attachments');
                     };
 
+                }
+            }
+        }
+    ])
+    .directive('wfVariable', [
+        function() {
+            return {
+                restrict: 'A',
+                scope: {
+
+                },
+                link: function (scope, element, attr) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
+                        scope.form = form;
+                        var data = form.data;
+                        var fieldName = attr.wfVariable;
+                        var subFieldName = null;
+                        var indexOfPeriod = fieldName.indexOf('.');
+                        if (indexOfPeriod != -1) {
+                            subFieldName = fieldName.substring(indexOfPeriod+1);
+                            fieldName = fieldName.substring(0, indexOfPeriod);
+                        }
+                        var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
+                        if (values != null) {
+                            var html = '';
+                            var href = '';
+                            angular.forEach(values, function(value) {
+                                if (value != null) {
+                                    var current;
+                                    if (subFieldName != null)
+                                        current = value[subFieldName];
+                                    else
+                                        current = value;
+
+                                    html += typeof(current) === 'string' ? current : current.name;
+
+                                    if (typeof(current) !== 'string')
+                                        href = current.link;
+                                }
+                            });
+                            if (html == '')
+                                html = attr.wfPlaceholder;
+                            if (href != '')
+                                element.attr('href', href);
+
+                            element.html(html);
+                        }
+                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
+                            var html = typeof(value) === 'string' ? value : value.name;
+                            element.html(html);
+                        });
+                    });
+                }
+            }
+        }
+    ])
+    .directive('wfVariableUpload', ['attachmentService', '$rootScope',
+        function(attachmentService, $rootScope) {
+            return {
+                restrict: 'A',
+                scope: {
+                    form : '='
+                },
+                link: function (scope, element, attr) {
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
+                        scope.form = form;
+                    });
+                    var fieldName = attr.wfVariableUpload;
+
+                    element.find('button').click(function(event) {
+                        var data = new FormData();
+                        var $inputs = element.find(':input');
+                        $inputs.each(function(index, input) {
+                            var $input = $(input);
+                            data.append(input.name, $input.val());
+                        });
+
+                        var url = scope.form.attachment;
+                        if (fieldName != 'attachments') {
+                            url = url.replace('/attachment', '/value');
+                            url += '/' + fieldName;
+                        }
+
+                        $.ajax({
+                           url : url,
+                           data : data,
+                           processData : false,
+                           contentType : false,
+                           type : 'POST'
+                        })
+                        .done(function(data, textStatus, jqXHR) {
+                           $inputs.val('');
+                           if (fieldName == 'attachments')
+                                scope.$root.$broadcast('wfEvent:attachments', data.list);
+                           else
+                                scope.$root.$broadcast('wfEvent:value-updated:' + fieldName, data);
+                        })
+                        .fail(function(jqXHR, textStatus, errorThrown) {
+                           var data = $.parseJSON(jqXHR.responseText);
+                           var selector = '.process-alert[data-element="' + input.name + '"]';
+                           var message = data.messageDetail;
+                           var $alert = $(selector);
+                           $alert.show();
+                           $alert.text(message);
+                        });
+                    });
                 }
             }
         }

@@ -20,7 +20,7 @@ describe('Unit testing wf-active', function() {
         var element = $compile("<input data-wf-active=\"start\" name=\"myElement\"/>")(scope);
         scope.$digest();
         var form = { task: null };
-        scope.$broadcast('event:form-loaded', form);
+        scope.$broadcast('wfEvent:form-loaded', form);
         expect(element.attr('disabled')).toBeFalsy();
     });
 
@@ -29,7 +29,7 @@ describe('Unit testing wf-active', function() {
         var element = $compile("<input data-wf-active=\"start\" name=\"myElement\"/>")(scope);
         scope.$digest();
         var form = { task: { taskDefinitionKey: 'reviewIt' } };
-        scope.$broadcast('event:form-loaded', form);
+        scope.$broadcast('wfEvent:form-loaded', form);
         expect(element.attr('disabled')).toBeTruthy();
     });
 
@@ -38,7 +38,7 @@ describe('Unit testing wf-active', function() {
         var element = $compile("<input data-wf-active=\"reviewIt\" name=\"myElement\"/>")(scope);
         scope.$digest();
         var form = { task: { taskDefinitionKey: 'reviewIt' } };
-        scope.$broadcast('event:form-loaded', form);
+        scope.$broadcast('wfEvent:form-loaded', form);
         expect(element.attr('disabled')).toBeFalsy();
     });
 
@@ -47,8 +47,45 @@ describe('Unit testing wf-active', function() {
         var element = $compile("<input data-wf-active=\"start\" name=\"myElement\"/>")(scope);
         scope.$digest();
         var form = { task: { taskDefinitionKey: 'reviewIt' } };
-        scope.$broadcast('event:form-loaded', form);
+        scope.$broadcast('wfEvent:form-loaded', form);
         expect(element.attr('disabled')).toBeTruthy();
+    });
+
+});
+
+describe('Unit testing wf-alert', function() {
+    var $compile;
+    var $rootScope;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should display message text if field name matches', function() {
+        var scope = $rootScope;
+        var element = $compile("<span data-wf-alert=\"myElement\"></span>")(scope);
+        var form = { validation: { 'myElement' : [ { text: 'TestMessage' } ] } };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        var html = element.html();
+        expect(html).toContain('TestMessage');
+    });
+
+    it('Should not display message text if field name does not', function() {
+        var scope = $rootScope;
+        var element = $compile("<span data-wf-alert=\"myElement\"></span>")(scope);
+        var form = { validation: { 'anotherElement' : [ { text: 'TestMessage' } ] } };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        var html = element.html();
+        expect(html).toContain('');
     });
 
 });
@@ -77,7 +114,7 @@ describe('Unit testing wf-attachments', function() {
         var scope = $rootScope;
         var attachment = {"attachmentId":"52d6351630042ac6f74be285","name":"comment","description":"Test XYZ","contentType":"text/plain","user":{"userId":"testuser","visibleId":"testuser","displayName":"Jerome P. User","emailAddress":"","phoneNumber":null,"uri":null},"ordinal":0,"lastModified":"2014-01-15T07:13:22.977+0000","link":"http://localhost/workflow/ui/instance/DEMO/52d09a2d3004c98375b1fd42/attachment/52d6351630042ac6f74be285","uri":"http://localhost/workflow/api/v1/instance/DEMO/52d09a2d3004c98375b1fd42/attachment/52d6351630042ac6f74be285"};
         var attachments = [ attachment ];
-        scope.$broadcast('event:attachments', attachments);
+        scope.$broadcast('wfEvent:attachments', attachments);
         scope.$digest();
         spyOn($attachmentService, 'deleteAttachment');
         // Click edit attachments button
@@ -90,7 +127,7 @@ describe('Unit testing wf-attachments', function() {
     it('Should set form on local scope form-loaded event is broadcast', function() {
         var scope = $element.scope;
         var form = { test: 'ok' };
-        $rootScope.$broadcast('event:form-loaded', form);
+        $rootScope.$broadcast('wfEvent:form-loaded', form);
         expect(form).toEqual({ test : 'ok', loadedBy: [ 'wfAttachments' ]});
     });
 
@@ -102,7 +139,7 @@ describe('Unit testing wf-attachments', function() {
         var scope = $rootScope;
         var attachments = [{"attachmentId":"52d6351630042ac6f74be285","name":"comment","description":"Test XYZ","contentType":"text/plain","user":{"userId":"testuser","visibleId":"testuser","displayName":"Jerome P. User","emailAddress":"","phoneNumber":null,"uri":null},"ordinal":0,"lastModified":"2014-01-15T07:13:22.977+0000","link":"http://localhost/workflow/ui/instance/DEMO/52d09a2d3004c98375b1fd42/attachment/52d6351630042ac6f74be285","uri":"http://localhost/workflow/api/v1/instance/DEMO/52d09a2d3004c98375b1fd42/attachment/52d6351630042ac6f74be285"}];
         scope.ok = {};
-        scope.$broadcast('event:attachments', attachments);
+        scope.$broadcast('wfEvent:attachments', attachments);
         $rootScope.$digest();
         var html = $element.html();
         expect(html).toContain('Test XYZ');
@@ -114,9 +151,9 @@ describe('Unit testing wf-attachments', function() {
     it('Should broadcast toggle-attachments event if view-attachments event is broadcast', function() {
         var scope = $rootScope;
         spyOn(scope, '$broadcast').and.callThrough();
-        scope.$broadcast('event:view-attachments');
-        expect(scope.$broadcast).toHaveBeenCalledWith('event:view-attachments');
-        expect(scope.$broadcast).toHaveBeenCalledWith('event:toggle-attachments', true);
+        scope.$broadcast('wfEvent:view-attachments');
+        expect(scope.$broadcast).toHaveBeenCalledWith('wfEvent:view-attachments');
+        expect(scope.$broadcast).toHaveBeenCalledWith('wfEvent:toggle-attachments', true);
     });
 });
 
@@ -141,7 +178,7 @@ describe('Unit testing wf-breadcrumbs', function() {
     it('Should set form on local scope form-loaded event is broadcast', function() {
         var scope = $rootScope;
         var form = { test: 'ok' };
-        scope.$broadcast('event:form-loaded', form);
+        scope.$broadcast('wfEvent:form-loaded', form);
         expect(form).toEqual({ test : 'ok', loadedBy: [ 'wfBreadcrumbs' ]});
     });
 
@@ -152,7 +189,7 @@ describe('Unit testing wf-breadcrumbs', function() {
     it('Should contain a breadcrumb if a step for that breadcrumb exists', function() {
         var scope = $rootScope;
         var form = { container: { activeStepOrdinal: 1 }, steps: [ { isStep: false, leaf: false, breadcrumb: 'My Example Breadcrumb', ordinal: 1, reviewChildIndex: 1} ] };
-        $rootScope.$broadcast('event:form-loaded', form);
+        $rootScope.$broadcast('wfEvent:form-loaded', form);
         scope.$digest();
         expect($element.html()).toContain('My Example Breadcrumb');
     });
@@ -228,7 +265,7 @@ describe('Unit testing wf-container', function() {
         var element = $compile("<div wf-container container=\"container\"></div>")(scope);
         scope.$digest();
         var form = { test: 'ok' };
-        scope.$broadcast('event:form-loaded', form);
+        scope.$broadcast('wfEvent:form-loaded', form);
         expect(form).toEqual({ test : 'ok', loadedBy: [ 'wfContainer', 'wfStatus', 'wfAttachments' ]});
     });
 
@@ -238,7 +275,7 @@ describe('Unit testing wf-container', function() {
         var element = $compile("<div wf-container container=\"container\"></div>")(scope);
         scope.$digest();
         var form = { test: 'ok' };
-        scope.$broadcast('event:toggle-attachments', true);
+        scope.$broadcast('wfEvent:toggle-attachments', true);
         scope.$digest();
         expect(element.html()).toContain('class="wf-expanded');
     });
@@ -249,7 +286,7 @@ describe('Unit testing wf-container', function() {
         var element = $compile("<div wf-container container=\"container\"></div>")(scope);
         scope.$digest();
         var form = { test: 'ok' };
-        scope.$broadcast('event:toggle-attachments', false);
+        scope.$broadcast('wfEvent:toggle-attachments', false);
         scope.$digest();
         expect(element.html()).not.toContain('class="wf-expanded');
     });
@@ -260,60 +297,6 @@ describe('Unit testing wf-container', function() {
         var element = $compile("<div wf-container container=\"container\"></div>")(scope);
         scope.$digest();
         expect(element.html()).toContain('This form is assigned to Joe Q Tester');
-    });
-
-});
-
-describe('Unit testing wf-element', function() {
-    var $compile;
-    var $rootScope;
-    var $element;
-
-    // Load the wf module, which contains the directive
-    beforeEach(module('wf'));
-
-    // Store references to $rootScope and $compile
-    // so they are available to all tests in this describe block
-    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
-      // The injector unwraps the underscores (_) from around the parameter names when matching
-      $compile = _$compile_;
-      $rootScope = _$rootScope_;
-    }));
-
-    it('Should add text of all values that exist in data map', function() {
-        var scope = $rootScope;
-        var form = { data: { 'myElement' : [ 'Blam!', 'Kazam!', 'Pow!'] } };
-        var element = $compile("<span data-wf-element=\"myElement\"></span>")($rootScope);
-        scope.$broadcast('event:form-loaded', form);
-        scope.$digest();
-        expect(element.html()).toContain('Blam!Kazam!Pow!');
-    });
-
-    it('Should add html of all values that exist in data map', function() {
-        var scope = $rootScope;
-        var form = { data: { 'myElement' : [ '<p></p>', '<br>', '<span>Test</span>'] } };
-        var element = $compile("<span data-wf-element=\"myElement\"></span>")($rootScope);
-        scope.$broadcast('event:form-loaded', form);
-        scope.$digest();
-        expect(element.html()).toContain('<p></p><br><span>Test</span>');
-    });
-
-    it('Should add blank text if no values exist in data map', function() {
-        var scope = $rootScope;
-        var form = { data: {  } };
-        var element = $compile("<span data-wf-element=\"myElement\"></span>")($rootScope);
-        scope.$broadcast('event:form-loaded', form);
-        scope.$digest();
-        expect(element.html()).toContain('');
-    });
-
-    it('Should add text of all values that exist as sub fields in data map', function() {
-        var scope = $rootScope;
-        var form = { data: { 'myElement' : [ { displayName: 'Joe' }] } };
-        var element = $compile("<span data-wf-element=\"myElement.displayName\"></span>")($rootScope);
-        scope.$broadcast('event:form-loaded', form);
-        scope.$digest();
-        expect(element.html()).toContain('Joe');
     });
 
 });
@@ -474,6 +457,278 @@ describe('Unit testing wf-field', function() {
 
 });
 
+describe('Unit testing wf-fieldset', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should set field visible if there are no constraints', function() {
+        var scope = $rootScope;
+        var field = { name : 'TestField', maxInputs : 1, type : 'textarea' };
+        var container = {};
+        container.fields = [ ];
+        container.fields.push(field);
+        scope.form = { 'container' : container, 'fieldMap' : { 'TestField' : field } };
+        scope.container = container;
+        var element = $compile("<div data-wf-fieldset data-form=\"form\" data-container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).toContain('<textarea');
+    });
+
+    it('Should set field not visible if there is an unmet visibility constraint', function() {
+        var scope = $rootScope;
+        var field = { name : 'TestField', constraints: [ { name : 'DependentField', type : 'IS_ONLY_VISIBLE_WHEN', value : 'Yes' } ], maxInputs : 1, type : 'textarea' };
+        var dependent = { name : 'DependentField', value : 'No' };
+        var container = {};
+        container.fields = [ ];
+        container.fields.push(field);
+        container.fields.push(dependent);
+        scope.form = { 'container' : container, 'fieldMap' : { 'DependentField' : dependent } };
+        scope.container = container;
+        var element = $compile("<div data-wf-fieldset data-form=\"form\" data-container=\"container\"></div>")(scope);
+        scope.$digest();
+        expect(element.html()).not.toContain('<textarea');
+    });
+
+});
+
+describe('Unit testing wf-form-fallback', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should not display content on startup', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-form-fallback>Something invisible</div>")(scope);
+        scope.$digest();
+        expect(element.attr('style')).toContain('display: none;');
+        expect(element.html()).toContain('Something invisible');
+    });
+
+    it('Should display content if fallback event is received', function() {
+         var scope = $rootScope;
+         var element = $compile("<div data-wf-form-fallback>Something invisible</div>")(scope);
+         scope.$digest();
+         scope.$broadcast('wfEvent:fallback');
+         expect(element.attr('style')).not.toContain('display: none;');
+         expect(element.html()).toContain('Something invisible');
+    });
+
+});
+
+describe('Unit testing wf-form-loading', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should display content on startup', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-form-loading>Something invisible</div>")(scope);
+        scope.$digest();
+        expect(element.attr('style')).toBeUndefined();
+        expect(element.html()).toContain('Something invisible');
+    });
+
+    it('Should not display content if stop-loading event is received', function() {
+         var scope = $rootScope;
+         var element = $compile("<div data-wf-form-loading>Something invisible</div>")(scope);
+         scope.$digest();
+         scope.$broadcast('wfEvent:stop-loading');
+         expect(element.attr('style')).toContain('display: none;');
+         expect(element.html()).toContain('Something invisible');
+    });
+
+});
+
+describe('Unit testing wf-input-mask', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    var hasDatePickerSupport = function() {
+         var elem = document.createElement('input');
+         elem.setAttribute('type','date');
+         elem.value = 'foo';
+         return (elem.type == 'date' && elem.value != 'foo');
+    }
+
+    it('Should set an input mask on a text input', function() {
+        var scope = $rootScope;
+        var element = $compile("<input data-wf-input-mask=\"99-9999\" type=\"text\"/>")(scope);
+        scope.$digest();
+        element.val("112222");
+        expect(element.val()).toContain('11-2222');
+    });
+
+    it('Should set an input mask on a date input if there is no date picker support', function() {
+        var scope = $rootScope;
+        var element = $compile("<input data-wf-input-mask=\"9999-99-99\" type=\"date\"/>")(scope);
+        scope.$digest();
+        if (hasDatePickerSupport)
+            element.val("2014-06-20");
+        else
+            element.val("20140620");
+
+        expect(element.val()).toContain('2014-06-20');
+    });
+
+    it('Should set an input mask on a datetime input if there is no date picker support', function() {
+        var scope = $rootScope;
+        var element = $compile("<input data-wf-input-mask=\"9999-99-99 99:99 a\" type=\"datetime\"/>")(scope);
+        scope.$digest();
+        if (hasDatePickerSupport)
+            element.val("2014-06-20 12:00 A");
+        else
+            element.val("201406201200A");
+
+        expect(element.val()).toContain('2014-06-20 12:00 A');
+        expect(element.val()).not.toContain('2014-06-20 12:00 P');
+    });
+
+    it('Should set an input mask on a datetime-local input if there is no date picker support', function() {
+        var scope = $rootScope;
+        var element = $compile("<input data-wf-input-mask=\"9999-99-99T99:99:99\" type=\"datetime-local\"/>")(scope);
+        scope.$digest();
+        if (hasDatePickerSupport)
+            element.val("2014-06-20T15:00:00");
+        else
+            element.val("20140620150000");
+
+        expect(element.val()).toContain('2014-06-20T15:00:00');
+        expect(element.val()).not.toContain('2014-06-20 15:00 P');
+    });
+
+});
+
+describe('Unit testing wf-login', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should display current user name', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-login></div>")(scope);
+        scope.$digest();
+        var form = { currentUser : { displayName: 'Joe Tester' }};
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('Joe Tester');
+    });
+
+});
+
+describe('Unit testing wf-namebar', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should display current user name', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-namebar></div>")(scope);
+        scope.$digest();
+        var form = { currentUser : { displayName: 'Joe Tester' }};
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('Joe Tester');
+    });
+
+});
+
+describe('Unit testing wf-notifications', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should display notification message', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-notifications></div>")(scope);
+        scope.$digest();
+        var notification = { message : 'Some message', title: 'Some title' };
+        scope.$broadcast('wfEvent:notification', notification);
+        scope.$digest();
+        expect(element.html()).toContain('Some title');
+        expect(element.html()).toContain('Some message');
+    });
+
+});
+
 describe('Unit testing wf-status', function() {
     var $compile;
     var $rootScope;
@@ -496,7 +751,7 @@ describe('Unit testing wf-status', function() {
         var element = $compile("<div wf-status></div>")(scope);
         scope.$digest();
         var form = { test: 'ok' };
-        scope.$broadcast('event:form-loaded', form);
+        scope.$broadcast('wfEvent:form-loaded', form);
         expect(form).toEqual({ test : 'ok', loadedBy: [ 'wfStatus' ]});
     });
 
@@ -555,6 +810,60 @@ describe('Unit testing wf-status', function() {
         scope.$digest();
         expect(element.html()).toContain('Some special explanation');
         expect(element.html()).toContain('Some detail');
+    });
+
+});
+
+describe('Unit testing wf-variable', function() {
+    var $compile;
+    var $rootScope;
+    var $element;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _attachmentService_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should add text of all values that exist in data map', function() {
+        var scope = $rootScope;
+        var form = { data: { 'myElement' : [ 'Blam!', 'Kazam!', 'Pow!'] } };
+        var element = $compile("<span data-wf-variable=\"myElement\"></span>")($rootScope);
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('Blam!Kazam!Pow!');
+    });
+
+    it('Should add html of all values that exist in data map', function() {
+        var scope = $rootScope;
+        var form = { data: { 'myElement' : [ '<p></p>', '<br>', '<span>Test</span>'] } };
+        var element = $compile("<span data-wf-variable=\"myElement\"></span>")($rootScope);
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('<p></p><br><span>Test</span>');
+    });
+
+    it('Should add blank text if no values exist in data map', function() {
+        var scope = $rootScope;
+        var form = { data: {  } };
+        var element = $compile("<span data-wf-variable=\"myElement\"></span>")($rootScope);
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('');
+    });
+
+    it('Should add text of all values that exist as sub fields in data map', function() {
+        var scope = $rootScope;
+        var form = { data: { 'myElement' : [ { displayName: 'Joe' }] } };
+        var element = $compile("<span data-wf-variable=\"myElement.displayName\"></span>")($rootScope);
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$digest();
+        expect(element.html()).toContain('Joe');
     });
 
 });

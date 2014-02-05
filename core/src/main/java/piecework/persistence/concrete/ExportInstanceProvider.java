@@ -58,8 +58,8 @@ public class ExportInstanceProvider implements IteratingDataProvider<String> {
         this.request = new PageRequest(0, PAGE_SIZE, sort);
         this.sort = sort;
 
-        this.headerMap.put("__processInstanceId", "ID");
-        this.headerMap.put("__title", "Title");
+        this.headerMap.put("__processInstanceId", "\"ID\"");
+        this.headerMap.put("__title", "\"Title\"");
         String[] headerKeys = null;
         ProcessDeployment deployment = process.getDeployment();
         if (deployment != null) {
@@ -104,8 +104,8 @@ public class ExportInstanceProvider implements IteratingDataProvider<String> {
                     }
                 }
             }
-            this.headerMap.put("__submitted", "Submitted");
-            this.headerMap.put("__completed", "Completed");
+            this.headerMap.put("__submitted", "\"Submitted\"");
+            this.headerMap.put("__completed", "\"Completed\"");
 
             if (!headerMap.isEmpty())
                 headerKeys = headerMap.keySet().toArray(new String[headerMap.size()]);
