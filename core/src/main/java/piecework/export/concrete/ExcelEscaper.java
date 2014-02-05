@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.persistence;
+package piecework.export.concrete;
 
-import java.util.List;
-import java.util.Map;
+import piecework.export.Escaper;
 
 /**
  * @author James Renfro
  */
-public interface IteratingDataProvider<T> {
+public class ExcelEscaper implements Escaper {
 
-    T getHeader();
-
-    List<T> next();
-
-    boolean hasNext();
-
-    void reset();
+    @Override
+    public String escape(String input) {
+        return input;
+    }
 
 }

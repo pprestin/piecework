@@ -30,7 +30,9 @@ import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
-import piecework.persistence.concrete.ExportInstanceProvider;
+import piecework.export.IteratingDataProvider;
+import piecework.export.concrete.ExportAsCommaSeparatedValuesProvider;
+import piecework.export.concrete.ExportAsExcelWorkbookProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
@@ -44,6 +46,7 @@ import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.submission.SubmissionTemplate;
 import piecework.ui.Streamable;
+import piecework.util.ExportUtility;
 import piecework.util.ProcessUtility;
 import piecework.validation.Validation;
 import piecework.validation.ValidationFactory;
@@ -293,7 +296,7 @@ public class ProcessInstanceService {
         }
     }
 
-    public ExportInstanceProvider exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean isCSV) throws StatusCodeError {
+    public IteratingDataProvider<?> exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean isCSV) throws StatusCodeError {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
@@ -320,7 +323,10 @@ public class ProcessInstanceService {
             String processDefinitionKey = processDefinitionKeys.iterator().next();
             Process process = processService.read(processDefinitionKey);
 
-            return new ExportInstanceProvider(process, executionCriteria, processInstanceRepository, executionCriteria.getSort(), isCSV);
+            Map<String, String> headerMap = ExportUtility.headerMap(process);
+            if (isCSV)
+                return new ExportAsCommaSeparatedValuesProvider(process, headerMap, executionCriteria, processInstanceRepository, executionCriteria.getSort());
+            return new ExportAsExcelWorkbookProvider(process, headerMap, executionCriteria, processInstanceRepository, executionCriteria.getSort());
         }
         return null;
     }

@@ -1096,7 +1096,7 @@ angular.module('wf.directives',
                     scope.criteria.taskStatus = 'all';
 
                     scope.exportCsv = function(selectedForms) {
-                        $window.location.href = "/workflow/ui/instance.csv?processDefinitionKey=" + scope.criteria.processDefinitionKey;
+                        $window.location.href = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.criteria.processDefinitionKey;
                     };
 
                     scope.processStatusDescription = {
