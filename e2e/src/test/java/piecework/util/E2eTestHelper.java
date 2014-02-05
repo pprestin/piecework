@@ -18,8 +18,10 @@ package piecework.util;
 
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import java.util.concurrent.TimeUnit;
 
-import static org.testng.AssertJUnit.*;
+import static org.testng.Assert.*;
+import org.testng.annotations.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -39,6 +41,7 @@ public class E2eTestHelper {
             //System.out.println(k + "'s type =" + a);
             if ( tagName.equals("input") ) {
                 if ( t.startsWith("text") ) {
+                    element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
                     element.sendKeys(v);
                 } else if ( t.equals("hidden") ) {
                     WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
@@ -64,6 +67,22 @@ public class E2eTestHelper {
                     el.click();
                 }
             }
+        }
+    }
+
+    // verify form fields
+    public static void verifyForm(WebDriver driver, String[][] data) {
+        for ( String[] e : data ) { 
+            String k = e[0];
+            String v = e[1];
+            WebElement element = driver.findElement(By.xpath(k));
+            String tagName = element.getTagName();
+            String actual =  element.getText();
+            if ( actual == null || !actual.equals(v) ) {
+                actual = element.getAttribute("value");
+            }
+            //System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual);
+            assertEquals( actual, v);
         }
     }
 
@@ -120,19 +139,55 @@ public class E2eTestHelper {
     }
 
     // misc helper methods
-    public static String getDate(int days) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+    public static String getDate(int days, String format) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         Date dt = new Date();
         dt.setTime(dt.getTime() + days*MILLISECONDS_IN_ONE_DAY);
         return dateFormat.format(dt);
+    }
+
+    public static String getDate(int days) {
+        return getDate(days, "MM/dd/yyyy");  // default date format
     }
 
     public static String getCurrentDate() {
         return getDate(0);
     }
 
+    public static String getCurrentDate(String format) {
+        return getDate(0, format);
+    }
+
     public static String getCurrentDateTime() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm a");
+        return getCurrentDateTime("M/dd/yyyy HH:mm a");  // default datetime format
+    }
+
+    public static String getCurrentDateTime(String format) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         return dateFormat.format(new Date());
+    }
+
+    public static void waitForUserLogin(WebDriver driver, String patialLoginStr, int timeoutInSeconds) {
+        if ( driver == null || patialLoginStr == null || patialLoginStr.length() < 3 ) {
+            return;
+        }
+
+        if ( timeoutInSeconds < 1 ) {
+            timeoutInSeconds = 1;
+        }
+
+        String url = driver.getCurrentUrl();
+        System.out.println(url);
+        if ( url.indexOf(patialLoginStr) > 0 ) { 
+            try {
+                for (int i=0; i<timeoutInSeconds && url.indexOf(patialLoginStr) > 0; ++i) {
+                    url = driver.getCurrentUrl();
+                    System.out.println(url);
+                        Thread.sleep(1000);
+                }   
+                Thread.sleep(1000);   // additional wait for redrection
+            } catch (InterruptedException e) {
+            }   
+        } 
     }
 }
