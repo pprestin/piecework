@@ -293,7 +293,7 @@ public class ProcessInstanceService {
         }
     }
 
-    public ExportInstanceProvider exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
+    public ExportInstanceProvider exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean isCSV) throws StatusCodeError {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
@@ -320,7 +320,7 @@ public class ProcessInstanceService {
             String processDefinitionKey = processDefinitionKeys.iterator().next();
             Process process = processService.read(processDefinitionKey);
 
-            return new ExportInstanceProvider(process, executionCriteria, processInstanceRepository, executionCriteria.getSort());
+            return new ExportInstanceProvider(process, executionCriteria, processInstanceRepository, executionCriteria.getSort(), isCSV);
         }
         return null;
     }

@@ -317,15 +317,24 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
 		MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
 
-        if (mediaTypes != null && mediaTypes.contains(new MediaType("text", "csv"))) {
-            String fileName = "export.csv";
-            ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters, principal);
-            ExportStreamingOutput exportStreamingOutput = new ExportStreamingOutput(provider);
-            return Response.ok(exportStreamingOutput, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
+        if (mediaTypes != null) {
+            if (mediaTypes.contains(new MediaType("text", "csv"))) {
+                String fileName = "export.csv";
+                ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters, principal, true);
+                ExportStreamingOutput exportStreamingOutput = new ExportStreamingOutput(provider);
+                return Response.ok(exportStreamingOutput, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
+            } else if (mediaTypes.contains(new MediaType("application", "vnd.ms-excel"))) {
+                String fileName = "export.xml";
+                ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters, principal, false);
+                ExportStreamingOutput exportStreamingOutput = new ExportStreamingOutput(provider);
+                return Response.ok(exportStreamingOutput, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
+            }
         } else {
             SearchResults results = processInstanceService.search(rawQueryParameters, principal);
             return Response.ok(results).build();
         }
+
+        throw new NotFoundError();
 	}
 
     @Override

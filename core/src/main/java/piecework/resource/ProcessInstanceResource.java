@@ -69,7 +69,7 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @GET
     @Path("")
     @RolesAllowed({AuthorizationRole.ADMIN})
-    @Produces({"application/json", "text/csv"})
+    @Produces({"application/json", "text/csv", "application/vnd.ms-excel"})
     Response search(@Context MessageContext context) throws PieceworkException;
 
     /*

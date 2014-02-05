@@ -17,6 +17,8 @@ package piecework.persistence.concrete;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,16 +49,23 @@ public class ExportInstanceProvider implements IteratingDataProvider<String> {
     private final Query query;
     private final ProcessInstanceRepository repository;
     private final Sort sort;
+    private final boolean isCSV;
 
     private Page<ProcessInstance> page;
     private Pageable request;
+    private Workbook wb;
 
-    public ExportInstanceProvider(Process process, ProcessInstanceSearchCriteria criteria, ProcessInstanceRepository repository, Sort sort) {
+    public ExportInstanceProvider(Process process, ProcessInstanceSearchCriteria criteria, ProcessInstanceRepository repository, Sort sort, boolean isCSV) {
         this.headerMap = new LinkedHashMap<String, String>();
         this.query = new ProcessInstanceQueryBuilder(criteria).build();
         this.repository = repository;
         this.request = new PageRequest(0, PAGE_SIZE, sort);
         this.sort = sort;
+        this.isCSV = isCSV;
+
+        if (!isCSV) {
+            Workbook wb = new XSSFWorkbook();
+        }
 
         this.headerMap.put("__processInstanceId", "\"ID\"");
         this.headerMap.put("__title", "\"Title\"");
@@ -95,11 +104,11 @@ public class ExportInstanceProvider implements IteratingDataProvider<String> {
                                 continue;
 
                             if (StringUtils.isNotEmpty(fieldHeader))
-                                headerMap.put(fieldName, "\"" + StringEscapeUtils.unescapeXml(fieldHeader) + "\"");
+                                headerMap.put(fieldName, StringEscapeUtils.unescapeXml(fieldHeader));
                             else if (StringUtils.isNotEmpty(fieldLabel))
-                                headerMap.put(fieldName, "\"" + StringEscapeUtils.unescapeXml(fieldLabel) + "\"");
+                                headerMap.put(fieldName, StringEscapeUtils.unescapeXml(fieldLabel));
                             else
-                                headerMap.put(fieldName, "\"\"");
+                                headerMap.put(fieldName, "");
                         }
                     }
                 }
@@ -115,7 +124,18 @@ public class ExportInstanceProvider implements IteratingDataProvider<String> {
 
     @Override
     public String getHeader() {
-        return StringUtils.join(headerMap.values(), ", ");
+        if (isCSV) {
+            List<String> quotedValues = new ArrayList<String>();
+            if (!headerMap.isEmpty()) {
+                for (String header : headerMap.values()) {
+                    quotedValues.add(new StringBuilder("\"").append(header).append("\"").toString());
+                }
+            }
+            return StringUtils.join(quotedValues, ", ");
+        } else {
+            return null;
+        }
+
     }
 
     @Override

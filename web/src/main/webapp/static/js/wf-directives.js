@@ -370,7 +370,7 @@ angular.module('wf.directives',
 
                      var type = element.attr('type');
                      var options = {};
-                     if (typeof(attr.wfInputMask) !== 'undefined')
+                     if (typeof(attr.wfInputMask) !== 'undefined' && attr.wfInputMask != '')
                         options['mask'] = attr.wfInputMask;
                      else if (typeof(attr.wfMask) !== 'undefined')
                         options['mask'] = attr.wfMask;

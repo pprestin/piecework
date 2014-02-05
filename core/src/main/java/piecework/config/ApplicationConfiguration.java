@@ -108,6 +108,7 @@ public class ApplicationConfiguration {
         extensionMappings.put("json", "application/json");
         extensionMappings.put("html", "text/html");
         extensionMappings.put("csv", "text/csv");
+        extensionMappings.put("xls", "application/vnd.ms-excel");
 
         JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
         sf.setServiceBeanObjects((Object[])applicationResources);
