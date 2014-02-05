@@ -20,23 +20,8 @@
 	<build>
         <finalName>piecework</finalName>
 		<plugins>
-            <!-- Disabling auto jasmine tests because of some bug in truezip
-            <plugin>
-                <groupId>com.github.klieber</groupId>
-                <artifactId>phantomjs-maven-plugin</artifactId>
-                <version>0.2.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>install</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <version>1.9.2</version>
-                </configuration>
-            </plugin>
-            <plugin>
+            <!-- Disabling auto jasmine tests because of a bug -->
+            <!--plugin>
                 <groupId>com.github.searls</groupId>
                 <artifactId>jasmine-maven-plugin</artifactId>
                 <version>1.3.1.4</version>
@@ -48,18 +33,14 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <webDriverClassName>org.openqa.selenium.phantomjs.PhantomJSDriver</webDriverClassName>
-                    <webDriverCapabilities>
-                        <phantomjs.binary.path>${phantomjs.binary}</phantomjs.binary.path>
-                    </webDriverCapabilities>
                     <jsSrcDir>src/main/webapp/static/js</jsSrcDir>
                     <jsTestSrcDir>src/main/webapp/static/test</jsTestSrcDir>
                     <specIncludes>
-                        <include>*Spec.js</include>
+                        <include>WorkflowSpec.js</include>
                     </specIncludes>
                 </configuration>
-            </plugin>
-            -->
+            </plugin-->
+
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>

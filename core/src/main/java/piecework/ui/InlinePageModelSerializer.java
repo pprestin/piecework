@@ -22,6 +22,7 @@ import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
 import org.springframework.core.io.Resource;
 import piecework.designer.model.view.IndexView;
+import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.settings.UserInterfaceSettings;
 
@@ -117,10 +118,14 @@ public class InlinePageModelSerializer {
 
         if (type.equals(Form.class)) {
             Form form = Form.class.cast(t);
-//            if (form.isAnonymous())
-                script.addAttribute("src", settings.getPublicUrl() + "/resource/script/" + form.getProcess().getProcessDefinitionKey() + ".js");
-//            else
-//                script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/" + form.getProcess().getProcessDefinitionKey() + ".js");
+            FormDisposition disposition = form.getDisposition();
+            String url;
+            if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+                url = settings.getPublicUrl() + "/resource/script/" + form.getProcess().getProcessDefinitionKey() + ".js";
+            else
+                url = settings.getApplicationUrl() + "/resource/script/Form.js";
+
+            script.addAttribute("src", url);
         } else if (type.equals(Report.class)) {
             script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/Report.js");
         } else if (type.equals(SearchResults.class)) {
@@ -154,10 +159,15 @@ public class InlinePageModelSerializer {
 
         if (type.equals(Form.class)) {
             Form form = Form.class.cast(t);
-            if (form.isAnonymous())
-                link.addAttribute("href", settings.getPublicUrl() + "/resource/css/Form.css");
+            FormDisposition disposition = form.getDisposition();
+            String url;
+            if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+                url = settings.getPublicUrl() + "/resource/css/" + form.getProcess().getProcessDefinitionKey() + ".css";
             else
-                link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/Form.css");
+                url = settings.getApplicationUrl() + "/resource/css/Form.css";
+
+            link.addAttribute("href", url);
+
         } else if (type.equals(Report.class)) {
             link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/Report.css");
         } else if (type.equals(SearchResults.class)) {

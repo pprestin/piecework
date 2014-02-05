@@ -88,20 +88,27 @@ public class StaticResourceAggregator {
             if (reader != null) {
 
                 // Special handling for the wf controllers, which needs to be compiled as a template
-                if (path.endsWith("/wf-form.js") && formDisposition != null) {
+                if (path.endsWith("/wf-form.js")) {
                     StringBuilder dynamicConfigurationBuilder = new StringBuilder();
-                    String hostUri = formDisposition.getHostUri() != null ? formDisposition.getHostUri().toString() : "";
-                    String pageUri = formDisposition.getPageUri() != null ? formDisposition.getPageUri().toString() : "";
-                    String resourceUri = formDisposition.getResourceUri() != null ? formDisposition.getResourceUri().toString() : "";
 
-                    if (formDisposition.getType() == FormDisposition.FormDispositionType.REMOTE) {
-                        dynamicConfigurationBuilder
-                                .append("$httpProvider.defaults.withCredentials = true;")
-                                .append("$httpProvider.defaults.useXDomain = true;")
-                                .append("$sceDelegateProvider.resourceUrlWhitelist(['")
-                                .append(hostUri).append("/**','")
-                                .append(settings.getHostUri())
-                                .append("/**', 'self']);");
+                    String hostUri = "";
+                    String pageUri = "";
+                    String resourceUri = "";
+
+                    if (formDisposition != null) {
+                        hostUri = formDisposition.getHostUri() != null ? formDisposition.getHostUri().toString() : "";
+                        pageUri = formDisposition.getPageUri() != null ? formDisposition.getPageUri().toString() : "";
+                        resourceUri = formDisposition.getResourceUri() != null ? formDisposition.getResourceUri().toString() : "";
+
+                        if (formDisposition.getType() == FormDisposition.FormDispositionType.REMOTE) {
+                            dynamicConfigurationBuilder
+                                    .append("$httpProvider.defaults.withCredentials = true;")
+                                    .append("$httpProvider.defaults.useXDomain = true;")
+                                    .append("$sceDelegateProvider.resourceUrlWhitelist(['")
+                                    .append(hostUri).append("/**','")
+                                    .append(settings.getHostUri())
+                                    .append("/**', 'self']);");
+                        }
                     }
 
                     Map<String, String> scopes = new HashMap<String, String>();

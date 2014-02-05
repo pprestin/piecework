@@ -20,7 +20,9 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
+import piecework.form.FormDisposition;
 import piecework.service.RequestService;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
@@ -59,6 +61,65 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     @Autowired
     SecuritySettings securitySettings;
 
+    @Override
+    public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+        String scriptId = sanitizer.sanitize(rawProcessDefinitionKey);
+        String templateName = UserInterfaceUtility.templateName(scriptId, isAnonymous());
+
+        Resource scriptResource;
+
+        if (templateName != null) {
+            ServletContext servletContext = context.getServletContext();
+            scriptResource = userInterfaceService.getScriptResource(servletContext, templateName, isAnonymous());
+        } else {
+            Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
+            ServletContext servletContext = context.getServletContext();
+
+            FormDisposition disposition = form.getDisposition();
+            if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
+                try {
+                    Resource pageResource = userInterfaceService.getCustomPage(form);
+                    scriptResource = userInterfaceService.getScriptResource(servletContext, form, pageResource);
+                } catch (MisconfiguredProcessException e) {
+                    throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+                }
+            } else {
+                scriptResource = userInterfaceService.getScriptResource(servletContext, form);
+            }
+        }
+
+        return response(scriptResource, "text/javascript");
+    }
+
+    @Override
+    public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+        String stylesheetId = sanitizer.sanitize(rawProcessDefinitionKey);
+        String templateName = UserInterfaceUtility.templateName(stylesheetId, isAnonymous());
+
+        Resource stylesheetResource;
+
+        if (templateName != null) {
+            ServletContext servletContext = context.getServletContext();
+            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, templateName);
+        } else {
+            Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
+            ServletContext servletContext = context.getServletContext();
+            FormDisposition disposition = form.getDisposition();
+            if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
+                try {
+                    Resource pageResource = userInterfaceService.getCustomPage(form);
+                    stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, pageResource);
+                } catch (MisconfiguredProcessException e) {
+                    throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
+                }
+            } else {
+                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form);
+            }
+        }
+
+        return response(stylesheetResource, "text/css");
+    }
+
 
 //    @Override
 //    public Response read(String rawProcessDefinitionKey, String rawRequestId, MessageContext context) throws StatusCodeError {
@@ -70,7 +131,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
 //        return response(request, principal, new MediaType("text", "javascript"));
 //    }
 
-    @Override
+/*    @Override
     public Response readScript(String rawScriptId, MessageContext context) throws StatusCodeError {
         String scriptId = sanitizer.sanitize(rawScriptId);
 //        Entity principal = identityHelper.getPrincipal();
@@ -100,7 +161,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
 
         Resource stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, templateName);
         return response(stylesheetResource, "text/css");
-    }
+    } */
 
 //    @Override
 //    public Response readStatic(final String rawProcessDefinitionKey, final List<PathSegment> pathSegments, final MessageContext context) throws StatusCodeError {
