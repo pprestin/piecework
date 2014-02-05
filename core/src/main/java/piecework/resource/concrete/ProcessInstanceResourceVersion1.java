@@ -21,6 +21,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.export.IteratingDataProvider;
 import piecework.service.AttachmentService;
 import piecework.Constants;
 import piecework.Versions;
@@ -33,7 +34,6 @@ import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.concrete.ExportInstanceProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.service.HistoryFactory;
 import piecework.resource.ProcessInstanceResource;
@@ -43,13 +43,11 @@ import piecework.settings.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.*;
 import piecework.ui.Streamable;
-import piecework.ui.streaming.ExportStreamingOutput;
 import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.common.ManyMap;
 import piecework.util.FormUtility;
 import piecework.util.ProcessInstanceUtility;
 
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -320,14 +318,12 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         if (mediaTypes != null) {
             if (mediaTypes.contains(new MediaType("text", "csv"))) {
                 String fileName = "export.csv";
-                ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters, principal, true);
-                ExportStreamingOutput exportStreamingOutput = new ExportStreamingOutput(provider);
-                return Response.ok(exportStreamingOutput, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
+                IteratingDataProvider<?> provider = processInstanceService.exportProvider(rawQueryParameters, principal, true);
+                return Response.ok(provider, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
             } else if (mediaTypes.contains(new MediaType("application", "vnd.ms-excel"))) {
-                String fileName = "export.xml";
-                ExportInstanceProvider provider = processInstanceService.exportProvider(rawQueryParameters, principal, false);
-                ExportStreamingOutput exportStreamingOutput = new ExportStreamingOutput(provider);
-                return Response.ok(exportStreamingOutput, "text/csv").header("Content-Disposition", "attachment; filename=" + fileName).build();
+                String fileName = "export.xls";
+                IteratingDataProvider<?> provider = processInstanceService.exportProvider(rawQueryParameters, principal, false);
+                return Response.ok(provider, "application/vnd.ms-excel").header("Content-Disposition", "attachment; filename=" + fileName).build();
             }
         } else {
             SearchResults results = processInstanceService.search(rawQueryParameters, principal);
