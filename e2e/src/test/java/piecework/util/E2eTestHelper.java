@@ -33,57 +33,77 @@ public class E2eTestHelper {
 
     public static void fillForm(WebDriver driver, String[][] data) {
         for ( String[] e : data ) { 
-            String k = e[0];
-            String v = e[1];
-            WebElement element = driver.findElement(By.name(k));
-            String tagName = element.getTagName();
-            String t = element.getAttribute("type");
-            //System.out.println(k + "'s type =" + a);
-            if ( tagName.equals("input") ) {
-                if ( t.startsWith("text") ) {
-                    element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
-                    element.sendKeys(v);
-                } else if ( t.equals("hidden") ) {
-                    WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
-                    e1.sendKeys(v);
-                } else if ( t.equals("checkbox") ) {
-                    element.click();
-                } else if ( t.equals("radio") ) {
-                    if ( v != null && !v.isEmpty() ) {
-                        WebElement el = element.findElement(By.xpath("//input[@name='" + k + "' and @type='radio' and @value='"+v+"']"));
-                        el.click();
-                    } else {
-                        element.click();
+            for (int i=0; i<3; ++i) {
+                try {
+                    String k = e[0];
+                    String v = e[1];
+                    WebElement element = driver.findElement(By.name(k));
+                    String tagName = element.getTagName();
+                    String t = element.getAttribute("type");
+                    //System.out.println(k + "'s type =" + a);
+                    if ( tagName.equals("input") ) {
+                        if ( t.startsWith("text") ) {
+                            element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
+                            element.sendKeys(v);
+                        } else if ( t.equals("hidden") ) {
+                            WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
+                            e1.sendKeys(v);
+                        } else if ( t.equals("checkbox") ) {
+                            element.click();
+                        } else if ( t.equals("radio") ) {
+                            if ( v != null && !v.isEmpty() ) {
+                                WebElement el = element.findElement(By.xpath("//input[@name='" + k + "' and @type='radio' and @value='"+v+"']"));
+                                el.click();
+                            } else {
+                                element.click();
+                            }
+                        }
+                    } else if ( tagName.startsWith("text") ) {
+                        element.sendKeys(v);
+                    } else if ( tagName.equals("select") ) {
+                        if ( v != null && !v.isEmpty() ) {
+                            WebElement el = element.findElement(By.xpath(".//option[@value='"+v+"']"));
+                            el.click();
+                        } else {
+                            WebElement el = element.findElement(By.xpath(".//option[1]"));
+                            el.click();
+                        }
+                    }
+                    break;
+                } catch ( org.openqa.selenium.ElementNotVisibleException ex) {
+                    try {
+                        Thread.sleep(1000);   // wait a bit, then try again
+                    } catch (InterruptedException ex1) {
                     }
                 }
-            } else if ( tagName.startsWith("text") ) {
-                element.sendKeys(v);
-            } else if ( tagName.equals("select") ) {
-                if ( v != null && !v.isEmpty() ) {
-                    WebElement el = element.findElement(By.xpath(".//option[@value='"+v+"']"));
-                    el.click();
-                } else {
-                    WebElement el = element.findElement(By.xpath(".//option[1]"));
-                    el.click();
-                }
-            }
-        }
+            }  // inner loop
+        } // outer loop
     }
 
     // verify form fields
     public static void verifyForm(WebDriver driver, String[][] data) {
         for ( String[] e : data ) { 
-            String k = e[0];
-            String v = e[1];
-            WebElement element = driver.findElement(By.xpath(k));
-            String tagName = element.getTagName();
-            String actual =  element.getText();
-            if ( actual == null || !actual.equals(v) ) {
-                actual = element.getAttribute("value");
-            }
-            //System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual);
-            assertEquals( actual, v);
-        }
+            for (int i=0; i<3; ++i) {
+                try {
+                    String k = e[0];
+                    String v = e[1];
+                    WebElement element = driver.findElement(By.xpath(k));
+                    String tagName = element.getTagName();
+                    String actual =  element.getText();
+                    if ( actual == null || !actual.equals(v) ) {
+                        actual = element.getAttribute("value");
+                    }
+                    //System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual);
+                    assertEquals( actual, v);
+                    break;
+                } catch ( org.openqa.selenium.ElementNotVisibleException ex) {
+                    try {
+                        Thread.sleep(1000);   // wait a bit, then try again
+                    } catch (InterruptedException ex1) {
+                    }
+                }
+            }  // inner loop
+        }  // outer loop
     }
 
     public static void clickButton(WebDriver driver, String buttonValue) {
