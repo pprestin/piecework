@@ -70,7 +70,7 @@ public class E2eTestHelper {
                         }
                     }
                     break;
-                } catch ( org.openqa.selenium.ElementNotVisibleException ex) {
+                } catch ( Exception ex ) {
                     try {
                         Thread.sleep(1000);   // wait a bit, then try again
                     } catch (InterruptedException ex1) {
@@ -96,7 +96,7 @@ public class E2eTestHelper {
                     //System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual);
                     assertEquals( actual, v);
                     break;
-                } catch ( org.openqa.selenium.ElementNotVisibleException ex) {
+                } catch ( Exception ex) {
                     try {
                         Thread.sleep(1000);   // wait a bit, then try again
                     } catch (InterruptedException ex1) {
