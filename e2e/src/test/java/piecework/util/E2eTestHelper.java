@@ -119,8 +119,8 @@ public class E2eTestHelper {
     public static String getRequestId(WebDriver driver) {
         String requestId = null;
 
-        // Wait for the page to load, timeout after 2 seconds
-        (new WebDriverWait(driver, 2)).until(new ExpectedCondition<Boolean>() {
+        // Wait for the page to load, timeout after 5 seconds
+        (new WebDriverWait(driver, 5)).until(new ExpectedCondition<Boolean>() {
             public Boolean apply(WebDriver d) {
                 return d.getCurrentUrl().indexOf("requestId=") > 0;
             }
@@ -204,8 +204,8 @@ public class E2eTestHelper {
             try {
                 for (int i=0; i<timeoutInSeconds && url.indexOf(patialLoginStr) > 0; ++i) {
                     url = driver.getCurrentUrl();
-                    System.out.println(url);
-                        Thread.sleep(1000);
+                    //System.out.println(url);
+                    Thread.sleep(1000);
                 }   
                 Thread.sleep(1000);   // additional wait for redrection
             } catch (InterruptedException e) {
