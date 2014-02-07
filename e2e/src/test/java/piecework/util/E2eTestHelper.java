@@ -27,11 +27,13 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.JavascriptExecutor;
 
 public class E2eTestHelper {
     public static final long MILLISECONDS_IN_ONE_DAY = 24*60*60*1000;
 
     public static void fillForm(WebDriver driver, String[][] data) {
+        //JavascriptExecutor jse = (JavascriptExecutor) driver;
         for ( String[] e : data ) { 
             for (int i=0; i<3; ++i) {
                 try {
@@ -42,10 +44,7 @@ public class E2eTestHelper {
                     String t = element.getAttribute("type");
                     //System.out.println(k + "'s type =" + a);
                     if ( tagName.equals("input") ) {
-                        if ( t.startsWith("text") ) {
-                            element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
-                            element.sendKeys(v);
-                        } else if ( t.equals("hidden") ) {
+                        if ( t.equals("hidden") ) {
                             WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
                             e1.sendKeys(v);
                         } else if ( t.equals("checkbox") ) {
@@ -57,6 +56,9 @@ public class E2eTestHelper {
                             } else {
                                 element.click();
                             }
+                        } else {  // "text", "date" etc.
+                            element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
+                            element.sendKeys(v);
                         }
                     } else if ( tagName.startsWith("text") ) {
                         element.sendKeys(v);
@@ -90,7 +92,7 @@ public class E2eTestHelper {
                     WebElement element = driver.findElement(By.xpath(k));
                     String tagName = element.getTagName();
                     String actual =  element.getText();
-                    if ( actual == null || !actual.equals(v) ) {
+                    if ( (actual == null || !actual.equals(v) ) && ( null != element.getAttribute("value") ) ) {
                         actual = element.getAttribute("value");
                     }
                     //System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual);
@@ -179,7 +181,7 @@ public class E2eTestHelper {
     }
 
     public static String getCurrentDateTime() {
-        return getCurrentDateTime("M/dd/yyyy HH:mm a");  // default datetime format
+        return getCurrentDateTime("MM/dd/yyyy HH:mm a");  // default datetime format
     }
 
     public static String getCurrentDateTime(String format) {
