@@ -56,7 +56,7 @@ public class E2eTestHelper {
                             } else {
                                 element.click();
                             }
-                        } else {  // "text", "date" etc.
+                        } else {  // "text", "date", "datetime" etc.
                             element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
                             element.sendKeys(v);
                         }
@@ -180,8 +180,11 @@ public class E2eTestHelper {
         return getDate(0, format);
     }
 
+    // get current datetime usig default format
+    // need "\t" between date and time and no space between time and am/pm
+    // to make datetime picker happy
     public static String getCurrentDateTime() {
-        return getCurrentDateTime("MM/dd/yyyy HH:mm a");  // default datetime format
+        return getCurrentDateTime("MM/dd/yyyy\tHH:mma");  // default datetime format
     }
 
     public static String getCurrentDateTime(String format) {
