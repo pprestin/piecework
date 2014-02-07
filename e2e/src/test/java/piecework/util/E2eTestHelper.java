@@ -85,10 +85,11 @@ public class E2eTestHelper {
     // verify form fields
     public static void verifyForm(WebDriver driver, String[][] data) {
         for ( String[] e : data ) { 
+            String k = e[0];
+            String v = e[1];
+            boolean verified = false;
             for (int i=0; i<3; ++i) {
                 try {
-                    String k = e[0];
-                    String v = e[1];
                     WebElement element = driver.findElement(By.xpath(k));
                     String tagName = element.getTagName();
                     String actual =  element.getText();
@@ -97,6 +98,7 @@ public class E2eTestHelper {
                     }
                     //System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual);
                     assertEquals( actual, v);
+                    verified = true;
                     break;
                 } catch ( Exception ex) {
                     try {
@@ -105,6 +107,7 @@ public class E2eTestHelper {
                     }
                 }
             }  // inner loop
+            assertTrue(verified, "could not find element <"+k + ">, expected value: " + v);
         }  // outer loop
     }
 
@@ -161,6 +164,8 @@ public class E2eTestHelper {
     }
 
     // misc helper methods
+    // chrome with date picker requires "MM/dd/yyyy\tHH:mma"
+    // but firefox and ie, without date picker, requires "yyyy/MM/dd HH:mm a".
     public static String getDate(int days, String format) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         Date dt = new Date();
@@ -168,8 +173,9 @@ public class E2eTestHelper {
         return dateFormat.format(dt);
     }
 
+    // get date usig default date  format
     public static String getDate(int days) {
-        return getDate(days, "MM/dd/yyyy");  // default date format
+        return getDate(days, "yyyy/MM/dd");  // default date format
     }
 
     public static String getCurrentDate() {
@@ -181,10 +187,8 @@ public class E2eTestHelper {
     }
 
     // get current datetime usig default format
-    // need "\t" between date and time and no space between time and am/pm
-    // to make datetime picker happy
     public static String getCurrentDateTime() {
-        return getCurrentDateTime("MM/dd/yyyy\tHH:mma");  // default datetime format
+        return getCurrentDateTime("yyyy/MM/dd HH:mm a");  // default datetime format
     }
 
     public static String getCurrentDateTime(String format) {
