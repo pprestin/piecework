@@ -98,7 +98,7 @@ public class RemoveValueCommand extends AbstractEngineStorageCommand<ProcessInst
         updatedData.put(fieldName, remainingValues);
 
         Submission submission = SubmissionFactory.submission(actionType, process.getProcessDefinitionKey(), null, null, updatedData, null, principal);
-        return storageManager.store(instance, updatedData, submission);
+        return storageManager.store(null, instance, updatedData, submission);
     }
 
 

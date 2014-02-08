@@ -618,6 +618,8 @@ angular.module('wf.services',
                 changeStep : function(form, ordinal) {
                     if (form.layout == 'multipage' && ordinal > form.container.activeChildIndex)
                         return;
+                    if (typeof(ordinal) === 'undefined')
+                        return;
 
                     form.activeStepOrdinal = ordinal;
                     $rootScope.$broadcast("wfEvent:step-changed", ordinal);

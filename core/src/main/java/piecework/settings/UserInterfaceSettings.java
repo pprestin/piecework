@@ -33,6 +33,7 @@ public class UserInterfaceSettings {
     private String hostUri;
     private String applicationTitle;
     private String applicationUrl;
+    private String serviceUrl;
     private String publicUrl;
     private String assetsUrl;
     private String assetsDirectoryPath;
@@ -45,6 +46,7 @@ public class UserInterfaceSettings {
         this.hostUri = environment.getProperty("host.uri");
         this.applicationTitle = environment.getProperty("application.name");
         this.applicationUrl = environment.getProperty("base.application.uri");
+        this.serviceUrl = environment.getProperty("base.service.uri");
         this.publicUrl = environment.getProperty("base.public.uri");
         this.assetsUrl = environment.getProperty("ui.static.urlbase");
         this.disableResourceCaching = environment.getProperty("disable.resource.caching", Boolean.class, Boolean.FALSE);
@@ -63,6 +65,10 @@ public class UserInterfaceSettings {
 
     public String getApplicationUrl() {
         return applicationUrl;
+    }
+
+    public String getServiceUrl() {
+        return serviceUrl;
     }
 
     public String getPublicUrl() {

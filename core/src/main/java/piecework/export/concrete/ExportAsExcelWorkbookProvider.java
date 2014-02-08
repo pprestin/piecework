@@ -24,15 +24,9 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.query.Query;
 import piecework.export.IteratingDataProvider;
+import piecework.export.Pager;
 import piecework.model.*;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.process.ProcessInstanceQueryBuilder;
-import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.util.ExportUtility;
 
 import javax.ws.rs.WebApplicationException;
@@ -46,30 +40,22 @@ import java.util.*;
 public class ExportAsExcelWorkbookProvider implements IteratingDataProvider<Row> {
 
     private static final Logger LOG = Logger.getLogger(ExportAsExcelWorkbookProvider.class);
-    private static final int PAGE_SIZE = 200;
 
     private final Map<String, String> headerMap;
     private final String[] headerKeys;
-    private final Query query;
-    private final ProcessInstanceRepository repository;
-    private final Sort sort;
+    private final Pager<ProcessInstance> pager;
 
-    private Page<ProcessInstance> page;
-    private Pageable request;
     private Workbook wb;
     private Sheet sheet;
     private int rowCount = 0;
 
-    public ExportAsExcelWorkbookProvider(piecework.model.Process process, Map<String, String> headerMap, ProcessInstanceSearchCriteria criteria, ProcessInstanceRepository repository, Sort sort) {
+    public ExportAsExcelWorkbookProvider(String processDefinitionLabel, Map<String, String> headerMap, Pager<ProcessInstance> pager) {
         this.headerMap = headerMap;
-        this.query = new ProcessInstanceQueryBuilder(criteria).build();
-        this.repository = repository;
-        this.request = new PageRequest(0, PAGE_SIZE, sort);
-        this.sort = sort;
+        this.pager = pager;
 
         this.wb = new XSSFWorkbook();
         Date now = new Date();
-        this.sheet = wb.createSheet(WorkbookUtil.createSafeSheetName(process.getProcessDefinitionLabel() + " Export - " + now.toString()));
+        this.sheet = wb.createSheet(WorkbookUtil.createSafeSheetName(processDefinitionLabel + " Export - " + now.toString()));
 
         this.headerKeys = !headerMap.isEmpty() ? headerMap.keySet().toArray(new String[headerMap.size()]) : new String[0];
     }
@@ -110,9 +96,7 @@ public class ExportAsExcelWorkbookProvider implements IteratingDataProvider<Row>
 
     @Override
     public List<Row> next() {
-        Query query = this.query.with(this.request);
-        this.page = repository.findByQuery(query, this.request);
-        this.request = page.nextPageable();
+        Page<ProcessInstance> page = pager.nextPage();
 
         List<Row> rows = page.hasContent() ? new ArrayList<Row>(page.getNumberOfElements()) : Collections.<Row>emptyList();
 
@@ -128,12 +112,12 @@ public class ExportAsExcelWorkbookProvider implements IteratingDataProvider<Row>
 
     @Override
     public boolean hasNext() {
-        return this.page == null || !this.page.isLastPage();
+        return pager.hasNext();
     }
 
     @Override
     public void reset() {
-        this.request = new PageRequest(0, PAGE_SIZE, sort);
+        pager.reset();
     }
 
     private Row convert(ProcessInstance instance) {

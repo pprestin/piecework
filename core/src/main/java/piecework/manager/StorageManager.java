@@ -109,8 +109,8 @@ public class StorageManager {
         return processInstanceRepository.update(processInstanceId, engineInstanceId);
     }
 
-    public ProcessInstance store(ProcessInstance instance, Map<String, List<Value>> data, Submission submission) {
-        return processInstanceRepository.update(instance.getProcessInstanceId(), null, data, null, null, submission, null);
+    public ProcessInstance store(String label, ProcessInstance instance, Map<String, List<Value>> data, Submission submission) {
+        return processInstanceRepository.update(instance.getProcessInstanceId(), label, data, null, null, submission, null);
     }
 
     public ProcessInstance store(ProcessInstance instance, Map<String, List<Value>> data, Map<String, List<Message>> messages, Submission submission, String applicationStatusExplanation) {
@@ -169,25 +169,25 @@ public class StorageManager {
         return processInstanceRepository.update(processInstanceId, label, data, messages, attachments, submission, applicationStatusExplanation);
     }
 
-    private ProcessInstance store(Process process, ProcessInstance instance, Validation validation, boolean isAttachment) throws PieceworkException {
-        return store(process, instance, validation, validation.getSubmission(), isAttachment);
-    }
-
-    private ProcessInstance store(Process process, ProcessInstance instance, Validation validation, Submission submission, boolean isAttachment) throws PieceworkException {
-        String applicationStatusExplanation = validation.getApplicationStatusExplanation();
-        Map<String, List<Message>> messages = validation.getResults();
-        List<Attachment> attachments = validation.getAttachments();
-        if (attachments != null && !attachments.isEmpty()) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Persisting " + attachments.size() + " attachments");
-            attachments = attachmentRepository.save(attachments);
-        }
-
-        Map<String, List<Value>> data = isAttachment ? null : validation.getData();
-        String label = ProcessInstanceUtility.processInstanceLabel(process, null, data, submission.getProcessInstanceLabel());
-
-        return processInstanceRepository.update(instance.getProcessInstanceId(), label, data, messages, attachments, submission, applicationStatusExplanation);
-    }
+//    private ProcessInstance store(Process process, ProcessInstance instance, Validation validation, boolean isAttachment) throws PieceworkException {
+//        return store(process, instance, validation, validation.getSubmission(), isAttachment);
+//    }
+//
+//    private ProcessInstance store(Process process, ProcessInstance instance, Validation validation, Submission submission, boolean isAttachment) throws PieceworkException {
+//        String applicationStatusExplanation = validation.getApplicationStatusExplanation();
+//        Map<String, List<Message>> messages = validation.getResults();
+//        List<Attachment> attachments = validation.getAttachments();
+//        if (attachments != null && !attachments.isEmpty()) {
+//            if (LOG.isDebugEnabled())
+//                LOG.debug("Persisting " + attachments.size() + " attachments");
+//            attachments = attachmentRepository.save(attachments);
+//        }
+//
+//        Map<String, List<Value>> data = isAttachment ? null : validation.getData();
+//        String label = ProcessInstanceUtility.processInstanceLabel(process, null, data, submission.getProcessInstanceLabel());
+//
+//        return processInstanceRepository.update(instance.getProcessInstanceId(), label, data, messages, attachments, submission, applicationStatusExplanation);
+//    }
 
     public boolean store(ProcessInstance instance, Task task) {
         if (task == null)

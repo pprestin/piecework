@@ -101,10 +101,11 @@ public class ProcessInstanceUtility {
         if (StringUtils.isEmpty(processInstanceLabel))
             processInstanceLabel = submissionLabel;
 
-        if (StringUtils.isEmpty(processInstanceLabel) && processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
+        if (processInstanceLabelTemplate != null && processInstanceLabelTemplate.indexOf('{') != -1) {
             Map<String, List<Value>> data = instance != null ? instance.getData() : null;
 
-            processInstanceLabel = template(processInstanceLabelTemplate, data, validationData);
+            if (StringUtils.isEmpty(processInstanceLabel) || data != null)
+                processInstanceLabel = template(processInstanceLabelTemplate, data, validationData);
         }
 
         if (StringUtils.isEmpty(processInstanceLabel))

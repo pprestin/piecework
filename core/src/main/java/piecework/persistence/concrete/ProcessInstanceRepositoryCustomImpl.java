@@ -15,6 +15,8 @@
  */
 package piecework.persistence.concrete;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 import org.apache.commons.lang.StringUtils;
@@ -228,6 +230,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
             MongoConverter converter = mongoOperations.getConverter();
             MongoTypeMapper typeMapper = converter.getTypeMapper();
 
+            Set<String> keywords = new HashSet<String>();
             for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
                 String key = "data." + entry.getKey();
                 List<Value> values = entry.getValue();
@@ -241,6 +244,17 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                             clz = File.class;
                         else if (value instanceof User)
                             clz = User.class;
+                        else if (value instanceof Secret)
+                            clz = Secret.class;
+                        else {
+                            String strValue = value.getValue();
+                            if (StringUtils.isNotEmpty(strValue)) {
+                                if (strValue.contains("-")) {
+                                    keywords.add(strValue.replaceAll("-", "").toLowerCase());
+                                }
+                                keywords.add(strValue.toLowerCase());
+                            }
+                        }
                         if (clz != null) {
                             typeMapper.writeType(clz, DBObject.class.cast(dbObject));
                         }
@@ -250,6 +264,17 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
 
                 update.set(key, dbObjects);
             }
+            if (!keywords.isEmpty()) {
+                BasicDBList eachList = new BasicDBList();
+                for (String keyword : keywords) {
+                    eachList.add(keyword);
+                }
+                update.addToSet(
+                        "keywords",
+                        BasicDBObjectBuilder.start("$each", eachList).get()
+                );
+            }
+
         }
     }
 

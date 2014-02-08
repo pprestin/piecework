@@ -32,6 +32,7 @@ import piecework.common.ManyMap;
 import java.util.Map;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -94,7 +95,7 @@ public class RemoveValueCommandTest {
                 .hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER);
         RemoveValueCommand remove = new RemoveValueCommand(null, principal, process, instance, task, fieldName, valueId);
         remove.execute(processEngineFacade, storageManager);
-        verify(storageManager).store(eq(instance), any(Map.class), any(Submission.class));
+        verify(storageManager).store(anyString(), eq(instance), any(Map.class), any(Submission.class));
     }
 
     @Test
@@ -108,6 +109,6 @@ public class RemoveValueCommandTest {
                 .hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER);
         RemoveValueCommand remove = new RemoveValueCommand(null, principal, process, instance, task, fieldName, valueId);
         remove.execute(processEngineFacade, storageManager);
-        verify(storageManager).store(eq(instance), any(Map.class), any(Submission.class));
+        verify(storageManager).store(anyString(), eq(instance), any(Map.class), any(Submission.class));
     }
 }

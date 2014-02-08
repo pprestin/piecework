@@ -5,12 +5,35 @@ angular.module('wf.directives',
             return {
                 restrict: 'A',
                 link: function (scope, element, attr) {
-                    var flowElement = attr.wfActive;
+                    var step = attr.wfActive;
+                    if (typeof(step) === 'undefined')
+                        step = '-1';
+
+                    var indexOf = step.indexOf('+');
+                    var upwards = false;
+                    if (indexOf == (step.length-1)) {
+                        step = step.substring(0, indexOf);
+                        upwards = true;
+                    }
+
+                    step = parseInt(step);
+
                     scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
-                        var task = typeof(form) !== 'undefined' ? form.task : null;
-                        var active = (flowElement == 'start' && task == null) || (task != null && flowElement == task.taskDefinitionKey);
-                        if (!active) {
+                        // Check to see if the current user is the assigned user
+                        if (typeof(form.task) !== 'undefined') {
+                            if (form.currentUser == null || form.task.assignee == null || form.currentUser.userId !== form.task.assignee.userId)
+                                element.attr('disabled', 'disabled');
+                            else
+                                element.removeAttr('disabled');
+                        }
+
+                        var ordinal = form.activeStepOrdinal;
+
+                        if (upwards) {
+                            if (typeof(ordinal) !== 'undefined' && step < ordinal)
+                                element.attr('disabled', 'disabled');
+                        } else if (step != ordinal) {
                             element.attr('disabled', 'disabled');
                         }
                     });
@@ -377,6 +400,8 @@ angular.module('wf.directives',
                      if (typeof(attr.wfPlaceholder) !== 'undefined')
                         options['placeholder'] = attr.wfPlaceholder;
 
+                     options['showMaskOnHover'] = false;
+
                      if (type == 'text')
                         element.inputmask(options);
                      else if ((type == 'date' || type == 'datetime' || type == 'datetime-local') && !scope.hasDatePickerSupport())
@@ -664,7 +689,7 @@ angular.module('wf.directives',
                                         scope.addFields(fields, form, rootContainer, true);
                                     } else {
                                         fields = form.container != null ? form.container.fields : [];
-                                        form.layout = 'normal';
+//                                        form.layout = 'normal';
                                     }
                                 }
                                 form.fieldMap = new Object();
@@ -690,7 +715,8 @@ angular.module('wf.directives',
 
                                 scope.$root.form = form;
                                 scope.$root.$broadcast('wfEvent:form-loaded', form);
-                                scope.$root.$broadcast('wfEvent:step-changed', form.activeStepOrdinal);
+                                if (typeof(form.activeStepOrdinal) !== 'undefined')
+                                    scope.$root.$broadcast('wfEvent:step-changed', form.activeStepOrdinal);
                             });
                     });
 
@@ -994,7 +1020,7 @@ angular.module('wf.directives',
             return {
                 restrict: 'A',
                 scope: {
-                    form : '='
+//                    form : '='
                 },
                 link: function (scope, element, attr) {
 
@@ -1011,18 +1037,30 @@ angular.module('wf.directives',
 
                     step = parseInt(step);
 
-                    scope.$root.$on('wfEvent:step-changed', function(event, ordinal) {
-                        if (attr.wfScreen == 'confirmation' && typeof(ordinal) === 'undefined')
-                            return;
-                        element.removeClass('ng-hide');
-
-                        if (upwards) {
-                            if (typeof(ordinal) === 'undefined' || step > ordinal)
-                                element.addClass('ng-hide');
-                        } else if (step != ordinal) {
-                            element.addClass('ng-hide');
+                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
+                        scope.form = form;
+                        if (scope.form != null && scope.form.task != null && !scope.form.task.active) {
+                            if (scope.form.task.taskAction == 'COMPLETE') {
+                                element.toggle(attr.wfScreen == 'confirmation');
+                            } else if (scope.form.task.taskAction == 'REJECT') {
+                                element.toggle(attr.wfScreen == 'rejection');
+                            }
                         }
                     });
+
+                    element.hide();
+
+                    if (attr.wfScreen != 'confirmation' && attr.wfScreen != 'rejection') {
+                        scope.$root.$on('wfEvent:step-changed', function(event, ordinal) {
+                            if (scope.form != null && scope.form.task != null && !scope.form.task.active) {
+                                element.hide();
+                            } else if (upwards) {
+                                element.toggle(ordinal >= step);
+                            } else {
+                                element.toggle(step == ordinal);
+                            }
+                        });
+                    }
                 }
             }
         }

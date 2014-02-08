@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
@@ -33,6 +34,8 @@ import piecework.enumeration.ActionType;
 import piecework.export.IteratingDataProvider;
 import piecework.export.concrete.ExportAsCommaSeparatedValuesProvider;
 import piecework.export.concrete.ExportAsExcelWorkbookProvider;
+import piecework.export.concrete.ProcessInstanceQueryPager;
+import piecework.process.ProcessInstanceQueryBuilder;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.model.SearchResults;
 import piecework.common.ViewContext;
@@ -44,6 +47,7 @@ import piecework.persistence.ProcessInstanceRepository;
 import piecework.security.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.settings.UserInterfaceSettings;
 import piecework.submission.SubmissionTemplate;
 import piecework.ui.Streamable;
 import piecework.util.ExportUtility;
@@ -60,6 +64,7 @@ import java.util.*;
 @Service
 public class ProcessInstanceService {
 
+    private static final String VERSION = "v1";
     private static final Logger LOG = Logger.getLogger(ProcessInstanceService.class);
 
     @Autowired
@@ -99,7 +104,8 @@ public class ProcessInstanceService {
     ValidationFactory validationFactory;
 
     @Autowired
-    Versions versions;
+    UserInterfaceSettings settings;
+
 
     public void activate(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
         Process process = processService.read(rawProcessDefinitionKey);
@@ -226,7 +232,7 @@ public class ProcessInstanceService {
 
         if (full) {
             ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
-            ViewContext viewContext = versions.getVersion1();
+            ViewContext viewContext = new ViewContext(settings, VERSION);
 
             Set<String> attachmentIds = instance.getAttachmentIds();
             if (attachmentIds != null && !attachmentIds.isEmpty()) {
@@ -323,10 +329,14 @@ public class ProcessInstanceService {
             String processDefinitionKey = processDefinitionKeys.iterator().next();
             Process process = processService.read(processDefinitionKey);
 
-            Map<String, String> headerMap = ExportUtility.headerMap(process);
+            Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
+            ProcessInstanceQueryPager pager = new ProcessInstanceQueryPager(query, processInstanceRepository, executionCriteria.getSort());
+
+            List<Field> fields = ExportUtility.exportFields(process.getDeployment());
+            Map<String, String> headerMap = ExportUtility.headerMap(fields);
             if (isCSV)
-                return new ExportAsCommaSeparatedValuesProvider(process, headerMap, executionCriteria, processInstanceRepository, executionCriteria.getSort());
-            return new ExportAsExcelWorkbookProvider(process, headerMap, executionCriteria, processInstanceRepository, executionCriteria.getSort());
+                return new ExportAsCommaSeparatedValuesProvider(headerMap, pager);
+            return new ExportAsExcelWorkbookProvider(process.getProcessDefinitionLabel(), headerMap, pager);
         }
         return null;
     }
@@ -335,12 +345,12 @@ public class ProcessInstanceService {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
-        ViewContext version1 = versions.getVersion1();
+        ViewContext context = new ViewContext(settings, VERSION);
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Workflows")
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
-                .link(version1.getApplicationUri());
+                .link(context.getApplicationUri());
 
         Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
         Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
@@ -350,7 +360,7 @@ public class ProcessInstanceService {
 
                 if (allowedProcessDefinitionKey != null) {
                     executionCriteriaBuilder.processDefinitionKey(allowedProcessDefinitionKey);
-                    resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).build(version1));
+                    resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).build(context));
                 }
             }
             ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
@@ -369,7 +379,7 @@ public class ProcessInstanceService {
 
             if (page.hasContent()) {
                 for (ProcessInstance instance : page.getContent()) {
-                    resultsBuilder.item(new ProcessInstance.Builder(instance).build(version1));
+                    resultsBuilder.item(new ProcessInstance.Builder(instance).build(context));
                 }
             }
 

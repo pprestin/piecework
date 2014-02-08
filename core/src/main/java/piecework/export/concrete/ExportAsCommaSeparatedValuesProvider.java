@@ -19,16 +19,9 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.query.Query;
 import piecework.export.IteratingDataProvider;
+import piecework.export.Pager;
 import piecework.model.*;
-import piecework.model.Process;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.process.ProcessInstanceQueryBuilder;
-import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.util.ExportUtility;
 
 import javax.ws.rs.WebApplicationException;
@@ -44,24 +37,14 @@ public class ExportAsCommaSeparatedValuesProvider implements IteratingDataProvid
 
     private static final Logger LOG = Logger.getLogger(ExportAsCommaSeparatedValuesProvider.class);
 
-    private static final int PAGE_SIZE = 200;
-
+    private final static String crLf = Character.toString((char)13) + Character.toString((char)10);
     private final Map<String, String> headerMap;
     private final String[] headerKeys;
-    private final Query query;
-    private final ProcessInstanceRepository repository;
-    private final Sort sort;
+    private final Pager<ProcessInstance> pager;
 
-    private Page<ProcessInstance> page;
-    private Pageable request;
-
-    public ExportAsCommaSeparatedValuesProvider(Process process, Map<String, String> headerMap, ProcessInstanceSearchCriteria criteria, ProcessInstanceRepository repository, Sort sort) {
+    public ExportAsCommaSeparatedValuesProvider(Map<String, String> headerMap, Pager<ProcessInstance> pager) {
         this.headerMap = headerMap;
-        this.query = new ProcessInstanceQueryBuilder(criteria).build();
-        this.repository = repository;
-        this.request = new PageRequest(0, PAGE_SIZE, sort);
-        this.sort = sort;
-
+        this.pager = pager;
         this.headerKeys = !headerMap.isEmpty() ? headerMap.keySet().toArray(new String[headerMap.size()]) : new String[0];
     }
 
@@ -71,7 +54,7 @@ public class ExportAsCommaSeparatedValuesProvider implements IteratingDataProvid
 
         try {
             writer = new PrintWriter(output, true);
-            writer.println(getHeader());
+            writer.print(getHeader());
             while (hasNext()) {
                 List<String> rows = next();
                 for (String row : rows) {
@@ -96,14 +79,12 @@ public class ExportAsCommaSeparatedValuesProvider implements IteratingDataProvid
                 quotedValues.add(StringEscapeUtils.escapeCsv(header));
             }
         }
-        return StringUtils.join(quotedValues, ", ");
+        return StringUtils.join(quotedValues, ",") + crLf;
     }
 
     @Override
     public List<String> next() {
-        Query query = this.query.with(this.request);
-        this.page = repository.findByQuery(query, this.request);
-        this.request = page.nextPageable();
+        Page<ProcessInstance> page = pager.nextPage();
 
         List<String> rows = page.hasContent() ? new ArrayList<String>(page.getNumberOfElements()) : Collections.<String>emptyList();
 
@@ -121,17 +102,16 @@ public class ExportAsCommaSeparatedValuesProvider implements IteratingDataProvid
 
     @Override
     public boolean hasNext() {
-        return this.page == null || !this.page.isLastPage();
+        return pager.hasNext();
     }
 
     @Override
     public void reset() {
-        this.request = new PageRequest(0, PAGE_SIZE, sort);
+        pager.reset();
     }
 
     private String convert(ProcessInstance instance) {
         String[] columns = ExportUtility.dataColumns(instance, headerKeys, new CsvEscaper());
-        String crLf = Character.toString((char)13) + Character.toString((char)10);
 
         StringBuilder builder = new StringBuilder(StringUtils.join(columns, ","));
         return builder.append(crLf).toString();

@@ -30,12 +30,9 @@ import java.util.*;
  */
 public class ExportUtility {
 
-    public static Map<String, String> headerMap(Process process) {
-        Map<String, String> headerMap = new LinkedHashMap<String, String>();
+    public static List<Field> exportFields(ProcessDeployment deployment) {
+        List<Field> fields = new ArrayList<Field>();
 
-        headerMap.put("__processInstanceId", "ID");
-        headerMap.put("__title", "Title");
-        ProcessDeployment deployment = process.getDeployment();
         if (deployment != null) {
             Collection<Activity> activities = deployment.getActivityMap().values();
             for (Activity activity : activities) {
@@ -46,7 +43,6 @@ public class ExportUtility {
 
                     Map<String, Field> fieldMap = activity.getFieldMap();
                     List<String> fieldIds = ActivityUtil.fieldIds(container, parentContainer);
-                    List<Field> fields = new ArrayList<Field>();
                     if (fieldIds != null) {
                         for (String fieldId : fieldIds) {
                             Field field = fieldMap.get(fieldId);
@@ -54,29 +50,39 @@ public class ExportUtility {
                                 fields.add(field);
                         }
                     }
-                    if (fields != null) {
-                        for (Field field : fields) {
-                            if (field.isRestricted())
-                                continue;
-                            if (field.getType().equals(Constants.FieldTypes.HTML))
-                                continue;
-
-                            String fieldName = field.getName();
-                            String fieldLabel = field.getLabel();
-                            String fieldHeader = field.getHeader();
-
-                            if (StringUtils.isEmpty(fieldName))
-                                continue;
-
-                            if (StringUtils.isNotEmpty(fieldHeader))
-                                headerMap.put(fieldName, StringEscapeUtils.unescapeXml(fieldHeader));
-                            else if (StringUtils.isNotEmpty(fieldLabel))
-                                headerMap.put(fieldName, StringEscapeUtils.unescapeXml(fieldLabel));
-                            else
-                                headerMap.put(fieldName, "");
-                        }
-                    }
                 }
+            }
+        }
+
+        return fields;
+    }
+
+    public static Map<String, String> headerMap(List<Field> fields) {
+        Map<String, String> headerMap = new LinkedHashMap<String, String>();
+
+        headerMap.put("__processInstanceId", "ID");
+        headerMap.put("__title", "Title");
+
+        if (fields != null) {
+            for (Field field : fields) {
+                if (field.isRestricted())
+                    continue;
+                if (field.getType() != null && field.getType().equals(Constants.FieldTypes.HTML))
+                    continue;
+
+                String fieldName = field.getName();
+                String fieldLabel = field.getLabel();
+                String fieldHeader = field.getHeader();
+
+                if (StringUtils.isEmpty(fieldName))
+                    continue;
+
+                if (StringUtils.isNotEmpty(fieldHeader))
+                    headerMap.put(fieldName, StringEscapeUtils.unescapeXml(fieldHeader));
+                else if (StringUtils.isNotEmpty(fieldLabel))
+                    headerMap.put(fieldName, StringEscapeUtils.unescapeXml(fieldLabel));
+                else
+                    headerMap.put(fieldName, "");
             }
             headerMap.put("__submitted", "Submitted");
             headerMap.put("__completed", "Completed");
@@ -96,7 +102,6 @@ public class ExportUtility {
         columns[endTimeIndex] = instance.getEndTime() != null ? escaper.escape(instance.getEndTime().toString()) : null;
         for (int i=2;i<startTimeIndex;i++) {
             String headerKey = headerKeys[i];
-            String columnValue = null;
             List<Value> values = data.get(headerKey);
             if (values != null && !values.isEmpty()) {
                 StringBuilder valueBuilder = new StringBuilder();

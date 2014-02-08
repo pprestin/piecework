@@ -15,6 +15,8 @@
  */
 package piecework.common;
 
+import piecework.settings.UserInterfaceSettings;
+
 /**
  * @author James Renfro
  */
@@ -29,6 +31,14 @@ public class ViewContext {
 	public ViewContext() {
 		this(null, null, null, null, null);
 	}
+
+    public ViewContext(UserInterfaceSettings settings, String version) {
+        this.hostUri = settings.getHostUri();
+        this.baseApplicationUri = settings.getApplicationUrl();
+        this.baseServiceUri = settings.getServiceUrl();
+        this.basePublicUri = settings.getPublicUrl();
+        this.version = version;
+    }
 	
 	public ViewContext(String hostUri, String baseUri, String baseServiceUri, String basePublicUri, String version) {
         this.hostUri = hostUri;

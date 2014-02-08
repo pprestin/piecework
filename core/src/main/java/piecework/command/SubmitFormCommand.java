@@ -23,6 +23,7 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.service.RequestService;
+import piecework.util.ProcessInstanceUtility;
 import piecework.validation.Validation;
 
 /**
@@ -90,7 +91,8 @@ public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse
                     return new SubmissionCommandResponse(submission, nextRequest);
                 }
             case SAVE:
-                storageManager.store(instance, validation.getData(), submission);
+                String label = ProcessInstanceUtility.processInstanceLabel(process, instance, validation.getData(), submission.getProcessInstanceLabel());
+                storageManager.store(label, instance, validation.getData(), submission);
                 break;
         }
 

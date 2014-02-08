@@ -207,7 +207,8 @@ public class FormUtility {
 
         if (remoteHost != null) {
             String hostUri = remoteHost.toString();
-            LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
+            if (LOG.isDebugEnabled())
+                LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
             builder.header("Access-Control-Allow-Origin", hostUri);
             builder.header("Access-Control-Allow-Credentials", "true");
             // For file upload
@@ -216,7 +217,6 @@ public class FormUtility {
                 builder.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         }
     }
-
 
     public static URI remoteHost(ProcessDeployment deployment) {
         URI uri = null;
