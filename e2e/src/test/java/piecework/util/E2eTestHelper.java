@@ -219,4 +219,27 @@ public class E2eTestHelper {
             }   
         } 
     }
+
+    // convience function
+    public static void sleep(Integer seconds) {
+        // sanity check
+        if ( seconds == null || seconds <= 0 || seconds > 60) {
+           return;
+        }
+
+        try {
+            Thread.sleep(1000*seconds);
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public static void sleep() {
+        Integer wait = Integer.getInteger("w");
+        if ( wait == null ) {
+             wait = Integer.getInteger("wait");
+        }
+
+        sleep(wait);
+    }
 }
