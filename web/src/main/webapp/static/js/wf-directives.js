@@ -30,6 +30,9 @@ angular.module('wf.directives',
 
                         var ordinal = form.activeStepOrdinal;
 
+                        if (form.actionType == 'VIEW')
+                            ordinal = -1;
+
                         if (upwards) {
                             if (typeof(ordinal) !== 'undefined' && step < ordinal)
                                 element.attr('disabled', 'disabled');
@@ -713,8 +716,12 @@ angular.module('wf.directives',
                                     }
                                 }
 
+                                if (form.actionType == 'VIEW')
+                                    form.activeStepOrdinal = 1;
+
                                 scope.$root.form = form;
                                 scope.$root.$broadcast('wfEvent:form-loaded', form);
+
                                 if (typeof(form.activeStepOrdinal) !== 'undefined')
                                     scope.$root.$broadcast('wfEvent:step-changed', form.activeStepOrdinal);
                             });
@@ -1038,13 +1045,13 @@ angular.module('wf.directives',
                     step = parseInt(step);
 
                     scope.isCompletion = function(form) {
-                        return form != null && form.actionType != 'VIEW' && form.task != null && !form.task.active;
+                        return form != null && form.actionType != 'VIEW' && ((form.actionType == 'COMPLETE' && form.task == null) || (form.task != null && !form.task.active));
                     };
 
                     scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         if (scope.isCompletion(form)) {
-                            if (scope.form.task.taskAction == 'COMPLETE') {
+                            if (scope.form.task == null || scope.form.task.taskAction == 'COMPLETE') {
                                 element.toggle(attr.wfScreen == 'confirmation');
                             } else if (scope.form.task.taskAction == 'REJECT') {
                                 element.toggle(attr.wfScreen == 'rejection');

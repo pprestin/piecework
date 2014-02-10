@@ -18,8 +18,6 @@ package piecework.util;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.ManyMap;
 import piecework.model.Field;
@@ -54,7 +52,7 @@ public class ValidationUtilityTest {
         submissionData.putOne(fieldName, new Value("TestValue"));
 
         ValidationUtility.validateField(builder, field, rules, fieldNames,
-                submissionData, instanceData, true);
+                submissionData, instanceData, submissionData, instanceData, true);
 
         Validation validation = builder.build();
         Assert.assertEquals(submissionData, validation.getData());
@@ -78,7 +76,7 @@ public class ValidationUtilityTest {
         ManyMap<String, Value> instanceData = new ManyMap<String, Value>();
 
         ValidationUtility.validateField(builder, field, rules, fieldNames,
-                submissionData, instanceData, true);
+                submissionData, instanceData, submissionData, instanceData, true);
 
         Validation validation = builder.build();
         List<Message> messages = validation.getResults().get(fieldName);

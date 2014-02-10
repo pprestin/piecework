@@ -43,7 +43,7 @@ public class ValidationUtility {
 
     public static void validateField(Validation.Builder validationBuilder, Field field,
                                      List<ValidationRule> rules, Set<String> fieldNames,
-                                     ManyMap<String, Value> decryptedSubmissionData,
+                                     Map<String, List<Value>> submissionData, Map<String, List<Value>> instanceData, ManyMap<String, Value> decryptedSubmissionData,
                                      ManyMap<String, Value> decryptedInstanceData,
                                      boolean onlyAcceptValidInputs) {
 
@@ -81,8 +81,9 @@ public class ValidationUtility {
         }
 
         if (fieldNames.contains(fieldName)) {
-            List<? extends Value> values = decryptedSubmissionData.get(fieldName);
-            List<? extends Value> previousValues = decryptedInstanceData.get(fieldName);
+
+            List<? extends Value> values = submissionData.get(fieldName);
+            List<? extends Value> previousValues = instanceData.get(fieldName);
 
             boolean isFileField = field.getType() != null && (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
             if (values == null) {
@@ -104,7 +105,7 @@ public class ValidationUtility {
     }
 
     public static Validation validate(Process process, ProcessInstance instance, Task task, Submission submission,
-                                      SubmissionTemplate template, ManyMap<String, Value> decryptedSubmissionData, ManyMap<String, Value> decryptedInstanceData,
+                                      SubmissionTemplate template, Map<String, List<Value>> submissionData, Map<String, List<Value>> instanceData, ManyMap<String, Value> decryptedSubmissionData, ManyMap<String, Value> decryptedInstanceData,
                                       boolean onlyAcceptValidInputs) {
 
         Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
@@ -116,12 +117,12 @@ public class ValidationUtility {
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();
                 List<ValidationRule> rules = entry.getValue();
-                validateField(validationBuilder, field, rules, fieldNames, decryptedSubmissionData, decryptedInstanceData, onlyAcceptValidInputs);
+                validateField(validationBuilder, field, rules, fieldNames, submissionData, instanceData, decryptedSubmissionData, decryptedInstanceData, onlyAcceptValidInputs);
             }
         }
 
-        if (template.isAnyFieldAllowed() && !decryptedSubmissionData.isEmpty()) {
-            for (Map.Entry<String, List<Value>> entry : decryptedSubmissionData.entrySet()) {
+        if (template.isAnyFieldAllowed() && !submissionData.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : submissionData.entrySet()) {
                 String fieldName = entry.getKey();
 
                 if (!allFieldNames.contains(fieldName)) {

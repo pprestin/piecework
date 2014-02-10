@@ -17,21 +17,17 @@ package piecework.validation;
 
 import java.util.*;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import piecework.Constants;
 import piecework.exception.BadRequestError;
 import piecework.exception.StatusCodeError;
-import piecework.exception.ValidationRuleException;
 import piecework.model.*;
 import piecework.model.Process;
 
 import com.google.common.collect.Sets;
 import piecework.security.DataFilterService;
-import piecework.service.TaskService;
 import piecework.common.ManyMap;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ValidationUtility;
@@ -61,7 +57,7 @@ public class ValidationFactory {
         ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData);
 
         // Validate the submission
-        Validation validation = ValidationUtility.validate(process, instance, task, submission, template, decryptedSubmissionData, decryptedInstanceData, throwException);
+        Validation validation = ValidationUtility.validate(process, instance, task, submission, template, submissionData, instanceData, decryptedSubmissionData, decryptedInstanceData, throwException);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
