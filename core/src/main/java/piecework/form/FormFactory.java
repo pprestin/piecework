@@ -71,7 +71,8 @@ public class FormFactory {
         Form.Builder builder = new Form.Builder()
                 .process(process)
                 .formInstanceId(formInstanceId)
-                .processDefinitionKey(processDefinitionKey);
+                .processDefinitionKey(processDefinitionKey)
+                .actionType(actionType);
 
         if (unmodifiable)
             builder.readonly();

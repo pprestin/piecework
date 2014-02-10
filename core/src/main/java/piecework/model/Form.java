@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import piecework.enumeration.ActionType;
 import piecework.form.FormDisposition;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
@@ -50,6 +51,9 @@ public class Form {
 
     @XmlAttribute
     private final String submissionType;
+
+    @XmlAttribute
+    private final ActionType actionType;
 
     @XmlAttribute
     private final String layout;
@@ -146,6 +150,7 @@ public class Form {
         this.formInstanceId = builder.formInstanceId;
         this.processInstanceId = builder.processInstanceId;
         this.submissionType = builder.submissionType;
+        this.actionType = builder.actionType;
         this.layout = builder.layout;
         this.task = builder.task;
         this.container = builder.container;
@@ -189,6 +194,10 @@ public class Form {
 
     public String getSubmissionType() {
         return submissionType;
+    }
+
+    public ActionType getActionType() {
+        return actionType;
     }
 
     public String getLayout() {
@@ -324,6 +333,7 @@ public class Form {
         private String processInstanceId;
         private String processDefinitionKey;
         private String submissionType;
+        private ActionType actionType;
         private String layout;
         private String applicationStatusExplanation;
         private Task task;
@@ -362,6 +372,7 @@ public class Form {
             this.formInstanceId = sanitizer.sanitize(form.formInstanceId);
             this.processInstanceId = sanitizer.sanitize(form.processInstanceId);
             this.submissionType = sanitizer.sanitize(form.submissionType);
+            this.actionType = form.actionType;
             this.layout = sanitizer.sanitize(form.layout);
             this.applicationStatusExplanation = sanitizer.sanitize(form.applicationStatusExplanation);
             this.container = form.container != null ? new Container.Builder(form.container, sanitizer).build() : null;
@@ -445,6 +456,11 @@ public class Form {
             } else {
                 this.attachmentCount = attachmentCount;
             }
+            return this;
+        }
+
+        public Builder actionType(ActionType actionType) {
+            this.actionType = actionType;
             return this;
         }
 

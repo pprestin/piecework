@@ -1037,9 +1037,13 @@ angular.module('wf.directives',
 
                     step = parseInt(step);
 
+                    scope.isCompletion = function(form) {
+                        return form != null && form.actionType != 'VIEW' && form.task != null && !form.task.active;
+                    };
+
                     scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
-                        if (scope.form != null && scope.form.task != null && !scope.form.task.active) {
+                        if (scope.isCompletion(form)) {
                             if (scope.form.task.taskAction == 'COMPLETE') {
                                 element.toggle(attr.wfScreen == 'confirmation');
                             } else if (scope.form.task.taskAction == 'REJECT') {
@@ -1052,7 +1056,7 @@ angular.module('wf.directives',
 
                     if (attr.wfScreen != 'confirmation' && attr.wfScreen != 'rejection') {
                         scope.$root.$on('wfEvent:step-changed', function(event, ordinal) {
-                            if (scope.form != null && scope.form.task != null && !scope.form.task.active) {
+                            if (scope.isCompletion(scope.form)) {
                                 element.hide();
                             } else if (upwards) {
                                 element.toggle(ordinal >= step);
