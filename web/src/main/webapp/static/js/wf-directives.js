@@ -21,7 +21,7 @@ angular.module('wf.directives',
                     scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         // Check to see if the current user is the assigned user
-                        if (typeof(form.task) !== 'undefined') {
+                        if (typeof(form) !== 'undefined' && form.task != null) {
                             if (form.currentUser == null || form.task.assignee == null || form.currentUser.userId !== form.task.assignee.userId)
                                 element.attr('disabled', 'disabled');
                             else
@@ -1020,7 +1020,7 @@ angular.module('wf.directives',
             return {
                 restrict: 'A',
                 scope: {
-//                    form : '='
+
                 },
                 link: function (scope, element, attr) {
 
