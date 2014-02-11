@@ -67,6 +67,8 @@ public class Process implements Serializable {
     @XmlElement
     private final String deploymentVersion;
 
+    private final String contentReceiverKey;
+
     @XmlElement
     private final ProcessCodeRepository repository;
 
@@ -120,6 +122,7 @@ public class Process implements Serializable {
         this.participantSummary = builder.participantSummary;
         this.repository = builder.repository;
 		this.deployment = builder.deployment;
+        this.contentReceiverKey = null;
         this.versions = Collections.unmodifiableList(builder.versions);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
@@ -154,6 +157,10 @@ public class Process implements Serializable {
     @JsonIgnore
     public ProcessDeployment getDeployment() {
         return deployment;
+    }
+
+    public String getContentReceiverKey() {
+        return contentReceiverKey;
     }
 
     public String getDeploymentId() {

@@ -104,13 +104,13 @@ public class ContentHandlerRepository implements ContentRepository {
 
     @Override
     public Content save(Process process, Content content) throws IOException {
-        String contentProviderKey = null;
         String contentReceiverKey = null;
 
-        if (content.getMetadata() != null) {
-            contentProviderKey = content.getMetadata().get(Constants.ContentMetadataKeys.CONTENT_PROVIDER);
+        if (content.getMetadata() != null)
             contentReceiverKey = content.getMetadata().get(Constants.ContentMetadataKeys.CONTENT_RECEIVER);
-        }
+
+        if (StringUtils.isEmpty(contentReceiverKey) && StringUtils.isNotEmpty(process.getContentReceiverKey()))
+            contentReceiverKey = process.getContentReceiverKey();
 
         // Return the result from the specified receiver (or primary receiver if key is null)
         ContentReceiver contentReceiver = contentHandlerRegistry.contentReceiver(contentReceiverKey);

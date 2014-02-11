@@ -140,7 +140,6 @@ public class ContentHandlerRegistryTest {
                 return ContentHandlerPriority.PRIMARY;
             if (receiver instanceof GridFSContentProviderReceiver)
                 return ContentHandlerPriority.BACKUP;
-
             return ContentHandlerPriority.IGNORE;
         }
     }
