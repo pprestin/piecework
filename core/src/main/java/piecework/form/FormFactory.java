@@ -106,6 +106,8 @@ public class FormFactory {
         explanation = explanation == null ? request.getExplanation() : explanation;
 
         ManyMap<String, Message> messages = new ManyMap<String, Message>();
+        if (instance != null && instance.getMessages() != null && !instance.getMessages().isEmpty())
+            messages.putAll(instance.getMessages());
         if (request.getMessages() != null && !request.getMessages().isEmpty())
             messages.putAll(request.getMessages());
         if (validation != null && validation.getResults() != null && !validation.getResults().isEmpty())

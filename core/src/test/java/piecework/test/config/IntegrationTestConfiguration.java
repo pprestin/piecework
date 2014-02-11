@@ -25,10 +25,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import piecework.ServiceLocator;
 import piecework.Versions;
 import piecework.common.UuidGenerator;
 import piecework.config.ProviderConfiguration;
 import piecework.engine.ProcessEngineFacade;
+import piecework.identity.DebugIdentityService;
+import piecework.identity.DebugUserDetailsService;
+import piecework.identity.IdentityHelper;
 import piecework.persistence.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
@@ -42,7 +47,7 @@ import java.net.URL;
  */
 @Configuration
 @Import({MockRepositoryConfiguration.class, ProviderConfiguration.class})
-@ComponentScan(basePackages = {"piecework.command", "piecework.form", "piecework.identity", "piecework.manager", "piecework.resource", "piecework.service", "piecework.settings"})
+@ComponentScan(basePackages = {"piecework.command", "piecework.form", "piecework.manager", "piecework.resource", "piecework.service", "piecework.settings"})
 public class IntegrationTestConfiguration {
 
     @Bean
@@ -61,6 +66,21 @@ public class IntegrationTestConfiguration {
     public CacheManager cacheManager() {
         return Mockito.mock(CacheManager.class);
     }
+
+    @Bean
+    public IdentityHelper identityHelper() {
+        return Mockito.mock(IdentityHelper.class);
+    }
+
+    @Bean
+    public DebugUserDetailsService debugUserDetailsService(Environment environment, ServiceLocator serviceLocator) {
+        return new DebugUserDetailsService(environment, serviceLocator);
+    }
+
+//    @Bean
+//    public DebugIdentityService debugIdentityService(UserDetailsService userDetailsService) {
+//        return new DebugIdentityService(userDetailsService);
+//    }
 
     @Bean
     public ProcessEngineFacade processEngineFacade() {

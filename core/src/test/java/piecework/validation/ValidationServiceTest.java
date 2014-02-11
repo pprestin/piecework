@@ -27,6 +27,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import piecework.Registry;
 import piecework.identity.IdentityHelper;
+import piecework.model.Entity;
 import piecework.security.DataFilterService;
 import piecework.service.IdentityService;
 import piecework.service.TaskService;
@@ -50,6 +51,9 @@ public class ValidationServiceTest {
     ValidationFactory validationFactory;
 
     @Mock
+    Entity principal;
+
+    @Mock
     Registry registry;
 
     @Mock
@@ -66,7 +70,7 @@ public class ValidationServiceTest {
 
 	@Before
 	public void setUp() {
-        Mockito.when(dataFilterService.decrypt(Mockito.any(Map.class))).then(new Answer<Map<String, List<String>>>() {
+        Mockito.when(dataFilterService.decrypt(Mockito.any(Map.class), principal)).then(new Answer<Map<String, List<String>>>() {
             @Override
             public Map<String, List<String>> answer(InvocationOnMock invocation) throws Throwable {
                 Map<String, List<String>> map = (Map<String, List<String>>) invocation.getArguments()[0];

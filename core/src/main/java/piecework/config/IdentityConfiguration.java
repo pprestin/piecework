@@ -28,6 +28,8 @@ import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import piecework.ServiceLocator;
+import piecework.authorization.AccessFactory;
+import piecework.authorization.AuthorizationRoleMapper;
 import piecework.identity.*;
 import piecework.ldap.*;
 import piecework.security.KeyManagerCabinet;
@@ -76,7 +78,7 @@ public class IdentityConfiguration {
     }
 
     @Bean
-    public IdentityService identityService(Environment environment) throws Exception {
+    public IdentityService identityService(Environment environment, AccessFactory accessFactory) throws Exception {
         Boolean isDebugMode = environment.getProperty("debug.mode", Boolean.class, Boolean.FALSE);
         Boolean isDebugIdentity = environment.getProperty("debug.identity", Boolean.class, Boolean.FALSE);
 
@@ -93,7 +95,7 @@ public class IdentityConfiguration {
         LdapUserSearch userSearch = LdapUtility.userSearch(contextSource, ldapSettings);
         LdapAuthoritiesPopulator authoritiesPopulator = LdapUtility.authoritiesPopulator(ldapSettings, sslSocketFactory);
         CustomLdapUserDetailsMapper userDetailsMapper = new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), displayNameConverter, ldapSettings);
-        return new LdapIdentityService(userDetailsService(environment), cacheService, contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings);
+        return new LdapIdentityService(userDetailsService(environment), cacheService, contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings, accessFactory);
     }
 
     @Bean

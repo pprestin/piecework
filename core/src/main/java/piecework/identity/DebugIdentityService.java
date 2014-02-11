@@ -41,6 +41,11 @@ public class DebugIdentityService implements IdentityService {
     }
 
     @Override
+    public User getUserWithAccessAuthority(String id) {
+        return getUser(id);
+    }
+
+    @Override
     public List<User> findUsersByDisplayName(String displayNameLike, Long maxResults) {
         return Collections.singletonList(getUser("testuser"));
     }

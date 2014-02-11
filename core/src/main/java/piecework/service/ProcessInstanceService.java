@@ -24,7 +24,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
 import piecework.engine.ProcessDeploymentResource;
@@ -116,7 +115,7 @@ public class ProcessInstanceService {
     }
 
     public void assign(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, Task task, String assigneeId) throws BadRequestError, PieceworkException {
-        User assignee = assigneeId != null ? identityService.getUser(assigneeId) : null;
+        User assignee = assigneeId != null ? identityService.getUserWithAccessAuthority(assigneeId) : null;
         commandFactory.assignment(principal, process, deployment, instance, task, assignee).execute();
     }
 
@@ -176,7 +175,7 @@ public class ProcessInstanceService {
     }
 
     public void createSubTask(Entity principal, Process process, ProcessInstance instance, Task task, String parentTaskId, SubmissionTemplate template, Submission submission) throws PieceworkException {
-        Validation validation = validationFactory.validation(process, instance, task, template, submission, true);
+        Validation validation = validationFactory.validation(process, instance, task, template, submission, principal, true);
         ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
         commandFactory.createsubtask(principal, process, instance, deployment, parentTaskId, validation).execute();
     }
@@ -185,8 +184,10 @@ public class ProcessInstanceService {
         if (process == null)
             throw new BadRequestError(Constants.ExceptionCodes.process_does_not_exist);
         String taskId = sanitizer.sanitize(rawTaskId);
+        String processDefinitionKey = process.getProcessDefinitionKey();
 
-        return processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
+        ProcessInstance instance = processInstanceRepository.findByTaskId(processDefinitionKey, taskId);
+        return instance;
     }
 
     public Streamable getDiagram(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {

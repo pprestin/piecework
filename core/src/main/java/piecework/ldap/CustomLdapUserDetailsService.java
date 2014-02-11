@@ -19,12 +19,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
+import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
+import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
+import org.springframework.util.Assert;
 import piecework.enumeration.CacheName;
 import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.service.CacheService;
@@ -32,18 +36,29 @@ import piecework.service.CacheService;
 /**
  * @author James Renfro
  */
-public class CustomLdapUserDetailsService extends LdapUserDetailsService {
+public class CustomLdapUserDetailsService implements UserDetailsService {
 
     private static final Logger LOG = Logger.getLogger(CustomLdapUserDetailsService.class);
 
+    private final LdapUserSearch userSearch;
+    private final LdapAuthoritiesPopulator authoritiesPopulator;
+    private UserDetailsContextMapper userDetailsMapper;
     private final AuthenticationPrincipalConverter authenticationPrincipalConverter;
     private final CacheService cacheService;
+    private final LdapSettings ldapSettings;
 
-    public CustomLdapUserDetailsService(AuthenticationPrincipalConverter authenticationPrincipalConverter, CacheService cacheService, LdapUserSearch userSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper) {
-        super(userSearch, authoritiesPopulator);
+    public CustomLdapUserDetailsService(AuthenticationPrincipalConverter authenticationPrincipalConverter,
+                                        CacheService cacheService, LdapUserSearch userSearch,
+                                        LdapAuthoritiesPopulator authoritiesPopulator,
+                                        CustomLdapUserDetailsMapper userDetailsMapper) {
+        Assert.notNull(userSearch, "userSearch must not be null");
+        Assert.notNull(authoritiesPopulator, "authoritiesPopulator must not be null");
+        this.userSearch = userSearch;
+        this.authoritiesPopulator = authoritiesPopulator;
         this.authenticationPrincipalConverter = authenticationPrincipalConverter;
         this.cacheService = cacheService;
-        setUserDetailsMapper(userDetailsMapper);
+        this.userDetailsMapper = userDetailsMapper;
+        this.ldapSettings = userDetailsMapper.getLdapSettings();
     }
 
     @Override
@@ -73,7 +88,11 @@ public class CustomLdapUserDetailsService extends LdapUserDetailsService {
             LOG.debug("Retrieving user by uniqueId " + username);
 
         try {
-            userDetails = super.loadUserByUsername(username);
+            DirContextOperations userData = userSearch.searchForUser(username);
+            String actualUserName = userData.getStringAttribute(ldapSettings.getLdapGroupMemberUserName());
+
+            userDetails = userDetailsMapper.mapUserFromContext(userData, username,
+                    authoritiesPopulator.getGrantedAuthorities(userData, actualUserName));
 
         } finally {
             cacheService.put(CacheName.IDENTITY, username, userDetails);

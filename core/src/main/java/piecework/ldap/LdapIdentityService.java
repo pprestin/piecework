@@ -24,6 +24,7 @@ import org.springframework.ldap.SizeLimitExceededException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.filter.*;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,6 +32,9 @@ import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
+import piecework.authorization.AccessAuthority;
+import piecework.authorization.AccessFactory;
+import piecework.authorization.AuthorizationRoleMapper;
 import piecework.enumeration.CacheName;
 import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.identity.IdentityDetails;
@@ -56,8 +60,9 @@ public class LdapIdentityService implements IdentityService {
     private final LdapAuthoritiesPopulator authoritiesPopulator;
     private final CustomLdapUserDetailsMapper userDetailsMapper;
     private final UserDetailsService userDetailsService;
+    private final AccessFactory accessFactory;
 
-    public LdapIdentityService(UserDetailsService userDetailsService, CacheService cacheService, LdapContextSource personLdapContextSource, LdapUserSearch userSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, LdapSettings ldapSettings) {
+    public LdapIdentityService(UserDetailsService userDetailsService, CacheService cacheService, LdapContextSource personLdapContextSource, LdapUserSearch userSearch, LdapAuthoritiesPopulator authoritiesPopulator, CustomLdapUserDetailsMapper userDetailsMapper, LdapSettings ldapSettings, AccessFactory accessFactory) {
         this.userDetailsService = userDetailsService;
         this.cacheService = cacheService;
         this.personLdapContextSource = personLdapContextSource;
@@ -67,6 +72,7 @@ public class LdapIdentityService implements IdentityService {
         this.userSearch = userSearch;
         this.authoritiesPopulator = authoritiesPopulator;
         this.ldapSettings = ldapSettings;
+        this.accessFactory = accessFactory;
     }
 
     @Override
@@ -122,6 +128,21 @@ public class LdapIdentityService implements IdentityService {
         }
     }
 
+    @Override
+    public User getUserWithAccessAuthority(String id) {
+        try {
+            UserDetails userDetails = IdentityDetails.class.cast(userDetailsService.loadUserByUsername(id));
+            if (userDetails == null)
+                return null;
+
+            AccessAuthority accessAuthority = accessFactory.authority(userDetails.getAuthorities());
+
+            return new User.Builder(userDetails).accessAuthority(accessAuthority).build();
+        } catch (UsernameNotFoundException e) {
+            return null;
+        }
+    }
+
     private List<User> findMany(Filter filter, long countLimit) {
         String encoded = filter.encode();
         Cache.ValueWrapper wrapper = cacheService.get(CacheName.MULTI_USER, encoded);
@@ -145,7 +166,7 @@ public class LdapIdentityService implements IdentityService {
                 for (IdentityDetails identityDetails : identityDetailsList) {
                     User user = new User.Builder(identityDetails).build();
                     users.add(user);
-                    cacheService.put(CacheName.IDENTITY, user.getUserId(), identityDetails);
+//                    cacheService.put(CacheName.IDENTITY, user.getUserId(), identityDetails);
                 }
             }
             cacheService.put(CacheName.MULTI_USER, encoded, users);

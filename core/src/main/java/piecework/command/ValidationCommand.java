@@ -48,6 +48,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
     private final FormRequest request;
     private final Object object;
     private final Class<?> type;
+    private final Entity principal;
     private final String validationId;
     private final String fieldName;
     private final boolean ignoreThrowException;
@@ -60,6 +61,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         this.object = object;
         this.submission = null;
         this.type = type;
+        this.principal = principal;
         this.validationId = validationId;
         this.fieldName = fieldName;
         this.ignoreThrowException = false;
@@ -72,6 +74,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         this.request = request;
         this.object = null;
         this.type = null;
+        this.principal = principal;
         this.submission = submission;
         this.validationId = null;
         this.fieldName = null;
@@ -110,7 +113,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
 
         taskService.checkIsActiveIfTaskExists(process, task);
 
-        return validationFactory.validation(process, instance, task, template, submission, throwException);
+        return validationFactory.validation(process, instance, task, template, submission, principal, throwException);
     }
 
 }

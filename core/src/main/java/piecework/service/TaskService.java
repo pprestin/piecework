@@ -137,11 +137,11 @@ public class TaskService {
         Command<?> command;
         switch (actionType) {
             case ASSIGN:
-                User assignee = assigneeId != null ? identityService.getUser(assigneeId) : null;
+                User assignee = assigneeId != null ? identityService.getUserWithAccessAuthority(assigneeId) : null;
                 command = commandFactory.assignment(principal, process, deployment, instance, task, assignee);
                 break;
             case CLAIM:
-                User actingAs = actingUser != null ? identityService.getUser(actingUser) : null;
+                User actingAs = actingUser != null ? identityService.getUserWithAccessAuthority(actingUser) : null;
                 command = commandFactory.assignment(principal, process, deployment, instance, task, actingAs);
                 break;
             case ATTACH:

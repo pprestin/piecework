@@ -65,6 +65,13 @@ public class RestartCommand extends AbstractCommand<ProcessInstance> {
 
         String processStatus = instance.getProcessStatus();
 
+        // This is an operation that anonymous users should never be able to cause
+        if (principal == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        // Only process admins or superusers are allowed to reactivate suspended processes
+        if (!principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
+            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
         if (processStatus != null && processStatus.equals(Constants.ProcessStatuses.QUEUED)) {
 
             return commandFactory.requeueInstance(principal, process, instance).execute();
@@ -94,12 +101,6 @@ public class RestartCommand extends AbstractCommand<ProcessInstance> {
     }
 
     protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
-        // This is an operation that anonymous users should never be able to cause
-        if (principal == null)
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
-        // Only process admins or superusers are allowed to reactivate suspended processes
-        if (!principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         return new OperationResult(applicationStatusExplanation, instance.getPreviousApplicationStatus(), instance.getProcessStatus(), applicationStatusExplanation);
     }

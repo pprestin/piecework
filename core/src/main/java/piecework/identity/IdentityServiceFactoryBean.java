@@ -25,6 +25,7 @@ import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import piecework.ServiceLocator;
+import piecework.authorization.AccessFactory;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapIdentityService;
 import piecework.ldap.LdapSettings;
@@ -41,6 +42,9 @@ import javax.net.ssl.SSLSocketFactory;
 public class IdentityServiceFactoryBean implements FactoryBean<IdentityService> {
 
     private static final Logger LOG = Logger.getLogger(IdentityServiceFactoryBean.class);
+
+    @Autowired
+    AccessFactory accessFactory;
 
     @Autowired
     CacheService cacheService;
@@ -84,7 +88,7 @@ public class IdentityServiceFactoryBean implements FactoryBean<IdentityService> 
         LdapUserSearch userSearch = LdapUtility.userSearch(contextSource, ldapSettings);
         LdapAuthoritiesPopulator authoritiesPopulator = LdapUtility.authoritiesPopulator(ldapSettings, sslSocketFactory);
         CustomLdapUserDetailsMapper userDetailsMapper = new CustomLdapUserDetailsMapper(new LdapUserDetailsMapper(), displayNameConverter, ldapSettings);
-        return new LdapIdentityService(userDetailsService, cacheService, contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings);
+        return new LdapIdentityService(userDetailsService, cacheService, contextSource, userSearch, authoritiesPopulator, userDetailsMapper, ldapSettings, accessFactory);
     }
 
     @Override

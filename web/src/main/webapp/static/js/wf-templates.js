@@ -224,8 +224,8 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </div>\n" +
     "    </div>");
   $templateCache.put("templates/breadcrumbs.html",
-    "<div class=\"crumbs\">\n" +
-    "            <ul class=\"breadcrumb-stacked\">\n" +
+    "<div class=\"crumbs\" data-ng-if=\"form.steps && form.steps.length > 0\">\n" +
+    "            <ul class=\"breadcrumb-stacked\" data-ng-if=\"form.steps && form.steps.length > 0\">\n" +
     "                <li ng-repeat=\"step in form.steps\" ng-class=\"wizard.isActiveStep(form, step) ? 'active' : ''\">\n" +
     "                    <a ng-click=\"wizard.changeStep(form, step.ordinal)\" href=\"\" class=\"list-group-item-text\">{{step.breadcrumb}}</a>\n" +
     "                </li>\n" +
@@ -312,7 +312,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "    <div>\n" +
 //    "        <form class=\"form form-default\" action=\"{{form.action}}\" method=\"POST\" enctype=\"multipart/form-data\" novalidate>\n" +
     "            <div class=\"row\">\n" +
-    "                <div class=\"crumbs col-md-3\">\n" +
+    "                <div class=\"crumbs col-md-3\" data-ng-if=\"form.steps && form.steps.length > 0\">\n" +
     "                    <ul class=\"breadcrumb-stacked\">\n" +
     "                        <li ng-repeat=\"step in form.steps\" ng-class=\"wizard.isActiveStep(form, step) ? 'active' : ''\">\n" +
     "                            <a data-ng-class=\"step.breadcrumbCssClass\" data-ng-show=\"wizard.isAvailableStep(form, step)\" ng-click=\"form.activeStepOrdinal = step.ordinal\" href=\"\" class=\"list-group-item-text\">{{step.breadcrumb}} <i class=\"fa fa-warning invalid-only\" title=\"This section has validation errors\"></i></a>\n" +
@@ -320,7 +320,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                        </li>\n" +
     "                    </ul>\n" +
     "                </div>\n" +
-    "                <div ng-class=\"state.isViewingAttachments ? 'col-md-5' : 'col-md-9'\" class=\"screen\">\n" +
+    "                <div ng-class=\"state.isViewingAttachments ? ((form.steps && form.steps.length > 0) ? 'col-md-5' : 'col-md-8') : 'col-md-9'\" class=\"screen\">\n" +
     "                    <h2>{{form.container.title}}</h2>\n" +
     "                    <div ng-repeat=\"step in form.steps\">\n" +
     "                        <wf-step form=\"form\" step=\"step\" active=\"wizard.isActiveStep(form, step)\" current=\"false\"></wf-step>\n" +
@@ -479,7 +479,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
 //    "        <form class=\"form form-default\" action=\"{{form.action}}\" method=\"POST\" enctype=\"multipart/form-data\" novalidate>\n" +
     "            <div class=\"row\">\n" +
     "                <div class=\"crumbs col-md-3\">\n" +
-    "                    <ul class=\"breadcrumb-stacked\">\n" +
+    "                    <ul class=\"breadcrumb-stacked\" data-ng-if=\"form.steps && form.steps.length > 0\">\n" +
     "                        <li ng-repeat=\"step in form.steps\" ng-class=\"wizard.isActiveStep(form, step) ? 'active' : ''\">\n" +
     "                            <a ng-click=\"wizard.changeStep(form, step.ordinal)\" href=\"\" class=\"list-group-item-text\">{{step.breadcrumb}}</a>\n" +
     "                        </li>\n" +

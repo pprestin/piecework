@@ -15,38 +15,29 @@ describe('Unit testing wf-active', function() {
       $rootScope = _$rootScope_;
     }));
 
-    it('Should not disable input elements when attribute value is start and there is no task definition key', function() {
+    it('Should not disable input elements when attribute value is the same as the active step', function() {
         var scope = $rootScope;
-        var element = $compile("<input data-wf-active=\"start\" name=\"myElement\"/>")(scope);
+        var element = $compile("<input data-wf-active=\"1\" name=\"myElement\"/>")(scope);
         scope.$digest();
-        var form = { task: null };
+        var form = { activeStepOrdinal: 1 };
         scope.$broadcast('wfEvent:form-loaded', form);
         expect(element.attr('disabled')).toBeFalsy();
     });
 
-    it('Should disable input elements when attribute value is start and there is a task definition key', function() {
+    it('Should disable input elements when attribute value is different from the active step', function() {
         var scope = $rootScope;
-        var element = $compile("<input data-wf-active=\"start\" name=\"myElement\"/>")(scope);
+        var element = $compile("<input data-wf-active=\"1\" name=\"myElement\"/>")(scope);
         scope.$digest();
-        var form = { task: { taskDefinitionKey: 'reviewIt' } };
+        var form = { task: { activeStepOrdinal: 2 } };
         scope.$broadcast('wfEvent:form-loaded', form);
         expect(element.attr('disabled')).toBeTruthy();
     });
 
-    it('Should not disable input elements when attribute value matches task definition key', function() {
+    it('Should disable input elements when actionType is view even when the attribute value matches the active step', function() {
         var scope = $rootScope;
-        var element = $compile("<input data-wf-active=\"reviewIt\" name=\"myElement\"/>")(scope);
+        var element = $compile("<input data-wf-active=\"1\" name=\"myElement\"/>")(scope);
         scope.$digest();
-        var form = { task: { taskDefinitionKey: 'reviewIt' } };
-        scope.$broadcast('wfEvent:form-loaded', form);
-        expect(element.attr('disabled')).toBeFalsy();
-    });
-
-    it('Should disable input elements when attribute value does not match task definition key', function() {
-        var scope = $rootScope;
-        var element = $compile("<input data-wf-active=\"start\" name=\"myElement\"/>")(scope);
-        scope.$digest();
-        var form = { task: { taskDefinitionKey: 'reviewIt' } };
+        var form = { task: { activeStepOrdinal: 1, actionType: 'VIEW' } };
         scope.$broadcast('wfEvent:form-loaded', form);
         expect(element.attr('disabled')).toBeTruthy();
     });
@@ -729,6 +720,84 @@ describe('Unit testing wf-notifications', function() {
 
 });
 
+
+describe('Unit testing wf-screen', function() {
+    var $compile;
+    var $rootScope;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should NOT hide content if attribute value is "confirmation", actionType is "COMPLETE" and form has no task', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-screen=\"confirmation\">Some content</div>")(scope);
+        scope.$digest();
+        var form = { actionType: 'COMPLETE' };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$broadcast('wfEvent:step-changed', 1);
+        expect(element.attr('style')).not.toContain("display: none");
+    });
+
+    it('Should NOT hide content if attribute value is "confirmation", actionType is "COMPLETE" and task is not active', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-screen=\"confirmation\">Some content</div>")(scope);
+        scope.$digest();
+        var form = { actionType: 'COMPLETE', task: { active: false, taskAction: 'COMPLETE' } };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$broadcast('wfEvent:step-changed', 1);
+        expect(element.attr('style')).not.toContain("display: none");
+    });
+
+    it('Should hide content if attribute value is "rejection", actionType is "COMPLETE" and task is not active', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-screen=\"rejection\">Some content</div>")(scope);
+        scope.$digest();
+        var form = { actionType: 'COMPLETE', task: { active: false, taskAction: 'COMPLETE' } };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$broadcast('wfEvent:step-changed', 1);
+        expect(element.attr('style')).toContain("display: none");
+    });
+
+    it('Should NOT hide content if attribute value is "rejection", actionType is "REJECT" and task is not active', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-screen=\"rejection\">Some content</div>")(scope);
+        scope.$digest();
+        var form = { actionType: 'REJECT', task: { active: false, taskAction: 'REJECT' } };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$broadcast('wfEvent:step-changed', 1);
+        expect(element.attr('style')).not.toContain("display: none");
+    });
+
+    it('Should NOT hide content if attribute value is "1", step is "1", actionType is "CREATE" and task is active', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-screen=\"1\">Some content</div>")(scope);
+        scope.$digest();
+        var form = { actionType: 'CREATE', task: { active: true, taskAction: 'CREATE' } };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$broadcast('wfEvent:step-changed', 1);
+        expect(element.attr('style')).not.toContain("display: none");
+    });
+
+    it('Should hide content if attribute value is "1", step is "2", actionType is "CREATE" and task is active', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-screen=\"1\">Some content</div>")(scope);
+        scope.$digest();
+        var form = { actionType: 'CREATE', task: { active: true, taskAction: 'CREATE' } };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        scope.$broadcast('wfEvent:step-changed', 2);
+        expect(element.attr('style')).toContain("display: none");
+    });
+
+});
+
 describe('Unit testing wf-status', function() {
     var $compile;
     var $rootScope;
@@ -810,6 +879,32 @@ describe('Unit testing wf-status', function() {
         scope.$digest();
         expect(element.html()).toContain('Some special explanation');
         expect(element.html()).toContain('Some detail');
+    });
+
+});
+
+describe('Unit testing wf-toolbar', function() {
+    var $compile;
+    var $rootScope;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_){
+      // The injector unwraps the underscores (_) from around the parameter names when matching
+      $compile = _$compile_;
+      $rootScope = _$rootScope_;
+    }));
+
+    it('Should display toolbar', function() {
+        var scope = $rootScope;
+        var element = $compile("<div data-wf-toolbar></div>")(scope);
+        scope.$digest();
+        var form = { actionType: 'CREATE' };
+        scope.$broadcast('wfEvent:form-loaded', form);
+        expect(element.html()).toContain("navbar navbar-default");
     });
 
 });

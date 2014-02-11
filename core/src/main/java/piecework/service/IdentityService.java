@@ -46,6 +46,8 @@ public interface IdentityService {
 
     User getUser(String id);
 
+    User getUserWithAccessAuthority(String id);
+
     List<User> findUsersByDisplayName(String displayNameLike, Long maxResults);
 
     Map<String, User> findUsers(Set<String> ids);

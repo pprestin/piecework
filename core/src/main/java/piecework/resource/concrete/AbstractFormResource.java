@@ -47,6 +47,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -176,7 +177,7 @@ public abstract class AbstractFormResource {
         Entity principal = helper.getPrincipal();
         FormRequest request = requestService.create(principal, requestDetails, process, taskId, null);
 
-        List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
+        List<MediaType> mediaTypes = context != null ? context.getHttpHeaders().getAcceptableMediaTypes() : Collections.<MediaType>emptyList();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
 
         return response(process, request, ActionType.CREATE, mediaType, count);

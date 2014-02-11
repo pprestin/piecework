@@ -72,4 +72,8 @@ public class CustomLdapUserDetailsMapper extends LdapUserDetailsMapper implement
         }
         return null;
     }
+
+    public LdapSettings getLdapSettings() {
+        return ldapSettings;
+    }
 }

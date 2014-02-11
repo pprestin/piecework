@@ -44,7 +44,7 @@ public class ValidationFactory {
     @Autowired
     DataFilterService dataFilterService;
 
-    public Validation validation(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, boolean throwException) throws StatusCodeError {
+    public Validation validation(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, Entity principal, boolean throwException) throws StatusCodeError {
         long time = 0;
 
         if (LOG.isDebugEnabled())
@@ -53,8 +53,8 @@ public class ValidationFactory {
         Map<String, List<Value>> submissionData = submission.getData();
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
-        ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData);
-        ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData);
+        ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData, principal);
+        ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData, principal);
 
         // Validate the submission
         Validation validation = ValidationUtility.validate(process, instance, task, submission, template, submissionData, instanceData, decryptedSubmissionData, decryptedInstanceData, throwException);

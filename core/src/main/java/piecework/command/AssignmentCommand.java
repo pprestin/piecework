@@ -47,8 +47,9 @@ public class AssignmentCommand extends AbstractOperationCommand {
     protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
         boolean isAssignmentRestricted = process.isAssignmentRestrictedToCandidates();
         if (isAssignmentRestricted && assignee != null) {
-            Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
-            if (!candidateAssigneeIds.contains(assignee.getUserId()))
+//            Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
+//            if (!candidateAssigneeIds.contains(assignee.getUserId()) && (assignee.getAccessAuthority() == null || !assignee.getAccessAuthority().hasGroup(candidateAssigneeIds)))
+            if (!task.isCandidateOrAssignee(assignee))
                 throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
         }
         if (!task.isDisconnected() && !facade.assign(process, deployment, task.getTaskInstanceId(), assignee)) {

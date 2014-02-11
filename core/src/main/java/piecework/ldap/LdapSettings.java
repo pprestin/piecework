@@ -40,6 +40,7 @@ public class LdapSettings {
     private final String ldapGroupAttributeId;
     private final String ldapGroupAttributeDisplayName;
     private final String ldapGroupUseridPrefix;
+    private final String ldapGroupMemberUserName;
     private final String ldapPersonDn;
     private final String ldapPersonAttributeDisplayName;
     private final String ldapPersonAttributeIdInternal;
@@ -69,6 +70,7 @@ public class LdapSettings {
         this.ldapGroupAttributeId = environment.getProperty("ldap.attribute.group.id");
         this.ldapGroupAttributeDisplayName  = environment.getProperty("ldap.attribute.group.name.display");
         this.ldapGroupUseridPrefix = environment.getProperty("ldap.group.userid.prefix");
+        this.ldapGroupMemberUserName = environment.getProperty("ldap.group.member.username");
         this.ldapPersonAttributeEmail = environment.getProperty("ldap.attribute.email");
         this.ldapPersonSearchBase = environment.getProperty("ldap.person.search.base");
         this.ldapPersonSearchFilter = environment.getProperty("ldap.person.search.filter");
@@ -113,6 +115,10 @@ public class LdapSettings {
 
     public String getLdapGroupAttributeMember() {
         return ldapGroupAttributeMember;
+    }
+
+    public String getLdapGroupMemberUserName() {
+        return ldapGroupMemberUserName;
     }
 
     public String getLdapGroupAttributeId() {

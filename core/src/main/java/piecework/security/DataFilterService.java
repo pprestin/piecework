@@ -67,7 +67,7 @@ public class DataFilterService {
         Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, includeRestrictedData, includeInstanceData, allowAny);
         if (validation != null) {
             // Always decrypt the validation data
-            Map<String, List<Value>> validationData = decrypt(validation.getData());
+            Map<String, List<Value>> validationData = decrypt(validation.getData(), principal);
             if (validationData != null) {
                 for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
                     String fieldName = entry.getKey();
@@ -106,7 +106,7 @@ public class DataFilterService {
 
         if (includeRestrictedData && task != null) {
             if (isAuthorizedForRestrictedData(task, principal)) {
-                return decrypt(filtered);
+                return decrypt(filtered, principal);
             }
             return mask(filtered);
         }
@@ -156,14 +156,14 @@ public class DataFilterService {
         return list;
     }
 
-    public ManyMap<String, Value> decrypt(Map<String, List<Value>> original) {
+    public ManyMap<String, Value> decrypt(Map<String, List<Value>> original, Entity principal) {
         ManyMap<String, Value> map = new ManyMap<String, Value>();
 
         if (original != null && !original.isEmpty()) {
             for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
                 String key = entry.getKey();
                 try {
-                    List<Value> decrypted = decrypt(entry.getValue());
+                    List<Value> decrypted = decrypt(key, entry.getValue(), principal);
                     map.put(key, decrypted);
                 } catch (Exception e) {
                     LOG.error("Could not decrypt messages for " + key, e);
@@ -193,16 +193,19 @@ public class DataFilterService {
         return list;
     }
 
-    private List<Value> decrypt(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+    private List<Value> decrypt(String key, List<? extends Value> values, Entity principal) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
         if (values.isEmpty())
             return Collections.emptyList();
 
         List<Value> list = new ArrayList<Value>(values.size());
         for (Value value : values) {
             if (value instanceof Secret) {
+                if (principal == null)
+                    throw new GeneralSecurityException("Anonymous principals should never have access to restricted data");
                 Secret secret = Secret.class.cast(value);
                 String plaintext = encryptionService.decrypt(secret);
                 list.add(new Value(plaintext));
+                LOG.warn("Decrypting value of restricted field " + key + " on behalf of " + principal.getEntityId());
             } else {
                 list.add(value);
             }
