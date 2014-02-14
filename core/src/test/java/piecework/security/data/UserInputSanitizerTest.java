@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security.concrete;
+package piecework.security.data;
 
 import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.owasp.validator.html.Policy;
 import org.springframework.core.io.ClassPathResource;
+import piecework.security.data.UserInputSanitizer;
 
 import java.net.URL;
 

@@ -28,7 +28,8 @@ import piecework.enumeration.ActionType;
 import piecework.exception.FormBuildingException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.security.DataFilterService;
+import piecework.security.AccessTracker;
+import piecework.security.data.DataFilterService;
 
 /**
  * @author James Renfro
@@ -38,6 +39,9 @@ public class FormFactoryTest {
 
     @InjectMocks
     FormFactory formFactory;
+
+    @Mock
+    AccessTracker accessTracker;
 
     @Mock
     DataFilterService dataFilterService;
@@ -73,7 +77,7 @@ public class FormFactoryTest {
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .instance(instance).build();
 
-        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, null, null, false, false);
+        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, null, null, false, false, "v1");
 
         Assert.assertNotNull(form);
         Assert.assertEquals("123", form.getFormInstanceId());

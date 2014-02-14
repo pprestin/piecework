@@ -25,7 +25,7 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
-import piecework.security.DataFilterService;
+import piecework.security.data.DataFilterService;
 import piecework.common.ManyMap;
 import piecework.validation.Validation;
 

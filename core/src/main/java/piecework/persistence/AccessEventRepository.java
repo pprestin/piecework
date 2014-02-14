@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
+package piecework.persistence;
 
-import piecework.authorization.SuperUserAccessAuthority;
-import piecework.model.Application;
-import piecework.service.ProcessService;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import piecework.model.AccessEvent;
+import piecework.model.CacheEvent;
 
 /**
  * @author James Renfro
  */
-public class SystemUser extends Application {
+public interface AccessEventRepository extends MongoRepository<AccessEvent, String> {
 
-    public SystemUser() {
-        super("piecework");
-    }
-
-    public SystemUser(final ProcessService processService) {
-        super("piecework", new SuperUserAccessAuthority(processService));
-    }
 
 }

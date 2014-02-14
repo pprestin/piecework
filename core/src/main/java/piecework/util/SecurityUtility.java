@@ -21,9 +21,14 @@ import org.joda.time.DateTime;
 import org.joda.time.Hours;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.ManyMap;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
 import piecework.model.*;
+import piecework.security.DataFilter;
+import piecework.validation.Validation;
+
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -31,6 +36,87 @@ import piecework.model.*;
 public class SecurityUtility {
 
     private static final Logger LOG = Logger.getLogger(SecurityUtility.class);
+
+    public static ManyMap<String, Value> combinedData(ProcessInstance instance, Validation validation) {
+        ManyMap<String, Value> combinedData = new ManyMap<String, Value>();
+        if (instance != null) {
+            Map<String, List<Value>> instanceData = instance.getData();
+            if (instanceData != null && !instanceData.isEmpty())
+                combinedData.putAll(instanceData);
+        }
+        if (validation != null) {
+            Map<String, List<Value>> validationData = validation.getData();
+            if (validationData != null && !validationData.isEmpty())
+                combinedData.putAll(validationData);
+        }
+        return combinedData;
+    }
+
+    public static Set<Field> fields(Activity activity, Action action) {
+        Map<String, Field> fieldMap = activity.getFieldMap();
+        Container container = action != null ? action.getContainer() : null;
+        Set<Field> fields = new HashSet<Field>();
+        if (container != null) {
+            fields(fields, fieldMap, container, container.getActiveChildIndex());
+        }
+
+        return fields;
+    }
+
+    private static void fields(Set<Field> fields, Map<String, Field> fieldMap, Container container, int activeChildIndex) {
+        List<String> fieldIds = container.getFieldIds();
+        if (fieldIds != null && !fieldIds.isEmpty()) {
+            for (String fieldId : fieldIds) {
+                Field field = fieldMap.get(fieldId);
+                if (field == null)
+                    continue;
+                fields.add(field);
+            }
+        }
+        if (container.getChildren() != null && !container.getChildren().isEmpty()) {
+            for (Container child : container.getChildren()) {
+                fields(fields, fieldMap, child, activeChildIndex);
+            }
+        }
+    }
+
+    public static Set<Field> restrictedFields(Set<Field> allFields) {
+        Set<Field> restrictedFields = new HashSet<Field>();
+        if (allFields != null && !allFields.isEmpty()) {
+            for (Field field : allFields) {
+                if (field.isRestricted())
+                    restrictedFields.add(field);
+            }
+        }
+        return restrictedFields;
+    }
+
+    public static ManyMap<String, Value> filter(Map<String, List<Value>> original, DataFilter... dataFilters) {
+        ManyMap<String, Value> map = new ManyMap<String, Value>();
+
+        if (original != null && !original.isEmpty()) {
+            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
+                String key = entry.getKey();
+                List<Value> values = entry.getValue();
+                if (dataFilters != null) {
+                    for (DataFilter dataFilter : dataFilters) {
+                        values = dataFilter.filter(key, values);
+                    }
+                }
+                if (!values.isEmpty())
+                    map.put(key, values);
+            }
+        }
+
+        return map;
+    }
+
+//    public static boolean isAuthorizedForRestrictedData(Task task, Entity principal) {
+//        // If this is an application
+//        if (principal instanceof Application && StringUtils.isNotEmpty(principal.getEntityId()) && principal.getEntityId().equals("piecework"))
+//            return true;
+//        return task.isAssignee(principal);
+//    }
 
     public static void verifyEntityIsAuthorized(piecework.model.Process process, Task task, Entity principal) throws ForbiddenError, BadRequestError {
         if (process == null)

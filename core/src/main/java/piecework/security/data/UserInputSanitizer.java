@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security.concrete;
+package piecework.security.data;
 
 import java.util.LinkedList;
 import java.util.List;

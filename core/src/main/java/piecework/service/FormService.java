@@ -35,6 +35,7 @@ import javax.ws.rs.core.MultivaluedMap;
 public class FormService {
 
     private static final Logger LOG = Logger.getLogger(FormService.class);
+    private static final String VERSION = "v1";
 
     @Autowired
     CommandFactory commandFactory;
@@ -55,21 +56,21 @@ public class FormService {
     public <T> SubmissionCommandResponse save(Process process, RequestDetails requestDetails, String requestId, T data, Class<T> type, Entity principal) throws PieceworkException {
         FormRequest request = requestService.read(requestDetails, requestId);
         ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal).execute();
+        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal, VERSION).execute();
         return commandFactory.submitForm(principal, deployment, validation, ActionType.SAVE, requestDetails, request).execute();
     }
 
     public <T> SubmissionCommandResponse submit(Process process, RequestDetails requestDetails, String requestId, T data, Class<T> type, Entity principal) throws PieceworkException {
         FormRequest request = requestService.read(requestDetails, requestId);
         ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal).execute();
+        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal, VERSION).execute();
         return commandFactory.submitForm(principal, deployment, validation, request.getAction(), requestDetails, request).execute();
     }
 
     public <T> void validate(Process process, RequestDetails requestDetails, String requestId, final T data, final Class<T> type, String validationId, Entity principal) throws PieceworkException {
         FormRequest request = requestService.read(requestDetails, requestId);
         ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-        commandFactory.validation(process, deployment, request, data, type, principal, validationId, null).execute();
+        commandFactory.validation(process, deployment, request, data, type, principal, validationId, null, VERSION).execute();
     }
 
 }

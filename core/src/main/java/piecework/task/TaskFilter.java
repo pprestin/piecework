@@ -20,8 +20,9 @@ import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
-import piecework.security.DataFilterService;
+import piecework.security.data.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.util.SecurityUtility;
 
 import java.util.*;
 
@@ -53,15 +54,18 @@ public class TaskFilter {
             boolean external = createAction != null && StringUtils.isNotEmpty(createAction.getLocation());
 
             Map<String, List<Value>> data = null;
+            ProcessInstance instance = deployment.getInstance();
 
-            if (includeData)
-                data = dataFilterService.filter(activity.getFieldMap(), deployment.getInstance(), null, principal, false, includeData, false);
+            if (includeData) {
+                Set<Field> fields = SecurityUtility.fields(activity, createAction);
+                data = dataFilterService.unrestrictedInstanceData(instance, fields);
+            }
 
             return new Form.Builder()
                     .formInstanceId(rebuilt.getTaskInstanceId())
                     .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
                     .processDefinitionKey(rebuilt.getProcessDefinitionKey())
-                    .instance(deployment.getInstance(), version1)
+                    .instance(instance, version1)
                     .data(data)
                     .external(external)
                     .build(version1);

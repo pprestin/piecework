@@ -23,6 +23,7 @@ import piecework.enumeration.DataInjectionStrategy;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -42,16 +43,6 @@ public class Action implements Serializable {
         this.location = location;
         this.strategy = strategy;
     }
-
-//    @JsonIgnore
-//    public URI getUri(String remoteHost) throws URISyntaxException {
-//        if (StringUtils.isNotEmpty(location)) {
-//            String remoteLocation = location;
-//            URI uri = new URI(remoteHost + location);
-//            return uri;
-//        }
-//        return null;
-//    }
 
     public Container getContainer() {
         return container;

@@ -35,6 +35,11 @@ import static org.mockito.Matchers.any;
 public class MockRepositoryConfiguration {
 
     @Bean
+    public AccessEventRepository accessEventRepository() {
+        return mockRepository(AccessEventRepository.class);
+    }
+
+    @Bean
     public ActivityRepository activityRepository() {
         return mockRepository(ActivityRepository.class);
     }

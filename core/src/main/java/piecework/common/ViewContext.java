@@ -33,10 +33,10 @@ public class ViewContext {
 	}
 
     public ViewContext(UserInterfaceSettings settings, String version) {
-        this.hostUri = settings.getHostUri();
-        this.baseApplicationUri = settings.getApplicationUrl();
-        this.baseServiceUri = settings.getServiceUrl();
-        this.basePublicUri = settings.getPublicUrl();
+        this.hostUri = settings != null ? settings.getHostUri() : "";
+        this.baseApplicationUri = settings != null ? settings.getApplicationUrl() : "";
+        this.baseServiceUri = settings != null ? settings.getServiceUrl() : "";
+        this.basePublicUri = settings != null ? settings.getPublicUrl() : "";
         this.version = version;
     }
 	

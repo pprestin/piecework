@@ -22,6 +22,10 @@ import piecework.authorization.AccessAuthority;
  */
 public class Application extends Entity {
 
+    public Application(String entityId) {
+        this(entityId, null);
+    }
+
     public Application(String entityId, AccessAuthority accessAuthority) {
         super(entityId, EntityType.SYSTEM, accessAuthority);
     }

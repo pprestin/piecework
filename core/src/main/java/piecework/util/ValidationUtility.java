@@ -41,11 +41,37 @@ public class ValidationUtility {
     private static final Set<FieldTag> FREEFORM_INPUT_TYPES = Sets.newHashSet(FieldTag.FILE, FieldTag.EMAIL, FieldTag.NUMBER, FieldTag.TEXT, FieldTag.TEXTAREA);
     private static final Logger LOG = Logger.getLogger(ValidationUtility.class);
 
+    public static String fieldName(Field field, Map<String, List<Value>> data) {
+        String fieldName = field.getName();
+
+        if (fieldName == null) {
+            if (field.getType() != null && field.getType().equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
+                List<Option> options = field.getOptions();
+                if (options != null) {
+                    for (Option option : options) {
+                        if (StringUtils.isNotEmpty(option.getName()) && data.containsKey(option.getName()))
+                            fieldName = option.getName();
+                    }
+                }
+            }
+        }
+        return fieldName;
+    }
+
     public static void validateField(Validation.Builder validationBuilder, Field field,
                                      List<ValidationRule> rules, Set<String> fieldNames,
-                                     Map<String, List<Value>> submissionData, Map<String, List<Value>> instanceData, ManyMap<String, Value> decryptedSubmissionData,
-                                     ManyMap<String, Value> decryptedInstanceData,
+                                     Map<String, List<Value>> submissionData,
+                                     Map<String, List<Value>> instanceData,
+                                     Map<String, List<Value>> decryptedSubmissionData,
+                                     Map<String, List<Value>> decryptedInstanceData,
                                      boolean onlyAcceptValidInputs) {
+
+        String fieldName = fieldName(field, submissionData);
+
+        if (fieldName == null) {
+            LOG.warn("Field is missing name " + field.getFieldId());
+            return;
+        }
 
         if (rules != null) {
             for (ValidationRule rule : rules) {
@@ -61,29 +87,11 @@ public class ValidationUtility {
                 }
             }
         }
-        String fieldName = field.getName();
-
-        if (fieldName == null) {
-            if (field.getType() != null && field.getType().equalsIgnoreCase(Constants.FieldTypes.CHECKBOX)) {
-                List<Option> options = field.getOptions();
-                if (options != null) {
-                    for (Option option : options) {
-                        if (StringUtils.isNotEmpty(option.getName()) && decryptedSubmissionData.containsKey(option.getName()))
-                            fieldName = option.getName();
-                    }
-                }
-            }
-        }
-
-        if (fieldName == null) {
-            LOG.warn("Field is missing name " + field.getFieldId());
-            return;
-        }
 
         if (fieldNames.contains(fieldName)) {
 
             List<? extends Value> values = submissionData.get(fieldName);
-            List<? extends Value> previousValues = instanceData.get(fieldName);
+            List<? extends Value> previousValues = instanceData != null ? instanceData.get(fieldName) : Collections.<Value>emptyList();
 
             boolean isFileField = field.getType() != null && (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
             if (values == null) {
@@ -94,7 +102,7 @@ public class ValidationUtility {
 
             } else if (isFileField && field.getMaxInputs() > 1) {
                 // With file fields that accept multiple files, we want to append each submission
-                values = append(values, previousValues);
+                values = ValidationUtility.append(values, previousValues);
             }
 
             if (values == null)
@@ -104,37 +112,7 @@ public class ValidationUtility {
         }
     }
 
-    public static Validation validate(Process process, ProcessInstance instance, Task task, Submission submission,
-                                      SubmissionTemplate template, Map<String, List<Value>> submissionData, Map<String, List<Value>> instanceData, ManyMap<String, Value> decryptedSubmissionData, ManyMap<String, Value> decryptedInstanceData,
-                                      boolean onlyAcceptValidInputs) {
-
-        Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
-        Set<String> allFieldNames = Collections.unmodifiableSet(new HashSet<String>(template.getFieldMap().keySet()));
-        Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
-
-        Validation.Builder validationBuilder = new Validation.Builder().process(process).instance(instance).submission(submission).task(task);
-        if (fieldRuleMap != null) {
-            for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
-                Field field = entry.getKey();
-                List<ValidationRule> rules = entry.getValue();
-                validateField(validationBuilder, field, rules, fieldNames, submissionData, instanceData, decryptedSubmissionData, decryptedInstanceData, onlyAcceptValidInputs);
-            }
-        }
-
-        if (template.isAnyFieldAllowed() && !submissionData.isEmpty()) {
-            for (Map.Entry<String, List<Value>> entry : submissionData.entrySet()) {
-                String fieldName = entry.getKey();
-
-                if (!allFieldNames.contains(fieldName)) {
-                    validationBuilder.formValue(fieldName, entry.getValue());
-                }
-            }
-        }
-
-        return validationBuilder.build();
-    }
-
-    private static List<? extends Value> append(List<? extends Value> values, List<? extends Value> previousValues) {
+    public static List<? extends Value> append(List<? extends Value> values, List<? extends Value> previousValues) {
         if (values == null)
             return previousValues;
 

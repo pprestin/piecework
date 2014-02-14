@@ -51,9 +51,10 @@ public class ValidationCommand extends AbstractCommand<Validation> {
     private final Entity principal;
     private final String validationId;
     private final String fieldName;
+    private final String version;
     private final boolean ignoreThrowException;
 
-    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName) {
+    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName, String version) {
         super(commandExecutor, principal, process, request.getInstance());
         this.deployment = deployment;
         this.task = request.getTask();
@@ -64,10 +65,11 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         this.principal = principal;
         this.validationId = validationId;
         this.fieldName = fieldName;
+        this.version = version;
         this.ignoreThrowException = false;
     }
 
-    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal) {
+    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal, String version) {
         super(commandExecutor, principal, process, request.getInstance());
         this.deployment = deployment;
         this.task = request.getTask();
@@ -78,6 +80,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
         this.submission = submission;
         this.validationId = null;
         this.fieldName = null;
+        this.version = version;
         this.ignoreThrowException = true;
     }
 
@@ -113,7 +116,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
 
         taskService.checkIsActiveIfTaskExists(process, task);
 
-        return validationFactory.validation(process, instance, task, template, submission, principal, throwException);
+        return validationFactory.validation(process, instance, task, template, submission, principal, version, throwException);
     }
 
 }

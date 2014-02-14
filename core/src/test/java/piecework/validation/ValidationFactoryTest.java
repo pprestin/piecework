@@ -15,58 +15,43 @@
  */
 package piecework.validation;
 
-import org.junit.Before;
-import org.junit.Ignore;
-
+import junit.framework.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import piecework.Registry;
-import piecework.identity.IdentityHelper;
-import piecework.model.Entity;
-import piecework.security.data.DataFilterService;
-import piecework.service.IdentityService;
-import piecework.service.TaskService;
-import piecework.submission.SubmissionTemplateFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.common.ManyMap;
+import piecework.model.Field;
+import piecework.model.Message;
+import piecework.model.Value;
+import piecework.test.config.IntegrationTestConfiguration;
+import piecework.util.ValidationUtility;
+import piecework.validation.config.ValidationConfiguration;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author James Renfro
  */
-@Ignore
-@RunWith(MockitoJUnitRunner.class)
-public class ValidationServiceTest {
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes={ValidationConfiguration.class})
+public class ValidationFactoryTest {
 
-    @InjectMocks
-    SubmissionTemplateFactory submissionTemplateFactory;
-
-    @InjectMocks
+    @Autowired
     ValidationFactory validationFactory;
 
-    @Mock
-    Entity principal;
 
-    @Mock
-    Registry registry;
+    @Test
+    public void verifyApplicationContext() {
+        Assert.assertTrue(true);
+    }
 
-    @Mock
-    IdentityHelper helper;
-
-    @Mock
-    DataFilterService dataFilterService;
-
-    @Mock
-    IdentityService identityService;
-
-    @Mock
-    TaskService taskService;
-
-	@Before
-	public void setUp() {
-
-	}
-
-//	@Test
+//    @Test
 //	public void testValidateFirstOfTwoSections() throws StatusCodeError {
 //        Process process = ExampleFactory.exampleProcess();
 //        ProcessInstance instance = null;
@@ -97,7 +82,7 @@ public class ValidationServiceTest {
 //        Assert.assertNotNull(results);
 //        Assert.assertEquals(1, results.size());
 //    }
-
+//
 //    @Test
 //    public void testValidateBothOfTwoSections() throws StatusCodeError {
 //        Process process = ExampleFactory.exampleProcess();

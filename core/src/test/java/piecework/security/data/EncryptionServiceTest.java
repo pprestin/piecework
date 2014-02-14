@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.security;
+package piecework.security.data;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.model.Secret;
 import piecework.security.EncryptionService;
-import piecework.security.concrete.config.EncryptionTestConfiguration;
+import piecework.security.config.EncryptionTestConfiguration;
 
 /**
  * @author James Renfro

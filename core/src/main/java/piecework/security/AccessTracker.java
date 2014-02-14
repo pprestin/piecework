@@ -22,7 +22,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.common.AccessLog;
 import piecework.enumeration.CacheName;
+import piecework.model.AccessEvent;
+import piecework.model.Entity;
+import piecework.model.ProcessInstance;
 import piecework.model.RequestDetails;
+import piecework.persistence.AccessEventRepository;
 import piecework.service.CacheService;
 
 import javax.annotation.PostConstruct;
@@ -34,6 +38,9 @@ import javax.annotation.PostConstruct;
 public class AccessTracker {
 
     private static final Logger LOG = Logger.getLogger(AccessTracker.class);
+
+    @Autowired
+    AccessEventRepository accessEventRepository;
 
     @Autowired
     CacheService cacheService;
@@ -77,6 +84,8 @@ public class AccessTracker {
             LOG.warn("Access attempt " + accessLog.getAccessCount() + " by " + key);
     }
 
-
+    public void track(ProcessInstance instance, String secretId, String key, String reason, Entity principal) {
+        accessEventRepository.save(new AccessEvent(instance, secretId, key, reason, principal));
+    }
 
 }

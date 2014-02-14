@@ -267,6 +267,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </div>\n" +
     "        <div data-ng-switch-when=\"select-one\">\n" +
     "            <select data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-readonly=\"field.readonly\" data-ng-required=\"{{field.required}}\" class=\"form-control\" name=\"{{field.name}}\" >\n" +
+    "                <option></option>" +
     "                <option data-ng-repeat=\"option in field.options\" value=\"{{option.value}}\" data-ng-selected=\"{{option.value == field.value}}\">\n" +
     "                    {{option.label!='' && option.label || option.value}}\n" +
     "                </option>\n" +
@@ -287,7 +288,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </div>\n" +
     "        <textarea data-ng-change=\"onFieldChange(field)\" data-ng-switch-when=\"textarea\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.value\" data-ng-maxlength=\"{{field.maxValueLength}}\" data-ng-minlength=\"{{field.minValueLength}}\" data-ng-pattern=\"/{{field.pattern}}/\" data-ng-readonly=\"{{field.readonly}}\" data-ng-required=\"field.required\" class=\"form-control\" name=\"{{field.name}}\" placeholder=\"{{field.placeholder}}\"></textarea>\n" +
     "        <div data-ng-switch-default>\n" +
-    "            <input data-ng-if=\"field.editable\" data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.values[n-1]\" data-ng-minlength=\"{{field.minValueLength}}\" data-inputmask=\"{{field.mask}}\" data-ng-pattern=\"/{{field.pattern}}/\" data-ng-readonly=\"field.readonly\" class=\"form-control\" type=\"{{field.type}}\" name=\"{{field.name}}\" placeholder=\"{{field.placeholder}}\" size=\"{{field.displayValueLength}}\"/>\n" +
+    "            <input data-ng-if=\"field.editable\" data-ng-change=\"onFieldChange(field)\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.values[n-1]\" data-ng-minlength=\"{{field.minValueLength}}\" data-wf-inputmask=\"{{field.mask}}\" data-ng-pattern=\"/{{field.pattern}}/\" data-ng-readonly=\"field.readonly\" class=\"form-control\" type=\"{{field.type}}\" name=\"{{field.name}}\" placeholder=\"{{field.placeholder}}\" size=\"{{field.displayValueLength}}\"/>\n" +
     "            <input data-ng-if=\"!field.editable\" data-ng-disabled=\"!field.editable\" data-ng-model=\"field.values[n-1]\" data-ng-readonly=\"field.readonly\" class=\"form-control\" type=\"{{field.type}}\" name=\"{{field.name}}\" placeholder=\"{{field.placeholder}}\" size=\"{{field.displayValueLength}}\"/>\n" +
     "        </div>\n" +
     "    </div>\n" +
@@ -336,22 +337,22 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "    </div>");
   $templateCache.put("templates/status.html",
     "   <div class=\"container\"><div class=\"row\" data-ng-show=\"form.container.readonly\" data-ng-switch=\"form.state\">\n" +
-    "        <div data-ng-switch-when=\"assigned\" class=\"alert alert-warning\">\n" +
+    "        <div data-ng-switch-when=\"assigned\" class=\"alert alert-info\">\n" +
     "            <strong>This form is assigned to {{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</strong> - to take action, you will need to assign it to yourself.\n" +
     "            <button data-ng-click=\"claim()\" class=\"btn btn-default pull-right\" type=\"button\">Assign to me</button>\n" +
     "            <div class=\"clearfix\"></div>\n" +
     "        </div>\n" +
-    "        <div data-ng-switch-when=\"unassigned\" class=\"alert alert-warning\">\n" +
+    "        <div data-ng-switch-when=\"unassigned\" class=\"alert alert-info\">\n" +
     "            <strong>This form is not currently assigned</strong> - to modify it, you will need to assign it to yourself.\n" +
     "            <button data-ng-click=\"claim()\" class=\"btn btn-default pull-right\" type=\"button\">Assign to me</button>\n" +
     "            <div class=\"clearfix\"></div>\n" +
     "        </div>\n" +
-    "        <div data-ng-switch-when=\"completed\" class=\"alert alert-warning\"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>\n" +
-    "        <div data-ng-switch-when=\"suspended\" class=\"alert alert-danger\"><strong>This form can no longer be modified</strong> - it has been suspended</div>\n" +
-    "        <div data-ng-switch-when=\"cancelled\" class=\"alert alert-danger\"><strong>This form can no longer be modified</strong> - it has been cancelled</div>\n" +
+    "        <div data-ng-switch-when=\"completed\" class=\"alert alert-info\"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>\n" +
+    "        <div data-ng-switch-when=\"suspended\" class=\"alert alert-info\"><strong>This form can no longer be modified</strong> - it has been suspended</div>\n" +
+    "        <div data-ng-switch-when=\"cancelled\" class=\"alert alert-info\"><strong>This form can no longer be modified</strong> - it has been cancelled</div>\n" +
     "    </div>\n" +
     "    <div data-ng-if=\"form.applicationStatusExplanation != null && form.applicationStatusExplanation != ''\" class=\"row\">\n" +
-    "        <div class=\"alert alert-warning\">\n" +
+    "        <div class=\"alert alert-danger\">\n" +
     "        <button type=\"button\" class=\"close\" data-ng-click=\"form.applicationStatusExplanation = null\" aria-hidden=\"true\">&times;</button>\n" +
     "           {{form.applicationStatusExplanation}}\n" +
     "    </div>\n" +
@@ -478,8 +479,8 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "    <div>\n" +
 //    "        <form class=\"form form-default\" action=\"{{form.action}}\" method=\"POST\" enctype=\"multipart/form-data\" novalidate>\n" +
     "            <div class=\"row\">\n" +
-    "                <div class=\"crumbs col-md-3\">\n" +
-    "                    <ul class=\"breadcrumb-stacked\" data-ng-if=\"form.steps && form.steps.length > 0\">\n" +
+    "                <div class=\"crumbs col-md-3\" data-ng-if=\"form.steps && form.steps.length > 0\">\n" +
+    "                    <ul class=\"breadcrumb-stacked\">\n" +
     "                        <li ng-repeat=\"step in form.steps\" ng-class=\"wizard.isActiveStep(form, step) ? 'active' : ''\">\n" +
     "                            <a ng-click=\"wizard.changeStep(form, step.ordinal)\" href=\"\" class=\"list-group-item-text\">{{step.breadcrumb}}</a>\n" +
     "                        </li>\n" +

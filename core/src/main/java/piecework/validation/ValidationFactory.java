@@ -27,8 +27,7 @@ import piecework.model.*;
 import piecework.model.Process;
 
 import com.google.common.collect.Sets;
-import piecework.security.DataFilterService;
-import piecework.common.ManyMap;
+import piecework.security.data.DataFilterService;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ValidationUtility;
 
@@ -44,20 +43,16 @@ public class ValidationFactory {
     @Autowired
     DataFilterService dataFilterService;
 
-    public Validation validation(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, Entity principal, boolean throwException) throws StatusCodeError {
+    public Validation validation(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, Entity principal, String version, boolean throwException) throws StatusCodeError {
         long time = 0;
 
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
 
-        Map<String, List<Value>> submissionData = submission.getData();
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
-        ManyMap<String, Value> decryptedSubmissionData = dataFilterService.decrypt(submissionData, principal);
-        ManyMap<String, Value> decryptedInstanceData = dataFilterService.decrypt(instanceData, principal);
-
         // Validate the submission
-        Validation validation = ValidationUtility.validate(process, instance, task, submission, template, submissionData, instanceData, decryptedSubmissionData, decryptedInstanceData, throwException);
+        Validation validation = validate(process, instance, task, submission, template, principal, version, throwException);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
@@ -69,6 +64,50 @@ public class ValidationFactory {
         }
 
         return validation;
+    }
+
+    public Validation validate(Process process, ProcessInstance instance, Task task, Submission submission,
+                               SubmissionTemplate template,
+                               Entity principal, String version,
+                               boolean onlyAcceptValidInputs) {
+
+        Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
+        Set<String> allFieldNames = Collections.unmodifiableSet(new HashSet<String>(template.getFieldMap().keySet()));
+        Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
+
+        Map<String, List<Value>> instanceData = instance != null ? instance.getData() : null;
+        Map<String, List<Value>> submissionData = submission.getData();
+
+        Validation.Builder validationBuilder = new Validation.Builder().process(process).instance(instance).submission(submission).task(task);
+        if (fieldRuleMap != null) {
+            Set<Field> fields = fieldRuleMap.keySet();
+            String reason = "User is submitting data that needs to be validated";
+            Map<String, List<Value>> decryptedSubmissionData = dataFilterService.allSubmissionData(instance, submission, principal, reason);
+            Map<String, List<Value>> decryptedInstanceData = null;
+
+            if (task != null)
+                decryptedInstanceData = dataFilterService.authorizedInstanceData(instance, task, fields, principal, version, reason);
+
+            for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
+                Field field = entry.getKey();
+                List<ValidationRule> rules = entry.getValue();
+                ValidationUtility.validateField(validationBuilder, field, rules, fieldNames, submissionData, instanceData, decryptedSubmissionData, decryptedInstanceData, onlyAcceptValidInputs);
+            }
+        }
+
+        if (template.isAnyFieldAllowed()) {
+            if (!submissionData.isEmpty()) {
+                for (Map.Entry<String, List<Value>> entry : submissionData.entrySet()) {
+                    String fieldName = entry.getKey();
+
+                    if (!allFieldNames.contains(fieldName)) {
+                        validationBuilder.formValue(fieldName, entry.getValue());
+                    }
+                }
+            }
+        }
+
+        return validationBuilder.build();
     }
 
 }

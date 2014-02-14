@@ -25,7 +25,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import piecework.Command;
 import piecework.Constants;
-import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.*;
 import piecework.common.ViewContext;
@@ -36,9 +35,10 @@ import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.security.DataFilterService;
+import piecework.security.data.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.settings.UserInterfaceSettings;
 import piecework.task.TaskFactory;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
@@ -55,6 +55,7 @@ import java.util.*;
 public class TaskService {
 
     private static final Logger LOG = Logger.getLogger(TaskService.class);
+    private static final String VERSION = "v1";
 
     @Autowired
     private CommandFactory commandFactory;
@@ -87,7 +88,7 @@ public class TaskService {
     Sanitizer sanitizer;
 
     @Autowired
-    Versions versions;
+    UserInterfaceSettings settings;
 
 
     public void complete(final String rawProcessDefinitionKey, final String rawTaskId, final String rawAction, final Submission rawSubmission, final RequestDetails requestDetails, final Entity principal) throws PieceworkException {
@@ -146,12 +147,12 @@ public class TaskService {
                 break;
             case ATTACH:
                 request = requestService.create(requestDetails, process, instance, task, actionType);
-                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal).execute();
+                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal, VERSION).execute();
                 command = commandFactory.attachment(principal, deployment, validation);
                 break;
             default:
                 request = requestService.create(requestDetails, process, instance, task, actionType);
-                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal).execute();
+                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal, VERSION).execute();
                 command = commandFactory.completeTask(principal, deployment, validation, actionType);
                 break;
         }
@@ -166,14 +167,14 @@ public class TaskService {
             return null;
 
         Entity principal = helper.getPrincipal();
-        return TaskUtility.findTask(identityService, process, instance, taskId, principal, limitToActive, versions.getVersion1());
+        return TaskUtility.findTask(identityService, process, instance, taskId, principal, limitToActive, new ViewContext(settings, VERSION));
     }
 
     /*
      * Returns the first task for the passed instance that the user is allowed to access
      */
     public Task allowedTask(Process process, ProcessInstance instance, Entity principal, boolean limitToActive) throws StatusCodeError {
-        return TaskUtility.findTask(identityService, process, instance, null, principal, limitToActive, versions.getVersion1());
+        return TaskUtility.findTask(identityService, process, instance, null, principal, limitToActive, new ViewContext(settings, VERSION));
     }
 
     public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
@@ -196,10 +197,8 @@ public class TaskService {
         Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
         Set<Process> allowedProcesses = processService.findProcesses(allProcessDefinitionKeys);
 
-        ViewContext version = versions.getVersion1();
-
         TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, wrapWithForm, includeData);
-        TaskPageHandler pageHandler = new TaskPageHandler(rawQueryParameters, taskFilter, sanitizer, version){
+        TaskPageHandler pageHandler = new TaskPageHandler(rawQueryParameters, taskFilter, sanitizer, new ViewContext(settings, VERSION)){
 
             protected Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds) {
                 return deploymentService.getDeploymentMap(deploymentIds);
@@ -241,10 +240,11 @@ public class TaskService {
             if (instance != null) {
                 Set<Task> tasks = instance.getTasks();
                 if (tasks != null) {
+                    ViewContext context = new ViewContext(settings, VERSION);
                     for (Task task : tasks) {
                         if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId)) {
                             Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
-                            return TaskFactory.task(task, new PassthroughSanitizer(), userMap, versions.getVersion1());
+                            return TaskFactory.task(task, new PassthroughSanitizer(), userMap, context);
                         }
                     }
                 }

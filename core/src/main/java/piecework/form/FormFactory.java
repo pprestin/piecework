@@ -20,21 +20,21 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.Versions;
 import piecework.common.ManyMap;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.FormBuildingException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.security.DataFilterService;
+import piecework.security.data.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.ConstraintUtil;
 import piecework.util.FormUtility;
 import piecework.util.ProcessInstanceUtility;
+import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
-import javax.ws.rs.core.MediaType;
 import java.util.*;
 
 /**
@@ -49,12 +49,12 @@ public class FormFactory {
     DataFilterService dataFilterService;
 
     @Autowired
-    Versions versions;
+    UserInterfaceSettings settings;
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous) throws FormBuildingException {
-        ViewContext version = versions.getVersion1();
+    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous, String version) throws FormBuildingException {
+        ViewContext context = new ViewContext(settings, version);
         Activity activity = request.getActivity();
 
         String formInstanceId = request.getRequestId();
@@ -78,7 +78,6 @@ public class FormFactory {
             builder.readonly();
 
         if (activity != null) {
-            ViewContext context = versions.getVersion1();
             FormDisposition formDisposition = FormUtility.disposition(process, deployment, activity, actionType, context, builder);
 
             builder.disposition(formDisposition);
@@ -90,11 +89,22 @@ public class FormFactory {
             // but just in case
             boolean includeInstanceData = !anonymous;
             Map<String, List<Value>> data;
+            Set<Field> fields = SecurityUtility.fields(activity, action);
+
+            if (anonymous || task == null)
+                data = dataFilterService.allValidationData(validation, fields);
+            else {
+                // This reason will only be used if the user actually has been assigned the task -- the dataFilterService
+                // will verify that
+                String reason = "User is viewing an assigned task: " + task.getTaskInstanceId();
+                data = dataFilterService.authorizedInstanceAndValidationData(instance, validation, task, fields, principal, version, reason);
+            }
+
             // If an activity is set up to allow "any" input then it also has to be provided with the full set of data currently stored for the instance
             // but just to be safe, exclude any restricted data that could have been attached
-            data = dataFilterService.filter(fieldMap, instance, task, principal, validation, includeRestrictedData, includeInstanceData, activity.isAllowAny());
+//            data = dataFilterService.filter(fieldMap, instance, task, principal, validation, includeRestrictedData, includeInstanceData, activity.isAllowAny());
 
-            Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, version, unmodifiable);
+            Map<String, Field> decoratedFieldMap = decorate(fieldMap, processDefinitionKey, processInstanceId, data, context, unmodifiable);
             container(builder, data, decoratedFieldMap, action);
             builder.data(data);
             builder.allowAttachments(activity.isAllowAttachments());
@@ -113,8 +123,8 @@ public class FormFactory {
         if (validation != null && validation.getResults() != null && !validation.getResults().isEmpty())
             messages.putAll(validation.getResults());
 
-        builder.taskSubresources(processDefinitionKey, task, version)
-                .instance(instance, version)
+        builder.taskSubresources(processDefinitionKey, task, context)
+                .instance(instance, context)
                 .messages(messages)
                 .explanation(explanation)
                 .anonymous(anonymous);
@@ -122,7 +132,7 @@ public class FormFactory {
         if (actionType != ActionType.COMPLETE && instance != null)
             builder.applicationStatusExplanation(instance.getApplicationStatusExplanation());
 
-        return builder.build(version);
+        return builder.build(context);
     }
 
     private void container(Form.Builder builder, Map<String, List<Value>> data, Map<String, Field> decoratedFieldMap, Action action) {

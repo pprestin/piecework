@@ -173,6 +173,13 @@ public class Validation implements Serializable {
         	return this;
         }
 
+        public Builder data(Map<String, List<Value>> data) {
+            if (data != null && !data.isEmpty()) {
+                this.data.putAll(data);
+            }
+            return this;
+        }
+
         public Builder data(ManyMap<String, Value> data) {
             if (data != null && !data.isEmpty()) {
                 this.data.putAll(data);

@@ -91,6 +91,11 @@ public class CustomLdapUserDetailsService implements UserDetailsService {
             DirContextOperations userData = userSearch.searchForUser(username);
             String actualUserName = userData.getStringAttribute(ldapSettings.getLdapGroupMemberUserName());
 
+            if (StringUtils.isEmpty(actualUserName)) {
+                LOG.info("No property ldap.group.member.username defined, assuming that person username attribute is the same as the group member attribute");
+                actualUserName = username;
+            }
+
             userDetails = userDetailsMapper.mapUserFromContext(userData, username,
                     authoritiesPopulator.getGrantedAuthorities(userData, actualUserName));
 

@@ -13,45 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.command.config;
+package piecework.validation.config;
 
-import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import piecework.ServiceLocator;
-import piecework.engine.Mediator;
+import piecework.Versions;
 import piecework.security.config.DataFilterTestConfiguration;
 import piecework.security.data.DataFilterService;
-import piecework.service.TaskService;
-import piecework.submission.config.SubmissionConfiguration;
+import piecework.security.config.EncryptionTestConfiguration;
 import piecework.validation.ValidationFactory;
 
 /**
  * @author James Renfro
  */
 @Configuration
-@ComponentScan(basePackages = "piecework.command")
-@Import({ SubmissionConfiguration.class, DataFilterTestConfiguration.class })
-public class CommandConfiguration {
-
-    @Bean
-    public Mediator mediator() {
-        return new Mediator();
-    }
-
-    @Bean
-    public ServiceLocator serviceLocator() {
-        ServiceLocator serviceLocator = new ServiceLocator();
-        TaskService mockTaskService = Mockito.mock(TaskService.class);
-        serviceLocator.setService(TaskService.class, mockTaskService);
-        return serviceLocator;
-    }
+@Import({DataFilterTestConfiguration.class})
+public class ValidationConfiguration {
 
     @Bean
     public ValidationFactory validationFactory() {
-       return new ValidationFactory();
+        return new ValidationFactory();
+    }
+
+    @Bean
+    public Versions versions() {
+        return new Versions();
     }
 
 }

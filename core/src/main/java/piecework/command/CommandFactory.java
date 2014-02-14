@@ -139,19 +139,19 @@ public class CommandFactory {
         return new UpdateValueCommand(commandExecutor, principal, task, validation);
     }
 
-    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal) {
+    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal, String version) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, submission, principal);
+        return new ValidationCommand(commandExecutor, process, deployment, request, submission, principal, version);
     }
 
-    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal) {
+    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String version) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, null, null);
+        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, null, null, version);
     }
 
-    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName) {
+    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName, String version) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, validationId, fieldName);
+        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, validationId, fieldName, version);
     }
 
 }

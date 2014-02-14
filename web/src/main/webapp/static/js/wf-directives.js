@@ -499,7 +499,7 @@ angular.module('wf.directives',
                         if (typeof(validation) !== 'undefined' && validation[field.name] != null) {
                             field.messages = validation[field.name];
                             field.cssClass = "has-error";
-                            if (field.parent != null) {
+                            if (field.parent != null && field.parent.ordinal < form.activeStepOrdinal) {
                                 form.activeStepOrdinal = field.parent.ordinal;
                                 field.parent.breadcrumbCssClass = "invalid";
                             }
@@ -716,8 +716,8 @@ angular.module('wf.directives',
                                     }
                                 }
 
-                                if (form.actionType == 'VIEW')
-                                    form.activeStepOrdinal = 1;
+//                                if (form.actionType == 'VIEW')
+//                                    form.activeStepOrdinal = 1;
 
                                 scope.$root.form = form;
                                 scope.$root.$broadcast('wfEvent:form-loaded', form);

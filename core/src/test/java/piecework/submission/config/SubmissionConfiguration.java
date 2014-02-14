@@ -16,22 +16,16 @@
 package piecework.submission.config;
 
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.owasp.validator.html.Policy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import piecework.common.UuidGenerator;
-import piecework.model.Submission;
 import piecework.model.User;
-import piecework.persistence.ActivityRepository;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.SubmissionRepository;
 import piecework.persistence.config.MockRepositoryConfiguration;
 import piecework.security.Sanitizer;
-import piecework.security.concrete.UserInputSanitizer;
+import piecework.security.data.UserInputSanitizer;
 import piecework.service.IdentityService;
 import piecework.service.SubmissionStorageService;
 import piecework.submission.SubmissionHandlerRegistry;

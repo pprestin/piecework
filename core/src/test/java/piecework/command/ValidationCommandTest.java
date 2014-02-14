@@ -20,24 +20,19 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import piecework.authorization.AuthorizationRole;
 import piecework.command.config.CommandConfiguration;
 import piecework.common.ManyMap;
-import piecework.enumeration.ActionType;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.submission.config.SubmissionConfiguration;
 import piecework.validation.Validation;
 
 import java.util.Map;
 
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
 
 /**
  * @author James Renfro
@@ -62,7 +57,7 @@ public class ValidationCommandTest {
                 .when(mockRequest).getActivity();
 
         ManyMap<String, String> data = new ManyMap<String, String>();
-        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, data, Map.class, mockPrincipal).execute();
+        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, data, Map.class, mockPrincipal, "v1").execute();
 
         Assert.assertNotNull(validation);
     }
@@ -80,7 +75,7 @@ public class ValidationCommandTest {
         Mockito.doReturn(mockActivity)
                 .when(mockRequest).getActivity();
 
-        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, mockMultipartBody, MultipartBody.class, mockPrincipal).execute();
+        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, mockMultipartBody, MultipartBody.class, mockPrincipal, "v1").execute();
 
         Assert.assertNotNull(validation);
     }
@@ -97,7 +92,7 @@ public class ValidationCommandTest {
         Mockito.doReturn(mockActivity)
                .when(mockRequest).getActivity();
 
-        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, mockSubmission, mockPrincipal).execute();
+        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, mockSubmission, mockPrincipal, "v1").execute();
 
         Assert.assertNotNull(validation);
     }

@@ -58,6 +58,7 @@ import java.util.Map;
 public abstract class AbstractFormResource {
 
     private static final Logger LOG = Logger.getLogger(AbstractFormResource.class);
+    private static final String VERSION = "v1";
 
     @Autowired
     AccessTracker accessTracker;
@@ -163,7 +164,7 @@ public abstract class AbstractFormResource {
 
 
         // When returning the JSON for a submission it's necessary to rerun the validation
-        Validation validation = commandFactory.validation(process, process.getDeployment(), request, submission, helper.getPrincipal()).execute();
+        Validation validation = commandFactory.validation(process, process.getDeployment(), request, submission, helper.getPrincipal(), VERSION).execute();
 
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
@@ -309,7 +310,7 @@ public abstract class AbstractFormResource {
         Entity principal = helper.getPrincipal();
         try {
             ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-            Form form = formFactory.form(process, deployment, request, actionType, principal, validation, explanation, includeRestrictedData, isAnonymous());
+            Form form = formFactory.form(process, deployment, request, actionType, principal, validation, explanation, includeRestrictedData, isAnonymous(), VERSION);
             FormDisposition formDisposition = form.getDisposition();
 
             if (mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) {

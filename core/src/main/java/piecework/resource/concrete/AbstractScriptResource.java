@@ -44,6 +44,7 @@ import java.util.List;
  */
 public abstract class AbstractScriptResource {
 
+    private static final String VERSION = "v1";
     private static final Logger LOG = Logger.getLogger(AbstractScriptResource.class);
 
     @Autowired
@@ -81,7 +82,7 @@ public abstract class AbstractScriptResource {
             FormRequest request = requestService.create(requestDetails, process);
             ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
             boolean includeRestrictedData = false;
-            Form form = formFactory.form(process, deployment, request, ActionType.CREATE, principal, null, null, includeRestrictedData, isAnonymous());
+            Form form = formFactory.form(process, deployment, request, ActionType.CREATE, principal, null, null, includeRestrictedData, isAnonymous(), VERSION);
             return form;
         } catch (FormBuildingException fbe) {
             LOG.error("Caught form building exception", fbe);

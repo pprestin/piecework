@@ -43,7 +43,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.AttachmentRepository;
 import piecework.persistence.ProcessInstanceRepository;
-import piecework.security.DataFilterService;
+import piecework.security.data.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.settings.UserInterfaceSettings;
@@ -63,8 +63,8 @@ import java.util.*;
 @Service
 public class ProcessInstanceService {
 
-    private static final String VERSION = "v1";
     private static final Logger LOG = Logger.getLogger(ProcessInstanceService.class);
+    private static final String VERSION = "v1";
 
     @Autowired
     AttachmentRepository attachmentRepository;
@@ -129,7 +129,7 @@ public class ProcessInstanceService {
             throw new ForbiddenError(Constants.ExceptionCodes.task_required);
 
         FormRequest request = requestService.create(requestDetails, process, instance, task, ActionType.ATTACH);
-        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal).execute();
+        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal, VERSION).execute();
 
         return commandFactory.attachment(principal, deployment, validation).execute();
     }
@@ -160,7 +160,7 @@ public class ProcessInstanceService {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
         FormRequest request = requestService.create(requestDetails, process);
-        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal).execute();
+        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal, VERSION).execute();
 
         return commandFactory.createInstance(principal, validation).execute();
     }
@@ -175,7 +175,7 @@ public class ProcessInstanceService {
     }
 
     public void createSubTask(Entity principal, Process process, ProcessInstance instance, Task task, String parentTaskId, SubmissionTemplate template, Submission submission) throws PieceworkException {
-        Validation validation = validationFactory.validation(process, instance, task, template, submission, principal, true);
+        Validation validation = validationFactory.validation(process, instance, task, template, submission, principal, VERSION, true);
         ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
         commandFactory.createsubtask(principal, process, instance, deployment, parentTaskId, validation).execute();
     }
@@ -395,7 +395,7 @@ public class ProcessInstanceService {
         ProcessDeployment deployment = deploymentService.read(process, instance);
         Task task = taskService.allowedTask(process, instance, principal, true);
         FormRequest request = requestService.create(requestDetails, process, instance, task, ActionType.UPDATE);
-        Validation validation = commandFactory.validation(process, deployment, request, object, type, principal, null, fieldName).execute();
+        Validation validation = commandFactory.validation(process, deployment, request, object, type, principal, null, fieldName, VERSION).execute();
 
         return commandFactory.updateValue(principal, task, validation).execute();
     }

@@ -15,7 +15,6 @@
  */
 package piecework.test.config;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.owasp.validator.html.Policy;
 import org.springframework.cache.CacheManager;
@@ -25,19 +24,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import piecework.ServiceLocator;
 import piecework.Versions;
 import piecework.common.UuidGenerator;
 import piecework.config.ProviderConfiguration;
 import piecework.engine.ProcessEngineFacade;
-import piecework.identity.DebugIdentityService;
 import piecework.identity.DebugUserDetailsService;
 import piecework.identity.IdentityHelper;
 import piecework.persistence.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
-import piecework.security.concrete.UserInputSanitizer;
+import piecework.security.data.UserInputSanitizer;
 import piecework.settings.SecuritySettings;
 
 import java.net.URL;
@@ -76,11 +73,6 @@ public class IntegrationTestConfiguration {
     public DebugUserDetailsService debugUserDetailsService(Environment environment, ServiceLocator serviceLocator) {
         return new DebugUserDetailsService(environment, serviceLocator);
     }
-
-//    @Bean
-//    public DebugIdentityService debugIdentityService(UserDetailsService userDetailsService) {
-//        return new DebugIdentityService(userDetailsService);
-//    }
 
     @Bean
     public ProcessEngineFacade processEngineFacade() {
