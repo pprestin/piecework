@@ -131,18 +131,23 @@ public class DataFilterService {
      * who submitted the data.
      *
      *
+     *
      * @param validation containing the data
      * @param fields
+     * @param isAllowAny
      * @return Map of validation data that
      */
-    public Map<String, List<Value>> allValidationData(Validation validation, Set<Field> fields) {
+    public Map<String, List<Value>> allValidationData(Validation validation, Set<Field> fields, boolean isAllowAny) {
         Map<String, List<Value>> validationData = validation != null ? validation.getData() : null;
+        if (isAllowAny)
+            return validationData;
+
         // Need to include restricted fields since they are submitted by the requesting user
-        DataFilter limitFieldsFilter = new LimitFieldsFilter(fields, true);
+        DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
         return SecurityUtility.filter(validationData, limitFieldsFilter);
     }
 
-    public Map<String, List<Value>> authorizedInstanceData(ProcessInstance instance, Task task, Set<Field> fields, Entity principal, String version, String reason) {
+    public Map<String, List<Value>> authorizedInstanceData(ProcessInstance instance, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : null;
 
         DataFilter decryptValuesFilter;
@@ -151,7 +156,7 @@ public class DataFilterService {
         else
             decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
 
-        DataFilter limitFieldsFilter = new LimitFieldsFilter(fields, true);
+        DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
         DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, fields, settings, principal, version);
         return SecurityUtility.filter(instanceData, limitFieldsFilter, decryptValuesFilter, decorateValuesFilter);
     }
@@ -164,9 +169,10 @@ public class DataFilterService {
      * @param validation
      * @param task
      * @param fields
-     *@param principal  @return
+     * @param principal  @return
+     * @param isAllowAny
      */
-    public Map<String, List<Value>> authorizedInstanceAndValidationData(ProcessInstance instance, Validation validation, Task task, Set<Field> fields, Entity principal, String version, String reason) {
+    public Map<String, List<Value>> authorizedInstanceAndValidationData(ProcessInstance instance, Validation validation, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
         ManyMap<String, Value> combinedData = SecurityUtility.combinedData(instance, validation);
 
         DataFilter decryptValuesFilter;
@@ -175,7 +181,7 @@ public class DataFilterService {
         else
             decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
 
-        DataFilter limitFieldsFilter = new LimitFieldsFilter(fields, true);
+        DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
         DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, fields, settings, principal, version);
         return SecurityUtility.filter(combinedData, limitFieldsFilter, decryptValuesFilter, decorateValuesFilter);
     }

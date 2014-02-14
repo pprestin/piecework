@@ -91,13 +91,16 @@ public class FormFactory {
             Map<String, List<Value>> data;
             Set<Field> fields = SecurityUtility.fields(activity, action);
 
+            boolean isAllowAny = activity.isAllowAny();
+
             if (anonymous || task == null)
-                data = dataFilterService.allValidationData(validation, fields);
+                data = dataFilterService.allValidationData(validation, fields, isAllowAny);
             else {
                 // This reason will only be used if the user actually has been assigned the task -- the dataFilterService
                 // will verify that
                 String reason = "User is viewing an assigned task: " + task.getTaskInstanceId();
-                data = dataFilterService.authorizedInstanceAndValidationData(instance, validation, task, fields, principal, version, reason);
+
+                data = dataFilterService.authorizedInstanceAndValidationData(instance, validation, task, fields, principal, version, reason, isAllowAny);
             }
 
             // If an activity is set up to allow "any" input then it also has to be provided with the full set of data currently stored for the instance
