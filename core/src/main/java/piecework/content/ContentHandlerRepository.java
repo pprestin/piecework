@@ -79,6 +79,11 @@ public class ContentHandlerRepository implements ContentRepository {
         if (StringUtils.isEmpty(location))
             return null;
 
+        String contentReceiverKey = null;
+
+        if (StringUtils.isEmpty(contentReceiverKey) && StringUtils.isNotEmpty(process.getContentReceiverKey()))
+            contentReceiverKey = process.getContentReceiverKey();
+
         String path;
 
         if (StringUtils.isNotEmpty(base))
@@ -87,7 +92,7 @@ public class ContentHandlerRepository implements ContentRepository {
             path = location;
 
         Scheme scheme = PathUtility.findScheme(path);
-        List<ContentProvider> contentProviders = contentHandlerRegistry.providers(scheme);
+        List<ContentProvider> contentProviders = contentHandlerRegistry.providers(scheme, contentReceiverKey);
 
         for (ContentProvider contentProvider : contentProviders) {
             try {
@@ -103,7 +108,7 @@ public class ContentHandlerRepository implements ContentRepository {
     }
 
     @Override
-    public Content save(Process process, Content content) throws IOException {
+    public Content save(Process process, Content content, Entity principal) throws IOException {
         String contentReceiverKey = null;
 
         if (content.getMetadata() != null)
@@ -114,7 +119,7 @@ public class ContentHandlerRepository implements ContentRepository {
 
         // Return the result from the specified receiver (or primary receiver if key is null)
         ContentReceiver contentReceiver = contentHandlerRegistry.contentReceiver(contentReceiverKey);
-        Content saved = contentReceiver.save(content);
+        Content saved = contentReceiver.save(content, principal);
         // Backup receivers should also be saved to, but IOExceptions from them
         // should not bubble up
         Set<ContentReceiver> backupReceivers = contentHandlerRegistry.backupReceivers();
@@ -122,12 +127,16 @@ public class ContentHandlerRepository implements ContentRepository {
             for (ContentReceiver backupReceiver : backupReceivers) {
                 try {
                     // Don't bother to get back the result, since it won't be returned
-                    backupReceiver.save(content);
+                    backupReceiver.save(content, principal);
                 } catch (IOException ioe) {
                     LOG.error("Error saving content to a backup receiver");
                 }
             }
         }
         return saved;
+    }
+
+    public ContentHandlerRegistry getContentHandlerRegistry() {
+        return contentHandlerRegistry;
     }
 }

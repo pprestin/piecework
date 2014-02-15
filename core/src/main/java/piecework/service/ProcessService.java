@@ -344,7 +344,8 @@ public class ProcessService {
                .participantSummary(update.getParticipantSummary())
                .processSummary(update.getProcessSummary())
                .allowAnonymousSubmission(update.isAnonymousSubmissionAllowed())
-               .assignmentRestrictedToCandidates(update.isAssignmentRestrictedToCandidates());
+               .assignmentRestrictedToCandidates(update.isAssignmentRestrictedToCandidates())
+               .contentReceiverKey(update.getContentReceiverKey());
 
         return persist(builder.build());
     }

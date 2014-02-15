@@ -51,7 +51,7 @@ public class MultipartSubmissionHandler extends AbstractSubmissionHandler<Multip
                 if (mediaType == null)
                     continue;
 
-                handleAllContentTypes(template, submissionBuilder, attachment, actingAsId);
+                handleAllContentTypes(template, submissionBuilder, attachment, actingAsId, principal);
             }
         }
         return submissionBuilder.build();

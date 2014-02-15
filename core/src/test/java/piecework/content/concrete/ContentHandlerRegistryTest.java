@@ -15,18 +15,12 @@
  */
 package piecework.content.concrete;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.junit.Assert;
 import org.junit.Test;
-import piecework.content.ContentProvider;
-import piecework.content.ContentProviderVoter;
-import piecework.content.ContentReceiver;
-import piecework.content.ContentReceiverVoter;
-import piecework.enumeration.ContentHandlerPriority;
+import piecework.content.*;
+import piecework.content.stubs.*;
 import piecework.enumeration.Scheme;
-import piecework.model.*;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -69,6 +63,16 @@ public class ContentHandlerRegistryTest {
     }
 
     @Test
+    public void testContentProviderByKey() {
+        ContentHandlerRegistry registry = new ContentHandlerRegistry(new TestContentProviderVoter(), null);
+        registry.registerProviders(new InMemoryContentProviderReceiver(), new GridFSContentProviderReceiver(), new TestKeyContentProvider());
+        registry.init();
+        List<ContentProvider> contentProviders = registry.providers(Scheme.REPOSITORY, "some-key");
+        Assert.assertEquals(1, contentProviders.size());
+        Assert.assertTrue(contentProviders.get(0) instanceof TestKeyContentProvider);
+    }
+
+    @Test
     public void testContentReceiver() {
         ContentHandlerRegistry registry = new ContentHandlerRegistry(null, new TestContentReceiverVoter());
         registry.registerReceivers(new InMemoryContentProviderReceiver(), new GridFSContentProviderReceiver(), new TestExternalContentReceiver());
@@ -80,6 +84,15 @@ public class ContentHandlerRegistryTest {
         Assert.assertTrue(backupReceiver instanceof GridFSContentProviderReceiver);
     }
 
+    @Test
+    public void testContentReceiverByKey() {
+        ContentHandlerRegistry registry = new ContentHandlerRegistry(null, new TestContentReceiverVoter());
+        registry.registerReceivers(new InMemoryContentProviderReceiver(), new GridFSContentProviderReceiver(), new TestKeyContentReceiver());
+        registry.init();
+        ContentReceiver contentReceiver = registry.contentReceiver("some-key");
+        Assert.assertTrue(contentReceiver instanceof TestKeyContentReceiver);
+    }
+
     @Test(expected = RuntimeException.class)
     public void testUninitializedRegistry() {
         ContentHandlerRegistry registry = new ContentHandlerRegistry(new TestContentProviderVoter(), null);
@@ -87,61 +100,5 @@ public class ContentHandlerRegistryTest {
         registry.providers(Scheme.REPOSITORY);
     }
 
-
-    public class TestExternalContentProvider implements ContentProvider {
-
-        @Override
-        public Content findByPath(piecework.model.Process process, String base, String location) throws IOException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public Scheme getScheme() {
-            return Scheme.REPOSITORY;
-        }
-
-        @Override
-        public String getKey() {
-            return null;
-        }
-    }
-
-    public class TestExternalContentReceiver implements ContentReceiver {
-
-        @Override
-        public Content save(Content content) throws IOException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public String getKey() {
-            return null;
-        }
-
-    }
-
-    public class TestContentProviderVoter implements ContentProviderVoter {
-
-        @Override
-        public <P extends ContentProvider> ContentHandlerPriority vote(P provider) {
-            if (provider instanceof TestExternalContentProvider)
-                return ContentHandlerPriority.PRIMARY;
-            if (provider instanceof InMemoryContentProviderReceiver)
-                return ContentHandlerPriority.BACKUP;
-            return ContentHandlerPriority.IGNORE;
-        }
-
-    }
-
-    public class TestContentReceiverVoter implements ContentReceiverVoter {
-        @Override
-        public <R extends ContentReceiver> ContentHandlerPriority vote(R receiver) {
-            if (receiver instanceof TestExternalContentReceiver)
-                return ContentHandlerPriority.PRIMARY;
-            if (receiver instanceof GridFSContentProviderReceiver)
-                return ContentHandlerPriority.BACKUP;
-            return ContentHandlerPriority.IGNORE;
-        }
-    }
 
 }

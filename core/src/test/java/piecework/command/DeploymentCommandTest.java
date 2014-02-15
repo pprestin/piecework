@@ -26,10 +26,8 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.exception.BadRequestError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
-import piecework.model.Content;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessDeployment;
-import piecework.model.ProcessDeploymentVersion;
 import piecework.persistence.ActivityRepository;
 import piecework.persistence.ContentRepository;
 import piecework.persistence.DeploymentRepository;
@@ -56,6 +54,9 @@ public class DeploymentCommandTest {
 
     @Mock
     DeploymentRepository deploymentRepository;
+
+    @Mock
+    Entity principal;
 
     @Mock
     ProcessEngineFacade facade;
@@ -122,7 +123,7 @@ public class DeploymentCommandTest {
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
 
-        verify(contentRepository).save(eq(process), any(Content.class));
+        verify(contentRepository).save(eq(process), any(Content.class), any(Entity.class));
         verify(facade).deploy(eq(process), eq(processDeployment), any(Content.class));
         verify(processRepository).save(any(Process.class));
     }

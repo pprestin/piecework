@@ -19,10 +19,14 @@ import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
+import org.apache.poi.util.IOUtils;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import piecework.model.Content;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
 
@@ -69,22 +73,27 @@ public class ContentUtility {
         if (entity == null)
             return null;
 
-        String fileId = uri.toString();
+        String url = uri.toString();
         String originalFileName = FileUtility.resolveFilenameFromPath(uri.getPath());
         String contentType = entity.getContentType() != null ? entity.getContentType().getValue() : "application/octet-stream";
 
+        InputStream inputStream = entity.getContent();
+
+        if (inputStream != null) {
+            inputStream = new BufferedInputStream(inputStream);
+//            inputStream = new ByteArrayInputStream(IOUtils.toByteArray(inputStream));
+        }
+
         return new Content.Builder()
-                .contentId(fileId)
+                .contentId(url)
                 .contentType(contentType)
                 .filename(originalFileName)
-                .location(null)
-                .inputStream(entity.getContent())
+                .location(url)
+                .inputStream(inputStream)
                 .lastModified(lastModified)
                 .length(entity.getContentLength())
                 .md5(eTag)
                 .build();
     }
-
-
 
 }

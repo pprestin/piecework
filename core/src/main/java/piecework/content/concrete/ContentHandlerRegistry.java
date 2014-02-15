@@ -15,6 +15,7 @@
  */
 package piecework.content.concrete;
 
+import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.common.ManyMap;
 import piecework.content.ContentProvider;
@@ -65,6 +66,12 @@ public class ContentHandlerRegistry {
         return storage.providers(scheme);
     }
 
+    public List<ContentProvider> providers(Scheme scheme, String key) {
+        if (storage == null)
+            throw new RuntimeException("Storage is not initialized");
+        return storage.providers(scheme, key);
+    }
+
     public ContentReceiver primaryReceiver() {
         if (storage == null)
             throw new RuntimeException("Storage is not initialized");
@@ -75,12 +82,6 @@ public class ContentHandlerRegistry {
         if (storage == null)
             throw new RuntimeException("Storage is not initialized");
         return storage.receiver(key);
-    }
-
-    public List<ContentProvider> contentProviders(Scheme scheme, String key) {
-        if (storage == null)
-            throw new RuntimeException("Storage is not initialized");
-        return storage.providers(scheme, key);
     }
 
     public Set<ContentReceiver> backupReceivers() {
@@ -196,7 +197,14 @@ public class ContentHandlerRegistry {
         public List<ContentProvider> providers(Scheme scheme, String key) {
             if (key == null || contentProviderKeyMap == null || contentProviderKeyMap.isEmpty())
                 return providers(scheme);
-            return Collections.singletonList(contentProviderKeyMap.get(key));
+            ContentProvider contentProvider = scheme == Scheme.REPOSITORY ? contentProviderKeyMap.get(key) : null;
+            List<ContentProvider> allProviders = new ArrayList<ContentProvider>();
+            if (contentProvider != null)
+                allProviders.add(contentProvider);
+            List<ContentProvider> otherProviders = providers(scheme);
+            if (otherProviders != null && !otherProviders.isEmpty())
+                allProviders.addAll(otherProviders);
+            return allProviders;
         }
 
         public List<ContentProvider> providers(Scheme scheme) {
@@ -209,6 +217,7 @@ public class ContentHandlerRegistry {
         public ContentReceiver receiver(String key) {
             if (key == null || contentReceiverKeyMap == null || contentReceiverKeyMap.isEmpty() || !contentReceiverKeyMap.containsKey(key))
                 return primaryReceiver();
+
             return contentReceiverKeyMap.get(key);
         }
 

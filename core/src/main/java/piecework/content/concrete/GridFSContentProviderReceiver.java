@@ -51,7 +51,7 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     }
 
     @Override
-    public Content save(Content content) throws IOException {
+    public Content save(Content content, Entity principal) throws IOException {
         BasicDBObject metadata = new BasicDBObject();
         metadata.put("originalFilename", content.getName());
 

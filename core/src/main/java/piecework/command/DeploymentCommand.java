@@ -98,7 +98,7 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
                     .build();
 
             try {
-                contentRepository.save(process, content);
+                contentRepository.save(process, content, principal);
             } catch (IOException ioe) {
                 LOG.error("Error saving to content repo", ioe);
                 throw new InternalServerError(Constants.ExceptionCodes.attachment_could_not_be_saved);

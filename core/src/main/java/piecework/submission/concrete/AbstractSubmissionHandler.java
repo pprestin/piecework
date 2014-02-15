@@ -16,6 +16,7 @@
 package piecework.submission.concrete;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +68,7 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
 
     protected abstract Submission handleInternal(T data, SubmissionTemplate template, Entity principal) throws PieceworkException;
 
-    protected void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws MisconfiguredProcessException, StatusCodeError {
+    protected void handlePlaintext(SubmissionTemplate template, Submission.Builder submissionBuilder, Attachment attachment, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String contentType = MediaType.TEXT_PLAIN;
         if (LOG.isDebugEnabled())
             LOG.debug("Processing multipart with content type " + contentType + " and content id " + attachment.getContentId());
@@ -75,12 +76,12 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         String name = sanitizer.sanitize(attachment.getDataHandler().getName());
         String value = sanitizer.sanitize(attachment.getObject(String.class));
 
-        if (!submissionStorageService.store(template, submissionBuilder, name, value, userId)) {
+        if (!submissionStorageService.store(template, submissionBuilder, name, value, actingAsId, principal)) {
             LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
         }
     }
 
-    protected void handleAllContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, org.apache.cxf.jaxrs.ext.multipart.Attachment attachment, String userId) throws MisconfiguredProcessException, StatusCodeError {
+    protected void handleAllContentTypes(SubmissionTemplate template, Submission.Builder submissionBuilder, Attachment attachment, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         ContentDisposition contentDisposition = attachment.getContentDisposition();
         MediaType mediaType = attachment.getContentType();
 
@@ -92,14 +93,14 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
                 if (LOG.isDebugEnabled())
                     LOG.debug("Processing multipart with content type " + contentType + " content id " + attachment.getContentId() + " and filename " + filename);
                 try {
-                    if (!submissionStorageService.store(template, submissionBuilder, name, filename, userId, attachment.getDataHandler().getInputStream(), contentType)) {
+                    if (!submissionStorageService.store(template, submissionBuilder, name, filename, actingAsId, attachment.getDataHandler().getInputStream(), contentType, principal)) {
                         LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                     }
                 } catch (IOException e) {
                     LOG.warn("Unable to store file with content type " + contentType + " and filename " + filename);
                 }
             } else if (mediaType.equals(MediaType.TEXT_PLAIN_TYPE)) {
-                handlePlaintext(template, submissionBuilder, attachment, userId);
+                handlePlaintext(template, submissionBuilder, attachment, actingAsId, principal);
             }
         }
     }

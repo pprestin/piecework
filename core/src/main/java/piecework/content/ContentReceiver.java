@@ -1,6 +1,7 @@
 package piecework.content;
 
 import piecework.model.Content;
+import piecework.model.Entity;
 
 import java.io.IOException;
 
@@ -9,7 +10,7 @@ import java.io.IOException;
  */
 public interface ContentReceiver {
 
-    Content save(Content content) throws IOException;
+    Content save(Content content, Entity principal) throws IOException;
 
     String getKey();
 

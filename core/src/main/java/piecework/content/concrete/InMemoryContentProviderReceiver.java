@@ -56,7 +56,7 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
-    public synchronized Content save(Content content) throws IOException {
+    public synchronized Content save(Content content, Entity principal) throws IOException {
         String contentId = content.getContentId() == null ? UUID.randomUUID().toString() : content.getContentId();
 
         long contentLength = 0;

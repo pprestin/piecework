@@ -19,6 +19,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import junit.framework.Assert;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.message.BasicHeader;
@@ -147,11 +148,14 @@ public class ContentUtilityTest {
 
         Content content = ContentUtility.toContent(uri, entity, testDate, eTag);
 
+        String expected = "test";
+        String actual = IOUtils.toString(content.getInputStream());
+
         Assert.assertEquals(id, content.getContentId());
         Assert.assertEquals(contentType, content.getContentType());
         Assert.assertEquals(filename, content.getFilename());
-        Assert.assertNull(content.getLocation());
-        Assert.assertEquals(inputStream, content.getInputStream());
+        Assert.assertEquals("http://testserver.com/some/file.html", content.getLocation());
+        Assert.assertEquals(expected, actual);
         Assert.assertEquals(testDate, content.getLastModified());
         Assert.assertEquals(contentLength, content.getLength());
         Assert.assertEquals(eTag, content.getMd5());

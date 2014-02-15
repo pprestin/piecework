@@ -17,9 +17,7 @@ package piecework.submission.concrete;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
-import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 import piecework.model.Submission;
 import piecework.submission.SubmissionTemplate;
@@ -49,7 +47,7 @@ public class FormValueSubmissionHandler extends AbstractSubmissionHandler<Map<St
                 if (rawValues != null) {
                     for (String rawValue : rawValues) {
                         String value = sanitizer.sanitize(rawValue);
-                        if (!submissionStorageService.store(template, submissionBuilder, name, value, actingAsId)) {
+                        if (!submissionStorageService.store(template, submissionBuilder, name, value, actingAsId, principal)) {
                             LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                         }
                     }

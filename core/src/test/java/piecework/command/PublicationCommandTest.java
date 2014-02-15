@@ -60,6 +60,9 @@ public class PublicationCommandTest {
     DeploymentRepository deploymentRepository;
 
     @Mock
+    Entity principal;
+
+    @Mock
     ProcessEngineFacade facade;
 
     @Mock
@@ -117,7 +120,7 @@ public class PublicationCommandTest {
         PublicationCommand publication = new PublicationCommand(null, process, deploymentId);
         publication.execute(deploymentRepository, processRepository);
 
-        verify(contentRepository).save(process, any(Content.class));
+        verify(contentRepository).save(process, any(Content.class), principal);
         verify(facade).deploy(eq(process), eq(processDeployment), any(Content.class));
         verify(processRepository).save(any(Process.class));
     }

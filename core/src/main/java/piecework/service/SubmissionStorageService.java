@@ -64,11 +64,11 @@ public class SubmissionStorageService {
             encryptionService = new PassthroughEncryptionService();
     }
 
-    public boolean store(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId) throws MisconfiguredProcessException, StatusCodeError {
-        return store(template, submissionBuilder, name, value, userId, null, MediaType.TEXT_PLAIN);
+    public boolean store(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+        return store(template, submissionBuilder, name, value, actingAsId, null, MediaType.TEXT_PLAIN, principal);
     }
 
-    public boolean store(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String userId, InputStream inputStream, String contentType) throws MisconfiguredProcessException, StatusCodeError {
+    public boolean store(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, InputStream inputStream, String contentType, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         FieldSubmissionType fieldSubmissionType = template.fieldSubmissionType(name);
 
         if (fieldSubmissionType == FieldSubmissionType.BUTTON) {
@@ -107,7 +107,7 @@ public class SubmissionStorageService {
                         .build();
 
                 try {
-                    content = contentRepository.save(template.getProcess(), content);
+                    content = contentRepository.save(template.getProcess(), content, principal);
 
                 } catch (MongoException mongoException) {
                     Throwable cause = mongoException.getCause();
@@ -120,8 +120,10 @@ public class SubmissionStorageService {
                     }
                 } catch (IOException ioe) {
                     LOG.error(ioe);
-                    throw new InternalServerError();
+                    String body = ioe.getMessage();
+                    throw new InternalServerError(Constants.ExceptionCodes.content_cannot_be_stored, body);
                 }
+
                 location = content.getLocation();
 
                 String description = submissionBuilder.getDescription(name);
@@ -182,7 +184,7 @@ public class SubmissionStorageService {
                         .location(location)
                         .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
                         .description(value)
-                        .userId(userId)
+                        .userId(actingAsId)
                         .name(name)
                         .build();
                 submissionBuilder.attachment(attachmentDetails);

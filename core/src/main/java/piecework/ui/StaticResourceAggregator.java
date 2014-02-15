@@ -236,6 +236,12 @@ public class StaticResourceAggregator {
         }
 
         if (!PathUtility.checkForStaticPath(path)) {
+            Scheme scheme = PathUtility.findScheme(path);
+            // Since we can trust that static resources are not trying to move above their base,
+            // allow for cases where the path is on the file system
+            if (scheme != Scheme.REPOSITORY)
+                base = null;
+
             Content content = contentRepository.findByLocation(process, base, path);
             if (content != null) {
                 return new BufferedReader(new InputStreamReader(content.getInputStream()));
