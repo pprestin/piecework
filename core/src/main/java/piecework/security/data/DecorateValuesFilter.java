@@ -67,7 +67,7 @@ public class DecorateValuesFilter implements DataFilter {
 
     @Override
     public List<Value> filter(String key, List<Value> values) {
-        if (values == null || values.isEmpty()) {
+        if (values == null || values.isEmpty() || values.iterator().next().toString().equals("")) {
             Value defaultValue = defaultValueMap.get(key);
             if (defaultValue != null)
                 return Collections.singletonList(defaultValue);

@@ -54,13 +54,13 @@ public class SecurityUtility {
 
     public static Set<Field> fields(Activity activity, Action action) {
         Map<String, Field> fieldMap = activity.getFieldMap();
-//        Container container = action != null ? action.getContainer() : null;
-//        Set<Field> fields = new HashSet<Field>();
-//        if (container != null) {
-//            fields(fields, fieldMap, container, container.getActiveChildIndex());
-//        }
-
-        return fieldMap.isEmpty() ? Collections.<Field>emptySet() : new HashSet<Field>(fieldMap.values());
+        Container container = action != null ? action.getContainer() : null;
+        Set<Field> fields = new HashSet<Field>();
+        if (container != null) {
+            fields(fields, fieldMap, container, container.getActiveChildIndex());
+        }
+        return fields;
+//        return fieldMap.isEmpty() ? Collections.<Field>emptySet() : new HashSet<Field>(fieldMap.values());
     }
 
     private static void fields(Set<Field> fields, Map<String, Field> fieldMap, Container container, int activeChildIndex) {

@@ -81,7 +81,7 @@ public class ContentHandlerRepository implements ContentRepository {
 
         String contentReceiverKey = null;
 
-        if (StringUtils.isEmpty(contentReceiverKey) && StringUtils.isNotEmpty(process.getContentReceiverKey()))
+        if (StringUtils.isEmpty(contentReceiverKey) && process != null && StringUtils.isNotEmpty(process.getContentReceiverKey()))
             contentReceiverKey = process.getContentReceiverKey();
 
         String path;
