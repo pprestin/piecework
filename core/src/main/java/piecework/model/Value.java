@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.apache.cxf.common.util.StringUtils;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
@@ -50,6 +51,10 @@ public class Value implements Serializable {
 
     public String toString() {
         return value;
+    }
+
+    public boolean isEmpty() {
+        return StringUtils.isEmpty(value);
     }
 
     @JsonValue

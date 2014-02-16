@@ -24,8 +24,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.model.*;
-import piecework.security.AccessTracker;
-import piecework.security.EncryptionService;
 import piecework.security.config.DataFilterTestConfiguration;
 import piecework.settings.UserInterfaceSettings;
 
@@ -58,7 +56,7 @@ public class DecorateValuesFilterTest {
                 .build();
         Set<Field> fields = new HashSet<Field>();
 
-        this.filter = new DecorateValuesFilter(instance, fields, settings, principal, "v0");
+        this.filter = new DecorateValuesFilter(instance, null, fields, settings, principal, "v0");
     }
 
     @Test

@@ -1145,7 +1145,12 @@ angular.module('wf.directives',
                     scope.criteria.taskStatus = 'all';
 
                     scope.exportCsv = function(selectedForms) {
-                        $window.location.href = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.criteria.processDefinitionKey;
+                        var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.criteria.processDefinitionKey;
+                        if (scope.criteria.startedAfter != null)
+                            url += '&startedAfter=' + scope.criteria.startedAfter;
+                        if (scope.criteria.startedBefore != null)
+                            url += '&startedBefore=' + scope.criteria.startedBefore;
+                        $window.location.href = url;
                     };
 
                     scope.processStatusDescription = {

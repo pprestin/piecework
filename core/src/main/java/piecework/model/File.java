@@ -98,6 +98,11 @@ public class File extends Value {
         return uri;
     }
 
+    @JsonIgnore
+    public boolean isEmpty() {
+        return StringUtils.isEmpty(name);
+    }
+
     @JsonValue(value=false)
     @JsonIgnore
     public String getValue() {

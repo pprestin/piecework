@@ -279,22 +279,26 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     }
 
     private void includeMessages(Update update, Map<String, List<Message>> messages) {
-        if (messages != null && !messages.isEmpty()) {
-            MongoConverter converter = mongoOperations.getConverter();
-
-            for (Map.Entry<String, List<Message>> entry : messages.entrySet()) {
-                String key = "messages." + entry.getKey();
-                List<Message> values = entry.getValue();
-                List<Object> dbObjects = new ArrayList<Object>();
-
-                for (Message value : values) {
-                    if (value != null) {
-                        Object dbObject = converter.convertToMongoType(value);
-                        dbObjects.add(dbObject);
-                    }
-                }
-
-                update.set(key, dbObjects);
+        if (messages != null) {
+            if (messages.isEmpty()) {
+                update.unset("messages");
+            } else {
+                update.set("messages", messages);
+//                MongoConverter converter = mongoOperations.getConverter();
+//                for (Map.Entry<String, List<Message>> entry : messages.entrySet()) {
+//                    String key = "messages." + entry.getKey();
+//                    List<Message> values = entry.getValue();
+//                    List<Object> dbObjects = new ArrayList<Object>();
+//
+//                    for (Message value : values) {
+//                        if (value != null) {
+//                            Object dbObject = converter.convertToMongoType(value);
+//                            dbObjects.add(dbObject);
+//                        }
+//                    }
+//
+//                    update.set(key, dbObjects);
+//                }
             }
         }
     }

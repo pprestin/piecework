@@ -84,6 +84,10 @@ public class Secret extends Value {
         return iv;
     }
 
+    public boolean isEmpty() {
+        return ciphertext == null || ciphertext.length == 0;
+    }
+
     public final static class Builder {
         private String id;
         private String name;

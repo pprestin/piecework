@@ -107,7 +107,8 @@ public class FormUtility {
             // If the action type was VIEW then revert to the default ui, use create as the action, but make it unmodifiable
             if (actionType == ActionType.VIEW) {
                 revertToDefaultUI = true;
-                builder.readonly();
+                if (builder != null)
+                    builder.readonly();
             }
         }
 

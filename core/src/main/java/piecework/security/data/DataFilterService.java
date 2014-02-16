@@ -157,7 +157,7 @@ public class DataFilterService {
             decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
 
         DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
-        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, fields, settings, principal, version);
+        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, version);
         return SecurityUtility.filter(instanceData, limitFieldsFilter, decryptValuesFilter, decorateValuesFilter);
     }
 
@@ -182,7 +182,7 @@ public class DataFilterService {
             decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
 
         DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
-        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, fields, settings, principal, version);
+        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, version);
         return SecurityUtility.filter(combinedData, limitFieldsFilter, decryptValuesFilter, decorateValuesFilter);
     }
 

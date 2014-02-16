@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.apache.cxf.common.util.StringUtils;
 import org.springframework.data.annotation.Id;
 
 import org.springframework.security.core.userdetails.UserDetails;
@@ -79,6 +80,10 @@ public class User extends Entity {
         this.phoneNumber = builder.phoneNumber;
         this.attributes = builder.attributes;
         this.uri = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.userId) : null;
+    }
+
+    public boolean isEmpty() {
+        return StringUtils.isEmpty(userId);
     }
 
     public String getUserId() {

@@ -40,7 +40,7 @@ public class DecorateValuesFilter implements DataFilter {
     private final ProcessInstance instance;
     private final ViewContext context;
 
-    public DecorateValuesFilter(ProcessInstance instance, Set<Field> fields, UserInterfaceSettings settings, Entity principal, String version) {
+    public DecorateValuesFilter(ProcessInstance instance, Task task, Set<Field> fields, UserInterfaceSettings settings, Entity principal, String version) {
         this.defaultValueMap = new HashMap<String, Value>();
         this.passthroughSanitizer = new PassthroughSanitizer();
         this.instance = instance;
@@ -50,7 +50,7 @@ public class DecorateValuesFilter implements DataFilter {
                 String defaultValueString = field.getDefaultValue();
                 Value defaultValue = null;
                 if (StringUtils.isNotEmpty(defaultValueString)) {
-                    if (defaultValueString.equals("{{CurrentUser}}"))
+                    if (defaultValueString.equals("{{CurrentUser}}") && (task == null || task.isAssignee(principal)))
                         defaultValue = principal != null ? principal.getActingAs() : null; //principal != null ? principal.getActingAs() : "";
                     else if (defaultValueString.equals("{{CurrentDate}}"))
                         defaultValue = new Value(dateTimeFormatter.print(new Date().getTime()));
@@ -67,7 +67,7 @@ public class DecorateValuesFilter implements DataFilter {
 
     @Override
     public List<Value> filter(String key, List<Value> values) {
-        if (values == null || values.isEmpty() || values.iterator().next().toString().equals("")) {
+        if (isEmpty(values)) {
             Value defaultValue = defaultValueMap.get(key);
             if (defaultValue != null)
                 return Collections.singletonList(defaultValue);
@@ -91,6 +91,20 @@ public class DecorateValuesFilter implements DataFilter {
         }
 
         return list;
+    }
+
+    private static boolean isEmpty(List<Value> values) {
+        if (values == null || values.isEmpty())
+            return true;
+
+        boolean isEmpty = true;
+        for (Value value : values) {
+            if (value != null && !value.isEmpty()) {
+                isEmpty = false;
+                break;
+            }
+        }
+        return isEmpty;
     }
 
 }
