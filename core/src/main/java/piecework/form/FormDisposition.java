@@ -87,7 +87,7 @@ public class FormDisposition {
 
     public URI getPageUri(FormRequest request, Validation validation, Explanation explanation, int count) throws URISyntaxException {
         String taskId = request != null ? request.getTaskId() : null;
-        String query = null;
+        String query = "";
         if (explanation == null && StringUtils.isNotEmpty(taskId))
             query = "taskId=" + taskId;
         else if (request != null && StringUtils.isNotEmpty(request.getRequestId()))

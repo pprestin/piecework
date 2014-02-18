@@ -16,6 +16,7 @@
 package piecework.resource;
 
 import junit.framework.Assert;
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,9 +33,15 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceRepository;
 import piecework.persistence.ProcessRepository;
+import piecework.service.IdentityService;
+import piecework.test.ProcessFactory;
 import piecework.test.config.IntegrationTestConfiguration;
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import java.util.Collections;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -78,19 +85,9 @@ public class FormResourceTest {
         Mockito.doReturn(createAction)
                .when(startActivity).action(eq(ActionType.CREATE));
 
-        ProcessDeployment deployment = Mockito.mock(ProcessDeployment.class);
-        Mockito.doReturn(deploymentId)
-                .when(deployment).getDeploymentId();
-        Mockito.doReturn(startActivity)
-               .when(deployment).getActivity(eq("start"));
-        Mockito.doReturn("start")
-               .when(deployment).getStartActivityKey();
+        ProcessDeployment deployment = ProcessFactory.remoteStrategyProcessDeployment(deploymentId);
+        Process process = ProcessFactory.process("TEST", "Some Test Process", deployment);
 
-        Process process = Mockito.mock(Process.class);
-        Mockito.doReturn("TEST")
-               .when(process).getProcessDefinitionKey();
-        Mockito.doReturn(deployment)
-               .when(process).getDeployment();
         Mockito.doReturn(process)
                .when(mockProcessRepository).findOne(eq("TEST"));
         ProcessInstance instance = Mockito.mock(ProcessInstance.class);
@@ -98,6 +95,18 @@ public class FormResourceTest {
                .when(mockProcessInstanceRepository).findByTaskId(eq("TEST"), eq("1234"));
         Mockito.doReturn(deploymentId)
                .when(instance).getDeploymentId();
+
+        Task task = Mockito.mock(Task.class);
+        Mockito.doReturn(Collections.singleton(task))
+                .when(instance).getTasks();
+        Mockito.doReturn("1234")
+                .when(task).getTaskInstanceId();
+
+        Mockito.doReturn(Collections.singleton("testuser"))
+                .when(task).getAssigneeAndCandidateAssigneeIds();
+
+        Mockito.doReturn(Boolean.TRUE)
+                .when(task).isCandidateOrAssignee(eq(principal));
     }
 
     @Test(expected = NotFoundError.class)
@@ -111,8 +120,26 @@ public class FormResourceTest {
     }
 
 //    @Test
-//    public void readByTaskId() throws PieceworkException {
+//    public void readByTaskIdHtml() throws PieceworkException {
 //        Response response = formResource.read(null, "TEST", "1234", null, null, "1");
+//
+//        Assert.assertEquals(303, response.getStatus());
+//        String location = response.getHeaderString(HttpHeaders.LOCATION);
+//        Assert.assertEquals("", location);
+//    }
+//
+//    @Test
+//    public void readByTaskIdJson() throws PieceworkException {
+//        MessageContext context = Mockito.mock(MessageContext.class);
+//        HttpHeaders httpHeaders = Mockito.mock(HttpHeaders.class);
+//
+//        Mockito.doReturn(Collections.singletonList(MediaType.APPLICATION_JSON_TYPE))
+//               .when(httpHeaders.getAcceptableMediaTypes());
+//
+//        Mockito.doReturn(httpHeaders)
+//               .when(context.getHttpHeaders());
+//
+//        Response response = formResource.read(context, "TEST", "1234", null, null, "1");
 //
 //        Assert.assertEquals(200, response.getStatus());
 //        Form form = Form.class.cast(response.getEntity());

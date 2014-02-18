@@ -103,7 +103,7 @@ public class ValidationFactory {
 
                     if (!allFieldNames.contains(fieldName)) {
                         List<? extends Value> values = entry.getValue();
-                        List<? extends Value> previousValues = instanceData.get(fieldName);
+                        List<? extends Value> previousValues = instanceData != null ? instanceData.get(fieldName) : null;
 
                         if (isFile(values, previousValues))
                             values = ValidationUtility.append(values, previousValues);

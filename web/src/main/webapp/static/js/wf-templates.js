@@ -43,13 +43,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
   $templateCache.put("templates/cancel-modal-dialog.html",
     "<div class=\"modal-dialog\">\n" +
     "    <div class=\"modal-content\">\n" +
-    "        <div class=\"modal-header\">\n" +
+    "        <div class=\"modal-header bg-danger\">\n" +
     "            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n" +
     "            <h4 class=\"modal-title\">Are you sure you want to cancel/delete this process?</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
     "            <div data-wf-notifications></div>" +
-    "            <p>Deleting a process <b>permanently</b> stops execution and <u>cannot</u> be reversed.</p>\n" +
+    "            <p>Deleting a process <b>permanently</b> stops execution and <u>cannot</u> be reversed. It also <b>permanently purges</b> any restricted data stored.</p>\n" +
     "            <textarea class=\"form-control input-block-level\" placeholder=\"Enter a reason\" ng-model=\"reason\" id=\"delete-reason\" rows=\"4\"></textarea>\n" +
     "        </div>\n" +
     "        <div class=\"modal-footer\">\n" +

@@ -340,7 +340,7 @@ public abstract class AbstractFormResource {
             LOG.error("IOException serving page", ioe);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         } catch (MisconfiguredProcessException mpe) {
-            LOG.error("Process is misconfigured", mpe);
+            LOG.error("Process is misconfigured: " + mpe.getMessage(), mpe);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         } catch (FormBuildingException fbe) {
             LOG.error("Unable to build form", fbe);

@@ -33,15 +33,17 @@ public class ProcessFactory {
     private static final String CUSTOM_WEB_PAGE = "/path/to/CustomWebPage.html";
 
 
-    public static piecework.model.Process process(String processDefinitionKey, String label) {
+    public static piecework.model.Process process(String processDefinitionKey, String label, ProcessDeployment deployment) {
         return new piecework.model.Process.Builder()
                 .processDefinitionKey(processDefinitionKey)
                 .processDefinitionLabel(label)
+                .deploy(new ProcessDeploymentVersion(deployment), deployment)
                 .build();
     }
 
-    public static ProcessDeployment remoteStrategyProcessDeployment() {
+    public static ProcessDeployment remoteStrategyProcessDeployment(String deploymentId) {
         ProcessDeployment current = new ProcessDeployment.Builder()
+                .deploymentId(deploymentId)
                 .deploymentLabel("First revision")
                 .processInstanceLabelTemplate("{{BudgetNumber}} for {{ReportPeriod}}")
                 .engine("activiti")
