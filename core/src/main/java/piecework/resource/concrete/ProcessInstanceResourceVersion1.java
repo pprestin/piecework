@@ -407,10 +407,6 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance stored = processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, body, MultipartBody.class, helper.getPrincipal());
         ProcessDeployment deployment = deploymentService.read(process, stored);
 
-        return valueLocation(deployment, stored, fieldName);
-    }
-
-    private Response valueLocation(ProcessDeployment deployment, ProcessInstance stored, String fieldName) {
         Map<String, List<Value>> data = stored.getData();
 
         ViewContext version1 = versions.getVersion1();
@@ -421,10 +417,10 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
 
             if (file != null) {
                 file = new File.Builder(file, new PassthroughSanitizer())
-                                .processDefinitionKey(stored.getProcessDefinitionKey())
-                                .processInstanceId(stored.getProcessInstanceId())
-                                .fieldName(fieldName)
-                                .build(version1);
+                        .processDefinitionKey(stored.getProcessDefinitionKey())
+                        .processInstanceId(stored.getProcessInstanceId())
+                        .fieldName(fieldName)
+                        .build(version1);
                 location = file.getLink();
             }
         }

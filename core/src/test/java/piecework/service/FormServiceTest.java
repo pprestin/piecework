@@ -110,9 +110,9 @@ public class FormServiceTest {
         Assert.assertNotNull(response);
         Submission submission = response.getSubmission();
         Assert.assertEquals("TEST", submission.getProcessDefinitionKey());
-        Assert.assertEquals(ActionType.COMPLETE, submission.getAction());
+        Assert.assertEquals(ActionType.SAVE, submission.getAction());
         FormRequest nextRequest = response.getNextRequest();
-        Assert.assertEquals(ActionType.COMPLETE, nextRequest.getAction());
+        Assert.assertEquals(ActionType.SAVE, nextRequest.getAction());
     }
 
     @Test
@@ -121,9 +121,9 @@ public class FormServiceTest {
         Assert.assertNotNull(response);
         Submission submission = response.getSubmission();
         Assert.assertEquals("TEST", submission.getProcessDefinitionKey());
-        Assert.assertEquals(ActionType.COMPLETE, submission.getAction());
+        Assert.assertEquals(ActionType.SAVE, submission.getAction());
         FormRequest nextRequest = response.getNextRequest();
-        Assert.assertEquals(ActionType.COMPLETE, nextRequest.getAction());
+        Assert.assertEquals(ActionType.SAVE, nextRequest.getAction());
     }
 
     @Test

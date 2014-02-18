@@ -123,7 +123,7 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         if (rawSubmission != null)
             submissionBuilder = new Submission.Builder(rawSubmission, sanitizer, true);
         else
-            submissionBuilder = new Submission.Builder().actionType(ActionType.COMPLETE);
+            submissionBuilder = new Submission.Builder().actionType(ActionType.SAVE);
 
         submissionBuilder.processDefinitionKey(template.getProcess().getProcessDefinitionKey())
                 .requestId(template.getRequestId())

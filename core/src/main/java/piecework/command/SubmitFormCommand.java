@@ -26,6 +26,9 @@ import piecework.service.RequestService;
 import piecework.util.ProcessInstanceUtility;
 import piecework.validation.Validation;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author James Renfro
  */
@@ -69,7 +72,7 @@ public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse
         if (submission != null && submission.getAction() != null)
             validatedActionType = submission.getAction();
         else if (actionType == ActionType.CREATE)
-            validatedActionType = ActionType.COMPLETE;
+            validatedActionType = ActionType.SAVE;
 
         AbstractCommand<ProcessInstance> command = null;
         if (task == null)
@@ -91,8 +94,11 @@ public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse
                     return new SubmissionCommandResponse(submission, nextRequest);
                 }
             case SAVE:
-                String label = ProcessInstanceUtility.processInstanceLabel(process, instance, validation.getData(), submission.getProcessInstanceLabel());
-                storageManager.store(label, instance, validation.getData(), submission);
+                Map<String, List<Value>> validationData = validation != null ? validation.getData() : null;
+                String submissionLabel = submission != null ? submission.getProcessInstanceLabel() : null;
+                String label = ProcessInstanceUtility.processInstanceLabel(process, instance, validationData, submissionLabel);
+                stored = storageManager.store(label, instance, validation.getData(), submission);
+                nextRequest = requestService.create(requestDetails, process, stored, task, validatedActionType);
                 break;
         }
 

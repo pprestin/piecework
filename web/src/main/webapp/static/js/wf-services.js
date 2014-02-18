@@ -7,7 +7,7 @@ angular.module('wf.services',
                     var attachmentService = this;
                     var url = attachment.link + '/removal';
                     $http.post($sce.trustAsResourceUrl(url), null, {
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                     })
                     .success(function() {
                         attachmentService.refreshAttachments(form);
@@ -357,7 +357,7 @@ angular.module('wf.services',
                                 return selectedForms;
                             }
                         },
-                        windowClass: 'in',
+                        windowClass: 'in'
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
@@ -371,7 +371,7 @@ angular.module('wf.services',
                                 return selectedForms;
                             }
                         },
-                        windowClass: 'in',
+                        windowClass: 'in'
                     });
                     modalInstance.result.then(function (assignee) {}, function () {});
                 },
@@ -385,7 +385,7 @@ angular.module('wf.services',
                                 return selectedForms;
                             }
                         },
-                        windowClass: 'in',
+                        windowClass: 'in'
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
@@ -399,7 +399,7 @@ angular.module('wf.services',
                                 return selectedForms;
                             }
                         },
-                        windowClass: 'in',
+                        windowClass: 'in'
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
@@ -413,7 +413,7 @@ angular.module('wf.services',
                                 return selectedForms;
                             }
                         },
-                        windowClass: 'in',
+                        windowClass: 'in'
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
@@ -427,7 +427,7 @@ angular.module('wf.services',
                                 return selectedForms;
                             }
                         },
-                        windowClass: 'in',
+                        windowClass: 'in'
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
@@ -441,7 +441,7 @@ angular.module('wf.services',
                                 return selectedForms;
                             }
                         },
-                        windowClass: 'in',
+                        windowClass: 'in'
                     });
                     modalInstance.result.then(function () {}, function () {});
                 }
@@ -501,7 +501,7 @@ angular.module('wf.services',
                     var formData = 'comment=' + comment;
                     var url = form.attachment + ".json";
                     $http.post($sce.trustAsResourceUrl(url), formData, {
-                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                         })
                         .success(function(data, status, headers, config) {
                             success($scope, data, status, headers, config, form, formData);

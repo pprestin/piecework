@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('wf.directives',
     ['ui.bootstrap', 'ui.bootstrap.alert', 'ui.bootstrap.modal', 'wf.services', 'wf.templates'])
     .directive('wfActive', [
@@ -20,12 +22,11 @@ angular.module('wf.directives',
 
                     scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
+                        var isDisabled = false;
+
                         // Check to see if the current user is the assigned user
                         if (typeof(form) !== 'undefined' && form.task != null) {
-                            if (form.currentUser == null || form.task.assignee == null || form.currentUser.userId !== form.task.assignee.userId)
-                                element.attr('disabled', 'disabled');
-                            else
-                                element.removeAttr('disabled');
+                            isDisabled = (form.currentUser == null || form.task.assignee == null || form.currentUser.userId !== form.task.assignee.userId)
                         }
 
                         var ordinal = form.activeStepOrdinal;
@@ -35,10 +36,16 @@ angular.module('wf.directives',
 
                         if (upwards) {
                             if (typeof(ordinal) !== 'undefined' && step < ordinal)
-                                element.attr('disabled', 'disabled');
+                                isDisabled = true;
                         } else if (step != ordinal) {
-                            element.attr('disabled', 'disabled');
+                            isDisabled = true;
                         }
+
+                        var $input = element.is(":input") ? element : element.children();
+                        if (isDisabled)
+                            $input.attr('disabled', 'disabled');
+                        else
+                            $input.removeAttr('disabled');
                     });
                 }
             }
@@ -172,7 +179,7 @@ angular.module('wf.directives',
             return {
                 restrict: 'AE',
                 scope: {
-                    container : '=',
+                    container : '='
                 },
                 templateUrl: 'templates/container.html',
                 link: function (scope, element) {
@@ -301,6 +308,65 @@ angular.module('wf.directives',
 
                          return true;
                     };
+                }
+            }
+        }
+    ])
+    .directive('wfFile', ['$sce', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
+        function($sce, attachmentService, dialogs, notificationService, taskService, wizardService) {
+            return {
+                restrict: 'AE',
+                scope: {
+                    'name': '@',
+                    'label': '@'
+                },
+                templateUrl: 'templates/file.html',
+                link: function (scope, element, attr) {
+//                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
+//                        scope.form = form;
+//                    });
+
+//                    scope.onChange = function() {
+//                        if (scope.form == null)
+//                            return;
+//
+//                        var fieldName = scope.name;
+//                        var data = new FormData();
+//                        var $inputs = element.find(':input[type="file"]');
+//                        $inputs.each(function(index, input) {
+//                            var $input = $(input);
+//                            data.append(input.name, $input.val());
+//                        });
+//
+//                        var url = scope.form.attachment;
+//                        if (fieldName != 'attachments') {
+//                            url = url.replace('/attachment', '/value');
+//                            url += '/' + fieldName;
+//                        }
+//
+//                        $.ajax({
+//                            url : url,
+//                            data : data,
+//                            processData : false,
+//                            contentType : false,
+//                            type : 'POST'
+//                        })
+//                        .done(function(data, textStatus, jqXHR) {
+//                            $inputs.val('');
+//                            if (fieldName == 'attachments')
+//                                scope.$root.$broadcast('wfEvent:attachments', data.list);
+//                            else
+//                                scope.$root.$broadcast('wfEvent:value-updated:' + fieldName, data);
+//                        })
+//                        .fail(function(jqXHR, textStatus, errorThrown) {
+//                            var data = $.parseJSON(jqXHR.responseText);
+//                            var selector = '.process-alert[data-element="' + fieldName + '"]';
+//                            var message = data.messageDetail;
+//                            var $alert = $(selector);
+//                            $alert.show();
+//                            $alert.text(message);
+//                        });
+//                    }
                 }
             }
         }
@@ -556,6 +622,157 @@ angular.module('wf.directives',
                         else
                             scope.$root.$broadcast('wfEvent:fallback');
                     };
+                    scope.reloadForm = function(form) {
+                        element.show();
+                        scope.$root.$broadcast('wfEvent:stop-loading');
+                        element.attr("action", form.action);
+                        element.attr("method", "POST");
+                        element.attr("enctype", "multipart/form-data");
+
+                        scope.$root.uploadOptions = {
+                            autoUpload: true,
+                            dataType: 'json',
+                            fileInput: $('input:file'),
+                            xhrFields: {
+                                withCredentials: true
+                            }
+                        };
+
+                        var created = form.task != null ? form.task.startTime : null;
+                        element.attr('data-wf-task-started', created);
+
+                        var data = form.data;
+                        var validation = form.validation;
+                        var formElement = element[0];
+                        angular.forEach(formElement.elements, function(input) {
+                            if (input.attributes['data-wf-blank'])
+                                return;
+                            if (input.name != null) {
+                                var fieldName = input.name;
+                                var subFieldName = null;
+                                var indexOfPeriod = fieldName.indexOf('.');
+                                if (indexOfPeriod != -1) {
+                                    subFieldName = fieldName.substring(indexOfPeriod+1);
+                                    fieldName = fieldName.substring(0, indexOfPeriod);
+                                }
+                                if (input.type == 'file') {
+                                    var $input = $(input);
+                                    if ($input.attr('data-auto-upload')) {
+                                        $input.unbind('change');
+                                        $input.on('change', function(event) {
+                                            var files = $(event.target)[0].files;
+                                            var data = new FormData();
+                                            var descriptionSelector = ':input.process-variable-description[data-element="' + input.name + '"]';
+                                            var description = $(descriptionSelector).val();
+                                            if (typeof(description) !== 'undefined')
+                                                data.append(input.name + '!description', description);
+
+                                            $.each(files, function(i, file) {
+                                                data.append(input.name, file);
+                                            });
+
+                                            var url = form.attachment;
+                                            var indexOf = url.indexOf('/attachment');
+                                            if (indexOf != -1)
+                                                url = url.substring(0, indexOf) + '/value/' + input.name;
+                                            $.ajax({
+                                                url : url,
+                                                data : data,
+                                                processData : false,
+                                                contentType : false,
+                                                type : 'POST'
+                                            })
+                                                .done(function(data, textStatus, jqXHR) {
+                                                    $(descriptionSelector).val('');
+                                                    scope.$root.$broadcast('wfEvent:value-updated:' + input.name, data);
+                                                })
+                                                .fail(function(jqXHR, textStatus, errorThrown) {
+                                                    var data = $.parseJSON(jqXHR.responseText);
+                                                    var selector = '.process-alert[data-element="' + input.name + '"]';
+                                                    var message = data.messageDetail;
+                                                    var $alert = $(selector);
+                                                    $alert.show();
+                                                    $alert.text(message);
+                                                });
+
+                                            return false;
+                                        });
+                                    }
+                                }
+                                var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
+                                if (values != null) {
+                                    angular.forEach(values, function(value) {
+                                        if (value != null) {
+                                            if (input.type == 'checkbox' || input.type == 'radio') {
+                                                if (input.value == value)
+                                                    input.checked = true;
+                                            } else if (input.type == 'select') {
+                                                angular.forEach(input.options, function(option) {
+                                                    if (option.value == value)
+                                                        option.selected = true;
+                                                });
+                                            } else if (input.type == 'file') {
+
+                                            } else {
+                                                var current;
+                                                if (subFieldName != null)
+                                                    current = value[subFieldName];
+                                                else
+                                                    current = value;
+
+                                                input.value = typeof(current) === 'string' ? current : current.name;
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        });
+
+                        var data = form.data;
+                        var readonly = form.container != null ? form.container.readonly : false;
+                        var rootContainer = form.container;
+                        var fields = new Array();
+                        if (rootContainer != null) {
+                            scope.markLeaves(rootContainer);
+                            if (rootContainer.children != null && rootContainer.children.length > 1 && rootContainer.activeChildIndex != -1) {
+                                form.steps = rootContainer.children;
+                                form.activeStepOrdinal = rootContainer.activeChildIndex;
+                                scope.addFields(fields, form, rootContainer, true);
+                            } else {
+                                fields = form.container != null ? form.container.fields : [];
+                            }
+                        }
+                        form.fieldMap = new Object();
+                        angular.forEach(fields, function(field) {
+                            form.fieldMap[field.name] = field;
+                            scope.handleField(form, data, validation, field, readonly);
+                        });
+
+                        if (form.task != null) {
+                            if (form.task.active) {
+                                if (form.task.assignee != null)
+                                    form.state = 'assigned';
+                                else
+                                    form.state = 'unassigned';
+                            } else if (form.task.taskStatus == 'Suspended') {
+                                form.state = 'suspended';
+                            } else if (form.task.taskStatus == 'Cancelled') {
+                                form.state = 'cancelled';
+                            } else if (form.task.taskStatus == 'Complete' && (form.task.assignee == null || form.task.assignee.userId != form.currentUser.userId)) {
+                                form.state = 'completed';
+                            }
+                        }
+
+//                                if (form.actionType == 'VIEW')
+//                                    form.activeStepOrdinal = 1;
+
+                        scope.$root.form = form;
+                        scope.$root.$broadcast('wfEvent:form-loaded', form);
+
+                        if (typeof(form.activeStepOrdinal) !== 'undefined')
+                            scope.$root.$broadcast('wfEvent:step-changed', form.activeStepOrdinal);
+                    };
+
                     scope.$root.$on('wfEvent:refresh', function(event, message) {
                         scope.$root.refreshing = true;
                         var link = formResourceUri;
@@ -583,151 +800,27 @@ angular.module('wf.directives',
                                     }, 3000);
                                 }
                             })
-                            .success(function(form) {
-                                element.show();
-                                scope.$root.$broadcast('wfEvent:stop-loading');
-                                element.attr("action", form.action);
-                                element.attr("method", "POST");
-                                element.attr("enctype", "multipart/form-data");
-
-                                var created = form.task != null ? form.task.startTime : null;
-                                element.attr('data-wf-task-started', created);
-
-                                var data = form.data;
-                                var validation = form.validation;
-                                var formElement = element[0];
-                                angular.forEach(formElement.elements, function(input) {
-                                    if (input.attributes['data-wf-blank'])
-                                        return;
-                                    if (input.name != null) {
-                                        var fieldName = input.name;
-                                        var subFieldName = null;
-                                        var indexOfPeriod = fieldName.indexOf('.');
-                                        if (indexOfPeriod != -1) {
-                                            subFieldName = fieldName.substring(indexOfPeriod+1);
-                                            fieldName = fieldName.substring(0, indexOfPeriod);
-                                        }
-                                        if (input.type == 'file') {
-                                            var $input = $(input);
-                                            if ($input.attr('data-auto-upload')) {
-                                                $input.unbind('change');
-                                                $input.on('change', function(event) {
-                                                   var files = $(event.target)[0].files;
-                                                   var data = new FormData();
-                                                   var descriptionSelector = ':input.process-variable-description[data-element="' + input.name + '"]';
-                                                   var description = $(descriptionSelector).val();
-                                                   if (typeof(description) !== 'undefined')
-                                                       data.append(input.name + '!description', description);
-
-                                                   $.each(files, function(i, file) {
-                                                       data.append(input.name, file);
-                                                   });
-
-                                                   var url = form.attachment;
-                                                   var indexOf = url.indexOf('/attachment');
-                                                   if (indexOf != -1)
-                                                        url = url.substring(0, indexOf) + '/value/' + input.name;
-                                                   $.ajax({
-                                                       url : url,
-                                                       data : data,
-                                                       processData : false,
-                                                       contentType : false,
-                                                       type : 'POST'
-                                                   })
-                                                   .done(function(data, textStatus, jqXHR) {
-                                                       $(descriptionSelector).val('');
-                                                       scope.$root.$broadcast('wfEvent:value-updated:' + input.name, data);
-                                                   })
-                                                   .fail(function(jqXHR, textStatus, errorThrown) {
-                                                       var data = $.parseJSON(jqXHR.responseText);
-                                                       var selector = '.process-alert[data-element="' + input.name + '"]';
-                                                       var message = data.messageDetail;
-                                                       var $alert = $(selector);
-                                                       $alert.show();
-                                                       $alert.text(message);
-                                                   });
-
-                                                   return false;
-                                                });
-                                            }
-                                        }
-                                        var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
-                                        if (values != null) {
-                                            angular.forEach(values, function(value) {
-                                                if (value != null) {
-                                                    if (input.type == 'checkbox' || input.type == 'radio') {
-                                                        if (input.value == value)
-                                                            input.checked = true;
-                                                    } else if (input.type == 'select') {
-                                                        angular.forEach(input.options, function(option) {
-                                                           if (option.value == value)
-                                                                option.selected = true;
-                                                        });
-                                                    } else if (input.type == 'file') {
-
-                                                    } else {
-                                                        var current;
-                                                        if (subFieldName != null)
-                                                            current = value[subFieldName];
-                                                        else
-                                                            current = value;
-
-                                                        input.value = typeof(current) === 'string' ? current : current.name;
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
-
-                                var data = form.data;
-                                var readonly = form.container != null ? form.container.readonly : false;
-                                var rootContainer = form.container;
-                                var fields = new Array();
-                                if (rootContainer != null) {
-                                    scope.markLeaves(rootContainer);
-                                    if (rootContainer.children != null && rootContainer.children.length > 1 && rootContainer.activeChildIndex != -1) {
-                                        form.steps = rootContainer.children;
-                                        form.activeStepOrdinal = rootContainer.activeChildIndex;
-                                        scope.addFields(fields, form, rootContainer, true);
-                                    } else {
-                                        fields = form.container != null ? form.container.fields : [];
-//                                        form.layout = 'normal';
-                                    }
-                                }
-                                form.fieldMap = new Object();
-                                angular.forEach(fields, function(field) {
-                                    form.fieldMap[field.name] = field;
-                                    scope.handleField(form, data, validation, field, readonly);
-                                });
-
-                                if (form.task != null) {
-                                    if (form.task.active) {
-                                        if (form.task.assignee != null)
-                                            form.state = 'assigned';
-                                        else
-                                            form.state = 'unassigned';
-                                    } else if (form.task.taskStatus == 'Suspended') {
-                                        form.state = 'suspended';
-                                    } else if (form.task.taskStatus == 'Cancelled') {
-                                        form.state = 'cancelled';
-                                    } else if (form.task.taskStatus == 'Complete' && (form.task.assignee == null || form.task.assignee.userId != form.currentUser.userId)) {
-                                        form.state = 'completed';
-                                    }
-                                }
-
-//                                if (form.actionType == 'VIEW')
-//                                    form.activeStepOrdinal = 1;
-
-                                scope.$root.form = form;
-                                scope.$root.$broadcast('wfEvent:form-loaded', form);
-
-                                if (typeof(form.activeStepOrdinal) !== 'undefined')
-                                    scope.$root.$broadcast('wfEvent:step-changed', form.activeStepOrdinal);
-                            });
+                            .success(scope.reloadForm);
                     });
 
                     scope.$root.$broadcast('wfEvent:refresh', 'form');
+
+                    scope.$root.$on('fileuploaddone', function(event, data) {
+                        var form = data.result;
+//                        scope.$root.$broadcast('wfEvent:form-loaded', form);
+                        scope.reloadForm(form);
+                    });
+                    scope.$on('fileuploadfail', function(event, data) {
+                        var message = angular.fromJson(data.jqXHR.responseText);
+
+                        notificationService.notify(scope.$root, message.messageDetail);
+                    });
+                    scope.$on('fileuploadstart', function() {
+                        scope.state.sending = true;
+                    });
+                    scope.$on('fileuploadstop', function() {
+                        scope.state.sending = false;
+                    });
                 }
             }
         }
@@ -788,6 +881,8 @@ angular.module('wf.directives',
                                 realValue = value[subFieldName];
 
                             var current = templateHtml.clone();
+                            current.show();
+                            current.removeClass('template');
 
                             if (typeof(realValue) !== 'undefined') {
                                 var anchor = current.find('a[data-wf-link]');
@@ -827,12 +922,13 @@ angular.module('wf.directives',
                                     type : 'DELETE',
                                     success: function() {
                                         $listItem.remove();
-                                        if ($listElement.find('li').length == 0)
+                                        if ($listElement.find('li').length == 1)
                                             $fallbackHtml.show();
                                     }
                                 });
                             });
 
+                            $listElement.show();
                             $listElement.append(current);
                             if (element.length > 0)
                                 element.scrollTop(element[0].scrollHeight);
@@ -842,6 +938,9 @@ angular.module('wf.directives',
                                 $fallbackHtml.hide();
                         }
                     };
+                    scope.loadValueListener = function(event, updatedValue) {
+                        scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
+                    };
                     scope.loadMultipleValues = function(element, values, fieldName, subFieldName, childHtml) {
                         var fallbackHtml = element.find('[data-wf-fallback]');
                         var listElement = element.find('ul');
@@ -850,11 +949,15 @@ angular.module('wf.directives',
                         if (listElement.length == 0)
                             listElement = element;
 
+                        listElement.hide();
                         listElement.empty();
+                        listElement.append(childHtml);
 
-                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, updatedValue) {
-                            scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
-                        });
+                        var eventName = 'wfEvent:value-updated:' + fieldName;
+
+                        if (scope.valueUpdatedListener == null)
+                            scope.valueUpdatedListener = scope.$on(eventName, scope.loadValueListener);
+
                         if (values != null && values.length > 0) {
                             angular.forEach(values, function(value) {
                                 scope.loadValue(listElement, value, fieldName, subFieldName, childHtml, fallbackHtml);
@@ -863,7 +966,7 @@ angular.module('wf.directives',
                             fallbackHtml.show();
                         }
                     };
-                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
                         scope.form = form;
                         var data = form.data;
                         var fieldName = attr.wfList;
@@ -875,8 +978,12 @@ angular.module('wf.directives',
                         }
                         var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
 
-                        var childHtml = element.find('li');
+                        var childHtml = element.find('li:first');
                         var fallbackHtml = element.find('[data-wf-fallback]');
+                        if (!childHtml.hasClass('template')) {
+                            childHtml.addClass('template');
+                            childHtml.hide();
+                        }
 
                         if (fieldName == 'attachments') {
                             scope.$on('wfEvent:attachments', function(event, attachments) {
@@ -1006,7 +1113,7 @@ angular.module('wf.directives',
              return {
                  restrict: 'AE',
                  scope: {
-                     form : '=',
+                     form : '='
                  },
                  templateUrl: 'templates/review.html',
                  link: function (scope, element) {
@@ -1475,6 +1582,9 @@ angular.module('wf.directives',
                             element.html(html);
                         }
                         scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
+                            if (typeof(value) == 'undefined' && value == null)
+                                return;
+
                             var html = typeof(value) === 'string' ? value : value.name;
                             element.html(html);
                         });
@@ -1551,7 +1661,7 @@ angular.module('wf.directives',
 
                     var negate = flowElement.indexOf('!') == 0;
                     if (negate) {
-                        formElement = flowElement.substring(1);
+                        flowElement = flowElement.substring(1);
                     }
 
                     scope.$root.$on('wfEvent:form-loaded', function(event, form) {

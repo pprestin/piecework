@@ -200,10 +200,16 @@ public abstract class AbstractFormResource {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, isAnonymous());
         FormRequest formRequest = requestService.read(requestDetails, requestId);
+        List<MediaType> mediaTypes = context != null ? context.getHttpHeaders().getAcceptableMediaTypes() : Collections.<MediaType>emptyList();
+        MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
+
         try {
             SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, data, type, helper.getPrincipal());
             if (isAnonymous())
                 return response(process, submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true, 1);
+
+            if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE))
+                return response(process, submissionCommandResponse.getNextRequest(), submissionCommandResponse.getNextRequest().getAction(), mediaType, 1);
 
             return redirect(process, submissionCommandResponse, false);
         } catch (Exception e) {
@@ -228,16 +234,16 @@ public abstract class AbstractFormResource {
                 }
             }
 
-            List<MediaType> acceptableMediaTypes = requestDetails.getAcceptableMediaTypes();
-            boolean isJSON = acceptableMediaTypes.size() == 1 && acceptableMediaTypes.contains(MediaType.APPLICATION_JSON_TYPE);
-
-            if (isJSON && e instanceof BadRequestError)
+            if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE) && e instanceof BadRequestError)
                 throw (BadRequestError)e;
 
             try {
                 FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
                 if (isAnonymous())
                     return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true, 1);
+
+                if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE))
+                    return response(process, invalidRequest, invalidRequest.getAction(), mediaType, validation, explanation, true, 1);
 
                 Submission submission = validation != null ? validation.getSubmission() : null;
                 return redirect(process, new SubmissionCommandResponse(submission, invalidRequest), true);

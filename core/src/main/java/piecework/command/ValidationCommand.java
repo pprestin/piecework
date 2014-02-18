@@ -105,10 +105,11 @@ public class ValidationCommand extends AbstractCommand<Validation> {
             Map<String, Field> fieldMap = activity.getFieldKeyMap();
 
             Field field = fieldMap.get(fieldName);
-            if (field == null)
+
+            if (field == null && !activity.isAllowAny())
                 throw new NotFoundError();
 
-            template = submissionTemplateFactory.submissionTemplate(process, field, request);
+            template = submissionTemplateFactory.submissionTemplate(process, field, request, activity.isAllowAny());
         }
 
         Submission submission = this.submission == null ? handler.handle(object, template, principal) : this.submission;

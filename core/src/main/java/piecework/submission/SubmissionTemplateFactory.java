@@ -61,12 +61,16 @@ public class SubmissionTemplateFactory {
         return submissionTemplate(process, deployment, formRequest, activity, validationId);
     }
 
-    public SubmissionTemplate submissionTemplate(Process process, Field field, FormRequest formRequest) {
+    public SubmissionTemplate submissionTemplate(Process process, Field field, FormRequest formRequest, boolean allowAny) {
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, process.getDeployment());
         if (formRequest != null)
             builder.requestId(formRequest.getRequestId()).taskId(formRequest.getTaskId()).actAsUser(formRequest.getActAsUser());
 
-        addField(builder, field);
+        if (allowAny)
+            builder.allowAny(allowAny);
+        else if (field != null)
+            addField(builder, field);
+
         return builder.build();
     }
 

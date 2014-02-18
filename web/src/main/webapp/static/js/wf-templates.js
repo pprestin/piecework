@@ -466,6 +466,20 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "             </div></div>\n" +
     "         </div>\n" +
     "     </nav>");
+  $templateCache.put("templates/file.html",
+    "<div class=\"well\" data-wf-list=\"{{name}}\">\n" +
+    "   <p data-wf-fallback class=\"muted\">No documents</p>\n" +
+    "   <ul class=\"process-variable-list\">\n" +
+    "     <li>\n" +
+    "        <i data-wf-delete class=\"fa fa-times text-danger\" title=\"Delete item\" style=\"font-size:14px;\"></i>&nbsp;&nbsp;\n" +
+    "        <i class=\"fa fa-download\" style=\"font-size:1.4em;color:#666;\"></i>&nbsp;&nbsp;<a rel=\"external\" data-wf-link></a>\n" +
+    "     </li>\n" +
+    "   </ul>\n" +
+    "</div>\n" +
+    "<span class=\"btn btn-default fileinput-button pull-right\" data-ng-class=\"{disabled: disabled}\">\n" +
+    "   <i ng-hide=\"state.sending\" class=\"fa fa-cloud-upload\"></i>  <i ng-show=\"state.sending\" class='fa fa-spinner fa-spin'></i> {{label}}\n" +
+    "   <input type=\"file\" name=\"{{name}}\" multiple=\"\" ng-disabled=\"disabled\">\n" +
+    "</span>");
   $templateCache.put("templates/fileupload.html",
     "   <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{getAttachmentUrl()}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +
     "       <span class=\"btn btn-default navbar-btn fileinput-button\" data-ng-class=\"{disabled: disabled}\">\n" +

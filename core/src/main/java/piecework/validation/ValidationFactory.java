@@ -49,7 +49,7 @@ public class ValidationFactory {
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
 
-        Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
+//        Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
 
         // Validate the submission
         Validation validation = validate(process, instance, task, submission, template, principal, version, throwException);
@@ -102,13 +102,31 @@ public class ValidationFactory {
                     String fieldName = entry.getKey();
 
                     if (!allFieldNames.contains(fieldName)) {
-                        validationBuilder.formValue(fieldName, entry.getValue());
+                        List<? extends Value> values = entry.getValue();
+                        List<? extends Value> previousValues = instanceData.get(fieldName);
+
+                        if (isFile(values, previousValues))
+                            values = ValidationUtility.append(values, previousValues);
+
+                        validationBuilder.formValue(fieldName, values);
                     }
                 }
             }
         }
 
         return validationBuilder.build();
+    }
+
+    private static boolean isFile(List<? extends Value> values, List<? extends Value> previousValues) {
+        return isFile(values) || isFile(previousValues);
+    }
+
+    private static boolean isFile(List<? extends Value> values) {
+        if (values != null && !values.isEmpty()) {
+            Value value = values.iterator().next();
+            return value instanceof File;
+        }
+        return false;
     }
 
 }
