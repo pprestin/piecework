@@ -3,6 +3,7 @@ package piecework.persistence;
 import piecework.model.Content;
 import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.ProcessInstance;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +33,6 @@ public interface ContentRepository {
      * Stores content specific to a process, or if the processDefinitionKey is left null,
      * in a general purpose location.
      */
-    Content save(Process process, Content content, Entity principal) throws IOException;
+    Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException;
 
 }

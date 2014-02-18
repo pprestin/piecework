@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
+import piecework.model.ProcessInstance;
 import piecework.model.Submission;
 import piecework.submission.SubmissionTemplate;
 
@@ -37,7 +38,7 @@ public class MultipartSubmissionHandler extends AbstractSubmissionHandler<Multip
     private static final Logger LOG = Logger.getLogger(MultipartSubmissionHandler.class);
 
     @Override
-    protected Submission handleInternal(MultipartBody body, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected Submission handleInternal(ProcessInstance instance, MultipartBody body, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
         Submission.Builder submissionBuilder = submissionBuilder(template, principal);
         List<Attachment> attachments = body != null ? body.getAllAttachments() : null;
@@ -51,7 +52,7 @@ public class MultipartSubmissionHandler extends AbstractSubmissionHandler<Multip
                 if (mediaType == null)
                     continue;
 
-                handleAllContentTypes(template, submissionBuilder, attachment, actingAsId, principal);
+                handleAllContentTypes(instance, template, submissionBuilder, attachment, actingAsId, principal);
             }
         }
         return submissionBuilder.build();

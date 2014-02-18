@@ -27,6 +27,7 @@ import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
 import piecework.enumeration.Scheme;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.util.ContentUtility;
 
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     }
 
     @Override
-    public Content save(Content content, Entity principal) throws IOException {
+    public Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
         BasicDBObject metadata = new BasicDBObject();
         metadata.put("originalFilename", content.getName());
 

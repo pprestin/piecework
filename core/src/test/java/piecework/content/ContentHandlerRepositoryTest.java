@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.content.concrete.ContentHandlerRegistry;
-import piecework.content.concrete.GridFSContentProviderReceiver;
 import piecework.content.concrete.InMemoryContentProviderReceiver;
 import piecework.content.config.ContentConfiguration;
 import piecework.content.stubs.*;
@@ -30,7 +29,6 @@ import piecework.enumeration.Scheme;
 import piecework.model.Content;
 import piecework.model.Process;
 import piecework.model.User;
-import piecework.submission.config.SubmissionConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -127,7 +125,7 @@ public class ContentHandlerRepositoryTest {
         Content content = new Content.Builder()
                 .build();
 
-        Content stored = contentHandlerRepository.save(process, content, null);
+        Content stored = contentHandlerRepository.save(process, null, content, null);
         Assert.assertEquals("some-key-content-receiver", stored.getLocation());
     }
 
@@ -139,7 +137,7 @@ public class ContentHandlerRepositoryTest {
         Content content = new Content.Builder()
                 .build();
 
-        Content stored = contentHandlerRepository.save(process, content, null);
+        Content stored = contentHandlerRepository.save(process, null, content, null);
         Assert.assertEquals("some-external-content-receiver", stored.getLocation());
     }
 
@@ -152,7 +150,7 @@ public class ContentHandlerRepositoryTest {
                 .build();
         User principal = new User.Builder()
                 .build();
-        Content stored = contentReceiver.save(content, principal);
+        Content stored = contentReceiver.save(null, null, content, principal);
 
         Assert.assertEquals("some-key-content-receiver", stored.getLocation());
     }

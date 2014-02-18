@@ -15,10 +15,9 @@
  */
 package piecework.content.stubs;
 
-import org.apache.commons.lang.NotImplementedException;
 import piecework.content.ContentReceiver;
-import piecework.model.Content;
-import piecework.model.Entity;
+import piecework.model.*;
+import piecework.model.Process;
 
 import java.io.IOException;
 
@@ -28,7 +27,7 @@ import java.io.IOException;
 public class TestKeyContentReceiver implements ContentReceiver {
 
     @Override
-    public Content save(Content content, Entity principal) throws IOException {
+    public Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
         return new Content.Builder()
                 .location("some-key-content-receiver")
                 .build();

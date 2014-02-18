@@ -20,6 +20,7 @@ import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 import piecework.model.FormRequest;
+import piecework.model.ProcessInstance;
 import piecework.model.Submission;
 
 /**
@@ -27,7 +28,7 @@ import piecework.model.Submission;
  */
 public interface SubmissionHandler<T> {
 
-    Submission handle(T submission, SubmissionTemplate template, Entity principal) throws PieceworkException;
+    Submission handle(ProcessInstance instance, T submission, SubmissionTemplate template, Entity principal) throws PieceworkException;
 
     Class<?> getType();
 

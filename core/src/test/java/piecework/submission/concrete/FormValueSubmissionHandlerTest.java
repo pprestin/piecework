@@ -59,7 +59,7 @@ public class FormValueSubmissionHandlerTest {
         ManyMap<String, String> data = new ManyMap<String, String>();
         data.putOne("TestField1", "Some data");
 
-        Submission submission = submissionHandler.handle(data, mockTemplate, mockUser);
+        Submission submission = submissionHandler.handle(null, data, mockTemplate, mockUser);
         String fieldData = submission.getData().get("TestField1").iterator().next().getValue();
         Assert.assertEquals("Some data", fieldData);
     }

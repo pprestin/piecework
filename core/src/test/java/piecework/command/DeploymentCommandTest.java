@@ -123,7 +123,7 @@ public class DeploymentCommandTest {
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
 
-        verify(contentRepository).save(eq(process), any(Content.class), any(Entity.class));
+        verify(contentRepository).save(eq(process), any(ProcessInstance.class), any(Content.class), any(Entity.class));
         verify(facade).deploy(eq(process), eq(processDeployment), any(Content.class));
         verify(processRepository).save(any(Process.class));
     }

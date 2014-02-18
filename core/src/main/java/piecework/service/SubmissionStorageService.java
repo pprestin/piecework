@@ -64,11 +64,11 @@ public class SubmissionStorageService {
             encryptionService = new PassthroughEncryptionService();
     }
 
-    public boolean store(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
-        return store(template, submissionBuilder, name, value, actingAsId, null, MediaType.TEXT_PLAIN, principal);
+    public boolean store(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+        return store(instance, template, submissionBuilder, name, value, actingAsId, null, MediaType.TEXT_PLAIN, principal);
     }
 
-    public boolean store(SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, InputStream inputStream, String contentType, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    public boolean store(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, InputStream inputStream, String contentType, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         FieldSubmissionType fieldSubmissionType = template.fieldSubmissionType(name);
 
         if (fieldSubmissionType == FieldSubmissionType.BUTTON) {
@@ -107,7 +107,7 @@ public class SubmissionStorageService {
                         .build();
 
                 try {
-                    content = contentRepository.save(template.getProcess(), content, principal);
+                    content = contentRepository.save(template.getProcess(), instance, content, principal);
 
                 } catch (MongoException mongoException) {
                     Throwable cause = mongoException.getCause();

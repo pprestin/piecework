@@ -362,6 +362,17 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
     }
 
     @Override
+    public Response removeOptions(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+        ProcessDeployment deployment = deploymentService.read(process, instance);
+
+        LOG.debug("Remove options for " + process.getProcessDefinitionKey());
+
+        return FormUtility.allowCrossOriginResponse(deployment, null);
+    }
+
+    @Override
     public Response readValue(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, Boolean inline) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, false);

@@ -36,7 +36,7 @@ public class ObjectSubmissionHandler extends AbstractSubmissionHandler<Submissio
     private static final Logger LOG = Logger.getLogger(FormValueSubmissionHandler.class);
 
     @Override
-    protected Submission handleInternal(Submission rawSubmission, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected Submission handleInternal(ProcessInstance instance, Submission rawSubmission, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
         Submission.Builder submissionBuilder = submissionBuilder(template, principal, rawSubmission);
         if (rawSubmission != null && rawSubmission.getData() != null) {
@@ -49,7 +49,7 @@ public class ObjectSubmissionHandler extends AbstractSubmissionHandler<Submissio
                         continue;
 
                     String actualValue = sanitizer.sanitize(value.getValue());
-                    if (!submissionStorageService.store(template, submissionBuilder, name, actualValue, principalId, principal)) {
+                    if (!submissionStorageService.store(instance, template, submissionBuilder, name, actualValue, principalId, principal)) {
                         LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                     }
                 }

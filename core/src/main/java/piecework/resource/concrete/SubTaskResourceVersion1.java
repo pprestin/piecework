@@ -114,7 +114,7 @@ public class SubTaskResourceVersion1 implements SubTaskResource {
             ProcessDeployment deployment = deploymentService.read(process, instance);
 
             SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, formRequest);
-            Submission submission = handler.handle(rawSubmission, template, principal);
+            Submission submission = handler.handle(instance, rawSubmission, template, principal);
 
 
             processInstanceService.createSubTask(principal, process, instance, task, taskId, template, submission);

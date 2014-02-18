@@ -112,7 +112,7 @@ public class ValidationCommand extends AbstractCommand<Validation> {
             template = submissionTemplateFactory.submissionTemplate(process, field, request, activity.isAllowAny());
         }
 
-        Submission submission = this.submission == null ? handler.handle(object, template, principal) : this.submission;
+        Submission submission = this.submission == null ? handler.handle(instance, object, template, principal) : this.submission;
         boolean throwException = !ignoreThrowException && submission.getAction() != null && !UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
 
         taskService.checkIsActiveIfTaskExists(process, task);

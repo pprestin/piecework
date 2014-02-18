@@ -108,7 +108,7 @@ public class ContentHandlerRepository implements ContentRepository {
     }
 
     @Override
-    public Content save(Process process, Content content, Entity principal) throws IOException {
+    public Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
         String contentReceiverKey = null;
 
         if (content.getMetadata() != null)
@@ -119,7 +119,7 @@ public class ContentHandlerRepository implements ContentRepository {
 
         // Return the result from the specified receiver (or primary receiver if key is null)
         ContentReceiver contentReceiver = contentHandlerRegistry.contentReceiver(contentReceiverKey);
-        Content saved = contentReceiver.save(content, principal);
+        Content saved = contentReceiver.save(process, instance, content, principal);
         // Backup receivers should also be saved to, but IOExceptions from them
         // should not bubble up
         Set<ContentReceiver> backupReceivers = contentHandlerRegistry.backupReceivers();
@@ -127,7 +127,7 @@ public class ContentHandlerRepository implements ContentRepository {
             for (ContentReceiver backupReceiver : backupReceivers) {
                 try {
                     // Don't bother to get back the result, since it won't be returned
-                    backupReceiver.save(content, principal);
+                    backupReceiver.save(process, instance, content, principal);
                 } catch (IOException ioe) {
                     LOG.error("Error saving content to a backup receiver");
                 }

@@ -72,7 +72,7 @@ public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse
         if (submission != null && submission.getAction() != null)
             validatedActionType = submission.getAction();
         else if (actionType == ActionType.CREATE)
-            validatedActionType = ActionType.SAVE;
+            validatedActionType = ActionType.COMPLETE;
 
         AbstractCommand<ProcessInstance> command = null;
         if (task == null)

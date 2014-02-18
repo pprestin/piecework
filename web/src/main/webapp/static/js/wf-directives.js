@@ -484,6 +484,7 @@ angular.module('wf.directives',
         function($http, $location, $sce, $window, formPageUri, formResourceUri, wizardService) {
             return {
                 restrict: 'AE',
+//                controller: 'FileUploadController',
                 scope: {
 
                 },
@@ -808,7 +809,8 @@ angular.module('wf.directives',
                     scope.$root.$on('fileuploaddone', function(event, data) {
                         var form = data.result;
 //                        scope.$root.$broadcast('wfEvent:form-loaded', form);
-                        scope.reloadForm(form);
+                        if (form != null && form.data != null)
+                            scope.reloadForm(form);
                     });
                     scope.$on('fileuploadfail', function(event, data) {
                         var message = angular.fromJson(data.jqXHR.responseText);
@@ -1503,6 +1505,8 @@ angular.module('wf.directives',
                     };
                     scope.fileUploadOptions = {
                         autoUpload: true,
+                        dataType: 'json',
+                        fileInput: $('input:file'),
                         xhrFields: {
                             withCredentials: true
                         }

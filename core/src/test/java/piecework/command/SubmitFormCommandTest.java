@@ -113,7 +113,7 @@ public class SubmitFormCommandTest {
         SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
         submit.execute(commandFactory, requestService, storageManager);
 
-        Mockito.verify(requestService).create(requestDetails, process, null, null, ActionType.SAVE);
+        Mockito.verify(requestService).create(requestDetails, process, instance, null, ActionType.COMPLETE);
     }
 
     @Test(expected = ForbiddenError.class)
