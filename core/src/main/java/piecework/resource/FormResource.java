@@ -38,17 +38,25 @@ public interface FormResource extends ApplicationResource {
 
     @OPTIONS
     @Path("{processDefinitionKey}")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Consumes("*/*")
     @Produces("*/*")
     @LocalPreflight
-    Response options(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
+    Response readOptions(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}")
-    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR})
+    @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces({"text/html","application/json"})
     Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId, @QueryParam("redirectCount") String redirectCount) throws PieceworkException;
+
+    @OPTIONS
+    @Path("{processDefinitionKey}/{requestId}")
+    @RolesAllowed({AuthorizationRole.INITIATOR, AuthorizationRole.USER})
+    @Consumes("*/*")
+    @Produces("*/*")
+    @LocalPreflight
+    Response submitOptions(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{requestId}")

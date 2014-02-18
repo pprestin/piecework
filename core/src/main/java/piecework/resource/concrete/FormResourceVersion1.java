@@ -56,7 +56,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     Versions versions;
 
     @Override
-    public Response options(MessageContext context, String rawProcessDefinitionKey, String taskId, String requestId, String submissionId) throws PieceworkException {
+    public Response readOptions(MessageContext context, String rawProcessDefinitionKey, String taskId, String requestId, String submissionId) throws PieceworkException {
         Process process = processService.read(rawProcessDefinitionKey);
         ProcessDeployment deployment = process.getDeployment();
 
@@ -79,6 +79,16 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
             return submissionForm(context, process, rawSubmissionId);
 
         return startForm(context, process);
+    }
+
+    @Override
+    public Response submitOptions(MessageContext context, String rawProcessDefinitionKey, String requestId) throws PieceworkException {
+        Process process = processService.read(rawProcessDefinitionKey);
+        ProcessDeployment deployment = process.getDeployment();
+
+        LOG.debug("Options for " + process.getProcessDefinitionKey());
+
+        return isAnonymous() ? Response.ok().build() : FormUtility.allowCrossOriginResponse(deployment, null);
     }
 
     @Override
