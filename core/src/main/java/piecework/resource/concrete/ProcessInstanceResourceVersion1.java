@@ -132,7 +132,7 @@ public class ProcessInstanceResourceVersion1 implements ProcessInstanceResource 
         ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
         ProcessDeployment deployment = deploymentService.read(process, instance);
 
-        LOG.debug("Options for " + process.getProcessDefinitionKey());
+        LOG.debug("Attachment options for " + process.getProcessDefinitionKey());
 
         return FormUtility.allowCrossOriginResponse(deployment, null);
     }
