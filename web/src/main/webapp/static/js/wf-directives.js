@@ -566,7 +566,7 @@ angular.module('wf.directives',
                         if (typeof(validation) !== 'undefined' && validation[field.name] != null) {
                             field.messages = validation[field.name];
                             field.cssClass = "has-error";
-                            if (field.parent != null && field.parent.ordinal < form.activeStepOrdinal) {
+                            if (field.parent != null && (form.layout == 'review' || field.parent.ordinal < form.activeStepOrdinal)) {
                                 form.activeStepOrdinal = field.parent.ordinal;
                                 field.parent.breadcrumbCssClass = "invalid";
                             }

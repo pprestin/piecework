@@ -86,7 +86,7 @@ public class AccessTracker {
     }
 
     public void track(Process process, ProcessInstance instance, String secretId, String key, String reason, Entity principal, boolean isAnonymousAllowed) {
-        accessEventRepository.save(new AccessEvent(instance, secretId, key, reason, principal, isAnonymousAllowed));
+        accessEventRepository.save(new AccessEvent(process, instance, secretId, key, reason, principal, isAnonymousAllowed));
     }
 
 }

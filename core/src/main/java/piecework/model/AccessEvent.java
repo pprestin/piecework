@@ -46,12 +46,12 @@ public class AccessEvent {
     private final boolean isAnonymousAllowed;
 
     public AccessEvent() {
-        this(null, null, null, null, null, false);
+        this(null, null, null, null, null, null, false);
     }
 
-    public AccessEvent(ProcessInstance instance, String secretId, String key, String reason, Entity entity, boolean isAnonymousAllowed) {
+    public AccessEvent(Process process, ProcessInstance instance, String secretId, String key, String reason, Entity entity, boolean isAnonymousAllowed) {
         this.accessEventId = null;
-        this.processDefinitionKey = instance != null ? instance.getProcessDefinitionKey() : null;
+        this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
         this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
         this.secretId = secretId;
         this.key = key;
