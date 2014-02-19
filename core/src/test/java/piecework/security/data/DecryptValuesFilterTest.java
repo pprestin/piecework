@@ -20,12 +20,12 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.persistence.AccessEventRepository;
 import piecework.security.AccessTracker;
 import piecework.security.EncryptionService;
@@ -64,6 +64,9 @@ public class DecryptValuesFilterTest {
 
     @Before
     public void setup() {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
         ProcessInstance instance = new ProcessInstance.Builder()
                 .processDefinitionKey("TEST")
                 .processInstanceId("1234")
@@ -73,7 +76,7 @@ public class DecryptValuesFilterTest {
                 .build();
 
         String reason = "testing";
-        this.filter = new DecryptValuesFilter(instance, principal, reason, accessTracker, encryptionService);
+        this.filter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, false);
     }
 
     @Test
@@ -146,5 +149,7 @@ public class DecryptValuesFilterTest {
 
         verify(mockAccessEventRepository, times(3)).save(any(AccessEvent.class));
     }
+
+
 
 }

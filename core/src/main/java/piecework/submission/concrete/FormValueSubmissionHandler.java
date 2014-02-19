@@ -38,7 +38,7 @@ public class FormValueSubmissionHandler extends AbstractSubmissionHandler<Map<St
     protected Submission handleInternal(ProcessInstance instance, Map<String, List<String>> data, SubmissionTemplate template, Entity principal) throws PieceworkException {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
         String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
-        Submission.Builder submissionBuilder = submissionBuilder(template, principal);
+        Submission.Builder submissionBuilder = submissionBuilder(instance, template, principal);
 
         if (data != null && !data.isEmpty()) {
             for (Map.Entry<String, List<String>> entry : data.entrySet()) {

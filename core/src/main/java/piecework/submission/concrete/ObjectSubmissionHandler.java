@@ -38,7 +38,7 @@ public class ObjectSubmissionHandler extends AbstractSubmissionHandler<Submissio
     @Override
     protected Submission handleInternal(ProcessInstance instance, Submission rawSubmission, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
-        Submission.Builder submissionBuilder = submissionBuilder(template, principal, rawSubmission);
+        Submission.Builder submissionBuilder = submissionBuilder(instance, template, principal, rawSubmission);
         if (rawSubmission != null && rawSubmission.getData() != null) {
             for (Map.Entry<String, List<Value>> entry : rawSubmission.getData().entrySet()) {
                 String name = sanitizer.sanitize(entry.getKey());

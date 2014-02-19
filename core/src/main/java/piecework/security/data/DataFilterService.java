@@ -17,12 +17,11 @@ package piecework.security.data;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.SystemUser;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.security.EncryptionService;
@@ -54,9 +53,6 @@ public class DataFilterService {
     @Autowired
     private UserInterfaceSettings settings;
 
-    private static final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-    private static final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis();
-
 
     @PostConstruct
     public void init() {
@@ -67,28 +63,32 @@ public class DataFilterService {
     /**
      * Retrieves all instance data including restricted values, decrypting them all.
      *
+     *
+     * @param process
      * @param instance containing the data
      * @param reason why this data is being retrieved in the code, e.g. to send it to some backend system
      * @return Map of decrypted instance data
      */
-    public Map<String, List<Value>> allInstanceDataDecrypted(ProcessInstance instance, String reason) {
+    public Map<String, List<Value>> allInstanceDataDecrypted(Process process, ProcessInstance instance, String reason) {
         LOG.info("Retrieving all instance data, decrypted, for the following reason: " + reason);
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : null;
-        DataFilter decryptValuesFilter = new DecryptValuesFilter(instance, new SystemUser(), reason, accessTracker, encryptionService);
+        DataFilter decryptValuesFilter = new DecryptValuesFilter(process, instance, new SystemUser(), reason, accessTracker, encryptionService, false);
         return SecurityUtility.filter(instanceData, decryptValuesFilter);
     }
 
     /**
      * Retrieves all instance and validation data, including restricted values, decrypting them all.
      *
+     *
+     * @param process
      * @param instance containing the data
      * @param reason why this data is being retrieved in the code, e.g. to send it to some backend system
      * @return Map of decrypted instance data
      */
-    public Map<String, List<Value>> allInstanceAndValidationDataDecrypted(ProcessInstance instance, Validation validation, String reason) {
+    public Map<String, List<Value>> allInstanceAndValidationDataDecrypted(Process process, ProcessInstance instance, Validation validation, String reason) {
         LOG.info("Retrieving all instance and validation data, decrypted, for the following reason: " + reason);
         ManyMap<String, Value> combinedData = SecurityUtility.combinedData(instance, validation);
-        DataFilter decryptValuesFilter = new DecryptValuesFilter(instance, new SystemUser(), reason, accessTracker, encryptionService);
+        DataFilter decryptValuesFilter = new DecryptValuesFilter(process, instance, new SystemUser(), reason, accessTracker, encryptionService, false);
         return SecurityUtility.filter(combinedData, decryptValuesFilter);
     }
 
@@ -111,15 +111,18 @@ public class DataFilterService {
      * Retrieves all submission data, including restricted fields, which will be
      * decrypted
      *
+     *
+     * @param process
      * @param instance to log access to
      * @param submission containing the data
      * @param principal entity that is accessing this data
      * @param reason why the principal is requesting the data
      * @return Map of validation data that
      */
-    public Map<String, List<Value>> allSubmissionData(ProcessInstance instance, Submission submission, Entity principal, String reason) {
+    public Map<String, List<Value>> allSubmissionData(Process process, ProcessInstance instance, Submission submission, Entity principal, String reason) {
         Map<String, List<Value>> validationData = submission != null ? submission.getData() : null;
-        DataFilter decryptValuesFilter = new DecryptValuesFilter(instance, principal, reason, accessTracker, encryptionService);
+        boolean isAnonymousDecryptAllowed = instance == null && process.isAnonymousSubmissionAllowed();
+        DataFilter decryptValuesFilter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, isAnonymousDecryptAllowed);
         return SecurityUtility.filter(validationData, decryptValuesFilter);
     }
 
@@ -147,12 +150,12 @@ public class DataFilterService {
         return SecurityUtility.filter(validationData, limitFieldsFilter);
     }
 
-    public Map<String, List<Value>> authorizedInstanceData(ProcessInstance instance, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
+    public Map<String, List<Value>> authorizedInstanceData(Process process, ProcessInstance instance, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : null;
 
         DataFilter decryptValuesFilter;
         if (task.isAssignee(principal))
-            decryptValuesFilter = new DecryptValuesFilter(instance, principal, reason, accessTracker, encryptionService);
+            decryptValuesFilter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, false);
         else
             decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
 
@@ -165,6 +168,7 @@ public class DataFilterService {
      * Filters instance and validation data to the
      *
      *
+     * @param process
      * @param instance
      * @param validation
      * @param task
@@ -172,12 +176,12 @@ public class DataFilterService {
      * @param principal  @return
      * @param isAllowAny
      */
-    public Map<String, List<Value>> authorizedInstanceAndValidationData(ProcessInstance instance, Validation validation, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
+    public Map<String, List<Value>> authorizedInstanceAndValidationData(Process process, ProcessInstance instance, Validation validation, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
         ManyMap<String, Value> combinedData = SecurityUtility.combinedData(instance, validation);
 
         DataFilter decryptValuesFilter;
         if (task.isAssignee(principal))
-            decryptValuesFilter = new DecryptValuesFilter(instance, principal, reason, accessTracker, encryptionService);
+            decryptValuesFilter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, false);
         else
             decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
 
@@ -185,7 +189,6 @@ public class DataFilterService {
         DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, version);
         return SecurityUtility.filter(combinedData, limitFieldsFilter, decryptValuesFilter, decorateValuesFilter);
     }
-
 
     public ManyMap<String, Value> exclude(Map<String, List<Value>> original) {
         ManyMap<String, Value> map = new ManyMap<String, Value>();
@@ -205,128 +208,6 @@ public class DataFilterService {
 
         return map;
     }
-
-//    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, Validation validation, boolean includeRestrictedData, boolean includeInstanceData, boolean allowAny) {
-//        Map<String, List<Value>> data = filter(fieldMap, instance, task, principal, includeRestrictedData, includeInstanceData, allowAny);
-//        if (validation != null) {
-//            Map<String, List<Value>> validationData = filter(validation.getData(), task, principal, includeRestrictedData);
-//            if (validationData != null) {
-//                for (Map.Entry<String, List<Value>> entry : validationData.entrySet()) {
-//                    String fieldName = entry.getKey();
-//                    List<Value> values = values(instance, fieldName, entry.getValue(), null, principal);
-//                    data.put(fieldName, values);
-//                }
-//            }
-//        }
-//        return data;
-//    }
-//
-//    public Map<String, List<Value>> filter(Map<String, Field> fieldMap, ProcessInstance instance, Task task, Entity principal, boolean includeRestrictedData, boolean includeInstanceData, boolean allowAny) {
-//        Map<String, List<Value>> data = includeInstanceData && instance != null ? instance.getData() : new ManyMap<String, Value>();
-//        Map<String, List<Value>> filtered = new ManyMap<String, Value>();
-//        if (allowAny) {
-//            for (Map.Entry<String, List<Value>> entry : data.entrySet()) {
-//                String fieldName = entry.getKey();
-//                List<Value> values = values(instance, fieldName, entry.getValue(), null, principal);
-//                filtered.put(fieldName, values);
-//            }
-//        }
-//
-//        if (fieldMap != null) {
-//            for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
-//                Field field = entry.getValue();
-//                String fieldName = field.getName();
-//                if (fieldName == null)
-//                    continue;
-//
-//                String defaultValue = field.getDefaultValue();
-//                List<Value> values = values(instance, fieldName, data.get(fieldName), defaultValue, principal);
-//                filtered.put(fieldName, values);
-//            }
-//        }
-//
-//        return filter(filtered, task, principal, includeRestrictedData);
-//    }
-
-//    private List<Value> values(ProcessInstance instance, String fieldName, List<? extends Value> values, String defaultValue, Entity principal) {
-//        if (values == null || values.isEmpty()) {
-//            if (StringUtils.isNotEmpty(defaultValue)) {
-//                if (defaultValue.equals("{{CurrentUser}}") && principal != null)
-//                    return Collections.singletonList((Value) principal.getActingAs());
-//                if (defaultValue.equals("{{CurrentDate}}")) {
-//                    Value currentDateValue = new Value(dateTimeFormatter.print(new Date().getTime()));
-//                    return Collections.singletonList(currentDateValue);
-//                }
-//                if (instance != null && defaultValue.contains("{{ConfirmationNumber}}"))
-//                    defaultValue = defaultValue.replaceAll("\\{\\{ConfirmationNumber\\}\\}", instance.getProcessInstanceId());
-//
-//                return Collections.singletonList(new Value(defaultValue));
-//            }
-//
-//            return Collections.emptyList();
-//        }
-//
-//        List<Value> list = new ArrayList<Value>(values.size());
-//        for (Value value : values) {
-//            if (value instanceof File) {
-//                File file = File.class.cast(value);
-//
-//                list.add(new File.Builder(file, passthroughSanitizer)
-//                        .processDefinitionKey(instance.getProcessDefinitionKey())
-//                        .processInstanceId(instance.getProcessInstanceId())
-//                        .fieldName(fieldName)
-//                        .build(version));
-//            } else {
-//                list.add(value);
-//            }
-//        }
-//
-//        return list;
-//    }
-
-//    public ManyMap<String, Value> filter(Map<String, List<Value>> filtered, Task task, Entity principal, boolean includeRestrictedData) {
-//        if (includeRestrictedData && task != null) {
-//            if (SecurityUtility.isAuthorizedForRestrictedData(task, principal)) {
-//                return decrypt(filtered, principal);
-//            }
-//            return mask(filtered);
-//        }
-//        return exclude(filtered);
-//    }
-
-    /*
-     * Takes a passed set of fields that are currently being validated and decrypts any corresponding values so they can be validated
-     */
-//    public ManyMap<String, Value> decryptAnyRestrictedFieldsForValidation(Set<Field> fields, Map<String, List<Value>> data, Task task, Entity principal) {
-//        ManyMap<String, Value> decryptedMap = new ManyMap<String, Value>();
-//
-//        // If the fields set is null or empty, just return the data as passed
-//        if (fields == null || fields.isEmpty())
-//            return data != null && !data.isEmpty() ? new ManyMap<String, Value>(data) : decryptedMap;
-//
-//        for (Field field : fields) {
-//            String fieldName = ValidationUtility.fieldName(field, data);
-//            List<Value> values = data.get(fieldName);
-//
-//            if (field.isRestricted()) {
-//                if (SecurityUtility.isAuthorizedForRestrictedData(task, principal)) {
-//                    try {
-//                        List<Value> decrypted = decrypt(fieldName, values, principal);
-//                        decryptedMap.put(fieldName, decrypted);
-//                    } catch (Exception e) {
-//                        LOG.error("Unable to decrypt restricted data for " + fieldName + " as requested by " + principal.getEntityId());
-//                    }
-//                }
-//            } else {
-//                if (values == null)
-//                    values = Collections.emptyList();
-//
-//                decryptedMap.put(fieldName, values);
-//            }
-//        }
-//        return decryptedMap;
-//    }
-
 
     private static List<Value> exclude(List<? extends Value> values) throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
         if (values.isEmpty())

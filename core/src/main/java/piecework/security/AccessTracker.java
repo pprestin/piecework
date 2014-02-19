@@ -24,6 +24,7 @@ import piecework.common.AccessLog;
 import piecework.enumeration.CacheName;
 import piecework.model.AccessEvent;
 import piecework.model.Entity;
+import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.RequestDetails;
 import piecework.persistence.AccessEventRepository;
@@ -84,8 +85,8 @@ public class AccessTracker {
             LOG.warn("Access attempt " + accessLog.getAccessCount() + " by " + key);
     }
 
-    public void track(ProcessInstance instance, String secretId, String key, String reason, Entity principal) {
-        accessEventRepository.save(new AccessEvent(instance, secretId, key, reason, principal));
+    public void track(Process process, ProcessInstance instance, String secretId, String key, String reason, Entity principal, boolean isAnonymousAllowed) {
+        accessEventRepository.save(new AccessEvent(instance, secretId, key, reason, principal, isAnonymousAllowed));
     }
 
 }

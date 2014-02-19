@@ -25,6 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.common.ManyMap;
 import piecework.model.AccessEvent;
+import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.User;
 import piecework.model.Value;
@@ -73,13 +74,17 @@ public class DataFilterServiceTest {
         original.putOne("test-key-2", new Value("test-value-2"));
         original.putOne("test-key-3", new Value("test-value-3"));
 
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
+
         ProcessInstance instance = new ProcessInstance.Builder()
                 .processDefinitionKey("TEST")
                 .processInstanceId("123")
                 .data(original)
                 .build();
 
-        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(instance, "testing");
+        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(process, instance, "testing");
         Assert.assertEquals(original, data);
         Assert.assertEquals(3, data.size());
         verify(mockAccessEventRepository, never()).save(any(AccessEvent.class));
@@ -96,13 +101,17 @@ public class DataFilterServiceTest {
         original.putOne("test-key-2", new Value("test-value-2"));
         original.putOne("test-key-3", encryptionService.encrypt("test-value-3"));
 
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
+
         ProcessInstance instance = new ProcessInstance.Builder()
                 .processDefinitionKey("TEST")
                 .processInstanceId("123")
                 .data(original)
                 .build();
 
-        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(instance, "testing");
+        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(process, instance, "testing");
         Assert.assertEquals(3, data.size());
         Assert.assertEquals("test-value-3", data.get("test-key-3").iterator().next().toString());
         verify(mockAccessEventRepository, times(1)).save(any(AccessEvent.class));

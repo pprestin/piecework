@@ -106,11 +106,11 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         }
     }
 
-    protected Submission.Builder submissionBuilder(SubmissionTemplate template, Entity principal) {
-        return submissionBuilder(template, principal, null);
+    protected Submission.Builder submissionBuilder(ProcessInstance instance, SubmissionTemplate template, Entity principal) {
+        return submissionBuilder(instance, template, principal, null);
     }
 
-    protected Submission.Builder submissionBuilder(SubmissionTemplate template, Entity principal, Submission rawSubmission) {
+    protected Submission.Builder submissionBuilder(ProcessInstance instance, SubmissionTemplate template, Entity principal, Submission rawSubmission) {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
 
         String submitterId = principalId;
@@ -124,7 +124,7 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         if (rawSubmission != null)
             submissionBuilder = new Submission.Builder(rawSubmission, sanitizer, true);
         else
-            submissionBuilder = new Submission.Builder().actionType(ActionType.SAVE);
+            submissionBuilder = new Submission.Builder().actionType(instance == null ? ActionType.COMPLETE : ActionType.SAVE);
 
         submissionBuilder.processDefinitionKey(template.getProcess().getProcessDefinitionKey())
                 .requestId(template.getRequestId())

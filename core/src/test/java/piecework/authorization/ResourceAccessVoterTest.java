@@ -31,6 +31,7 @@ import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import piecework.model.Submission;
+import piecework.resource.ProcessInstanceApiResource;
 import piecework.resource.ProcessInstanceResource;
 
 import java.util.Collection;
@@ -63,7 +64,7 @@ public class ResourceAccessVoterTest {
         Mockito.when(methodInvocation.getArguments())
                 .thenReturn(new Object[] {null, "TESTPROCESS1", null});
         Mockito.when(methodInvocation.getMethod())
-                .thenReturn(ProcessInstanceResource.class.getMethod("create", MessageContext.class, String.class, Submission.class));
+                .thenReturn(ProcessInstanceApiResource.class.getMethod("create", MessageContext.class, String.class, Submission.class));
     }
 
     @Test

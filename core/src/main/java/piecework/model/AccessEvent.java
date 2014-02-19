@@ -43,11 +43,13 @@ public class AccessEvent {
 
     private final String reason;
 
+    private final boolean isAnonymousAllowed;
+
     public AccessEvent() {
-        this(null, null, null, null, null);
+        this(null, null, null, null, null, false);
     }
 
-    public AccessEvent(ProcessInstance instance, String secretId, String key, String reason, Entity entity) {
+    public AccessEvent(ProcessInstance instance, String secretId, String key, String reason, Entity entity, boolean isAnonymousAllowed) {
         this.accessEventId = null;
         this.processDefinitionKey = instance != null ? instance.getProcessDefinitionKey() : null;
         this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
@@ -56,6 +58,7 @@ public class AccessEvent {
         this.reason = reason;
         this.entityId = entity != null ? entity.getEntityId() : null;
         this.accessDate = new Date();
+        this.isAnonymousAllowed = isAnonymousAllowed;
     }
 
     public String getAccessEventId() {
@@ -89,4 +92,5 @@ public class AccessEvent {
     public String getReason() {
         return reason;
     }
+
 }

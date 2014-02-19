@@ -48,7 +48,6 @@ public interface TaskResource extends ApplicationResource, ApiResource {
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.SYSTEM})
     Response complete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("taskId") String taskId, @PathParam("action") String action, @Context MessageContext context, Submission submission) throws PieceworkException;
 
-
     @GET
     @Path("")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})

@@ -106,14 +106,6 @@ public class ProcessInstanceService {
     UserInterfaceSettings settings;
 
 
-    public void activate(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-        String reason = sanitizer.sanitize(rawReason);
-        commandFactory.activation(principal, process, deployment, instance, reason).execute();
-    }
-
     public void assign(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, Task task, String assigneeId) throws BadRequestError, PieceworkException {
         User assignee = assigneeId != null ? identityService.getUserWithAccessAuthority(assigneeId) : null;
         commandFactory.assignment(principal, process, deployment, instance, task, assignee).execute();
@@ -165,12 +157,8 @@ public class ProcessInstanceService {
         return commandFactory.createInstance(principal, validation).execute();
     }
 
-    public void deleteAttachment(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws BadRequestError, PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
-        String attachmentId = sanitizer.sanitize(rawAttachmentId);
+    public void deleteAttachment(Process process, ProcessInstance instance, String attachmentId, Entity principal) throws BadRequestError, PieceworkException {
         Task task = taskService.allowedTask(process, instance, principal, true);
-
         commandFactory.detachment(principal, process, instance, task, attachmentId).execute();
     }
 
@@ -256,23 +244,6 @@ public class ProcessInstanceService {
             LOG.debug("Retrieved instance for " + processInstanceId + " in " + (System.currentTimeMillis() - start) + " ms");
 
         return instance;
-    }
-
-    public void restart(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-        String reason = sanitizer.sanitize(rawReason);
-        commandFactory.restart(principal, process, deployment, instance, reason).execute();
-    }
-
-    public void suspend(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-        String reason = sanitizer.sanitize(rawReason);
-
-        commandFactory.suspension(principal, process, deployment, instance, reason).execute();
     }
 
     public ProcessInstance update(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, ProcessInstance rawInstance) throws BadRequestError, PieceworkException {

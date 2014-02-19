@@ -83,11 +83,11 @@ public class ValidationFactory {
             Set<Field> fields = fieldRuleMap.keySet();
             boolean isAllowAny = template.isAnyFieldAllowed();
             String reason = "User is submitting data that needs to be validated";
-            Map<String, List<Value>> decryptedSubmissionData = dataFilterService.allSubmissionData(instance, submission, principal, reason);
+            Map<String, List<Value>> decryptedSubmissionData = dataFilterService.allSubmissionData(process, instance, submission, principal, reason);
             Map<String, List<Value>> decryptedInstanceData = null;
 
             if (task != null)
-                decryptedInstanceData = dataFilterService.authorizedInstanceData(instance, task, fields, principal, version, reason, isAllowAny);
+                decryptedInstanceData = dataFilterService.authorizedInstanceData(process, instance, task, fields, principal, version, reason, isAllowAny);
 
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();

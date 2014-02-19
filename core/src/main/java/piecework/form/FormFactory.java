@@ -100,7 +100,7 @@ public class FormFactory {
                 // will verify that
                 String reason = "User is viewing an assigned task: " + task.getTaskInstanceId();
 
-                data = dataFilterService.authorizedInstanceAndValidationData(instance, validation, task, fields, principal, version, reason, isAllowAny);
+                data = dataFilterService.authorizedInstanceAndValidationData(process, instance, validation, task, fields, principal, version, reason, isAllowAny);
             }
 
             // If an activity is set up to allow "any" input then it also has to be provided with the full set of data currently stored for the instance

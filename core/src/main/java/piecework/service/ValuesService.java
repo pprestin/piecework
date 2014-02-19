@@ -93,20 +93,20 @@ public class ValuesService {
         throw new NotFoundError();
     }
 
-    public void delete(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, RequestDetails requestDetails, Entity principal) throws PieceworkException {
-
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String fieldName = sanitizer.sanitize(rawFieldName);
-        String valueId = sanitizer.sanitize(rawValueId);
-
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
-            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
-
-        Task task = taskService.allowedTask(process, instance, principal, true);
-
-        commandFactory.removeValue(principal, process, instance, task, fieldName, valueId).execute();
-    }
+//    public void delete(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, RequestDetails requestDetails, Entity principal) throws PieceworkException {
+//
+//        Process process = processService.read(rawProcessDefinitionKey);
+//        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
+//        String fieldName = sanitizer.sanitize(rawFieldName);
+//        String valueId = sanitizer.sanitize(rawValueId);
+//
+//        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
+//            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+//
+//        Task task = taskService.allowedTask(process, instance, principal, true);
+//
+//        commandFactory.removeValue(principal, process, instance, task, fieldName, valueId).execute();
+//    }
 
     public List<Value> searchValues(Process process, ProcessInstance instance, String fieldName) throws StatusCodeError {
         Map<String, List<Value>> data = instance.getData();

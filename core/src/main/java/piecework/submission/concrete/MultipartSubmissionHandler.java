@@ -40,7 +40,7 @@ public class MultipartSubmissionHandler extends AbstractSubmissionHandler<Multip
     @Override
     protected Submission handleInternal(ProcessInstance instance, MultipartBody body, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
-        Submission.Builder submissionBuilder = submissionBuilder(template, principal);
+        Submission.Builder submissionBuilder = submissionBuilder(instance, template, principal);
         List<Attachment> attachments = body != null ? body.getAllAttachments() : null;
         if (attachments != null && !attachments.isEmpty()) {
             if (LOG.isDebugEnabled())

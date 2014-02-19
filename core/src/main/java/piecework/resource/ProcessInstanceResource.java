@@ -29,42 +29,7 @@ import piecework.process.AttachmentQueryParameters;
  */
 @Path("instance")
 @Produces({"application/json"})
-public interface ProcessInstanceResource extends ApplicationResource, ApiResource {
-
-    @POST
-    @Path("{processDefinitionKey}")
-    @RolesAllowed({AuthorizationRole.INITIATOR})
-    @Consumes({"application/json"})
-    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, Submission submission) throws PieceworkException;
-
-    @POST
-	@Path("{processDefinitionKey}")
-	@RolesAllowed({AuthorizationRole.INITIATOR})
-	@Consumes("application/x-www-form-urlencoded")
-    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultivaluedMap<String, String> formData) throws PieceworkException;
-	
-	@POST
-	@Path("{processDefinitionKey}")
-	@RolesAllowed({AuthorizationRole.INITIATOR})
-	@Consumes("multipart/form-data")
-	Response createMultipart(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, MultipartBody body) throws PieceworkException;
-	
-    @GET
-    @Path("{processDefinitionKey}/{processInstanceId}")
-    @RolesAllowed({AuthorizationRole.ADMIN})
-    Response read(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
-
-    @PUT
-    @Path("{processDefinitionKey}/{processInstanceId}")
-    @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/json"})
-    Response update(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, ProcessInstance instance) throws PieceworkException;
-
-    @DELETE
-    @Path("{processDefinitionKey}/{processInstanceId}")
-    @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/json"})
-    Response delete(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
+public interface ProcessInstanceResource extends ApplicationResource {
 
     @GET
     @Path("")
@@ -80,12 +45,6 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/x-www-form-urlencoded"})
     Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws PieceworkException;
-
-    @POST
-    @Path("{processDefinitionKey}/{processInstanceId}/activation")
-    @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/json"})
-    Response activate(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/attachment")
@@ -121,12 +80,6 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.ADMIN})
     @Consumes("application/x-www-form-urlencoded")
     Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws PieceworkException;
-
-    @POST
-    @Path("{processDefinitionKey}/{processInstanceId}/cancellation")
-    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    @Consumes({"application/json"})
-    Response cancel(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}/removal")
@@ -173,18 +126,6 @@ public interface ProcessInstanceResource extends ApplicationResource, ApiResourc
     @RolesAllowed({AuthorizationRole.ADMIN})
     @Consumes({"application/x-www-form-urlencoded"})
     Response restart(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @FormParam("reason") String reason) throws PieceworkException;
-
-    @POST
-    @Path("{processDefinitionKey}/{processInstanceId}/restart")
-    @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/json"})
-    Response restart(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
-
-    @POST
-    @Path("{processDefinitionKey}/{processInstanceId}/suspension")
-    @RolesAllowed({AuthorizationRole.ADMIN})
-    @Consumes({"application/json"})
-    Response suspend(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, OperationDetails reason) throws PieceworkException;
 
     @OPTIONS
     @Path("{processDefinitionKey}/{processInstanceId}/suspension")
