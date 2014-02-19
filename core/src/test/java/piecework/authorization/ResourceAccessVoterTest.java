@@ -32,7 +32,6 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import piecework.model.Submission;
 import piecework.resource.ProcessInstanceApiResource;
-import piecework.resource.ProcessInstanceResource;
 
 import java.util.Collection;
 

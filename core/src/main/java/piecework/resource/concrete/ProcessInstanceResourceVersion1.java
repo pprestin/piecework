@@ -22,8 +22,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.enumeration.OperationType;
-import piecework.export.IteratingDataProvider;
-import piecework.service.AttachmentService;
+import piecework.resource.ProcessInstanceApplicationResource;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
@@ -32,15 +31,10 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
-import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.process.AttachmentQueryParameters;
 import piecework.service.HistoryFactory;
-import piecework.resource.ProcessInstanceResource;
-import piecework.security.AccessTracker;
-import piecework.security.Sanitizer;
-import piecework.settings.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.*;
 import piecework.ui.Streamable;
@@ -51,7 +45,6 @@ import piecework.util.ProcessInstanceUtility;
 
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +52,7 @@ import java.util.Map;
  * @author James Renfro
  */
 @Service
-public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource implements ProcessInstanceResource {
+public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource implements ProcessInstanceApplicationResource {
 
     private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
 

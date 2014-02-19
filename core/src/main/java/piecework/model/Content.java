@@ -17,6 +17,7 @@ package piecework.model;
 
 import org.apache.log4j.Logger;
 import org.springframework.core.io.Resource;
+import piecework.content.concrete.RemoteResource;
 import piecework.ui.Streamable;
 
 import java.io.BufferedInputStream;
@@ -71,6 +72,8 @@ public class Content implements Serializable, Streamable {
     }
 
     public String getContentType() {
+        if (resource != null && resource instanceof RemoteResource)
+            return ((RemoteResource) resource).getContentType();
         return contentType;
     }
 
@@ -79,6 +82,9 @@ public class Content implements Serializable, Streamable {
     }
 
     public String getFilename() {
+        if (resource != null && resource instanceof RemoteResource)
+            return ((RemoteResource) resource).getFilename();
+
         return filename;
     }
 
@@ -112,10 +118,26 @@ public class Content implements Serializable, Streamable {
     }
 
     public Date getLastModified() {
+        if (resource != null && resource instanceof RemoteResource) {
+            try {
+                return new Date(((RemoteResource) resource).lastModified());
+            } catch (IOException ioe) {
+                // Ignore
+                LOG.info("Caught io exception checking last modified on remote resource");
+            }
+        }
         return lastModified;
     }
 
     public Long getLength() {
+        if (resource != null && resource instanceof RemoteResource) {
+            try {
+                return ((RemoteResource) resource).contentLength();
+            } catch (IOException ioe) {
+                // Ignore
+                LOG.info("Caught io exception checking content length on remote resource");
+            }
+        }
         return length;
     }
 

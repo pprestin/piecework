@@ -19,8 +19,10 @@ import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.poi.util.IOUtils;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
+import piecework.content.concrete.RemoteResource;
 import piecework.model.Content;
 
 import java.io.BufferedInputStream;
@@ -69,30 +71,16 @@ public class ContentUtility {
                 .build();
     }
 
-    public static Content toContent(URI uri, HttpEntity entity, Date lastModified, String eTag) throws IOException {
-        if (entity == null)
+    public static Content toContent(CloseableHttpClient client, URI uri) {
+        if (client == null)
             return null;
 
         String url = uri.toString();
-        String originalFileName = FileUtility.resolveFilenameFromPath(uri.getPath());
-        String contentType = entity.getContentType() != null ? entity.getContentType().getValue() : "application/octet-stream";
-
-        InputStream inputStream = entity.getContent();
-
-        if (inputStream != null) {
-            inputStream = new BufferedInputStream(inputStream);
-//            inputStream = new ByteArrayInputStream(IOUtils.toByteArray(inputStream));
-        }
 
         return new Content.Builder()
                 .contentId(url)
-                .contentType(contentType)
-                .filename(originalFileName)
                 .location(url)
-                .inputStream(inputStream)
-                .lastModified(lastModified)
-                .length(entity.getContentLength())
-                .md5(eTag)
+                .resource(new RemoteResource(client, uri))
                 .build();
     }
 

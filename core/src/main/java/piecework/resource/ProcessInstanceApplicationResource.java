@@ -29,7 +29,7 @@ import piecework.process.AttachmentQueryParameters;
  */
 @Path("instance")
 @Produces({"application/json"})
-public interface ProcessInstanceResource extends ApplicationResource {
+public interface ProcessInstanceApplicationResource extends ApplicationResource {
 
     @GET
     @Path("")

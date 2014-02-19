@@ -117,46 +117,46 @@ public class RemoteContentProvider extends GridFSContentProviderReceiver {
 //            return ContentUtility.toContent(file);
 //        }
 
-        return retrieve(uri);
+        return ContentUtility.toContent(client, uri);
     }
 
 
-    private Content retrieve(URI uri) {
-        GridFSDBFile file = null;
-//        HttpContext context = new BasicHttpContext();
-        HttpCacheContext context = HttpCacheContext.create();
-        HttpGet get = new HttpGet(uri);
-        CloseableHttpResponse response = null;
-        try {
-            LOG.info("Retrieving resource from " + uri.toString());
-            response = client.execute(get, context);
-            HttpEntity entity = response.getEntity();
-            Header lastModifiedHeader = response.getFirstHeader("Last-Modified");
-            Date lastModified = lastModifiedHeader != null && StringUtils.isNotEmpty(lastModifiedHeader.getValue()) ? DateUtils.parseDate(lastModifiedHeader.getValue()) : null;
-            Header eTagHeader = response.getFirstHeader("ETag");
-            String eTag = eTagHeader != null ? eTagHeader.getValue() : null;
-
-            return ContentUtility.toContent(uri, entity, lastModified, eTag);
-//            if (entity != null) {
-//                BasicDBObject metadata = new BasicDBObject();
-//                metadata.put("originalFilename", location);
-//                gridFsOperations.store(entity.getContent(), storageLocation, entity.getContentType().getValue(), metadata);
-//                file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
+//    private Content retrieve(URI uri) {
+//        GridFSDBFile file = null;
+////        HttpContext context = new BasicHttpContext();
+//        HttpCacheContext context = HttpCacheContext.create();
+//        HttpGet get = new HttpGet(uri);
+//        CloseableHttpResponse response = null;
+//        try {
+//            LOG.info("Retrieving resource from " + uri.toString());
+//            response = client.execute(get, context);
+//            HttpEntity entity = response.getEntity();
+//            Header lastModifiedHeader = response.getFirstHeader("Last-Modified");
+//            Date lastModified = lastModifiedHeader != null && StringUtils.isNotEmpty(lastModifiedHeader.getValue()) ? DateUtils.parseDate(lastModifiedHeader.getValue()) : null;
+//            Header eTagHeader = response.getFirstHeader("ETag");
+//            String eTag = eTagHeader != null ? eTagHeader.getValue() : null;
+//
+//            return ContentUtility.toContent(uri, entity, lastModified, eTag);
+////            if (entity != null) {
+////                BasicDBObject metadata = new BasicDBObject();
+////                metadata.put("originalFilename", location);
+////                gridFsOperations.store(entity.getContent(), storageLocation, entity.getContentType().getValue(), metadata);
+////                file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
+////            }
+//        } catch (Exception e) {
+//            LOG.error("Unable to retrieve remote resource", e);
+//        } finally {
+//            if (response != null) {
+//                try {
+//                    response.close();
+//                } catch (IOException ioe) {
+//                    LOG.error("Unable to close response", ioe);
+//                }
 //            }
-        } catch (Exception e) {
-            LOG.error("Unable to retrieve remote resource", e);
-        } finally {
-            if (response != null) {
-                try {
-                    response.close();
-                } catch (IOException ioe) {
-                    LOG.error("Unable to close response", ioe);
-                }
-            }
-        }
-
-        return null;
-    }
+//        }
+//
+//        return null;
+//    }
 
 
     @Override
