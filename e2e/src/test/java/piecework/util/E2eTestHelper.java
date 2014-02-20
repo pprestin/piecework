@@ -101,7 +101,7 @@ public class E2eTestHelper {
             String k = e[0];
             String v = e[1];
             String actual = "";
-            for (int i=0; i<2; ++i) {
+            for (int i=0; i<3; ++i) {
                 try {
                     WebElement element = driver.findElement(By.xpath(k));
                     String tagName = element.getTagName();
@@ -113,10 +113,10 @@ public class E2eTestHelper {
                     if ( actual != null && actual.equals(v) ) {
                         break;
                     } else {
-                        sleep(2); // wait a bit for page to refresh
+                        sleep(1); // wait a bit for page to refresh
                     }
                 } catch ( Exception ex) {
-                    sleep(); // wait a bit and then try again
+                    sleep(1); // wait a bit and then try again
                 }
             }  // inner loop
             assertEquals( actual, v);
