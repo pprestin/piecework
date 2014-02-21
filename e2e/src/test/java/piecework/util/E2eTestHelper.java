@@ -32,21 +32,23 @@ import org.openqa.selenium.JavascriptExecutor;
 public class E2eTestHelper {
     public static final long MILLISECONDS_IN_ONE_DAY = 24*60*60*1000;
 
+    // findElement and findElements were very slow for non-existent element name or ID.
+    // ByIdOrName worked but was very, very slow:
+    // (WebElement element = driver.findElement(new ByIdOrName(k));)
+    // use a hint from input data to decide ByName or ById to speed up findElement.
+    // default is ByName.
     public static void fillForm(WebDriver driver, String[][] data) {
         //JavascriptExecutor jse = (JavascriptExecutor) driver;
         for ( String[] e : data ) { 
             String k = e[0];
             String v = e[1];
+            String byAttr = e.length > 2 ? e[2] : "name";  // default to ByName
             boolean found = false;
             for (int i=0; i<3; ++i) {
                 try {
                     // System.out.println(k + ", v=" + v + ", i="+ i);
-                    // ByIdOrName worked but was very, very slow:
-                    // WebElement element = driver.findElement(new ByIdOrName(k));
-                    // the following is a hack to simulate ByIdOrName but was much
-                    // faster than ByIdOrName
                     WebElement element = null;
-                    if ( i==1 ) {
+                    if ( byAttr.equals("id") ) {
                         element = driver.findElement(By.id(k));
                     } else {
                         element = driver.findElement(By.name(k));
@@ -126,6 +128,7 @@ public class E2eTestHelper {
     public static void clickButton(WebDriver driver, String buttonValue) {
         WebElement button = driver.findElement(By.xpath("//button[@id='" + buttonValue + "' or @value='" + buttonValue + "']"));
         if ( button != null ) {
+            button.sendKeys(""); // bring button into view in case it is not visible
             button.click();
             //System.out.println("clicked button with value " + buttonValue);
         }
