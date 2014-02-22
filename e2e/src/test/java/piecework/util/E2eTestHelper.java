@@ -258,11 +258,22 @@ public class E2eTestHelper {
         sleep(wait);
     }
 
+    static final int MIN_LENGTH=5;
     public static String getBaseUrl() {
-        String server = System.getProperty("s");
-        if ( server == null || server.length() < 5 ) { 
-            server = "localhost";
+
+        String baseUrl = System.getProperty("u");
+        if ( baseUrl == null || baseUrl.length() < MIN_LENGTH) {
+            baseUrl = System.getProperty("url");
+        }
+
+        if ( baseUrl == null || baseUrl.length() < MIN_LENGTH) {
+            baseUrl = System.getProperty("s");
+        }
+
+        if ( baseUrl == null || baseUrl.length() < MIN_LENGTH) {
+            baseUrl = "http://localhost/workflow/ui/form";
         }   
-        return "http://" + server + "/workflow/ui/form";
+
+        return  baseUrl;
     }
 }
