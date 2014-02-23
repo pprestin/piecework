@@ -17,24 +17,16 @@ package piecework.authorization;
 
 import com.google.common.collect.Sets;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.authorization.config.AuthorizationConfiguration;
-import piecework.model.Authorization;
-import piecework.persistence.AuthorizationRepository;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
 
 /**

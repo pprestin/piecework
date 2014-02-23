@@ -4,6 +4,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.exception.PieceworkException;
 import piecework.model.SearchResults;
 import piecework.exception.StatusCodeError;
 import piecework.model.Submission;
@@ -26,6 +27,6 @@ public interface SubTaskResource extends ApplicationResource, ApiResource {
     @Path("{processDefinitionKey}/{parentTaskId}")
     @RolesAllowed({AuthorizationRole.INITIATOR})
     @Consumes({"application/xml","application/json"})
-    Response create(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("parentTaskId") String taskId, @Context MessageContext context, Submission submission) throws StatusCodeError;
+    Response create(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("parentTaskId") String taskId, Submission submission) throws StatusCodeError;
 
 }

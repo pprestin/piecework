@@ -26,7 +26,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.AccessEventRepository;
+import piecework.repository.AccessEventRepository;
 import piecework.security.AccessTracker;
 import piecework.security.EncryptionService;
 import piecework.security.config.DataFilterTestConfiguration;

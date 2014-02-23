@@ -23,13 +23,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.exception.PieceworkException;
+import piecework.model.Entity;
 import piecework.model.ProcessDeployment;
 import piecework.model.SearchResults;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.resource.FormResource;
 import piecework.model.Process;
 import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
+import piecework.security.data.UserInputSanitizer;
 import piecework.service.ProcessService;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
 
 import javax.ws.rs.core.*;
@@ -53,73 +57,65 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     Sanitizer sanitizer;
 
     @Autowired
+    UserInterfaceSettings settings;
+
+    @Autowired
     Versions versions;
 
     @Override
     public Response readOptions(MessageContext context, String rawProcessDefinitionKey, String taskId, String requestId, String submissionId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessDeployment deployment = process.getDeployment();
-
-        LOG.debug("Options for " + process.getProcessDefinitionKey());
-
-        return isAnonymous() ? Response.ok().build() : FormUtility.allowCrossOriginResponse(deployment, null);
+        ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, helper.getPrincipal());
+        return FormUtility.optionsResponse(settings, deploymentProvider, isAnonymous(), "GET");
     }
 
     @Override
     public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawRequestId, final String rawSubmissionId, final String redirectCount) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
 
         int count = StringUtils.isNotEmpty(redirectCount) ? Integer.valueOf(redirectCount) : 1;
 
-        if (StringUtils.isNotEmpty(rawTaskId))
-            return taskForm(context, process, rawTaskId, count);
-        if (StringUtils.isNotEmpty(rawRequestId))
-            return requestForm(context, process, rawRequestId);
-        if (StringUtils.isNotEmpty(rawSubmissionId))
-            return submissionForm(context, process, rawSubmissionId);
+        Entity principal = helper.getPrincipal();
 
-        return startForm(context, process);
+        if (StringUtils.isNotEmpty(rawTaskId))
+            return taskForm(context, rawProcessDefinitionKey, rawTaskId, count, principal);
+        if (StringUtils.isNotEmpty(rawRequestId))
+            return requestForm(context, rawProcessDefinitionKey, rawRequestId, principal);
+        if (StringUtils.isNotEmpty(rawSubmissionId))
+            return submissionForm(context, rawProcessDefinitionKey, rawSubmissionId, principal);
+
+        return startForm(context, rawProcessDefinitionKey, principal);
     }
 
     @Override
-    public Response submitOptions(MessageContext context, String rawProcessDefinitionKey, String requestId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessDeployment deployment = process.getDeployment();
-
-        LOG.debug("Options for " + process.getProcessDefinitionKey());
-
-        return isAnonymous() ? Response.ok().build() : FormUtility.allowCrossOriginResponse(deployment, null);
+    public Response submitOptions(final MessageContext context, final String rawProcessDefinitionKey, final String requestId) throws PieceworkException {
+        ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, helper.getPrincipal());
+        return FormUtility.optionsResponse(settings, deploymentProvider, isAnonymous(), "POST");
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        return submitForm(context, process, rawRequestId, formData, Map.class);
+        return submitForm(context, rawProcessDefinitionKey, rawRequestId, formData, Map.class, helper.getPrincipal());
     }
 
     @Override
     public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultipartBody body) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        return submitForm(context, process, rawRequestId, body, MultipartBody.class);
+        return submitForm(context, rawProcessDefinitionKey, rawRequestId, body, MultipartBody.class, helper.getPrincipal());
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        return validateForm(context, process, formData, rawRequestId, rawValidationId);
+        return validateForm(context, rawProcessDefinitionKey, formData, rawRequestId, rawValidationId, helper.getPrincipal());
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultipartBody body) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        return validateForm(context, process, body, rawRequestId, rawValidationId);
+        return validateForm(context, rawProcessDefinitionKey, body, rawRequestId, rawValidationId, helper.getPrincipal());
     }
 
     @Override
     public SearchResults search(MessageContext context) throws PieceworkException {
         UriInfo uriInfo = context.getContext(UriInfo.class);
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        return search(context, rawQueryParameters);
+        return search(context, rawQueryParameters, helper.getPrincipal());
     }
 
     @Override

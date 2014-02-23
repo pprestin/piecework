@@ -18,7 +18,6 @@ package piecework.identity;
 import java.security.cert.X509Certificate;
 import java.util.*;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,7 +34,7 @@ import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.model.Application;
-import piecework.persistence.ProcessRepository;
+import piecework.repository.ProcessRepository;
 
 /**
  * @author James Renfro

@@ -30,6 +30,7 @@ import piecework.exception.BadRequestError;
 import piecework.exception.PieceworkException;
 import piecework.model.Process;
 import piecework.common.ManyMap;
+import piecework.persistence.ProcessProvider;
 
 import javax.annotation.PostConstruct;
 import java.util.Collection;
@@ -91,7 +92,7 @@ public class Mediator implements ApplicationContextAware, InitializingBean {
         }
     }
 
-    public <T, C extends AbstractCommand<T>> C before(C command) throws PieceworkException {
+    public <T, C extends AbstractCommand<T, P>, P extends ProcessProvider> C before(C command) throws PieceworkException {
         String processDefinitionKey = command.getProcessDefinitionKey();
         C updatedCommand = command;
         if (StringUtils.isNotEmpty(processDefinitionKey)) {
@@ -125,21 +126,25 @@ public class Mediator implements ApplicationContextAware, InitializingBean {
     }
 
     public void notify(StateChangeEvent event) {
-        Process process = event.getProcess();
-        if (process != null) {
-            String processDefinitionKey = process.getProcessDefinitionKey();
-            if (StringUtils.isNotEmpty(processDefinitionKey)) {
-                List<EventListener> listenerList = eventListenerMap.get(processDefinitionKey);
-                if (listenerList != null) {
-                    for (EventListener listener : listenerList) {
-                        try {
-                            listener.notify(event);
-                        } catch (Exception e) {
-                            LOG.error("Caught exception notifying eventListeners", e);
+        try {
+            Process process = event.getInstanceProvider().process();
+            if (process != null) {
+                String processDefinitionKey = process.getProcessDefinitionKey();
+                if (StringUtils.isNotEmpty(processDefinitionKey)) {
+                    List<EventListener> listenerList = eventListenerMap.get(processDefinitionKey);
+                    if (listenerList != null) {
+                        for (EventListener listener : listenerList) {
+                            try {
+                                listener.notify(event);
+                            } catch (Exception e) {
+                                LOG.error("Caught exception notifying eventListeners", e);
+                            }
                         }
                     }
                 }
             }
+        } catch (PieceworkException pe) {
+            LOG.error("Unable to retrieve process", pe);
         }
     }
 

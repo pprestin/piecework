@@ -25,10 +25,10 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessInstanceProvider;
 
 import java.util.Collection;
 
@@ -37,16 +37,14 @@ import java.util.Collection;
  *
  * @author James Renfro
  */
-public class RestartCommand extends AbstractCommand<ProcessInstance> {
+public class RestartCommand extends AbstractCommand<ProcessInstance, ProcessInstanceProvider> {
 
     private static final Logger LOG = Logger.getLogger(RestartCommand.class);
-    private final ProcessDeployment deployment;
     private final OperationType operation;
     private String applicationStatusExplanation;
 
-    RestartCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
-        super(commandExecutor, principal, process, instance);
-        this.deployment = deployment;
+    RestartCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
+        super(commandExecutor, instanceProvider);
         this.applicationStatusExplanation = applicationStatusExplanation;
         this.operation = OperationType.RESTART;
     }
@@ -63,22 +61,25 @@ public class RestartCommand extends AbstractCommand<ProcessInstance> {
         if (LOG.isDebugEnabled())
             LOG.debug("Executing instance state command " + this.toString());
 
+        ProcessInstance instance = modelProvider.instance();
         String processStatus = instance.getProcessStatus();
 
+        Entity principal = modelProvider.principal();
         // This is an operation that anonymous users should never be able to cause
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+        Process process = modelProvider.process();
         // Only process admins or superusers are allowed to reactivate suspended processes
         if (!principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         if (processStatus != null && processStatus.equals(Constants.ProcessStatuses.QUEUED)) {
-
-            return commandFactory.requeueInstance(principal, process, instance).execute();
+            return commandFactory.requeueInstance(modelProvider).execute();
         } else {
 
             Collection<Attachment> attachments = instance.getAttachments();
-            ProcessInstance restarted = commandFactory.createInstance(principal, process, instance.getData(), attachments, null).execute();
+            ProcessInstance restarted = commandFactory.createInstance(modelProvider, instance.getData(), attachments, null).execute();
             if (this.applicationStatusExplanation == null)
                 this.applicationStatusExplanation = "";
             this.applicationStatusExplanation += " Restarted as " + restarted.getProcessInstanceId();
@@ -100,8 +101,8 @@ public class RestartCommand extends AbstractCommand<ProcessInstance> {
         }
     }
 
-    protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
-
+    protected OperationResult operation(ProcessEngineFacade facade) throws PieceworkException, ProcessEngineException {
+        ProcessInstance instance = modelProvider.instance();
         return new OperationResult(applicationStatusExplanation, instance.getPreviousApplicationStatus(), instance.getProcessStatus(), applicationStatusExplanation);
     }
 

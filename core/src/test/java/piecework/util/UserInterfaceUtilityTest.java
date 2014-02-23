@@ -32,7 +32,7 @@ import piecework.model.Explanation;
 import piecework.model.Form;
 import piecework.model.Report;
 import piecework.model.SearchResults;
-import piecework.persistence.ContentRepository;
+import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 
 import javax.servlet.ServletContext;
@@ -178,7 +178,7 @@ public class UserInterfaceUtilityTest {
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
         Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings);
+        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings, null);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
         Assert.assertTrue(IOUtils.toString(resource.getInputStream()).length() > 10);
@@ -201,7 +201,7 @@ public class UserInterfaceUtilityTest {
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
         Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings);
+        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings, null);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
 
@@ -238,7 +238,7 @@ public class UserInterfaceUtilityTest {
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
         Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.STYLESHEET, form, template, contentRepository, servletContext, settings);
+        Resource resource = UserInterfaceUtility.resource(CacheName.STYLESHEET, form, template, contentRepository, servletContext, settings, null);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
 

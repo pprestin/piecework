@@ -32,7 +32,7 @@ import piecework.model.RequestDetails;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.RequestRepository;
+import piecework.repository.RequestRepository;
 import piecework.settings.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.test.ExampleFactory;
@@ -106,7 +106,7 @@ public class RequestServiceTest {
 
         Mockito.when(requestRepository.findOne(Mockito.any(String.class))).thenReturn(formRequest);
 
-        FormRequest handleRequest = requestService.read(requestDetails, formRequest.getRequestId());
+        FormRequest handleRequest = requestService.read("TEST", requestDetails, formRequest.getRequestId());
         assertEqual(formRequest, handleRequest);
     }
 

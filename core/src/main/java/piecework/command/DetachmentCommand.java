@@ -22,6 +22,7 @@ import piecework.exception.*;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.AllowedTaskProvider;
 
 /**
  * Detaches a file or comment from its process instance - effectively soft-deleting it so it cannot be
@@ -29,30 +30,32 @@ import piecework.model.Process;
  *
  * @author James Renfro
  */
-public class DetachmentCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class DetachmentCommand extends AbstractEngineStorageCommand<ProcessInstance, AllowedTaskProvider> {
 
-    private final Task task;
     private final String attachmentId;
 
-    public DetachmentCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance, Task task, String attachmentId) {
-        super(commandExecutor, principal, process, instance);
-        this.task = task;
+    public DetachmentCommand(CommandExecutor commandExecutor, AllowedTaskProvider allowedTaskProvider, String attachmentId) {
+        super(commandExecutor, allowedTaskProvider);
         this.attachmentId = attachmentId;
     }
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
         // This is an operation that anonymous users should never be able to cause
+        Entity principal = modelProvider.principal();
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         // Users are only allowed to delete attachments if they have been assigned a task, and
         // only process overseers or superusers are allowed to delete attachments without a task
+        Process process = modelProvider.process();
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
-            if (task == null || !task.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
+            Task allowedTask = modelProvider.allowedTask(true);
+            if (allowedTask == null || !allowedTask.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
                 throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
+        ProcessInstance instance = modelProvider.instance();
         if (instance == null)
             throw new NotFoundError();
 

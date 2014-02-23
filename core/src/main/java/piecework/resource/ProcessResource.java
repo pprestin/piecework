@@ -40,7 +40,7 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
 	@POST
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response create(Process process) throws StatusCodeError;
+	Response create(Process process) throws PieceworkException;
 	
 	@GET
     @Path("{processDefinitionKey}")
@@ -51,17 +51,17 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
 	@PUT
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, Process process) throws StatusCodeError;
+	Response update(@PathParam("processDefinitionKey") String processDefinitionKey, Process process) throws PieceworkException;
 	
 	@DELETE
 	@Path("{processDefinitionKey}")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	Response delete(@PathParam("processDefinitionKey") String processDefinitionKey) throws StatusCodeError;
+	Response delete(@PathParam("processDefinitionKey") String processDefinitionKey) throws PieceworkException;
 	
 	@GET
 	@Path("")
 	@RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-	SearchResults search(@Context UriInfo uriInfo) throws StatusCodeError;
+	SearchResults search(@Context UriInfo uriInfo) throws PieceworkException;
 
     /*
      * SUBRESOURCES
@@ -74,33 +74,33 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @POST
     @Path("{processDefinitionKey}/deployment/{deploymentId}/clone")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response cloneDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+    Response cloneDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/deployment/{deploymentId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response getDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+    Response getDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws PieceworkException;
 
     @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response updateDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, ProcessDeployment deployment) throws StatusCodeError;
+    Response updateDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, ProcessDeployment deployment) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/deployment/{deploymentId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response deleteDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+    Response deleteDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/release/{deploymentId}")
     @RolesAllowed({AuthorizationRole.OWNER})
-    Response publishDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+    Response publishDeployment(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/deployment")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    SearchResults searchDeployments(@PathParam("processDefinitionKey") String processDefinitionKey,@Context UriInfo uriInfo) throws StatusCodeError;
+    SearchResults searchDeployments(@PathParam("processDefinitionKey") String processDefinitionKey,@Context UriInfo uriInfo) throws PieceworkException;
 
     /*
      * SUB-SUBRESOURCES
@@ -114,50 +114,50 @@ public interface ProcessResource extends ApplicationResource, ApiResource {
     @GET
     @Path("{processDefinitionKey}/deployment/{deploymentId}/resource")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response getDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+    Response getDeploymentResource(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/deployment/{deploymentId}/diagram")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
     @Produces({"image/png"})
-    Response getDiagram(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws StatusCodeError;
+    Response getDiagram(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId) throws PieceworkException;
 
     @GET
     @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response getActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey) throws StatusCodeError;
+    Response getActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response deleteActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey) throws StatusCodeError;
+    Response deleteActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}/container/{containerId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response deleteContainer(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId) throws StatusCodeError;
+    Response deleteContainer(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}/container/{containerId}/field/{fieldId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response deleteField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId, @PathParam("fieldId") String fieldId) throws StatusCodeError;
+    Response deleteField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId, @PathParam("fieldId") String fieldId) throws PieceworkException;
 
     @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}/activity/{activityKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response updateActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, Activity activity) throws StatusCodeError;
+    Response updateActivity(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, Activity activity) throws PieceworkException;
 
     @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response updateContainer(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId, Container container) throws StatusCodeError;
+    Response updateContainer(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("containerId") String containerId, Container container) throws PieceworkException;
 
     @POST
     @PUT
     @Path("{processDefinitionKey}/deployment/{deploymentId}/section/{sectionId}/field/{fieldId}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.CREATOR})
-    Response updateField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("fieldId") String fieldId, Field field) throws StatusCodeError;
+    Response updateField(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("deploymentId") String deploymentId, @PathParam("activityKey") String activityKey, @PathParam("fieldId") String fieldId, Field field) throws PieceworkException;
 
 }

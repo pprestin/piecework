@@ -24,6 +24,10 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.util.ModelUtility;
 import piecework.validation.Validation;
 
 /**
@@ -31,24 +35,25 @@ import piecework.validation.Validation;
  *
  * @author James Renfro
  */
-public class AttachmentCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class AttachmentCommand extends AbstractEngineStorageCommand<ProcessInstance, ProcessInstanceProvider> {
 
-    private final ProcessDeployment deployment;
     private final Validation validation;
 
-    AttachmentCommand(CommandExecutor commandExecutor, Entity principal, ProcessDeployment deployment, Validation validation) {
-        super(commandExecutor, principal, validation.getProcess());
-        this.deployment = deployment;
+    AttachmentCommand(CommandExecutor commandExecutor, ProcessInstanceProvider modelProvider, Validation validation) {
+        super(commandExecutor, modelProvider);
         this.validation = validation;
     }
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
+        Entity principal = modelProvider.principal();
         // This is an operation that anonymous users should never be able to cause
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        Task task = validation.getTask();
+        Task task = ModelUtility.allowedTask(modelProvider);
+
+        Process process = modelProvider.process();
         // Users are only allowed to add attachments if they have been assigned a task, and
         // only process overseers or superusers are allowed to add attachments without a task
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
@@ -56,12 +61,12 @@ public class AttachmentCommand extends AbstractEngineStorageCommand<ProcessInsta
                 throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
-        ProcessInstance instance = validation.getInstance();
+        ProcessInstance instance = modelProvider.instance();
         // Can't attach anything unless there is an instance to attach to
         if (instance == null)
             throw new NotFoundError();
 
-        return storageManager.store(validation, ActionType.ATTACH);
+        return storageManager.store(modelProvider, validation, ActionType.ATTACH);
     }
 
 }

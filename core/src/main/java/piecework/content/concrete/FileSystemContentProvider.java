@@ -46,7 +46,7 @@ public class FileSystemContentProvider implements ContentProvider {
     }
 
     @Override
-    public Content findByPath(Process process, String base, String location) throws IOException {
+    public Content findByPath(Process process, String base, String location, Entity principal) throws IOException {
         if (!location.startsWith("file:"))
             return null;
 

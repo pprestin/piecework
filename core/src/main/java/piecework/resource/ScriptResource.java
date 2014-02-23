@@ -18,6 +18,7 @@ package piecework.resource;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 
 import javax.annotation.security.RolesAllowed;
@@ -40,11 +41,11 @@ public interface ScriptResource extends ApplicationResource {
     @GET
     @Path("css/{processDefinitionKey}.css")
     @Produces({"text/css"})
-    Response readStylesheet(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
+    Response readStylesheet(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws PieceworkException;
 
     @GET
     @Path("script/{processDefinitionKey}.js")
     @Produces({"text/javascript"})
-    Response readScript(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws StatusCodeError;
+    Response readScript(@PathParam("processDefinitionKey") String processDefinitionKey, @Context MessageContext context) throws PieceworkException;
 
 }

@@ -29,7 +29,7 @@ import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.User;
 import piecework.model.Value;
-import piecework.persistence.AccessEventRepository;
+import piecework.repository.AccessEventRepository;
 import piecework.security.EncryptionService;
 import piecework.security.config.DataFilterTestConfiguration;
 

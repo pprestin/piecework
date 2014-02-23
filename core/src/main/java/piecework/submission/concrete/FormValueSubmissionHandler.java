@@ -21,7 +21,9 @@ import piecework.exception.PieceworkException;
 import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
+import piecework.persistence.ProcessProvider;
 import piecework.submission.SubmissionTemplate;
+import piecework.util.ModelUtility;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,10 @@ public class FormValueSubmissionHandler extends AbstractSubmissionHandler<Map<St
     private static final Logger LOG = Logger.getLogger(FormValueSubmissionHandler.class);
 
     @Override
-    protected Submission handleInternal(ProcessInstance instance, Map<String, List<String>> data, SubmissionTemplate template, Entity principal) throws PieceworkException {
+    protected <P extends ProcessProvider> Submission handleInternal(P modelProvider, Map<String, List<String>> data, SubmissionTemplate template) throws PieceworkException {
+        Entity principal = modelProvider.principal();
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
+
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
         String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
         Submission.Builder submissionBuilder = submissionBuilder(instance, template, principal);

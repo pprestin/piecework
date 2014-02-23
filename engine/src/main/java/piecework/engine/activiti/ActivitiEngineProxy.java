@@ -43,7 +43,7 @@ import piecework.model.*;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
-import piecework.persistence.ProcessInstanceRepository;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;

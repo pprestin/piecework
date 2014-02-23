@@ -15,10 +15,7 @@
  */
 package piecework.authorization;
 
-import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
 import piecework.model.Process;
-import piecework.persistence.ProcessRepository;
 import piecework.service.ProcessService;
 
 import java.util.ArrayList;

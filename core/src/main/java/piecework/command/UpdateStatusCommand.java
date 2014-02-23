@@ -22,9 +22,10 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
-import piecework.exception.StatusCodeError;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessInstanceProvider;
 
 /**
  * Updates the application status and/or application status explanation of a process instance
@@ -33,15 +34,18 @@ import piecework.model.Process;
  */
 public class UpdateStatusCommand extends AbstractOperationCommand {
 
-    UpdateStatusCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance, String applicationStatus, String applicationStatusExplanation) {
-        super(commandExecutor, principal, process, instance, null, OperationType.UPDATE, applicationStatus, applicationStatusExplanation);
+    UpdateStatusCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, String applicationStatus, String applicationStatusExplanation) {
+        super(commandExecutor, instanceProvider, null, OperationType.UPDATE, applicationStatus, applicationStatusExplanation);
     }
 
     @Override
-    protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
+    protected OperationResult operation(ProcessEngineFacade facade) throws PieceworkException, ProcessEngineException {
+        Entity principal = modelProvider.principal();
         // This is an operation that anonymous users should never be able to cause
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+        Process process = modelProvider.process();
         // Only process admins or superusers are allowed to update application status
         if (!principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);

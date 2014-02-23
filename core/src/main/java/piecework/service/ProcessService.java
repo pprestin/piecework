@@ -28,12 +28,16 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.CacheName;
 import piecework.exception.*;
+import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ActivityRepository;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessProvider;
+import piecework.repository.ActivityRepository;
+import piecework.repository.ContentRepository;
+import piecework.repository.ProcessInstanceRepository;
+import piecework.repository.ProcessRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.ui.Streamable;
@@ -66,7 +70,13 @@ public class ProcessService {
     ProcessEngineFacade facade;
 
     @Autowired
+    IdentityHelper helper;
+
+    @Autowired
     ContentRepository contentRepository;
+
+    @Autowired
+    ModelProviderFactory modelProviderFactory;
 
     @Autowired
     ProcessRepository processRepository;
@@ -91,20 +101,14 @@ public class ProcessService {
         return persist(builder.build());
     }
 
-    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting) throws StatusCodeError {
+    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting, Entity principal) throws PieceworkException {
         Process process = create(rawProcess);
-        ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
-        try {
-            deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
-        } catch (PieceworkException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        try {
-            publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
-        } catch (PieceworkException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        process = read(process.getProcessDefinitionKey());
+
+        ProcessProvider processProvider = modelProviderFactory.processProvider(process.getProcessDefinitionKey(), principal);
+        ProcessDeployment deployment = createDeployment(processProvider, rawDeployment);
+        deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
+        publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId(), principal);
+        process = read(process.getProcessDefinitionKey(), principal);
 
         if (migrateExisting)
             migrate(process);
@@ -123,23 +127,22 @@ public class ProcessService {
         }
     }
 
-    public ProcessDeployment createDeployment(String rawProcessDefinitionKey) throws StatusCodeError {
-        Process process = read(rawProcessDefinitionKey);
-        ProcessDeployment deployment = deploymentService.create(process);
+//    public ProcessDeployment createDeployment(String rawProcessDefinitionKey, Entity principal) throws PieceworkException {
+//        ProcessProvider processProvider = modelProviderFactory.processProvider(rawProcessDefinitionKey, principal);
+//        ProcessDeployment deployment = deploymentService.create(process);
+//
+//        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+//        Process updated = new Process.Builder(process, passthroughSanitizer)
+//                .version(new ProcessDeploymentVersion(deployment))
+//                .build();
+//
+//        persist(updated);
+//
+//        return deployment;
+//    }
 
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        Process updated = new Process.Builder(process, passthroughSanitizer)
-                .version(new ProcessDeploymentVersion(deployment))
-                .build();
-
-        persist(updated);
-
-        return deployment;
-    }
-
-    public ProcessDeployment createDeployment(String rawProcessDefinitionKey, ProcessDeployment rawDeployment) throws StatusCodeError {
-        Process process = read(rawProcessDefinitionKey);
-
+    public ProcessDeployment createDeployment(ProcessProvider processProvider, ProcessDeployment rawDeployment) throws PieceworkException {
+        Process process = processProvider.process();
         ProcessDeployment deployment = deploymentService.create(process, rawDeployment);
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
         Process updated = new Process.Builder(process, passthroughSanitizer)
@@ -151,8 +154,8 @@ public class ProcessService {
         return deployment;
     }
 
-    public ProcessDeployment cloneDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
-        Process process = read(rawProcessDefinitionKey);
+    public ProcessDeployment cloneDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws PieceworkException {
+        Process process = read(rawProcessDefinitionKey, helper.getPrincipal());
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
         ProcessDeployment deployment = deploymentService.clone(process, deploymentId);
@@ -165,7 +168,7 @@ public class ProcessService {
         return deployment;
     }
 
-    public Process delete(String rawProcessDefinitionKey) throws StatusCodeError {
+    public Process delete(String rawProcessDefinitionKey) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
 
         Process record = processRepository.findOne(processDefinitionKey);
@@ -177,8 +180,8 @@ public class ProcessService {
         return persist(builder.build());
     }
 
-    public void deleteDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
-        Process process = read(rawProcessDefinitionKey);
+    public void deleteDeployment(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
+        Process process = read(rawProcessDefinitionKey, principal);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
         Process updated = new Process.Builder(process, sanitizer)
@@ -230,8 +233,8 @@ public class ProcessService {
         return Collections.unmodifiableSet(allProcesses);
     }
 
-    public Streamable getDiagram(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
-        Process process = read(rawProcessDefinitionKey);
+    public Streamable getDiagram(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
+        Process process = read(rawProcessDefinitionKey, principal);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
         ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
@@ -249,54 +252,55 @@ public class ProcessService {
         }
     }
 
-    public ProcessDeploymentResource getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId) throws StatusCodeError {
-        Process process = read(rawProcessDefinitionKey);
+    public ProcessDeploymentResource getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
+        Process process = read(rawProcessDefinitionKey, principal);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
         ProcessDeployment deployment = deploymentService.read(process, deploymentId);
-        Content content = contentRepository.findByLocation(process, deployment.getEngineProcessDefinitionLocation());
+        Content content = contentRepository.findByLocation(process, deployment.getEngineProcessDefinitionLocation(), principal);
         return new ProcessDeploymentResource.Builder(content).build();
     }
 
     public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws PieceworkException {
-        Process process = read(rawProcessDefinitionKey);
+        ProcessProvider processProvider = modelProviderFactory.processProvider(rawProcessDefinitionKey, helper.getPrincipal());
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
-
-        return commandFactory.deployment(process, deploymentId, resource).execute();
+        return commandFactory.deployment(processProvider, deploymentId, resource).execute();
     }
 
-    public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId) throws PieceworkException {
-        Process process = read(rawProcessDefinitionKey);
+    public ProcessDeployment publishDeployment(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
+        ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
-        return commandFactory.publication(process, deploymentId).execute();
+        return commandFactory.publication(deploymentProvider, deploymentId).execute();
     }
 
-    public Process read(String rawProcessDefinitionKey) throws StatusCodeError {
-        long start = 0;
-        if (LOG.isDebugEnabled())
-            start = System.currentTimeMillis();
-
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-
-        Process result;
-        Cache.ValueWrapper value = cacheService.get(CacheName.PROCESS, processDefinitionKey);
-        if (value != null) {
-            result = Process.class.cast(value.get());
-        } else {
-            result = processRepository.findOne(processDefinitionKey);
-            cacheService.put(CacheName.PROCESS, processDefinitionKey, result);
-        }
-
-        if (LOG.isDebugEnabled())
-            LOG.debug("Retrieved full process definition for " + processDefinitionKey + " in " + (System.currentTimeMillis() - start) + " ms");
-
-        if (result == null)
-            throw new NotFoundError();
-        if (result.isDeleted())
-            throw new GoneError();
-
-        return result;
+    private Process read(String rawProcessDefinitionKey, Entity principal) throws PieceworkException {
+        ProcessProvider processProvider = modelProviderFactory.processProvider(rawProcessDefinitionKey, principal);
+        return processProvider.process();
+//        long start = 0;
+//        if (LOG.isDebugEnabled())
+//            start = System.currentTimeMillis();
+//
+//        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
+//
+//        Process result;
+//        Cache.ValueWrapper value = cacheService.get(CacheName.PROCESS, processDefinitionKey);
+//        if (value != null) {
+//            result = Process.class.cast(value.get());
+//        } else {
+//            result = processRepository.findOne(processDefinitionKey);
+//            cacheService.put(CacheName.PROCESS, processDefinitionKey, result);
+//        }
+//
+//        if (LOG.isDebugEnabled())
+//            LOG.debug("Retrieved full process definition for " + processDefinitionKey + " in " + (System.currentTimeMillis() - start) + " ms");
+//
+//        if (result == null)
+//            throw new NotFoundError();
+//        if (result.isDeleted())
+//            throw new GoneError();
+//
+//        return result;
     }
 
     public SearchResults search(MultivaluedMap<String, String> queryParameters, Entity principal) {
@@ -325,7 +329,7 @@ public class ProcessService {
         return resultsBuilder.build();
     }
 
-    public Process update(String rawProcessDefinitionKey, Process rawProcess) throws StatusCodeError {
+    public Process update(String rawProcessDefinitionKey, Process rawProcess) throws PieceworkException {
         // Sanitize all user input
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
@@ -350,29 +354,19 @@ public class ProcessService {
         return persist(builder.build());
     }
 
-    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting) throws StatusCodeError {
-        Process process = read(rawProcess.getProcessDefinitionKey());
-        ProcessDeployment deployment = createDeployment(process.getProcessDefinitionKey(), rawDeployment);
-        try {
-            deploy(process.getProcessDefinitionKey(), deployment.getDeploymentId(), resource);
-        } catch (PieceworkException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        try {
-            publishDeployment(process.getProcessDefinitionKey(), deployment.getDeploymentId());
-        } catch (PieceworkException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        process = read(process.getProcessDefinitionKey());
+    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting, Entity principal) throws PieceworkException {
+        ProcessProvider processProvider = modelProviderFactory.processProvider(rawProcess.getProcessDefinitionKey(), principal);
+
+        String processDefinitionKey = processProvider.processDefinitionKey();
+        ProcessDeployment deployment = createDeployment(processProvider, rawDeployment);
+        deploy(processDefinitionKey, deployment.getDeploymentId(), resource);
+        publishDeployment(processDefinitionKey, deployment.getDeploymentId(), principal);
+        Process process = modelProviderFactory.processProvider(processDefinitionKey, principal).process();
 
         if (migrateExisting)
             migrate(process);
 
         return process;
-    }
-
-    public String getVersion() {
-        return "v1";
     }
 
     private Process persist(Process process) {

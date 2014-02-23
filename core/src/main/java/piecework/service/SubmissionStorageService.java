@@ -25,7 +25,7 @@ import piecework.common.UuidGenerator;
 import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.*;
 import piecework.model.*;
-import piecework.persistence.ContentRepository;
+import piecework.repository.ContentRepository;
 import piecework.security.EncryptionService;
 import piecework.security.MaxSizeInputStream;
 import piecework.security.concrete.PassthroughEncryptionService;

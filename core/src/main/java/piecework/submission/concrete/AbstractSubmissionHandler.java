@@ -27,8 +27,9 @@ import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
-import piecework.persistence.ActivityRepository;
-import piecework.persistence.SubmissionRepository;
+import piecework.persistence.ProcessProvider;
+import piecework.repository.ActivityRepository;
+import piecework.repository.SubmissionRepository;
 import piecework.security.Sanitizer;
 import piecework.service.IdentityService;
 import piecework.service.SubmissionStorageService;
@@ -62,12 +63,12 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
     SubmissionStorageService submissionStorageService;
 
     @Override
-    public Submission handle(ProcessInstance instance, T data, SubmissionTemplate template, Entity principal) throws PieceworkException {
-        Submission submission = handleInternal(instance, data, template, principal);
+    public <P extends ProcessProvider> Submission handle(P modelProvider, T data, SubmissionTemplate template) throws PieceworkException {
+        Submission submission = handleInternal(modelProvider, data, template);
         return submissionRepository.save(submission);
     }
 
-    protected abstract Submission handleInternal(ProcessInstance instance, T data, SubmissionTemplate template, Entity principal) throws PieceworkException;
+    protected abstract <P extends ProcessProvider> Submission handleInternal(P modelProvider, T data, SubmissionTemplate template) throws PieceworkException;
 
     protected void handlePlaintext(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, Attachment attachment, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
         String contentType = MediaType.TEXT_PLAIN;

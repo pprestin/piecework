@@ -26,10 +26,10 @@ import piecework.enumeration.OperationType;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.AttachmentRepository;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.repository.AttachmentRepository;
+import piecework.repository.DeploymentRepository;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.util.ProcessInstanceUtility;
 import piecework.validation.Validation;
 
@@ -146,7 +146,7 @@ public class StorageManager {
         return processInstanceRepository.update(instance.getProcessInstanceId(), new Operation(UUID.randomUUID().toString(), operationType, result.getOperationDescription(), new Date(), actingAsUserId), applicationStatus, applicationStatusExplanation, processStatus, tasks);
     }
 
-    public ProcessInstance store(Validation validation, ActionType actionType) throws PieceworkException {
+    public ProcessInstance store(ProcessInstanceProvider instanceProvider, Validation validation, ActionType actionType) throws PieceworkException {
         String applicationStatusExplanation = validation.getApplicationStatusExplanation();
         Map<String, List<Message>> messages = validation.getResults();
         List<Attachment> attachments = validation.getAttachments();
@@ -158,8 +158,8 @@ public class StorageManager {
 
         boolean isAttachment = actionType == ActionType.ATTACH;
 
-        Process process = validation.getProcess();
-        ProcessInstance instance = validation.getInstance();
+        Process process = instanceProvider.process();
+        ProcessInstance instance = instanceProvider.instance();
         String processInstanceId = instance.getProcessInstanceId();
         Submission submission = validation.getSubmission();
         Map<String, List<Value>> data = isAttachment ? null : validation.getData();

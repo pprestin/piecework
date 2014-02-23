@@ -17,7 +17,6 @@ package piecework.resource.concrete;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
-import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -26,13 +25,13 @@ import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
+import piecework.identity.IdentityHelper;
 import piecework.model.*;
-import piecework.model.Process;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.resource.ProcessInstanceApiResource;
-import piecework.settings.UserInterfaceSettings;
 import piecework.ui.streaming.StreamingAttachmentContent;
-import piecework.util.FormUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -45,75 +44,74 @@ import java.util.Map;
 @Service
 public class ProcessInstanceApiResourceVersion1 extends AbstractInstanceResource implements ProcessInstanceApiResource {
 
+    @Autowired
+    IdentityHelper helper;
+
     @Override
     public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws PieceworkException {
         String rawReason = details.getReason();
-        doOperation(OperationType.ACTIVATION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
+        doOperation(OperationType.ACTIVATION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason, helper.getPrincipal());
         return Response.noContent().build();
     }
 
     @Override
     public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
-        if (!taskService.hasAllowedTask(process, instance, principal, true))
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Task allowedTask = allowedTaskProvider.allowedTask(true);
+
+        if (allowedTask == null)
             throw new ForbiddenError();
 
-        StreamingAttachmentContent content = attachmentService.content(process, instance, attachmentId);
+        StreamingAttachmentContent content = allowedTaskProvider.attachment(attachmentId);
 
         if (content == null)
             throw new NotFoundError(Constants.ExceptionCodes.attachment_does_not_exist, attachmentId);
 
         String contentDisposition = new StringBuilder("attachment; filename=").append(content.getAttachment().getDescription()).toString();
-
-        return FormUtility.allowCrossOriginResponse(deployment, content, content.getAttachment().getContentType(), new BasicHeader("Content-Disposition", contentDisposition));
+        return Response.ok(content, content.getAttachment().getContentType()).header("Content-Disposition", contentDisposition).build();
     }
 
     @Override
     public Response attachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Task allowedTask = allowedTaskProvider.allowedTask(true);
 
-        if (!taskService.hasAllowedTask(process, instance, principal, false))
+        if (allowedTask == null)
             throw new ForbiddenError();
 
-        SearchResults searchResults = attachmentService.search(instance, queryParameters);
+        SearchResults searchResults = allowedTaskProvider.attachments(queryParameters, new ViewContext(settings, VERSION));
         return Response.ok(searchResults).build();
     }
 
     @Override
     public Response cancel(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws PieceworkException {
-        doOperation(OperationType.CANCELLATION, rawProcessDefinitionKey, rawProcessInstanceId, details.getReason());
+        doOperation(OperationType.CANCELLATION, rawProcessDefinitionKey, rawProcessInstanceId, details.getReason(), helper.getPrincipal());
         return Response.noContent().build();
     }
 
     @Override
     public Response create(MessageContext context, String rawProcessDefinitionKey, Submission rawSubmission) throws PieceworkException {
-        return doCreate(context, rawProcessDefinitionKey, rawSubmission, Submission.class);
+        return doCreate(context, rawProcessDefinitionKey, rawSubmission, Submission.class, helper.getPrincipal());
     }
 
     @Override
     public Response create(MessageContext context, String rawProcessDefinitionKey, MultivaluedMap<String, String> formData) throws PieceworkException {
-        return doCreate(context, rawProcessDefinitionKey, formData, Map.class);
+        return doCreate(context, rawProcessDefinitionKey, formData, Map.class, helper.getPrincipal());
     }
 
     @Override
     public Response createMultipart(MessageContext context, String rawProcessDefinitionKey, MultipartBody body) throws PieceworkException {
-        return doCreate(context, rawProcessDefinitionKey, body, MultipartBody.class);
+        return doCreate(context, rawProcessDefinitionKey, body, MultipartBody.class, helper.getPrincipal());
     }
 
     @Override
     public Response delete(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
         Entity principal = helper.getPrincipal();
-
-        ProcessInstance instance = processInstanceService.cancel(principal, rawProcessDefinitionKey, rawProcessInstanceId, null);
+        String reason = null;
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
+        ProcessInstance instance = commandFactory.cancellation(instanceProvider, reason).execute();
         Response.ResponseBuilder responseBuilder = Response.status(Response.Status.NO_CONTENT);
         ViewContext context = new ViewContext(settings, VERSION);
         String location = context != null ? context.getApplicationUri(instance.getProcessDefinitionKey(), instance.getProcessInstanceId()) : null;
@@ -123,47 +121,39 @@ public class ProcessInstanceApiResourceVersion1 extends AbstractInstanceResource
     }
 
     @Override
-    public Response detach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
-        doDetach(rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId);
+    public Response detach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
+        doDetach(context, rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId, helper.getPrincipal());
         return Response.noContent().build();
     }
 
     @Override
     public Response read(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
-
-        piecework.model.Process process = processService.read(processDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, processInstanceId, false);
-
-        ProcessInstance.Builder builder = new ProcessInstance.Builder(instance)
-                .processDefinitionKey(processDefinitionKey)
-                .processDefinitionLabel(process.getProcessDefinitionLabel());
-
-        return Response.ok(builder.build(new ViewContext(settings, VERSION))).build();
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        ProcessInstance instance = instanceProvider.instance(new ViewContext(settings, VERSION));
+        return Response.ok(instance).build();
     }
 
     @Override
     public Response remove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
-        doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId);
+        doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, helper.getPrincipal());
         return Response.noContent().build();
     }
 
     @Override
     public Response restart(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws PieceworkException {
         String reason = sanitizer.sanitize(details.getReason());
-        doOperation(OperationType.RESTART, rawProcessDefinitionKey, rawProcessInstanceId, reason);
+        doOperation(OperationType.RESTART, rawProcessDefinitionKey, rawProcessInstanceId, reason, helper.getPrincipal());
         return Response.noContent().build();
     }
 
     @Override
     public Response search(MessageContext context) throws PieceworkException {
-        return doSearch(context);
+        return doSearch(context, helper.getPrincipal());
     }
 
     @Override
     public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, OperationDetails details) throws PieceworkException {
-        doOperation(OperationType.SUSPENSION, rawProcessDefinitionKey, rawProcessInstanceId, details.getReason());
+        doOperation(OperationType.SUSPENSION, rawProcessDefinitionKey, rawProcessInstanceId, details.getReason(), helper.getPrincipal());
         return Response.noContent().build();
     }
 

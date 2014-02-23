@@ -80,7 +80,6 @@ public class ApplicationConfiguration {
 	public Server apiServer() {
 		Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
 		extensionMappings.put("json", "application/json");
-//		extensionMappings.put("xml", "application/xml");
 		
 		JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
 		sf.setServiceBeanObjects((Object[])apiResources);

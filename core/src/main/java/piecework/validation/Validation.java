@@ -42,11 +42,11 @@ public class Validation implements Serializable {
 
     private final Submission submission;
 
-    private final Process process;
-
-    private final ProcessInstance instance;
-
-    private final Task task;
+//    private final Process process;
+//
+//    private final ProcessInstance instance;
+//
+//    private final Task task;
 
     private final String applicationStatusExplanation;
 
@@ -63,9 +63,9 @@ public class Validation implements Serializable {
         this.attachments = builder.attachments != null ? Collections.unmodifiableList(builder.attachments) : null;
 		this.unchangedFields = builder.unchangedFields != null ? Collections.unmodifiableSet(builder.unchangedFields) : null;
 	    this.submission = builder.submission;
-        this.process = builder.process;
-        this.instance = builder.instance;
-        this.task = builder.task;
+//        this.process = builder.process;
+//        this.instance = builder.instance;
+//        this.task = builder.task;
         this.applicationStatusExplanation = builder.applicationStatusExplanation;
         this.hasError = builder.hasError;
     }
@@ -94,17 +94,17 @@ public class Validation implements Serializable {
         return submission;
     }
 
-    public Process getProcess() {
-        return process;
-    }
-
-    public ProcessInstance getInstance() {
-        return instance;
-    }
-
-    public Task getTask() {
-        return task;
-    }
+//    public Process getProcess() {
+//        return process;
+//    }
+//
+//    public ProcessInstance getInstance() {
+//        return instance;
+//    }
+//
+//    public Task getTask() {
+//        return task;
+//    }
 
     public String getApplicationStatusExplanation() {
         return applicationStatusExplanation;
@@ -122,9 +122,9 @@ public class Validation implements Serializable {
         private List<Attachment> attachments;
         private Set<String> unchangedFields;
         private Submission submission;
-        private Process process;
-        private ProcessInstance instance;
-        private Task task;
+//        private Process process;
+//        private ProcessInstance instance;
+//        private Task task;
         private String applicationStatusExplanation;
         private boolean hasError;
 
@@ -143,9 +143,9 @@ public class Validation implements Serializable {
             this.applicationStatusExplanation = validation.getApplicationStatusExplanation();
             this.unchangedFields = validation.getUnchangedFields() != null ? new HashSet<String>(validation.getUnchangedFields()) : new HashSet<String>();
             this.hasError = validation.isHasError();
-            this.process = validation.getProcess();
-            this.instance = validation.getInstance();
-            this.task = validation.getTask();
+//            this.process = validation.getProcess();
+//            this.instance = validation.getInstance();
+//            this.task = validation.getTask();
             this.submission = validation.getSubmission();
         }
         
@@ -238,20 +238,20 @@ public class Validation implements Serializable {
             return this;
         }
 
-        public Builder process(Process process) {
-            this.process = process;
-            return this;
-        }
-
-        public Builder instance(ProcessInstance instance) {
-            this.instance = instance;
-            return this;
-        }
-
-        public Builder task(Task task) {
-            this.task = task;
-            return this;
-        }
+//        public Builder process(Process process) {
+//            this.process = process;
+//            return this;
+//        }
+//
+//        public Builder instance(ProcessInstance instance) {
+//            this.instance = instance;
+//            return this;
+//        }
+//
+//        public Builder task(Task task) {
+//            this.task = task;
+//            return this;
+//        }
 
         public Builder applicationStatusExplanation(String applicationStatusExplanation) {
             this.applicationStatusExplanation = applicationStatusExplanation;

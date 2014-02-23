@@ -18,7 +18,9 @@ package piecework.ui.visitor;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import piecework.exception.NotFoundError;
+import piecework.identity.IdentityHelper;
 import piecework.model.Explanation;
 import piecework.service.UserInterfaceService;
 
@@ -39,6 +41,9 @@ import java.lang.reflect.Type;
 public class HtmlProvider extends AbstractConfigurableProvider implements MessageBodyWriter<Object> {
 
 	private static final Logger LOG = Logger.getLogger(HtmlProvider.class);
+
+    @Autowired
+    private IdentityHelper helper;
 
     @Context
     private javax.servlet.ServletContext servletContext;
@@ -67,7 +72,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             StreamingOutput streamingOutput;
 
             if (type.equals(Explanation.class))
-                streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, Explanation.class.cast(t));
+                streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, Explanation.class.cast(t), helper.getPrincipal());
             else
                 streamingOutput = userInterfaceService.getDefaultPageAsStreaming(type, t);
 

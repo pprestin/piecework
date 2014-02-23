@@ -26,7 +26,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
-import piecework.persistence.DeploymentRepository;
+import piecework.repository.DeploymentRepository;
 import piecework.security.Sanitizer;
 
 /**

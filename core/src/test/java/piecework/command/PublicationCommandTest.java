@@ -28,10 +28,10 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ActivityRepository;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.repository.ActivityRepository;
+import piecework.repository.ContentRepository;
+import piecework.repository.DeploymentRepository;
+import piecework.repository.ProcessRepository;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

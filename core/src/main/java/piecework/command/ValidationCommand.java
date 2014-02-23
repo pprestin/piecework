@@ -18,13 +18,16 @@ package piecework.command;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import piecework.Constants;
 import piecework.ServiceLocator;
 import piecework.enumeration.ActionType;
-import piecework.exception.NotFoundError;
-import piecework.exception.PieceworkException;
+import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.service.TaskService;
+import piecework.util.ModelUtility;
 import piecework.validation.ValidationFactory;
 import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
@@ -37,49 +40,37 @@ import java.util.*;
 /**
  * @author James Renfro
  */
-public class ValidationCommand extends AbstractCommand<Validation> {
+public class ValidationCommand<P extends ProcessDeploymentProvider> extends AbstractCommand<Validation, P> {
 
     private static final Set<ActionType> UNEXCEPTIONAL_ACTION_TYPES = Sets.newHashSet(ActionType.ASSIGN, ActionType.CLAIM, ActionType.SAVE, ActionType.REJECT);
 
     private static final Logger LOG = Logger.getLogger(ValidationCommand.class);
-    private final ProcessDeployment deployment;
     private final Submission submission;
-    private final Task task;
     private final FormRequest request;
     private final Object object;
     private final Class<?> type;
-    private final Entity principal;
     private final String validationId;
-    private final String fieldName;
     private final String version;
     private final boolean ignoreThrowException;
 
-    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName, String version) {
-        super(commandExecutor, principal, process, request.getInstance());
-        this.deployment = deployment;
-        this.task = request.getTask();
-        this.request = request;
-        this.object = object;
-        this.submission = null;
-        this.type = type;
-        this.principal = principal;
-        this.validationId = validationId;
-        this.fieldName = fieldName;
-        this.version = version;
-        this.ignoreThrowException = false;
-    }
-
-    ValidationCommand(CommandExecutor commandExecutor, Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal, String version) {
-        super(commandExecutor, principal, process, request.getInstance());
-        this.deployment = deployment;
-        this.task = request.getTask();
+    ValidationCommand(CommandExecutor commandExecutor, P modelProvider, FormRequest request, Submission submission, String version) {
+        super(commandExecutor, modelProvider);
         this.request = request;
         this.object = null;
         this.type = null;
-        this.principal = principal;
         this.submission = submission;
         this.validationId = null;
-        this.fieldName = null;
+        this.version = version;
+        this.ignoreThrowException = true;
+    }
+
+    ValidationCommand(CommandExecutor commandExecutor, P modelProvider, FormRequest request, Object object, Class<?> type, String version) {
+        super(commandExecutor, modelProvider);
+        this.request = request;
+        this.object = object;
+        this.type = type;
+        this.submission = null;
+        this.validationId = null;
         this.version = version;
         this.ignoreThrowException = true;
     }
@@ -88,36 +79,29 @@ public class ValidationCommand extends AbstractCommand<Validation> {
     Validation execute(ServiceLocator serviceLocator) throws PieceworkException {
         SubmissionHandlerRegistry submissionHandlerRegistry = serviceLocator.getService(SubmissionHandlerRegistry.class);
         SubmissionTemplateFactory submissionTemplateFactory = serviceLocator.getService(SubmissionTemplateFactory.class);
-        TaskService taskService = serviceLocator.getService(TaskService.class);
         ValidationFactory validationFactory = serviceLocator.getService(ValidationFactory.class);
 
-        return execute(submissionHandlerRegistry, submissionTemplateFactory, taskService, validationFactory);
+        return execute(submissionHandlerRegistry, submissionTemplateFactory, validationFactory);
     }
 
-    Validation execute(SubmissionHandlerRegistry submissionHandlerRegistry, SubmissionTemplateFactory submissionTemplateFactory, TaskService taskService, ValidationFactory validationFactory) throws PieceworkException {
+    Validation execute(SubmissionHandlerRegistry submissionHandlerRegistry, SubmissionTemplateFactory submissionTemplateFactory, ValidationFactory validationFactory) throws PieceworkException {
         SubmissionHandler handler = type != null ? submissionHandlerRegistry.handler(type) : null;
         SubmissionTemplate template;
 
-        if (StringUtils.isEmpty(fieldName)) {
-            template = submissionTemplateFactory.submissionTemplate(process, deployment, request, validationId);
-        } else {
-            Activity activity = request.getActivity();
-            Map<String, Field> fieldMap = activity.getFieldKeyMap();
-
-            Field field = fieldMap.get(fieldName);
-
-            if (field == null && !activity.isAllowAny())
-                throw new NotFoundError();
-
-            template = submissionTemplateFactory.submissionTemplate(process, field, request, activity.isAllowAny());
+        Task task = ModelUtility.task(modelProvider);
+        if (task != null) {
+            if (!task.isActive())
+                throw new BadRequestError(Constants.ExceptionCodes.active_task_required);
+            if (!task.isAssignee(modelProvider.principal()))
+                throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
         }
 
-        Submission submission = this.submission == null ? handler.handle(instance, object, template, principal) : this.submission;
+        template = submissionTemplateFactory.submissionTemplate(modelProvider, request, validationId);
+
+        Submission submission = this.submission == null ? handler.handle(modelProvider, object, template) : this.submission;
         boolean throwException = !ignoreThrowException && submission.getAction() != null && !UNEXCEPTIONAL_ACTION_TYPES.contains(submission.getAction());
 
-        taskService.checkIsActiveIfTaskExists(process, task);
-
-        return validationFactory.validation(process, instance, task, template, submission, principal, version, throwException);
+        return validationFactory.validation(modelProvider, template, submission, version, throwException);
     }
 
 }

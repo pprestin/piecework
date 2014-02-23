@@ -33,7 +33,9 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.identity.IdentityHelper;
-import piecework.persistence.ProcessInstanceRepository;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.TaskProvider;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.data.DataFilterService;
 import piecework.security.Sanitizer;
@@ -42,7 +44,6 @@ import piecework.settings.UserInterfaceSettings;
 import piecework.task.TaskFactory;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
-import piecework.util.TaskUtility;
 import piecework.validation.Validation;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -73,6 +74,9 @@ public class TaskService {
     IdentityService identityService;
 
     @Autowired
+    ModelProviderFactory modelProviderFactory;
+
+    @Autowired
     ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
@@ -91,9 +95,9 @@ public class TaskService {
     UserInterfaceSettings settings;
 
 
-    public void complete(final String rawProcessDefinitionKey, final String rawTaskId, final String rawAction, final Submission rawSubmission, final RequestDetails requestDetails, final Entity principal) throws PieceworkException {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String taskId = sanitizer.sanitize(rawTaskId);
+    public TaskProvider complete(final String rawProcessDefinitionKey, final String rawTaskId, final String rawAction, final Submission rawSubmission, final RequestDetails requestDetails, final Entity principal) throws PieceworkException {
+        TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, principal);
+
         String action = sanitizer.sanitize(rawAction);
 
         ActionType actionType = ActionType.COMPLETE;
@@ -115,8 +119,8 @@ public class TaskService {
                 actingUser = principal.getEntityId();
         }
 
-        Process process = processService.read(processDefinitionKey);
-        Task task = taskId != null ? read(process, taskId, true) : null;
+        ViewContext context = new ViewContext(settings, VERSION);
+        Task task = taskProvider.task(context, true);
         if (task == null)
             throw new NotFoundError();
 
@@ -124,13 +128,10 @@ public class TaskService {
         if ( StringUtils.isEmpty(assigneeId) ) {
             assigneeId = null; // to be consistent with task.getAssigneeId() to facilitate later comparison
         }
-        if (    actionType == ActionType.ASSIGN && StringUtils.equals(assigneeId, task.getAssigneeId()) 
+        if (actionType == ActionType.ASSIGN && StringUtils.equals(assigneeId, task.getAssigneeId())
              || actionType == ActionType.CLAIM && StringUtils.equals(actingUser, task.getAssigneeId()) ) {
-            return; // no change in assignee
+            return taskProvider; // no change in assignee
         }
-
-        ProcessInstance instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
 
         FormRequest request;
         Validation validation;
@@ -139,52 +140,55 @@ public class TaskService {
         switch (actionType) {
             case ASSIGN:
                 User assignee = assigneeId != null ? identityService.getUserWithAccessAuthority(assigneeId) : null;
-                command = commandFactory.assignment(principal, process, deployment, instance, task, assignee);
+                command = commandFactory.assignment(taskProvider, task, assignee);
                 break;
             case CLAIM:
                 User actingAs = actingUser != null ? identityService.getUserWithAccessAuthority(actingUser) : null;
-                command = commandFactory.assignment(principal, process, deployment, instance, task, actingAs);
+                command = commandFactory.assignment(taskProvider, task, actingAs);
                 break;
             case ATTACH:
-                request = requestService.create(requestDetails, process, instance, task, actionType);
-                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal, VERSION).execute();
-                command = commandFactory.attachment(principal, deployment, validation);
+                request = requestService.create(requestDetails, taskProvider, actionType);
+                ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, VERSION);
+                validation = validationCommand.execute();
+                command = commandFactory.attachment(taskProvider, validation);
                 break;
             default:
-                request = requestService.create(requestDetails, process, instance, task, actionType);
-                validation = commandFactory.validation(process, deployment, request, rawSubmission, Submission.class, principal, VERSION).execute();
-                command = commandFactory.completeTask(principal, deployment, validation, actionType);
+                request = requestService.create(requestDetails, taskProvider, actionType);
+                validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, VERSION);
+                validation = validationCommand.execute();
+                command = commandFactory.completeTask(taskProvider, validation, actionType);
                 break;
         }
 
         command.execute();
+        return taskProvider;
     }
 
-    public Task read(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
-        ProcessInstance instance = processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
-
-        if (instance == null)
-            return null;
-
-        Entity principal = helper.getPrincipal();
-        return TaskUtility.findTask(identityService, process, instance, taskId, principal, limitToActive, new ViewContext(settings, VERSION));
-    }
+//    public Task read(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
+//        ProcessInstance instance = processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
+//
+//        if (instance == null)
+//            return null;
+//
+//        Entity principal = helper.getPrincipal();
+//        return TaskUtility.findTask(identityService, process, instance, taskId, principal, limitToActive, new ViewContext(settings, VERSION));
+//    }
 
     /*
      * Returns the first task for the passed instance that the user is allowed to access
      */
-    public Task allowedTask(Process process, ProcessInstance instance, Entity principal, boolean limitToActive) throws StatusCodeError {
-        return TaskUtility.findTask(identityService, process, instance, null, principal, limitToActive, new ViewContext(settings, VERSION));
-    }
+//    public Task allowedTask(Process process, ProcessInstance instance, Entity principal, boolean limitToActive) throws StatusCodeError {
+//        return TaskUtility.findTask(identityService, process, instance, null, principal, limitToActive, new ViewContext(settings, VERSION));
+//    }
 
-    public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
-        String taskId = task != null ? task.getTaskInstanceId() : null;
-        if (StringUtils.isNotEmpty(taskId)) {
-            task = read(process, taskId, false);
-            if (task == null || !task.isActive())
-                throw new ForbiddenError();
-        }
-    }
+//    public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
+//        String taskId = task != null ? task.getTaskInstanceId() : null;
+//        if (StringUtils.isNotEmpty(taskId)) {
+//            task = read(process, taskId, false);
+//            if (task == null || !task.isActive())
+//                throw new ForbiddenError();
+//        }
+//    }
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
         long time = 0;
@@ -227,32 +231,24 @@ public class TaskService {
         return results;
     }
 
-    public boolean hasAllowedTask(Process process, ProcessInstance processInstance, Entity principal, boolean limitToActive) throws StatusCodeError {
-
-        if (allowedTask(process, processInstance, principal, limitToActive) != null)
-            return true;
-
-        return false;
-    }
-
-    public Task read(ProcessInstance instance, String taskId) {
-        if (instance != null && StringUtils.isNotEmpty(taskId)) {
-            if (instance != null) {
-                Set<Task> tasks = instance.getTasks();
-                if (tasks != null) {
-                    ViewContext context = new ViewContext(settings, VERSION);
-                    for (Task task : tasks) {
-                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId)) {
-                            Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
-                            return TaskFactory.task(task, new PassthroughSanitizer(), userMap, context);
-                        }
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
+//    public Task read(ProcessInstance instance, String taskId) {
+//        if (instance != null && StringUtils.isNotEmpty(taskId)) {
+//            if (instance != null) {
+//                Set<Task> tasks = instance.getTasks();
+//                if (tasks != null) {
+//                    ViewContext context = new ViewContext(settings, VERSION);
+//                    for (Task task : tasks) {
+//                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId)) {
+//                            Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
+//                            return TaskFactory.task(task, new PassthroughSanitizer(), userMap, context);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        return null;
+//    }
 
     public boolean update(String processInstanceId, Task task) {
         return processInstanceRepository.update(processInstanceId, task);

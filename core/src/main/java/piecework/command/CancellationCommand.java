@@ -23,11 +23,12 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
 import piecework.exception.ForbiddenError;
-import piecework.exception.StatusCodeError;
+import piecework.exception.PieceworkException;
 import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
+import piecework.persistence.ProcessInstanceProvider;
 
 /**
  * Cancels a process instance so it can no longer be executed.
@@ -36,23 +37,24 @@ import piecework.model.ProcessInstance;
  */
 public class CancellationCommand extends AbstractOperationCommand {
 
-    private final ProcessDeployment deployment;
-
-    CancellationCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
-        super(commandExecutor, principal, process, instance, null, OperationType.CANCELLATION, null, applicationStatusExplanation);
-        this.deployment = deployment;
+    CancellationCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
+        super(commandExecutor, instanceProvider, null, OperationType.CANCELLATION, null, applicationStatusExplanation);
     }
 
     @Override
-    protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
+    protected OperationResult operation(ProcessEngineFacade facade) throws PieceworkException, ProcessEngineException {
+        Entity principal = modelProvider.principal();
         // This is an operation that anonymous users should never be able to cause
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
+        Process process = modelProvider.process();
+        ProcessInstance instance = modelProvider.instance();
         // Only initiators, process admins or superusers are allowed to cancel processes
         if (!instance.isInitiator(principal) && !principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
+        ProcessDeployment deployment = modelProvider.deployment();
         if (!facade.cancel(process, deployment, instance))
             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
         return new OperationResult(applicationStatusExplanation, deployment.getCancellationStatus(), Constants.ProcessStatuses.CANCELLED, applicationStatusExplanation);

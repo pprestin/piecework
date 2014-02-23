@@ -20,14 +20,19 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.SystemUser;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.ProcessProvider;
 import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.security.EncryptionService;
 import piecework.security.concrete.*;
 import piecework.common.ManyMap;
 import piecework.settings.UserInterfaceSettings;
+import piecework.util.ModelUtility;
 import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
@@ -64,31 +69,31 @@ public class DataFilterService {
      * Retrieves all instance data including restricted values, decrypting them all.
      *
      *
-     * @param process
-     * @param instance containing the data
+     * @param modelProvider of model data objects
      * @param reason why this data is being retrieved in the code, e.g. to send it to some backend system
      * @return Map of decrypted instance data
      */
-    public Map<String, List<Value>> allInstanceDataDecrypted(Process process, ProcessInstance instance, String reason) {
+    public <P extends ProcessInstanceProvider> Map<String, List<Value>> allInstanceDataDecrypted(P modelProvider, String reason) throws PieceworkException {
         LOG.info("Retrieving all instance data, decrypted, for the following reason: " + reason);
+        ProcessInstance instance = modelProvider.instance();
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : null;
-        DataFilter decryptValuesFilter = new DecryptValuesFilter(process, instance, new SystemUser(), reason, accessTracker, encryptionService, false);
+        DataFilter decryptValuesFilter = new DecryptValuesFilter(modelProvider, reason, accessTracker, encryptionService, false);
         return SecurityUtility.filter(instanceData, decryptValuesFilter);
     }
 
     /**
      * Retrieves all instance and validation data, including restricted values, decrypting them all.
      *
-     *
-     * @param process
-     * @param instance containing the data
+     * @param modelProvider of model data objects
      * @param reason why this data is being retrieved in the code, e.g. to send it to some backend system
      * @return Map of decrypted instance data
      */
-    public Map<String, List<Value>> allInstanceAndValidationDataDecrypted(Process process, ProcessInstance instance, Validation validation, String reason) {
-        LOG.info("Retrieving all instance and validation data, decrypted, for the following reason: " + reason);
+    public <P extends ProcessInstanceProvider> Map<String, List<Value>> allInstanceAndValidationDataDecrypted(P modelProvider, Validation validation, String reason) throws PieceworkException {
+        if (LOG.isDebugEnabled())
+            LOG.debug("Retrieving all instance and validation data, decrypted, for the following reason: " + reason);
+        ProcessInstance instance = modelProvider.instance();
         ManyMap<String, Value> combinedData = SecurityUtility.combinedData(instance, validation);
-        DataFilter decryptValuesFilter = new DecryptValuesFilter(process, instance, new SystemUser(), reason, accessTracker, encryptionService, false);
+        DataFilter decryptValuesFilter = new DecryptValuesFilter(modelProvider, reason, accessTracker, encryptionService, false);
         return SecurityUtility.filter(combinedData, decryptValuesFilter);
     }
 
@@ -112,17 +117,17 @@ public class DataFilterService {
      * decrypted
      *
      *
-     * @param process
-     * @param instance to log access to
+     * @param provider of model data objects
      * @param submission containing the data
-     * @param principal entity that is accessing this data
      * @param reason why the principal is requesting the data
      * @return Map of validation data that
      */
-    public Map<String, List<Value>> allSubmissionData(Process process, ProcessInstance instance, Submission submission, Entity principal, String reason) {
+    public <P extends ProcessProvider> Map<String, List<Value>> allSubmissionData(P provider, Submission submission, String reason) throws PieceworkException {
         Map<String, List<Value>> validationData = submission != null ? submission.getData() : null;
+        Process process = provider.process();
+        ProcessInstance instance = ModelUtility.instance(provider);
         boolean isAnonymousDecryptAllowed = instance == null && process.isAnonymousSubmissionAllowed();
-        DataFilter decryptValuesFilter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, isAnonymousDecryptAllowed);
+        DataFilter decryptValuesFilter = new DecryptValuesFilter(provider, reason, accessTracker, encryptionService, isAnonymousDecryptAllowed);
         return SecurityUtility.filter(validationData, decryptValuesFilter);
     }
 
@@ -150,14 +155,18 @@ public class DataFilterService {
         return SecurityUtility.filter(validationData, limitFieldsFilter);
     }
 
-    public Map<String, List<Value>> authorizedInstanceData(Process process, ProcessInstance instance, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
+    public <P extends ProcessDeploymentProvider> Map<String, List<Value>> authorizedInstanceData(P modelProvider, Set<Field> fields, String version, String reason, boolean isAllowAny) throws PieceworkException {
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : null;
 
         DataFilter decryptValuesFilter;
-        if (task.isAssignee(principal))
-            decryptValuesFilter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, false);
+        Task task = ModelUtility.task(modelProvider);
+        Entity principal = modelProvider.principal();
+
+        if (task != null && task.isAssignee(principal))
+            decryptValuesFilter = new DecryptValuesFilter(modelProvider, reason, accessTracker, encryptionService, false);
         else
-            decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
+            decryptValuesFilter = new MaskRestrictedValuesFilter(modelProvider, encryptionService);
 
         DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
         DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, version);
@@ -167,23 +176,23 @@ public class DataFilterService {
     /**
      * Filters instance and validation data to the
      *
-     *
-     * @param process
-     * @param instance
+     * @param modelProvider
      * @param validation
-     * @param task
      * @param fields
-     * @param principal  @return
      * @param isAllowAny
      */
-    public Map<String, List<Value>> authorizedInstanceAndValidationData(Process process, ProcessInstance instance, Validation validation, Task task, Set<Field> fields, Entity principal, String version, String reason, boolean isAllowAny) {
+    public <P extends ProcessDeploymentProvider> Map<String, List<Value>> authorizedInstanceAndValidationData(P modelProvider, Validation validation, Set<Field> fields, String version, String reason, boolean isAllowAny) throws PieceworkException {
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
         ManyMap<String, Value> combinedData = SecurityUtility.combinedData(instance, validation);
 
         DataFilter decryptValuesFilter;
-        if (task.isAssignee(principal))
-            decryptValuesFilter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, false);
+        Task task = ModelUtility.task(modelProvider);
+        Entity principal = modelProvider.principal();
+
+        if (task != null && task.isAssignee(principal))
+            decryptValuesFilter = new DecryptValuesFilter(modelProvider, reason, accessTracker, encryptionService, false);
         else
-            decryptValuesFilter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
+            decryptValuesFilter = new MaskRestrictedValuesFilter(modelProvider, encryptionService);
 
         DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
         DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, version);

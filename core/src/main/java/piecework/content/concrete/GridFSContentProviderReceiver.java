@@ -46,7 +46,7 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     GridFsOperations gridFsOperations;
 
     @Override
-    public Content findByPath(piecework.model.Process process, String base, String location) {
+    public Content findByPath(Process process, String base, String location, Entity principal) {
         GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
         return ContentUtility.toContent(file);
     }

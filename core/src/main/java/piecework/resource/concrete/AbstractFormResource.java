@@ -24,13 +24,20 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.command.CommandFactory;
 import piecework.command.SubmissionCommandResponse;
+import piecework.command.SubmitFormCommand;
+import piecework.command.ValidationCommand;
+import piecework.enumeration.AlarmSeverity;
 import piecework.form.FormDisposition;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.form.FormFactory;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.persistence.SubmissionRepository;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessProvider;
+import piecework.persistence.TaskProvider;
+import piecework.repository.ProcessInstanceRepository;
+import piecework.repository.SubmissionRepository;
 import piecework.security.AccessTracker;
 import piecework.service.*;
 import piecework.identity.IdentityHelper;
@@ -38,6 +45,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
 import piecework.settings.SecuritySettings;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
 import piecework.validation.Validation;
 
@@ -67,19 +75,16 @@ public abstract class AbstractFormResource {
     CommandFactory commandFactory;
 
     @Autowired
-    DeploymentService deploymentService;
-
-    @Autowired
     FormFactory formFactory;
-
-    @Autowired
-    FormService formService;
 
     @Autowired
     IdentityHelper helper;
 
     @Autowired
     IdentityService identityService;
+
+    @Autowired
+    ModelProviderFactory modelProviderFactory;
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
@@ -97,35 +102,51 @@ public abstract class AbstractFormResource {
     SecuritySettings securitySettings;
 
     @Autowired
+    TaskService taskService;
+
+    @Autowired
     UserInterfaceService userInterfaceService;
+
+    @Autowired
+    UserInterfaceSettings settings;
 
     @Autowired
     Versions versions;
 
     protected abstract boolean isAnonymous();
 
-    protected Response startForm(MessageContext context, Process process) throws PieceworkException {
+    protected Response startForm(final MessageContext context, final String rawProcessDefinitionKey, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
-        FormRequest request = requestService.create(requestDetails, process);
+        ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
+        if (isAnonymous())
+            verifyProcessAllowsAnonymousSubmission(deploymentProvider);
+
+        FormRequest request = requestService.create(requestDetails, deploymentProvider);
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
-        return response(process, request, ActionType.CREATE, mediaType, 1);
+        return response(deploymentProvider, request, ActionType.CREATE, mediaType, 1);
     }
 
-    protected Response requestForm(MessageContext context, Process process, String rawRequestId) throws PieceworkException {
+    protected <P extends ProcessDeploymentProvider> Response requestForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawRequestId, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
 
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
             throw new NotFoundError();
 
-        FormRequest request = requestService.read(requestDetails, requestId);
+        FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
 
         if (request == null)
             throw new NotFoundError();
+
+        P provider = modelProviderFactory.provider(request, principal);
+
+        if (isAnonymous())
+            verifyProcessAllowsAnonymousSubmission(provider);
 
         ActionType actionType = request.getAction();
 
@@ -134,12 +155,13 @@ public abstract class AbstractFormResource {
 
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
-        return response(process, request, actionType, mediaType, 1);
+        return response(provider, request, actionType, mediaType, 1);
     }
 
-    protected Response submissionForm(MessageContext context, Process process, String rawSubmissionId) throws PieceworkException {
+    protected <P extends ProcessDeploymentProvider> Response submissionForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawSubmissionId, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String submissionId = sanitizer.sanitize(rawSubmissionId);
 
         Submission submission = submissionRepository.findOne(submissionId);
@@ -152,10 +174,15 @@ public abstract class AbstractFormResource {
         if (StringUtils.isEmpty(requestId))
             throw new NotFoundError();
 
-        FormRequest request = requestService.read(requestDetails, requestId);
+        FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
 
         if (request == null)
             throw new NotFoundError();
+
+        P provider = modelProviderFactory.provider(request, principal);
+
+        if (isAnonymous())
+            verifyProcessAllowsAnonymousSubmission(provider);
 
         ActionType actionType = request.getAction();
 
@@ -164,34 +191,49 @@ public abstract class AbstractFormResource {
 
 
         // When returning the JSON for a submission it's necessary to rerun the validation
-        Validation validation = commandFactory.validation(process, process.getDeployment(), request, submission, helper.getPrincipal(), VERSION).execute();
+        ValidationCommand<P> validationCommand = commandFactory.validation(provider, request, submission, VERSION);
+        Validation validation = validationCommand.execute();
 
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
-        return response(process, request, actionType, mediaType, validation, null, true, 1);
+        return response(provider, request, actionType, mediaType, validation, null, true, 1);
     }
 
-    protected Response taskForm(MessageContext context, Process process, String rawTaskId, int count) throws PieceworkException {
+    protected Response taskForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final int count, Entity principal) throws PieceworkException {
+        if (isAnonymous()) {
+            String message = "Someone is attempting to view a task form through an anonymous resource. This is never allowed.";
+            LOG.error(message);
+            accessTracker.alarm(AlarmSeverity.URGENT, message);
+            throw new ForbiddenError();
+        }
+
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, isAnonymous());
-        String taskId = sanitizer.sanitize(rawTaskId);
-        Entity principal = helper.getPrincipal();
-        FormRequest request = requestService.create(principal, requestDetails, process, taskId, null);
+        TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, principal);
+
+        FormRequest request = requestService.create(requestDetails, taskProvider, ActionType.CREATE);
 
         List<MediaType> mediaTypes = context != null ? context.getHttpHeaders().getAcceptableMediaTypes() : Collections.<MediaType>emptyList();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
 
-        return response(process, request, ActionType.CREATE, mediaType, count);
+        return response(taskProvider, request, ActionType.CREATE, mediaType, count);
     }
 
-    protected SearchResults search(MessageContext context, MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException {
+    protected SearchResults search(final MessageContext context, final MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws PieceworkException {
+        if (isAnonymous() || principal == null) {
+            String message = "Someone is attempting to view a list of tasks through an anonymous resource. This is never allowed.";
+            LOG.error(message);
+            accessTracker.alarm(AlarmSeverity.URGENT, message);
+            throw new ForbiddenError();
+        }
+
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
-        Entity principal = helper.getPrincipal();
-        return formService.search(rawQueryParameters, principal);
+        return taskService.search(rawQueryParameters, principal, true, false);
     }
 
-    protected <T> Response submitForm(MessageContext context, Process process, String rawRequestId, T data, Class<T> type) throws StatusCodeError {
+    protected <T, P extends ProcessDeploymentProvider> Response submitForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawRequestId, final T data, final Class<T> type, Entity principal) throws PieceworkException {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
 
         if (StringUtils.isEmpty(requestId))
@@ -199,19 +241,32 @@ public abstract class AbstractFormResource {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, isAnonymous());
-        FormRequest formRequest = requestService.read(requestDetails, requestId);
+        FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
+
+        if (request == null)
+            throw new NotFoundError();
+
+        P provider = modelProviderFactory.provider(request, principal);
+
+        if (isAnonymous() || principal == null)
+            verifyProcessAllowsAnonymousSubmission(provider);
+
         List<MediaType> mediaTypes = context != null ? context.getHttpHeaders().getAcceptableMediaTypes() : Collections.<MediaType>emptyList();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
 
         try {
-            SubmissionCommandResponse submissionCommandResponse = formService.submit(process, requestDetails, requestId, data, type, helper.getPrincipal());
+            ValidationCommand<P> validationCommand = commandFactory.validation(provider, request, data, type, VERSION);
+            Validation validation = validationCommand.execute();
+            SubmitFormCommand<P> submitFormCommand = commandFactory.submitForm(provider, validation, request.getAction(), requestDetails, request);
+            SubmissionCommandResponse submissionCommandResponse = submitFormCommand.execute();
+
             if (isAnonymous())
-                return response(process, submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true, 1);
+                return response(provider, submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true, 1);
 
             if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE))
-                return response(process, submissionCommandResponse.getNextRequest(), submissionCommandResponse.getNextRequest().getAction(), mediaType, 1);
+                return response(provider, submissionCommandResponse.getNextRequest(), submissionCommandResponse.getNextRequest().getAction(), mediaType, 1);
 
-            return redirect(process, submissionCommandResponse, false);
+            return redirect(provider, submissionCommandResponse, false);
         } catch (Exception e) {
             Validation validation = null;
             Explanation explanation = null;
@@ -238,15 +293,15 @@ public abstract class AbstractFormResource {
                 throw (BadRequestError)e;
 
             try {
-                FormRequest invalidRequest = requestService.create(requestDetails, process, formRequest.getInstance(), formRequest.getTask(), ActionType.CREATE, validation, explanation);
+                FormRequest invalidRequest = requestService.create(requestDetails, provider, ActionType.CREATE, validation, explanation);
                 if (isAnonymous())
-                    return response(process, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true, 1);
+                    return response(provider, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true, 1);
 
                 if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE))
-                    return response(process, invalidRequest, invalidRequest.getAction(), mediaType, validation, explanation, true, 1);
+                    return response(provider, invalidRequest, invalidRequest.getAction(), mediaType, validation, explanation, true, 1);
 
                 Submission submission = validation != null ? validation.getSubmission() : null;
-                return redirect(process, new SubmissionCommandResponse(submission, invalidRequest), true);
+                return redirect(provider, new SubmissionCommandResponse(submission, invalidRequest), true);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -254,29 +309,51 @@ public abstract class AbstractFormResource {
         }
     }
 
-    protected Response validateForm(MessageContext context, Process process, MultivaluedMap<String, String> formData, String rawRequestId, String rawValidationId) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
+    protected <P extends ProcessDeploymentProvider> Response validateForm(final MessageContext context, final String rawProcessDefinitionKey, final MultivaluedMap<String, String> formData, final String rawRequestId, final String rawValidationId, final Entity principal) throws PieceworkException {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
         String validationId = sanitizer.sanitize(rawValidationId);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
-        formService.validate(process, requestDetails, requestId, formData, Map.class, validationId, principal);
-        return Response.noContent().build();
+        FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
+
+        if (request == null)
+            throw new NotFoundError();
+
+        P provider = modelProviderFactory.provider(request, principal);
+
+        if (isAnonymous() || principal == null)
+            verifyProcessAllowsAnonymousSubmission(provider);
+
+        commandFactory.validation(provider, request, formData, Map.class, validationId, VERSION).execute();
+
+        return FormUtility.noContentResponse(settings, provider, isAnonymous());
     }
 
-    protected Response validateForm(MessageContext context, Process process, MultipartBody body, String rawRequestId, String rawValidationId) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
+    protected <P extends ProcessDeploymentProvider> Response validateForm(final MessageContext context, final String rawProcessDefinitionKey, final MultipartBody body, final String rawRequestId, final String rawValidationId, final Entity principal) throws PieceworkException {
+        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
         String validationId = sanitizer.sanitize(rawValidationId);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
-        formService.validate(process, requestDetails, requestId, body, MultipartBody.class, validationId, principal);
-        return Response.noContent().build();
+
+        FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
+
+        if (request == null)
+            throw new NotFoundError();
+
+        P provider = modelProviderFactory.provider(request, principal);
+
+        if (isAnonymous() || principal == null)
+            verifyProcessAllowsAnonymousSubmission(provider);
+
+        commandFactory.validation(provider, request, body, MultipartBody.class, validationId, VERSION).execute();
+        return FormUtility.noContentResponse(settings, provider, isAnonymous());
     }
 
-    private Response redirect(Process process, SubmissionCommandResponse submissionCommandResponse, boolean isInvalidSubmission) throws StatusCodeError {
+    private <P extends ProcessDeploymentProvider> Response redirect(final P provider, final SubmissionCommandResponse submissionCommandResponse, final boolean isInvalidSubmission) throws PieceworkException {
         if (submissionCommandResponse.getNextRequest() == null)
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
 
@@ -286,8 +363,8 @@ public abstract class AbstractFormResource {
             throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
 
         try {
-            ProcessDeployment deployment = deploymentService.read(process, formRequest.getInstance());
-            FormDisposition formDisposition = FormUtility.disposition(process, deployment, formRequest.getActivity(), formRequest.getAction(), versions.getVersion1(), null);
+
+            FormDisposition formDisposition = FormUtility.disposition(provider, formRequest.getActivity(), formRequest.getAction(), versions.getVersion1(), null);
 
             if (isInvalidSubmission)
                 return Response.seeOther(formDisposition.getInvalidPageUri(submission)).build();
@@ -299,24 +376,22 @@ public abstract class AbstractFormResource {
         } catch (MisconfiguredProcessException mpe) {
             LOG.error("Misconfigured process ", mpe);
             throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
-        } catch (FormBuildingException fbe) {
-            LOG.error("Error finding disposition", fbe);
-            throw new ConflictError(Constants.ExceptionCodes.process_is_misconfigured);
         }
+
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, int count) throws StatusCodeError {
-        return response(process, request, actionType, mediaType, null, null, true, count);
+    private <P extends ProcessDeploymentProvider> Response response(final P modelProvider, final FormRequest request, final ActionType actionType, final MediaType mediaType, final int count) throws PieceworkException {
+        return response(modelProvider, request, actionType, mediaType, null, null, true, count);
     }
 
-    private Response response(Process process, FormRequest request, ActionType actionType, MediaType mediaType, Validation validation, Explanation explanation, boolean includeRestrictedData, int count) throws StatusCodeError {
+    private <P extends ProcessDeploymentProvider> Response response(final P modelProvider, final FormRequest request, final ActionType actionType, final MediaType mediaType, final Validation validation, final Explanation explanation, final boolean includeRestrictedData, int count) throws PieceworkException {
+        Process process = modelProvider.process();
         if (!request.validate(process))
             throw new BadRequestError();
 
-        Entity principal = helper.getPrincipal();
         try {
-            ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-            Form form = formFactory.form(process, deployment, request, actionType, principal, validation, explanation, includeRestrictedData, isAnonymous(), VERSION);
+            ProcessDeployment deployment = modelProvider.deployment();
+            Form form = formFactory.form(modelProvider, request, actionType, validation, explanation, includeRestrictedData, isAnonymous(), VERSION);
             FormDisposition formDisposition = form.getDisposition();
 
             if (mediaType == null || mediaType.equals(MediaType.TEXT_HTML_TYPE)) {
@@ -327,11 +402,11 @@ public abstract class AbstractFormResource {
                             return Response.temporaryRedirect(formDisposition.getHostUri()).build();
                         return Response.seeOther(pageUri).build();
                     case CUSTOM:
-                        return Response.ok(userInterfaceService.getCustomPageAsStreaming(process, form), MediaType.TEXT_HTML_TYPE).build();
+                        return FormUtility.okResponse(settings, modelProvider, userInterfaceService.getCustomPageAsStreaming(process, form, modelProvider.principal()), MediaType.TEXT_HTML_TYPE.toString(), isAnonymous());
                 }
             }
 
-            return isAnonymous() ? Response.ok(form).build() : FormUtility.allowCrossOriginResponse(deployment, form);
+            return FormUtility.okResponse(settings, modelProvider, form, mediaType.toString(), isAnonymous());
 
         } catch (URISyntaxException use) {
             LOG.error("URISyntaxException serving page", use);
@@ -339,13 +414,20 @@ public abstract class AbstractFormResource {
         } catch (IOException ioe) {
             LOG.error("IOException serving page", ioe);
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-        } catch (MisconfiguredProcessException mpe) {
-            LOG.error("Process is misconfigured: " + mpe.getMessage(), mpe);
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-        } catch (FormBuildingException fbe) {
-            LOG.error("Unable to build form", fbe);
-            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         }
+    }
+
+    private ProcessProvider verifyProcessAllowsAnonymousSubmission(final ProcessProvider processProvider) throws PieceworkException {
+        Process process = processProvider.process();
+
+        if (process == null)
+            throw new NotFoundError();
+
+        // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
+        if (!process.isAnonymousSubmissionAllowed())
+            throw new NotFoundError();
+
+        return processProvider;
     }
 
 

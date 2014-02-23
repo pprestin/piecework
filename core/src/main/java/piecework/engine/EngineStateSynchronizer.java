@@ -18,13 +18,18 @@ package piecework.engine;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.SystemUser;
 import piecework.enumeration.StateChangeType;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.model.Form;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.TaskProvider;
 import piecework.service.ProcessInstanceService;
-import piecework.persistence.ProcessInstanceRepository;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.service.ProcessService;
 import piecework.service.TaskService;
 import piecework.task.TaskFactory;
@@ -51,13 +56,10 @@ public class EngineStateSynchronizer {
     Mediator mediator;
 
     @Autowired
-    ProcessService processService;
+    ModelProviderFactory modelProviderFactory;
 
     @Autowired
     ProcessInstanceService processInstanceService;
-
-    @Autowired
-    ProcessInstanceRepository processInstanceRepository;
 
     @Autowired
     TaskService taskService;
@@ -68,32 +70,23 @@ public class EngineStateSynchronizer {
     @Autowired
     NotificationService notificationService;
 
+
     public void onProcessInstanceEvent(StateChangeType type, String processInstanceId, EngineContext context) {
-        ProcessInstance instance = null;
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(processInstanceId, new SystemUser());
         switch (type) {
         case START_PROCESS:
             if (LOG.isDebugEnabled())
                 LOG.debug("Process instance started " + processInstanceId);
 
-            try {
-                instance = processInstanceRepository.findOne(processInstanceId);
-                Process process = processService.read(instance.getProcessDefinitionKey());
-                mediator.notify(new StateChangeEvent.Builder(type).context(context).process(process).instance(instance).build());
-                doStartNotification(type, context);
-            } catch (StatusCodeError error) {
-                LOG.error("Unable to read process instance: " + processInstanceId, error);
-            }   
+                mediator.notify(new StateChangeEvent.Builder(type).context(context).instanceProvider(instanceProvider).build());
+//                doStartNotification(type, context);
+
             break;
         case COMPLETE_PROCESS:
-            instance = processInstanceService.complete(processInstanceId);
+            ProcessInstance instance = processInstanceService.complete(processInstanceId, new SystemUser());
             if (instance != null) {
-                try {
-                    Process process = processService.read(instance.getProcessDefinitionKey());
-                    LOG.debug("Process instance completed " + processInstanceId);
-                    mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).context(context).process(process).instance(instance).build());
-                } catch (StatusCodeError e) {
-                    LOG.error("Unable to find the process for this process instance -- complete process event will not be thrown" + processInstanceId);
-                }
+                LOG.debug("Process instance completed " + processInstanceId);
+                mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).context(context).instanceProvider(instanceProvider).build());
             } else {
                 LOG.error("Unable to save final state of process instance with execution business key because the instance could not be found" + processInstanceId);
             }
@@ -102,57 +95,38 @@ public class EngineStateSynchronizer {
 
     public void onTaskEvent(StateChangeType type, EngineTask delegateTask, EngineContext context) {
         try {
-            Process process = processService.read(delegateTask.getProcessDefinitionKey());
-            if (process == null)
-                return;
-
-            ProcessInstance processInstance = processInstanceService.read(process, delegateTask.getProcessInstanceId(), true);
-            if (processInstance == null)
-                return;
-
+            ProcessInstanceProvider instanceProvider = null;
             Task updated;
-
+            Process process;
+            ProcessInstance instance;
             switch(type) {
                 case CREATE_TASK:
-                    updated = TaskFactory.task(process, processInstance, delegateTask);
+                    instanceProvider = modelProviderFactory.instanceProvider(delegateTask.getProcessDefinitionKey(), delegateTask.getProcessInstanceId(), new SystemUser());
+                    process = instanceProvider.process();
+                    instance = instanceProvider.instance();
+                    updated = TaskFactory.task(process, instance, delegateTask);
                     break;
                 default:
-                    Task task = taskService.read(processInstance, delegateTask.getTaskId());
+                    TaskProvider taskProvider = modelProviderFactory.taskProvider(delegateTask.getProcessDefinitionKey(), delegateTask.getTaskId(), new SystemUser());
+                    process = taskProvider.process();
+                    instance = taskProvider.instance();
+                    Task task = taskProvider.task();
+                    instanceProvider = taskProvider;
                     updated = TaskFactory.task(task, delegateTask, type == StateChangeType.COMPLETE_TASK);
                     break;
             };
 
             if (updated != null) {
-                if (taskService.update(processInstance.getProcessInstanceId(), updated)) {
+                if (taskService.update(instance.getProcessInstanceId(), updated)) {
                     LOG.debug("Stored task changes");
-                    mediator.notify(new StateChangeEvent.Builder(type).context(context).process(process).instance(processInstance).task(updated).build());
-                    doTaskNotification(type, process, processInstance, updated, context);
+                    mediator.notify(new StateChangeEvent.Builder(type).context(context).instanceProvider(instanceProvider).task(updated).build());
+                    doTaskNotification(type, process, instance, updated, context);
                 } else {
                     LOG.error("Failed to store task changes");
                 }
             }
-        } catch (StatusCodeError error) {
+        } catch (PieceworkException error) {
             LOG.error("Unable to save task state changes -- probably because the process or the instance could not be found", error);
-        }
-    }
-
-    private void doStartNotification(StateChangeType type, EngineContext engineContext) {
-        //Map<String, String> map = engineContext.getStartFormProperties();
-        //buildNotification(map);
-    }
-
-    // local helper function to append a new stirng value into a map
-    private void appendValue(Map<String, StringBuilder> map, String key, String val)
-    {
-        if ( key == null || val == null ) {
-            return;
-        }
-
-        if ( map.containsKey(key) ) {
-            StringBuilder sb = map.get(key);
-            sb.append(","+val);
-        } else {
-            map.put(key, new StringBuilder(val));
         }
     }
 
@@ -226,7 +200,7 @@ public class EngineStateSynchronizer {
             return;
         }
 
-        // get notfication templates
+        // get notification templates
         Collection<Notification> notifications = new ArrayList<Notification>();
         String taskKey = task.getTaskDefinitionKey();
         if ( taskKey != null && process != null && process.getDeployment() != null ) {

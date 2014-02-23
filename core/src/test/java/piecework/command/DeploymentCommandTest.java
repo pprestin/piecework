@@ -28,10 +28,10 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ActivityRepository;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.repository.ActivityRepository;
+import piecework.repository.ContentRepository;
+import piecework.repository.DeploymentRepository;
+import piecework.repository.ProcessRepository;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class DeploymentCommandTest {
 
     @Test(expected = NotFoundError.class)
     public void testNotFound() throws PieceworkException {
-        DeploymentCommand deployment = new DeploymentCommand(null, process, deploymentId, resource);
+        DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
     }
@@ -102,7 +102,7 @@ public class DeploymentCommandTest {
     public void testBadRequest() throws PieceworkException {
         when(deploymentRepository.findOne(deploymentId))
                 .thenReturn(processDeployment);
-        DeploymentCommand deployment = new DeploymentCommand(null, process, deploymentId, resource);
+        DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
     }
@@ -119,7 +119,7 @@ public class DeploymentCommandTest {
                 .thenReturn("TESTRESOURCE1");
         when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(Content.class)))
                 .thenReturn(processDeployment);
-        DeploymentCommand deployment = new DeploymentCommand(null, process, deploymentId, resource);
+        DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
 

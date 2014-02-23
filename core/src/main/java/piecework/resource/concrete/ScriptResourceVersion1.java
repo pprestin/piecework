@@ -62,15 +62,15 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     SecuritySettings securitySettings;
 
     @Override
-    public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+    public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         String scriptId = sanitizer.sanitize(rawProcessDefinitionKey);
         String templateName = UserInterfaceUtility.templateName(scriptId, isAnonymous());
 
         Resource scriptResource;
-
+        Entity principal = identityHelper.getPrincipal();
         if (templateName != null) {
             ServletContext servletContext = context.getServletContext();
-            scriptResource = userInterfaceService.getScriptResource(servletContext, templateName, isAnonymous());
+            scriptResource = userInterfaceService.getScriptResource(servletContext, templateName, isAnonymous(), principal);
         } else {
             Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
             ServletContext servletContext = context.getServletContext();
@@ -78,13 +78,13 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
             FormDisposition disposition = form.getDisposition();
             if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
                 try {
-                    Resource pageResource = userInterfaceService.getCustomPage(form);
-                    scriptResource = userInterfaceService.getScriptResource(servletContext, form, pageResource);
+                    Resource pageResource = userInterfaceService.getCustomPage(form, identityHelper.getPrincipal());
+                    scriptResource = userInterfaceService.getScriptResource(servletContext, form, pageResource, principal);
                 } catch (MisconfiguredProcessException e) {
                     throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
                 }
             } else {
-                scriptResource = userInterfaceService.getScriptResource(servletContext, form);
+                scriptResource = userInterfaceService.getScriptResource(servletContext, form, principal);
             }
         }
 
@@ -92,28 +92,28 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     }
 
     @Override
-    public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+    public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         String stylesheetId = sanitizer.sanitize(rawProcessDefinitionKey);
         String templateName = UserInterfaceUtility.templateName(stylesheetId, isAnonymous());
 
         Resource stylesheetResource;
-
+        Entity principal = identityHelper.getPrincipal();
         if (templateName != null) {
             ServletContext servletContext = context.getServletContext();
-            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, templateName);
+            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, templateName, principal);
         } else {
             Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
             ServletContext servletContext = context.getServletContext();
             FormDisposition disposition = form.getDisposition();
             if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
                 try {
-                    Resource pageResource = userInterfaceService.getCustomPage(form);
-                    stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, pageResource);
+                    Resource pageResource = userInterfaceService.getCustomPage(form, identityHelper.getPrincipal());
+                    stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, pageResource, principal);
                 } catch (MisconfiguredProcessException e) {
                     throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
                 }
             } else {
-                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form);
+                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, principal);
             }
         }
 
@@ -176,7 +176,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
         return false;
     }
 
-    private Form getForm(String processDefinitionKey, Entity principal, MessageContext context) throws StatusCodeError {
+    private Form getForm(String processDefinitionKey, Entity principal, MessageContext context) throws PieceworkException {
         if (principal == null)
             throw new ForbiddenError();
 
@@ -188,7 +188,7 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
         if (process == null)
             throw new NotFoundError();
 
-        return form(process, context, principal);
+        return form(processDefinitionKey, context, principal);
     }
 
 }

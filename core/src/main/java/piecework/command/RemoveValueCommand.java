@@ -26,6 +26,7 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.AllowedTaskProvider;
 import piecework.submission.SubmissionFactory;
 import piecework.util.Base64Utility;
 import piecework.common.ManyMap;
@@ -40,21 +41,20 @@ import java.util.Map;
  *
  * @author James Renfro
  */
-public class RemoveValueCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class RemoveValueCommand extends AbstractEngineStorageCommand<ProcessInstance, AllowedTaskProvider> {
 
-    private final Task task;
     private final String fieldName;
     private final String valueId;
 
-    RemoveValueCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance, Task task, String fieldName, String valueId) {
-        super(commandExecutor, principal, process, instance);
-        this.task = task;
+    RemoveValueCommand(CommandExecutor commandExecutor, AllowedTaskProvider allowedTaskProvider, String fieldName, String valueId) {
+        super(commandExecutor, allowedTaskProvider);
         this.fieldName = fieldName;
         this.valueId = valueId;
     }
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
+        Entity principal = modelProvider.principal();
         // This is an operation that anonymous users should never be able to cause
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -63,11 +63,14 @@ public class RemoveValueCommand extends AbstractEngineStorageCommand<ProcessInst
 
         // Users are only allowed to remove values if they have been assigned a task, and
         // only process overseers or superusers are allowed to remove values otherwise
+        Process process = modelProvider.process();
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
+            Task task = modelProvider.allowedTask(true);
             if (task == null || !task.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
                 throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
+        ProcessInstance instance = modelProvider.instance();
         Map<String, List<Value>> data = instance.getData();
         List<? extends Value> values = fieldName != null ? data.get(fieldName) : null;
 

@@ -26,7 +26,6 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.support.LdapContextSource;
 import piecework.common.CustomPropertySourcesConfigurer;
-import piecework.config.PropertiesConfiguration;
 import piecework.engine.activiti.ActivitiEngineProxy;
 import piecework.engine.ProcessEngineProxy;
 import piecework.engine.activiti.ActivitiEngineProxyHelper;
@@ -40,8 +39,8 @@ import piecework.service.IdentityService;
 import piecework.ldap.CustomLdapUserDetailsMapper;
 import piecework.ldap.LdapSettings;
 import piecework.model.Process;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.repository.ProcessInstanceRepository;
+import piecework.repository.ProcessRepository;
 
 import java.io.IOException;
 

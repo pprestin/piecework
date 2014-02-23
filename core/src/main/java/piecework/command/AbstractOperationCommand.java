@@ -21,15 +21,15 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.manager.StorageManager;
 import piecework.model.Process;
 import piecework.model.*;
+import piecework.persistence.ProcessInstanceProvider;
 
 /**
  * @author James Renfro
  */
-public abstract class AbstractOperationCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public abstract class AbstractOperationCommand extends AbstractEngineStorageCommand<ProcessInstance, ProcessInstanceProvider> {
 
     private static final Logger LOG = Logger.getLogger(AbstractOperationCommand.class);
 
@@ -38,8 +38,8 @@ public abstract class AbstractOperationCommand extends AbstractEngineStorageComm
     protected String applicationStatusExplanation;
     protected Task task;
 
-    AbstractOperationCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance, Task task, OperationType operation, String applicationStatus, String applicationStatusExplanation) {
-        super(commandExecutor, principal, process, instance);
+    AbstractOperationCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, Task task, OperationType operation, String applicationStatus, String applicationStatusExplanation) {
+        super(commandExecutor, instanceProvider);
         this.task = task;
         this.operation = operation;
         this.applicationStatus = applicationStatus;
@@ -56,6 +56,8 @@ public abstract class AbstractOperationCommand extends AbstractEngineStorageComm
 
         ProcessInstance updated = null;
         try {
+            ProcessInstance instance = modelProvider.instance();
+            Entity principal = modelProvider.principal();
             OperationResult result = operation(processEngineFacade);
             updated = storageManager.store(operation, result, instance, principal);
 
@@ -70,13 +72,21 @@ public abstract class AbstractOperationCommand extends AbstractEngineStorageComm
         return updated;
     }
 
-    public String toString() {
+    public String toString()  {
+        Process process = null;
+        ProcessInstance instance = null;
+        try {
+            process = modelProvider.process();
+            instance = modelProvider.instance();
+        } catch (PieceworkException e) {
+            LOG.error("Unable to retrieve process and/or instance", e);
+        }
         String processDefinitionKey = process != null ? process.getProcessDefinitionKey() : "";
         String processInstanceId = instance != null ? instance.getProcessInstanceId() : "";
 
         return "{ processDefinitionKey: \"" + processDefinitionKey + "\", processInstanceId: \"" + processInstanceId + "\", operation: \"" + operation + "\" }";
     }
 
-    protected abstract OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException;
+    protected abstract OperationResult operation(ProcessEngineFacade facade) throws PieceworkException, ProcessEngineException;
 
 }

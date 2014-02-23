@@ -44,7 +44,7 @@ public class RemoteContentProviderTest {
 
     @Test
     public void retrieveContentHappyPath() throws IOException {
-        Content content = contentProvider.findByPath(null, "https://raw.github.com/", "piecework/piecework/master/README.md");
+        Content content = contentProvider.findByPath(null, "https://raw.github.com/", "piecework/piecework/master/README.md", null);
         Assert.assertEquals("README.md", content.getFilename());
         Assert.assertEquals("https://raw.github.com/piecework/piecework/master/README.md", content.getContentId());
         Assert.assertEquals("text/plain; charset=utf-8", content.getContentType());

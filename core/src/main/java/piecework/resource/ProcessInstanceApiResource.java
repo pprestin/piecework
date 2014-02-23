@@ -92,7 +92,7 @@ public interface ProcessInstanceApiResource extends ApiResource {
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/attachment/{attachmentId}")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    Response detach(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws PieceworkException;
+    Response detach(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("attachmentId") String attachmentId) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")

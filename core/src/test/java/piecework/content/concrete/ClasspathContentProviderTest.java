@@ -28,25 +28,25 @@ public class ClasspathContentProviderTest {
 
     @Test
     public void happyPathSuccess() {
-        Content content = contentProvider.findByPath(null, "classpath:META-INF/piecework", "default.properties");
+        Content content = contentProvider.findByPath(null, "classpath:META-INF/piecework", "default.properties", null);
         Assert.assertEquals("classpath:META-INF/piecework/default.properties", content.getLocation());
     }
 
     @Test
     public void relativePathSuccess() {
-        Content content = contentProvider.findByPath(null, "classpath:nothing/../META-INF/piecework", "default.properties");
+        Content content = contentProvider.findByPath(null, "classpath:nothing/../META-INF/piecework", "default.properties", null);
         Assert.assertEquals("classpath:META-INF/piecework/default.properties", content.getLocation());
     }
 
     @Test
     public void happyPathFailure() {
-        Content content = contentProvider.findByPath(null, "classpath:META-INF/does/not/exist", "default.properties");
+        Content content = contentProvider.findByPath(null, "classpath:META-INF/does/not/exist", "default.properties", null);
         Assert.assertNull(content);
     }
 
     @Test
     public void relativePathFailure() {
-        Content content = contentProvider.findByPath(null, "classpath:META-INF/piecework", "../../piecework/StatusCodeError.properties");
+        Content content = contentProvider.findByPath(null, "classpath:META-INF/piecework", "../../piecework/StatusCodeError.properties", null);
         Assert.assertNull(content);
     }
 

@@ -46,7 +46,7 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
-    public synchronized Content findByPath(Process process, String base, String location) throws IOException {
+    public synchronized Content findByPath(Process process, String base, String location, Entity principal) throws IOException {
         return contentLocationMap.get(location);
     }
 

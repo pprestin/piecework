@@ -23,7 +23,10 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
 import piecework.submission.*;
+import piecework.util.ModelUtility;
 
 import java.util.List;
 import java.util.Map;
@@ -33,16 +36,14 @@ import java.util.Map;
  *
  * @author James Renfro
  */
-public class UpdateDataCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class UpdateDataCommand<P extends ProcessProvider> extends AbstractEngineStorageCommand<ProcessInstance, P> {
 
-    private final Task task;
     private final Map<String, List<Value>> data;
     private final Map<String, List<Message>> messages;
     private final String applicationStatusExplanation;
 
-    UpdateDataCommand(CommandExecutor commandExecutor, Entity principal, piecework.model.Process process, ProcessInstance instance, Task task, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) {
-        super(commandExecutor, principal, process, instance);
-        this.task = task;
+    UpdateDataCommand(CommandExecutor commandExecutor, P modelProvider, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) {
+        super(commandExecutor, modelProvider);
         this.data = data;
         this.messages = messages;
         this.applicationStatusExplanation = applicationStatusExplanation;
@@ -51,6 +52,7 @@ public class UpdateDataCommand extends AbstractEngineStorageCommand<ProcessInsta
     @Override
     ProcessInstance execute(final ProcessEngineFacade processEngineFacade, final StorageManager storageManager) throws PieceworkException {
         // This is an operation that anonymous users should never be able to cause
+        Entity principal = modelProvider.principal();
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
@@ -58,13 +60,15 @@ public class UpdateDataCommand extends AbstractEngineStorageCommand<ProcessInsta
 
         // Users are only allowed to complete tasks if they have been assigned a task, and
         // only process overseers or superusers are allowed to complete tasks otherwise
+        Process process = modelProvider.process();
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
+            Task task = ModelUtility.allowedTask(modelProvider);
             if (task == null || !task.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
                 throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
         Submission submission = SubmissionFactory.submission(actionType, process.getProcessDefinitionKey(), null, null, data, null, principal);
-
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
         return storageManager.store(instance, data, messages, submission, applicationStatusExplanation);
     }
 

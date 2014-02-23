@@ -17,89 +17,68 @@ package piecework.command;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import piecework.Command;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.task.TaskCriteria;
-import piecework.util.TaskUtility;
-import piecework.validation.Validation;
+import piecework.persistence.TaskProvider;
 import piecework.validation.Validation;
 
-public class SubTaskCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class SubTaskCommand extends AbstractEngineStorageCommand<ProcessInstance, TaskProvider> {
 
     private static final Logger LOG = Logger.getLogger(SubTaskCommand.class);
 
-    private final Process process;
-    private final ProcessInstance instance;
-    private final String parentTaskId;
     private final Validation validation;
-    private final CommandExecutor executor;
-    private final ProcessDeployment deployment;
-    private final Entity principal;
 
-    public SubTaskCommand(CommandExecutor executor, Entity principal, Process process, ProcessInstance instance, ProcessDeployment deployment, String parentTaskId, Validation validation) {
-        super(executor, principal, validation.getProcess());
-        this.principal = principal;
-        this.executor = executor;
-        this.process = process;
-        this.instance = instance;
-        this.parentTaskId = parentTaskId;
+    public SubTaskCommand(CommandExecutor executor, TaskProvider taskProvider, Validation validation) {
+        super(executor, taskProvider);
         this.validation = validation;
-        this.deployment = deployment;
     }
 
     @Override
     ProcessInstance execute(final ProcessEngineFacade processEngineFacade, final StorageManager storageManager) throws PieceworkException {
-        if (StringUtils.isEmpty(parentTaskId))
+        Task parentTask = modelProvider.task();
+        if (parentTask == null)
             throw new NotFoundError();
 
+        Entity principal = modelProvider.principal();
         // This is an operation that anonymous users should not be able to take
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        Task task = instance.getTask(parentTaskId);
-
+        Process process = modelProvider.process();
         // Users are only allowed to complete tasks if they have been assigned a task, and
         // only process overseers or superusers are allowed to complete tasks otherwise
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
-            if (task == null || !task.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
+            if (parentTask == null || !parentTask.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
                 throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
         Task result = null;
-        ProcessInstance iresult = null;
-        if (StringUtils.isNotEmpty(parentTaskId)) {
-            try {
-                result = processEngineFacade.createSubTask(process, deployment, parentTaskId, instance, validation);
+        ProcessInstance instance = null;
+        try {
+            result = processEngineFacade.createSubTask(modelProvider, validation);
 
-                ProcessInstance.Builder builder = new ProcessInstance.Builder(instance);
-                builder.task(result);
+            ProcessInstance.Builder builder = new ProcessInstance.Builder(modelProvider.instance());
+            builder.task(result);
 
-                iresult = storageManager.store(builder.build());
+            instance = storageManager.store(builder.build());
 
-                if (result == null || iresult == null) {
-                    throw new InternalServerError(Constants.ExceptionCodes.subtask_create_invalid);
-                }
-            } catch (ProcessEngineException e) {
-                LOG.error(e);
-                throw new InternalServerError(e);
+            if (result == null || instance == null) {
+                throw new InternalServerError(Constants.ExceptionCodes.subtask_create_invalid);
             }
+        } catch (ProcessEngineException e) {
+            LOG.error(e);
+            throw new InternalServerError(e);
         }
+
 
         return instance;
 
     }
 
-    public String getProcessDefinitionKey() {
-        return process != null ? process.getProcessDefinitionKey() : null;
-    }
 }

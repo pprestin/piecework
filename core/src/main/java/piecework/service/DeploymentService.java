@@ -27,8 +27,9 @@ import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ActivityRepository;
-import piecework.persistence.DeploymentRepository;
+import piecework.persistence.ProcessProvider;
+import piecework.repository.ActivityRepository;
+import piecework.repository.DeploymentRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessUtility;
@@ -64,7 +65,8 @@ public class DeploymentService {
     @Autowired
     Sanitizer sanitizer;
 
-    public ProcessDeployment create(Process process) {
+    public ProcessDeployment create(ProcessProvider processProvider) throws PieceworkException {
+        Process process = processProvider.process();
         List<ProcessDeploymentVersion> versions = process.getVersions();
         String deploymentVersion = versions != null ? "" + (versions.size() + 1) : "1";
 

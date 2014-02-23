@@ -15,40 +15,21 @@
  */
 package piecework.content.concrete;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.gridfs.GridFSDBFile;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.cache.HttpCacheContext;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.DateUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.cache.CacheConfig;
-import org.apache.http.impl.client.cache.CachingHttpClientBuilder;
-import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 import org.apache.log4j.Logger;
-import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.stereotype.Service;
 import piecework.enumeration.Scheme;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.util.ContentUtility;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Date;
-
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 /**
  * @author James Renfro
@@ -86,7 +67,7 @@ public class RemoteContentProvider extends GridFSContentProviderReceiver {
     }
 
     @Override
-    public Content findByPath(piecework.model.Process process, String base, String location) {
+    public Content findByPath(Process process, String base, String location, Entity principal) {
         String url = "";
         if (StringUtils.isNotEmpty(base))
             url += base;

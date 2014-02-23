@@ -20,11 +20,14 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
+import piecework.persistence.ProcessProvider;
 import piecework.submission.SubmissionTemplate;
+import piecework.util.ModelUtility;
 
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -38,7 +41,10 @@ public class MultipartSubmissionHandler extends AbstractSubmissionHandler<Multip
     private static final Logger LOG = Logger.getLogger(MultipartSubmissionHandler.class);
 
     @Override
-    protected Submission handleInternal(ProcessInstance instance, MultipartBody body, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected <P extends ProcessProvider> Submission handleInternal(P modelProvider, MultipartBody body, SubmissionTemplate template) throws PieceworkException {
+        Entity principal = modelProvider.principal();
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
+
         String actingAsId = principal != null ? principal.getActingAsId() : "anonymous";
         Submission.Builder submissionBuilder = submissionBuilder(instance, template, principal);
         List<Attachment> attachments = body != null ? body.getAllAttachments() : null;

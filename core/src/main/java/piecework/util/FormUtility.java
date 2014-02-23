@@ -22,13 +22,19 @@ import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
 import piecework.exception.FormBuildingException;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.settings.UserInterfaceSettings;
 
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -97,7 +103,7 @@ public class FormUtility {
                 .option(new Option.Builder().value("WY").label("Wyoming").build());
     }
 
-    public static FormDisposition disposition(Process process, ProcessDeployment deployment, Activity activity, ActionType actionType, ViewContext context, Form.Builder builder) throws FormBuildingException {
+    public static <P extends ProcessDeploymentProvider> FormDisposition disposition(P modelProvider, Activity activity, ActionType actionType, ViewContext context, Form.Builder builder) throws PieceworkException {
         Action action = activity.action(actionType);
         boolean revertToDefaultUI = false;
 
@@ -113,35 +119,12 @@ public class FormUtility {
         }
 
         if (action == null)
-            throw new FormBuildingException("Action is null for this activity and type " + actionType);
+            throw new MisconfiguredProcessException("Action is null for this activity and type " + actionType);
 
-//        URI uri = FormUtility.safeUri(deployment.getRemoteHost(), action);
-//        boolean external = FormUtility.isExternal(uri);
-
+        Process process = modelProvider.process();
+        ProcessDeployment deployment = modelProvider.deployment();
         FormDisposition formDisposition = FormDisposition.Builder.build(process, deployment, action, context);
         FormUtility.layout(builder, activity);
-
-//        if (!revertToDefaultUI) {
-//            switch (action.getStrategy()) {
-//                case DECORATE_HTML:
-//                    formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
-//                    break;
-//                case INCLUDE_DIRECTIVES:
-//                case INCLUDE_SCRIPT:
-//                case REMOTE:
-//                    if (external)
-//                        formDisposition = new FormDisposition(uri, action.getStrategy(), action);
-//                    else if (action.getLocation() != null)
-//                        formDisposition = new FormDisposition(deployment.getBase(), action.getLocation(), action.getStrategy(), action);
-//                    break;
-//            }
-//        }
-//
-//        // Tacking this on at the end - could be somewhere better
-//        if (formDisposition == null) {
-//            formDisposition = new FormDisposition(action);
-//            FormUtility.layout(builder, activity);
-//        }
 
         return formDisposition;
     }
@@ -177,21 +160,34 @@ public class FormUtility {
         return false;
     }
 
-    public static Response allowCrossOriginNoContentResponse(ProcessDeployment deployment) {
-        Response.ResponseBuilder builder = Response.noContent();
+    public static Response createResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, URI location, boolean isAnonymous) throws PieceworkException {
+        Response.ResponseBuilder builder = Response.created(location);
 
-        addCrossOriginHeaders(builder, deployment, null);
+        addCrossOriginHeaders(settings, builder, deploymentProvider, null, isAnonymous);
+
         return builder.build();
     }
 
-    public static Response allowCrossOriginResponse(ProcessDeployment deployment, Object entity) {
-        return allowCrossOriginResponse(deployment, entity, null);
+    public static Response okResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, boolean isAnonymous) throws PieceworkException {
+        return allowCrossOriginResponse(settings, deploymentProvider, entity, contentType, Collections.<Header>emptyList(), isAnonymous);
     }
 
-    public static Response allowCrossOriginResponse(ProcessDeployment deployment, Object entity, String contentType, Header ... headers) {
-        Response.ResponseBuilder builder = entity != null ? Response.ok(entity, contentType) : Response.ok();
+    public static Response okResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous) throws PieceworkException {
+        return allowCrossOriginResponse(settings, deploymentProvider, entity, contentType, headers, isAnonymous);
+    }
 
-        addCrossOriginHeaders(builder, deployment, entity);
+    public static Response optionsResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, boolean isAnonymous, String... methods) throws PieceworkException {
+        return allowCrossOriginResponse(settings, deploymentProvider, null, null, Collections.<Header>emptyList(), isAnonymous, methods);
+    }
+
+    public static Response noContentResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, boolean isAnonymous, String... methods) throws PieceworkException {
+        return noContentResponse(settings, deploymentProvider, null, isAnonymous, methods);
+    }
+
+    public static Response noContentResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, List<Header> headers, boolean isAnonymous, String... methods) throws PieceworkException {
+        Response.ResponseBuilder builder = Response.noContent();
+
+        addCrossOriginHeaders(settings, builder, deploymentProvider, null, isAnonymous, methods);
 
         if (headers != null) {
             for (Header header : headers) {
@@ -203,33 +199,78 @@ public class FormUtility {
         return builder.build();
     }
 
-    public static void addCrossOriginHeaders(Response.ResponseBuilder builder, ProcessDeployment deployment, Object entity) {
-        URI remoteHost = remoteHost(deployment);
+//    public static Response allowCrossOriginResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, boolean isAnonymous) throws PieceworkException{
+//        return allowCrossOriginResponse(settings, deploymentProvider, entity, null, Collections.<Header>emptyList(), isAnonymous);
+//    }
 
-        if (remoteHost != null) {
-            String hostUri = remoteHost.toString();
-            if (LOG.isDebugEnabled())
-                LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
-            builder.header("Access-Control-Allow-Origin", hostUri);
-            builder.header("Access-Control-Allow-Credentials", "true");
-            // For file upload
-            builder.header("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Range, Content-Disposition, Content-Description");
-            if (entity == null)
-                builder.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+//    public static Response allowCrossOriginOptionsResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, boolean isAnonymous,  String... methods) throws PieceworkException {
+//        return allowCrossOriginResponse(settings, deploymentProvider, null, null, Collections.<Header>emptyList(), isAnonymous, methods);
+//    }
+
+    public static Response allowCrossOriginResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous, String... methods) throws PieceworkException {
+        Response.ResponseBuilder builder = entity != null ? Response.ok(entity, contentType) : Response.ok();
+
+        addCrossOriginHeaders(settings, builder, deploymentProvider, entity, isAnonymous, methods);
+
+        if (headers != null) {
+            for (Header header : headers) {
+                if (StringUtils.isNotEmpty(header.getName()) && StringUtils.isNotEmpty(header.getValue()))
+                    builder.header(header.getName(), header.getValue());
+            }
         }
+
+        return builder.build();
     }
 
-    public static URI remoteHost(ProcessDeployment deployment) {
-        URI uri = null;
-        String remoteHost = deployment.getRemoteHost();
-        String location = StringUtils.isNotEmpty(remoteHost) ? remoteHost : null;
-        try {
-            if (location != null)
-                uri = new URI(location);
-        } catch (URISyntaxException iae) {
-            LOG.error("Failed to convert location into uri:" + location, iae);
+    public static void addCrossOriginHeaders(UserInterfaceSettings settings, Response.ResponseBuilder builder, ProcessDeploymentProvider deploymentProvider, Object entity, boolean isAnonymous, String... methods) throws PieceworkException {
+        String methodHeader = null;
+
+        if (entity != null && methods != null && methods.length > 0)
+            methodHeader = StringUtils.join(methods, ",");
+
+        // Never allow CORS for anonymous resources
+        if (!isAnonymous) {
+
+            URI remoteHost = remoteHost(settings, deploymentProvider);
+
+            if (remoteHost != null) {
+                String hostUri = remoteHost.toString();
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Setting Access-Control-Allow-Origin to " + hostUri);
+                builder.header("Access-Control-Allow-Origin", hostUri);
+                builder.header("Access-Control-Allow-Credentials", "true");
+                // For file upload
+                builder.header("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Range, Content-Disposition, Content-Description");
+                if (StringUtils.isNotEmpty(methodHeader))
+                    builder.header("Access-Control-Allow-Methods", methodHeader);
+            }
         }
-        return uri;
+
+        if (StringUtils.isNotEmpty(methodHeader))
+            builder.header("Allow", methodHeader);
+    }
+
+    public static URI remoteHost(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider) throws PieceworkException {
+        URI remoteHostUri = null;
+        ProcessDeployment deployment = deploymentProvider.deployment();
+        String remoteHost = deployment.getRemoteHost();
+        String serverHost = settings.getHostUri();
+
+        if (StringUtils.isNotEmpty(remoteHost) && StringUtils.isNotEmpty(serverHost)) {
+            try {
+                remoteHostUri = new URI(remoteHost);
+                URI serverHostUri = new URI(serverHost);
+
+                // Don't return a remote host if in fact the remote host is the same as the server host
+                // because it means that we're not doing CORS for this request
+                if (remoteHostUri.equals(serverHostUri))
+                    return null;
+
+            } catch (URISyntaxException iae) {
+                LOG.error("Failed to convert remote host or server host location into uri:" + remoteHost + ", " + serverHost, iae);
+            }
+        }
+        return remoteHostUri;
     }
 
     public static URI safeUri(String remoteHost, Action action) {

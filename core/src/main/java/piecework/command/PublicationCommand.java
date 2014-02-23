@@ -22,8 +22,9 @@ import piecework.exception.*;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessDeploymentVersion;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.repository.DeploymentRepository;
+import piecework.repository.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessUtility;
 
@@ -32,14 +33,14 @@ import piecework.util.ProcessUtility;
  *
  * @author James Renfro
  */
-public class PublicationCommand extends AbstractCommand<ProcessDeployment> {
+public class PublicationCommand extends AbstractCommand<ProcessDeployment, ProcessDeploymentProvider> {
 
     private static final Logger LOG = Logger.getLogger(PublicationCommand.class);
 
     private final String deploymentId;
 
-    PublicationCommand(CommandExecutor commandExecutor, Process process, String deploymentId) {
-        super(commandExecutor, null, process);
+    PublicationCommand(CommandExecutor commandExecutor, ProcessDeploymentProvider deploymentProvider, String deploymentId) {
+        super(commandExecutor, deploymentProvider);
         this.deploymentId = deploymentId;
     }
 
@@ -54,6 +55,8 @@ public class PublicationCommand extends AbstractCommand<ProcessDeployment> {
     ProcessDeployment execute(DeploymentRepository deploymentRepository, ProcessRepository processRepository) throws PieceworkException {
         if (LOG.isDebugEnabled())
             LOG.debug("Executing publication command " + this.toString());
+
+        Process process = modelProvider.process();
 
         // Verify that this deployment belongs to this process
         ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
@@ -86,10 +89,6 @@ public class PublicationCommand extends AbstractCommand<ProcessDeployment> {
         processRepository.save(updatedProcess);
 
         return persistedDeployment;
-    }
-
-    public String getProcessDefinitionKey() {
-        return process != null ? process.getProcessDefinitionKey() : null;
     }
 
 }

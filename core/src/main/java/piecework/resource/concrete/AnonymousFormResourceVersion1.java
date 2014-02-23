@@ -19,14 +19,11 @@ import javax.ws.rs.core.*;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import piecework.persistence.ProcessRepository;
+import piecework.persistence.ProcessProvider;
 import piecework.exception.*;
-import piecework.model.Process;
 import piecework.resource.AnonymousFormResource;
-import piecework.security.AccessTracker;
 
 import java.util.Map;
 
@@ -38,28 +35,20 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
 
     private static final Logger LOG = Logger.getLogger(FormResourceVersion1.class);
 
-    @Autowired
-    ProcessRepository processRepository;
 
     @Override
     public Response read(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
-        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
-
-        return startForm(context, process);
+        return startForm(context, rawProcessDefinitionKey, null);
     }
 
     @Override
-    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws StatusCodeError {
-        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
-
-        return submitForm(context, process, rawRequestId, formData, Map.class);
+    public Response submit(final String rawProcessDefinitionKey, final String rawRequestId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
+        return submitForm(context, rawProcessDefinitionKey, rawRequestId, formData, Map.class, null);
     }
 
     @Override
     public Response validate(final String rawProcessDefinitionKey, final String rawRequestId, final String rawValidationId, final MessageContext context, final MultivaluedMap<String, String> formData) throws PieceworkException {
-        Process process = verifyProcessAllowsAnonymousSubmission(rawProcessDefinitionKey);
-
-        return validateForm(context, process, formData, rawRequestId, rawValidationId);
+        return validateForm(context, rawProcessDefinitionKey, formData, rawRequestId, rawValidationId, null);
     }
 
     @Override
@@ -67,17 +56,4 @@ public class AnonymousFormResourceVersion1 extends AbstractFormResource implemen
         return true;
     }
 
-    private Process verifyProcessAllowsAnonymousSubmission(final String rawProcessDefinitionKey) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        Process process = processRepository.findOne(processDefinitionKey);
-
-        if (process == null)
-            throw new NotFoundError();
-
-        // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
-        if (!process.isAnonymousSubmissionAllowed())
-            throw new NotFoundError();
-
-        return process;
-    }
 }

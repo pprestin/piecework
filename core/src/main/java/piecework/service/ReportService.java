@@ -27,6 +27,7 @@ import piecework.model.ChartData;
 import piecework.model.ChartDataset;
 import piecework.model.Process;
 import piecework.model.Report;
+import piecework.persistence.ProcessProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +46,7 @@ public class ReportService {
     @Qualifier(value="mongoTemplate")
     MongoOperations operations;
 
-    public Report getReport(Process process, String reportName) throws PieceworkException {
+    public Report getReport(ProcessProvider processProvider, String reportName) throws PieceworkException {
         ChartDataset dataset1 = new ChartDataset();
         dataset1.setLabel("Jan 2013");
         dataset1.setData(Arrays.asList(65, 59, 90, 81, 56));

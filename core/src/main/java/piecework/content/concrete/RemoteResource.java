@@ -71,7 +71,7 @@ public class RemoteResource implements Resource {
 
     @Override
     public boolean isOpen() {
-        return false;
+        return true;
     }
 
     @Override
@@ -121,12 +121,12 @@ public class RemoteResource implements Resource {
         return null;
     }
 
-    public synchronized String getContentType() {
+    public synchronized String contentType() {
         ensureInitialized();
         return contentType;
     }
 
-    private synchronized void ensureInitialized() {
+    protected synchronized void ensureInitialized() {
         if (!this.initialized) {
             this.initialized = true;
             HttpCacheContext context = HttpCacheContext.create();
@@ -171,20 +171,12 @@ public class RemoteResource implements Resource {
         this.initialized = true;
     }
 
-//    private synchronized void addDetails(HttpEntity entity) {
-//        Header contentTypeHeader = entity.getContentType();
-//        if (contentTypeHeader != null)
-//            this.contentType = contentTypeHeader.getValue();
-//        this.contentLength = entity.getContentLength();
-//        this.lastModified = new Date().getTime();
-//        this.initialized = true;
-//    }
-
     @Override
     public InputStream getInputStream() throws IOException {
         HttpCacheContext context = HttpCacheContext.create();
         HttpGet get = new HttpGet(uri);
 
+        addHeaders(get);
         final ConnectionCloser connectionCloser = new ConnectionCloser();
         try {
             LOG.info("Retrieving resource from " + uri.toString());
@@ -215,6 +207,10 @@ public class RemoteResource implements Resource {
         } finally {
 
         }
+    }
+
+    protected void addHeaders(HttpGet get) {
+
     }
 
     public class ConnectionCloser {

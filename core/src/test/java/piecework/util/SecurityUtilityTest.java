@@ -403,7 +403,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("testuser")
                .when(formRequest).getRemoteUser();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -413,7 +413,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("another")
                 .when(requestDetails).getRemoteUser();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     // Having a different remote host is not necessarily an exception, but it will be logged
@@ -429,7 +429,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("nowhere.com")
                 .when(requestDetails).getRemoteHost();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     // Having a different remote address is not necessarily an exception, but it will be logged
@@ -445,7 +445,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("200.0.0.1")
                 .when(requestDetails).getRemoteAddr();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -455,7 +455,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("Some other CA")
                 .when(requestDetails).getCertificateIssuer();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -465,7 +465,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("def.host.com")
                 .when(requestDetails).getCertificateSubject();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -480,7 +480,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("def.host.com")
                 .when(requestDetails).getCertificateSubject();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -495,7 +495,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("def.host.com")
                 .when(requestDetails).getCertificateSubject();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -510,7 +510,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn("abc.host.com")
                 .when(requestDetails).getCertificateSubject();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test
@@ -519,7 +519,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn(now)
                 .when(formRequest).getRequestDate();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
     @Test(expected = ForbiddenError.class)
@@ -528,7 +528,7 @@ public class SecurityUtilityTest {
         Mockito.doReturn(yesterday)
                .when(formRequest).getRequestDate();
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, requestDetails);
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, requestDetails);
     }
 
 }

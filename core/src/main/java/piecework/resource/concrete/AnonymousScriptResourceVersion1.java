@@ -25,7 +25,8 @@ import piecework.exception.*;
 import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ProcessRepository;
+import piecework.persistence.ModelProviderFactory;
+import piecework.repository.ProcessRepository;
 import piecework.resource.AnonymousScriptResource;
 import piecework.service.FormTemplateService;
 import piecework.service.ProcessService;
@@ -44,57 +45,52 @@ public class AnonymousScriptResourceVersion1 extends AbstractScriptResource impl
     @Autowired
     private FormTemplateService formTemplateService;
 
-    @Autowired
-    private ProcessRepository processRepository;
-
-    @Autowired
-    private ProcessService processService;
-
     @Override
-    public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+    public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         Form form = getForm(rawProcessDefinitionKey, context);
         ServletContext servletContext = context.getServletContext();
 
         Resource scriptResource;
+        Entity principal = null;
 
         FormDisposition disposition = form.getDisposition();
         if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
             try {
-                Resource pageResource = userInterfaceService.getCustomPage(form);
-                scriptResource = userInterfaceService.getScriptResource(servletContext, form, pageResource);
+                Resource pageResource = userInterfaceService.getCustomPage(form, null);
+                scriptResource = userInterfaceService.getScriptResource(servletContext, form, pageResource, principal);
             } catch (MisconfiguredProcessException e) {
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
             }
         } else {
-            scriptResource = userInterfaceService.getScriptResource(servletContext, form);
+            scriptResource = userInterfaceService.getScriptResource(servletContext, form, principal);
         }
 
         return response(scriptResource, "text/javascript");
     }
 
     @Override
-    public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
+    public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         Form form = getForm(rawProcessDefinitionKey, context);
         ServletContext servletContext = context.getServletContext();
         Resource stylesheetResource;
         FormDisposition disposition = form.getDisposition();
+        Entity principal = null;
         if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
             try {
-                Resource pageResource = userInterfaceService.getCustomPage(form);
-                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, pageResource);
+                Resource pageResource = userInterfaceService.getCustomPage(form, null);
+                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, pageResource, principal);
             } catch (MisconfiguredProcessException e) {
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
             }
         } else {
-            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form);
+            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, principal);
         }
 
         return response(stylesheetResource, "text/css");
     }
 
-    private Form getForm(final String rawProcessDefinitionKey, final MessageContext context) throws StatusCodeError {
-        Process process = processService.read(rawProcessDefinitionKey);
-        return form(process, context, null);
+    private Form getForm(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
+        return form(rawProcessDefinitionKey, context, null);
     }
 
     @Override

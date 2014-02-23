@@ -31,8 +31,9 @@ import org.springframework.web.context.support.ServletContextResource;
 import piecework.enumeration.Scheme;
 import piecework.form.FormDisposition;
 import piecework.model.Content;
+import piecework.model.Entity;
 import piecework.model.Process;
-import piecework.persistence.ContentRepository;
+import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
 
@@ -62,14 +63,16 @@ public class StaticResourceAggregator {
     private final StringBuffer buffer;
     private final UserInterfaceSettings settings;
     private final FormDisposition formDisposition;
+    private final Entity principal;
 
-    public StaticResourceAggregator(ServletContext servletContext, Process process, ContentRepository contentRepository, UserInterfaceSettings settings, FormDisposition formDisposition) {
+    public StaticResourceAggregator(ServletContext servletContext, Process process, ContentRepository contentRepository, UserInterfaceSettings settings, FormDisposition formDisposition, Entity principal) {
         this.servletContext = servletContext;
         this.process = process;
         this.contentRepository = contentRepository;
         this.buffer = new StringBuffer();
         this.settings = settings;
         this.formDisposition = formDisposition;
+        this.principal = principal;
     }
 
     public Resource getStaticResource() {
@@ -242,7 +245,7 @@ public class StaticResourceAggregator {
             if (scheme != Scheme.REPOSITORY)
                 base = null;
 
-            Content content = contentRepository.findByLocation(process, base, path);
+            Content content = contentRepository.findByLocation(process, base, path, principal);
             if (content != null) {
                 return new BufferedReader(new InputStreamReader(content.getInputStream()));
             }

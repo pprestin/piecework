@@ -22,7 +22,10 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.*;
 import piecework.service.RequestService;
+import piecework.util.ModelUtility;
 import piecework.util.ProcessInstanceUtility;
 import piecework.validation.Validation;
 
@@ -32,17 +35,15 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse> {
+public class SubmitFormCommand<P extends ProcessDeploymentProvider> extends AbstractCommand<SubmissionCommandResponse, P> {
 
-    private final ProcessDeployment deployment;
     private final Validation validation;
     private final ActionType actionType;
     private final RequestDetails requestDetails;
     private final FormRequest request;
 
-    SubmitFormCommand(CommandExecutor commandExecutor, Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
-        super(commandExecutor, principal, validation.getProcess(), validation.getInstance());
-        this.deployment = deployment;
+    SubmitFormCommand(CommandExecutor commandExecutor, P modelProvider, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
+        super(commandExecutor, modelProvider);
         this.validation = validation;
         this.actionType = actionType;
         this.requestDetails = requestDetails;
@@ -54,17 +55,20 @@ public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse
         CommandFactory commandFactory = serviceLocator.getService(CommandFactory.class);
         RequestService requestService = serviceLocator.getService(RequestService.class);
         StorageManager storageManager = serviceLocator.getService(StorageManager.class);
+        ModelProviderFactory modelProviderFactory = serviceLocator.getService(ModelProviderFactory.class);
 
-        return execute(commandFactory, requestService, storageManager);
+        return execute(commandFactory, modelProviderFactory, requestService, storageManager);
     }
 
-    SubmissionCommandResponse execute(CommandFactory commandFactory, RequestService requestService, StorageManager storageManager) throws PieceworkException {
+    SubmissionCommandResponse execute(CommandFactory commandFactory, ModelProviderFactory modelProviderFactory, RequestService requestService, StorageManager storageManager) throws PieceworkException {
         // This is an operation that anonymous users should not be able to cause unless the process is set up to allow it explicitly
+        Entity principal = modelProvider.principal();
+        Process process = modelProvider.process();
         if (principal == null && !process.isAnonymousSubmissionAllowed())
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         // Decide if this is a 'create instance' or 'complete task' form submission
-        Task task = validation.getTask();
+        Task task = ModelUtility.task(modelProvider);
         ProcessInstance stored = null;
 
         ActionType validatedActionType = actionType;
@@ -74,23 +78,32 @@ public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse
         else if (actionType == ActionType.CREATE)
             validatedActionType = ActionType.COMPLETE;
 
-        AbstractCommand<ProcessInstance> command = null;
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
+        AbstractCommand<ProcessInstance, ? extends ProcessDeploymentProvider> command = null;
         if (task == null)
-            command = commandFactory.createInstance(principal, validation);
+            command = commandFactory.createInstance(modelProvider, validation);
         else if (instance != null && principal != null && (validatedActionType == ActionType.COMPLETE || validatedActionType == ActionType.REJECT))
-            command = commandFactory.completeTask(principal, deployment, validation, validatedActionType);
+            command = commandFactory.completeTask(TaskProvider.class.cast(modelProvider), validation, validatedActionType);
 
         if (command != null)
             stored = command.execute();
 
         FormRequest nextRequest = request;
 
+        ProcessDeploymentProvider provider;
+        if (task != null)
+            provider = modelProviderFactory.taskProvider(process.getProcessDefinitionKey(), task.getTaskInstanceId(), principal);
+        else if (stored != null)
+            provider = modelProviderFactory.instanceProvider(process.getProcessDefinitionKey(), stored.getProcessInstanceId(), principal);
+        else
+            provider = modelProviderFactory.deploymentProvider(process.getProcessDefinitionKey(), principal);
+
         switch (validatedActionType) {
             case CREATE:
             case COMPLETE:
             case REJECT:
                 if (stored != null) {
-                    nextRequest = requestService.create(requestDetails, process, stored, task, validatedActionType);
+                    nextRequest = requestService.create(requestDetails, provider, validatedActionType);
                     return new SubmissionCommandResponse(submission, nextRequest);
                 }
             case SAVE:
@@ -98,7 +111,7 @@ public class SubmitFormCommand extends AbstractCommand<SubmissionCommandResponse
                 String submissionLabel = submission != null ? submission.getProcessInstanceLabel() : null;
                 String label = ProcessInstanceUtility.processInstanceLabel(process, instance, validationData, submissionLabel);
                 stored = storageManager.store(label, instance, validation.getData(), submission);
-                nextRequest = requestService.create(requestDetails, process, stored, task, validatedActionType);
+                nextRequest = requestService.create(requestDetails, provider, validatedActionType);
                 break;
         }
 

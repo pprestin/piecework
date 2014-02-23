@@ -4,6 +4,7 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.TaskProvider;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
@@ -34,7 +35,7 @@ public interface ProcessEngineCapabilities {
 
     boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, Validation validation, Entity principal) throws ProcessEngineException;
 
-    Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, Validation validation) throws ProcessEngineException;
+    Task createSubTask(TaskProvider taskProvider, Validation validation) throws ProcessEngineException;
 
     ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
 

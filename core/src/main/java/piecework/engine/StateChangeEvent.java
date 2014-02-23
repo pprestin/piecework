@@ -20,6 +20,7 @@ import piecework.enumeration.StateChangeType;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
+import piecework.persistence.ProcessInstanceProvider;
 
 /**
  * @author James Renfro
@@ -27,10 +28,8 @@ import piecework.model.Task;
 public class StateChangeEvent {
 
     private final StateChangeType type;
-    private final Process process;
-    private final ProcessInstance instance;
+    private final ProcessInstanceProvider instanceProvider;
     private final Task task;
-    private final ActionType actionType;
     private final EngineContext context;
 
     private StateChangeEvent() {
@@ -39,10 +38,8 @@ public class StateChangeEvent {
 
     private StateChangeEvent(Builder builder) {
         this.type = builder.type;
-        this.process = builder.process;
-        this.instance = builder.instance;
+        this.instanceProvider = builder.instanceProvider;
         this.task = builder.task;
-        this.actionType = builder.actionType;
         this.context = builder.context;
     }
 
@@ -50,20 +47,12 @@ public class StateChangeEvent {
         return type;
     }
 
-    public Process getProcess() {
-        return process;
-    }
-
-    public ProcessInstance getInstance() {
-        return instance;
+    public ProcessInstanceProvider getInstanceProvider() {
+        return instanceProvider;
     }
 
     public Task getTask() {
         return task;
-    }
-
-    public ActionType getActionType() {
-        return actionType;
     }
 
     public EngineContext getContext() {
@@ -73,10 +62,8 @@ public class StateChangeEvent {
     public static final class Builder {
 
         private final StateChangeType type;
-        private Process process;
-        private ProcessInstance instance;
+        private ProcessInstanceProvider instanceProvider;
         private Task task;
-        private ActionType actionType;
         private EngineContext context;
 
         public Builder(StateChangeType type) {
@@ -87,13 +74,8 @@ public class StateChangeEvent {
             return new StateChangeEvent(this);
         }
 
-        public Builder process(Process process) {
-            this.process = process;
-            return this;
-        }
-
-        public Builder instance(ProcessInstance instance) {
-            this.instance = instance;
+        public Builder instanceProvider(ProcessInstanceProvider instanceProvider) {
+            this.instanceProvider = instanceProvider;
             return this;
         }
 

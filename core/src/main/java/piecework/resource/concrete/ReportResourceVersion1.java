@@ -19,9 +19,12 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.exception.InternalServerError;
+import piecework.identity.IdentityHelper;
 import piecework.model.Process;
 import piecework.exception.PieceworkException;
 import piecework.model.Report;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessProvider;
 import piecework.resource.ReportResource;
 import piecework.security.Sanitizer;
 import piecework.service.ProcessService;
@@ -41,7 +44,10 @@ import java.io.IOException;
 public class ReportResourceVersion1 implements ReportResource {
 
     @Autowired
-    ProcessService processService;
+    ModelProviderFactory modelProviderFactory;
+
+    @Autowired
+    IdentityHelper helper;
 
     @Autowired
     ReportService reportService;
@@ -65,7 +71,7 @@ public class ReportResourceVersion1 implements ReportResource {
     @Override
     public Response read(MessageContext context, String rawProcessDefinitionKey, String rawReportName) throws PieceworkException {
         String reportName = sanitizer.sanitize(rawReportName);
-        Process process = processService.read(rawProcessDefinitionKey);
-        return Response.ok(reportService.getReport(process, reportName)).build();
+        ProcessProvider processProvider = modelProviderFactory.processProvider(rawProcessDefinitionKey, helper.getPrincipal());
+        return Response.ok(reportService.getReport(processProvider, reportName)).build();
     }
 }

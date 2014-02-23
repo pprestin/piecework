@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import piecework.ServiceLocator;
 import piecework.engine.Mediator;
 import piecework.exception.*;
+import piecework.persistence.ProcessProvider;
 
 /**
  * @author James Renfro
@@ -36,7 +37,7 @@ class CommandExecutor {
     @Autowired
     private ServiceLocator serviceLocator;
 
-    public <T, C extends AbstractCommand<T>> T execute(C command) throws BadRequestError, PieceworkException {
+    public <T, C extends AbstractCommand<T, P>, P extends ProcessProvider> T execute(C command) throws BadRequestError, PieceworkException {
         command = mediator.before(command);
         if (command == null)
             throw new PieceworkException("No command provided");

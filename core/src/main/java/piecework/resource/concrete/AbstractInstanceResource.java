@@ -20,7 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.CommandFactory;
+import piecework.command.ValidationCommand;
 import piecework.common.ViewContext;
+import piecework.enumeration.ActionType;
 import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
@@ -29,6 +31,7 @@ import piecework.export.IteratingDataProvider;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.*;
 import piecework.process.AttachmentQueryParameters;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
@@ -36,11 +39,13 @@ import piecework.service.*;
 import piecework.settings.SecuritySettings;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
+import piecework.validation.Validation;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -60,16 +65,13 @@ public abstract class AbstractInstanceResource {
     CommandFactory commandFactory;
 
     @Autowired
-    DeploymentService deploymentService;
-
-    @Autowired
-    IdentityHelper helper;
-
-    @Autowired
-    ProcessService processService;
+    ModelProviderFactory modelProviderFactory;
 
     @Autowired
     ProcessInstanceService processInstanceService;
+
+    @Autowired
+    RequestService requestService;
 
     @Autowired
     Sanitizer sanitizer;
@@ -80,110 +82,99 @@ public abstract class AbstractInstanceResource {
     @Autowired
     UserInterfaceSettings settings;
 
-    @Autowired
-    TaskService taskService;
 
-
-    protected <T> Response doAttach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, T data, Class<T> type) throws PieceworkException {
+    protected <T> Response doAttach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, T data, Class<T> type, Entity principal) throws PieceworkException {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
 
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.attach(helper.getPrincipal(), requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, data, type);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+        AllowedTaskProvider taskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
+        Task task = taskProvider.allowedTask(true);
+        if (task == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        SearchResults searchResults = attachmentService.search(instance, new AttachmentQueryParameters());
+        FormRequest request = requestService.create(requestDetails, taskProvider, ActionType.ATTACH);
+        ValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(taskProvider, request, data, type, VERSION);
+        Validation validation = validationCommand.execute();
 
-        return FormUtility.allowCrossOriginResponse(deployment, searchResults);
+        commandFactory.attachment(taskProvider, validation).execute();
+
+        ProcessInstance instance = taskProvider.instance();
+        SearchResults searchResults = taskProvider.attachments(new AttachmentQueryParameters(), new ViewContext(settings, VERSION));
+
+        return FormUtility.okResponse(settings, taskProvider, searchResults, null, false);
     }
 
-//    protected ProcessDeployment doCancel(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
-//        Process process = processService.read(rawProcessDefinitionKey);
-//        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-//        ProcessDeployment deployment = deploymentService.read(process, instance);
-//
-//        processInstanceService.cancel(helper.getPrincipal(), rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-//        return deployment;
-//    }
-
-    protected <T> Response doCreate(MessageContext context, String rawProcessDefinitionKey, T data, Class<T> type) throws PieceworkException {
+    protected <T> Response doCreate(MessageContext context, String rawProcessDefinitionKey, T data, Class<T> type, Entity principal) throws PieceworkException {
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
 
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.create(helper.getPrincipal(), requestDetails, rawProcessDefinitionKey, data, type);
+        ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
+        FormRequest request = requestService.create(requestDetails, deploymentProvider);
+        ValidationCommand<ProcessDeploymentProvider> validationCommand = commandFactory.validation(deploymentProvider, request, data, type, VERSION);
+        Validation validation = validationCommand.execute();
+        ProcessInstance instance = commandFactory.createInstance(deploymentProvider, validation).execute();
 
-        ProcessDeployment deployment = deploymentService.read(process, instance);
         ProcessInstance decorated = new ProcessInstance.Builder(instance).build(new ViewContext(settings, VERSION));
+//        URI location = URI.create(decorated.getUri());
 
-        Response.ResponseBuilder builder = Response.ok(decorated);
-        FormUtility.addCrossOriginHeaders(builder, deployment, decorated);
-        return builder.build();
+        return FormUtility.okResponse(settings, deploymentProvider, decorated, null, false);
     }
 
-    protected ProcessDeployment doDetach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+    protected AllowedTaskProvider doDetach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId, Entity principal) throws PieceworkException {
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
-        Entity principal = helper.getPrincipal();
-        processInstanceService.deleteAttachment(process, instance, attachmentId, principal);
-        return deployment;
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+
+        AllowedTaskProvider taskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
+        Task task = taskProvider.allowedTask(new ViewContext(settings, VERSION), true);
+        if (task == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.task_required);
+
+        requestService.create(requestDetails, taskProvider, ActionType.REMOVE);
+        commandFactory.detachment(taskProvider, attachmentId).execute();
+        return taskProvider;
     }
 
-    protected ProcessDeployment doOperation(OperationType operationType, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+    protected ProcessInstanceProvider doOperation(OperationType operationType, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason, Entity principal) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
 
-        Entity principal = helper.getPrincipal();
         String reason = sanitizer.sanitize(rawReason);
         switch(operationType) {
             case ACTIVATION:
-                commandFactory.activation(principal, process, deployment, instance, reason).execute();
+                commandFactory.activation(instanceProvider, reason).execute();
                 break;
             case CANCELLATION:
-                commandFactory.cancellation(principal, process, deployment, instance, reason).execute();
+                commandFactory.cancellation(instanceProvider, reason).execute();
                 break;
             case RESTART:
-                commandFactory.restart(principal, process, deployment, instance, reason).execute();
+                commandFactory.restart(instanceProvider, reason).execute();
                 break;
             case SUSPENSION:
-                commandFactory.suspension(principal, process, deployment, instance, reason).execute();
+                commandFactory.suspension(instanceProvider, reason).execute();
                 break;
         }
-        return deployment;
+        return instanceProvider;
     }
 
-    protected ProcessDeployment doRemove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+    protected AllowedTaskProvider doRemove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, Entity principal) throws PieceworkException {
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
-        Entity principal = helper.getPrincipal();
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
-            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
-
-        Task task = taskService.allowedTask(process, instance, principal, true);
-
-        commandFactory.removeValue(principal, process, instance, task, fieldName, valueId).execute();
-
-        return deployment;
+        commandFactory.removeValue(allowedTaskProvider, fieldName, valueId).execute();
+        return allowedTaskProvider;
     }
 
-    protected Response doSearch(MessageContext context) throws PieceworkException {
+    protected Response doSearch(MessageContext context, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, false);
 
-        Entity principal = helper.getPrincipal();
         UriInfo uriInfo = context.getContext(UriInfo.class);
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
 

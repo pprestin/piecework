@@ -20,8 +20,11 @@ import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
 import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +35,11 @@ import java.util.Map;
  */
 public class ActivityUtil {
 
-    public static Activity activity(piecework.model.Process process, ProcessInstance instance, Task task) throws MisconfiguredProcessException {
+    public static <P extends ProcessProvider> Activity activity(P modelProvider) throws PieceworkException {
+        Process process = modelProvider.process();
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
+        Task task = ModelUtility.task(modelProvider);
+
         Activity activity = null;
         if (process.isAllowPerInstanceActivities() && task != null && task.getTaskDefinitionKey() != null && instance != null) {
             Map<String, Activity> activityMap = instance.getActivityMap();

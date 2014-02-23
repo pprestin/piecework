@@ -74,14 +74,14 @@ public class FormRequest {
 
     private final Explanation explanation;
 
-    @Transient
-    private final ProcessInstance instance;
-
-    @Transient
-    private final ProcessDeployment deployment;
-
-    @Transient
-    private final Task task;
+//    @Transient
+//    private final ProcessInstance instance;
+//
+//    @Transient
+//    private final ProcessDeployment deployment;
+//
+//    @Transient
+//    private final Task task;
 
     private FormRequest() {
         this(new FormRequest.Builder());
@@ -104,12 +104,12 @@ public class FormRequest {
         this.contentType= builder.contentType;
         this.acceptableMediaTypes = Collections.unmodifiableList(builder.acceptableMediaTypes);
         this.messages = Collections.unmodifiableMap(builder.messages);
-        this.deployment = builder.deployment;
-        this.instance = builder.instance;
+//        this.deployment = builder.deployment;
+//        this.instance = builder.instance;
         this.referrer = builder.referrer;
         this.userAgent = builder.userAgent;
         this.explanation = builder.explanation;
-        this.task = builder.task;
+//        this.task = builder.task;
         this.requestDate = new Date();
     }
 
@@ -190,17 +190,17 @@ public class FormRequest {
         return messages;
     }
 
-    public ProcessInstance getInstance() {
-        return instance;
-    }
-
-    public Task getTask() {
-        return task;
-    }
-
-    public ProcessDeployment getDeployment() {
-        return deployment;
-    }
+//    public ProcessInstance getInstance() {
+//        return instance;
+//    }
+//
+//    public Task getTask() {
+//        return task;
+//    }
+//
+//    public ProcessDeployment getDeployment() {
+//        return deployment;
+//    }
 
     public String getUserAgent() {
         return userAgent;
@@ -228,9 +228,9 @@ public class FormRequest {
         private String certificateSubject;
         private String certificateIssuer;
         private String taskId;
-        private ProcessDeployment deployment;
-        private ProcessInstance instance;
-        private Task task;
+//        private ProcessDeployment deployment;
+//        private ProcessInstance instance;
+//        private Task task;
         private Activity activity;
         private ActionType action;
         private Explanation explanation;
@@ -384,24 +384,24 @@ public class FormRequest {
             return this;
         }
 
-        public Builder deployment(ProcessDeployment deployment) {
-            this.deployment = deployment;
-            return this;
-        }
-
-        public Builder instance(ProcessInstance instance) {
-            this.instance = instance;
-            if (instance != null)
-                this.processInstanceId = instance.getProcessInstanceId();
-            return this;
-        }
-
-        public Builder task(Task task) {
-            this.task = task;
-            if (task != null)
-                this.taskId = task.getTaskInstanceId();
-            return this;
-        }
+//        public Builder deployment(ProcessDeployment deployment) {
+//            this.deployment = deployment;
+//            return this;
+//        }
+//
+//        public Builder instance(ProcessInstance instance) {
+//            this.instance = instance;
+//            if (instance != null)
+//                this.processInstanceId = instance.getProcessInstanceId();
+//            return this;
+//        }
+//
+//        public Builder task(Task task) {
+//            this.task = task;
+//            if (task != null)
+//                this.taskId = task.getTaskInstanceId();
+//            return this;
+//        }
 
         public Builder referrer(String referrer) {
             this.referrer = referrer;

@@ -23,6 +23,8 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.AllowedTaskProvider;
 import piecework.validation.Validation;
 
 /**
@@ -30,20 +32,19 @@ import piecework.validation.Validation;
  *
  * @author James Renfro
  */
-public class UpdateValueCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class UpdateValueCommand extends AbstractEngineStorageCommand<ProcessInstance, AllowedTaskProvider> {
 
-    private final Task task;
     private final Validation validation;
 
-    UpdateValueCommand(CommandExecutor commandExecutor, Entity principal, Task task, Validation validation) {
-        super(commandExecutor, principal, validation.getProcess());
-        this.task = task;
+    UpdateValueCommand(CommandExecutor commandExecutor, AllowedTaskProvider allowedTaskProvider, Validation validation) {
+        super(commandExecutor, allowedTaskProvider);
         this.validation = validation;
     }
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
         // This is an operation that anonymous users should never be able to cause
+        Entity principal = modelProvider.principal();
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
@@ -51,11 +52,13 @@ public class UpdateValueCommand extends AbstractEngineStorageCommand<ProcessInst
 
         // Users are only allowed to complete tasks if they have been assigned a task, and
         // only process overseers or superusers are allowed to complete tasks otherwise
+        Process process = modelProvider.process();
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
+            Task task = modelProvider.allowedTask(true);
             if (task == null || !task.isCandidateOrAssignee(principal) || !principal.hasRole(process, AuthorizationRole.USER))
                 throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
         }
 
-        return storageManager.store(validation, actionType);
+        return storageManager.store(modelProvider, validation, actionType);
     }
 }

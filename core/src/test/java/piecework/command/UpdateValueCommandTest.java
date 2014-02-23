@@ -159,7 +159,7 @@ public class UpdateValueCommandTest {
         UpdateValueCommand update = new UpdateValueCommand(null, principal, task, validation);
         update.execute(processEngineFacade, storageManager);
 
-        Mockito.verify(storageManager).store(eq(validation), eq(ActionType.SAVE));
+        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.SAVE));
     }
 
     @Test
@@ -181,7 +181,7 @@ public class UpdateValueCommandTest {
         UpdateValueCommand update = new UpdateValueCommand(null, principal, task, validation);
         update.execute(processEngineFacade, storageManager);
 
-        Mockito.verify(storageManager).store(eq(validation), eq(ActionType.SAVE));
+        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.SAVE));
     }
 
 }

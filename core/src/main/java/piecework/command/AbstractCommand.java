@@ -20,36 +20,19 @@ import piecework.ServiceLocator;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
 
 /**
  * @author James Renfro
  */
-public abstract class AbstractCommand<T> implements Command<T> {
+public abstract class AbstractCommand<T, P extends ProcessProvider> implements Command<T> {
 
     private final CommandExecutor commandExecutor;
-    private final String processDefinitionKey;
-    protected final piecework.model.Process process;
-    protected final ProcessInstance instance;
-    protected final Entity principal;
+    protected final P modelProvider;
 
-    AbstractCommand(CommandExecutor commandExecutor, ProcessInstance instance) {
+    AbstractCommand(CommandExecutor commandExecutor, P modelProvider) {
         this.commandExecutor = commandExecutor;
-        this.principal = null;
-        this.processDefinitionKey = instance != null ? instance.getProcessDefinitionKey() : null;
-        this.process = null;
-        this.instance = instance;
-    }
-
-    AbstractCommand(CommandExecutor commandExecutor, Entity principal, Process process) {
-        this(commandExecutor, principal, process, null);
-    }
-
-    AbstractCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance) {
-        this.commandExecutor = commandExecutor;
-        this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
-        this.principal = principal;
-        this.process = process;
-        this.instance = instance;
+        this.modelProvider = modelProvider;
     }
 
     @Override
@@ -60,21 +43,14 @@ public abstract class AbstractCommand<T> implements Command<T> {
     // Package-access abstract method signature to all CommandFactory to pass in ServiceLocator
     abstract <T> T execute(ServiceLocator serviceLocator) throws PieceworkException;
 
-    public Process getProcess() {
-        return process;
-    }
 
-    public ProcessInstance getInstance() {
-        return instance;
-    }
-
-    public Entity getPrincipal() {
-        return principal;
+    public P getProvider() {
+        return modelProvider;
     }
 
     @Override
     public String getProcessDefinitionKey() {
-        return processDefinitionKey;
+        return modelProvider.processDefinitionKey();
     }
 
 }

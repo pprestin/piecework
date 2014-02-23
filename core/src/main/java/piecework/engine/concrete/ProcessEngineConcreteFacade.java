@@ -27,9 +27,11 @@ import piecework.Registry;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ProcessInstanceRepository;
+import piecework.persistence.TaskProvider;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
@@ -250,12 +252,18 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, Validation validation) throws ProcessEngineException{
-       ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
+    public Task createSubTask(TaskProvider taskProvider, Validation validation) throws ProcessEngineException {
+        ProcessDeployment deployment;
+        try {
+            deployment = taskProvider.deployment();
+        } catch (PieceworkException e) {
+            throw new ProcessEngineException("No deployment", e);
+        }
+        ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if(proxy == null)
             throw new ProcessEngineException("Not Found");
 
-        return proxy.createSubTask(process, deployment, parentTaskId, instance, validation);
+        return proxy.createSubTask(taskProvider, validation);
     }
 
     @Override

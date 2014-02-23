@@ -27,6 +27,7 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.validation.Validation;
 
 import java.util.Collection;
@@ -38,7 +39,7 @@ import java.util.Map;
  *
  * @author James Renfro
  */
-public class CreateInstanceCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class CreateInstanceCommand extends AbstractEngineStorageCommand<ProcessInstance, ProcessDeploymentProvider> {
 
     private static final Logger LOG = Logger.getLogger(CreateInstanceCommand.class);
 //    private final Validation validation;
@@ -46,12 +47,12 @@ public class CreateInstanceCommand extends AbstractEngineStorageCommand<ProcessI
     private final Map<String, List<Value>> data;
     private final Collection<Attachment> attachments;
 
-    CreateInstanceCommand(CommandExecutor commandExecutor, Entity principal, Validation validation) {
-        this(commandExecutor, principal, validation.getProcess(), validation.getData(), validation.getAttachments(), validation.getSubmission());
+    CreateInstanceCommand(CommandExecutor commandExecutor, ProcessDeploymentProvider modelProvider, Validation validation) {
+        this(commandExecutor, modelProvider, validation.getData(), validation.getAttachments(), validation.getSubmission());
     }
 
-    CreateInstanceCommand(CommandExecutor commandExecutor, Entity principal, Process process, Map<String, List<Value>> data, Collection<Attachment> attachments, Submission submission) {
-        super(commandExecutor, principal, process);
+    CreateInstanceCommand(CommandExecutor commandExecutor, ProcessDeploymentProvider modelProvider, Map<String, List<Value>> data, Collection<Attachment> attachments, Submission submission) {
+        super(commandExecutor, modelProvider);
         this.data = data;
         this.attachments = attachments;
         this.submission = submission;
@@ -59,6 +60,7 @@ public class CreateInstanceCommand extends AbstractEngineStorageCommand<ProcessI
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
+        Process process = modelProvider.process();
         if (process == null)
             throw new MisconfiguredProcessException("No process provided to create new instance");
         if (StringUtils.isEmpty(process.getProcessDefinitionKey()))
@@ -73,6 +75,7 @@ public class CreateInstanceCommand extends AbstractEngineStorageCommand<ProcessI
 
         // It's okay to create instance as anonymous, assuming that this process
         // allows it
+        Entity principal = modelProvider.principal();
         if (principal == null && !process.isAnonymousSubmissionAllowed())
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 

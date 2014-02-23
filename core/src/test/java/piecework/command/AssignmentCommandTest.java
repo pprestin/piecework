@@ -20,7 +20,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.OperationResult;
 import piecework.engine.ProcessEngineFacade;
@@ -80,7 +79,7 @@ public class AssignmentCommandTest {
 
         OperationResult expected = new OperationResult();
 
-        AssignmentCommand command = new AssignmentCommand(null, principal, process, deployment, instance, task, assignee);
+        AssignmentCommand command = new AssignmentCommand(null, instanceProvider, task, assignee);
         command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.ASSIGNMENT), eq(expected), eq(instance), eq(principal));
     }

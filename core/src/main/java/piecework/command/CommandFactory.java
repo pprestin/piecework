@@ -22,6 +22,7 @@ import piecework.engine.ProcessDeploymentResource;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.*;
 import piecework.validation.Validation;
 
 import java.util.Collection;
@@ -39,119 +40,119 @@ public class CommandFactory {
     @Autowired
     private CommandExecutor commandExecutor;
 
-    public ActivationCommand activation(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
+    public ActivationCommand activation(ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
 
-        return new ActivationCommand(commandExecutor, principal, process, deployment, instance, applicationStatusExplanation);
+        return new ActivationCommand(commandExecutor, instanceProvider, applicationStatusExplanation);
     }
 
-    public AssignmentCommand assignment(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, Task task, User assignee) {
+    public AssignmentCommand assignment(ProcessInstanceProvider instanceProvider, Task task, User assignee) {
 
-        return new AssignmentCommand(commandExecutor, principal, process, deployment, instance, task, assignee);
+        return new AssignmentCommand(commandExecutor, instanceProvider, task, assignee);
     }
 
-    public AttachmentCommand attachment(Entity principal, ProcessDeployment deployment, Validation validation) {
+    public AttachmentCommand attachment(ProcessInstanceProvider instanceProvider, Validation validation) {
 
-        return new AttachmentCommand(commandExecutor, principal, deployment, validation);
+        return new AttachmentCommand(commandExecutor, instanceProvider, validation);
     }
 
-    public CancellationCommand cancellation(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
+    public CancellationCommand cancellation(ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
 
-        return new CancellationCommand(commandExecutor, principal, process, deployment, instance, applicationStatusExplanation);
+        return new CancellationCommand(commandExecutor, instanceProvider, applicationStatusExplanation);
     }
 
-    public CompleteTaskCommand completeTask(Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType) {
+    public CompleteTaskCommand completeTask(TaskProvider taskProvider, Validation validation, ActionType actionType) {
 
-        return new CompleteTaskCommand(commandExecutor, principal, deployment, validation, actionType);
+        return new CompleteTaskCommand(commandExecutor, taskProvider, validation, actionType);
     }
 
-    public CompletionCommand completion(ProcessInstance instance, Map<String, List<Value>> data) {
+    public CompletionCommand completion(ProcessInstanceProvider instanceProvider) {
 
-        return new CompletionCommand(commandExecutor, instance, data);
+        return new CompletionCommand(commandExecutor, instanceProvider);
     }
 
-    public CreateInstanceCommand createInstance(Entity principal, Validation validation) {
+    public CreateInstanceCommand createInstance(ProcessDeploymentProvider modelProvider, Validation validation) {
 
-        return new CreateInstanceCommand(commandExecutor, principal, validation);
+        return new CreateInstanceCommand(commandExecutor, modelProvider, validation);
     }
 
-    public CreateInstanceCommand createInstance(Entity principal, Process process, Map<String, List<Value>> data, Collection<Attachment> attachments, Submission submission) {
+    public CreateInstanceCommand createInstance(ProcessDeploymentProvider modelProvider, Map<String, List<Value>> data, Collection<Attachment> attachments, Submission submission) {
 
-        return new CreateInstanceCommand(commandExecutor, principal, process, data, attachments, submission);
+        return new CreateInstanceCommand(commandExecutor, modelProvider, data, attachments, submission);
     }
 
-    public DeploymentCommand deployment(Process process, String deploymentId, ProcessDeploymentResource resource) {
+    public DeploymentCommand deployment(ProcessProvider processProvider, String deploymentId, ProcessDeploymentResource resource) {
 
-        return new DeploymentCommand(commandExecutor, process, deploymentId, resource);
+        return new DeploymentCommand(commandExecutor, processProvider, deploymentId, resource);
     }
 
-    public DetachmentCommand detachment(Entity principal, Process process, ProcessInstance instance, Task task, String attachmentId) {
+    public DetachmentCommand detachment(AllowedTaskProvider allowedTaskProvider, String attachmentId) {
 
-        return new DetachmentCommand(commandExecutor, principal, process, instance, task, attachmentId);
+        return new DetachmentCommand(commandExecutor, allowedTaskProvider, attachmentId);
     }
 
-    public SubTaskCommand createsubtask(Entity principal, Process process, ProcessInstance instance, ProcessDeployment deployment, String taskid, Validation validation) {
+    public SubTaskCommand createSubTask(TaskProvider taskProvider, Validation validation) {
 
-        return new SubTaskCommand(commandExecutor, principal, process, instance, deployment, taskid, validation);
+        return new SubTaskCommand(commandExecutor, taskProvider, validation);
     }
 
-    public PublicationCommand publication(Process process, String deploymentId) {
+    public PublicationCommand publication(ProcessDeploymentProvider deploymentProvider, String deploymentId) {
 
-        return new PublicationCommand(commandExecutor, process, deploymentId);
+        return new PublicationCommand(commandExecutor, deploymentProvider, deploymentId);
     }
 
-    public RequeueInstanceCommand requeueInstance(Entity principal, Process process, ProcessInstance instance) {
+    public RequeueInstanceCommand requeueInstance(ProcessInstanceProvider instanceProvider) {
 
-        return new RequeueInstanceCommand(commandExecutor, principal, process, instance);
+        return new RequeueInstanceCommand(commandExecutor, instanceProvider);
     }
 
-    public RemoveValueCommand removeValue(Entity principal, Process process, ProcessInstance instance, Task task, String fieldName, String valueId) {
+    public RemoveValueCommand removeValue(AllowedTaskProvider allowedTaskProvider, String fieldName, String valueId) {
 
-        return new RemoveValueCommand(commandExecutor, principal, process, instance, task, fieldName, valueId);
+        return new RemoveValueCommand(commandExecutor, allowedTaskProvider, fieldName, valueId);
     }
 
-    public RestartCommand restart(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
+    public RestartCommand restart(ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
 
-        return new RestartCommand(commandExecutor, principal, process, deployment, instance, applicationStatusExplanation);
+        return new RestartCommand(commandExecutor, instanceProvider, applicationStatusExplanation);
     }
 
-    public SubmitFormCommand submitForm(Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
+    public <P extends ProcessDeploymentProvider> SubmitFormCommand submitForm(P modelProvider, Validation validation, ActionType actionType, RequestDetails requestDetails, FormRequest request) {
 
-        return new SubmitFormCommand(commandExecutor, principal, deployment, validation, actionType, requestDetails, request);
+        return new SubmitFormCommand(commandExecutor, modelProvider, validation, actionType, requestDetails, request);
     }
 
-    public SuspensionCommand suspension(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
+    public SuspensionCommand suspension(ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
 
-        return new SuspensionCommand(commandExecutor, principal, process, deployment, instance, applicationStatusExplanation);
+        return new SuspensionCommand(commandExecutor, instanceProvider, applicationStatusExplanation);
     }
 
-    public UpdateDataCommand updateData(Entity principal, Process process, ProcessInstance instance, Task task, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) {
+    public <P extends ProcessProvider> UpdateDataCommand updateData(P modelProvider, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) {
 
-        return new UpdateDataCommand(commandExecutor, principal, process, instance, task, data, messages, applicationStatusExplanation);
+        return new UpdateDataCommand(commandExecutor, modelProvider, data, messages, applicationStatusExplanation);
     }
 
-    public UpdateStatusCommand updateStatus(Entity principal, Process process, ProcessInstance instance, String applicationStatus, String applicationStatusExplanation) {
+    public UpdateStatusCommand updateStatus(ProcessInstanceProvider instanceProvider, String applicationStatus, String applicationStatusExplanation) {
 
-        return new UpdateStatusCommand(commandExecutor, principal, process, instance, applicationStatus, applicationStatusExplanation);
+        return new UpdateStatusCommand(commandExecutor, instanceProvider, applicationStatus, applicationStatusExplanation);
     }
 
-    public UpdateValueCommand updateValue(Entity principal, Task task, Validation validation) {
+    public UpdateValueCommand updateValue(AllowedTaskProvider allowedTaskProvider, Validation validation) {
 
-        return new UpdateValueCommand(commandExecutor, principal, task, validation);
+        return new UpdateValueCommand(commandExecutor, allowedTaskProvider, validation);
     }
 
-    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Submission submission, Entity principal, String version) {
+    public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, Submission submission, String version) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, submission, principal, version);
+        return new ValidationCommand<P>(commandExecutor, modelProvider, request, submission, version);
     }
 
-    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String version) {
+    public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, Object object, Class<?> type, String version) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, null, null, version);
+        return new ValidationCommand<P>(commandExecutor, modelProvider, request, object, type, version);
     }
 
-    public ValidationCommand validation(Process process, ProcessDeployment deployment, FormRequest request, Object object, Class<?> type, Entity principal, String validationId, String fieldName, String version) {
+    public <P extends ProcessDeploymentProvider> FieldValidationCommand validation(P modelProvider, FormRequest request, Object object, Class<?> type, String fieldName, String version) {
 
-        return new ValidationCommand(commandExecutor, process, deployment, request, object, type, principal, validationId, fieldName, version);
+        return new FieldValidationCommand<P>(commandExecutor, modelProvider, request, object, type, fieldName, version);
     }
 
 }

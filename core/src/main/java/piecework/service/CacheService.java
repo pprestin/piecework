@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import piecework.common.ManyMapSet;
 import piecework.enumeration.CacheName;
 import piecework.model.CacheEvent;
-import piecework.persistence.CacheEventRepository;
+import piecework.repository.CacheEventRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.*;

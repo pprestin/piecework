@@ -22,13 +22,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.exception.BadRequestError;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 
 import com.google.common.collect.Sets;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.security.data.DataFilterService;
 import piecework.submission.SubmissionTemplate;
+import piecework.util.ModelUtility;
 import piecework.util.ValidationUtility;
 
 /**
@@ -43,16 +46,14 @@ public class ValidationFactory {
     @Autowired
     DataFilterService dataFilterService;
 
-    public Validation validation(Process process, ProcessInstance instance, Task task, SubmissionTemplate template, Submission submission, Entity principal, String version, boolean throwException) throws StatusCodeError {
+    public <P extends ProcessDeploymentProvider> Validation validation(P modelProvider, SubmissionTemplate template, Submission submission, String version, boolean throwException) throws PieceworkException {
         long time = 0;
 
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
 
-//        Map<String, List<Value>> instanceData = instance != null ? instance.getData() : Collections.<String, List<Value>>emptyMap();
-
         // Validate the submission
-        Validation validation = validate(process, instance, task, submission, template, principal, version, throwException);
+        Validation validation = validate(modelProvider, submission, template, version, throwException);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
@@ -66,28 +67,28 @@ public class ValidationFactory {
         return validation;
     }
 
-    public Validation validate(Process process, ProcessInstance instance, Task task, Submission submission,
-                               SubmissionTemplate template,
-                               Entity principal, String version,
-                               boolean onlyAcceptValidInputs) {
+    public <P extends ProcessDeploymentProvider> Validation validate(P modelProvider,
+                                Submission submission, SubmissionTemplate template, String version, boolean onlyAcceptValidInputs) throws PieceworkException {
 
         Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
         Set<String> allFieldNames = Collections.unmodifiableSet(new HashSet<String>(template.getFieldMap().keySet()));
         Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
 
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
         Map<String, List<Value>> instanceData = instance != null ? instance.getData() : null;
         Map<String, List<Value>> submissionData = submission.getData();
 
-        Validation.Builder validationBuilder = new Validation.Builder().process(process).instance(instance).submission(submission).task(task);
+        Validation.Builder validationBuilder = new Validation.Builder().submission(submission);
         if (fieldRuleMap != null) {
             Set<Field> fields = fieldRuleMap.keySet();
             boolean isAllowAny = template.isAnyFieldAllowed();
             String reason = "User is submitting data that needs to be validated";
-            Map<String, List<Value>> decryptedSubmissionData = dataFilterService.allSubmissionData(process, instance, submission, principal, reason);
+            Map<String, List<Value>> decryptedSubmissionData = dataFilterService.allSubmissionData(modelProvider, submission, reason);
             Map<String, List<Value>> decryptedInstanceData = null;
 
+            Task task = ModelUtility.task(modelProvider);
             if (task != null)
-                decryptedInstanceData = dataFilterService.authorizedInstanceData(process, instance, task, fields, principal, version, reason, isAllowAny);
+                decryptedInstanceData = dataFilterService.authorizedInstanceData(modelProvider, fields, version, reason, isAllowAny);
 
             for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
                 Field field = entry.getKey();

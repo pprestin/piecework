@@ -20,7 +20,6 @@ import org.springframework.core.io.Resource;
 import piecework.content.concrete.RemoteResource;
 import piecework.ui.Streamable;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -73,7 +72,7 @@ public class Content implements Serializable, Streamable {
 
     public String getContentType() {
         if (resource != null && resource instanceof RemoteResource)
-            return ((RemoteResource) resource).getContentType();
+            return ((RemoteResource) resource).contentType();
         return contentType;
     }
 

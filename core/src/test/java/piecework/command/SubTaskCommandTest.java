@@ -111,7 +111,7 @@ public class SubTaskCommandTest extends TestCase {
         Mockito.when(validation.getProcess())
                 .thenReturn(process);
 
-        Mockito.when(storageManager.store(validation, ActionType.COMPLETE))
+        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.COMPLETE))
                 .thenReturn(instance);
 
         String taskId = "123456";
@@ -150,7 +150,7 @@ public class SubTaskCommandTest extends TestCase {
         Mockito.when(validation.getProcess())
                 .thenReturn(process);
 
-        Mockito.when(storageManager.store(validation, ActionType.SAVE))
+        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.SAVE))
                 .thenReturn(instance);
 
         SubTaskCommand command = new SubTaskCommand(null, principal, process, instance, deployment, parentTaskId, validation);

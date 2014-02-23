@@ -74,7 +74,7 @@ public class ActivationCommandTest {
         String applicationStatusExplanation = "Testing 1,2,3";
         OperationResult expected = new OperationResult(applicationStatusExplanation, "1,2,3", Constants.ProcessStatuses.OPEN, applicationStatusExplanation);
 
-        ActivationCommand command = new ActivationCommand(null, principal, process, deployment, instance, applicationStatusExplanation);
+        ActivationCommand command = new ActivationCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.ACTIVATION), eq(expected), eq(instance), eq(principal));
     }

@@ -85,7 +85,7 @@ public class ContentHandlerRepositoryTest {
         Assert.assertEquals(3, contentProviders.size());
         ContentProvider provider = contentProviders.get(0);
         Assert.assertTrue(provider instanceof TestKeyContentProvider);
-        Content content = provider.findByPath(null, null, null);
+        Content content = provider.findByPath(null, null, null, null);
         Assert.assertEquals("some-key-content-provider", content.getLocation());
     }
 
@@ -95,7 +95,7 @@ public class ContentHandlerRepositoryTest {
                 .processDefinitionKey("TEST")
                 .contentReceiverKey("some-key")
                 .build();
-        Content content = contentHandlerRepository.findByLocation(process, "some/location");
+        Content content = contentHandlerRepository.findByLocation(process, "some/location", null);
         Assert.assertEquals("some-key-content-provider", content.getLocation());
     }
 
@@ -104,7 +104,7 @@ public class ContentHandlerRepositoryTest {
         Process process = new Process.Builder()
                 .processDefinitionKey("TEST")
                 .build();
-        Content content = contentHandlerRepository.findByLocation(process, "some/location");
+        Content content = contentHandlerRepository.findByLocation(process, "some/location", null);
         Assert.assertEquals("some-external-content-provider", content.getLocation());
     }
 

@@ -24,7 +24,7 @@ import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.enumeration.Scheme;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ContentRepository;
+import piecework.repository.ContentRepository;
 import piecework.util.PathUtility;
 
 import javax.annotation.PostConstruct;
@@ -70,12 +70,12 @@ public class ContentHandlerRepository implements ContentRepository {
     }
 
     @Override
-    public Content findByLocation(Process process, String location) {
-        return findByLocation(process, null, location);
+    public Content findByLocation(Process process, String location, Entity principal) {
+        return findByLocation(process, null, location, principal);
     }
 
     @Override
-    public Content findByLocation(final Process process, final String base, final String location) {
+    public Content findByLocation(final Process process, final String base, final String location, Entity principal) {
         if (StringUtils.isEmpty(location))
             return null;
 
@@ -96,7 +96,7 @@ public class ContentHandlerRepository implements ContentRepository {
 
         for (ContentProvider contentProvider : contentProviders) {
             try {
-                Content content = contentProvider.findByPath(process, base, location);
+                Content content = contentProvider.findByPath(process, base, location, principal);
                 if (content != null)
                     return content;
             } catch (IOException e) {

@@ -16,13 +16,16 @@
 package piecework.security.data;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Secret;
 import piecework.model.Value;
+import piecework.persistence.ProcessProvider;
 import piecework.security.DataFilter;
 import piecework.security.EncryptionService;
+import piecework.util.ModelUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,18 +38,25 @@ import java.util.List;
  *
  * @author James Renfro
  */
-public class MaskRestrictedValuesFilter implements DataFilter {
+public class MaskRestrictedValuesFilter<P extends ProcessProvider> implements DataFilter {
 
     private static final Logger LOG = Logger.getLogger(MaskRestrictedValuesFilter.class);
 
     private final EncryptionService encryptionService;
-    private final ProcessInstance instance;
-    private final Entity principal;
+    private final P modelProvider;
 
-    public MaskRestrictedValuesFilter(ProcessInstance instance, Entity principal, EncryptionService encryptionService) {
-        this.instance = instance;
-        this.principal = principal;
+    private final String processDefinitionKey;
+    private final String processInstanceId;
+    private final String entityId;
+    private final String coreMessage;
+
+    public MaskRestrictedValuesFilter(P modelProvider, EncryptionService encryptionService) {
+        this.modelProvider = modelProvider;
         this.encryptionService = encryptionService;
+        this.processDefinitionKey = modelProvider.processDefinitionKey();
+        this.processInstanceId = ModelUtility.instanceId(modelProvider);
+        this.entityId = modelProvider.principal() != null ? modelProvider.principal().getEntityId() : null;
+        this.coreMessage = message(modelProvider.processDefinitionKey(), processInstanceId, entityId);
     }
 
     @Override
@@ -54,7 +64,6 @@ public class MaskRestrictedValuesFilter implements DataFilter {
         if (values == null || values.isEmpty())
             return Collections.emptyList();
 
-        String entityId = principal != null ? principal.getEntityId() : "ANONYMOUS";
         List<Value> list = new ArrayList<Value>(values.size());
         for (Value value : values) {
             if (value instanceof Secret) {
@@ -63,9 +72,9 @@ public class MaskRestrictedValuesFilter implements DataFilter {
                     String plaintext = encryptionService.decrypt(secret);
                     list.add(new Value(Strings.repeat("*", plaintext.length())));
                     if (LOG.isInfoEnabled())
-                        LOG.info("Masking value of restricted field " + key + " of process " + instance.getProcessDefinitionKey() + " and instance " + instance.getProcessInstanceId() + " on behalf of " + entityId);
+                        LOG.info("Masking value of " + coreMessage);
                 } catch (Exception exception) {
-                    LOG.error("Failed to mask value of restricted field " + key + " of process " + instance.getProcessDefinitionKey() + " and instance " + instance.getProcessInstanceId() + " on behalf of " + entityId, exception);
+                    LOG.error("Failed to mask value of " + coreMessage, exception);
                 }
             } else {
                 list.add(value);
@@ -73,5 +82,20 @@ public class MaskRestrictedValuesFilter implements DataFilter {
         }
 
         return list;
+    }
+
+    private static String message(String processDefinitionKey, String processInstanceId, String entityId) {
+        StringBuilder message = new StringBuilder(" restricted field for process ").append(processDefinitionKey);
+
+        if (StringUtils.isNotEmpty(processInstanceId))
+            message.append(" and instance ").append(processInstanceId);
+
+        message.append(" on behalf of ");
+        if (StringUtils.isEmpty(entityId))
+            message.append("anonymous submitter");
+        else
+            message.append(entityId);
+
+        return message.toString();
     }
 }

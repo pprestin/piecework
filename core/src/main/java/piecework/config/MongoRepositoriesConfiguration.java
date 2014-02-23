@@ -24,15 +24,15 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.Repository;
-import piecework.persistence.AuthorizationRepository;
-import piecework.persistence.InteractionRepository;
-import piecework.persistence.ScreenRepository;
+import piecework.repository.AuthorizationRepository;
+import piecework.repository.InteractionRepository;
+import piecework.repository.ScreenRepository;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.persistence.ProcessRepository;
-import piecework.persistence.RequestRepository;
-import piecework.persistence.SubmissionRepository;
+import piecework.repository.ProcessInstanceRepository;
+import piecework.repository.ProcessRepository;
+import piecework.repository.RequestRepository;
+import piecework.repository.SubmissionRepository;
 
 /**
  * @author James Renfro

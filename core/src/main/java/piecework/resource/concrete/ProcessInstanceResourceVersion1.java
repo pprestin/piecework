@@ -17,34 +17,39 @@ package piecework.resource.concrete;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.command.FieldValidationCommand;
+import piecework.enumeration.ActionType;
 import piecework.enumeration.OperationType;
+import piecework.identity.IdentityHelper;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.HistoryProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.resource.ProcessInstanceApplicationResource;
 import piecework.Constants;
-import piecework.Versions;
-import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
-import piecework.model.Process;
 import piecework.process.AttachmentQueryParameters;
-import piecework.service.HistoryFactory;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.*;
+import piecework.settings.UserInterfaceSettings;
 import piecework.ui.Streamable;
 import piecework.ui.streaming.StreamingAttachmentContent;
 import piecework.common.ManyMap;
 import piecework.util.FormUtility;
 import piecework.util.ProcessInstanceUtility;
+import piecework.validation.Validation;
 
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -57,157 +62,126 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
     private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
 
     @Autowired
-    HistoryFactory historyFactory;
+    IdentityHelper helper;
 
     @Autowired
     RequestService requestService;
 
     @Autowired
-    ValuesService valuesService;
-
-    @Autowired
-    Versions versions;
+    UserInterfaceSettings settings;
 
     @Override
-    public Response activate(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
-        ProcessDeployment deployment = doOperation(OperationType.ACTIVATION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
+    public Response activate(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = doOperation(OperationType.ACTIVATION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason, helper.getPrincipal());
+        return FormUtility.noContentResponse(settings, instanceProvider, false);
     }
 
     @Override
     public Response attach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, MultivaluedMap<String, String> formData) throws PieceworkException {
-        return doAttach(context, rawProcessDefinitionKey, rawProcessInstanceId, formData, Map.class);
+        return doAttach(context, rawProcessDefinitionKey, rawProcessInstanceId, formData, Map.class, helper.getPrincipal());
     }
 
     @Override
     public Response attach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, MultipartBody body) throws PieceworkException {
-        return doAttach(context, rawProcessDefinitionKey, rawProcessInstanceId, body, MultipartBody.class);
+        return doAttach(context, rawProcessDefinitionKey, rawProcessInstanceId, body, MultipartBody.class, helper.getPrincipal());
     }
 
     @Override
     public Response attachOptions(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-
-        LOG.debug("Attachment options for " + process.getProcessDefinitionKey());
-
-        return FormUtility.allowCrossOriginResponse(deployment, null);
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        return FormUtility.optionsResponse(settings, instanceProvider, false, "GET", "POST");
     }
 
     @Override
-     public Response attachments(String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+     public Response attachments(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, AttachmentQueryParameters queryParameters) throws PieceworkException {
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Task allowedTask = allowedTaskProvider.allowedTask(true);
 
-        if (!taskService.hasAllowedTask(process, instance, principal, false))
+        if (allowedTask == null)
             throw new ForbiddenError();
 
-        SearchResults searchResults = attachmentService.search(instance, queryParameters);
-        return FormUtility.allowCrossOriginResponse(deployment, searchResults);
+        SearchResults searchResults = allowedTaskProvider.attachments(queryParameters, new ViewContext(settings, VERSION));
+        return FormUtility.okResponse(settings, allowedTaskProvider, searchResults, null, false);
     }
 
     @Override
-    public Response attachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-
+    public Response attachment(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
 
-        if (!taskService.hasAllowedTask(process, instance, principal, true))
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Task allowedTask = allowedTaskProvider.allowedTask(true);
+
+        if (allowedTask == null)
             throw new ForbiddenError();
 
-        StreamingAttachmentContent content = attachmentService.content(process, instance, attachmentId);
+        StreamingAttachmentContent content = allowedTaskProvider.attachment(attachmentId);
 
         if (content == null)
             throw new NotFoundError(Constants.ExceptionCodes.attachment_does_not_exist, attachmentId);
 
         String contentDisposition = new StringBuilder("attachment; filename=").append(content.getAttachment().getDescription()).toString();
 
-        return FormUtility.allowCrossOriginResponse(deployment, content, content.getAttachment().getContentType(), new BasicHeader("Content-Disposition", contentDisposition));
+        return FormUtility.okResponse(settings, allowedTaskProvider, content, content.getAttachment().getContentType(), Collections.<Header>singletonList(new BasicHeader("Content-Disposition", contentDisposition)), false);
     }
 
     @Override
-    public Response cancel(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
-        ProcessDeployment deployment = doOperation(OperationType.CANCELLATION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
+    public Response cancel(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = doOperation(OperationType.CANCELLATION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason, helper.getPrincipal());
+        return FormUtility.noContentResponse(settings, instanceProvider, false);
     }
 
     @Override
-    public Response detachment(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
-        return detach(rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId);
+    public Response detachment(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
+        return detach(context, rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId);
     }
 
     @Override
-    public Response detach(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
-        ProcessDeployment deployment = doDetach(rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId);
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
+    public Response detach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId) throws PieceworkException {
+        AllowedTaskProvider taskProvider = doDetach(context, rawProcessDefinitionKey, rawProcessInstanceId, rawAttachmentId, helper.getPrincipal());
+        return FormUtility.noContentResponse(settings, taskProvider, false);
     }
 
     @Override
-    public Response diagram(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
-        Streamable diagram = processInstanceService.getDiagram(rawProcessDefinitionKey, rawProcessInstanceId);
+    public Response diagram(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, false);
+
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Streamable diagram = instanceProvider.diagram();
         StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(diagram);
         ResponseBuilder responseBuilder = Response.ok(streamingAttachmentContent);
         return responseBuilder.build();
     }
 
     @Override
-    public Response history(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+    public Response history(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, false);
 
-        History history = historyFactory.history(rawProcessDefinitionKey, rawProcessInstanceId);
-        return FormUtility.allowCrossOriginResponse(deployment, history);
+        HistoryProvider historyProvider = modelProviderFactory.historyProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        return FormUtility.okResponse(settings, historyProvider, historyProvider.history(new ViewContext(settings, VERSION)), null, false);
     }
 
     @Override
-    public Response suspendOptions(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessDeployment deployment = process.getDeployment();
-
-        LOG.debug("Options for " + process.getProcessDefinitionKey());
-
-        return FormUtility.allowCrossOriginResponse(deployment, null);
-    }
-
-    @Override
-    public Response suspend(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
-        ProcessDeployment deployment = doOperation(OperationType.SUSPENSION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
-    }
-
-	@Override
-	public Response search(MessageContext context) throws PieceworkException {
-        return doSearch(context);
-	}
-
-    @Override
-    public Response restart(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
-        ProcessDeployment deployment = doOperation(OperationType.RESTART, rawProcessDefinitionKey, rawProcessInstanceId, rawReason);
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
+    public Response restart(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = doOperation(OperationType.RESTART, rawProcessDefinitionKey, rawProcessInstanceId, rawReason, helper.getPrincipal());
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+        return FormUtility.noContentResponse(settings, instanceProvider, false);
     }
 
     @Override
     public Response remove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
-        ProcessDeployment deployment = doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId);
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
+        AllowedTaskProvider allowedTaskProvider = doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, helper.getPrincipal());
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+        return FormUtility.noContentResponse(settings, allowedTaskProvider, false);
     }
 
     @Override
     public Response removeOptions(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-
-        LOG.debug("Remove options for " + process.getProcessDefinitionKey());
-
-        return FormUtility.allowCrossOriginResponse(deployment, null);
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        return FormUtility.optionsResponse(settings, instanceProvider, false, "DELETE");
     }
 
     @Override
@@ -215,24 +189,45 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, false);
 
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        String fieldName = sanitizer.sanitize(rawFieldName);
-        String valueId = sanitizer.sanitize(rawValueId);
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        StreamingAttachmentContent streaming = allowedTaskProvider.value(rawFieldName, rawValueId);
+        Content content = Content.class.cast(streaming.getContent());
 
-        Entity principal = helper.getPrincipal();
+        boolean isInline = inline != null && inline.booleanValue();
+        if (isInline)
+            return FormUtility.okResponse(settings, allowedTaskProvider, streaming, content.getContentType(), false);
 
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
-            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getName()).toString();
 
-        return valuesService.read(process, instance, fieldName, valueId, inline);
+        List<Header> headers = Collections.<Header>singletonList(new BasicHeader("Content-Disposition", contentDisposition));
+        return FormUtility.okResponse(settings, allowedTaskProvider, streaming, content.getContentType(), headers, false);
+    }
+
+    @Override
+    public Response search(MessageContext context) throws PieceworkException {
+        return doSearch(context, helper.getPrincipal());
+    }
+
+    @Override
+    public Response suspendOptions(String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        return FormUtility.optionsResponse(settings, instanceProvider, false, "POST");
+    }
+
+    @Override
+    public Response suspend(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = doOperation(OperationType.SUSPENSION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason, helper.getPrincipal());
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+        return FormUtility.noContentResponse(settings, instanceProvider, false);
     }
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String value) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Task allowedTask = allowedTaskProvider.allowedTask(true);
+        if (allowedTask == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
@@ -241,24 +236,33 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
 
         ManyMap<String, Value> data = new ManyMap<String, Value>();
         data.putOne(fieldName, new Value(sanitizer.sanitize(value)));
-        processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, data, Map.class, helper.getPrincipal());
 
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
+        FormRequest request = requestService.create(requestDetails, allowedTaskProvider, ActionType.UPDATE);
+        FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(allowedTaskProvider, request, data, Map.class, fieldName, VERSION);
+        Validation validation = validationCommand.execute();
+        commandFactory.updateValue(allowedTaskProvider, validation).execute();
+
+        return FormUtility.noContentResponse(settings, allowedTaskProvider, false);
     }
 
     @Override
     public Response value(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, MultipartBody body) throws PieceworkException {
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Task allowedTask = allowedTaskProvider.allowedTask(true);
+        if (allowedTask == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance stored = processInstanceService.updateField(requestDetails, rawProcessDefinitionKey, rawProcessInstanceId, fieldName, body, MultipartBody.class, helper.getPrincipal());
-        ProcessDeployment deployment = deploymentService.read(process, stored);
+        FormRequest request = requestService.create(requestDetails, allowedTaskProvider, ActionType.UPDATE);
+        FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(allowedTaskProvider, request, body, MultipartBody.class, fieldName, VERSION);
+        Validation validation = validationCommand.execute();
+        ProcessInstance stored = commandFactory.updateValue(allowedTaskProvider, validation).execute();
 
         Map<String, List<Value>> data = stored.getData();
 
-        ViewContext version1 = versions.getVersion1();
         String location = null;
         File file = null;
         if (data != null) {
@@ -269,37 +273,35 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
                         .processDefinitionKey(stored.getProcessDefinitionKey())
                         .processInstanceId(stored.getProcessInstanceId())
                         .fieldName(fieldName)
-                        .build(version1);
+                        .build(new ViewContext(settings, VERSION));
                 location = file.getLink();
             }
         }
 
-        ResponseBuilder builder = file != null ? Response.ok(file) : Response.noContent();
+        List<Header> headers = null;
 
-        FormUtility.addCrossOriginHeaders(builder, deployment, null);
         if (location != null)
-            builder.header(HttpHeaders.LOCATION, location);
+            headers = Collections.<Header>singletonList(new BasicHeader(HttpHeaders.LOCATION, location));
 
-        return builder.build();
+        if (file != null)
+            return FormUtility.okResponse(settings, allowedTaskProvider, file, null, headers, false);
+
+        return FormUtility.noContentResponse(settings, allowedTaskProvider, headers, false);
     }
 
     @Override
-    public Response values(String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-        String fieldName = sanitizer.sanitize(rawFieldName);
-
-        if (!principal.hasRole(process, AuthorizationRole.OVERSEER) && !taskService.hasAllowedTask(process, instance, principal, true))
+    public Response values(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName) throws PieceworkException {
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        Task allowedTask = allowedTaskProvider.allowedTask(true);
+        if (allowedTask == null)
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        List<Value> files = valuesService.searchValues(process, instance, fieldName);
-        SearchResults searchResults = new SearchResults.Builder()
-                .items(files)
-                .build();
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, false, false);
+        String fieldName = sanitizer.sanitize(rawFieldName);
 
-        return FormUtility.allowCrossOriginResponse(deployment, searchResults);
+        SearchResults searchResults = allowedTaskProvider.values(fieldName, new ViewContext(settings, VERSION));
+        return FormUtility.okResponse(settings, allowedTaskProvider, searchResults, null, false);
     }
 
 }

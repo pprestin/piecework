@@ -25,6 +25,8 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.TaskProvider;
 import piecework.validation.Validation;
 
 /**
@@ -32,18 +34,14 @@ import piecework.validation.Validation;
  *
  * @author James Renfro
  */
-public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessInstance, TaskProvider> {
 
-    private final ProcessDeployment deployment;
-    private final Task task;
     private final Validation validation;
     private final Submission submission;
     private final ActionType actionType;
 
-    CompleteTaskCommand(CommandExecutor commandExecutor, Entity principal, ProcessDeployment deployment, Validation validation, ActionType actionType) {
-        super(commandExecutor, principal, validation.getProcess(), validation.getInstance());
-        this.deployment = deployment;
-        this.task = validation.getTask();
+    CompleteTaskCommand(CommandExecutor commandExecutor, TaskProvider taskProvider, Validation validation, ActionType actionType) {
+        super(commandExecutor, taskProvider);
         this.validation = validation;
         this.submission = validation.getSubmission();
         this.actionType = actionType;
@@ -51,13 +49,16 @@ public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessIns
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
+        Task task = modelProvider.task();
         if (task == null)
             throw new NotFoundError();
 
+        Entity principal = modelProvider.principal();
         // This is an operation that anonymous users should not be able to take
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
+        Process process = modelProvider.process();
         // Users are only allowed to complete tasks if they have been assigned a task, and
         // only process overseers or superusers are allowed to complete tasks otherwise
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER)) {
@@ -74,19 +75,21 @@ public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessIns
                 // data on complete and reject as well
             case ATTACH:
             case SAVE:
-                return storageManager.store(validation, actionType);
+                return storageManager.store(modelProvider, validation, actionType);
             default:
                 // For example, on actionType VALIDATE
-                return instance;
+                return modelProvider.instance();
         }
     }
 
     private void completeTask(final ProcessEngineFacade facade, final StorageManager storageManager, final Task task, final Validation validation, final ActionType actionType, final Entity principal) throws PieceworkException {
-
+        Process process = modelProvider.process();
+        ProcessDeployment deployment = modelProvider.deployment();
         String taskId = task.getTaskInstanceId();
         boolean result = facade.completeTask(process, deployment, taskId, actionType, validation, principal);
 
         if (result == false) {
+            ProcessInstance instance = modelProvider.instance();
             // It's possible that the system has gotten out of sync -- grab a current instance of the task from the engine
             // and overwrite the one that's stored in mongo
             Task current = facade.findTask(process, deployment, taskId, false);
@@ -95,20 +98,12 @@ public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessIns
         }
     }
 
-    public ProcessDeployment getDeployment() {
-        return deployment;
+    public TaskProvider getTaskProvider() {
+        return modelProvider;
     }
 
     public Validation getValidation() {
         return validation;
-    }
-
-    public Submission getSubmission() {
-        return submission;
-    }
-
-    public Task getTask() {
-        return task;
     }
 
     public ActionType getActionType() {

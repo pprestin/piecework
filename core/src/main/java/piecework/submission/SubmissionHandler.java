@@ -22,13 +22,14 @@ import piecework.model.Entity;
 import piecework.model.FormRequest;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
+import piecework.persistence.ProcessProvider;
 
 /**
  * @author James Renfro
  */
 public interface SubmissionHandler<T> {
 
-    Submission handle(ProcessInstance instance, T submission, SubmissionTemplate template, Entity principal) throws PieceworkException;
+    <P extends ProcessProvider> Submission handle(P provider, T submission, SubmissionTemplate template) throws PieceworkException;
 
     Class<?> getType();
 

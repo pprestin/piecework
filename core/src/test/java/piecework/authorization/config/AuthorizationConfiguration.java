@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import piecework.authorization.*;
 import piecework.model.Authorization;
-import piecework.persistence.AuthorizationRepository;
+import piecework.repository.AuthorizationRepository;
 
 import java.util.Collections;
 

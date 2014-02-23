@@ -61,7 +61,7 @@ public class SuspensionCommandTest {
 
     @Test(expected = ForbiddenError.class)
     public void testAnonymous() throws PieceworkException {
-        SuspensionCommand command = new SuspensionCommand(null, null, process, deployment, instance, applicationStatusExplanation);
+        SuspensionCommand command = new SuspensionCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
     }
 
@@ -70,7 +70,7 @@ public class SuspensionCommandTest {
         doReturn(Boolean.FALSE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER);
-        SuspensionCommand command = new SuspensionCommand(null, principal, process, deployment, instance, applicationStatusExplanation);
+        SuspensionCommand command = new SuspensionCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
     }
 
@@ -95,7 +95,7 @@ public class SuspensionCommandTest {
         String applicationStatusExplanation = "Testing 1,2,3";
         OperationResult expected = new OperationResult(applicationStatusExplanation, "Suspended", Constants.ProcessStatuses.SUSPENDED, applicationStatusExplanation);
 
-        SuspensionCommand command = new SuspensionCommand(null, principal, process, deployment, instance, applicationStatusExplanation);
+        SuspensionCommand command = new SuspensionCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.SUSPENSION), eq(expected), eq(instance), eq(principal));
     }

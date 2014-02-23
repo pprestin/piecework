@@ -25,10 +25,11 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ActivityRepository;
-import piecework.persistence.ContentRepository;
-import piecework.persistence.DeploymentRepository;
-import piecework.persistence.ProcessRepository;
+import piecework.persistence.ProcessProvider;
+import piecework.repository.ActivityRepository;
+import piecework.repository.ContentRepository;
+import piecework.repository.DeploymentRepository;
+import piecework.repository.ProcessRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.util.ProcessUtility;
 
@@ -38,15 +39,15 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
+public class DeploymentCommand extends AbstractCommand<ProcessDeployment, ProcessProvider> {
 
     private static final Logger LOG = Logger.getLogger(PublicationCommand.class);
 
     private final String deploymentId;
     private final ProcessDeploymentResource resource;
 
-    DeploymentCommand(CommandExecutor commandExecutor, Process process, String deploymentId, ProcessDeploymentResource resource) {
-        super(commandExecutor, null, process);
+    DeploymentCommand(CommandExecutor commandExecutor, ProcessProvider processProvider, String deploymentId, ProcessDeploymentResource resource) {
+        super(commandExecutor, processProvider);
         this.deploymentId = deploymentId;
         this.resource = resource;
     }
@@ -69,7 +70,9 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
         if (LOG.isDebugEnabled())
             LOG.debug("Executing deployment command " + this.toString());
 
-        String processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
+        Entity principal = modelProvider.principal();
+        Process process = modelProvider.process();
+//        String processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
 
         // Verify that this deployment belongs to this process
         ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, deploymentId);
@@ -98,13 +101,13 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
                     .build();
 
             try {
-                contentRepository.save(process, instance, content, principal);
+                contentRepository.save(process, null, content, principal);
             } catch (IOException ioe) {
                 LOG.error("Error saving to content repo", ioe);
                 throw new InternalServerError(Constants.ExceptionCodes.attachment_could_not_be_saved);
             }
 
-            content = contentRepository.findByLocation(process, location);
+            content = contentRepository.findByLocation(process, location, principal);
 
             // Try to deploy it in the engine -- this is the step that's most likely to fail because
             // the artifact is not formatted correctly, etc..
@@ -128,10 +131,6 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment> {
         }
 
         return persistedDeployment;
-    }
-
-    public String getProcessDefinitionKey() {
-        return process != null ? process.getProcessDefinitionKey() : null;
     }
 
     private ProcessDeployment cascadeSave(ActivityRepository activityRepository, DeploymentRepository deploymentRepository, ProcessDeployment deployment) {

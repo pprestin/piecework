@@ -29,10 +29,10 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import piecework.identity.IdentityHelper;
 import piecework.model.Explanation;
 import piecework.service.UserInterfaceService;
 
-import java.io.IOException;
 import java.util.List;
 
 
@@ -46,6 +46,9 @@ import java.util.List;
 public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException> {
 
 	private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(GeneralExceptionMapper.class);
+
+    @Autowired
+    private IdentityHelper helper;
 
     @Autowired
     private UserInterfaceService userInterfaceService;
@@ -99,7 +102,7 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
         if (!mediaType.equals(MediaType.TEXT_HTML_TYPE))
             return Response.status(status).entity(explanation).build();
 
-        StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation);
+        StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation, helper.getPrincipal());
         return Response.status(status).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();
 	}
 

@@ -36,7 +36,7 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import piecework.model.ProcessInstance;
-import piecework.persistence.EmbeddedMongoInstance;
+import piecework.repository.EmbeddedMongoInstance;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -44,7 +44,7 @@ import javax.net.ssl.SSLSocketFactory;
  * @author James Renfro
  */
 @Configuration
-@EnableMongoRepositories(basePackages="piecework.persistence",repositoryImplementationPostfix="CustomImpl")
+@EnableMongoRepositories(basePackages="piecework.repository",repositoryImplementationPostfix="CustomImpl")
 public class MongoConfiguration extends AbstractMongoConfiguration {
 
 	private static final Logger LOG = Logger.getLogger(MongoConfiguration.class);

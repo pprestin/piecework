@@ -15,15 +15,20 @@
  */
 package piecework.security.data;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import piecework.enumeration.AlarmSeverity;
 import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.Secret;
 import piecework.model.Value;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessProvider;
 import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.security.EncryptionService;
+import piecework.util.ModelUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,32 +41,31 @@ import java.util.List;
  *
  * @author James Renfro
  */
-public class DecryptValuesFilter implements DataFilter {
+public class DecryptValuesFilter<P extends ProcessProvider> implements DataFilter {
 
     private static final Logger LOG = Logger.getLogger(DecryptValuesFilter.class);
+    private static final String ANONYMOUS_RESTRICTED_MESSAGE = "Anonymous principals should never have access to restricted data. System will not decrypt this value ";
 
-    private final Process process;
-    private final ProcessInstance instance;
-    private final Entity principal;
+    private final P modelProvider;
     private final String reason;
     private final AccessTracker accessTracker;
     private final EncryptionService encryptionService;
     private final boolean isAnonymousDecryptAllowed;
-    private final String processDefinitionKey;
+
     private final String processInstanceId;
     private final String entityId;
 
-    public DecryptValuesFilter(Process process, ProcessInstance instance, Entity principal, String reason, AccessTracker accessTracker, EncryptionService encryptionService, boolean isAnonymousDecryptAllowed) {
-        this.process = process;
-        this.instance = instance;
-        this.principal = principal;
+    private final String coreMessage;
+
+    public DecryptValuesFilter(P modelProvider, String reason, AccessTracker accessTracker, EncryptionService encryptionService, boolean isAnonymousDecryptAllowed) {
+        this.modelProvider = modelProvider;
         this.reason = reason;
         this.accessTracker = accessTracker;
         this.encryptionService = encryptionService;
         this.isAnonymousDecryptAllowed = isAnonymousDecryptAllowed;
-        this.processDefinitionKey = process != null ? process.getProcessDefinitionKey() : null;
-        this.processInstanceId = instance != null ? instance.getProcessInstanceId() : null;
-        this.entityId = principal != null ? principal.getEntityId() : null;
+        this.processInstanceId = ModelUtility.instanceId(modelProvider);
+        this.entityId = modelProvider.principal() != null ? modelProvider.principal().getEntityId() : null;
+        this.coreMessage = message(modelProvider.processDefinitionKey(), processInstanceId, entityId, isAnonymousDecryptAllowed);
     }
 
     @Override
@@ -74,31 +78,19 @@ public class DecryptValuesFilter implements DataFilter {
             if (value instanceof Secret) {
                 // The only time we should ever anonymously decrypt anything is for submission data on a process that is allowed to submit anonymous
                 // submission data, when no instance yet exists...
-                if (principal == null && !isAnonymousDecryptAllowed) {
-                    LOG.error("Anonymous principals should never have access to restricted data. System will not decrypt this value");
+                if (StringUtils.isEmpty(entityId) && !isAnonymousDecryptAllowed) {
+                    accessTracker.alarm(AlarmSeverity.URGENT, new StringBuilder(ANONYMOUS_RESTRICTED_MESSAGE).append(key).append(coreMessage).toString());
                     continue;
                 }
                 Secret secret = Secret.class.cast(value);
                 try {
-                    accessTracker.track(process, instance, secret.getId(), key, reason, principal, isAnonymousDecryptAllowed);
+                    accessTracker.track(modelProvider, secret.getId(), key, reason, isAnonymousDecryptAllowed);
                     String plaintext = encryptionService.decrypt(secret);
                     list.add(new Value(plaintext));
-                    if (LOG.isInfoEnabled()) {
-                        StringBuilder message = new StringBuilder("Decrypting value of restricted field ")
-                                .append(key).append(" of process ")
-                                .append(processDefinitionKey)
-                                .append(" and instance ")
-                                .append(processInstanceId)
-                                .append(" on behalf of ");
-                        if (entityId == null && isAnonymousDecryptAllowed)
-                            message.append("anonymous submitter");
-                        else
-                            message.append(entityId);
-
-                        LOG.info(message.toString());
-                    }
+                    if (LOG.isInfoEnabled())
+                        LOG.info(new StringBuilder("Decrypting ").append(key).append(coreMessage).toString());
                 } catch (Exception exception) {
-                    LOG.error("Failed to decrypt value of restricted field " + key + " of process " + processDefinitionKey + " and instance " + processInstanceId + " on behalf of " + entityId, exception);
+                    LOG.error(new StringBuilder("Failed to decrypt ").append(key).append(coreMessage).toString(), exception);
                 }
             } else {
                 list.add(value);
@@ -106,6 +98,21 @@ public class DecryptValuesFilter implements DataFilter {
         }
 
         return list;
+    }
+
+    private static String message(String processDefinitionKey, String processInstanceId, String entityId, boolean isAnonymousDecryptAllowed) {
+        StringBuilder message = new StringBuilder(" restricted field for process ").append(processDefinitionKey);
+
+        if (StringUtils.isNotEmpty(processInstanceId))
+            message.append(" and instance ").append(processInstanceId);
+
+        message.append(" on behalf of ");
+        if (entityId == null && isAnonymousDecryptAllowed)
+            message.append("anonymous submitter");
+        else
+            message.append(entityId);
+
+        return message.toString();
     }
 
 }

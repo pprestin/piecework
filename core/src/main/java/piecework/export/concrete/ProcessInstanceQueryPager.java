@@ -22,7 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import piecework.export.Pager;
 import piecework.model.ProcessInstance;
-import piecework.persistence.ProcessInstanceRepository;
+import piecework.repository.ProcessInstanceRepository;
 
 /**
  * @author James Renfro

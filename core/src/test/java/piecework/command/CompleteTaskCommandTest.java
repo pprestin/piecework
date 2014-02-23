@@ -86,12 +86,12 @@ public class CompleteTaskCommandTest {
         Mockito.when(validation.getProcess())
                 .thenReturn(process);
 
-        Mockito.when(storageManager.store(validation, ActionType.SAVE))
+        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.SAVE))
                 .thenReturn(instance);
 
-        CompleteTaskCommand command = new CompleteTaskCommand(null, principal, deployment, validation, ActionType.SAVE);
+        CompleteTaskCommand command = new CompleteTaskCommand(null, taskProvider, validation, ActionType.SAVE);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
-        Mockito.verify(storageManager).store(eq(validation), eq(ActionType.SAVE));
+        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.SAVE));
         Mockito.verifyZeroInteractions(processEngineFacade);
         Assert.assertEquals(instance, actual);
     }
@@ -117,7 +117,7 @@ public class CompleteTaskCommandTest {
         Mockito.when(validation.getProcess())
                 .thenReturn(process);
 
-        Mockito.when(storageManager.store(validation, ActionType.COMPLETE))
+        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.COMPLETE))
                 .thenReturn(instance);
 
         String taskId = "123456";
@@ -128,9 +128,9 @@ public class CompleteTaskCommandTest {
         Mockito.when(processEngineFacade.completeTask(process, deployment, taskId, ActionType.COMPLETE, validation, principal))
                 .thenReturn(Boolean.TRUE);
 
-        CompleteTaskCommand command = new CompleteTaskCommand(null, principal, deployment, validation, ActionType.COMPLETE);
+        CompleteTaskCommand command = new CompleteTaskCommand(null, taskProvider, validation, ActionType.COMPLETE);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
-        Mockito.verify(storageManager).store(eq(validation), eq(ActionType.COMPLETE));
+        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.COMPLETE));
         Mockito.verify(processEngineFacade).completeTask(process, deployment, taskId, ActionType.COMPLETE, validation, principal);
         Assert.assertEquals(instance, actual);
     }
@@ -156,10 +156,10 @@ public class CompleteTaskCommandTest {
         Mockito.when(validation.getProcess())
                 .thenReturn(process);
 
-        Mockito.when(storageManager.store(validation, ActionType.SAVE))
+        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.SAVE))
                 .thenReturn(instance);
 
-        CompleteTaskCommand command = new CompleteTaskCommand(null, principal, deployment, validation, ActionType.SAVE);
+        CompleteTaskCommand command = new CompleteTaskCommand(null, taskProvider, validation, ActionType.SAVE);
 
         try {
             Mockito.when(command.execute(processEngineFacade, storageManager))

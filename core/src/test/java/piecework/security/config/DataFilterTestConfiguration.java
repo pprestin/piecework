@@ -20,7 +20,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import piecework.persistence.config.MockRepositoryConfiguration;
+import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.data.DataFilterService;
 import piecework.service.CacheService;

@@ -15,8 +15,6 @@
  */
 package piecework.resource;
 
-import junit.framework.Assert;
-import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,19 +29,13 @@ import piecework.exception.PieceworkException;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ProcessInstanceRepository;
-import piecework.persistence.ProcessRepository;
-import piecework.service.IdentityService;
+import piecework.repository.ProcessInstanceRepository;
+import piecework.repository.ProcessRepository;
 import piecework.test.ProcessFactory;
 import piecework.test.config.IntegrationTestConfiguration;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import java.util.Collections;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 
 /**

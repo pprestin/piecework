@@ -25,6 +25,7 @@ import piecework.common.ManyMap;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
 import piecework.model.*;
+import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.validation.Validation;
 
@@ -137,9 +138,24 @@ public class SecurityUtility {
         }
     }
 
-    public static void verifyRequestIntegrity(FormRequest formRequest, RequestDetails request) throws ForbiddenError {
+    public static void verifyRequestIntegrity(AccessTracker accessTracker, String processDefinitionKey, FormRequest formRequest, RequestDetails request) throws ForbiddenError {
         if (request == null)
             return;
+
+        if (StringUtils.isEmpty(processDefinitionKey)) {
+            LOG.error("Attempting to verify request integrity with empty processDefinitionKey -- this is FORBIDDEN and SUSPICIOUS");
+            throw new ForbiddenError(Constants.ExceptionCodes.process_key_required);
+        }
+
+        if (StringUtils.isEmpty(formRequest.getProcessDefinitionKey())) {
+            LOG.error("Attempting to verify request integrity when the request itself has an empty processDefinitionKey -- this shouldn't happen and indicates that something is seriously wrong in the data store");
+            throw new ForbiddenError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
+
+        if (!processDefinitionKey.equals(formRequest.getProcessDefinitionKey())) {
+            LOG.error("Attempting to verify request integrity and the processDefinitionKey doesn't match the request -- this is FORBIDDEN and SUSPICIOUS");
+            throw new ForbiddenError(Constants.ExceptionCodes.process_is_misconfigured);
+        }
 
         if (StringUtils.isNotEmpty(formRequest.getRemoteUser())) {
             // If this form request belongs to a specific user (is not anonymous), then don't show it to an anonymous user

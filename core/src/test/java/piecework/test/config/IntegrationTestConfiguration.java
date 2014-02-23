@@ -31,7 +31,7 @@ import piecework.config.ProviderConfiguration;
 import piecework.engine.ProcessEngineFacade;
 import piecework.identity.DebugUserDetailsService;
 import piecework.identity.IdentityHelper;
-import piecework.persistence.config.MockRepositoryConfiguration;
+import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
 import piecework.security.data.UserInputSanitizer;

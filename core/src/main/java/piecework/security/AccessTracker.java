@@ -15,22 +15,29 @@
  */
 package piecework.security;
 
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.SimpleEmail;
+import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.common.AccessLog;
+import piecework.enumeration.AlarmSeverity;
 import piecework.enumeration.CacheName;
-import piecework.model.AccessEvent;
-import piecework.model.Entity;
+import piecework.exception.PieceworkException;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
-import piecework.model.RequestDetails;
-import piecework.persistence.AccessEventRepository;
+import piecework.persistence.ProcessProvider;
+import piecework.repository.AccessEventRepository;
 import piecework.service.CacheService;
+import piecework.settings.NotificationSettings;
+import piecework.util.ModelUtility;
 
 import javax.annotation.PostConstruct;
+import javax.mail.internet.InternetAddress;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -49,6 +56,9 @@ public class AccessTracker {
     @Autowired
     Environment environment;
 
+    @Autowired
+    NotificationSettings notificationSettings;
+
     private long accessCacheInterval;
     private long accessCountLimit;
 
@@ -60,7 +70,42 @@ public class AccessTracker {
         this.accessCountLimit = environment.getProperty("access.count.limit", Long.class, Long.valueOf(1000));
     }
 
-    public void track(RequestDetails requestDetails, boolean isUpdate, boolean isAnonymous) {
+    public void alarm(final AlarmSeverity severity, final String message) {
+        try {
+            SimpleEmail email = new SimpleEmail();
+            email.setHostName(notificationSettings.getMailServerHost());
+            email.setSmtpPort(notificationSettings.getMailServerPort());
+
+            String adminEmail = notificationSettings.getAdminEmail();
+
+            LOG.error("Alarming at severity " + severity + " : " + message);
+
+            if (StringUtils.isEmpty(adminEmail)) {
+                LOG.error("Unable to send alarm email, no admin email addressed configured.");
+                return;
+            }
+
+            email.addTo(adminEmail);
+
+            List<InternetAddress> toList = email.getToAddresses();
+            if ( toList == null || toList.isEmpty() ) {
+                LOG.error("No email addresses were found for " + adminEmail + ". No emails were sent.");
+                return; // no recipients
+            }
+
+            email.setFrom(notificationSettings.getMailFromAddress(), notificationSettings.getMailFromLabel());
+            email.setSubject("Alarm from piecework: " + severity);
+            email.setMsg(message);
+
+            LOG.debug("Subject: " + email.getSubject());
+            LOG.debug(email.getMimeMessage());
+            email.send();
+        } catch (EmailException e) {
+            LOG.error("Unable to send email with subject: Alarm from piecework: " + severity);
+        }
+    }
+
+    public void track(final RequestDetails requestDetails, final boolean isUpdate, final boolean isAnonymous) {
         CacheName cacheName = isAnonymous ? CacheName.ACCESS_ANONYMOUS : CacheName.ACCESS_AUTHENTICATED;
         String key = isAnonymous ? requestDetails.getRemoteAddr() : requestDetails.getRemoteUser();
 
@@ -81,11 +126,17 @@ public class AccessTracker {
 
         cacheService.put(cacheName, key, accessLog);
 
-        if (accessLog.isAlarming())
-            LOG.warn("Access attempt " + accessLog.getAccessCount() + " by " + key);
+        if (accessLog.isAlarming()) {
+            String message = "Access attempt " + accessLog.getAccessCount() + " by " + key;
+            LOG.warn(message);
+            alarm(AlarmSeverity.MINOR, message);
+        }
     }
 
-    public void track(Process process, ProcessInstance instance, String secretId, String key, String reason, Entity principal, boolean isAnonymousAllowed) {
+    public <P extends ProcessProvider> void track(final P modelProvider, final String secretId, final String key, final String reason, final boolean isAnonymousAllowed) throws PieceworkException {
+        Process process = modelProvider.process();
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
+        Entity principal = modelProvider.principal();
         accessEventRepository.save(new AccessEvent(process, instance, secretId, key, reason, principal, isAnonymousAllowed));
     }
 

@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import piecework.common.UuidGenerator;
 import piecework.model.User;
-import piecework.persistence.config.MockRepositoryConfiguration;
+import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.Sanitizer;
 import piecework.security.data.UserInputSanitizer;
 import piecework.service.IdentityService;

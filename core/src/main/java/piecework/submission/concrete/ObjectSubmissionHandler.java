@@ -18,10 +18,13 @@ package piecework.submission.concrete;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
 import piecework.submission.SubmissionTemplate;
+import piecework.util.ModelUtility;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +39,10 @@ public class ObjectSubmissionHandler extends AbstractSubmissionHandler<Submissio
     private static final Logger LOG = Logger.getLogger(FormValueSubmissionHandler.class);
 
     @Override
-    protected Submission handleInternal(ProcessInstance instance, Submission rawSubmission, SubmissionTemplate template, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected <P extends ProcessProvider> Submission handleInternal(P modelProvider, Submission rawSubmission, SubmissionTemplate template) throws PieceworkException {
+        Entity principal = modelProvider.principal();
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
+
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
         Submission.Builder submissionBuilder = submissionBuilder(instance, template, principal, rawSubmission);
         if (rawSubmission != null && rawSubmission.getData() != null) {

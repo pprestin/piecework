@@ -21,6 +21,7 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
 
 /**
  * The majority of the commands implement the package-level execute(ServiceLocator) to
@@ -30,19 +31,19 @@ import piecework.model.Process;
  *
  * @author James Renfro
  */
-public abstract class AbstractEngineStorageCommand<T> extends AbstractCommand<T> {
+public abstract class AbstractEngineStorageCommand<T, P extends ProcessProvider> extends AbstractCommand<T, P> {
 
-    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, ProcessInstance instance) {
-        super(commandExecutor, instance);
+    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, P modelProvider) {
+        super(commandExecutor, modelProvider);
     }
 
-    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, Entity principal, Process process) {
-        super(commandExecutor, principal, process);
-    }
-
-    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance) {
-        super(commandExecutor, principal, process, instance);
-    }
+//    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, Entity principal, Process process) {
+//        super(commandExecutor, principal, process);
+//    }
+//
+//    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance) {
+//        super(commandExecutor, principal, process, instance);
+//    }
 
     /*
          * Injects necessary services into the other package-access execute method, which then does all the work

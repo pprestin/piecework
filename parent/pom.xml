@@ -333,7 +333,6 @@
                 <artifactId>cxf-rt-transports-http-jetty</artifactId>
                 <version>${cxf.version}</version>
                 <type>jar</type>
-                <scope>test</scope>
             </dependency>
 			<dependency>
 				<groupId>org.apache.activemq</groupId>
@@ -381,12 +380,12 @@
                 <artifactId>commons-email</artifactId>
                 <version>${commons-email.version}</version>
             </dependency>
-			<dependency>
+			<!--dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-transports-http-jetty</artifactId>
 				<version>${cxf.version}</version>
 				<type>jar</type>
-			</dependency>
+			</dependency-->
 			<dependency>
 				<groupId>org.apache.directory.server</groupId>
 				<artifactId>apacheds-all</artifactId>

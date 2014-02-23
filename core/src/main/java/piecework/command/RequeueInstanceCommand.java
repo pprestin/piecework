@@ -26,6 +26,7 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.validation.Validation;
 
 import java.util.ArrayList;
@@ -38,16 +39,17 @@ import java.util.Map;
  *
  * @author James Renfro
  */
-public class RequeueInstanceCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class RequeueInstanceCommand extends AbstractEngineStorageCommand<ProcessInstance, ProcessInstanceProvider> {
 
     private static final Logger LOG = Logger.getLogger(CreateInstanceCommand.class);
 
-    RequeueInstanceCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance) {
-        super(commandExecutor, principal, process, instance);
+    RequeueInstanceCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider) {
+        super(commandExecutor, instanceProvider);
     }
 
     @Override
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
+        Process process = modelProvider.process();
         if (process == null)
             throw new MisconfiguredProcessException("No process provided to requeue instance");
         if (StringUtils.isEmpty(process.getProcessDefinitionKey()))
@@ -60,6 +62,7 @@ public class RequeueInstanceCommand extends AbstractEngineStorageCommand<Process
         if (deployment == null)
             throw new MisconfiguredProcessException("No deployment on process");
 
+        Entity principal = modelProvider.principal();
         // If we got thru the check above and that principal is not null, then that principal
         // still needs to be an initiator of this process
         if (principal != null && !principal.hasRole(process, AuthorizationRole.INITIATOR))
@@ -67,6 +70,7 @@ public class RequeueInstanceCommand extends AbstractEngineStorageCommand<Process
 
         String initiatorId = principal != null ? principal.getEntityId() : null;
 
+        ProcessInstance instance = modelProvider.instance();
         ProcessInstance updated = new ProcessInstance.Builder(instance)
                 .processStatus(Constants.ProcessStatuses.OPEN)
                 .clearTasks()

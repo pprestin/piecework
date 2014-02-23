@@ -23,10 +23,9 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
 import piecework.exception.ForbiddenError;
-import piecework.exception.StatusCodeError;
-import piecework.model.Entity;
-import piecework.model.ProcessDeployment;
-import piecework.model.ProcessInstance;
+import piecework.exception.PieceworkException;
+import piecework.model.*;
+import piecework.persistence.ProcessInstanceProvider;
 
 /**
  * Suspends a process instance so that it is no longer executing. Can be reversed with the
@@ -36,21 +35,24 @@ import piecework.model.ProcessInstance;
  */
 public class SuspensionCommand extends AbstractOperationCommand {
 
-    private final ProcessDeployment deployment;
-
-    SuspensionCommand(CommandExecutor commandExecutor, Entity principal, piecework.model.Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
-        super(commandExecutor, principal, process, instance, null, OperationType.SUSPENSION, null, applicationStatusExplanation);
-        this.deployment = deployment;
+    SuspensionCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
+        super(commandExecutor, instanceProvider, null, OperationType.SUSPENSION, null, applicationStatusExplanation);
     }
 
     @Override
-    protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
+    protected OperationResult operation(ProcessEngineFacade facade) throws PieceworkException, ProcessEngineException {
+        Entity principal = modelProvider.principal();
+
         // This is an operation that anonymous users should never be able to cause
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+        piecework.model.Process process = modelProvider.process();
         // Only process admins or superusers are allowed to suspend processes
         if (!principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        ProcessInstance instance = modelProvider.instance();
+        ProcessDeployment deployment = modelProvider.deployment();
         if (!facade.suspend(process, deployment, instance))
             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
         return new OperationResult(applicationStatusExplanation, deployment.getSuspensionStatus(), Constants.ProcessStatuses.SUSPENDED, applicationStatusExplanation, instance.getApplicationStatus());

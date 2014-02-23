@@ -21,11 +21,10 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
-import piecework.exception.StatusCodeError;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
-
-import java.util.Set;
+import piecework.persistence.ProcessInstanceProvider;
 
 /**
  * Assigns a task to a particular user or unassigns it (if a null assignee is passed)
@@ -34,17 +33,16 @@ import java.util.Set;
  */
 public class AssignmentCommand extends AbstractOperationCommand {
 
-    private final ProcessDeployment deployment;
     private final User assignee;
 
-    AssignmentCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, Task task, User assignee) {
-        super(commandExecutor, principal, process, instance, task, OperationType.ASSIGNMENT, null, null);
-        this.deployment = deployment;
+    AssignmentCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, Task task, User assignee) {
+        super(commandExecutor, instanceProvider, task, OperationType.ASSIGNMENT, null, null);
         this.task = task;
         this.assignee = assignee;
     }
 
-    protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
+    protected OperationResult operation(ProcessEngineFacade facade) throws PieceworkException, ProcessEngineException {
+        Process process = modelProvider.process();
         boolean isAssignmentRestricted = process.isAssignmentRestrictedToCandidates();
         if (isAssignmentRestricted && assignee != null) {
 //            Set<String> candidateAssigneeIds = task.getCandidateAssigneeIds();
@@ -52,6 +50,7 @@ public class AssignmentCommand extends AbstractOperationCommand {
             if (!task.isCandidateOrAssignee(assignee))
                 throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
         }
+        ProcessDeployment deployment = modelProvider.deployment();
         if (!task.isDisconnected() && !facade.assign(process, deployment, task.getTaskInstanceId(), assignee)) {
             throw new ForbiddenError(Constants.ExceptionCodes.invalid_assignment);
         }

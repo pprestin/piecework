@@ -33,7 +33,7 @@ public class ClasspathContentProvider implements ContentProvider {
     private static final Logger LOG = Logger.getLogger(ClasspathContentProvider.class);
 
     @Override
-    public Content findByPath(Process process, String base, String path) {
+    public Content findByPath(Process process, String base, String path, Entity principal) {
         if (StringUtils.isEmpty(base)) {
             LOG.warn("Cannot retrieve a classpath resource without a base path");
             return null;

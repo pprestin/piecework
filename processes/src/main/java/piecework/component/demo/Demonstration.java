@@ -24,13 +24,19 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.SystemUser;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.ProcessProvider;
 import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 
@@ -57,7 +63,7 @@ public class Demonstration implements TaskListener {
     ProcessService processService;
 
     @Autowired
-    ProcessInstanceService processInstanceService;
+    ModelProviderFactory modelProviderFactory;
 
     @Autowired
     ProcessEngineFacade facade;
@@ -76,10 +82,12 @@ public class Demonstration implements TaskListener {
         String processInstanceId = delegateTask.getProcessInstanceId();
         String taskDefinitionKey = delegateTask.getTaskDefinitionKey();
 
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(PROCESS_DEFINITION_KEY, processBusinessKey, new SystemUser());
+
         ProcessInstance processInstance;
         try {
-            processInstance = processInstanceService.read(PROCESS_DEFINITION_KEY, processBusinessKey, true);
-        } catch (StatusCodeError e) {
+            processInstance = instanceProvider.instance();
+        } catch (PieceworkException e) {
             LOG.error("Could not retrieve process instance ", e);
             throw new RuntimeException(e);
         }
@@ -103,7 +111,7 @@ public class Demonstration implements TaskListener {
     }
 
     @PostConstruct
-    public void configure() throws IOException, ProcessEngineException, StatusCodeError {
+    public void configure() throws IOException, ProcessEngineException, PieceworkException {
         boolean isDemoMode = environment.getProperty("demo.mode", Boolean.class, Boolean.FALSE);
 
         if (!isDemoMode)
@@ -120,17 +128,18 @@ public class Demonstration implements TaskListener {
                 .build();
 
         try {
-            processService.read(process.getProcessDefinitionKey());
-            processService.updateAndPublishDeployment(process, deployment, resource, false);
+//            ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(process.getProcessDefinitionKey(), new SystemUser());
+            processService.update(process.getProcessDefinitionKey(), process);
+            processService.updateAndPublishDeployment(process, deployment, resource, false, new SystemUser());
         } catch (MappingException mappingException) {
             LOG.fatal("Could not create Demonstration process because of a spring mapping exception", mappingException);
         } catch (Exception e) {
             processService.create(process);
-            processService.createAndPublishDeployment(process, deployment, resource, false);
+            processService.createAndPublishDeployment(process, deployment, resource, false, new SystemUser());
         }
     }
 
-    public void synchronize() throws IOException, ProcessEngineException, StatusCodeError {
+    public void synchronize() throws IOException, ProcessEngineException, PieceworkException {
         Process process = demoProcess();
         ProcessDeployment deployment = demoProcessDeployment();
 
@@ -141,7 +150,7 @@ public class Demonstration implements TaskListener {
                 .inputStream(classPathResource.getInputStream())
                 .build();
 
-        processService.updateAndPublishDeployment(process, deployment, resource, false);
+        processService.updateAndPublishDeployment(process, deployment, resource, false, new SystemUser());
     }
 
     public static Field approvedField() {

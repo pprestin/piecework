@@ -24,8 +24,12 @@ import piecework.Registry;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.FieldTag;
 import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessProvider;
+import piecework.persistence.TaskProvider;
 import piecework.util.ActivityUtil;
 import piecework.form.OptionResolver;
 import piecework.util.ProcessUtility;
@@ -45,24 +49,29 @@ public class SubmissionTemplateFactory {
     @Autowired(required=false)
     Registry registry;
 
-    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, Task task, FormRequest formRequest) throws MisconfiguredProcessException {
-        return submissionTemplate(process, deployment, task, formRequest, null);
+    public SubmissionTemplate submissionTemplate(TaskProvider taskProvider, FormRequest formRequest) throws PieceworkException {
+        return submissionTemplate(taskProvider, formRequest, null);
     }
 
-    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, Task task, FormRequest formRequest, String validationId) throws MisconfiguredProcessException {
+    public SubmissionTemplate submissionTemplate(TaskProvider taskProvider, FormRequest formRequest, String validationId) throws PieceworkException {
+        ProcessDeployment deployment = taskProvider.deployment();
         if (deployment == null)
             throw new MisconfiguredProcessException("Deployment not specified in submission");
 
         Activity activity = formRequest.getActivity();
         if (activity == null) {
+            Task task = taskProvider.task();
             String taskDefinitionKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
             activity = deployment.getActivity(taskDefinitionKey);
         }
-        return submissionTemplate(process, deployment, formRequest, activity, validationId);
+        return submissionTemplate(taskProvider, formRequest, activity, validationId);
     }
 
-    public SubmissionTemplate submissionTemplate(Process process, Field field, FormRequest formRequest, boolean allowAny) {
-        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, process.getDeployment());
+    public SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, Field field, FormRequest formRequest, boolean allowAny) throws PieceworkException {
+        Process process = deploymentProvider.process();
+        ProcessDeployment deployment = deploymentProvider.deployment();
+
+        SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
         if (formRequest != null)
             builder.requestId(formRequest.getRequestId()).taskId(formRequest.getTaskId()).actAsUser(formRequest.getActAsUser());
 
@@ -74,20 +83,22 @@ public class SubmissionTemplateFactory {
         return builder.build();
     }
 
-    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, FormRequest formRequest) throws MisconfiguredProcessException {
-        return submissionTemplate(process, deployment, formRequest, formRequest.getActivity(), null);
-    }
+//    public SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest) throws PieceworkException {
+//        return submissionTemplate(deploymentProvider, formRequest, formRequest.getActivity(), null);
+//    }
 
-    public SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, FormRequest formRequest, String validationId) throws MisconfiguredProcessException {
-        return submissionTemplate(process, deployment, formRequest, formRequest.getActivity(), validationId);
+    public SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest, String validationId) throws PieceworkException {
+        return submissionTemplate(deploymentProvider, formRequest, formRequest.getActivity(), validationId);
     }
 
     /*
      * Takes an activity and generates the appropriate submission template for it,
      * limiting to a specific section id
      */
-    private SubmissionTemplate submissionTemplate(Process process, ProcessDeployment deployment, FormRequest formRequest, Activity activity, String validationId) throws MisconfiguredProcessException {
+    private SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest, Activity activity, String validationId) throws PieceworkException {
         Set<Field> fields = null;
+        Process process = deploymentProvider.process();
+        ProcessDeployment deployment = deploymentProvider.deployment();
 
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
 

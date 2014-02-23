@@ -22,9 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.model.Process;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.TaskProvider;
 import piecework.security.AccessTracker;
 import piecework.service.*;
 import piecework.model.RequestDetails;
+import piecework.settings.UserInterfaceSettings;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplateFactory;
 import piecework.model.SearchResults;
@@ -37,6 +40,7 @@ import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.resource.TaskResource;
 import piecework.util.FormUtility;
+import piecework.validation.Validation;
 import piecework.validation.ValidationFactory;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,27 +56,16 @@ import java.util.List;
 public class TaskResourceVersion1 implements TaskResource {
 
     private static final Logger LOG = Logger.getLogger(TaskResourceVersion1.class);
+    private static final String VERSION = "v1";
 
     @Autowired
     AccessTracker accessTracker;
 
     @Autowired
-    DeploymentService deploymentService;
-
-    @Autowired
     IdentityHelper helper;
 
     @Autowired
-    IdentityService identityService;
-
-    @Autowired
-    ProcessService processService;
-
-    @Autowired
-    ProcessInstanceService processInstanceService;
-
-    @Autowired
-    RequestService requestService;
+    ModelProviderFactory modelProviderFactory;
 
     @Autowired
     Sanitizer sanitizer;
@@ -81,22 +74,17 @@ public class TaskResourceVersion1 implements TaskResource {
     SecuritySettings securitySettings;
 
     @Autowired
-    SubmissionHandlerRegistry submissionHandlerRegistry;
-
-    @Autowired
-    SubmissionTemplateFactory submissionTemplateFactory;
-
-    @Autowired
     TaskService taskService;
 
     @Autowired
-    ValidationFactory validationFactory;
+    UserInterfaceSettings settings;
 
-    @Autowired
-    Versions versions;
 
     @Override
     public Response assign(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, String rawAssigneeId) throws PieceworkException {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+
         String assigneeId = sanitizer.sanitize(rawAssigneeId);
         Submission submission = new Submission.Builder()
                 .assignee(assigneeId)
@@ -106,31 +94,22 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Override
     public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, Submission rawSubmission) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, false);
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = processInstanceService.findByTaskId(process, rawTaskId);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-
-        taskService.complete(rawProcessDefinitionKey, rawTaskId, rawAction, rawSubmission, requestDetails, principal);
-        return FormUtility.allowCrossOriginNoContentResponse(deployment);
+        TaskProvider taskProvider = taskService.complete(rawProcessDefinitionKey, rawTaskId, rawAction, rawSubmission, requestDetails, helper.getPrincipal());
+        return FormUtility.noContentResponse(settings, taskProvider, false);
     }
 
-    public Response read(MessageContext context, String rawProcessDefinitionKey, String rawTaskId) throws StatusCodeError {
+    public Response read(MessageContext context, String rawProcessDefinitionKey, String rawTaskId) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, false);
 
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String taskId = sanitizer.sanitize(rawTaskId);
-
-        Process process = processService.read(processDefinitionKey);
-
-        Task task = taskService.read(process, taskId, true);
+        TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, helper.getPrincipal());
+        Task task = taskProvider.task(new ViewContext(settings, VERSION), false);
         if (task == null)
             throw new NotFoundError();
 
-        return Response.ok(new Task.Builder(task, new PassthroughSanitizer()).build(versions.getVersion1())).build();
+        return FormUtility.okResponse(settings, taskProvider, task, null, false);
     }
 
     @Override
@@ -153,7 +132,7 @@ public class TaskResourceVersion1 implements TaskResource {
         Entity principal = helper.getPrincipal();
         SearchResults results = taskService.search(rawQueryParameters, principal, false, false);
 
-        ViewContext version = versions.getVersion1();
+        ViewContext version = new ViewContext(settings, VERSION);
 
         SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
                 .resourceLabel("Tasks")
@@ -178,7 +157,7 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Override
     public String getVersion() {
-        return versions.getVersion1().getVersion();
+        return VERSION;
     }
 
 }

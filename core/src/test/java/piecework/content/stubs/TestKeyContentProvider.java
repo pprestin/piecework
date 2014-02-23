@@ -15,10 +15,9 @@
  */
 package piecework.content.stubs;
 
-import org.apache.commons.lang.NotImplementedException;
 import piecework.content.ContentProvider;
 import piecework.enumeration.Scheme;
-import piecework.model.Content;
+import piecework.model.*;
 
 import java.io.IOException;
 
@@ -28,7 +27,7 @@ import java.io.IOException;
 public class TestKeyContentProvider implements ContentProvider {
 
     @Override
-    public Content findByPath(piecework.model.Process process, String base, String location) throws IOException {
+    public Content findByPath(piecework.model.Process process, String base, String location, Entity principal) throws IOException {
         return new Content.Builder()
                 .location("some-key-content-provider")
                 .build();

@@ -18,20 +18,15 @@ package piecework.command;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.OperationResult;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
-import piecework.enumeration.OperationType;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
-import piecework.persistence.AttachmentRepository;
-import piecework.persistence.ProcessInstanceRepository;
 import piecework.validation.Validation;
 
 import static org.mockito.Matchers.eq;
@@ -90,12 +85,12 @@ public class AttachmentCommandTest {
         Mockito.when(validation.getProcess())
                 .thenReturn(process);
 
-        Mockito.when(storageManager.store(validation, ActionType.ATTACH))
+        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.ATTACH))
                 .thenReturn(instance);
 
-        AttachmentCommand command = new AttachmentCommand(null, principal, deployment, validation);
+        AttachmentCommand command = new AttachmentCommand(null, processProvider, validation);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
-        Mockito.verify(storageManager).store(eq(validation), eq(ActionType.ATTACH));
+        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.ATTACH));
         Assert.assertEquals(instance, actual);
     }
 

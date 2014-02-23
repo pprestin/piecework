@@ -611,6 +611,12 @@ public class ProcessInstance implements Serializable {
             return this;
         }
 
+        public Builder attachmentId(String attachmentId) {
+            if (StringUtils.isNotEmpty(attachmentId))
+                this.attachmentIds.add(attachmentId);
+            return this;
+        }
+
         public Builder attachment(Attachment attachment) {
             if (attachment != null) {
                 this.attachments.add(attachment);

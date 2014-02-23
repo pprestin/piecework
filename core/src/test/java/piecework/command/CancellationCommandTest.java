@@ -76,7 +76,7 @@ public class CancellationCommandTest {
         Mockito.when(storageManager.store(OperationType.CANCELLATION, result, instance, principal))
                 .thenReturn(instance);
 
-        CancellationCommand command = new CancellationCommand(null, principal, process, deployment, instance, "Because of a good reason");
+        CancellationCommand command = new CancellationCommand(null, instanceProvider, "Because of a good reason");
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
 
         Mockito.verify(storageManager).store(eq(OperationType.CANCELLATION), eq(result), eq(instance), eq(principal));
@@ -112,7 +112,7 @@ public class CancellationCommandTest {
         Mockito.when(storageManager.store(OperationType.CANCELLATION, result, instance, principal))
                 .thenReturn(instance);
 
-        CancellationCommand command = new CancellationCommand(null, principal, process, deployment, instance, "Because of a good reason");
+        CancellationCommand command = new CancellationCommand(null, instanceProvider, "Because of a good reason");
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.CANCELLATION), eq(result), eq(instance), eq(principal));
         Assert.assertEquals(instance, actual);

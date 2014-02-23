@@ -15,13 +15,16 @@
  */
 package piecework.resource.concrete;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
+import piecework.command.CommandFactory;
+import piecework.command.ValidationCommand;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.TaskProvider;
 import piecework.resource.SubTaskResource;
 import piecework.service.*;
 import piecework.enumeration.ActionType;
@@ -34,6 +37,7 @@ import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplate;
 import piecework.submission.SubmissionTemplateFactory;
+import piecework.validation.Validation;
 import piecework.validation.ValidationFactory;
 
 import javax.ws.rs.core.Response;
@@ -42,24 +46,20 @@ import javax.ws.rs.core.Response;
 public class SubTaskResourceVersion1 implements SubTaskResource {
 
     private static final Logger LOG = Logger.getLogger(SubTaskResourceVersion1.class);
+    protected static final String VERSION = "v1";
+
 
     @Autowired
-    DeploymentService deploymentService;
+    CommandFactory commandFactory;
 
     @Autowired
     IdentityHelper helper;
 
     @Autowired
-    ProcessService processService;
-
-    @Autowired
-    ProcessInstanceService processInstanceService;
+    ModelProviderFactory modelProviderFactory;
 
     @Autowired
     RequestService requestService;
-
-    @Autowired
-    Sanitizer sanitizer;
 
     @Autowired
     SecuritySettings securitySettings;
@@ -71,53 +71,26 @@ public class SubTaskResourceVersion1 implements SubTaskResource {
     SubmissionTemplateFactory submissionTemplateFactory;
 
     @Autowired
-    TaskService taskService;
-
-    @Autowired
     ValidationFactory validationFactory;
 
     @Autowired
     Versions versions;
 
     @Override
-    public Response create(String rawProcessDefinitionKey, String rawTaskId, MessageContext context, Submission rawSubmission) throws StatusCodeError {
-        String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
-        String taskId = sanitizer.sanitize(rawTaskId);
-
-        piecework.model.Process process = processService.read(processDefinitionKey);
-
+    public Response create(MessageContext context, String rawProcessDefinitionKey, String rawTaskId, Submission rawSubmission) throws StatusCodeError {
+        TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, helper.getPrincipal());
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-
-        String actingUser = null;
-        Entity principal = helper.getPrincipal();
-        if (principal != null) {
-            if (principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(requestDetails.getActAsUser()))
-                actingUser = requestDetails.getActAsUser();
-            else
-                actingUser = principal.getEntityId();
-        }
-
-        Task task = taskId != null ? taskService.read(process, taskId, true) : null;
-
-        if (task == null)
-            throw new NotFoundError();
-
-        ProcessInstance instance = null;
-
-        if (task != null && task.getProcessInstanceId() != null)
-            instance = processInstanceService.read(process, task.getProcessInstanceId(), false);
 
         SubmissionHandler handler = submissionHandlerRegistry.handler(Submission.class);
 
         try{
-            FormRequest formRequest = requestService.create(requestDetails, process, instance, task, ActionType.SUBCREATE);
-            ProcessDeployment deployment = deploymentService.read(process, instance);
+            FormRequest formRequest = requestService.create(requestDetails, taskProvider, ActionType.SUBCREATE);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(taskProvider, formRequest);
+            Submission submission = handler.handle(taskProvider, rawSubmission, template);
+            ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, formRequest, rawSubmission, VERSION);
+            Validation validation = validationCommand.execute();
 
-            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(process, deployment, formRequest);
-            Submission submission = handler.handle(instance, rawSubmission, template, principal);
-
-
-            processInstanceService.createSubTask(principal, process, instance, task, taskId, template, submission);
+            commandFactory.createSubTask(taskProvider, validation).execute();
 
             return Response.noContent().build();
         } catch (Exception mpe) {

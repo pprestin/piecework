@@ -20,6 +20,7 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.ProcessInstance;
 import piecework.model.Value;
+import piecework.persistence.ProcessInstanceProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -27,23 +28,22 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class CompletionCommand extends AbstractEngineStorageCommand<ProcessInstance> {
+public class CompletionCommand extends AbstractEngineStorageCommand<ProcessInstance, ProcessInstanceProvider> {
 
-    private final Map<String, List<Value>> data;
-
-    CompletionCommand(CommandExecutor commandExecutor, ProcessInstance instance, Map<String, List<Value>> data) {
-        super(commandExecutor, instance);
-        this.data = data;
+    CompletionCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider) {
+        super(commandExecutor, instanceProvider);
     }
 
     ProcessInstance execute(ProcessEngineFacade processEngineFacade, StorageManager storageManager) throws PieceworkException {
         // This is obviously a trivial implementation but in case we have additional logic on
         // instance completion this is available
+        ProcessInstance instance = modelProvider.instance();
+
+        if (instance == null)
+            return null;
+
+        Map<String, List<Value>> data = instance.getData();
         return storageManager.archive(instance, data);
     }
 
-    @Override
-    public String getProcessDefinitionKey() {
-        return instance.getProcessDefinitionKey();
-    }
 }

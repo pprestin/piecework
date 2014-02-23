@@ -34,6 +34,10 @@ import piecework.export.IteratingDataProvider;
 import piecework.export.concrete.ExportAsCommaSeparatedValuesProvider;
 import piecework.export.concrete.ExportAsExcelWorkbookProvider;
 import piecework.export.concrete.ProcessInstanceQueryPager;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.TaskProvider;
 import piecework.process.ProcessInstanceQueryBuilder;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.model.SearchResults;
@@ -41,8 +45,8 @@ import piecework.common.ViewContext;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.AttachmentRepository;
-import piecework.persistence.ProcessInstanceRepository;
+import piecework.repository.AttachmentRepository;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.security.data.DataFilterService;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -85,6 +89,9 @@ public class ProcessInstanceService {
     ProcessEngineFacade facade;
 
     @Autowired
+    ModelProviderFactory modelProviderFactory;
+
+    @Autowired
     ProcessService processService;
 
     @Autowired
@@ -106,66 +113,20 @@ public class ProcessInstanceService {
     UserInterfaceSettings settings;
 
 
-    public void assign(Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, Task task, String assigneeId) throws BadRequestError, PieceworkException {
+    public void assign(String processDefinitionKey, String processInstanceId, Entity principal, Task task, String assigneeId) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(processDefinitionKey, processInstanceId, principal);
         User assignee = assigneeId != null ? identityService.getUserWithAccessAuthority(assigneeId) : null;
-        commandFactory.assignment(principal, process, deployment, instance, task, assignee).execute();
+        commandFactory.assignment(instanceProvider, task, assignee).execute();
     }
 
-    public <T> ProcessInstance attach(Entity principal, RequestDetails requestDetails, String rawProcessDefinitionKey, String rawProcessInstanceId, T data, Class<T> type) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        if (task == null)
-            throw new ForbiddenError(Constants.ExceptionCodes.task_required);
-
-        FormRequest request = requestService.create(requestDetails, process, instance, task, ActionType.ATTACH);
-        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal, VERSION).execute();
-
-        return commandFactory.attachment(principal, deployment, validation).execute();
-    }
-
-    public ProcessInstance cancel(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws BadRequestError, PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-        String reason = sanitizer.sanitize(rawReason);
-
-        return commandFactory.cancellation(principal, process, deployment, instance, reason).execute();
-    }
-
-    public ProcessInstance complete(String processInstanceId) {
+    public ProcessInstance complete(String processInstanceId, Entity principal) {
         try {
-            ProcessInstance instance = processInstanceRepository.findOne(processInstanceId);
-            if (instance != null) {
-                Map<String, List<Value>> data = instance.getData();
-                return commandFactory.completion(instance, data).execute();
-            }
+            ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(processInstanceId, principal);
+            return commandFactory.completion(instanceProvider).execute();
         } catch (PieceworkException error) {
             LOG.error("Unable to mark instance as complete: " + processInstanceId, error);
         }
         return null;
-    }
-
-    public <T> ProcessInstance create(Entity principal, RequestDetails requestDetails, String rawProcessDefinitionKey, T data, Class<T> type) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
-        FormRequest request = requestService.create(requestDetails, process);
-        Validation validation = commandFactory.validation(process, deployment, request, data, type, principal, VERSION).execute();
-
-        return commandFactory.createInstance(principal, validation).execute();
-    }
-
-    public void deleteAttachment(Process process, ProcessInstance instance, String attachmentId, Entity principal) throws BadRequestError, PieceworkException {
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        commandFactory.detachment(principal, process, instance, task, attachmentId).execute();
-    }
-
-    public void createSubTask(Entity principal, Process process, ProcessInstance instance, Task task, String parentTaskId, SubmissionTemplate template, Submission submission) throws PieceworkException {
-        Validation validation = validationFactory.validation(process, instance, task, template, submission, principal, VERSION, true);
-        ProcessDeployment deployment = deploymentService.read(process, (ProcessInstance)null);
-        commandFactory.createsubtask(principal, process, instance, deployment, parentTaskId, validation).execute();
     }
 
     public ProcessInstance findByTaskId(Process process, String rawTaskId) throws StatusCodeError {
@@ -178,29 +139,30 @@ public class ProcessInstanceService {
         return instance;
     }
 
-    public Streamable getDiagram(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+//    public Streamable getDiagram(String rawProcessDefinitionKey, String rawProcessInstanceId) throws StatusCodeError {
+//        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
+//        Process process = processService.read(rawProcessDefinitionKey);
+//        ProcessInstance instance = read(process, rawProcessInstanceId, false);
+//
+//        ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, instance.getDeploymentId());
+//        if (selectedDeploymentVersion == null)
+//            throw new NotFoundError();
+//
+//        ProcessDeployment deployment = deploymentService.read(process, instance.getDeploymentId());
+//
+//        try {
+//            ProcessDeploymentResource resource = facade.resource(process, deployment, "image/png");
+//            return resource;
+//        } catch (ProcessEngineException e) {
+//            LOG.error("Could not generate diagram", e);
+//            throw new InternalServerError(e);
+//        }
+//    }
 
-        ProcessDeploymentVersion selectedDeploymentVersion = ProcessUtility.deploymentVersion(process, instance.getDeploymentId());
-        if (selectedDeploymentVersion == null)
-            throw new NotFoundError();
-
-        ProcessDeployment deployment = deploymentService.read(process, instance.getDeploymentId());
-
-        try {
-            ProcessDeploymentResource resource = facade.resource(process, deployment, "image/png");
-            return resource;
-        } catch (ProcessEngineException e) {
-            LOG.error("Could not generate diagram", e);
-            throw new InternalServerError(e);
-        }
-    }
-
-    public ProcessInstance read(String processDefinitionKey, String processInstanceId, boolean full) throws StatusCodeError {
-        Process process = processService.read(processDefinitionKey);
-        return read(process, processInstanceId, full);
-    }
+//    public ProcessInstance read(String processDefinitionKey, String processInstanceId, boolean full) throws StatusCodeError {
+//        Process process = processService.read(processDefinitionKey);
+//        return read(process, processInstanceId, full);
+//    }
 
     public ProcessInstance read(Process process, String rawProcessInstanceId, boolean full) throws StatusCodeError {
         String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
@@ -247,9 +209,7 @@ public class ProcessInstanceService {
     }
 
     public ProcessInstance update(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, ProcessInstance rawInstance) throws BadRequestError, PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, false);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
 
         String processStatus = sanitizer.sanitize(rawInstance.getProcessStatus());
         String applicationStatus = sanitizer.sanitize(rawInstance.getApplicationStatus());
@@ -257,16 +217,17 @@ public class ProcessInstanceService {
 
         if (StringUtils.isNotEmpty(processStatus) || StringUtils.isEmpty(applicationStatus)) {
             AbstractOperationCommand command = null;
+            ProcessInstance instance = instanceProvider.instance();
             if (processStatus != null && !processStatus.equalsIgnoreCase(instance.getProcessStatus())) {
                 if (processStatus.equals(Constants.ProcessStatuses.OPEN))
-                    command = commandFactory.activation(principal, process, deployment, instance, applicationStatusExplanation);
+                    command = commandFactory.activation(instanceProvider, applicationStatusExplanation);
                 else if (processStatus.equals(Constants.ProcessStatuses.CANCELLED))
-                    command = commandFactory.cancellation(principal, process, deployment, instance, applicationStatusExplanation);
+                    command = commandFactory.cancellation(instanceProvider, applicationStatusExplanation);
                 else if (processStatus.equals(Constants.ProcessStatuses.SUSPENDED))
-                    command = commandFactory.suspension(principal, process, deployment, instance, applicationStatusExplanation);
+                    command = commandFactory.suspension(instanceProvider, applicationStatusExplanation);
             }
             if (command == null)
-                command = commandFactory.updateStatus(principal, process, instance, applicationStatus, applicationStatusExplanation);
+                command = commandFactory.updateStatus(instanceProvider, applicationStatus, applicationStatusExplanation);
 
             return command.execute();
         } else {
@@ -274,7 +235,7 @@ public class ProcessInstanceService {
         }
     }
 
-    public IteratingDataProvider<?> exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean isCSV) throws StatusCodeError {
+    public IteratingDataProvider<?> exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean isCSV) throws PieceworkException {
         ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
                 new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
 
@@ -299,7 +260,7 @@ public class ProcessInstanceService {
                 throw new BadRequestError();
 
             String processDefinitionKey = processDefinitionKeys.iterator().next();
-            Process process = processService.read(processDefinitionKey);
+            Process process = modelProviderFactory.processProvider(processDefinitionKey, principal).process();
 
             Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
             ProcessInstanceQueryPager pager = new ProcessInstanceQueryPager(query, processInstanceRepository, executionCriteria.getSort());
@@ -360,22 +321,20 @@ public class ProcessInstanceService {
         return resultsBuilder.build();
     }
 
-    public ProcessInstance updateField(RequestDetails requestDetails, String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldName, Object object, Class<?> type, Entity principal) throws PieceworkException {
-        Process process = processService.read(rawProcessDefinitionKey);
-        ProcessInstance instance = read(process, rawProcessInstanceId, true);
-        ProcessDeployment deployment = deploymentService.read(process, instance);
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        FormRequest request = requestService.create(requestDetails, process, instance, task, ActionType.UPDATE);
-        Validation validation = commandFactory.validation(process, deployment, request, object, type, principal, null, fieldName, VERSION).execute();
+//    public ProcessInstance updateField(RequestDetails requestDetails, String rawProcessDefinitionKey, String rawProcessInstanceId, String fieldName, Object object, Class<?> type, Entity principal) throws PieceworkException {
+//        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
+//        FormRequest request = requestService.create(requestDetails, allowedTaskProvider, ActionType.UPDATE);
+//        FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(allowedTaskProvider, request, object, type, fieldName, VERSION);
+//        Validation validation = validationCommand.execute();
+//
+//        return commandFactory.updateValue(allowedTaskProvider, validation).execute();
+//    }
 
-        return commandFactory.updateValue(principal, task, validation).execute();
-    }
+    public ProcessInstance updateData(Entity principal, String rawProcessDefinitionKey, String rawProcessInstanceId, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
 
-    public ProcessInstance updateData(Entity principal, String processDefinitionKey, String processInstanceId, Map<String, List<Value>> data, Map<String, List<Message>> messages, String applicationStatusExplanation) throws PieceworkException {
-        Process process = processService.read(processDefinitionKey);
-        ProcessInstance instance = read(process, processInstanceId, true);
-        Task task = taskService.allowedTask(process, instance, principal, true);
-        return commandFactory.updateData(principal, process, instance, task, data, messages, applicationStatusExplanation).execute();
+        UpdateDataCommand<ProcessInstanceProvider> command = commandFactory.updateData(instanceProvider, data, messages, applicationStatusExplanation);
+        return command.execute();
     }
 
 }

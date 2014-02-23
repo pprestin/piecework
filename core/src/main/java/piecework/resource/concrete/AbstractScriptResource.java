@@ -27,7 +27,11 @@ import piecework.form.FormFactory;
 import piecework.model.*;
 import piecework.model.Form;
 import piecework.model.Process;
-import piecework.persistence.ContentRepository;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessProvider;
+import piecework.repository.ContentRepository;
+import piecework.resource.FormResource;
 import piecework.security.Sanitizer;
 import piecework.settings.SecuritySettings;
 import piecework.service.*;
@@ -59,6 +63,10 @@ public abstract class AbstractScriptResource {
     @Autowired
     private FormTemplateService formTemplateService;
 
+
+    @Autowired
+    private ModelProviderFactory modelProviderFactory;
+
     @Autowired
     ProcessService processService;
 
@@ -76,93 +84,21 @@ public abstract class AbstractScriptResource {
 
     protected abstract boolean isAnonymous();
 
-    protected Form form(final Process process, final MessageContext context, final Entity principal) throws NotFoundError {
+    protected Form form(final String processDefinitionKey, final MessageContext context, final Entity principal) throws PieceworkException {
         try {
-            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-            FormRequest request = requestService.create(requestDetails, process);
-            ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
+            ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(processDefinitionKey, principal);
             boolean includeRestrictedData = false;
-            Form form = formFactory.form(process, deployment, request, ActionType.CREATE, principal, null, null, includeRestrictedData, isAnonymous(), VERSION);
+            RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+            FormRequest request = requestService.create(requestDetails, deploymentProvider);
+            Form form = formFactory.form(deploymentProvider, request, ActionType.CREATE, null, null, includeRestrictedData, isAnonymous(), VERSION);
             return form;
-        } catch (FormBuildingException fbe) {
-            LOG.error("Caught form building exception", fbe);
-            throw new NotFoundError();
         } catch (MisconfiguredProcessException mpe) {
             LOG.error("Unable to create new instance because process is misconfigured", mpe);
             throw new NotFoundError();
         }
     }
 
-//    protected Response processScript(ServletContext servletContext, Form form) throws StatusCodeError {
-//        try {
-//            FormDisposition formDisposition = form.getDisposition();
-//            Resource pageResource = userInterfaceService.getCustomPage(form);
-//            Resource scriptResource = userInterfaceService.getScriptResource(servletContext, form.getProcess(), formDisposition, pageResource, form.isAnonymous());
-//            return response(scriptResource, "text/javascript");
-//        } catch (IOException ioe) {
-//            LOG.error("Caught io exception", ioe);
-//            throw new NotFoundError();
-//        } catch (MisconfiguredProcessException mpe) {
-//            LOG.error("Unable to create new instance because process is misconfigured", mpe);
-//            throw new NotFoundError();
-//        }
-//    }
-//
-//    protected Response processStylesheet(ServletContext servletContext, Form form) throws StatusCodeError {
-//        try {
-//            FormDisposition disposition = form.getDisposition();
-//            Resource pageResource = userInterfaceService.getCustomPage(form);
-//            Resource stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form.getProcess(), disposition, pageResource, isAnonymous());
-//            return response(stylesheetResource, "text/css");
-//        } catch (IOException ioe) {
-//            LOG.error("Caught io exception", ioe);
-//            throw new NotFoundError();
-//        } catch (MisconfiguredProcessException mpe) {
-//            LOG.error("Unable to create new instance because process is misconfigured", mpe);
-//            throw new NotFoundError();
-//        }
-//    }
-
-//    protected Response response(FormRequest request, Entity principal, MediaType mediaType) throws StatusCodeError {
-//        if (request == null)
-//            throw new NotFoundError();
-//
-//        try {
-//            ActionType actionType = request.getAction();
-//            Process process = processService.read(request.getProcessDefinitionKey());
-//            ProcessDeployment deployment = deploymentService.read(process, request.getInstance());
-//
-//            // Don't include restricted data in a script form
-//            boolean includeRestrictedData = false;
-//            Form form = formFactory.form(process, deployment, request, actionType, principal, null, null, includeRestrictedData, isAnonymous());
-//
-//            Activity activity = request.getActivity();
-//            Action action = activity.action(actionType);
-//
-//            try {
-//                if (action.getStrategy() == DataInjectionStrategy.INCLUDE_SCRIPT) {
-//                    StreamingOutput externalScript = userInterfaceService.getExternalScriptAsStreaming(Form.class, form);
-//                    if (externalScript != null) {
-//                        CacheControl cacheControl = new CacheControl();
-//                        cacheControl.setNoCache(true);
-//                        cacheControl.setNoStore(true);
-//                        return Response.ok(externalScript, new MediaType("text", "javascript")).cacheControl(cacheControl).build();
-//                    }
-//                }
-//            } catch (IOException e) {
-//                throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-//            }
-//        } catch (MisconfiguredProcessException mpe) {
-//            LOG.error("Process is misconfigured", mpe);
-//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-//        } catch (FormBuildingException e) {
-//            throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
-//        }
-//
-//        throw new NotFoundError();
-//    }
-
-    protected Response staticResponse(final Process process, final RequestDetails requestDetails, final List<PathSegment> pathSegments) throws StatusCodeError {
+    protected Response staticResponse(final Process process, final RequestDetails requestDetails, final List<PathSegment> pathSegments, Entity principal) throws StatusCodeError {
         Iterator<PathSegment> pathSegmentIterator = pathSegments.iterator();
 
         if (pathSegmentIterator.hasNext()) {
@@ -191,7 +127,7 @@ public abstract class AbstractScriptResource {
                 String requestLocation = base + "/" + name;
                 // Note that the content providers should be doing additional checking to ensure
                 // that resources are retrieved only from below the approved filesystem base and root
-                Content content = contentRepository.findByLocation(process, base, name);
+                Content content = contentRepository.findByLocation(process, base, name, principal);
 
                 // Ensure that content that is retrieved wasn't sneakily different from what was
                 // requested (i.e. by some other mechanism of substituting

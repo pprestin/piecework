@@ -15,18 +15,18 @@
  */
 package piecework.service;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import piecework.Constants;
 import piecework.common.RequestFactory;
 import piecework.model.RequestDetails;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.model.*;
-import piecework.model.Process;
-import piecework.persistence.RequestRepository;
+import piecework.persistence.ProcessProvider;
+import piecework.persistence.TaskProvider;
+import piecework.repository.RequestRepository;
+import piecework.security.AccessTracker;
 import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
@@ -39,6 +39,9 @@ public class RequestService {
     private static final Logger LOG = Logger.getLogger(RequestService.class);
 
     @Autowired
+    AccessTracker accessTracker;
+
+    @Autowired
     RequestRepository requestRepository;
 
     @Autowired
@@ -47,52 +50,56 @@ public class RequestService {
     @Autowired
     TaskService taskService;
 
-    public FormRequest create(RequestDetails requestDetails, Process process) throws MisconfiguredProcessException {
-        return create(requestDetails, process, null, (Task)null, ActionType.CREATE, null, null);
-    }
-
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType) throws MisconfiguredProcessException {
-        return create(requestDetails, process, processInstance, task, actionType, null, null);
-    }
-
-    public FormRequest create(RequestDetails requestDetails, Process process, ProcessInstance processInstance, Task task, ActionType actionType, Validation validation, Explanation explanation) throws MisconfiguredProcessException {
-        FormRequest formRequest = new RequestFactory().request(requestDetails, process, processInstance, task, actionType, validation, explanation);
+    public FormRequest create(RequestDetails requestDetails, ProcessProvider processProvider) throws PieceworkException {
+        FormRequest formRequest = new RequestFactory().request(requestDetails, processProvider, ActionType.CREATE, null, null);
         return requestRepository.save(formRequest);
     }
 
-    public FormRequest create(Entity principal, RequestDetails requestDetails, Process process, String taskId, FormRequest previousFormRequest) throws MisconfiguredProcessException, StatusCodeError {
-        ProcessInstance instance = processInstanceService.findByTaskId(process, taskId);
-        if (instance == null) {
-            LOG.warn("Forbidden: No instance found for the task id passed " + process.getProcessDefinitionKey() + " task: " + taskId);
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
-        }
-        Task task = taskService.read(instance, taskId);
-        SecurityUtility.verifyEntityIsAuthorized(process, task, principal);
-
-        ActionType actionType = ActionType.CREATE;
-//        if (task != null)
-//            actionType = ActionType.COMPLETE;
-
-        return create(requestDetails, process, instance, task, actionType);
+    public <P extends ProcessProvider> FormRequest create(RequestDetails requestDetails, P modelProvider, ActionType actionType) throws PieceworkException {
+        FormRequest formRequest = new RequestFactory().request(requestDetails, modelProvider, actionType, null, null);
+        return requestRepository.save(formRequest);
     }
 
-    public FormRequest read(RequestDetails request, String requestId) throws StatusCodeError {
+    public <P extends ProcessProvider> FormRequest create(RequestDetails requestDetails, P modelProvider, ActionType actionType, Validation validation, Explanation explanation) throws PieceworkException {
+        FormRequest formRequest = new RequestFactory().request(requestDetails, modelProvider, actionType, validation, explanation);
+        return requestRepository.save(formRequest);
+    }
+
+//    public FormRequest create(RequestDetails requestDetails, TaskProvider taskProvider, ActionType actionType, FormRequest previousFormRequest) throws PieceworkException {
+//        ProcessInstance instance = processInstanceService.findByTaskId(process, taskId);
+//        if (instance == null) {
+//            LOG.warn("Forbidden: No instance found for the task id passed " + process.getProcessDefinitionKey() + " task: " + taskId);
+//            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+//        }
+//        Task task = taskService.read(instance, taskId);
+//        SecurityUtility.verifyEntityIsAuthorized(process, task, principal);
+//
+//        ActionType actionType = ActionType.CREATE;
+////        if (task != null)
+////            actionType = ActionType.COMPLETE;
+//
+//        return create(requestDetails, process, instance, task, actionType);
+//    }
+
+    public FormRequest read(String processDefinitionKey, RequestDetails request, String requestId) throws StatusCodeError {
         FormRequest formRequest = requestRepository.findOne(requestId);
 
         if (formRequest == null)
             return null;
 
-        SecurityUtility.verifyRequestIntegrity(formRequest, request);
-        ProcessInstance instance = formRequest.getInstance();
+        SecurityUtility.verifyRequestIntegrity(accessTracker, processDefinitionKey, formRequest, request);
 
-        if (instance == null && StringUtils.isNotEmpty(formRequest.getProcessDefinitionKey()) && StringUtils.isNotEmpty(formRequest.getProcessInstanceId()))
-            instance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId(), false);
-
-        FormRequest.Builder builder = new FormRequest.Builder(formRequest)
-                .instance(instance)
-                .task(taskService.read(instance, formRequest.getTaskId()));
-
-        return builder.build();
+        return formRequest;
+//        ProcessInstance instance = formRequest.getInstance();
+//
+//        if (instance == null && StringUtils.isNotEmpty(formRequest.getProcessDefinitionKey()) && StringUtils.isNotEmpty(formRequest.getProcessInstanceId()))
+//            instance = processInstanceService.read(formRequest.getProcessDefinitionKey(), formRequest.getProcessInstanceId(), false);
+//
+//        FormRequest.Builder builder = new FormRequest.Builder(formRequest)
+//                .instance(instance)
+//                .task(taskService.read(instance, formRequest.getTaskId()));
+//
+//        return builder.build();
     }
 
 }

@@ -41,6 +41,7 @@ import piecework.model.Group;
 import piecework.service.GroupService;
 import piecework.Constants;
 import piecework.enumeration.StateChangeType;
+import piecework.settings.NotificationSettings;
 
 /**
  * send out email notifications
@@ -59,6 +60,9 @@ public class EmailNotificationService implements NotificationService {
     @Autowired
     GroupService groupService;	// get group members
 
+    @Autowired
+    NotificationSettings notificationSettings;
+
     /** 
      * expand any macros in notifications and send the notification to recipients.
      * @param  notification notification to send.
@@ -75,22 +79,18 @@ public class EmailNotificationService implements NotificationService {
             return;  // notfication not for this event/state change
         }
 
-        String mailServerHost = environment.getProperty("mail.server.host");
-        int mailServerPort = environment.getProperty("mail.server.port", Integer.class, 25);
-        String mailFromAddress = environment.getProperty("mail.from.address");
-        String mailFromLabel = environment.getProperty("mail.from.label");
-        String mailToOverride = environment.getProperty("mail.to.override");
+
 
         // get sender email
         String senderEmail = notification.getSenderEmail();
         if ( senderEmail == null || senderEmail.isEmpty() ) {
-            senderEmail = mailFromAddress;
+            senderEmail = notificationSettings.getMailFromAddress();
         }
 
         // get sender name/lablel
         String senderName = notification.getSenderName();
         if ( senderName == null || senderName.isEmpty() ) {
-            senderName = mailFromLabel;
+            senderName = notificationSettings.getMailFromLabel();
         }
 
         // recipients
@@ -101,6 +101,7 @@ public class EmailNotificationService implements NotificationService {
         mustache.execute(writer, scope);
         recipientStr = writer.toString();
 
+        String mailToOverride = notificationSettings.getMailToOverride();
         // override recipients in test environment (e.g. on dev)
         if ( mailToOverride != null && ! mailToOverride.isEmpty() ) {
             recipientStr = mailToOverride;
@@ -134,8 +135,8 @@ public class EmailNotificationService implements NotificationService {
 
         try {
             SimpleEmail email = new SimpleEmail();
-            email.setHostName(mailServerHost);
-            email.setSmtpPort(mailServerPort);
+            email.setHostName(notificationSettings.getMailServerHost());
+            email.setSmtpPort(notificationSettings.getMailServerPort());
 
             for (User u : recipients) {
                 String emailAddr = u.getEmailAddress();

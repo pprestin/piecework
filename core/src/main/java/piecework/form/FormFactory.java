@@ -24,15 +24,14 @@ import piecework.common.ManyMap;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.FormBuildingException;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.security.data.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.settings.UserInterfaceSettings;
-import piecework.util.ConstraintUtil;
-import piecework.util.FormUtility;
-import piecework.util.ProcessInstanceUtility;
-import piecework.util.SecurityUtility;
+import piecework.util.*;
 import piecework.validation.Validation;
 
 import java.util.*;
@@ -53,21 +52,23 @@ public class FormFactory {
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
-    public Form form(Process process, ProcessDeployment deployment, FormRequest request, ActionType actionType, Entity principal, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous, String version) throws FormBuildingException {
+    public <P extends ProcessDeploymentProvider> Form form(P modelProvider, FormRequest request, ActionType actionType, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous, String version) throws PieceworkException {
         ViewContext context = new ViewContext(settings, version);
         Activity activity = request.getActivity();
 
         String formInstanceId = request.getRequestId();
         String processDefinitionKey = request.getProcessDefinitionKey();
         String processInstanceId = request.getProcessInstanceId();
-        ProcessInstance instance = request.getInstance();
 
-        Task task = request.getTask();
+        Entity principal = modelProvider.principal();
+        Task task = ModelUtility.task(modelProvider);
+                //request.getTask();
         boolean unmodifiable = task != null && !task.canEdit(principal);
 
         if (unmodifiable && actionType != null && actionType == ActionType.CREATE)
             actionType = ActionType.VIEW;
 
+        Process process = modelProvider.process();
         Form.Builder builder = new Form.Builder()
                 .process(process)
                 .formInstanceId(formInstanceId)
@@ -78,7 +79,7 @@ public class FormFactory {
             builder.readonly();
 
         if (activity != null) {
-            FormDisposition formDisposition = FormUtility.disposition(process, deployment, activity, actionType, context, builder);
+            FormDisposition formDisposition = FormUtility.disposition(modelProvider, activity, actionType, context, builder);
 
             builder.disposition(formDisposition);
 
@@ -100,7 +101,7 @@ public class FormFactory {
                 // will verify that
                 String reason = "User is viewing an assigned task: " + task.getTaskInstanceId();
 
-                data = dataFilterService.authorizedInstanceAndValidationData(process, instance, validation, task, fields, principal, version, reason, isAllowAny);
+                data = dataFilterService.authorizedInstanceAndValidationData(modelProvider, validation, fields, version, reason, isAllowAny);
             }
 
             // If an activity is set up to allow "any" input then it also has to be provided with the full set of data currently stored for the instance
@@ -119,6 +120,7 @@ public class FormFactory {
         explanation = explanation == null ? request.getExplanation() : explanation;
 
         ManyMap<String, Message> messages = new ManyMap<String, Message>();
+        ProcessInstance instance = ModelUtility.instance(modelProvider);
         if (instance != null && instance.getMessages() != null && !instance.getMessages().isEmpty())
             messages.putAll(instance.getMessages());
         if (request.getMessages() != null && !request.getMessages().isEmpty())

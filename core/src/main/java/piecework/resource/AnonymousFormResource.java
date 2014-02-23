@@ -53,7 +53,7 @@ public interface AnonymousFormResource extends PublicApplicationResource {
     @Path("{processDefinitionKey}/{requestId}")
     @Consumes("application/x-www-form-urlencoded")
     @Produces("text/html")
-    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws StatusCodeError;
+    Response submit(@PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("requestId") String requestId, @Context MessageContext context, MultivaluedMap<String, String> formData) throws PieceworkException;
 
     @POST
     @Path("{processDefinitionKey}/{requestId}/{validationId}")

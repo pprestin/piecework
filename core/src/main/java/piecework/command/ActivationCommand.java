@@ -23,9 +23,12 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
 import piecework.exception.ForbiddenError;
-import piecework.exception.StatusCodeError;
-import piecework.model.*;
+import piecework.exception.PieceworkException;
+import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.ProcessDeployment;
+import piecework.model.ProcessInstance;
+import piecework.persistence.ProcessInstanceProvider;
 
 /**
  * Reactivates a process instance that has been suspended.
@@ -34,23 +37,28 @@ import piecework.model.Process;
  */
 public class ActivationCommand extends AbstractOperationCommand {
 
-    private final ProcessDeployment deployment;
-
-    ActivationCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessDeployment deployment, ProcessInstance instance, String applicationStatusExplanation) {
-        super(commandExecutor, principal, process, instance, null, OperationType.ACTIVATION, null, applicationStatusExplanation);
-        this.deployment = deployment;
+    ActivationCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
+        super(commandExecutor, instanceProvider, null, OperationType.ACTIVATION, null, applicationStatusExplanation);
     }
 
     @Override
-    protected OperationResult operation(ProcessEngineFacade facade) throws StatusCodeError, ProcessEngineException {
+    protected OperationResult operation(ProcessEngineFacade facade) throws PieceworkException, ProcessEngineException {
+        Entity principal = modelProvider.principal();
+
         // This is an operation that anonymous users should never be able to cause
         if (principal == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+        Process process = modelProvider.process();
         // Only process admins or superusers are allowed to reactivate suspended processes
         if (!principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+        ProcessInstance instance = modelProvider.instance();
+        ProcessDeployment deployment = modelProvider.deployment();
         if (!facade.activate(process, deployment, instance))
             throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
+
         return new OperationResult(applicationStatusExplanation, instance.getPreviousApplicationStatus(), Constants.ProcessStatuses.OPEN, applicationStatusExplanation);
     }
 
