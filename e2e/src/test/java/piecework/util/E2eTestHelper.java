@@ -70,6 +70,7 @@ public class E2eTestHelper {
                                 element.click();
                             }
                         } else {  // "text", "date", "datetime" etc.
+                            element.click();  // need this for field with maskedinput (another mask package)
                             element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
                             element.sendKeys(v);
                         }
