@@ -471,7 +471,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "   <p data-wf-fallback class=\"muted\">No documents</p>\n" +
     "   <ul class=\"process-variable-list\">\n" +
     "     <li>\n" +
-    "        <i data-wf-delete class=\"fa fa-times text-danger\" title=\"Delete item\" style=\"font-size:14px;\"></i>&nbsp;&nbsp;\n" +
+    "        <i data-wf-delete class=\"fa fa-times text-danger wf-delete-item\" title=\"Delete item\" style=\"font-size:14px;\"></i>&nbsp;&nbsp;\n" +
     "        <i class=\"fa fa-download\" style=\"font-size:1.4em;color:#666;\"></i>&nbsp;&nbsp;<a rel=\"external\" data-wf-link></a>\n" +
     "     </li>\n" +
     "   </ul>\n" +
