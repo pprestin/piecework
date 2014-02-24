@@ -494,6 +494,59 @@ describe('Unit testing wf-fieldset', function() {
 
 });
 
+describe('Unit testing wf-form', function() {
+    var $compile;
+    var $rootScope;
+    var $httpBackend;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+    beforeEach(module(function ($provide) {
+        $provide.value('hostUri', '');
+        $provide.value('formResourceUri', '/piecework/ui/form/123');
+        $provide.value('formPageUri', '/piecework/ui/form');
+    }));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_, _$httpBackend_){
+        // The injector unwraps the underscores (_) from around the parameter names when matching
+        $compile = _$compile_;
+        $rootScope = _$rootScope_;
+        $httpBackend = _$httpBackend_;
+        // backend definition common for all tests
+        $httpBackend.when('GET', '/piecework/ui/form/123.json').respond({ data: { myElement: ['test-value-1'], myOtherElement: ['test-value-2']},  activeStepOrdinal: 1 });
+    }));
+
+    it('Should populate text input values', function() {
+        var scope = $rootScope;
+        var element = $compile("<form data-wf-form><input name=\"myElement\" value=\"\"/></form>")(scope);
+
+        $httpBackend.flush();
+        scope.$digest();
+        expect(element.find('input').val()).toContain('test-value-1');
+    });
+
+    it('Should populate radio input values', function() {
+        var scope = $rootScope;
+        var element = $compile("<form data-wf-form><input type=\"radio\" name=\"myOtherElement\" value=\"test-value-2\"/></form>")(scope);
+
+        $httpBackend.flush();
+        scope.$digest();
+        expect(element.find(':input').prop('checked')).toBeTruthy();
+    });
+
+//    it('Should populate multiple radio input values', function() {
+//        var scope = $rootScope;
+//        var element = $compile("<form data-wf-form><input id=\"rad-1\" type=\"radio\" name=\"myOtherElement\" value=\"test-value-2\"/><input type=\"radio\" name=\"myOtherElement\" value=\"test-value-2\"/></form>")(scope);
+//
+//        $httpBackend.flush();
+//        scope.$digest();
+//        expect(element.find(':input').prop('checked')).toBeTruthy();
+//    });
+
+});
+
 describe('Unit testing wf-form-fallback', function() {
     var $compile;
     var $rootScope;
