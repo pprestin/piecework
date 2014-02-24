@@ -171,6 +171,14 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
     }
 
     @Override
+    public Response removal(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
+        AllowedTaskProvider allowedTaskProvider = doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, helper.getPrincipal());
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+        return FormUtility.noContentResponse(settings, allowedTaskProvider, false);
+    }
+
+    @Override
     public Response remove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
         AllowedTaskProvider allowedTaskProvider = doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, helper.getPrincipal());
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();

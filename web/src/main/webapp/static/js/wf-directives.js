@@ -880,8 +880,8 @@ angular.module('wf.directives',
                                 var $listItem = $(event.target).closest('li');
                                 var $fallbackHtml = $target.find('[data-wf-fallback]');
                                 $.ajax({
-                                    url : realValue.link,
-                                    type : 'DELETE',
+                                    url : realValue.link + '/removal',
+                                    type : 'POST',
                                     success: function() {
                                         $listItem.remove();
                                         if ($listElement.find('li').length == 1)
