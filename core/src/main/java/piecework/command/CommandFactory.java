@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
-import piecework.model.Process;
 import piecework.persistence.*;
 import piecework.validation.Validation;
 
@@ -145,12 +144,12 @@ public class CommandFactory {
         return new ValidationCommand<P>(commandExecutor, modelProvider, request, submission, version);
     }
 
-    public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, Object object, Class<?> type, String version) {
+    public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, Object object, Class<?> type, String validationId, String version) {
 
-        return new ValidationCommand<P>(commandExecutor, modelProvider, request, object, type, version);
+        return new ValidationCommand<P>(commandExecutor, modelProvider, request, object, type, validationId, version);
     }
 
-    public <P extends ProcessDeploymentProvider> FieldValidationCommand validation(P modelProvider, FormRequest request, Object object, Class<?> type, String fieldName, String version) {
+    public <P extends ProcessDeploymentProvider> FieldValidationCommand fieldValidation(P modelProvider, FormRequest request, Object object, Class<?> type, String fieldName, String version) {
 
         return new FieldValidationCommand<P>(commandExecutor, modelProvider, request, object, type, fieldName, version);
     }

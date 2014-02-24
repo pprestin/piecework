@@ -39,9 +39,7 @@ import piecework.repository.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.data.DataFilterService;
 import piecework.security.Sanitizer;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.settings.UserInterfaceSettings;
-import piecework.task.TaskFactory;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
 import piecework.validation.Validation;
@@ -148,13 +146,13 @@ public class TaskService {
                 break;
             case ATTACH:
                 request = requestService.create(requestDetails, taskProvider, actionType);
-                ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, VERSION);
+                ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, null, VERSION);
                 validation = validationCommand.execute();
                 command = commandFactory.attachment(taskProvider, validation);
                 break;
             default:
                 request = requestService.create(requestDetails, taskProvider, actionType);
-                validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, VERSION);
+                validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, null, VERSION);
                 validation = validationCommand.execute();
                 command = commandFactory.completeTask(taskProvider, validation, actionType);
                 break;

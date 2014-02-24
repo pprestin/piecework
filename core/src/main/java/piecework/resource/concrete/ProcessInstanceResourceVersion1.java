@@ -238,7 +238,7 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         data.putOne(fieldName, new Value(sanitizer.sanitize(value)));
 
         FormRequest request = requestService.create(requestDetails, allowedTaskProvider, ActionType.UPDATE);
-        FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(allowedTaskProvider, request, data, Map.class, fieldName, VERSION);
+        FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.fieldValidation(allowedTaskProvider, request, data, Map.class, fieldName, VERSION);
         Validation validation = validationCommand.execute();
         commandFactory.updateValue(allowedTaskProvider, validation).execute();
 
@@ -257,7 +257,7 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         FormRequest request = requestService.create(requestDetails, allowedTaskProvider, ActionType.UPDATE);
-        FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(allowedTaskProvider, request, body, MultipartBody.class, fieldName, VERSION);
+        FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.fieldValidation(allowedTaskProvider, request, body, MultipartBody.class, fieldName, VERSION);
         Validation validation = validationCommand.execute();
         ProcessInstance stored = commandFactory.updateValue(allowedTaskProvider, validation).execute();
 

@@ -322,51 +322,7 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/file.html',
                 link: function (scope, element, attr) {
-//                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
-//                        scope.form = form;
-//                    });
 
-//                    scope.onChange = function() {
-//                        if (scope.form == null)
-//                            return;
-//
-//                        var fieldName = scope.name;
-//                        var data = new FormData();
-//                        var $inputs = element.find(':input[type="file"]');
-//                        $inputs.each(function(index, input) {
-//                            var $input = $(input);
-//                            data.append(input.name, $input.val());
-//                        });
-//
-//                        var url = scope.form.attachment;
-//                        if (fieldName != 'attachments') {
-//                            url = url.replace('/attachment', '/value');
-//                            url += '/' + fieldName;
-//                        }
-//
-//                        $.ajax({
-//                            url : url,
-//                            data : data,
-//                            processData : false,
-//                            contentType : false,
-//                            type : 'POST'
-//                        })
-//                        .done(function(data, textStatus, jqXHR) {
-//                            $inputs.val('');
-//                            if (fieldName == 'attachments')
-//                                scope.$root.$broadcast('wfEvent:attachments', data.list);
-//                            else
-//                                scope.$root.$broadcast('wfEvent:value-updated:' + fieldName, data);
-//                        })
-//                        .fail(function(jqXHR, textStatus, errorThrown) {
-//                            var data = $.parseJSON(jqXHR.responseText);
-//                            var selector = '.process-alert[data-element="' + fieldName + '"]';
-//                            var message = data.messageDetail;
-//                            var $alert = $(selector);
-//                            $alert.show();
-//                            $alert.text(message);
-//                        });
-//                    }
                 }
             }
         }
@@ -484,7 +440,6 @@ angular.module('wf.directives',
         function($http, $location, $sce, $window, formPageUri, formResourceUri, wizardService) {
             return {
                 restrict: 'AE',
-//                controller: 'FileUploadController',
                 scope: {
 
                 },
@@ -645,7 +600,9 @@ angular.module('wf.directives',
                         var data = form.data;
                         var validation = form.validation;
                         var formElement = element[0];
-                        angular.forEach(formElement.elements, function(input) {
+//                        angular.forEach(formElement.elements, function(input) {
+
+                        element.find(':input').each(function(index, input) {
                             if (input.attributes['data-wf-blank'])
                                 return;
                             if (input.name != null) {
@@ -706,7 +663,9 @@ angular.module('wf.directives',
                                         if (value != null) {
                                             if (input.type == 'checkbox' || input.type == 'radio') {
                                                 if (input.value == value)
-                                                    input.checked = true;
+                                                    angular.element(input).prop('checked', true);
+//                                                    input.checked = true;
+
                                             } else if (input.type == 'select') {
                                                 angular.forEach(input.options, function(option) {
                                                     if (option.value == value)
@@ -721,7 +680,8 @@ angular.module('wf.directives',
                                                 else
                                                     current = value;
 
-                                                input.value = typeof(current) === 'string' ? current : current.name;
+                                                var specificValue = typeof(current) === 'string' ? current : current.name;
+                                                angular.element(input).val(specificValue);
                                             }
                                         }
                                     });
