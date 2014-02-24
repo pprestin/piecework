@@ -41,9 +41,9 @@ public class RequestFactory {
         Process process = modelProvider.process();
         ProcessInstance instance = ModelUtility.instance(modelProvider);
         Task task = ModelUtility.task(modelProvider);
-        Entity principal = modelProvider.principal();
+//        Entity principal = modelProvider.principal();
 
-        SecurityUtility.verifyEntityIsAuthorized(process, task, principal);
+//        SecurityUtility.verifyEntityIsAuthorized(process, task, principal);
 
         // Don't allow anyone to issue a create request for a task that's not open
         if (actionType == ActionType.CREATE && task != null && task.getTaskStatus() != null && !task.getTaskStatus().equals(Constants.TaskStatuses.OPEN))
