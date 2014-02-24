@@ -32,14 +32,27 @@ import org.openqa.selenium.JavascriptExecutor;
 public class E2eTestHelper {
     public static final long MILLISECONDS_IN_ONE_DAY = 24*60*60*1000;
 
+    // findElement and findElements were very slow for non-existent element name or ID.
+    // ByIdOrName worked but was very, very slow:
+    // (WebElement element = driver.findElement(new ByIdOrName(k));)
+    // use a hint from input data to decide ByName or ById to speed up findElement.
+    // default is ByName.
     public static void fillForm(WebDriver driver, String[][] data) {
         //JavascriptExecutor jse = (JavascriptExecutor) driver;
         for ( String[] e : data ) { 
+            String k = e[0];
+            String v = e[1];
+            String byAttr = e.length > 2 ? e[2] : "name";  // default to ByName
+            boolean found = false;
             for (int i=0; i<3; ++i) {
                 try {
-                    String k = e[0];
-                    String v = e[1];
-                    WebElement element = driver.findElement(By.name(k));
+                    // System.out.println(k + ", v=" + v + ", i="+ i);
+                    WebElement element = null;
+                    if ( byAttr.equals("id") ) {
+                        element = driver.findElement(By.id(k));
+                    } else {
+                        element = driver.findElement(By.name(k));
+                    }
                     String tagName = element.getTagName();
                     String t = element.getAttribute("type");
                     //System.out.println(k + "'s type =" + a);
@@ -71,6 +84,7 @@ public class E2eTestHelper {
                             el.click();
                         }
                     }
+                    found = true;
                     break;
                 } catch ( Exception ex ) {
                     try {
@@ -79,6 +93,7 @@ public class E2eTestHelper {
                     }
                 }
             }  // inner loop
+            assertTrue(found, "could not find element <"+k + ">");
         } // outer loop
     }
 
@@ -87,33 +102,33 @@ public class E2eTestHelper {
         for ( String[] e : data ) { 
             String k = e[0];
             String v = e[1];
-            boolean verified = false;
+            String actual = "";
             for (int i=0; i<3; ++i) {
                 try {
                     WebElement element = driver.findElement(By.xpath(k));
                     String tagName = element.getTagName();
-                    String actual =  element.getText();
+                    actual =  element.getText();
                     if ( (actual == null || !actual.equals(v) ) && ( null != element.getAttribute("value") ) ) {
                         actual = element.getAttribute("value");
                     }
-                    //System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual);
-                    assertEquals( actual, v);
-                    verified = true;
-                    break;
-                } catch ( Exception ex) {
-                    try {
-                        Thread.sleep(1000);   // wait a bit, then try again
-                    } catch (InterruptedException ex1) {
+                    // System.out.println("k="+k+", v="+v+", tag="+tagName+", actual="+actual+", i="+i);
+                    if ( actual != null && actual.equals(v) ) {
+                        break;
+                    } else {
+                        sleep(1); // wait a bit for page to refresh
                     }
+                } catch ( Exception ex) {
+                    sleep(1); // wait a bit and then try again
                 }
             }  // inner loop
-            assertTrue(verified, "could not find element <"+k + ">, expected value: " + v);
+            assertEquals( actual, v);
         }  // outer loop
     }
 
     public static void clickButton(WebDriver driver, String buttonValue) {
-        WebElement button = driver.findElement(By.xpath("//button[@value='" + buttonValue + "']"));
+        WebElement button = driver.findElement(By.xpath("//button[@id='" + buttonValue + "' or @value='" + buttonValue + "']"));
         if ( button != null ) {
+            button.sendKeys(""); // bring button into view in case it is not visible
             button.click();
             //System.out.println("clicked button with value " + buttonValue);
         }
@@ -241,5 +256,24 @@ public class E2eTestHelper {
         }
 
         sleep(wait);
+    }
+
+    static final int MIN_LENGTH=5;
+    public static String getBaseUrl() {
+
+        String baseUrl = System.getProperty("u");
+        if ( baseUrl == null || baseUrl.length() < MIN_LENGTH) {
+            baseUrl = System.getProperty("url");
+        }
+
+        if ( baseUrl == null || baseUrl.length() < MIN_LENGTH) {
+            baseUrl = System.getProperty("s");
+        }
+
+        if ( baseUrl == null || baseUrl.length() < MIN_LENGTH) {
+            baseUrl = "http://localhost/workflow/ui/form";
+        }   
+
+        return  baseUrl;
     }
 }
