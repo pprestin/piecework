@@ -478,7 +478,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "</div>\n" +
     "<span class=\"btn btn-default fileinput-button pull-right\" data-ng-class=\"{disabled: disabled}\">\n" +
     "   <i ng-hide=\"state.sending\" class=\"fa fa-cloud-upload\"></i>  <i ng-show=\"state.sending\" class='fa fa-spinner fa-spin'></i> {{label}}\n" +
-    "   <input type=\"file\" name=\"{{name}}\" multiple=\"\" ng-disabled=\"disabled\">\n" +
+    "   <input type=\"file\" name=\"{{name}}\" multiple=\"multiple\" ng-disabled=\"disabled\">\n" +
     "</span>");
   $templateCache.put("templates/fileupload.html",
     "   <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{getAttachmentUrl()}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +

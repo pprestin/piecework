@@ -61,7 +61,7 @@ public class ValidationCommandTest {
         ManyMap<String, String> data = new ManyMap<String, String>();
 
         TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
-        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, data, Map.class, "v1");
+        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, data, Map.class, null, "v1");
         Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);
@@ -81,7 +81,7 @@ public class ValidationCommandTest {
                 .when(mockRequest).getActivity();
 
         TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
-        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, mockMultipartBody, MultipartBody.class, "v1");
+        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, mockMultipartBody, MultipartBody.class, null, "v1");
         Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);

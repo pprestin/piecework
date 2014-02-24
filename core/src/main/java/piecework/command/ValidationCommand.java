@@ -64,13 +64,13 @@ public class ValidationCommand<P extends ProcessDeploymentProvider> extends Abst
         this.ignoreThrowException = true;
     }
 
-    ValidationCommand(CommandExecutor commandExecutor, P modelProvider, FormRequest request, Object object, Class<?> type, String version) {
+    ValidationCommand(CommandExecutor commandExecutor, P modelProvider, FormRequest request, Object object, Class<?> type, String validationId, String version) {
         super(commandExecutor, modelProvider);
         this.request = request;
         this.object = object;
         this.type = type;
         this.submission = null;
-        this.validationId = null;
+        this.validationId = validationId;
         this.version = version;
         this.ignoreThrowException = true;
     }

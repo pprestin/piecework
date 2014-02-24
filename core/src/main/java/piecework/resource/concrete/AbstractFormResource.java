@@ -262,7 +262,7 @@ public abstract class AbstractFormResource {
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
 
         try {
-            ValidationCommand<P> validationCommand = commandFactory.validation(provider, request, data, type, VERSION);
+            ValidationCommand<P> validationCommand = commandFactory.validation(provider, request, data, type, null, VERSION);
             Validation validation = validationCommand.execute();
             SubmitFormCommand<P> submitFormCommand = commandFactory.submitForm(provider, validation, request.getAction(), requestDetails, request);
             SubmissionCommandResponse submissionCommandResponse = submitFormCommand.execute();
