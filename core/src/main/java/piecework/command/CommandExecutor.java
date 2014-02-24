@@ -21,7 +21,9 @@ import org.springframework.stereotype.Service;
 import piecework.ServiceLocator;
 import piecework.engine.Mediator;
 import piecework.exception.*;
+import piecework.model.CommandEvent;
 import piecework.persistence.ProcessProvider;
+import piecework.repository.CommandEventRepository;
 
 /**
  * @author James Renfro
@@ -30,6 +32,9 @@ import piecework.persistence.ProcessProvider;
 class CommandExecutor {
 
     private static final Logger LOG = Logger.getLogger(CommandExecutor.class);
+
+    @Autowired
+    private CommandEventRepository commandEventRepository;
 
     @Autowired
     private Mediator mediator;
@@ -48,14 +53,16 @@ class CommandExecutor {
             LOG.debug("Executing " + command.getClass());
         }
 
+        boolean completed = false;
         try {
             T result = command.execute(serviceLocator);
+            completed = true;
             return result;
         } finally {
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Command completed in " + (System.currentTimeMillis() - start) + " ms");
-            }
+            String commandDescription = command.toString();
+            commandEventRepository.save(new CommandEvent(commandDescription, command.getProvider(), completed));
+            if (LOG.isDebugEnabled())
+                LOG.debug("Command " + commandDescription + " completed in " + (System.currentTimeMillis() - start) + " ms");
         }
     }
 

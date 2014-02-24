@@ -31,6 +31,8 @@ import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 
 import static org.mockito.Matchers.eq;
 
@@ -74,6 +76,7 @@ public class ActivationCommandTest {
         String applicationStatusExplanation = "Testing 1,2,3";
         OperationResult expected = new OperationResult(applicationStatusExplanation, "1,2,3", Constants.ProcessStatuses.OPEN, applicationStatusExplanation);
 
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
         ActivationCommand command = new ActivationCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.ACTIVATION), eq(expected), eq(instance), eq(principal));

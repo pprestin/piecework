@@ -37,17 +37,9 @@ public abstract class AbstractEngineStorageCommand<T, P extends ProcessProvider>
         super(commandExecutor, modelProvider);
     }
 
-//    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, Entity principal, Process process) {
-//        super(commandExecutor, principal, process);
-//    }
-//
-//    protected AbstractEngineStorageCommand(CommandExecutor commandExecutor, Entity principal, Process process, ProcessInstance instance) {
-//        super(commandExecutor, principal, process, instance);
-//    }
-
     /*
-         * Injects necessary services into the other package-access execute method, which then does all the work
-         */
+     * Injects necessary services into the other package-access execute method, which then does all the work
+     */
     @Override
     ProcessInstance execute(ServiceLocator serviceLocator) throws PieceworkException {
         ProcessEngineFacade processEngineFacade = serviceLocator.getService(ProcessEngineFacade.class);

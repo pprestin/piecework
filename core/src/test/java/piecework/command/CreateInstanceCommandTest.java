@@ -29,6 +29,10 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.common.ManyMap;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 import piecework.validation.Validation;
 
 import java.util.ArrayList;
@@ -92,63 +96,50 @@ public class CreateInstanceCommandTest {
 
     @Test(expected = MisconfiguredProcessException.class)
     public void testMisconfiguredNoProcess() throws PieceworkException {
-        Mockito.when(validation.getProcess())
-                .thenReturn(null);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(null, deployment, principal);
 
-        new CreateInstanceCommand(null, principal, validation)
+        new CreateInstanceCommand(null, deploymentProvider, validation)
                 .execute(processEngineFacade, storageManager);
     }
 
     @Test(expected = MisconfiguredProcessException.class)
     public void testMisconfiguredNoProcessDefinitionKey() throws PieceworkException {
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
         Mockito.when(process.getProcessDefinitionKey())
                 .thenReturn(null);
 
-        new CreateInstanceCommand(null, principal, validation)
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+
+        new CreateInstanceCommand(null, deploymentProvider, validation)
                 .execute(processEngineFacade, storageManager);
     }
 
     @Test(expected = MisconfiguredProcessException.class)
     public void testMisconfiguredNoDeployment() throws PieceworkException {
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
         Mockito.when(process.getProcessDefinitionKey())
                 .thenReturn("TESTPROCESS1");
 
-        Mockito.when(process.getDeployment())
-                .thenReturn(null);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, null, principal);
 
-        new CreateInstanceCommand(null, principal, validation)
+        new CreateInstanceCommand(null, deploymentProvider, validation)
                 .execute(processEngineFacade, storageManager);
     }
 
     @Test(expected = ForbiddenError.class)
     public void testCreateAnonymousFail() throws PieceworkException {
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
         Mockito.when(process.getProcessDefinitionKey())
                 .thenReturn("TESTPROCESS1");
-
-        Mockito.when(process.getDeployment())
-                .thenReturn(deployment);
 
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
 
-        new CreateInstanceCommand(null, null, validation)
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+
+        new CreateInstanceCommand(null, deploymentProvider, validation)
                 .execute(processEngineFacade, storageManager);
     }
 
     @Test
     public void testCreateAnonymousSucceed() throws PieceworkException {
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
         Mockito.when(process.getProcessDefinitionKey())
                 .thenReturn("TESTPROCESS1");
 
@@ -170,7 +161,9 @@ public class CreateInstanceCommandTest {
         Mockito.when(storageManager.store("1234", "9876"))
                 .thenReturn(Boolean.TRUE);
 
-        new CreateInstanceCommand(null, null, validation)
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, null);
+
+        new CreateInstanceCommand(null, deploymentProvider, validation)
                 .execute(processEngineFacade, storageManager);
 
         Mockito.verify(storageManager).store(eq("1234"), eq("9876"));
@@ -178,9 +171,6 @@ public class CreateInstanceCommandTest {
 
     @Test(expected = ForbiddenError.class)
     public void testCreateUnauthorizedInitiatorFail() throws PieceworkException {
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
         Mockito.when(process.getProcessDefinitionKey())
                 .thenReturn("TESTPROCESS1");
 
@@ -188,7 +178,7 @@ public class CreateInstanceCommandTest {
                 .thenReturn(deployment);
 
         Mockito.when(process.isAnonymousSubmissionAllowed())
-                .thenReturn(Boolean.TRUE);
+                .thenReturn(Boolean.FALSE);
 
         Mockito.when(instance.getProcessInstanceId())
                 .thenReturn("1234");
@@ -205,14 +195,14 @@ public class CreateInstanceCommandTest {
         Mockito.when(principal.hasRole(process, AuthorizationRole.INITIATOR))
                 .thenReturn(Boolean.FALSE);
 
-        new CreateInstanceCommand(null, principal, validation)
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+
+        new CreateInstanceCommand(null, deploymentProvider, validation)
                 .execute(processEngineFacade, storageManager);
     }
 
     @Test
     public void testAuthorizedInitiatorSucceed() throws PieceworkException {
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
 
         Mockito.when(process.getProcessDefinitionKey())
                 .thenReturn("TESTPROCESS1");
@@ -238,7 +228,9 @@ public class CreateInstanceCommandTest {
         Mockito.when(principal.hasRole(process, AuthorizationRole.INITIATOR))
                 .thenReturn(Boolean.TRUE);
 
-        new CreateInstanceCommand(null, principal, validation)
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+
+        new CreateInstanceCommand(null, deploymentProvider, validation)
                 .execute(processEngineFacade, storageManager);
 
         Mockito.verify(storageManager).store(eq("1234"), eq("9876"));

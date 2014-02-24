@@ -27,6 +27,8 @@ import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.PieceworkException;
 import piecework.model.Submission;
 import piecework.model.User;
+import piecework.persistence.ProcessProvider;
+import piecework.persistence.test.ProcessProviderStub;
 import piecework.submission.SubmissionTemplate;
 import piecework.submission.config.SubmissionConfiguration;
 
@@ -59,7 +61,8 @@ public class FormValueSubmissionHandlerTest {
         ManyMap<String, String> data = new ManyMap<String, String>();
         data.putOne("TestField1", "Some data");
 
-        Submission submission = submissionHandler.handle(null, data, mockTemplate, mockUser);
+        ProcessProvider processProvider = new ProcessProviderStub(mockProcess, mockUser);
+        Submission submission = submissionHandler.handle(processProvider, data, mockTemplate);
         String fieldData = submission.getData().get("TestField1").iterator().next().getValue();
         Assert.assertEquals("Some data", fieldData);
     }

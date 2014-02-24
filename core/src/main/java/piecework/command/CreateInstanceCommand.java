@@ -28,6 +28,7 @@ import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
+import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
 import java.util.Collection;
@@ -69,20 +70,15 @@ public class CreateInstanceCommand extends AbstractEngineStorageCommand<ProcessI
         if (LOG.isDebugEnabled())
             LOG.debug("Creating a new process instance for " + process.getProcessDefinitionKey());
 
-        ProcessDeployment deployment = process.getDeployment();
+        ProcessDeployment deployment = modelProvider.deployment();
         if (deployment == null)
             throw new MisconfiguredProcessException("No deployment on process");
 
-        // It's okay to create instance as anonymous, assuming that this process
-        // allows it
         Entity principal = modelProvider.principal();
-        if (principal == null && !process.isAnonymousSubmissionAllowed())
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        // If we got thru the check above and that principal is not null, then that principal
-        // still needs to be an initiator of this process
-        if (principal != null && !principal.hasRole(process, AuthorizationRole.INITIATOR))
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        // If this process doesn't allow anonymous submission, then it's important to verify that the
+        // principal is non-null and has the initiator role
+        SecurityUtility.verifyEntityCanInitiate(process, principal);
 
         String initiatorId = principal != null ? principal.getEntityId() : null;
         if (principal != null && principal.getEntityType() == Entity.EntityType.SYSTEM && StringUtils.isNotEmpty(submission.getSubmitterId())) {

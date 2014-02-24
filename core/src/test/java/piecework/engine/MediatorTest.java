@@ -29,6 +29,8 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -114,9 +116,10 @@ public class MediatorTest {
         mediator.init();
 
         // Build a state change event
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, null, instance, null);
+
         StateChangeEvent event = new StateChangeEvent.Builder(StateChangeType.CREATE_TASK)
-                .process(process)
-                .instance(instance)
+                .instanceProvider(instanceProvider)
                 .task(task)
                 .build();
 

@@ -144,7 +144,7 @@ public class Mediator implements ApplicationContextAware, InitializingBean {
                 }
             }
         } catch (PieceworkException pe) {
-            LOG.error("Unable to retrieve process", pe);
+            LOG.error("Unable to notify", pe);
         }
     }
 

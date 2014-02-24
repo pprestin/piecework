@@ -31,6 +31,8 @@ import piecework.enumeration.OperationType;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 
 import static org.mockito.Matchers.eq;
 
@@ -76,6 +78,7 @@ public class CancellationCommandTest {
         Mockito.when(storageManager.store(OperationType.CANCELLATION, result, instance, principal))
                 .thenReturn(instance);
 
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
         CancellationCommand command = new CancellationCommand(null, instanceProvider, "Because of a good reason");
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
 
@@ -112,6 +115,7 @@ public class CancellationCommandTest {
         Mockito.when(storageManager.store(OperationType.CANCELLATION, result, instance, principal))
                 .thenReturn(instance);
 
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
         CancellationCommand command = new CancellationCommand(null, instanceProvider, "Because of a good reason");
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.CANCELLATION), eq(result), eq(instance), eq(principal));

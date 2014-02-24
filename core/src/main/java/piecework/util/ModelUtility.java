@@ -16,12 +16,10 @@
 package piecework.util;
 
 import piecework.exception.PieceworkException;
+import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
-import piecework.persistence.AllowedTaskProvider;
-import piecework.persistence.ProcessInstanceProvider;
-import piecework.persistence.ProcessProvider;
-import piecework.persistence.TaskProvider;
+import piecework.persistence.*;
 
 /**
  * @author James Renfro
@@ -35,6 +33,14 @@ public class ModelUtility {
         } catch (PieceworkException e) {
             return null;
         }
+    }
+
+    public static <P extends ProcessProvider> ProcessDeployment deployment(P modelProvider) throws PieceworkException {
+        if (modelProvider instanceof ProcessDeploymentProvider) {
+            ProcessDeploymentProvider deploymentProvider = ProcessDeploymentProvider.class.cast(modelProvider);
+            return deploymentProvider.deployment();
+        }
+        return null;
     }
 
     public static <P extends ProcessProvider> ProcessInstance instance(P modelProvider) throws PieceworkException {

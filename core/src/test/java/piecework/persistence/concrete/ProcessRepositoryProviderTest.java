@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.exception.*;
+import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.ProcessRepository;
@@ -37,6 +38,9 @@ public class ProcessRepositoryProviderTest {
 
     @Mock
     ProcessRepository processRepository;
+
+    @Mock
+    Entity principal;
 
     @Test(expected= BadRequestError.class)
     public void verifyErrorOnNullKey() throws PieceworkException {

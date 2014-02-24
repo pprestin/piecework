@@ -29,6 +29,8 @@ import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.test.AllowedTaskProviderStub;
 import piecework.validation.Validation;
 
 import java.util.ArrayList;
@@ -106,7 +108,8 @@ public class UpdateDataCommandTest {
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
 
-        new UpdateDataCommand(null, principal, process, instance, task, data, messages, applicationStatusExplanation)
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        new UpdateDataCommand(null, allowedTaskProvider, data, messages, applicationStatusExplanation)
                 .execute(processEngineFacade, storageManager);
     }
 
@@ -122,7 +125,8 @@ public class UpdateDataCommandTest {
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
 
-        new UpdateDataCommand(null, principal, process, instance, task, data, messages, applicationStatusExplanation)
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        new UpdateDataCommand(null, allowedTaskProvider, data, messages, applicationStatusExplanation)
                 .execute(processEngineFacade, storageManager);
     }
 
@@ -138,13 +142,15 @@ public class UpdateDataCommandTest {
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
 
-        new UpdateDataCommand(null, principal, process, instance, task, data, messages, applicationStatusExplanation)
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        new UpdateDataCommand(null, allowedTaskProvider, data, messages, applicationStatusExplanation)
                 .execute(processEngineFacade, storageManager);
     }
 
     @Test(expected = ForbiddenError.class)
     public void testAnonymousFail() throws PieceworkException {
-        new UpdateDataCommand(null, null, process, instance, task, data, messages, applicationStatusExplanation)
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, null);
+        new UpdateDataCommand(null, allowedTaskProvider, data, messages, applicationStatusExplanation)
                 .execute(processEngineFacade, storageManager);
     }
 
@@ -175,7 +181,8 @@ public class UpdateDataCommandTest {
         Mockito.doReturn(instance)
                 .when(storageManager).store(eq(instance), eq(data), eq(messages), any(Submission.class), eq(applicationStatusExplanation));
 
-        new UpdateDataCommand(null, principal, process, instance, task, data, messages, applicationStatusExplanation)
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        new UpdateDataCommand(null, allowedTaskProvider, data, messages, applicationStatusExplanation)
                 .execute(processEngineFacade, storageManager);
 
         Mockito.verify(storageManager).store(eq(instance), eq(data), eq(messages), any(Submission.class), eq(applicationStatusExplanation));

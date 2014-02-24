@@ -24,7 +24,9 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.ManyMap;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.validation.Validation;
@@ -112,12 +114,17 @@ public class SecurityUtility {
         return map;
     }
 
-//    public static boolean isAuthorizedForRestrictedData(Task task, Entity principal) {
-//        // If this is an application
-//        if (principal instanceof Application && StringUtils.isNotEmpty(principal.getEntityId()) && principal.getEntityId().equals("piecework"))
-//            return true;
-//        return task.isAssignee(principal);
-//    }
+    public static void verifyEntityCanInitiate(Process process, Entity principal) throws PieceworkException {
+        if (!process.isAnonymousSubmissionAllowed()) {
+            if (principal == null)
+                throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+
+            // If we got thru the check above and that principal is not null, then that principal
+            // still needs to be an initiator of this process
+            if (principal != null && !principal.hasRole(process, AuthorizationRole.INITIATOR))
+                throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        }
+    }
 
     public static void verifyEntityIsAuthorized(piecework.model.Process process, Task task, Entity principal) throws ForbiddenError, BadRequestError {
         if (process == null)

@@ -28,6 +28,8 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.TaskProvider;
+import piecework.persistence.test.TaskProviderStub;
 import piecework.validation.Validation;
 
 import static org.mockito.Matchers.eq;
@@ -77,21 +79,14 @@ public class CompleteTaskCommandTest {
         Mockito.when(principal.hasRole(process, AuthorizationRole.USER))
                 .thenReturn(Boolean.TRUE);
 
-        Mockito.when(validation.getInstance())
-                .thenReturn(instance);
+        TaskProvider taskProvider = new TaskProviderStub(process, deployment, instance, task, principal);
 
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
-
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
-        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.SAVE))
-                .thenReturn(instance);
+        Mockito.doReturn(instance)
+                .when(storageManager).store(eq(taskProvider), eq(validation), eq(ActionType.SAVE));
 
         CompleteTaskCommand command = new CompleteTaskCommand(null, taskProvider, validation, ActionType.SAVE);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
-        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.SAVE));
+        Mockito.verify(storageManager).store(eq(taskProvider), eq(validation), eq(ActionType.SAVE));
         Mockito.verifyZeroInteractions(processEngineFacade);
         Assert.assertEquals(instance, actual);
     }
@@ -108,18 +103,6 @@ public class CompleteTaskCommandTest {
         Mockito.when(principal.hasRole(process, AuthorizationRole.USER))
                 .thenReturn(Boolean.TRUE);
 
-        Mockito.when(validation.getInstance())
-                .thenReturn(instance);
-
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
-
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
-        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.COMPLETE))
-                .thenReturn(instance);
-
         String taskId = "123456";
 
         Mockito.when(task.getTaskInstanceId())
@@ -128,9 +111,14 @@ public class CompleteTaskCommandTest {
         Mockito.when(processEngineFacade.completeTask(process, deployment, taskId, ActionType.COMPLETE, validation, principal))
                 .thenReturn(Boolean.TRUE);
 
+        TaskProvider taskProvider = new TaskProviderStub(process, deployment, instance, task, principal);
+
+        Mockito.doReturn(instance)
+                .when(storageManager).store(eq(taskProvider), eq(validation), eq(ActionType.COMPLETE));
+
         CompleteTaskCommand command = new CompleteTaskCommand(null, taskProvider, validation, ActionType.COMPLETE);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
-        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.COMPLETE));
+        Mockito.verify(storageManager).store(eq(taskProvider), eq(validation), eq(ActionType.COMPLETE));
         Mockito.verify(processEngineFacade).completeTask(process, deployment, taskId, ActionType.COMPLETE, validation, principal);
         Assert.assertEquals(instance, actual);
     }
@@ -147,17 +135,10 @@ public class CompleteTaskCommandTest {
         Mockito.when(principal.hasRole(process, AuthorizationRole.USER))
                 .thenReturn(Boolean.FALSE);
 
-        Mockito.when(validation.getInstance())
-                .thenReturn(instance);
+        TaskProvider taskProvider = new TaskProviderStub(process, deployment, instance, task, principal);
 
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
-
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
-        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.SAVE))
-                .thenReturn(instance);
+        Mockito.doReturn(instance)
+                .when(storageManager).store(eq(taskProvider), eq(validation), eq(ActionType.SAVE));
 
         CompleteTaskCommand command = new CompleteTaskCommand(null, taskProvider, validation, ActionType.SAVE);
 

@@ -24,6 +24,7 @@ import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.data.DataFilterService;
 import piecework.service.CacheService;
+import piecework.settings.NotificationSettings;
 import piecework.settings.UserInterfaceSettings;
 
 /**
@@ -51,6 +52,11 @@ public class DataFilterTestConfiguration {
     @Bean
     public DataFilterService dataFilterService() {
         return new DataFilterService();
+    }
+
+    @Bean
+    public NotificationSettings notificationSettings() {
+        return new NotificationSettings();
     }
 
     @Bean

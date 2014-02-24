@@ -16,6 +16,7 @@
 package piecework.util;
 
 import junit.framework.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -27,8 +28,10 @@ import piecework.enumeration.ActionType;
 import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.security.AccessTracker;
 import piecework.security.data.LimitFieldsFilter;
 
 import java.util.Collections;
@@ -45,6 +48,9 @@ import static org.mockito.Matchers.eq;
 public class SecurityUtilityTest {
 
     @Mock
+    AccessTracker accessTracker;
+
+    @Mock
     FormRequest formRequest;
 
     @Mock
@@ -58,6 +64,14 @@ public class SecurityUtilityTest {
 
     @Mock
     Task task;
+
+    private final static String processDefinitionKey = "TEST";
+
+    @Before
+    public void setup() {
+        Mockito.doReturn(processDefinitionKey)
+               .when(formRequest).getProcessDefinitionKey();
+    }
 
     @Test
     public void fieldsNoChildren() {
@@ -340,6 +354,39 @@ public class SecurityUtilityTest {
         ManyMap<String, Value> filtered = SecurityUtility.filter(original, new LimitFieldsFilter(fields, true));
         Assert.assertEquals(1, filtered.size());
         Assert.assertEquals("another", filtered.getOne("test-2").toString());
+    }
+
+    @Test
+    public void verifyNullEntityCanInitiateWithAnonymousAllowed() throws PieceworkException {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .allowAnonymousSubmission(true)
+                .build();
+
+        SecurityUtility.verifyEntityCanInitiate(process, null);
+    }
+
+    @Test(expected = ForbiddenError.class)
+    public void verifyNullEntityCannotInitiateWithoutAnonymousAllowed() throws PieceworkException {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .allowAnonymousSubmission(false)
+                .build();
+
+        SecurityUtility.verifyEntityCanInitiate(process, null);
+    }
+
+    @Test
+    public void verifyEntityCanInitiateAsInitiator() throws PieceworkException {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .allowAnonymousSubmission(false)
+                .build();
+
+        Mockito.doReturn(Boolean.TRUE)
+                .when(principal).hasRole(eq(process), eq(AuthorizationRole.INITIATOR));
+
+        SecurityUtility.verifyEntityCanInitiate(process, principal);
     }
 
     @Test

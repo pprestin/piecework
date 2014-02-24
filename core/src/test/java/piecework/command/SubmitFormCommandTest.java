@@ -27,10 +27,19 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.TaskProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
+import piecework.persistence.test.ProcessInstanceProviderStub;
+import piecework.persistence.test.TaskProviderStub;
 import piecework.service.RequestService;
 import piecework.validation.Validation;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -60,10 +69,13 @@ public class SubmitFormCommandTest {
     Entity principal;
 
     @Mock
+    ModelProviderFactory modelProviderFactory;
+
+    @Mock
     ProcessInstance instance;
 
     @Mock
-    piecework.model.Process process;
+    Process process;
 
     @Mock
     RequestDetails requestDetails;
@@ -80,46 +92,57 @@ public class SubmitFormCommandTest {
     @Mock
     Validation validation;
 
+    private ProcessDeploymentProvider deploymentProvider;
+    private ProcessInstanceProvider instanceProvider;
+    private TaskProvider taskProvider;
+
     @Before
     public void setup() throws PieceworkException {
+        deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+        instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
+        taskProvider = new TaskProviderStub(process, deployment, instance, task, principal);
+
+
         Mockito.doReturn(instance)
                 .when(create).execute();
         Mockito.doReturn(instance)
                 .when(complete).execute();
         Mockito.doReturn(create)
-                .when(commandFactory).createInstance(principal, validation);
-        Mockito.doReturn(create)
-                .when(commandFactory).createInstance(null, validation);
+                .when(commandFactory).createInstance(any(ProcessDeploymentProvider.class), eq(validation));
         Mockito.doReturn(complete)
-                .when(commandFactory).completeTask(principal, deployment, validation, ActionType.COMPLETE);
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-        Mockito.when(validation.getInstance())
-                .thenReturn(instance);
+                .when(commandFactory).completeTask(eq(taskProvider), eq(validation), eq(ActionType.COMPLETE));
+
+        Mockito.doReturn(taskProvider)
+               .when(modelProviderFactory).taskProvider(anyString(), anyString(), eq(principal));
+        Mockito.doReturn(deploymentProvider)
+                .when(modelProviderFactory).deploymentProvider(anyString(), eq(principal));
+        Mockito.doReturn(instanceProvider)
+                .when(modelProviderFactory).instanceProvider(anyString(), anyString(), any(Entity.class));
     }
 
     @Test(expected = ForbiddenError.class)
     public void testAnonymousFailed() throws PieceworkException {
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
-        SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService, storageManager);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, null);
+        SubmitFormCommand submit = new SubmitFormCommand(null, deploymentProvider, validation, ActionType.CREATE, requestDetails, formRequest);
+        submit.execute(commandFactory, modelProviderFactory, requestService, storageManager);
     }
 
     @Test
     public void testAnonymousSucceededCreate() throws PieceworkException {
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.TRUE);
-        SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService, storageManager);
 
-        Mockito.verify(requestService).create(requestDetails, process, instance, null, ActionType.COMPLETE);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, null);
+        SubmitFormCommand submit = new SubmitFormCommand(null, deploymentProvider, validation, ActionType.CREATE, requestDetails, formRequest);
+        submit.execute(commandFactory, modelProviderFactory, requestService, storageManager);
+
+        Mockito.verify(requestService).create(requestDetails, instanceProvider, ActionType.COMPLETE);
     }
 
     @Test(expected = ForbiddenError.class)
     public void testUnauthorizedUser() throws PieceworkException {
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
         doReturn(Boolean.FALSE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER);
@@ -129,20 +152,23 @@ public class SubmitFormCommandTest {
         doReturn(Boolean.TRUE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
-        SubmitFormCommand submit = new SubmitFormCommand(null, null, deployment, validation, ActionType.CREATE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService, storageManager);
+
+        SubmitFormCommand submit = new SubmitFormCommand(null, deploymentProvider, validation, ActionType.CREATE, requestDetails, formRequest);
+        submit.execute(commandFactory, modelProviderFactory, requestService, storageManager);
     }
 
     @Test
     public void testComplete() throws PieceworkException {
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
-        SubmitFormCommand submit = new SubmitFormCommand(null, principal, deployment, validation, ActionType.COMPLETE, requestDetails, formRequest);
-        submit.execute(commandFactory, requestService, storageManager);
+        doReturn(Boolean.TRUE)
+                .when(principal)
+                .hasRole(process, AuthorizationRole.INITIATOR);
 
-        Mockito.verify(requestService).create(requestDetails, process, instance, task, ActionType.COMPLETE);
+        SubmitFormCommand submit = new SubmitFormCommand(null, deploymentProvider, validation, ActionType.COMPLETE, requestDetails, formRequest);
+        submit.execute(commandFactory, modelProviderFactory, requestService, storageManager);
+
+        Mockito.verify(requestService).create(requestDetails, instanceProvider, ActionType.COMPLETE);
     }
 
 }

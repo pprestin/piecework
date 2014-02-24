@@ -28,6 +28,8 @@ import piecework.common.ManyMap;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.TaskProvider;
+import piecework.persistence.test.TaskProviderStub;
 import piecework.validation.Validation;
 
 import java.util.Map;
@@ -57,7 +59,10 @@ public class ValidationCommandTest {
                 .when(mockRequest).getActivity();
 
         ManyMap<String, String> data = new ManyMap<String, String>();
-        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, data, Map.class, mockPrincipal, "v1").execute();
+
+        TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
+        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, data, Map.class, "v1");
+        Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);
     }
@@ -75,7 +80,9 @@ public class ValidationCommandTest {
         Mockito.doReturn(mockActivity)
                 .when(mockRequest).getActivity();
 
-        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, mockMultipartBody, MultipartBody.class, mockPrincipal, "v1").execute();
+        TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
+        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, mockMultipartBody, MultipartBody.class, "v1");
+        Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);
     }
@@ -92,10 +99,11 @@ public class ValidationCommandTest {
         Mockito.doReturn(mockActivity)
                .when(mockRequest).getActivity();
 
-        Validation validation = commandFactory.validation(mockProcess, mockDeployment, mockRequest, mockSubmission, mockPrincipal, "v1").execute();
+        TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
+        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, mockSubmission, "v1");
+        Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);
     }
-
 
 }

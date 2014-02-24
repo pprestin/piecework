@@ -35,11 +35,12 @@ public class TaskUtility {
 
     public static Task findTask(IdentityService identityService, Process process, ProcessInstance instance, String taskId, Entity principal, boolean limitToActive, ViewContext viewContext) throws StatusCodeError {
 
-        Set<Task> tasks = instance.getTasks();
-        boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
+        Set<Task> tasks = instance != null ? instance.getTasks() : null;
 
         if (tasks == null)
             return null;
+
+        boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
 
         for (Task task : tasks) {
             if (limitToActive && !task.isActive())

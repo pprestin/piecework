@@ -93,4 +93,7 @@ public class AccessEvent {
         return reason;
     }
 
+    public boolean isAnonymousAllowed() {
+        return isAnonymousAllowed;
+    }
 }

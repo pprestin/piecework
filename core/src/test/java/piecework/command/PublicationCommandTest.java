@@ -28,6 +28,8 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
 import piecework.repository.ActivityRepository;
 import piecework.repository.ContentRepository;
 import piecework.repository.DeploymentRepository;
@@ -78,7 +80,7 @@ public class PublicationCommandTest {
     ProcessDeploymentResource resource;
 
     @Mock
-    ProcessDeployment processDeployment;
+    ProcessDeployment deployment;
 
     private String deploymentId = "TESTDEPLOYMENT1";
 
@@ -99,16 +101,17 @@ public class PublicationCommandTest {
 
     @Test(expected = NotFoundError.class)
     public void testNotFound() throws PieceworkException {
-        PublicationCommand publication = new PublicationCommand(null, process, deploymentId);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+        PublicationCommand publication = new PublicationCommand(null, deploymentProvider, deploymentId);
         publication.execute(deploymentRepository, processRepository);
     }
 
     @Test(expected = ForbiddenError.class)
     public void testNotDeployed() throws PieceworkException, IOException {
         doReturn(Boolean.FALSE)
-                .when(processDeployment).isDeployed();
+                .when(deployment).isDeployed();
         when(deploymentRepository.findOne(deploymentId))
-                .thenReturn(processDeployment);
+                .thenReturn(deployment);
         when(resource.getContentType())
                 .thenReturn("text/xml");
         when(resource.getInputStream())
@@ -116,21 +119,23 @@ public class PublicationCommandTest {
         when(resource.getName())
                 .thenReturn("TESTRESOURCE1");
         when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(Content.class)))
-                .thenReturn(processDeployment);
-        PublicationCommand publication = new PublicationCommand(null, process, deploymentId);
+                .thenReturn(deployment);
+
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+        PublicationCommand publication = new PublicationCommand(null, deploymentProvider, deploymentId);
         publication.execute(deploymentRepository, processRepository);
 
         verify(contentRepository).save(process, any(ProcessInstance.class), any(Content.class), principal);
-        verify(facade).deploy(eq(process), eq(processDeployment), any(Content.class));
+        verify(facade).deploy(eq(process), eq(deployment), any(Content.class));
         verify(processRepository).save(any(Process.class));
     }
 
     @Test
     public void testDeployed() throws PieceworkException, IOException {
         doReturn(Boolean.TRUE)
-                .when(processDeployment).isDeployed();
+                .when(deployment).isDeployed();
         when(deploymentRepository.findOne(deploymentId))
-                .thenReturn(processDeployment);
+                .thenReturn(deployment);
         when(resource.getContentType())
                 .thenReturn("text/xml");
         when(resource.getInputStream())
@@ -138,8 +143,10 @@ public class PublicationCommandTest {
         when(resource.getName())
                 .thenReturn("TESTRESOURCE1");
         when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(Content.class)))
-                .thenReturn(processDeployment);
-        PublicationCommand publication = new PublicationCommand(null, process, deploymentId);
+                .thenReturn(deployment);
+
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
+        PublicationCommand publication = new PublicationCommand(null, deploymentProvider, deploymentId);
         publication.execute(deploymentRepository, processRepository);
 
         verify(processRepository).save(any(Process.class));

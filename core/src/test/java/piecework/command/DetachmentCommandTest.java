@@ -25,10 +25,12 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
-import piecework.model.Entity;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
-import piecework.model.Task;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.AllowedTaskProviderStub;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 
 import static org.mockito.Mockito.*;
 
@@ -43,6 +45,9 @@ public class DetachmentCommandTest {
 
     @Mock
     ProcessInstance instance;
+
+    @Mock
+    ProcessDeployment deployment;
 
     @Mock
     Process process;
@@ -60,7 +65,8 @@ public class DetachmentCommandTest {
 
     @Test(expected = ForbiddenError.class)
     public void testAnonymous() throws PieceworkException {
-        DetachmentCommand detachment = new DetachmentCommand(null, null, process, instance, task, attachmentId);
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, null);
+        DetachmentCommand detachment = new DetachmentCommand(null, allowedTaskProvider, attachmentId);
         detachment.execute(processEngineFacade, storageManager);
     }
 
@@ -75,7 +81,8 @@ public class DetachmentCommandTest {
         doReturn(Boolean.TRUE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
-        DetachmentCommand detachment = new DetachmentCommand(null, principal, process, instance, task, attachmentId);
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        DetachmentCommand detachment = new DetachmentCommand(null, allowedTaskProvider, attachmentId);
         detachment.execute(processEngineFacade, storageManager);
     }
 
@@ -84,7 +91,9 @@ public class DetachmentCommandTest {
         doReturn(Boolean.TRUE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER);
-        DetachmentCommand detachment = new DetachmentCommand(null, principal, process, instance, task, attachmentId);
+
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        DetachmentCommand detachment = new DetachmentCommand(null, allowedTaskProvider, attachmentId);
         detachment.execute(processEngineFacade, storageManager);
 
         verify(storageManager).minusAttachment(eq(instance), eq(attachmentId), eq(principal));

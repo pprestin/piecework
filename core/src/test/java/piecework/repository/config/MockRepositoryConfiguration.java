@@ -53,6 +53,11 @@ public class MockRepositoryConfiguration {
     }
 
     @Bean
+    public CommandEventRepository commandEventRepository() {
+        return mockRepository(CommandEventRepository.class);
+    }
+
+    @Bean
     public ContentRepository contentRepository() {
         ContentRepository mock = Mockito.mock(ContentRepository.class);
         return mock;

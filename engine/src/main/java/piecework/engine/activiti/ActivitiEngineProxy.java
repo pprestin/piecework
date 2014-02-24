@@ -39,10 +39,12 @@ import piecework.Constants;
 import piecework.engine.exception.TaskAlreadyClaimedException;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.FlowElementType;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
+import piecework.persistence.TaskProvider;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.identity.IdentityHelper;
@@ -215,18 +217,21 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public Task createSubTask(Process process, ProcessDeployment deployment, String parentTaskId, ProcessInstance instance, Validation validation) throws ProcessEngineException {
+    public Task createSubTask(TaskProvider taskProvider, Validation validation) throws PieceworkException {
         Entity principal = helper.getPrincipal();
         String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
 
+        Process process = taskProvider.process();
+        ProcessDeployment deployment = taskProvider.deployment();
         if (deployment == null)
             throw new ProcessEngineException("Deployment missing for " + process.getProcessDefinitionKey());
 
+        Task task = taskProvider.task();
         String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
 
         try {
-            org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().taskId(parentTaskId).singleResult();
+            org.activiti.engine.task.Task activitiTask = processEngine.getTaskService().createTaskQuery().taskId(task.getTaskInstanceId()).singleResult();
 
             if (activitiTask != null)  {
                 Map<String, Object> variables = new HashMap<String, Object>();
@@ -234,7 +239,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
                 variables(variables, data);
 
                 org.activiti.engine.task.Task subTask =  processEngine.getTaskService().newTask();
-                subTask.setParentTaskId(parentTaskId);
+                subTask.setParentTaskId(task.getTaskInstanceId());
 
                 processEngine.getRuntimeService().setVariables(activitiTask.getExecutionId(), variables);
                 processEngine.getTaskService().saveTask(subTask);

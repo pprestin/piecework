@@ -28,6 +28,8 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
+import piecework.persistence.test.ProcessProviderStub;
 import piecework.repository.ActivityRepository;
 import piecework.repository.ContentRepository;
 import piecework.repository.DeploymentRepository;
@@ -93,6 +95,7 @@ public class DeploymentCommandTest {
 
     @Test(expected = NotFoundError.class)
     public void testNotFound() throws PieceworkException {
+        ProcessProvider processProvider = new ProcessProviderStub(process, principal);
         DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
@@ -102,6 +105,7 @@ public class DeploymentCommandTest {
     public void testBadRequest() throws PieceworkException {
         when(deploymentRepository.findOne(deploymentId))
                 .thenReturn(processDeployment);
+        ProcessProvider processProvider = new ProcessProviderStub(process, principal);
         DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
@@ -119,6 +123,8 @@ public class DeploymentCommandTest {
                 .thenReturn("TESTRESOURCE1");
         when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(Content.class)))
                 .thenReturn(processDeployment);
+
+        ProcessProvider processProvider = new ProcessProviderStub(process, principal);
         DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);

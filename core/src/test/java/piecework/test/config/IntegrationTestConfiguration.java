@@ -31,6 +31,8 @@ import piecework.config.ProviderConfiguration;
 import piecework.engine.ProcessEngineFacade;
 import piecework.identity.DebugUserDetailsService;
 import piecework.identity.IdentityHelper;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.concrete.ModelRepositoryProviderFactory;
 import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
@@ -72,6 +74,11 @@ public class IntegrationTestConfiguration {
     @Bean
     public DebugUserDetailsService debugUserDetailsService(Environment environment, ServiceLocator serviceLocator) {
         return new DebugUserDetailsService(environment, serviceLocator);
+    }
+
+    @Bean
+    public ModelProviderFactory modelProviderFactory() {
+        return new ModelRepositoryProviderFactory();
     }
 
     @Bean

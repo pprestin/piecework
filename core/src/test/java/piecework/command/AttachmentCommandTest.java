@@ -27,6 +27,8 @@ import piecework.enumeration.ActionType;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.TaskProvider;
+import piecework.persistence.test.TaskProviderStub;
 import piecework.validation.Validation;
 
 import static org.mockito.Matchers.eq;
@@ -76,21 +78,14 @@ public class AttachmentCommandTest {
         Mockito.when(principal.hasRole(process, AuthorizationRole.USER))
                 .thenReturn(Boolean.TRUE);
 
-        Mockito.when(validation.getInstance())
-                .thenReturn(instance);
+        TaskProvider taskProvider = new TaskProviderStub(process, deployment, instance, task, principal);
 
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
+        Mockito.doReturn(instance)
+               .when(storageManager).store(eq(taskProvider), eq(validation), eq(ActionType.ATTACH));
 
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
-        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.ATTACH))
-                .thenReturn(instance);
-
-        AttachmentCommand command = new AttachmentCommand(null, processProvider, validation);
+        AttachmentCommand command = new AttachmentCommand(null, taskProvider, validation);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
-        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.ATTACH));
+        Mockito.verify(storageManager).store(eq(taskProvider), eq(validation), eq(ActionType.ATTACH));
         Assert.assertEquals(instance, actual);
     }
 

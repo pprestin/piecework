@@ -16,6 +16,7 @@
 package piecework.engine;
 
 import piecework.enumeration.ActionType;
+import piecework.exception.PieceworkException;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
@@ -25,7 +26,7 @@ import piecework.model.Task;
  */
 public interface EventListener {
 
-    void notify(StateChangeEvent event);
+    void notify(StateChangeEvent event) throws PieceworkException;
 
     String getProcessDefinitionKey();
 

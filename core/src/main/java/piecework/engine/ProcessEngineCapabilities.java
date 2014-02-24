@@ -2,6 +2,7 @@ package piecework.engine;
 
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.TaskProvider;
@@ -35,7 +36,7 @@ public interface ProcessEngineCapabilities {
 
     boolean completeTask(Process process, ProcessDeployment deployment, String taskId, ActionType action, Validation validation, Entity principal) throws ProcessEngineException;
 
-    Task createSubTask(TaskProvider taskProvider, Validation validation) throws ProcessEngineException;
+    Task createSubTask(TaskProvider taskProvider, Validation validation) throws PieceworkException;
 
     ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
 

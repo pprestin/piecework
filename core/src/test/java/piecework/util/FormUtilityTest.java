@@ -27,6 +27,8 @@ import piecework.enumeration.DataInjectionStrategy;
 import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
 
 import java.net.URI;
 
@@ -59,7 +61,8 @@ public class FormUtilityTest {
 
         ViewContext context = new ViewContext("http://localhost", "/piecework/ui", "/piecework/api", "/piecework/public", "v2");
 
-        FormDisposition disposition = FormUtility.disposition(process, deployment, activity, ActionType.CREATE, context, builder);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, null);
+        FormDisposition disposition = FormUtility.disposition(deploymentProvider, activity, ActionType.CREATE, context, builder);
         Assert.assertEquals(action, disposition.getAction());
         Assert.assertEquals(URI.create("http://piecework.test/something.html"), disposition.getPageUri());
     }

@@ -29,6 +29,8 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -61,6 +63,7 @@ public class SuspensionCommandTest {
 
     @Test(expected = ForbiddenError.class)
     public void testAnonymous() throws PieceworkException {
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, null);
         SuspensionCommand command = new SuspensionCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
     }
@@ -70,6 +73,7 @@ public class SuspensionCommandTest {
         doReturn(Boolean.FALSE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER);
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
         SuspensionCommand command = new SuspensionCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
     }
@@ -95,6 +99,7 @@ public class SuspensionCommandTest {
         String applicationStatusExplanation = "Testing 1,2,3";
         OperationResult expected = new OperationResult(applicationStatusExplanation, "Suspended", Constants.ProcessStatuses.SUSPENDED, applicationStatusExplanation);
 
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
         SuspensionCommand command = new SuspensionCommand(null, instanceProvider, applicationStatusExplanation);
         command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.SUSPENSION), eq(expected), eq(instance), eq(principal));

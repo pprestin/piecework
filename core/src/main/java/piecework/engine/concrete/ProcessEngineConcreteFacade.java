@@ -252,13 +252,8 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public Task createSubTask(TaskProvider taskProvider, Validation validation) throws ProcessEngineException {
-        ProcessDeployment deployment;
-        try {
-            deployment = taskProvider.deployment();
-        } catch (PieceworkException e) {
-            throw new ProcessEngineException("No deployment", e);
-        }
+    public Task createSubTask(TaskProvider taskProvider, Validation validation) throws PieceworkException {
+        ProcessDeployment deployment  = taskProvider.deployment();
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if(proxy == null)
             throw new ProcessEngineException("Not Found");

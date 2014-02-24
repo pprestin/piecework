@@ -29,6 +29,8 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 
 import static org.mockito.Matchers.eq;
 
@@ -61,7 +63,8 @@ public class UpdateStatusCommandTest {
         String applicationStatus = "Some new application status";
         String operationDescription = "Testing 1,2,3";
 
-        UpdateStatusCommand command = new UpdateStatusCommand(null, null, process, instance, applicationStatus, operationDescription);
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, null);
+        UpdateStatusCommand command = new UpdateStatusCommand(null, instanceProvider, applicationStatus, operationDescription);
         command.execute(processEngineFacade, storageManager);
     }
 
@@ -73,7 +76,8 @@ public class UpdateStatusCommandTest {
         Mockito.when(principal.hasRole(process, AuthorizationRole.ADMIN, AuthorizationRole.SUPERUSER))
                 .thenReturn(Boolean.FALSE);
 
-        UpdateStatusCommand command = new UpdateStatusCommand(null, principal, process, instance, applicationStatus, operationDescription);
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
+        UpdateStatusCommand command = new UpdateStatusCommand(null, instanceProvider, applicationStatus, operationDescription);
         command.execute(processEngineFacade, storageManager);
     }
 
@@ -94,7 +98,8 @@ public class UpdateStatusCommandTest {
         String operationDescription = "Testing 1,2,3";
         OperationResult expected = new OperationResult(operationDescription, applicationStatus, null, null);
 
-        UpdateStatusCommand command = new UpdateStatusCommand(null, principal, process, instance, applicationStatus, operationDescription);
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
+        UpdateStatusCommand command = new UpdateStatusCommand(null, instanceProvider, applicationStatus, operationDescription);
         command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.UPDATE), eq(expected), eq(instance), eq(principal));
     }

@@ -24,7 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.SystemUser;
 import piecework.model.*;
+import piecework.model.Process;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 import piecework.security.AccessTracker;
 import piecework.security.EncryptionService;
 import piecework.security.config.DataFilterTestConfiguration;
@@ -53,6 +57,9 @@ public class MaskRestrictedValuesFilterTest {
 
     @Before
     public void setup() {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
         ProcessInstance instance = new ProcessInstance.Builder()
                 .processDefinitionKey("TEST")
                 .processInstanceId("1234")
@@ -61,7 +68,8 @@ public class MaskRestrictedValuesFilterTest {
                 .userId("testuser")
                 .build();
 
-        this.filter = new MaskRestrictedValuesFilter(instance, principal, encryptionService);
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, null, instance, new SystemUser());
+        this.filter = new MaskRestrictedValuesFilter(instanceProvider, encryptionService);
     }
 
     @Test

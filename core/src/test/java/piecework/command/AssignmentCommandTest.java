@@ -27,6 +27,8 @@ import piecework.enumeration.OperationType;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 
 import static org.mockito.Matchers.eq;
 
@@ -79,6 +81,7 @@ public class AssignmentCommandTest {
 
         OperationResult expected = new OperationResult();
 
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
         AssignmentCommand command = new AssignmentCommand(null, instanceProvider, task, assignee);
         command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(eq(OperationType.ASSIGNMENT), eq(expected), eq(instance), eq(principal));

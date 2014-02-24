@@ -23,12 +23,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.SystemUser;
 import piecework.common.ManyMap;
+import piecework.exception.PieceworkException;
 import piecework.model.AccessEvent;
 import piecework.model.Process;
 import piecework.model.ProcessInstance;
 import piecework.model.User;
 import piecework.model.Value;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 import piecework.repository.AccessEventRepository;
 import piecework.security.EncryptionService;
 import piecework.security.config.DataFilterTestConfiguration;
@@ -64,7 +68,7 @@ public class DataFilterServiceTest {
     }
 
     @Test
-    public void allInstanceDataDecryptedNoRestricted() {
+    public void allInstanceDataDecryptedNoRestricted() throws PieceworkException {
         reset(mockAccessEventRepository);
         ManyMap<String, Value> original = new ManyMap<String, Value>();
         original.putOne("test-key-1", new User.Builder()
@@ -84,14 +88,16 @@ public class DataFilterServiceTest {
                 .data(original)
                 .build();
 
-        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(process, instance, "testing");
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, null, instance, new SystemUser());
+
+        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(instanceProvider, "testing");
         Assert.assertEquals(original, data);
         Assert.assertEquals(3, data.size());
         verify(mockAccessEventRepository, never()).save(any(AccessEvent.class));
     }
 
     @Test
-    public void allInstanceDataDecryptedOneRestricted() throws UnsupportedEncodingException, GeneralSecurityException, InvalidCipherTextException {
+    public void allInstanceDataDecryptedOneRestricted() throws Exception {
         reset(mockAccessEventRepository);
         ManyMap<String, Value> original = new ManyMap<String, Value>();
         original.putOne("test-key-1", new User.Builder()
@@ -111,7 +117,9 @@ public class DataFilterServiceTest {
                 .data(original)
                 .build();
 
-        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(process, instance, "testing");
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, null, instance, new SystemUser());
+
+        Map<String, List<Value>> data = dataFilterService.allInstanceDataDecrypted(instanceProvider, "testing");
         Assert.assertEquals(3, data.size());
         Assert.assertEquals("test-value-3", data.get("test-key-3").iterator().next().toString());
         verify(mockAccessEventRepository, times(1)).save(any(AccessEvent.class));

@@ -53,4 +53,13 @@ public abstract class AbstractCommand<T, P extends ProcessProvider> implements C
         return modelProvider.processDefinitionKey();
     }
 
+    @Override
+    public Entity getPrincipal() {
+        return modelProvider.principal();
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
+    }
 }

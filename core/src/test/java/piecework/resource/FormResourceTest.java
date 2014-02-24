@@ -108,7 +108,7 @@ public class FormResourceTest {
 
     @Test(expected = ForbiddenError.class)
     public void readByTaskIdNoInstance() throws PieceworkException {
-        formResource.read(null, "TEST", "INVALID_PROCESS_INSTANCE_ID", null, null, null);
+        formResource.read(null, "TEST", "INVALID_TASK_INSTANCE_ID", null, null, null);
     }
 
 //    @Test

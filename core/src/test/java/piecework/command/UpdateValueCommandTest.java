@@ -28,6 +28,8 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.test.AllowedTaskProviderStub;
 import piecework.service.RequestService;
 import piecework.validation.Validation;
 
@@ -82,41 +84,37 @@ public class UpdateValueCommandTest {
     @Mock
     Validation validation;
 
+    private AllowedTaskProvider allowedTaskProvider;
+
     @Before
     public void setup() throws PieceworkException {
+        allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+
         Mockito.doReturn(instance)
                 .when(create).execute();
         Mockito.doReturn(instance)
                 .when(complete).execute();
         Mockito.doReturn(create)
-                .when(commandFactory).createInstance(principal, validation);
+                .when(commandFactory).createInstance(allowedTaskProvider, validation);
         Mockito.doReturn(create)
                 .when(commandFactory).createInstance(null, validation);
-        Mockito.doReturn(complete)
-                .when(commandFactory).completeTask(principal, deployment, validation, ActionType.COMPLETE);
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-        Mockito.when(validation.getInstance())
-                .thenReturn(instance);
     }
 
     @Test(expected = ForbiddenError.class)
     public void testAnonymousFail() throws PieceworkException {
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
-        UpdateValueCommand update = new UpdateValueCommand(null, null, task, validation);
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, null);
+        UpdateValueCommand update = new UpdateValueCommand(null, allowedTaskProvider, validation);
         update.execute(processEngineFacade, storageManager);
     }
 
     @Test(expected = ForbiddenError.class)
     public void testUnauthorizedFail() throws PieceworkException {
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
-        UpdateValueCommand update = new UpdateValueCommand(null, principal, task, validation);
+
+        UpdateValueCommand update = new UpdateValueCommand(null, allowedTaskProvider, validation);
         update.execute(processEngineFacade, storageManager);
     }
 
@@ -132,11 +130,9 @@ public class UpdateValueCommandTest {
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
 
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
-        UpdateValueCommand update = new UpdateValueCommand(null, principal, task, validation);
+        UpdateValueCommand update = new UpdateValueCommand(null, allowedTaskProvider, validation);
         update.execute(processEngineFacade, storageManager);
     }
 
@@ -152,14 +148,12 @@ public class UpdateValueCommandTest {
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
 
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
-        UpdateValueCommand update = new UpdateValueCommand(null, principal, task, validation);
+        UpdateValueCommand update = new UpdateValueCommand(null, allowedTaskProvider, validation);
         update.execute(processEngineFacade, storageManager);
 
-        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.SAVE));
+        Mockito.verify(storageManager).store(eq(allowedTaskProvider), eq(validation), eq(ActionType.SAVE));
     }
 
     @Test
@@ -174,14 +168,12 @@ public class UpdateValueCommandTest {
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
 
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
         Mockito.when(process.isAnonymousSubmissionAllowed())
                 .thenReturn(Boolean.FALSE);
-        UpdateValueCommand update = new UpdateValueCommand(null, principal, task, validation);
+        UpdateValueCommand update = new UpdateValueCommand(null, allowedTaskProvider, validation);
         update.execute(processEngineFacade, storageManager);
 
-        Mockito.verify(storageManager).store(instanceProvider, eq(validation), eq(ActionType.SAVE));
+        Mockito.verify(storageManager).store(eq(allowedTaskProvider), eq(validation), eq(ActionType.SAVE));
     }
 
 }

@@ -31,6 +31,8 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.TaskProvider;
+import piecework.persistence.test.TaskProviderStub;
 import piecework.validation.Validation;
 
 import static org.mockito.Matchers.any;
@@ -70,8 +72,11 @@ public class SubTaskCommandTest extends TestCase {
 
     private final String parentTaskId = "1324";
 
+    private TaskProvider taskProvider;
+
     @Before
-    public void setup() throws ProcessEngineException {
+    public void setup() throws PieceworkException {
+
         Mockito.when(task.getTaskInstanceId())
                 .thenReturn(parentTaskId);
 
@@ -81,9 +86,11 @@ public class SubTaskCommandTest extends TestCase {
                 .task(task)
                 .build();
 
+        taskProvider = new TaskProviderStub(process, deployment, instance, task, principal);
+
         Mockito.doReturn(task)
                 .when(processEngineFacade)
-                .createSubTask(eq(process), eq(deployment), eq(parentTaskId), eq(instance), eq(validation));
+                .createSubTask(eq(taskProvider), eq(validation));
 
         Mockito.doReturn(instance)
                 .when(storageManager)
@@ -102,16 +109,7 @@ public class SubTaskCommandTest extends TestCase {
         Mockito.when(principal.hasRole(process, AuthorizationRole.USER))
                 .thenReturn(Boolean.TRUE);
 
-        Mockito.when(validation.getInstance())
-                .thenReturn(instance);
-
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
-
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
-        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.COMPLETE))
+        Mockito.when(storageManager.store(taskProvider, validation, ActionType.COMPLETE))
                 .thenReturn(instance);
 
         String taskId = "123456";
@@ -122,10 +120,10 @@ public class SubTaskCommandTest extends TestCase {
         Mockito.when(processEngineFacade.completeTask(process, deployment, taskId, ActionType.COMPLETE, validation, principal))
                 .thenReturn(Boolean.TRUE);
 
-        SubTaskCommand command = new SubTaskCommand(null, principal, process, instance, deployment, parentTaskId, validation);
+        SubTaskCommand command = new SubTaskCommand(null, taskProvider, validation);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).store(any(ProcessInstance.class));
-        Mockito.verify(processEngineFacade).createSubTask(eq(process), eq(deployment), eq(parentTaskId), eq(instance), eq(validation));
+        Mockito.verify(processEngineFacade).createSubTask(eq(taskProvider), eq(validation));
         Assert.assertEquals(instance, actual);
     }
 
@@ -141,19 +139,10 @@ public class SubTaskCommandTest extends TestCase {
         Mockito.when(principal.hasRole(process, AuthorizationRole.USER))
                 .thenReturn(Boolean.FALSE);
 
-        Mockito.when(validation.getInstance())
+        Mockito.when(storageManager.store(taskProvider, validation, ActionType.SAVE))
                 .thenReturn(instance);
 
-        Mockito.when(validation.getTask())
-                .thenReturn(task);
-
-        Mockito.when(validation.getProcess())
-                .thenReturn(process);
-
-        Mockito.when(storageManager.store(instanceProvider, validation, ActionType.SAVE))
-                .thenReturn(instance);
-
-        SubTaskCommand command = new SubTaskCommand(null, principal, process, instance, deployment, parentTaskId, validation);
+        SubTaskCommand command = new SubTaskCommand(null, taskProvider, validation);
 
         try {
             Mockito.when(command.execute(processEngineFacade, storageManager))

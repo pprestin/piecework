@@ -25,6 +25,8 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 import piecework.security.data.DataFilterService;
 import piecework.common.ManyMap;
 import piecework.validation.Validation;
@@ -83,7 +85,8 @@ public class CompletionCommandTest {
         Mockito.when(storageManager.archive(instance, data))
                 .thenReturn(instance);
 
-        CompletionCommand command = new CompletionCommand(null, instance, data);
+        ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
+        CompletionCommand command = new CompletionCommand(null, instanceProvider);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
         Mockito.verify(storageManager).archive(eq(instance), eq(data));
         Assert.assertEquals(instance, actual);

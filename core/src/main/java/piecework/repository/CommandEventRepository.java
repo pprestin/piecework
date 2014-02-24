@@ -13,21 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework;
+package piecework.repository;
 
-import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
-import piecework.model.Entity;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import piecework.model.AccessEvent;
+import piecework.model.CommandEvent;
 
 /**
  * @author James Renfro
  */
-public interface Command<T> {
-
-    <T> T execute() throws PieceworkException;
-
-    String getProcessDefinitionKey();
-
-    Entity getPrincipal();
+public interface CommandEventRepository extends MongoRepository<CommandEvent, String> {
 
 }

@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.ViewContext;
+import piecework.engine.ProcessEngineFacade;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
@@ -46,6 +47,9 @@ import static org.mockito.Matchers.eq;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessInstanceRepositoryProviderTest {
+
+    @Mock
+    ProcessEngineFacade facade;
 
     @Mock
     ProcessRepository processRepository;
@@ -203,19 +207,6 @@ public class ProcessInstanceRepositoryProviderTest {
         ProcessDeployment deployment = instanceProvider.deployment();
         Assert.assertEquals("1", deployment.getDeploymentId());
     }
-
-    @Test
-    public void verifyAttachmentContent() throws PieceworkException, IOException {
-        ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
-        ProcessInstanceProvider instanceProvider = processInstanceProvider(processProvider);
-
-        StreamingAttachmentContent attachment = instanceProvider.attachment("233");
-        Assert.assertNotNull(attachment);
-        String expected = "This is some test data from an input stream";
-        String actual = IOUtils.toString(attachment.getContent().getInputStream());
-        Assert.assertEquals(expected, actual);
-    }
-
 
     private ProcessInstanceProvider processInstanceProvider(ProcessProvider processProvider) {
         return new ProcessInstanceRepositoryProvider(processProvider, processInstanceRepository, facade, attachmentRepository, contentRepository, deploymentRepository, "1234");

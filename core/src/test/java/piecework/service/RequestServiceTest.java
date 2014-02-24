@@ -32,6 +32,8 @@ import piecework.model.RequestDetails;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
+import piecework.persistence.test.ProcessProviderStub;
 import piecework.repository.RequestRepository;
 import piecework.settings.SecuritySettings;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -100,8 +102,10 @@ public class RequestServiceTest {
         Mockito.when(servletRequest.getRemotePort()).thenReturn(8000);
         Mockito.when(servletRequest.getRemoteUser()).thenReturn("tester");
 
+        ProcessProvider processProvider = new ProcessProviderStub(process, user);
+
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        FormRequest formRequest = requestService.create(requestDetails, process);
+        FormRequest formRequest = requestService.create(requestDetails, processProvider);
         assertValid(formRequest);
 
         Mockito.when(requestRepository.findOne(Mockito.any(String.class))).thenReturn(formRequest);

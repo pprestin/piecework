@@ -47,6 +47,7 @@ import piecework.security.Sanitizer;
 import piecework.settings.SecuritySettings;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
+import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
 import javax.ws.rs.core.MediaType;
@@ -210,6 +211,12 @@ public abstract class AbstractFormResource {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, true, isAnonymous());
         TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, principal);
+
+        Task task = taskProvider.task();
+        if (task == null)
+            throw new ForbiddenError(Constants.ExceptionCodes.task_does_not_exist);
+
+        SecurityUtility.verifyEntityIsAuthorized(taskProvider.process(), task, principal);
 
         FormRequest request = requestService.create(requestDetails, taskProvider, ActionType.CREATE);
 

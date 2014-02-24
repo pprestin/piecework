@@ -26,6 +26,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.TaskProvider;
+import piecework.persistence.test.TaskProviderStub;
 import piecework.repository.AccessEventRepository;
 import piecework.security.AccessTracker;
 import piecework.security.EncryptionService;
@@ -76,7 +78,8 @@ public class DecryptValuesFilterTest {
                 .build();
 
         String reason = "testing";
-        this.filter = new DecryptValuesFilter(process, instance, principal, reason, accessTracker, encryptionService, false);
+        TaskProvider taskProvider = new TaskProviderStub(process, null, instance, null, principal);
+        this.filter = new DecryptValuesFilter(taskProvider, reason, accessTracker, encryptionService, false);
     }
 
     @Test

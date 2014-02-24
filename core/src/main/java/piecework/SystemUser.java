@@ -16,7 +16,7 @@
 package piecework;
 
 import piecework.authorization.SuperUserAccessAuthority;
-import piecework.model.Application;
+import piecework.model.*;
 import piecework.service.ProcessService;
 
 /**
@@ -30,6 +30,10 @@ public class SystemUser extends Application {
 
     public SystemUser(final ProcessService processService) {
         super("piecework", new SuperUserAccessAuthority(processService));
+    }
+
+    public boolean hasRole(piecework.model.Process process, String ... allowedRoles) {
+        return true;
     }
 
 }

@@ -26,8 +26,13 @@ import piecework.Versions;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.exception.FormBuildingException;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
+import piecework.persistence.test.ProcessInstanceProviderStub;
 import piecework.security.AccessTracker;
 import piecework.security.data.DataFilterService;
 
@@ -62,7 +67,7 @@ public class FormFactoryTest {
     Entity user;
 
     @Test
-    public void testFormInitial() throws FormBuildingException {
+    public void testFormInitial() throws PieceworkException {
         Mockito.when(process.getProcessDefinitionKey())
                .thenReturn("TESTPROCESS1");
         Mockito.when(instance.getProcessDefinitionKey())
@@ -74,10 +79,12 @@ public class FormFactoryTest {
 
         FormRequest request = new FormRequest.Builder()
                 .requestId("123")
-                .processDefinitionKey(process.getProcessDefinitionKey())
-                .instance(instance).build();
+                .processDefinitionKey("TESTPROCESS1")
+                .processInstanceId("987").build();
 
-        Form form = formFactory.form(process, deployment, request, ActionType.CREATE, user, null, null, false, false, "v1");
+        ProcessInstanceProvider deploymentProvider = new ProcessInstanceProviderStub(process, deployment, instance, user);
+
+        Form form = formFactory.form(deploymentProvider, request, ActionType.CREATE, null, null, false, false, "v1");
 
         Assert.assertNotNull(form);
         Assert.assertEquals("123", form.getFormInstanceId());

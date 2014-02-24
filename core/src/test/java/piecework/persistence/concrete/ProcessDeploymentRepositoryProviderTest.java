@@ -41,6 +41,9 @@ public class ProcessDeploymentRepositoryProviderTest {
     @Mock
     ProcessRepository processRepository;
 
+    @Mock
+    Entity principal;
+
     @Test(expected= BadRequestError.class)
     public void verifyErrorOnNullKey() throws PieceworkException {
         ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, null, principal);

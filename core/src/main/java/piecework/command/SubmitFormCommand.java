@@ -17,6 +17,7 @@ package piecework.command;
 
 import piecework.Constants;
 import piecework.ServiceLocator;
+import piecework.authorization.AuthorizationRole;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
@@ -27,6 +28,7 @@ import piecework.persistence.*;
 import piecework.service.RequestService;
 import piecework.util.ModelUtility;
 import piecework.util.ProcessInstanceUtility;
+import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
 import java.util.List;
@@ -64,12 +66,17 @@ public class SubmitFormCommand<P extends ProcessDeploymentProvider> extends Abst
         // This is an operation that anonymous users should not be able to cause unless the process is set up to allow it explicitly
         Entity principal = modelProvider.principal();
         Process process = modelProvider.process();
-        if (principal == null && !process.isAnonymousSubmissionAllowed())
-            throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
+        // If this process doesn't allow anonymous submission, then it's important to verify that the
+        // principal is non-null and has the initiator role
+        SecurityUtility.verifyEntityCanInitiate(process, principal);
 
         // Decide if this is a 'create instance' or 'complete task' form submission
         Task task = ModelUtility.task(modelProvider);
         ProcessInstance stored = null;
+
+        // Can't submit a form for a task that is inactive or that is not assigned to you
+        if (task != null && (!task.isActive() || !task.isAssignee(principal)))
+            throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         ActionType validatedActionType = actionType;
         Submission submission = validation.getSubmission();

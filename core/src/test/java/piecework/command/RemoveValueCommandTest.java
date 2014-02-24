@@ -28,6 +28,9 @@ import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.common.ManyMap;
+import piecework.model.Process;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.test.AllowedTaskProviderStub;
 
 import java.util.Map;
 
@@ -50,7 +53,10 @@ public class RemoveValueCommandTest {
     ProcessInstance instance;
 
     @Mock
-    piecework.model.Process process;
+    Process process;
+
+    @Mock
+    ProcessDeployment deployment;
 
     @Mock
     ProcessEngineFacade processEngineFacade;
@@ -66,7 +72,8 @@ public class RemoveValueCommandTest {
 
     @Test(expected = ForbiddenError.class)
     public void testAnonymous() throws PieceworkException {
-        RemoveValueCommand remove = new RemoveValueCommand(null, null, process, instance, task, fieldName, valueId);
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, null);
+        RemoveValueCommand remove = new RemoveValueCommand(null, allowedTaskProvider, fieldName, valueId);
         remove.execute(processEngineFacade, storageManager);
     }
 
@@ -81,7 +88,8 @@ public class RemoveValueCommandTest {
         doReturn(Boolean.TRUE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.USER);
-        RemoveValueCommand remove = new RemoveValueCommand(null, principal, process, instance, task, fieldName, valueId);
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        RemoveValueCommand remove = new RemoveValueCommand(null, allowedTaskProvider, fieldName, valueId);
         remove.execute(processEngineFacade, storageManager);
     }
 
@@ -93,7 +101,9 @@ public class RemoveValueCommandTest {
         doReturn(Boolean.TRUE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER);
-        RemoveValueCommand remove = new RemoveValueCommand(null, principal, process, instance, task, fieldName, valueId);
+
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        RemoveValueCommand remove = new RemoveValueCommand(null, allowedTaskProvider, fieldName, valueId);
         remove.execute(processEngineFacade, storageManager);
         verify(storageManager).store(anyString(), eq(instance), any(Map.class), any(Submission.class));
     }
@@ -107,7 +117,9 @@ public class RemoveValueCommandTest {
         doReturn(Boolean.TRUE)
                 .when(principal)
                 .hasRole(process, AuthorizationRole.OVERSEER, AuthorizationRole.SUPERUSER);
-        RemoveValueCommand remove = new RemoveValueCommand(null, principal, process, instance, task, fieldName, valueId);
+
+        AllowedTaskProvider allowedTaskProvider = new AllowedTaskProviderStub(process, deployment, instance, task, principal);
+        RemoveValueCommand remove = new RemoveValueCommand(null, allowedTaskProvider, fieldName, valueId);
         remove.execute(processEngineFacade, storageManager);
         verify(storageManager).store(anyString(), eq(instance), any(Map.class), any(Submission.class));
     }
