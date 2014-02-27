@@ -31,6 +31,7 @@ import piecework.exception.NotFoundError;
 import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 import piecework.ui.visitor.StaticResourceAggregatingVisitor;
@@ -147,7 +148,7 @@ public class UserInterfaceUtility {
         return resource;
     }
 
-    public static Resource resource(CacheName cacheName, Form form, Resource template, ContentRepository contentRepository, ServletContext servletContext, UserInterfaceSettings settings, Entity principal) {
+    public static <P extends ProcessDeploymentProvider> Resource resource(CacheName cacheName, P modelProvider, Form form, Resource template, ContentRepository contentRepository, ServletContext servletContext, UserInterfaceSettings settings) {
         Process process = form != null ? form.getProcess() : null;
         FormDisposition disposition = form != null ? form.getDisposition() : null;
         boolean isAnonymous = form != null && form.isAnonymous();
@@ -157,7 +158,7 @@ public class UserInterfaceUtility {
         CleanerProperties cleanerProperties = new CleanerProperties();
         cleanerProperties.setOmitXmlDeclaration(true);
         HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-        visitor = new StaticResourceAggregatingVisitor(servletContext, process, disposition, settings, contentRepository, principal, isAnonymous);
+        visitor = new StaticResourceAggregatingVisitor(servletContext, modelProvider, disposition, settings, contentRepository, isAnonymous);
 
         InputStream inputStream = null;
         try {

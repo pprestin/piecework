@@ -16,8 +16,9 @@
 package piecework.content.stubs;
 
 import piecework.content.ContentReceiver;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
-import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;
 
@@ -27,7 +28,12 @@ import java.io.IOException;
 public class TestKeyContentReceiver implements ContentReceiver {
 
     @Override
-    public Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
+    public boolean expire(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return true;
+    }
+
+    @Override
+    public Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException {
         return new Content.Builder()
                 .location("some-key-content-receiver")
                 .build();

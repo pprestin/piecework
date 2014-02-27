@@ -30,14 +30,10 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ModelProviderFactory;
-import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessInstanceProvider;
-import piecework.persistence.ProcessProvider;
-import piecework.service.ProcessInstanceService;
 import piecework.service.ProcessService;
 
 import javax.annotation.PostConstruct;
@@ -129,7 +125,7 @@ public class Demonstration implements TaskListener {
 
         try {
 //            ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(process.getProcessDefinitionKey(), new SystemUser());
-            processService.update(process.getProcessDefinitionKey(), process);
+            processService.update(process.getProcessDefinitionKey(), process, new SystemUser());
             processService.updateAndPublishDeployment(process, deployment, resource, false, new SystemUser());
         } catch (MappingException mappingException) {
             LOG.fatal("Could not create Demonstration process because of a spring mapping exception", mappingException);

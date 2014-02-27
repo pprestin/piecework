@@ -15,14 +15,17 @@
  */
 package piecework.persistence.concrete;
 
-import org.springframework.stereotype.Service;
+import org.apache.commons.lang.StringUtils;
+import piecework.Constants;
 import piecework.common.ViewContext;
+import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
-import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
-import piecework.model.*;
+import piecework.model.ContentProfile;
+import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.ProcessDeployment;
+import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.DeploymentRepository;
@@ -32,10 +35,30 @@ import piecework.repository.DeploymentRepository;
  */
 public class ProcessDeploymentRepositoryProvider implements ProcessDeploymentProvider {
 
+    private final DeploymentRepository deploymentRepository;
     private final ProcessProvider processProvider;
+    private final String deploymentId;
 
-    ProcessDeploymentRepositoryProvider(ProcessProvider processProvider) {
+    ProcessDeploymentRepositoryProvider(final ProcessProvider processProvider) {
+        this(null, processProvider, null);
+    }
+
+    public ProcessDeploymentRepositoryProvider(DeploymentRepository deploymentRepository, final ProcessProvider processProvider, final String deploymentId) {
+        this.deploymentRepository = deploymentRepository;
         this.processProvider = processProvider;
+        this.deploymentId = deploymentId;
+    }
+
+    @Override
+    public ContentProfile contentProfile() throws PieceworkException {
+        ProcessDeployment deployment = deployment();
+        ContentProfile contentProfile;
+        if (deployment.getContentProfile() != null)
+            contentProfile = deployment.getContentProfile();
+        else
+            contentProfile = new ContentProfile.Builder().build();
+
+        return contentProfile;
     }
 
     @Override
@@ -50,6 +73,13 @@ public class ProcessDeploymentRepositoryProvider implements ProcessDeploymentPro
 
     @Override
     public ProcessDeployment deployment() throws PieceworkException {
+        if (StringUtils.isNotEmpty(deploymentId)) {
+            if (deploymentRepository == null)
+                throw new InternalServerError();
+
+            return deploymentRepository.findOne(deploymentId);
+        }
+
         Process process = process();
         ProcessDeployment deployment = process.getDeployment();
 

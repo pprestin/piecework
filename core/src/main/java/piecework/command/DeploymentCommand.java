@@ -25,6 +25,7 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.ActivityRepository;
 import piecework.repository.ContentRepository;
@@ -39,15 +40,15 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class DeploymentCommand extends AbstractCommand<ProcessDeployment, ProcessProvider> {
+public class DeploymentCommand extends AbstractCommand<ProcessDeployment, ProcessDeploymentProvider> {
 
     private static final Logger LOG = Logger.getLogger(PublicationCommand.class);
 
     private final String deploymentId;
     private final ProcessDeploymentResource resource;
 
-    DeploymentCommand(CommandExecutor commandExecutor, ProcessProvider processProvider, String deploymentId, ProcessDeploymentResource resource) {
-        super(commandExecutor, processProvider);
+    DeploymentCommand(CommandExecutor commandExecutor, ProcessDeploymentProvider modelProvider, String deploymentId, ProcessDeploymentResource resource) {
+        super(commandExecutor, modelProvider);
         this.deploymentId = deploymentId;
         this.resource = resource;
     }
@@ -101,13 +102,13 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment, Proces
                     .build();
 
             try {
-                contentRepository.save(process, null, content, principal);
+                contentRepository.save(modelProvider, content);
             } catch (IOException ioe) {
                 LOG.error("Error saving to content repo", ioe);
                 throw new InternalServerError(Constants.ExceptionCodes.attachment_could_not_be_saved);
             }
 
-            content = contentRepository.findByLocation(process, location, principal);
+            content = contentRepository.findByLocation(modelProvider, location);
 
             // Try to deploy it in the engine -- this is the step that's most likely to fail because
             // the artifact is not formatted correctly, etc..
@@ -126,6 +127,7 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment, Proces
                     .build();
             // Persist that too
             processRepository.save(updatedProcess);
+
         } catch (ProcessEngineException e) {
             throw new BadRequestError(Constants.ExceptionCodes.process_is_misconfigured, e.getCause());
         }

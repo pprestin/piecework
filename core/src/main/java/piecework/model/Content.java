@@ -40,6 +40,7 @@ public class Content implements Serializable, Streamable {
 
     private final String contentId;
     private final String contentType;
+    private final String fieldName;
     private final String filename;
     private final String location;
     private final InputStream inputStream;
@@ -56,6 +57,7 @@ public class Content implements Serializable, Streamable {
     private Content(Builder builder) {
         this.contentId = builder.contentId;
         this.contentType = builder.contentType;
+        this.fieldName = builder.fieldName;
         this.filename = builder.filename;
         this.location = builder.location;
         this.inputStream = builder.inputStream;
@@ -78,6 +80,10 @@ public class Content implements Serializable, Streamable {
 
     public String getName() {
         return filename;
+    }
+
+    public String getFieldName() {
+        return fieldName;
     }
 
     public String getFilename() {
@@ -144,6 +150,7 @@ public class Content implements Serializable, Streamable {
 
         private String contentId;
         private String contentType;
+        private String fieldName;
         private String filename;
         private String location;
         private InputStream inputStream;
@@ -160,6 +167,7 @@ public class Content implements Serializable, Streamable {
         public Builder(Content content) {
             this.contentId = content.contentId;
             this.contentType = content.contentType;
+            this.fieldName = content.fieldName;
             this.filename = content.filename;
             this.location = content.location;
             this.inputStream = content.inputStream;
@@ -181,6 +189,11 @@ public class Content implements Serializable, Streamable {
 
         public Builder contentType(String contentType) {
             this.contentType = contentType;
+            return this;
+        }
+
+        public Builder fieldName(String fieldName) {
+            this.fieldName = fieldName;
             return this;
         }
 

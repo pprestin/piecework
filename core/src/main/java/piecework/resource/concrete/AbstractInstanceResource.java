@@ -55,9 +55,6 @@ public abstract class AbstractInstanceResource {
     AccessTracker accessTracker;
 
     @Autowired
-    AttachmentService attachmentService;
-
-    @Autowired
     CommandFactory commandFactory;
 
     @Autowired

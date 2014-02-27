@@ -28,6 +28,8 @@ import piecework.engine.ProcessEngineFacade;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ModelProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.*;
@@ -73,7 +75,7 @@ public class ProcessInstanceRepositoryProviderTest {
     Entity principal;
 
     @Before
-    public void setup() {
+    public void setup() throws PieceworkException {
         ProcessDeployment currentDeployment = new ProcessDeployment.Builder()
                 .deploymentId("2")
                 .build();
@@ -128,7 +130,7 @@ public class ProcessInstanceRepositoryProviderTest {
         Mockito.doReturn(new ByteArrayInputStream("This is some test data from an input stream".getBytes()))
                 .when(content).getInputStream();
         Mockito.doReturn(content)
-                .when(contentRepository).findByLocation(eq(process), eq("/some/location"), eq(principal));
+                .when(contentRepository).findByLocation(any(ContentProfileProvider.class), eq("/some/location"));
     }
 
     @Test(expected= BadRequestError.class)

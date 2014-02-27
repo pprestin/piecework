@@ -20,8 +20,9 @@ import org.apache.commons.compress.utils.IOUtils;
 import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
 import piecework.enumeration.Scheme;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
-import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -46,7 +47,12 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
-    public synchronized Content findByPath(Process process, String base, String location, Entity principal) throws IOException {
+    public boolean expire(ContentProfileProvider modelProvider, String location) throws IOException {
+        return false;
+    }
+
+    @Override
+    public synchronized Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
         return contentLocationMap.get(location);
     }
 
@@ -56,7 +62,7 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
-    public synchronized Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
+    public synchronized Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException {
         String contentId = content.getContentId() == null ? UUID.randomUUID().toString() : content.getContentId();
 
         long contentLength = 0;

@@ -25,9 +25,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.common.ManyMap;
 import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.PieceworkException;
+import piecework.model.ContentProfile;
 import piecework.model.Submission;
 import piecework.model.User;
+import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
 import piecework.persistence.test.ProcessProviderStub;
 import piecework.submission.SubmissionTemplate;
 import piecework.submission.config.SubmissionConfiguration;
@@ -61,8 +64,10 @@ public class FormValueSubmissionHandlerTest {
         ManyMap<String, String> data = new ManyMap<String, String>();
         data.putOne("TestField1", "Some data");
 
-        ProcessProvider processProvider = new ProcessProviderStub(mockProcess, mockUser);
-        Submission submission = submissionHandler.handle(processProvider, data, mockTemplate);
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .build();
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        Submission submission = submissionHandler.handle(modelProvider, data, mockTemplate);
         String fieldData = submission.getData().get("TestField1").iterator().next().getValue();
         Assert.assertEquals("Some data", fieldData);
     }

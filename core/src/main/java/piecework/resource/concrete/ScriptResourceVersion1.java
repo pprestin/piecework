@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.form.FormDisposition;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.service.RequestService;
 import piecework.exception.*;
 import piecework.identity.IdentityHelper;
@@ -30,6 +32,7 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.resource.ScriptResource;
 import piecework.security.Sanitizer;
+import piecework.service.UserInterfaceService;
 import piecework.settings.SecuritySettings;
 import piecework.service.FormTemplateService;
 import piecework.util.UserInterfaceUtility;
@@ -47,30 +50,37 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     private static final Logger LOG = Logger.getLogger(ScriptResourceVersion1.class);
 
     @Autowired
-    FormTemplateService formTemplateService;
+    private FormTemplateService formTemplateService;
 
     @Autowired
-    IdentityHelper identityHelper;
+    private IdentityHelper identityHelper;
 
     @Autowired
-    RequestService requestService;
+    private ModelProviderFactory modelProviderFactory;
 
     @Autowired
-    Sanitizer sanitizer;
+    private RequestService requestService;
 
     @Autowired
-    SecuritySettings securitySettings;
+    private Sanitizer sanitizer;
+
+    @Autowired
+    private SecuritySettings securitySettings;
+
+    @Autowired
+    private UserInterfaceService userInterfaceService;
 
     @Override
     public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         String scriptId = sanitizer.sanitize(rawProcessDefinitionKey);
         String templateName = UserInterfaceUtility.templateName(scriptId, isAnonymous());
 
+        ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, identityHelper.getPrincipal());
         Resource scriptResource;
-        Entity principal = identityHelper.getPrincipal();
+        Entity principal = modelProvider.principal();
         if (templateName != null) {
             ServletContext servletContext = context.getServletContext();
-            scriptResource = userInterfaceService.getScriptResource(servletContext, templateName, isAnonymous(), principal);
+            scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, templateName, isAnonymous());
         } else {
             Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
             ServletContext servletContext = context.getServletContext();
@@ -78,13 +88,13 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
             FormDisposition disposition = form.getDisposition();
             if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
                 try {
-                    Resource pageResource = userInterfaceService.getCustomPage(form, identityHelper.getPrincipal());
-                    scriptResource = userInterfaceService.getScriptResource(servletContext, form, pageResource, principal);
+                    Resource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                    scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, form, pageResource);
                 } catch (MisconfiguredProcessException e) {
                     throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
                 }
             } else {
-                scriptResource = userInterfaceService.getScriptResource(servletContext, form, principal);
+                scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, form);
             }
         }
 
@@ -98,22 +108,23 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
 
         Resource stylesheetResource;
         Entity principal = identityHelper.getPrincipal();
+        ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         if (templateName != null) {
             ServletContext servletContext = context.getServletContext();
-            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, templateName, principal);
+            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, templateName);
         } else {
             Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
             ServletContext servletContext = context.getServletContext();
             FormDisposition disposition = form.getDisposition();
             if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
                 try {
-                    Resource pageResource = userInterfaceService.getCustomPage(form, identityHelper.getPrincipal());
-                    stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, pageResource, principal);
+                    Resource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                    stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, form, pageResource);
                 } catch (MisconfiguredProcessException e) {
                     throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
                 }
             } else {
-                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, principal);
+                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, form);
             }
         }
 

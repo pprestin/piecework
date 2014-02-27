@@ -25,6 +25,7 @@ import piecework.common.UuidGenerator;
 import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.*;
 import piecework.model.*;
+import piecework.persistence.ContentProfileProvider;
 import piecework.repository.ContentRepository;
 import piecework.security.EncryptionService;
 import piecework.security.MaxSizeInputStream;
@@ -64,11 +65,11 @@ public class SubmissionStorageService {
             encryptionService = new PassthroughEncryptionService();
     }
 
-    public boolean store(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
-        return store(instance, template, submissionBuilder, name, value, actingAsId, null, MediaType.TEXT_PLAIN, principal);
+    public <P extends ContentProfileProvider> boolean store(P modelProvider, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId) throws PieceworkException {
+        return store(modelProvider, template, submissionBuilder, name, value, actingAsId, null, MediaType.TEXT_PLAIN);
     }
 
-    public boolean store(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, InputStream inputStream, String contentType, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    public <P extends ContentProfileProvider> boolean store(P modelProvider, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, InputStream inputStream, String contentType) throws PieceworkException {
         FieldSubmissionType fieldSubmissionType = template.fieldSubmissionType(name);
 
         if (fieldSubmissionType == FieldSubmissionType.BUTTON) {
@@ -78,14 +79,9 @@ public class SubmissionStorageService {
             return true;
         } else if (fieldSubmissionType != FieldSubmissionType.INVALID) {
             Field field = template.getField(name);
-            String location = null;
             File file = null;
 
             if (inputStream != null) {
-                String directory = StringUtils.isNotEmpty(submissionBuilder.getProcessDefinitionKey()) ? submissionBuilder.getProcessDefinitionKey() : "submissions";
-                String id = uuidGenerator.getNextId();
-                location = "/" + directory + "/" + id;
-
                 if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(template.getMaxAttachmentSize()) * 1024l);
                 else if (field != null && field.getMaxValueLength() > 0)
@@ -100,14 +96,14 @@ public class SubmissionStorageService {
 
                 Content content = new Content.Builder()
                         .contentType(contentType)
+                        .fieldName(name)
                         .filename(value)
-                        .location(location)
                         .inputStream(inputStream)
                         .metadata(metadata)
                         .build();
 
                 try {
-                    content = contentRepository.save(template.getProcess(), instance, content, principal);
+                    content = contentRepository.save(modelProvider, content);
 
                 } catch (MongoException mongoException) {
                     Throwable cause = mongoException.getCause();
@@ -124,7 +120,8 @@ public class SubmissionStorageService {
                     throw new InternalServerError(Constants.ExceptionCodes.content_cannot_be_stored, body);
                 }
 
-                location = content.getLocation();
+                String id = content.getContentId();
+                String location = content.getLocation();
 
                 String description = submissionBuilder.getDescription(name);
                 file = new File.Builder()
@@ -169,6 +166,7 @@ public class SubmissionStorageService {
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
+                String location;
                 if (file != null) {
                     contentType = file.getContentType();
                     location = file.getLocation();

@@ -99,7 +99,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
 	@Override
 	public Response update(String rawProcessDefinitionKey, Process rawProcess) throws PieceworkException {
-        Process result = processService.update(rawProcessDefinitionKey, rawProcess);
+        Process result = processService.update(rawProcessDefinitionKey, rawProcess, helper.getPrincipal());
 		
 		ResponseBuilder responseBuilder = Response.status(Status.NO_CONTENT);
         ViewContext context = new ViewContext(settings, VERSION);

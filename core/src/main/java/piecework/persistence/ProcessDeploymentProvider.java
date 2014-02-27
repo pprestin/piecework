@@ -7,7 +7,7 @@ import piecework.model.ProcessDeployment;
 /**
  * @author James Renfro
  */
-public interface ProcessDeploymentProvider extends ProcessProvider {
+public interface ProcessDeploymentProvider extends ProcessProvider, ContentProfileProvider {
 
     ProcessDeployment deployment() throws PieceworkException;
 

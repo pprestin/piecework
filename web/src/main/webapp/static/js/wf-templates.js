@@ -468,6 +468,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "     </nav>");
   $templateCache.put("templates/file.html",
     "<div class=\"well\" data-wf-list=\"{{name}}\">\n" +
+        "<div class=\"fade\" data-ng-class=\"{in: active()}\">\n" +
+        "                <!-- The global progress bar -->\n" +
+        "                <div class=\"progress progress-striped active ng-scope\" data-file-upload-progress=\"progress()\"><div class=\"progress-bar progress-bar-success\" data-ng-style=\"{width: num + '%'}\"></div></div>\n" +
+        "                <!-- The extended global progress state -->\n" +
+        "                <div class=\"progress-extended\">&nbsp;</div>\n" +
+        "            </div>" +
+
     "   <p data-wf-fallback class=\"muted\">No documents</p>\n" +
     "   <ul class=\"process-variable-list\">\n" +
     "     <li>\n" +

@@ -96,7 +96,7 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
         if (!mediaType.equals(MediaType.TEXT_HTML_TYPE))
             return Response.status(statusCode).entity(explanation).build();
 
-        StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation, helper.getPrincipal());
+        StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation);
         return Response.status(statusCode).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();
 	}
 	
