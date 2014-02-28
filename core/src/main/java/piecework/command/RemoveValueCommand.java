@@ -88,8 +88,11 @@ public class RemoveValueCommand extends AbstractEngineStorageCommand<ProcessInst
                 if (StringUtils.isEmpty(file.getId()))
                     continue;
 
-                if (!file.getId().equals(valueId))
+                if (file.getId().equals(valueId))
+                    storageManager.expire(modelProvider, file.getLocation());
+                else
                     remainingValues.add(value);
+
             } else {
                 String link = value.getValue();
                 String id = Base64Utility.safeBase64(link);

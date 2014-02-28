@@ -468,10 +468,17 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "     </nav>");
   $templateCache.put("templates/file.html",
     "<div class=\"well\" data-wf-list=\"{{name}}\">\n" +
+        "<div class=\"fade\" data-ng-class=\"{in: active()}\">\n" +
+        "                <!-- The global progress bar -->\n" +
+        "                <div class=\"progress progress-striped active ng-scope\" data-file-upload-progress=\"progress()\"><div class=\"progress-bar progress-bar-success\" data-ng-style=\"{width: num + '%'}\"></div></div>\n" +
+        "                <!-- The extended global progress state -->\n" +
+        "                <div class=\"progress-extended\">&nbsp;</div>\n" +
+        "            </div>" +
+
     "   <p data-wf-fallback class=\"muted\">No documents</p>\n" +
     "   <ul class=\"process-variable-list\">\n" +
     "     <li>\n" +
-    "        <i data-wf-delete class=\"fa fa-times text-danger\" title=\"Delete item\" style=\"font-size:14px;\"></i>&nbsp;&nbsp;\n" +
+    "        <i data-wf-delete class=\"fa fa-times text-danger wf-delete-item\" title=\"Delete item\" style=\"font-size:14px;\"></i>&nbsp;&nbsp;\n" +
     "        <i class=\"fa fa-download\" style=\"font-size:1.4em;color:#666;\"></i>&nbsp;&nbsp;<a rel=\"external\" data-wf-link></a>\n" +
     "     </li>\n" +
     "   </ul>\n" +

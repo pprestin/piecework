@@ -409,7 +409,7 @@ public abstract class AbstractFormResource {
                             return Response.temporaryRedirect(formDisposition.getHostUri()).build();
                         return Response.seeOther(pageUri).build();
                     case CUSTOM:
-                        return FormUtility.okResponse(settings, modelProvider, userInterfaceService.getCustomPageAsStreaming(process, form, modelProvider.principal()), MediaType.TEXT_HTML_TYPE.toString(), isAnonymous());
+                        return FormUtility.okResponse(settings, modelProvider, userInterfaceService.getCustomPageAsStreaming(modelProvider, form), MediaType.TEXT_HTML_TYPE.toString(), isAnonymous());
                 }
             }
 
@@ -424,7 +424,7 @@ public abstract class AbstractFormResource {
         }
     }
 
-    private ProcessProvider verifyProcessAllowsAnonymousSubmission(final ProcessProvider processProvider) throws PieceworkException {
+    private static ProcessProvider verifyProcessAllowsAnonymousSubmission(final ProcessProvider processProvider) throws PieceworkException {
         Process process = processProvider.process();
 
         if (process == null)

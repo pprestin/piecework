@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.service;
+package piecework.content.stubs;
 
-import junit.framework.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 
 /**
  * @author James Renfro
  */
-@Ignore
-@RunWith(MockitoJUnitRunner.class)
-public class UserInterfaceServiceTest {
+@Path("some")
+public class TestExternalResource {
 
-    @Test
-    public void test() {
-        Assert.fail();
+    @GET
+    @Path("resource")
+    @Produces("text/plain")
+    public Response example() {
+        return Response.ok("This is some data from an external server", "text/plain;charset=utf-8").build();
     }
-
-
 
 }

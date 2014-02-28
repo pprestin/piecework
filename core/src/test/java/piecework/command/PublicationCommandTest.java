@@ -125,7 +125,7 @@ public class PublicationCommandTest {
         PublicationCommand publication = new PublicationCommand(null, deploymentProvider, deploymentId);
         publication.execute(deploymentRepository, processRepository);
 
-        verify(contentRepository).save(process, any(ProcessInstance.class), any(Content.class), principal);
+        verify(contentRepository).save(eq(deploymentProvider), any(Content.class));
         verify(facade).deploy(eq(process), eq(deployment), any(Content.class));
         verify(processRepository).save(any(Process.class));
     }

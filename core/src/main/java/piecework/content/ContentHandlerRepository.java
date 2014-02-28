@@ -18,13 +18,17 @@ package piecework.content;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.enumeration.Scheme;
+import piecework.exception.InternalServerError;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
-import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
 import piecework.repository.ContentRepository;
+import piecework.util.ContentUtility;
 import piecework.util.PathUtility;
 
 import javax.annotation.PostConstruct;
@@ -70,73 +74,135 @@ public class ContentHandlerRepository implements ContentRepository {
     }
 
     @Override
-    public Content findByLocation(Process process, String location, Entity principal) {
-        return findByLocation(process, null, location, principal);
+    public boolean expireByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, null);
+        // Return the result from the specified receiver (or primary receiver if key is null)
+        boolean expired = contentReceiver.expire(modelProvider, location);
+
+        // Backup receivers should also expire, but IOExceptions from them
+        // should not bubble up
+        backReceivers(new BackupReceiverExpire(modelProvider, location));
+        return expired;
     }
 
     @Override
-    public Content findByLocation(final Process process, final String base, final String location, Entity principal) {
+    public Content findByLocation(ContentProfileProvider modelProvider, final String location) throws PieceworkException {
         if (StringUtils.isEmpty(location))
             return null;
+        Scheme scheme = PathUtility.findScheme(location);
 
-        String contentReceiverKey = null;
-
-        if (StringUtils.isEmpty(contentReceiverKey) && process != null && StringUtils.isNotEmpty(process.getContentReceiverKey()))
-            contentReceiverKey = process.getContentReceiverKey();
-
-        String path;
-
-        if (StringUtils.isNotEmpty(base))
-            path = base + "/" + location;
-        else
-            path = location;
-
-        Scheme scheme = PathUtility.findScheme(path);
-        List<ContentProvider> contentProviders = contentHandlerRegistry.providers(scheme, contentReceiverKey);
+        List<ContentProvider> contentProviders = lookupContentProviders(modelProvider, scheme);
 
         for (ContentProvider contentProvider : contentProviders) {
-            try {
-                Content content = contentProvider.findByPath(process, base, location, principal);
-                if (content != null)
-                    return content;
-            } catch (IOException e) {
-                LOG.error("Could not retrieve content from provider " + contentProvider.toString(), e);
-            }
+            Content content = contentProvider.findByLocation(modelProvider, location);
+            if (content != null)
+                return content;
         }
 
         return null;
     }
 
     @Override
-    public Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
-        String contentReceiverKey = null;
-
-        if (content.getMetadata() != null)
-            contentReceiverKey = content.getMetadata().get(Constants.ContentMetadataKeys.CONTENT_RECEIVER);
-
-        if (StringUtils.isEmpty(contentReceiverKey) && StringUtils.isNotEmpty(process.getContentReceiverKey()))
-            contentReceiverKey = process.getContentReceiverKey();
-
+    public Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException {
+        ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, content);
         // Return the result from the specified receiver (or primary receiver if key is null)
-        ContentReceiver contentReceiver = contentHandlerRegistry.contentReceiver(contentReceiverKey);
-        Content saved = contentReceiver.save(process, instance, content, principal);
+        Content saved = contentReceiver.save(modelProvider, content);
         // Backup receivers should also be saved to, but IOExceptions from them
         // should not bubble up
+        backReceivers(new BackupReceiverSave(modelProvider, content));
+        return saved;
+    }
+
+    @Async
+    private void backReceivers(BackupReceiverAction action) {
         Set<ContentReceiver> backupReceivers = contentHandlerRegistry.backupReceivers();
         if (backupReceivers != null && !backupReceivers.isEmpty()) {
             for (ContentReceiver backupReceiver : backupReceivers) {
-                try {
-                    // Don't bother to get back the result, since it won't be returned
-                    backupReceiver.save(process, instance, content, principal);
-                } catch (IOException ioe) {
-                    LOG.error("Error saving content to a backup receiver");
-                }
+                action.action(backupReceiver);
             }
         }
-        return saved;
     }
 
     public ContentHandlerRegistry getContentHandlerRegistry() {
         return contentHandlerRegistry;
     }
+
+    private <P extends ContentProfileProvider> List<ContentProvider> lookupContentProviders(P modelProvider, Scheme scheme) throws PieceworkException {
+        // Note that the content receiver key is only used if the scheme is REPOSITORY -- the idea here is
+        // that repository is for the storage of content, as opposed to CLASSPATH or FILESYSTEM, which are
+        // intended to be readonly
+        List<ContentProvider> contentProviders;
+
+        if (scheme == Scheme.REPOSITORY) {
+            String contentHandlerKey = ContentUtility.contentHandlerKey(modelProvider);
+            contentProviders = contentHandlerRegistry.providers(scheme, contentHandlerKey);
+        } else {
+            contentProviders = contentHandlerRegistry.providers(scheme);
+        }
+
+        return contentProviders;
+    }
+
+    private <P extends ContentProfileProvider> ContentReceiver lookupContentReceiver(P modelProvider, Content content) throws PieceworkException {
+        if (content == null)
+            throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "Trying to save null content object");
+
+        String contentHandlerKey = ContentUtility.contentHandlerKey(modelProvider);
+
+        // Return the result from the specified receiver (or primary receiver if key is null)
+        return contentHandlerRegistry.contentReceiver(contentHandlerKey);
+    }
+
+    public abstract class BackupReceiverAction {
+
+        final ContentProfileProvider modelProvider;
+
+        BackupReceiverAction(ContentProfileProvider modelProvider) {
+            this.modelProvider = modelProvider;
+        }
+
+        public abstract void action(ContentReceiver contentReceiver);
+
+    }
+
+    public class BackupReceiverExpire extends BackupReceiverAction {
+
+        private final String location;
+
+        public BackupReceiverExpire(ContentProfileProvider modelProvider, String location) {
+            super(modelProvider);
+            this.location = location;
+        }
+
+        public void action(ContentReceiver receiver) {
+            try {
+                // Don't bother to get back the result, since it won't be returned
+                receiver.expire(modelProvider, location);
+            } catch (Exception e) {
+                LOG.error("Error expiring content for a backup receiver ", e);
+            }
+        }
+
+    }
+
+    public class BackupReceiverSave extends BackupReceiverAction {
+
+        private final Content content;
+
+        public BackupReceiverSave(ContentProfileProvider modelProvider, Content content) {
+            super(modelProvider);
+            this.content = content;
+        }
+
+        public void action(ContentReceiver receiver) {
+            try {
+                // Don't bother to get back the result, since it won't be returned
+                receiver.save(modelProvider, content);
+            } catch (Exception e) {
+                LOG.error("Error saving content to a backup receiver ", e);
+            }
+        }
+
+    }
+
 }

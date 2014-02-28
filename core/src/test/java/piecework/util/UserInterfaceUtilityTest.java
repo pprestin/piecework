@@ -32,6 +32,7 @@ import piecework.model.Explanation;
 import piecework.model.Form;
 import piecework.model.Report;
 import piecework.model.SearchResults;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 
@@ -175,10 +176,11 @@ public class UserInterfaceUtilityTest {
         Mockito.doReturn(getWorkingDirectory())
                .when(settings).getAssetsDirectoryPath();
 
+        ProcessDeploymentProvider modelProvider = null;
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
         Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings, null);
+        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, modelProvider, form, template, contentRepository, servletContext, settings);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
         Assert.assertTrue(IOUtils.toString(resource.getInputStream()).length() > 10);
@@ -198,10 +200,11 @@ public class UserInterfaceUtilityTest {
         Mockito.doReturn(disposition)
                 .when(form).getDisposition();
 
+        ProcessDeploymentProvider modelProvider = null;
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
         Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings, null);
+        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, modelProvider, form, template, contentRepository, servletContext, settings);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
 
@@ -235,10 +238,11 @@ public class UserInterfaceUtilityTest {
         Mockito.doReturn(disposition)
                 .when(form).getDisposition();
 
+        ProcessDeploymentProvider modelProvider = null;
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
         Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.STYLESHEET, form, template, contentRepository, servletContext, settings, null);
+        Resource resource = UserInterfaceUtility.resource(CacheName.STYLESHEET, modelProvider, form, template, contentRepository, servletContext, settings);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
 

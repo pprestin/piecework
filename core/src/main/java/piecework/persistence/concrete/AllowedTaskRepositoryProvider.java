@@ -86,7 +86,7 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
                 if (StringUtils.isEmpty(attachmentId) || StringUtils.isEmpty(storedAttachment.getAttachmentId()) || !attachmentId.equals(storedAttachment.getAttachmentId()))
                     continue;
 
-                Content content = contentRepository.findByLocation(process, storedAttachment.getLocation(), principal());
+                Content content = contentRepository.findByLocation(this, storedAttachment.getLocation());
                 if (content != null)
                     return new StreamingAttachmentContent(storedAttachment, content);
             }
@@ -184,7 +184,7 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
         if (value != null) {
             if (value instanceof File) {
                 File file = File.class.cast(value);
-                Content content = contentRepository.findByLocation(process, file.getLocation(), principal());
+                Content content = contentRepository.findByLocation(this, file.getLocation());
                 if (content != null)
                     return new StreamingAttachmentContent(null, content);
             }

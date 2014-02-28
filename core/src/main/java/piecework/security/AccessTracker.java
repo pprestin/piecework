@@ -46,6 +46,7 @@ import java.util.List;
 public class AccessTracker {
 
     private static final Logger LOG = Logger.getLogger(AccessTracker.class);
+    private static final String crLf = Character.toString((char)13) + Character.toString((char)10);
 
     @Autowired
     AccessEventRepository accessEventRepository;
@@ -71,11 +72,14 @@ public class AccessTracker {
     }
 
     public void alarm(final AlarmSeverity severity, final String message) {
+        alarm(severity, message, null);
+    }
+
+    public void alarm(final AlarmSeverity severity, final String message, final Entity principal) {
         try {
             SimpleEmail email = new SimpleEmail();
             email.setHostName(notificationSettings.getMailServerHost());
             email.setSmtpPort(notificationSettings.getMailServerPort());
-
             String adminEmail = notificationSettings.getAdminEmail();
 
             LOG.error("Alarming at severity " + severity + " : " + message);
@@ -93,9 +97,17 @@ public class AccessTracker {
                 return; // no recipients
             }
 
+            String subject = notificationSettings.getApplicationName() + " is issuing " + severity + " alarm";
+            StringBuilder body = new StringBuilder(message);
+
+            if (principal != null)
+                body.append(crLf).append(crLf).append("Action attempted as principal " + principal.getEntityId());
+            else
+                body.append(crLf).append(crLf).append("Action attempted by anonymous principal");
+
             email.setFrom(notificationSettings.getMailFromAddress(), notificationSettings.getMailFromLabel());
-            email.setSubject("Alarm from piecework: " + severity);
-            email.setMsg(message);
+            email.setSubject(subject);
+            email.setMsg(body.toString());
 
             LOG.debug("Subject: " + email.getSubject());
             LOG.debug(email.getMimeMessage());

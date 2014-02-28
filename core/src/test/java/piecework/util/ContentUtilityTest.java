@@ -15,6 +15,7 @@
  */
 package piecework.util;
 
+import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
@@ -32,12 +33,18 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
+import piecework.exception.InternalServerError;
+import piecework.exception.PieceworkException;
 import piecework.model.Content;
+import piecework.model.ContentProfile;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -53,6 +60,27 @@ public class ContentUtilityTest {
 
     @Mock
     HttpEntity entity;
+
+    @Test(expected = InternalServerError.class)
+    public void contentHandlerKeyNullProvider() throws PieceworkException {
+        ContentUtility.contentHandlerKey(null);
+    }
+
+    @Test
+    public void contentHandlerKeyNullProfile() throws PieceworkException {
+        ContentProfile contentProfile = null;
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        Assert.assertNull(ContentUtility.contentHandlerKey(modelProvider));
+    }
+
+    @Test
+    public void contentHandlerKey() throws PieceworkException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .contentHandlerKey("TEST-KEY")
+                .build();
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        Assert.assertEquals("TEST-KEY", ContentUtility.contentHandlerKey(modelProvider));
+    }
 
     @Test
     public void gridFsFileToContent() throws IOException {
@@ -149,6 +177,13 @@ public class ContentUtilityTest {
 //        Assert.assertEquals(testDate, content.getLastModified());
 //        Assert.assertEquals(Long.valueOf(actual.length()), content.getLength());
 //        Assert.assertEquals(eTag, content.getMd5());
+    }
+
+    @Test
+    public void validateValidRemoteLocation() {
+        Set<String> acceptable = Sets.newHashSet("http://test.edu/search/.*");
+        URI uri = URI.create("http://test.edu/search/some/path");
+        Assert.assertTrue(ContentUtility.validateRemoteLocation(acceptable, uri));
     }
 
 }

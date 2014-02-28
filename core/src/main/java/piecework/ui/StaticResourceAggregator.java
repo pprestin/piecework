@@ -33,6 +33,8 @@ import piecework.form.FormDisposition;
 import piecework.model.Content;
 import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
@@ -52,27 +54,25 @@ import java.util.Map;
  *
  * @author James Renfro
  */
-public class StaticResourceAggregator {
+public class StaticResourceAggregator<P extends ProcessDeploymentProvider> {
 
     private static final String NEWLINE = System.getProperty("line.separator");
     private static final Logger LOG = Logger.getLogger(StaticResourceAggregator.class);
 
     private final ServletContext servletContext;
-    private final Process process;
+    private final P modelProvider;
     private final ContentRepository contentRepository;
     private final StringBuffer buffer;
     private final UserInterfaceSettings settings;
     private final FormDisposition formDisposition;
-    private final Entity principal;
 
-    public StaticResourceAggregator(ServletContext servletContext, Process process, ContentRepository contentRepository, UserInterfaceSettings settings, FormDisposition formDisposition, Entity principal) {
+    public StaticResourceAggregator(ServletContext servletContext, P modelProvider, ContentRepository contentRepository, UserInterfaceSettings settings, FormDisposition formDisposition) {
         this.servletContext = servletContext;
-        this.process = process;
+        this.modelProvider = modelProvider;
         this.contentRepository = contentRepository;
         this.buffer = new StringBuffer();
         this.settings = settings;
         this.formDisposition = formDisposition;
-        this.principal = principal;
     }
 
     public Resource getStaticResource() {
@@ -245,7 +245,7 @@ public class StaticResourceAggregator {
             if (scheme != Scheme.REPOSITORY)
                 base = null;
 
-            Content content = contentRepository.findByLocation(process, base, path, principal);
+            Content content = modelProvider != null ? contentRepository.findByLocation(modelProvider, path) : null;
             if (content != null) {
                 return new BufferedReader(new InputStreamReader(content.getInputStream()));
             }

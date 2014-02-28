@@ -21,13 +21,11 @@ import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.enumeration.ActionType;
-import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
-import piecework.persistence.ProcessProvider;
+import piecework.persistence.ContentProfileProvider;
 import piecework.repository.ActivityRepository;
 import piecework.repository.SubmissionRepository;
 import piecework.security.Sanitizer;
@@ -63,14 +61,14 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
     SubmissionStorageService submissionStorageService;
 
     @Override
-    public <P extends ProcessProvider> Submission handle(P modelProvider, T data, SubmissionTemplate template) throws PieceworkException {
+    public Submission handle(ContentProfileProvider modelProvider, T data, SubmissionTemplate template) throws PieceworkException {
         Submission submission = handleInternal(modelProvider, data, template);
         return submissionRepository.save(submission);
     }
 
-    protected abstract <P extends ProcessProvider> Submission handleInternal(P modelProvider, T data, SubmissionTemplate template) throws PieceworkException;
+    protected abstract Submission handleInternal(ContentProfileProvider modelProvider, T data, SubmissionTemplate template) throws PieceworkException;
 
-    protected void handlePlaintext(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, Attachment attachment, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected void handlePlaintext(ContentProfileProvider modelProvider, SubmissionTemplate template, Submission.Builder submissionBuilder, Attachment attachment, String actingAsId) throws PieceworkException {
         String contentType = MediaType.TEXT_PLAIN;
         if (LOG.isDebugEnabled())
             LOG.debug("Processing multipart with content type " + contentType + " and content id " + attachment.getContentId());
@@ -78,12 +76,12 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
         String name = sanitizer.sanitize(attachment.getDataHandler().getName());
         String value = sanitizer.sanitize(attachment.getObject(String.class));
 
-        if (!submissionStorageService.store(instance, template, submissionBuilder, name, value, actingAsId, principal)) {
+        if (!submissionStorageService.store(modelProvider, template, submissionBuilder, name, value, actingAsId)) {
             LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
         }
     }
 
-    protected void handleAllContentTypes(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, Attachment attachment, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    protected void handleAllContentTypes(ContentProfileProvider modelProvider, SubmissionTemplate template, Submission.Builder submissionBuilder, Attachment attachment, String actingAsId) throws PieceworkException {
         ContentDisposition contentDisposition = attachment.getContentDisposition();
         MediaType mediaType = attachment.getContentType();
 
@@ -95,14 +93,14 @@ public abstract class AbstractSubmissionHandler<T> implements SubmissionHandler<
                 if (LOG.isDebugEnabled())
                     LOG.debug("Processing multipart with content type " + contentType + " content id " + attachment.getContentId() + " and filename " + filename);
                 try {
-                    if (!submissionStorageService.store(instance, template, submissionBuilder, name, filename, actingAsId, attachment.getDataHandler().getInputStream(), contentType, principal)) {
+                    if (!submissionStorageService.store(modelProvider, template, submissionBuilder, name, filename, actingAsId, attachment.getDataHandler().getInputStream(), contentType)) {
                         LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                     }
                 } catch (IOException e) {
                     LOG.warn("Unable to store file with content type " + contentType + " and filename " + filename);
                 }
             } else if (mediaType.equals(MediaType.TEXT_PLAIN_TYPE)) {
-                handlePlaintext(instance, template, submissionBuilder, attachment, actingAsId, principal);
+                handlePlaintext(modelProvider, template, submissionBuilder, attachment, actingAsId);
             }
         }
     }

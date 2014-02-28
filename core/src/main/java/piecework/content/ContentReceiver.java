@@ -1,7 +1,9 @@
 package piecework.content;
 
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;
 
@@ -10,7 +12,9 @@ import java.io.IOException;
  */
 public interface ContentReceiver {
 
-    Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException;
+    boolean expire(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException;
+
+    Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException;
 
     String getKey();
 

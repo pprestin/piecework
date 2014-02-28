@@ -18,16 +18,24 @@ package piecework.content.concrete;
 import com.mongodb.BasicDBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.stereotype.Service;
+import piecework.common.UuidGenerator;
 import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
+import piecework.enumeration.AlarmSeverity;
 import piecework.enumeration.Scheme;
+import piecework.exception.ForbiddenError;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
-import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
+import piecework.security.AccessTracker;
 import piecework.util.ContentUtility;
 
 import java.io.IOException;
@@ -43,24 +51,52 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     private static final Logger LOG = Logger.getLogger(GridFSContentProviderReceiver.class);
 
     @Autowired
+    AccessTracker accessTracker;
+
+    @Autowired
     GridFsOperations gridFsOperations;
 
+    @Autowired
+    UuidGenerator uuidGenerator;
+
+
     @Override
-    public Content findByPath(Process process, String base, String location, Entity principal) {
+    public boolean expire(ContentProfileProvider modelProvider, String location) throws IOException {
+        return false;
+    }
+
+    @Override
+    public Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+        if (StringUtils.isEmpty(location))
+            throw new MisconfiguredProcessException("Unable to find content with an empty location");
+
+        String normalized = FilenameUtils.normalize(location);
+        String basePath = basePath(modelProvider);
+
+        if (!normalized.startsWith(basePath)) {
+            accessTracker.alarm(AlarmSeverity.MINOR, "Attempt to access path " + normalized + " outside of " + basePath + " forbidden", modelProvider.principal());
+            throw new ForbiddenError();
+        }
+
         GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
         return ContentUtility.toContent(file);
     }
 
     @Override
-    public Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
+    public Content save(ContentProfileProvider modelProvider, Content content) throws IOException {
         BasicDBObject metadata = new BasicDBObject();
         metadata.put("originalFilename", content.getName());
 
-        GridFSFile file = gridFsOperations.store(content.getInputStream(), content.getLocation(), content.getContentType(), metadata);
+        String id = uuidGenerator.getNextId();
+        String path = basePath(modelProvider) + id;
+
+        GridFSFile file = gridFsOperations.store(content.getInputStream(), path, content.getContentType(), metadata);
         String contentId = file.getId().toString();
 
         return new Content.Builder(content)
                 .contentId(contentId)
+                .contentType(content.getContentType())
+                .location(path)
                 .length(file.getLength())
                 .lastModified(file.getUploadDate())
                 .md5(file.getMD5())
@@ -75,6 +111,14 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     @Override
     public String getKey() {
         return "default-gridfs";
+    }
+
+    /*
+     * The base path for all storage in the GridFS repository is the process definition key
+     */
+    private static String basePath(ContentProfileProvider contentProfileProvider) {
+        String processDefinitionKey = contentProfileProvider.processDefinitionKey();
+        return new StringBuilder("/").append(processDefinitionKey).append("/").toString();
     }
 
 }

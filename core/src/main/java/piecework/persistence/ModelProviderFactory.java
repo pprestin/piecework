@@ -43,6 +43,8 @@ public interface ModelProviderFactory {
 
     ProcessDeploymentProvider deploymentProvider(String processDefinitionKey, Entity principal);
 
+    ProcessDeploymentProvider deploymentProvider(String processDefinitionKey, String deploymentId, Entity principal);
+
     HistoryProvider historyProvider(String processDefinitionKey, String processInstanceId, Entity principal);
 
     ProcessInstanceProvider instanceProvider(String processInstanceId, Entity principal);

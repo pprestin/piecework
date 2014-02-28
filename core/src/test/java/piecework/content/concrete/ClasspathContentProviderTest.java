@@ -16,8 +16,17 @@
 package piecework.content.concrete;
 
 import junit.framework.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import piecework.enumeration.Scheme;
+import piecework.exception.ForbiddenError;
+import piecework.exception.PieceworkException;
 import piecework.model.Content;
+import piecework.model.ContentProfile;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
+import piecework.security.AccessTracker;
 
 /**
  * @author James Renfro
@@ -25,29 +34,48 @@ import piecework.model.Content;
 public class ClasspathContentProviderTest {
 
     private ClasspathContentProvider contentProvider = new ClasspathContentProvider();
+    private ContentProfileProvider modelProvider;
+
+    @Before
+    public void setup() {
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .baseClasspath("META-INF/piecework/")
+                .build();
+        this.modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        this.contentProvider.accessTracker = Mockito.mock(AccessTracker.class);
+    }
 
     @Test
-    public void happyPathSuccess() {
-        Content content = contentProvider.findByPath(null, "classpath:META-INF/piecework", "default.properties", null);
+    public void happyPathSuccess() throws PieceworkException {
+        Content content = contentProvider.findByLocation(modelProvider, "classpath:META-INF/piecework/default.properties");
         Assert.assertEquals("classpath:META-INF/piecework/default.properties", content.getLocation());
     }
 
     @Test
-    public void relativePathSuccess() {
-        Content content = contentProvider.findByPath(null, "classpath:nothing/../META-INF/piecework", "default.properties", null);
+    public void relativePathSuccess() throws PieceworkException {
+        Content content = contentProvider.findByLocation(modelProvider, "classpath:META-INF/piecework/some/../default.properties");
         Assert.assertEquals("classpath:META-INF/piecework/default.properties", content.getLocation());
     }
 
     @Test
-    public void happyPathFailure() {
-        Content content = contentProvider.findByPath(null, "classpath:META-INF/does/not/exist", "default.properties", null);
+    public void happyPathFailure() throws PieceworkException {
+        Content content = contentProvider.findByLocation(modelProvider, "default.properties");
         Assert.assertNull(content);
     }
 
+    @Test(expected = ForbiddenError.class)
+    public void relativePathForbidden() throws PieceworkException {
+        contentProvider.findByLocation(modelProvider, "classpath:../../piecework/StatusCodeError.properties");
+    }
+
     @Test
-    public void relativePathFailure() {
-        Content content = contentProvider.findByPath(null, "classpath:META-INF/piecework", "../../piecework/StatusCodeError.properties", null);
-        Assert.assertNull(content);
+    public void verifyKey() {
+        Assert.assertEquals("default-classpath", contentProvider.getKey());
+    }
+
+    @Test
+    public void verifyScheme() {
+        Assert.assertEquals(Scheme.CLASSPATH, contentProvider.getScheme());
     }
 
 }

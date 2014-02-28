@@ -28,7 +28,10 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessProvider;
+import piecework.persistence.concrete.ProcessDeploymentRepositoryProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
 import piecework.persistence.test.ProcessProviderStub;
 import piecework.repository.ActivityRepository;
 import piecework.repository.ContentRepository;
@@ -96,7 +99,8 @@ public class DeploymentCommandTest {
     @Test(expected = NotFoundError.class)
     public void testNotFound() throws PieceworkException {
         ProcessProvider processProvider = new ProcessProviderStub(process, principal);
-        DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
+        ProcessDeploymentProvider modelProvider = new ProcessDeploymentRepositoryProvider(deploymentRepository, processProvider, deploymentId);
+        DeploymentCommand deployment = new DeploymentCommand(null, modelProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
     }
@@ -106,7 +110,8 @@ public class DeploymentCommandTest {
         when(deploymentRepository.findOne(deploymentId))
                 .thenReturn(processDeployment);
         ProcessProvider processProvider = new ProcessProviderStub(process, principal);
-        DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
+        ProcessDeploymentProvider modelProvider = new ProcessDeploymentRepositoryProvider(deploymentRepository, processProvider, deploymentId);
+        DeploymentCommand deployment = new DeploymentCommand(null, modelProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
     }
@@ -125,11 +130,12 @@ public class DeploymentCommandTest {
                 .thenReturn(processDeployment);
 
         ProcessProvider processProvider = new ProcessProviderStub(process, principal);
-        DeploymentCommand deployment = new DeploymentCommand(null, processProvider, deploymentId, resource);
+        ProcessDeploymentProvider modelProvider = new ProcessDeploymentRepositoryProvider(deploymentRepository, processProvider, deploymentId);
+        DeploymentCommand deployment = new DeploymentCommand(null, modelProvider, deploymentId, resource);
         deployment.execute(activityRepository, contentRepository, deploymentRepository, facade,
                 processRepository, uuidGenerator);
 
-        verify(contentRepository).save(eq(process), any(ProcessInstance.class), any(Content.class), any(Entity.class));
+        verify(contentRepository).save(eq(modelProvider), any(Content.class));
         verify(facade).deploy(eq(process), eq(processDeployment), any(Content.class));
         verify(processRepository).save(any(Process.class));
     }

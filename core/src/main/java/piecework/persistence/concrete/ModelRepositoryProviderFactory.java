@@ -95,6 +95,13 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
     }
 
     @Override
+    public ProcessDeploymentProvider deploymentProvider(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) {
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentRepositoryProvider(deploymentRepository, processProvider(rawProcessDefinitionKey, principal), deploymentId);
+        return deploymentProvider;
+    }
+
+    @Override
     public <P extends ProcessDeploymentProvider> P provider(FormRequest request, Entity principal) {
         String processDefinitionKey = request.getProcessDefinitionKey();
         String processInstanceId = request.getProcessInstanceId();

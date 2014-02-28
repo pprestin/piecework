@@ -21,6 +21,7 @@ import piecework.exception.PieceworkException;
 import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
+import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ModelUtility;
@@ -37,7 +38,7 @@ public class FormValueSubmissionHandler extends AbstractSubmissionHandler<Map<St
     private static final Logger LOG = Logger.getLogger(FormValueSubmissionHandler.class);
 
     @Override
-    protected <P extends ProcessProvider> Submission handleInternal(P modelProvider, Map<String, List<String>> data, SubmissionTemplate template) throws PieceworkException {
+    protected Submission handleInternal(ContentProfileProvider modelProvider, Map<String, List<String>> data, SubmissionTemplate template) throws PieceworkException {
         Entity principal = modelProvider.principal();
         ProcessInstance instance = ModelUtility.instance(modelProvider);
 
@@ -53,7 +54,7 @@ public class FormValueSubmissionHandler extends AbstractSubmissionHandler<Map<St
                 if (rawValues != null) {
                     for (String rawValue : rawValues) {
                         String value = sanitizer.sanitize(rawValue);
-                        if (!submissionStorageService.store(instance, template, submissionBuilder, name, value, actingAsId, principal)) {
+                        if (!submissionStorageService.store(modelProvider, template, submissionBuilder, name, value, actingAsId)) {
                             LOG.warn("Submission included field (" + name + ") that is not acceptable, and no attachments are allowed for this template");
                         }
                     }

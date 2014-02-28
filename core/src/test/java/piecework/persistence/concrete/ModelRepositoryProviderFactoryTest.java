@@ -24,9 +24,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.ViewContext;
+import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.AllowedTaskProvider;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
@@ -34,6 +36,7 @@ import piecework.repository.*;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.CacheService;
 import piecework.settings.UserInterfaceSettings;
+import piecework.util.ModelUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +70,7 @@ public class ModelRepositoryProviderFactoryTest {
     ProcessRepository processRepository;
 
     @Mock
-    Entity principal;
+    User principal;
 
     @Mock
     ProcessInstanceRepository processInstanceRepository;
@@ -94,7 +97,19 @@ public class ModelRepositoryProviderFactoryTest {
                 .processInstanceId("1234")
                 .deploymentId("1")
                 .attachmentId("233")
+                .task(new Task.Builder()
+                        .taskInstanceId("555")
+                        .taskDescription("Some task")
+                        .assigneeId("testuser")
+                        .active()
+                        .build())
                 .build();
+
+        Mockito.doReturn("testuser")
+               .when(principal).getEntityId();
+
+        Mockito.doReturn("testuser")
+               .when(principal).getUserId();
 
         ProcessInstance deletedInstance = new ProcessInstance.Builder()
                 .processDefinitionKey("TEST")
@@ -111,6 +126,9 @@ public class ModelRepositoryProviderFactoryTest {
 
         Mockito.doReturn(instance)
                 .when(processInstanceRepository).findOne(eq("1234"));
+
+        Mockito.doReturn(instance)
+                .when(processInstanceRepository).findByTaskId(eq("TEST"), eq("555"));
 
         Mockito.doReturn(currentDeployment)
                 .when(deploymentRepository).findOne(eq("2"));
@@ -132,6 +150,28 @@ public class ModelRepositoryProviderFactoryTest {
     }
 
     @Test
+    public void verifyAllowedTaskProvider() throws PieceworkException {
+        AllowedTaskProvider allowedTaskProvider = factory.allowedTaskProvider("TEST", "1234", principal);
+        Assert.assertTrue(allowedTaskProvider instanceof AllowedTaskProvider);
+        Assert.assertEquals("TEST", allowedTaskProvider.processDefinitionKey());
+        Assert.assertEquals("TEST", allowedTaskProvider.process().getProcessDefinitionKey());
+
+        Task task = allowedTaskProvider.allowedTask(true);
+        Assert.assertEquals("555", task.getTaskInstanceId());
+        Assert.assertEquals("Some task", task.getTaskDescription());
+    }
+
+    @Test(expected = NotFoundError.class)
+    public void verifyAllowedTaskProviderWithUnknownTask() throws PieceworkException {
+        AllowedTaskProvider allowedTaskProvider = factory.allowedTaskProvider("TEST", "1230", principal);
+        Assert.assertTrue(allowedTaskProvider instanceof AllowedTaskProvider);
+        Assert.assertEquals("TEST", allowedTaskProvider.processDefinitionKey());
+        Assert.assertEquals("TEST", allowedTaskProvider.process().getProcessDefinitionKey());
+
+        allowedTaskProvider.allowedTask(true);
+    }
+
+    @Test
     public void verifyCachingProcessProvider() throws PieceworkException {
         ProcessProvider processProvider = factory.processProvider("TEST", principal);
         Assert.assertTrue(processProvider instanceof CachingProcessProvider);
@@ -149,6 +189,41 @@ public class ModelRepositoryProviderFactoryTest {
         Assert.assertEquals("TEST", process.getProcessDefinitionKey());
         ProcessDeployment deployment = deploymentProvider.deployment();
         Assert.assertEquals("2", deployment.getDeploymentId());
+    }
+
+    @Test
+    public void verifyDeploymentByIdProvider() throws PieceworkException {
+        ProcessDeploymentProvider deploymentProvider = factory.deploymentProvider("TEST", "1", principal);
+        Assert.assertTrue(deploymentProvider instanceof ProcessDeploymentRepositoryProvider);
+        Process process = deploymentProvider.process();
+        Assert.assertEquals("TEST", process.getProcessDefinitionKey());
+        ProcessDeployment deployment = deploymentProvider.deployment();
+        Assert.assertEquals("1", deployment.getDeploymentId());
+    }
+
+    @Test
+    public void verifyFormRequestTaskIdProvider() throws PieceworkException {
+        FormRequest request = new FormRequest.Builder()
+                .processDefinitionKey("TEST")
+                .taskId("555")
+                .build();
+
+        ProcessDeploymentProvider deploymentProvider = factory.provider(request, principal);
+        Task task = ModelUtility.task(deploymentProvider);
+        Assert.assertEquals("555", task.getTaskInstanceId());
+        Assert.assertEquals("Some task", task.getTaskDescription());
+    }
+
+    @Test
+    public void verifyFormRequestInstanceIdProvider() throws PieceworkException {
+        FormRequest request = new FormRequest.Builder()
+                .processDefinitionKey("TEST")
+                .processInstanceId("1234")
+                .build();
+
+        ProcessDeploymentProvider deploymentProvider = factory.provider(request, principal);
+        ProcessInstance instance = ModelUtility.instance(deploymentProvider);
+        Assert.assertEquals("1234", instance.getProcessInstanceId());
     }
 
     @Test

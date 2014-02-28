@@ -67,8 +67,6 @@ public class Process implements Serializable {
     @XmlElement
     private final String deploymentVersion;
 
-    private final String contentReceiverKey;
-
     @XmlElement
     private final ProcessCodeRepository repository;
 
@@ -122,7 +120,6 @@ public class Process implements Serializable {
         this.participantSummary = builder.participantSummary;
         this.repository = builder.repository;
 		this.deployment = builder.deployment;
-        this.contentReceiverKey = builder.contentReceiverKey;
         this.versions = Collections.unmodifiableList(builder.versions);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
@@ -157,10 +154,6 @@ public class Process implements Serializable {
     @JsonIgnore
     public ProcessDeployment getDeployment() {
         return deployment;
-    }
-
-    public String getContentReceiverKey() {
-        return contentReceiverKey;
     }
 
     public String getDeploymentId() {
@@ -245,7 +238,6 @@ public class Process implements Serializable {
         private String deploymentVersion;
         private String processSummary;
         private String participantSummary;
-        private String contentReceiverKey;
         private ProcessCodeRepository repository;
 		private ProcessDeployment deployment;
         private List<ProcessDeploymentVersion> versions;
@@ -276,7 +268,6 @@ public class Process implements Serializable {
                 this.versions = new ArrayList<ProcessDeploymentVersion>();
             else
                 this.versions = new ArrayList<ProcessDeploymentVersion>(process.versions);
-            this.contentReceiverKey = process.contentReceiverKey;
             this.isAnonymousSubmissionAllowed = process.isAnonymousSubmissionAllowed;
             this.isDeleted = process.isDeleted;
             this.allowPerInstanceActivities = process.allowPerInstanceActivities;
@@ -309,11 +300,6 @@ public class Process implements Serializable {
 
         public Builder participantSummary(String participantSummary) {
             this.participantSummary = participantSummary;
-            return this;
-        }
-
-        public Builder contentReceiverKey(String contentReceiverKey) {
-            this.contentReceiverKey = contentReceiverKey;
             return this;
         }
 

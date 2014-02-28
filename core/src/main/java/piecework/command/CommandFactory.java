@@ -79,9 +79,9 @@ public class CommandFactory {
         return new CreateInstanceCommand(commandExecutor, modelProvider, data, attachments, submission);
     }
 
-    public DeploymentCommand deployment(ProcessProvider processProvider, String deploymentId, ProcessDeploymentResource resource) {
+    public DeploymentCommand deployment(ProcessDeploymentProvider modelProvider, String deploymentId, ProcessDeploymentResource resource) {
 
-        return new DeploymentCommand(commandExecutor, processProvider, deploymentId, resource);
+        return new DeploymentCommand(commandExecutor, modelProvider, deploymentId, resource);
     }
 
     public DetachmentCommand detachment(AllowedTaskProvider allowedTaskProvider, String attachmentId) {

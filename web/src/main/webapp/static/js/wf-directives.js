@@ -828,8 +828,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfList', ['attachmentService', 'dateFilter',
-        function(attachmentService, dateFilter) {
+    .directive('wfList', ['$http', '$sce', 'attachmentService', 'dateFilter',
+        function($http, $sce, attachmentService, dateFilter) {
             return {
                 restrict: 'A',
                 scope: {
@@ -879,14 +879,18 @@ angular.module('wf.directives',
                                 var $listElement = $target.find('ul');
                                 var $listItem = $(event.target).closest('li');
                                 var $fallbackHtml = $target.find('[data-wf-fallback]');
-                                $.ajax({
-                                    url : realValue.link,
-                                    type : 'DELETE',
-                                    success: function() {
-                                        $listItem.remove();
-                                        if ($listElement.find('li').length == 1)
-                                            $fallbackHtml.show();
-                                    }
+                                var url = realValue.link + '/removal.json';
+                                $http.post($sce.trustAsResourceUrl(url), null, {
+                                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                    transformRequest: angular.identity
+                                })
+                                .success(function(data, status, headers, config) {
+                                    $listItem.remove();
+                                    if ($listElement.find('li').length == 1)
+                                        $fallbackHtml.show();
+                                })
+                                .error(function(data, status, headers, config) {
+
                                 });
                             });
 

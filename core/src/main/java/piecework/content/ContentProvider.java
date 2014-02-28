@@ -1,8 +1,10 @@
 package piecework.content;
 
 import piecework.enumeration.Scheme;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;
 
@@ -11,7 +13,7 @@ import java.io.IOException;
  */
 public interface ContentProvider {
 
-    Content findByPath(Process process, String base, String location, Entity principal) throws IOException;
+    Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException;
 
     Scheme getScheme();
 
