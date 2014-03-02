@@ -16,6 +16,7 @@
 package piecework.persistence.test;
 
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.persistence.ProcessInstanceProvider;
@@ -39,7 +40,7 @@ public class ProcessInstanceProviderStub extends ProcessDeploymentProviderStub i
     }
 
     @Override
-    public Streamable diagram() throws PieceworkException {
+    public ContentResource diagram() throws PieceworkException {
         return null;
     }
 

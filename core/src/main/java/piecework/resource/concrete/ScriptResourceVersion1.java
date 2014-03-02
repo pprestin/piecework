@@ -22,7 +22,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
+import piecework.content.ContentResource;
 import piecework.form.FormDisposition;
+import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.service.RequestService;
@@ -71,24 +73,32 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     private UserInterfaceService userInterfaceService;
 
     @Override
-    public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
-        String scriptId = sanitizer.sanitize(rawProcessDefinitionKey);
+    public Response readScript(final String rawScriptId, final MessageContext context) throws PieceworkException {
+        String scriptId = sanitizer.sanitize(rawScriptId);
         String templateName = UserInterfaceUtility.templateName(scriptId, isAnonymous());
 
-        ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, identityHelper.getPrincipal());
-        Resource scriptResource;
-        Entity principal = modelProvider.principal();
+        ContentResource scriptResource;
+        Entity principal = identityHelper.getPrincipal();
         if (templateName != null) {
+            ContentProfileProvider modelProvider = modelProviderFactory.systemContentProvider(principal);
             ServletContext servletContext = context.getServletContext();
             scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, templateName, isAnonymous());
         } else {
-            Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
+            // If we didn't find a template, then treat the script id as a process definition key, but since the
+            // user has not been authorized at this point, that authorization needs to be performed here
+            String processDefinitionKey = scriptId;
+
+            ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(processDefinitionKey, principal);
+            if (!principal.hasRole(modelProvider.process(), AuthorizationRole.USER, AuthorizationRole.INITIATOR, AuthorizationRole.OVERSEER))
+                throw new ForbiddenError();
+
+            Form form = getForm(processDefinitionKey, principal, context);
             ServletContext servletContext = context.getServletContext();
 
             FormDisposition disposition = form.getDisposition();
             if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
                 try {
-                    Resource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                    ContentResource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
                     scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, form, pageResource);
                 } catch (MisconfiguredProcessException e) {
                     throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -102,23 +112,32 @@ public class ScriptResourceVersion1 extends AbstractScriptResource implements Sc
     }
 
     @Override
-    public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
-        String stylesheetId = sanitizer.sanitize(rawProcessDefinitionKey);
+    public Response readStylesheet(final String rawStylesheetId, final MessageContext context) throws PieceworkException {
+        String stylesheetId = sanitizer.sanitize(rawStylesheetId);
         String templateName = UserInterfaceUtility.templateName(stylesheetId, isAnonymous());
 
-        Resource stylesheetResource;
+        ContentResource stylesheetResource;
         Entity principal = identityHelper.getPrincipal();
-        ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         if (templateName != null) {
+            ContentProfileProvider modelProvider = modelProviderFactory.systemContentProvider(principal);
+
             ServletContext servletContext = context.getServletContext();
             stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, templateName);
         } else {
-            Form form = getForm(rawProcessDefinitionKey, identityHelper.getPrincipal(), context);
+            // If we didn't find a template, then treat the script id as a process definition key, but since the
+            // user has not been authorized at this point, that authorization needs to be performed here
+            String processDefinitionKey = stylesheetId;
+
+            ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(processDefinitionKey, principal);
+            if (!principal.hasRole(modelProvider.process(), AuthorizationRole.USER, AuthorizationRole.INITIATOR, AuthorizationRole.OVERSEER))
+                throw new ForbiddenError();
+
+            Form form = getForm(processDefinitionKey, identityHelper.getPrincipal(), context);
             ServletContext servletContext = context.getServletContext();
             FormDisposition disposition = form.getDisposition();
             if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
                 try {
-                    Resource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                    ContentResource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
                     stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, form, pageResource);
                 } catch (MisconfiguredProcessException e) {
                     throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);

@@ -26,34 +26,35 @@ import piecework.Constants;
 /**
  * @author James Renfro
  */
+@Deprecated
 public class LayoutUtil {
 
-	public enum Layout { WIZARD, PANELS, FLOW };
-	
-	public static Layout getLayout(String layoutStr) {
-		Layout layout = Layout.PANELS;
-		
-		if (layoutStr != null) {
-			if (layoutStr.equals("wizard"))
-				layout = Layout.WIZARD;
-			else if (layoutStr.equals("flow"))
-				layout = Layout.FLOW;
-		}
-		return layout;
-	}
-	
-	public static boolean isSelectedSection(String layout, String taskDefinitionKey, String sectionName) {
-		return isSelectedSection(getLayout(layout), taskDefinitionKey, sectionName);
-	}
-	
-	public static boolean isSelectedSection(Layout layout, String taskDefinitionKey, String sectionName) {
-		if (layout == Layout.PANELS)
-			return true;
-		
-		String[] sectionNames = sectionName != null ? sectionName.split(",") : null;
-		@SuppressWarnings("unchecked")
-		Set<String> sectionNameSet = (Set<String>) (sectionNames != null ? new HashSet<String>(Arrays.asList(sectionNames)) : Collections.emptySet());
-		return (taskDefinitionKey == null && sectionNameSet.contains(Constants.START_TASK_DEFINITION_KEY) || (taskDefinitionKey != null && sectionNameSet.contains(taskDefinitionKey)));
-	}
+//	public enum Layout { WIZARD, PANELS, FLOW };
+//
+//	public static Layout getLayout(String layoutStr) {
+//		Layout layout = Layout.PANELS;
+//
+//		if (layoutStr != null) {
+//			if (layoutStr.equals("wizard"))
+//				layout = Layout.WIZARD;
+//			else if (layoutStr.equals("flow"))
+//				layout = Layout.FLOW;
+//		}
+//		return layout;
+//	}
+//
+//	public static boolean isSelectedSection(String layout, String taskDefinitionKey, String sectionName) {
+//		return isSelectedSection(getLayout(layout), taskDefinitionKey, sectionName);
+//	}
+//
+//	public static boolean isSelectedSection(Layout layout, String taskDefinitionKey, String sectionName) {
+//		if (layout == Layout.PANELS)
+//			return true;
+//
+//		String[] sectionNames = sectionName != null ? sectionName.split(",") : null;
+//		@SuppressWarnings("unchecked")
+//		Set<String> sectionNameSet = (Set<String>) (sectionNames != null ? new HashSet<String>(Arrays.asList(sectionNames)) : Collections.emptySet());
+//		return (taskDefinitionKey == null && sectionNameSet.contains(Constants.START_TASK_DEFINITION_KEY) || (taskDefinitionKey != null && sectionNameSet.contains(taskDefinitionKey)));
+//	}
 	
 }

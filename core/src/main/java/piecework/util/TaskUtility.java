@@ -37,10 +37,13 @@ public class TaskUtility {
 
         Set<Task> tasks = instance != null ? instance.getTasks() : null;
 
-        if (tasks == null)
+        if (tasks == null || tasks.isEmpty())
             return null;
 
         boolean hasOversight = principal.hasRole(process, AuthorizationRole.OVERSEER);
+        boolean isUser = principal.hasRole(process, AuthorizationRole.USER);
+
+        Task selectedTask = null;
 
         for (Task task : tasks) {
             if (limitToActive && !task.isActive())
@@ -49,13 +52,17 @@ public class TaskUtility {
             if (taskId != null && !task.getTaskInstanceId().equals(taskId))
                 continue;
 
-            if (hasOversight || task.isCandidateOrAssignee(principal) ) {
-                Map<String, User> userMap = identityService != null ? identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds()) : Collections.<String, User>emptyMap();
-                return TaskFactory.task(task, new PassthroughSanitizer(), userMap, viewContext);
+            if (hasOversight || (isUser && task.isCandidateOrAssignee(principal))) {
+                if (selectedTask == null || (!selectedTask.isActive() && task.isActive())) {
+                    Map<String, User> userMap = identityService != null ? identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds()) : Collections.<String, User>emptyMap();
+                    selectedTask = TaskFactory.task(task, new PassthroughSanitizer(), userMap, viewContext);
+                    if (selectedTask.isActive())
+                        break;
+                }
             }
         }
 
-        return null;
+        return viewContext != null ? new Task.Builder(selectedTask, new PassthroughSanitizer()).build(viewContext) : selectedTask;
     }
 
 }

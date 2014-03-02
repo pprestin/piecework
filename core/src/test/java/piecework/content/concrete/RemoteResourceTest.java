@@ -61,33 +61,8 @@ public class RemoteResourceTest {
     }
 
     @Test
-    public void verifyExists() {
-        Assert.assertTrue(remoteResource.exists());
-    }
-
-    @Test
-    public void verifyIsReadable() {
-        Assert.assertTrue(remoteResource.isReadable());
-    }
-
-    @Test
-    public void verifyIsOpen() {
-        Assert.assertTrue(remoteResource.isOpen());
-    }
-
-    @Test
-    public void verifyUrl() throws MalformedURLException, IOException {
-        Assert.assertEquals(new URL(URI_STRING), remoteResource.getURL());
-    }
-
-    @Test
-    public void verifyUri() throws MalformedURLException, IOException {
-        Assert.assertEquals(URI.create(URI_STRING), remoteResource.getURI());
-    }
-
-    @Test
-    public void verifyFile() throws IOException {
-        Assert.assertNull(remoteResource.getFile());
+    public void verifyLocation() throws MalformedURLException, IOException {
+        Assert.assertEquals(URI_STRING, remoteResource.getLocation());
     }
 
     @Test

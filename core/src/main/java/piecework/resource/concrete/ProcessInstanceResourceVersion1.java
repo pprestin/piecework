@@ -21,8 +21,10 @@ import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import piecework.command.FieldValidationCommand;
+import piecework.content.ContentResource;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.OperationType;
 import piecework.identity.IdentityHelper;
@@ -40,8 +42,7 @@ import piecework.process.AttachmentQueryParameters;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.*;
 import piecework.settings.UserInterfaceSettings;
-import piecework.ui.Streamable;
-import piecework.ui.streaming.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingResource;
 import piecework.common.ManyMap;
 import piecework.util.FormUtility;
 import piecework.util.ProcessInstanceUtility;
@@ -114,14 +115,14 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         if (allowedTask == null)
             throw new ForbiddenError();
 
-        StreamingAttachmentContent content = allowedTaskProvider.attachment(attachmentId);
+        ContentResource attachment = allowedTaskProvider.attachment(attachmentId);
 
-        if (content == null)
+        if (attachment == null)
             throw new NotFoundError(Constants.ExceptionCodes.attachment_does_not_exist, attachmentId);
 
-        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getAttachment().getDescription()).toString();
+        String contentDisposition = new StringBuilder("attachment; filename=").append(attachment.getFilename()).toString();
 
-        return FormUtility.okResponse(settings, allowedTaskProvider, content, content.getAttachment().getContentType(), Collections.<Header>singletonList(new BasicHeader("Content-Disposition", contentDisposition)), false);
+        return FormUtility.okResponse(settings, allowedTaskProvider, attachment, attachment.contentType(), Collections.<Header>singletonList(new BasicHeader("Content-Disposition", contentDisposition)), false);
     }
 
     @Override
@@ -147,9 +148,8 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         accessTracker.track(requestDetails, false, false);
 
         ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
-        Streamable diagram = instanceProvider.diagram();
-        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(diagram);
-        ResponseBuilder responseBuilder = Response.ok(streamingAttachmentContent);
+        ContentResource diagram = instanceProvider.diagram();
+        ResponseBuilder responseBuilder = Response.ok(diagram);
         return responseBuilder.build();
     }
 
@@ -198,17 +198,16 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         accessTracker.track(requestDetails, false, false);
 
         AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
-        StreamingAttachmentContent streaming = allowedTaskProvider.value(rawFieldName, rawValueId);
-        Content content = Content.class.cast(streaming.getContent());
+        ContentResource contentResource = allowedTaskProvider.value(rawFieldName, rawValueId);
 
         boolean isInline = inline != null && inline.booleanValue();
         if (isInline)
-            return FormUtility.okResponse(settings, allowedTaskProvider, streaming, content.getContentType(), false);
+            return FormUtility.okResponse(settings, allowedTaskProvider, contentResource, contentResource.contentType(), false);
 
-        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getName()).toString();
+        String contentDisposition = new StringBuilder("attachment; filename=").append(contentResource.getName()).toString();
 
         List<Header> headers = Collections.<Header>singletonList(new BasicHeader("Content-Disposition", contentDisposition));
-        return FormUtility.okResponse(settings, allowedTaskProvider, streaming, content.getContentType(), headers, false);
+        return FormUtility.okResponse(settings, allowedTaskProvider, contentResource, contentResource.contentType(), headers, false);
     }
 
     @Override

@@ -18,6 +18,7 @@ package piecework.command;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.content.ContentResource;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
@@ -79,7 +80,7 @@ public class CommandFactory {
         return new CreateInstanceCommand(commandExecutor, modelProvider, data, attachments, submission);
     }
 
-    public DeploymentCommand deployment(ProcessDeploymentProvider modelProvider, String deploymentId, ProcessDeploymentResource resource) {
+    public DeploymentCommand deployment(ProcessDeploymentProvider modelProvider, String deploymentId, ContentResource resource) {
 
         return new DeploymentCommand(commandExecutor, modelProvider, deploymentId, resource);
     }
@@ -139,14 +140,16 @@ public class CommandFactory {
         return new UpdateValueCommand(commandExecutor, allowedTaskProvider, validation);
     }
 
-    public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, Submission submission, String version) {
-
-        return new ValidationCommand<P>(commandExecutor, modelProvider, request, submission, version);
+    public <P extends ProcessDeploymentProvider> SubmissionValidationCommand submissionValidation(P modelProvider, FormRequest request, ActionType actionType, Submission submission, String version) {
+        return new SubmissionValidationCommand<P>(commandExecutor, modelProvider, request, actionType, submission, version);
     }
 
-    public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, Object object, Class<?> type, String validationId, String version) {
+    public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, ActionType actionType, Object object, Class<?> type, String version) {
+        return new ValidationCommand<P>(commandExecutor, modelProvider, request, actionType, object, type, version);
+    }
 
-        return new ValidationCommand<P>(commandExecutor, modelProvider, request, object, type, validationId, version);
+    public <P extends ProcessDeploymentProvider> ContainerValidationCommand containerValidation(P modelProvider, FormRequest request, ActionType actionType, Object object, Class<?> type, String validationId, String version) {
+        return new ContainerValidationCommand<P>(commandExecutor, modelProvider, request, actionType, object, type, validationId, version);
     }
 
     public <P extends ProcessDeploymentProvider> FieldValidationCommand fieldValidation(P modelProvider, FormRequest request, Object object, Class<?> type, String fieldName, String version) {

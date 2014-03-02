@@ -111,7 +111,7 @@ public class SubmitFormCommand<P extends ProcessDeploymentProvider> extends Abst
             case REJECT:
                 if (stored != null) {
                     nextRequest = requestService.create(requestDetails, provider, validatedActionType);
-                    return new SubmissionCommandResponse(submission, nextRequest);
+                    return new SubmissionCommandResponse(provider, submission, nextRequest);
                 }
             case SAVE:
                 Map<String, List<Value>> validationData = validation != null ? validation.getData() : null;
@@ -122,7 +122,7 @@ public class SubmitFormCommand<P extends ProcessDeploymentProvider> extends Abst
                 break;
         }
 
-        return new SubmissionCommandResponse(submission, nextRequest);
+        return new SubmissionCommandResponse(provider, submission, nextRequest);
     }
 
 }

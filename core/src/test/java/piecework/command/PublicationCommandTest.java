@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.UuidGenerator;
+import piecework.content.ContentResource;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.ForbiddenError;
@@ -118,15 +119,15 @@ public class PublicationCommandTest {
                 .thenReturn(new ByteArrayInputStream("Test".getBytes()));
         when(resource.getName())
                 .thenReturn("TESTRESOURCE1");
-        when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(Content.class)))
+        when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(ContentResource.class)))
                 .thenReturn(deployment);
 
         ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);
         PublicationCommand publication = new PublicationCommand(null, deploymentProvider, deploymentId);
         publication.execute(deploymentRepository, processRepository);
 
-        verify(contentRepository).save(eq(deploymentProvider), any(Content.class));
-        verify(facade).deploy(eq(process), eq(deployment), any(Content.class));
+        verify(contentRepository).save(eq(deploymentProvider), any(ContentResource.class));
+        verify(facade).deploy(eq(process), eq(deployment), any(ContentResource.class));
         verify(processRepository).save(any(Process.class));
     }
 
@@ -142,7 +143,7 @@ public class PublicationCommandTest {
                 .thenReturn(new ByteArrayInputStream("Test".getBytes()));
         when(resource.getName())
                 .thenReturn("TESTRESOURCE1");
-        when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(Content.class)))
+        when(facade.deploy(any(Process.class), any(ProcessDeployment.class), any(ContentResource.class)))
                 .thenReturn(deployment);
 
         ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentProviderStub(process, deployment, principal);

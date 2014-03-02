@@ -39,6 +39,8 @@ public interface ModelProviderFactory {
 
     AllowedTaskProvider allowedTaskProvider(String processDefinitionKey, String processInstanceId, Entity principal);
 
+    ContentProfileProvider systemContentProvider(Entity principal);
+
     ProcessProvider processProvider(String processDefinitionKey, Entity principal);
 
     ProcessDeploymentProvider deploymentProvider(String processDefinitionKey, Entity principal);

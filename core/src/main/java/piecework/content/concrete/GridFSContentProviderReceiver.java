@@ -28,12 +28,12 @@ import org.springframework.stereotype.Service;
 import piecework.common.UuidGenerator;
 import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
+import piecework.content.ContentResource;
 import piecework.enumeration.AlarmSeverity;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
 import piecework.persistence.ContentProfileProvider;
 import piecework.security.AccessTracker;
 import piecework.util.ContentUtility;
@@ -66,7 +66,7 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
     }
 
     @Override
-    public Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
         if (StringUtils.isEmpty(location))
             throw new MisconfiguredProcessException("Unable to find content with an empty location");
 
@@ -79,28 +79,24 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
         }
 
         GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(location)));
-        return ContentUtility.toContent(file);
+        return new GridFsContentResource(gridFsOperations, file, location);
     }
 
     @Override
-    public Content save(ContentProfileProvider modelProvider, Content content) throws IOException {
+    public ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws IOException {
         BasicDBObject metadata = new BasicDBObject();
-        metadata.put("originalFilename", content.getName());
+        metadata.put(GridFsContentResource.NAME, contentResource.getName());
+        metadata.put(GridFsContentResource.DESCRIPTION, contentResource.getDescription());
+        metadata.put(GridFsContentResource.FILENAME, contentResource.getFilename());
+        metadata.put(GridFsContentResource.CONTENT_LENGTH, contentResource.contentLength());
+        metadata.put(GridFsContentResource.E_TAG, contentResource.eTag());
+        metadata.put(GridFsContentResource.LAST_MODIFIED, contentResource.lastModified());
 
         String id = uuidGenerator.getNextId();
-        String path = basePath(modelProvider) + id;
+        String location = basePath(modelProvider) + id;
 
-        GridFSFile file = gridFsOperations.store(content.getInputStream(), path, content.getContentType(), metadata);
-        String contentId = file.getId().toString();
-
-        return new Content.Builder(content)
-                .contentId(contentId)
-                .contentType(content.getContentType())
-                .location(path)
-                .length(file.getLength())
-                .lastModified(file.getUploadDate())
-                .md5(file.getMD5())
-                .build();
+        GridFSFile file = gridFsOperations.store(contentResource.getInputStream(), location, contentResource.contentType(), metadata);
+        return new GridFsContentResource(gridFsOperations, file, location);
     }
 
     @Override

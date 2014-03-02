@@ -25,6 +25,8 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.SystemUser;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
@@ -117,9 +119,9 @@ public class Demonstration implements TaskListener {
         ProcessDeployment deployment = demoProcessDeployment();
 
         ClassPathResource classPathResource = new ClassPathResource("META-INF/demo/Demonstration.bpmn20.xml");
-        ProcessDeploymentResource resource = new ProcessDeploymentResource.Builder()
+        ContentResource resource = new BasicContentResource.Builder()
                 .contentType("application/xml")
-                .name("Demonstration.bpmn20.xml")
+                .filename("Demonstration.bpmn20.xml")
                 .inputStream(classPathResource.getInputStream())
                 .build();
 
@@ -140,9 +142,9 @@ public class Demonstration implements TaskListener {
         ProcessDeployment deployment = demoProcessDeployment();
 
         ClassPathResource classPathResource = new ClassPathResource("META-INF/demo/Demonstration.bpmn20.xml");
-        ProcessDeploymentResource resource = new ProcessDeploymentResource.Builder()
+        ContentResource resource = new BasicContentResource.Builder()
                 .contentType("application/xml")
-                .name("Demonstration.bpmn20.xml")
+                .filename("Demonstration.bpmn20.xml")
                 .inputStream(classPathResource.getInputStream())
                 .build();
 

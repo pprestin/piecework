@@ -22,7 +22,7 @@ import org.mockito.Mockito;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
-import piecework.model.Content;
+import piecework.content.ContentResource;
 import piecework.model.ContentProfile;
 import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.test.ProcessDeploymentProviderStub;
@@ -47,20 +47,20 @@ public class ClasspathContentProviderTest {
 
     @Test
     public void happyPathSuccess() throws PieceworkException {
-        Content content = contentProvider.findByLocation(modelProvider, "classpath:META-INF/piecework/default.properties");
-        Assert.assertEquals("classpath:META-INF/piecework/default.properties", content.getLocation());
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, "classpath:META-INF/piecework/default.properties");
+        Assert.assertEquals("classpath:META-INF/piecework/default.properties", contentResource.getLocation());
     }
 
     @Test
     public void relativePathSuccess() throws PieceworkException {
-        Content content = contentProvider.findByLocation(modelProvider, "classpath:META-INF/piecework/some/../default.properties");
-        Assert.assertEquals("classpath:META-INF/piecework/default.properties", content.getLocation());
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, "classpath:META-INF/piecework/some/../default.properties");
+        Assert.assertEquals("classpath:META-INF/piecework/default.properties", contentResource.getLocation());
     }
 
     @Test
     public void happyPathFailure() throws PieceworkException {
-        Content content = contentProvider.findByLocation(modelProvider, "default.properties");
-        Assert.assertNull(content);
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, "default.properties");
+        Assert.assertNull(contentResource);
     }
 
     @Test(expected = ForbiddenError.class)

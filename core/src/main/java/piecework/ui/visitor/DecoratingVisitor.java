@@ -210,8 +210,10 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     if (contentTypeSet.isEmpty() || (attachment.getContentType() != null && contentTypeSet.contains(attachment.getContentType()))) {
                         TagNode liNode = new TagNode("li");
                         TagNode anchorNode = new TagNode("a");
-                        anchorNode.addAttribute("href", attachment.getLink());
-                        anchorNode.addChild(new ContentNode(attachment.getName()));
+                        if (StringUtils.isNotEmpty(attachment.getLink()))
+                            anchorNode.addAttribute("href", attachment.getLink());
+                        if (StringUtils.isNotEmpty(attachment.getName()))
+                            anchorNode.addChild(new ContentNode(attachment.getName()));
                         ulNode.addChild(liNode);
                     }
                 }
@@ -386,16 +388,16 @@ public class DecoratingVisitor implements TagNodeVisitor {
                         if (value instanceof User) {
                             User user = User.class.cast(value);
                             if (user != null) {
-                                if (attributeName == null || attributeName.equals("displayName"))
+                                if ((attributeName == null || attributeName.equals("displayName")) && StringUtils.isNotEmpty(user.getDisplayName()))
                                     tag.addChild(new ContentNode(user.getDisplayName()));
-                                else if (attributeName.equals("visibleId"))
+                                else if (attributeName.equals("visibleId") && StringUtils.isNotEmpty(user.getVisibleId()))
                                     tag.addChild(new ContentNode(user.getVisibleId()));
                             }
                         } else if (value != null && StringUtils.isNotEmpty(value.getValue())) {
                             tag.addChild(new ContentNode(value.getValue()));
                         }
                     }
-                } else if (fieldName.equals("ConfirmationNumber")) {
+                } else if (fieldName.equals("ConfirmationNumber") && StringUtils.isNotEmpty(form.getProcessInstanceId())) {
                     tag.addChild(new ContentNode(form.getProcessInstanceId()));
                 }
             }
@@ -503,7 +505,7 @@ public class DecoratingVisitor implements TagNodeVisitor {
                     }
                     break;
                 case TEXTAREA:
-                    if (value != null && value.getValue() != null) {
+                    if (value != null && StringUtils.isNotEmpty(value.getValue())) {
                         tag.removeAllChildren();
                         tag.addChild(new ContentNode(value.getValue()));
                     }

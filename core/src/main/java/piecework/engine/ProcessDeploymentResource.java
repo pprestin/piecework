@@ -15,6 +15,9 @@
  */
 package piecework.engine;
 
+import org.springframework.core.io.AbstractResource;
+import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
 import piecework.ui.Streamable;
 
 import java.io.InputStream;
@@ -22,7 +25,7 @@ import java.io.InputStream;
 /**
  * @author James Renfro
  */
-public class ProcessDeploymentResource implements Streamable {
+public class ProcessDeploymentResource extends AbstractResource {
 
     private final String contentType;
     private final String name;
@@ -42,6 +45,10 @@ public class ProcessDeploymentResource implements Streamable {
         return contentType;
     }
 
+    public String getDescription() {
+        return null;
+    }
+
     public String getName() {
         return name;
     }
@@ -59,11 +66,11 @@ public class ProcessDeploymentResource implements Streamable {
 
         }
 
-        public Builder(Streamable streamable) {
-            this.contentType = streamable.getContentType();
-            this.inputStream = streamable.getInputStream();
-            this.name = streamable.getName();
-        }
+//        public Builder(ContentResource resource) {
+//            this.contentType = resource.getContentType();
+//            this.inputStream = resource.getInputStream();
+//            this.name = resource.getName();
+//        }
 
         public ProcessDeploymentResource build() {
             return new ProcessDeploymentResource(this);

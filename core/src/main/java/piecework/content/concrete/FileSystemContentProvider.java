@@ -23,6 +23,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.content.ContentProvider;
+import piecework.content.ContentResource;
 import piecework.enumeration.AlarmSeverity;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
@@ -57,15 +58,15 @@ public class FileSystemContentProvider implements ContentProvider {
 
     @PostConstruct
     public void init() {
-        if (environment != null && !StringUtils.isEmpty(filesystemRoot))
+        if (environment != null && StringUtils.isEmpty(filesystemRoot))
             filesystemRoot = environment.getProperty("base.filesystem.root", ".");
 
         if (StringUtils.isNotEmpty(filesystemRoot))
-            this.root = new java.io.File(filesystemRoot);
+            this.root = new File(filesystemRoot);
     }
 
     @Override
-    public Content findByLocation(ContentProfileProvider modelProvider, String rawPath) throws PieceworkException {
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, String rawPath) throws PieceworkException {
         if (!rawPath.startsWith("file:")) {
             LOG.error("Should not be looking for a file resource without the file prefix");
             return null;
@@ -98,30 +99,7 @@ public class FileSystemContentProvider implements ContentProvider {
 
         FileSystemResource resource = new FileSystemResource(file);
 
-        String filename = file.getName();
-        String contentType = null;
-        if (filename.endsWith(".css"))
-            contentType = "text/css";
-        else if (filename.endsWith(".js"))
-            contentType = "text/javascript";
-        else if (filename.endsWith(".html"))
-            contentType = "text/html";
-
-        String location = "file:" + file.getAbsolutePath();
-
-        try {
-            return new Content.Builder()
-                    .resource(resource)
-                    .length(resource.contentLength())
-                    .contentType(contentType)
-                    .location(location)
-                    .filename(file.getName())
-                    .build();
-
-        } catch (IOException ioe) {
-            LOG.error("Unable to determine content length of file: " + file.getAbsolutePath(), ioe);
-            throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, ioe.getMessage());
-        }
+        return new FileSystemContentResource(resource);
     }
 
     @Override

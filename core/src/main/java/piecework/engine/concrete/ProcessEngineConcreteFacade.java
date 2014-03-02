@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import piecework.Registry;
+import piecework.content.ContentResource;
 import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
@@ -262,15 +263,15 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException {
+    public ProcessDeployment deploy(Process process, ProcessDeployment deployment, ContentResource contentResource) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
-        return proxy.deploy(process, deployment, content);
+        return proxy.deploy(process, deployment, contentResource);
     }
 
     @Override
-    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
+    public ContentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
@@ -278,7 +279,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException {
+    public ContentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");

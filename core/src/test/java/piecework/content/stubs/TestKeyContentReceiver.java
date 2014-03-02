@@ -16,8 +16,9 @@
 package piecework.content.stubs;
 
 import piecework.content.ContentReceiver;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
 import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;
@@ -33,8 +34,8 @@ public class TestKeyContentReceiver implements ContentReceiver {
     }
 
     @Override
-    public Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException {
-        return new Content.Builder()
+    public ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
                 .location("some-key-content-receiver")
                 .build();
     }

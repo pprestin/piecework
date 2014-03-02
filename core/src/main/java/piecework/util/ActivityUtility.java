@@ -15,16 +15,13 @@
  */
 package piecework.util;
 
-import piecework.Constants;
+import org.apache.commons.lang.StringUtils;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
-import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ProcessProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,15 +30,14 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class ActivityUtil {
+public class ActivityUtility {
 
-    public static <P extends ProcessProvider> Activity activity(P modelProvider) throws PieceworkException {
-        Process process = modelProvider.process();
-        ProcessInstance instance = ModelUtility.instance(modelProvider);
-        Task task = ModelUtility.task(modelProvider);
+    public static Activity activity(Process process, ProcessDeployment deployment, ProcessInstance instance, Task task) throws PieceworkException {
+        if (process == null)
+            throw new MisconfiguredProcessException("No process found");
 
         Activity activity = null;
-        if (process.isAllowPerInstanceActivities() && task != null && task.getTaskDefinitionKey() != null && instance != null) {
+        if (process.isAllowPerInstanceActivities() && task != null && StringUtils.isNotEmpty(task.getTaskDefinitionKey()) && instance != null) {
             Map<String, Activity> activityMap = instance.getActivityMap();
             if (activityMap != null)
                 activity = activityMap.get(task.getTaskDefinitionKey());
@@ -50,7 +46,6 @@ public class ActivityUtil {
                 return activity;
         }
 
-        ProcessDeployment deployment = process.getDeployment();
         if (deployment == null)
             throw new MisconfiguredProcessException("No deployment found");
 
@@ -65,6 +60,7 @@ public class ActivityUtil {
             return activity;
 
         throw new MisconfiguredProcessException("Unable to build activity for process");
+
     }
 
     public static Container parent(Activity activity, ActionType actionType) {
@@ -103,11 +99,11 @@ public class ActivityUtil {
             List<Container> children = parentContainer.getChildren();
             for (Container child : children) {
                 if (child.getOrdinal() <= reviewChildIndex)
-                    ActivityUtil.gatherFieldIds(child, fieldIds);
+                    ActivityUtility.gatherFieldIds(child, fieldIds);
             }
         } else {
             // Otherwise we only need to gather the fieldIds from the container that is being validated
-            ActivityUtil.gatherFieldIds(container, fieldIds);
+            ActivityUtility.gatherFieldIds(container, fieldIds);
         }
         return fieldIds;
     }

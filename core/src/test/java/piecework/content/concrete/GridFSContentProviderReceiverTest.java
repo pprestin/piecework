@@ -34,7 +34,7 @@ import piecework.enumeration.AlarmSeverity;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
-import piecework.model.Content;
+import piecework.content.ContentResource;
 import piecework.model.Entity;
 import piecework.persistence.ContentProfileProvider;
 import piecework.security.AccessTracker;
@@ -87,6 +87,8 @@ public class GridFSContentProviderReceiverTest {
                .when(gridFsOperations).store(any(InputStream.class), anyString(), anyString(), any(DBObject.class));
         Mockito.doReturn("70000000001")
                .when(gridFSFile).getId();
+        Mockito.doReturn("application/json")
+               .when(gridFSFile).getContentType();
     }
 
     @Test
@@ -108,20 +110,20 @@ public class GridFSContentProviderReceiverTest {
     @Test
     public void verifyFindByValidLocation() throws Exception {
         String location = "/TEST/50000000001";
-        Content content = contentProviderReceiver.findByLocation(modelProvider, location);
-        Assert.assertNotNull(content);
-        Assert.assertEquals("60000000001", content.getContentId());
-        String actual = IOUtils.toString(content.getInputStream());
+        ContentResource contentResource = contentProviderReceiver.findByLocation(modelProvider, location);
+        Assert.assertNotNull(contentResource);
+        Assert.assertEquals("60000000001", contentResource.getContentId());
+        String actual = IOUtils.toString(contentResource.getInputStream());
         Assert.assertEquals("Some sample data", actual);
     }
 
     @Test
     public void verifySave() throws Exception {
-        Content content = new Content.Builder()
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .contentType("application/json")
                 .build();
-        Content stored = contentProviderReceiver.save(modelProvider, content);
-        Assert.assertEquals("application/json", stored.getContentType());
+        ContentResource stored = contentProviderReceiver.save(modelProvider, contentResource);
+        Assert.assertEquals("application/json", stored.contentType());
         Assert.assertEquals("70000000001", stored.getContentId());
     }
 

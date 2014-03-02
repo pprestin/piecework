@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
 import piecework.enumeration.ActionType;
 import piecework.exception.*;
 import piecework.form.FormFactory;
@@ -132,15 +133,16 @@ public abstract class AbstractScriptResource {
 //        return null;
 //    }
 
-    protected static Response response(Resource resource, String mediaType) throws NotFoundError {
+    protected static Response response(ContentResource resource, String mediaType) throws NotFoundError {
         if (resource == null)
             throw new NotFoundError();
 
         DateTime today = new DateTime();
+        Date lastModifiedDate = resource.lastModified() >= 0 ? new Date(resource.lastModified()) : null;
         return Response
-                .ok(new ResourceStreamingOutput(resource), mediaType)
+                .ok(resource, mediaType)
                 .expires(today.plusDays(1).toDate())
-                .lastModified(lastModified(resource))
+                .lastModified(lastModifiedDate)
                 .build();
     }
 

@@ -19,26 +19,20 @@ import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import piecework.Constants;
 import piecework.Registry;
 import piecework.enumeration.ActionType;
-import piecework.enumeration.FieldTag;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
-import piecework.persistence.ProcessProvider;
 import piecework.persistence.TaskProvider;
-import piecework.util.ActivityUtil;
-import piecework.form.OptionResolver;
+import piecework.util.ActivityUtility;
 import piecework.util.ProcessUtility;
 import piecework.util.ValidationUtility;
-import piecework.validation.Validation;
 import piecework.validation.ValidationRule;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * @author James Renfro
@@ -49,22 +43,22 @@ public class SubmissionTemplateFactory {
     @Autowired(required=false)
     Registry registry;
 
-    public SubmissionTemplate submissionTemplate(TaskProvider taskProvider, FormRequest formRequest) throws PieceworkException {
-        return submissionTemplate(taskProvider, formRequest, null);
+    public SubmissionTemplate submissionTemplate(TaskProvider taskProvider, FormRequest formRequest, ActionType actionType) throws PieceworkException {
+        return submissionTemplate(taskProvider, actionType, formRequest, null);
     }
 
-    public SubmissionTemplate submissionTemplate(TaskProvider taskProvider, FormRequest formRequest, String validationId) throws PieceworkException {
+    public SubmissionTemplate submissionTemplate(TaskProvider taskProvider, ActionType actionType, FormRequest formRequest, String validationId) throws PieceworkException {
         ProcessDeployment deployment = taskProvider.deployment();
         if (deployment == null)
             throw new MisconfiguredProcessException("Deployment not specified in submission");
 
-        Activity activity = formRequest.getActivity();
+        Activity activity = taskProvider.activity();
         if (activity == null) {
             Task task = taskProvider.task();
             String taskDefinitionKey = task != null ? task.getTaskDefinitionKey() : deployment.getStartActivityKey();
             activity = deployment.getActivity(taskDefinitionKey);
         }
-        return submissionTemplate(taskProvider, formRequest, activity, validationId);
+        return submissionTemplate(taskProvider, formRequest, actionType, activity, validationId);
     }
 
     public SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, Field field, FormRequest formRequest, boolean allowAny) throws PieceworkException {
@@ -83,32 +77,28 @@ public class SubmissionTemplateFactory {
         return builder.build();
     }
 
-//    public SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest) throws PieceworkException {
-//        return submissionTemplate(deploymentProvider, formRequest, formRequest.getActivity(), null);
-//    }
-
-    public SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest, String validationId) throws PieceworkException {
-        return submissionTemplate(deploymentProvider, formRequest, formRequest.getActivity(), validationId);
+    public SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest, ActionType actionType, String validationId) throws PieceworkException {
+        return submissionTemplate(deploymentProvider, formRequest, actionType, deploymentProvider.activity(), validationId);
     }
+
+    private static final Set<ActionType> EXCLUDE_FIELDS_ACTION_TYPES = Sets.newHashSet(ActionType.ATTACH, ActionType.REJECT, ActionType.REMOVE, ActionType.VIEW, ActionType.UPDATE);
 
     /*
      * Takes an activity and generates the appropriate submission template for it,
      * limiting to a specific section id
      */
-    private SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest, Activity activity, String validationId) throws PieceworkException {
+    private SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest, ActionType actionType, Activity activity, String validationId) throws PieceworkException {
         Set<Field> fields = null;
         Process process = deploymentProvider.process();
         ProcessDeployment deployment = deploymentProvider.deployment();
 
         SubmissionTemplate.Builder builder = new SubmissionTemplate.Builder(process, deployment);
 
-        boolean includeFields = false;
-        if (formRequest != null) {
+        boolean includeFields = !EXCLUDE_FIELDS_ACTION_TYPES.contains(actionType);
+        if (formRequest != null)
             builder.requestId(formRequest.getRequestId()).taskId(formRequest.getTaskId()).actAsUser(formRequest.getActAsUser());
-            ActionType actionType = formRequest.getAction();
-            includeFields = actionType == ActionType.CREATE || actionType == ActionType.COMPLETE || actionType == ActionType.VALIDATE || actionType == ActionType.SAVE;
-            builder.attachmentTemplate(actionType == ActionType.ATTACH);
-        }
+
+        builder.attachmentTemplate(actionType == ActionType.ATTACH);
 
         builder.allowAny(activity.isAllowAny());
 
@@ -118,15 +108,15 @@ public class SubmissionTemplateFactory {
         }
 
         if (includeFields) {
-            Container parentContainer = ActivityUtil.parent(activity, ActionType.CREATE);
-            Container container = ActivityUtil.child(activity, ActionType.CREATE, parentContainer);
+            Container parentContainer = ActivityUtility.parent(activity, ActionType.CREATE);
+            Container container = ActivityUtility.child(activity, ActionType.CREATE, parentContainer);
             if (container != null) {
                 if (StringUtils.isNotEmpty(validationId))
                     container = ProcessUtility.container(container, validationId);
 
                 if (container != null) {
                     Map<String, Field> fieldMap = activity.getFieldMap();
-                    List<String> fieldIds = ActivityUtil.fieldIds(container, parentContainer);
+                    List<String> fieldIds = ActivityUtility.fieldIds(container, parentContainer);
 
                     if (fieldIds != null) {
                         fields = new TreeSet<Field>();

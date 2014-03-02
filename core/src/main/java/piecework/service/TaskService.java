@@ -146,13 +146,13 @@ public class TaskService {
                 break;
             case ATTACH:
                 request = requestService.create(requestDetails, taskProvider, actionType);
-                ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, null, VERSION);
+                ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, request, actionType, rawSubmission, Submission.class, VERSION);
                 validation = validationCommand.execute();
                 command = commandFactory.attachment(taskProvider, validation);
                 break;
             default:
                 request = requestService.create(requestDetails, taskProvider, actionType);
-                validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, null, VERSION);
+                validationCommand = commandFactory.validation(taskProvider, request, actionType, rawSubmission, Submission.class, VERSION);
                 validation = validationCommand.execute();
                 command = commandFactory.completeTask(taskProvider, validation, actionType);
                 break;

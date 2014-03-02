@@ -22,10 +22,8 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Constants;
 import piecework.Versions;
-import piecework.command.CommandFactory;
-import piecework.command.SubmissionCommandResponse;
-import piecework.command.SubmitFormCommand;
-import piecework.command.ValidationCommand;
+import piecework.command.*;
+import piecework.common.ViewContext;
 import piecework.enumeration.AlarmSeverity;
 import piecework.form.FormDisposition;
 import piecework.model.RequestDetails;
@@ -70,49 +68,40 @@ public abstract class AbstractFormResource {
     private static final String VERSION = "v1";
 
     @Autowired
-    AccessTracker accessTracker;
+    protected AccessTracker accessTracker;
 
     @Autowired
-    CommandFactory commandFactory;
+    protected CommandFactory commandFactory;
 
     @Autowired
-    FormFactory formFactory;
+    private FormFactory formFactory;
 
     @Autowired
-    IdentityHelper helper;
+    protected IdentityHelper helper;
 
     @Autowired
-    IdentityService identityService;
+    protected ModelProviderFactory modelProviderFactory;
 
     @Autowired
-    ModelProviderFactory modelProviderFactory;
+    private RequestService requestService;
 
     @Autowired
-    ProcessInstanceRepository processInstanceRepository;
-
-    @Autowired
-    RequestService requestService;
-
-    @Autowired
-    SubmissionRepository submissionRepository;
+    private SubmissionRepository submissionRepository;
 
     @Autowired
     protected Sanitizer sanitizer;
 
     @Autowired
-    SecuritySettings securitySettings;
+    private SecuritySettings securitySettings;
 
     @Autowired
-    TaskService taskService;
+    private TaskService taskService;
 
     @Autowired
-    UserInterfaceService userInterfaceService;
+    private UserInterfaceService userInterfaceService;
 
     @Autowired
-    UserInterfaceSettings settings;
-
-    @Autowired
-    Versions versions;
+    private UserInterfaceSettings settings;
 
     protected abstract boolean isAnonymous();
 
@@ -121,7 +110,7 @@ public abstract class AbstractFormResource {
         accessTracker.track(requestDetails, false, isAnonymous());
         ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         if (isAnonymous())
-            verifyProcessAllowsAnonymousSubmission(deploymentProvider);
+            SecurityUtility.verifyProcessAllowsAnonymousSubmission(deploymentProvider);
 
         FormRequest request = requestService.create(requestDetails, deploymentProvider);
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
@@ -147,7 +136,7 @@ public abstract class AbstractFormResource {
         P provider = modelProviderFactory.provider(request, principal);
 
         if (isAnonymous())
-            verifyProcessAllowsAnonymousSubmission(provider);
+            SecurityUtility.verifyProcessAllowsAnonymousSubmission(provider);
 
         ActionType actionType = request.getAction();
 
@@ -183,7 +172,7 @@ public abstract class AbstractFormResource {
         P provider = modelProviderFactory.provider(request, principal);
 
         if (isAnonymous())
-            verifyProcessAllowsAnonymousSubmission(provider);
+            SecurityUtility.verifyProcessAllowsAnonymousSubmission(provider);
 
         ActionType actionType = request.getAction();
 
@@ -192,7 +181,7 @@ public abstract class AbstractFormResource {
 
 
         // When returning the JSON for a submission it's necessary to rerun the validation
-        ValidationCommand<P> validationCommand = commandFactory.validation(provider, request, submission, VERSION);
+        SubmissionValidationCommand<P> validationCommand = commandFactory.submissionValidation(provider, request, actionType, submission, VERSION);
         Validation validation = validationCommand.execute();
 
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
@@ -256,24 +245,24 @@ public abstract class AbstractFormResource {
         P provider = modelProviderFactory.provider(request, principal);
 
         if (isAnonymous() || principal == null)
-            verifyProcessAllowsAnonymousSubmission(provider);
+            SecurityUtility.verifyProcessAllowsAnonymousSubmission(provider);
 
         List<MediaType> mediaTypes = context != null ? context.getHttpHeaders().getAcceptableMediaTypes() : Collections.<MediaType>emptyList();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
 
         try {
-            ValidationCommand<P> validationCommand = commandFactory.validation(provider, request, data, type, null, VERSION);
+            ValidationCommand<P> validationCommand = commandFactory.validation(provider, request, ActionType.UNDEFINED, data, type, VERSION);
             Validation validation = validationCommand.execute();
             SubmitFormCommand<P> submitFormCommand = commandFactory.submitForm(provider, validation, request.getAction(), requestDetails, request);
             SubmissionCommandResponse submissionCommandResponse = submitFormCommand.execute();
 
             if (isAnonymous())
-                return response(provider, submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true, 1);
+                return response(submissionCommandResponse.getModelProvider(), submissionCommandResponse.getNextRequest(), ActionType.COMPLETE, MediaType.TEXT_HTML_TYPE, null, null, true, 1);
 
             if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE))
-                return response(provider, submissionCommandResponse.getNextRequest(), submissionCommandResponse.getNextRequest().getAction(), mediaType, 1);
+                return response(submissionCommandResponse.getModelProvider(), submissionCommandResponse.getNextRequest(), submissionCommandResponse.getNextRequest().getAction(), mediaType, 1);
 
-            return redirect(provider, submissionCommandResponse, false);
+            return redirect(submissionCommandResponse.getModelProvider(), submissionCommandResponse, false);
         } catch (Exception e) {
             Validation validation = null;
             Explanation explanation = null;
@@ -308,7 +297,7 @@ public abstract class AbstractFormResource {
                     return response(provider, invalidRequest, invalidRequest.getAction(), mediaType, validation, explanation, true, 1);
 
                 Submission submission = validation != null ? validation.getSubmission() : null;
-                return redirect(provider, new SubmissionCommandResponse(submission, invalidRequest), true);
+                return redirect(provider, new SubmissionCommandResponse(provider, submission, invalidRequest), true);
             } catch (MisconfiguredProcessException mpe) {
                 LOG.error("Unable to create new instance because process is misconfigured", mpe);
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -331,9 +320,9 @@ public abstract class AbstractFormResource {
         P provider = modelProviderFactory.provider(request, principal);
 
         if (isAnonymous() || principal == null)
-            verifyProcessAllowsAnonymousSubmission(provider);
+            SecurityUtility.verifyProcessAllowsAnonymousSubmission(provider);
 
-        commandFactory.validation(provider, request, formData, Map.class, validationId, VERSION).execute();
+        commandFactory.containerValidation(provider, request, ActionType.VALIDATE, formData, Map.class, validationId, VERSION).execute();
 
         return FormUtility.noContentResponse(settings, provider, isAnonymous());
     }
@@ -354,9 +343,9 @@ public abstract class AbstractFormResource {
         P provider = modelProviderFactory.provider(request, principal);
 
         if (isAnonymous() || principal == null)
-            verifyProcessAllowsAnonymousSubmission(provider);
+            SecurityUtility.verifyProcessAllowsAnonymousSubmission(provider);
 
-        commandFactory.validation(provider, request, body, MultipartBody.class, validationId, VERSION).execute();
+        commandFactory.containerValidation(provider, request, ActionType.VALIDATE, body, MultipartBody.class, validationId, VERSION).execute();
         return FormUtility.noContentResponse(settings, provider, isAnonymous());
     }
 
@@ -371,7 +360,7 @@ public abstract class AbstractFormResource {
 
         try {
 
-            FormDisposition formDisposition = FormUtility.disposition(provider, formRequest.getActivity(), formRequest.getAction(), versions.getVersion1(), null);
+            FormDisposition formDisposition = FormUtility.disposition(provider, provider.activity(), formRequest.getAction(), new ViewContext(settings, VERSION), null);
 
             if (isInvalidSubmission)
                 return Response.seeOther(formDisposition.getInvalidPageUri(submission)).build();
@@ -397,7 +386,6 @@ public abstract class AbstractFormResource {
             throw new BadRequestError();
 
         try {
-            ProcessDeployment deployment = modelProvider.deployment();
             Form form = formFactory.form(modelProvider, request, actionType, validation, explanation, includeRestrictedData, isAnonymous(), VERSION);
             FormDisposition formDisposition = form.getDisposition();
 
@@ -423,19 +411,5 @@ public abstract class AbstractFormResource {
             throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
         }
     }
-
-    private static ProcessProvider verifyProcessAllowsAnonymousSubmission(final ProcessProvider processProvider) throws PieceworkException {
-        Process process = processProvider.process();
-
-        if (process == null)
-            throw new NotFoundError();
-
-        // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
-        if (!process.isAnonymousSubmissionAllowed())
-            throw new NotFoundError();
-
-        return processProvider;
-    }
-
 
 }

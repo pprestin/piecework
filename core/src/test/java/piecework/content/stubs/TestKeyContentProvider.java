@@ -16,12 +16,11 @@
 package piecework.content.stubs;
 
 import piecework.content.ContentProvider;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.enumeration.Scheme;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
 import piecework.persistence.ContentProfileProvider;
-
-import java.io.IOException;
 
 /**
  * @author James Renfro
@@ -29,8 +28,8 @@ import java.io.IOException;
 public class TestKeyContentProvider implements ContentProvider {
 
     @Override
-    public Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
-        return new Content.Builder()
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+        return new BasicContentResource.Builder()
                 .location("some-key-content-provider")
                 .build();
     }

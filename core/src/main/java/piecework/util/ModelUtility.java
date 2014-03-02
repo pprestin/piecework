@@ -47,7 +47,14 @@ public class ModelUtility {
         if (modelProvider instanceof ProcessInstanceProvider) {
             ProcessInstanceProvider instanceProvider = ProcessInstanceProvider.class.cast(modelProvider);
             return instanceProvider.instance();
+        } else if (modelProvider instanceof TaskProvider) {
+            TaskProvider taskProvider = TaskProvider.class.cast(modelProvider);
+            return taskProvider.instance();
+        } else if (modelProvider instanceof AllowedTaskProvider) {
+            AllowedTaskProvider allowedTaskProvider = AllowedTaskProvider.class.cast(modelProvider);
+            return allowedTaskProvider.instance();
         }
+
         return null;
     }
 

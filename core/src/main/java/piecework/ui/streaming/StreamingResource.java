@@ -16,9 +16,8 @@
 package piecework.ui.streaming;
 
 import org.apache.commons.io.IOUtils;
+import org.springframework.core.io.Resource;
 import piecework.model.Attachment;
-import piecework.model.Content;
-import piecework.ui.Streamable;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
@@ -27,16 +26,16 @@ import java.io.*;
 /**
  * @author James Renfro
  */
-public class StreamingAttachmentContent implements StreamingOutput {
+public class StreamingResource implements StreamingOutput {
 
     private final Attachment attachment;
-    private final Streamable content;
+    private final Resource content;
 
-    public StreamingAttachmentContent(Streamable content) {
+    public StreamingResource(Resource content) {
         this(null, content);
     }
 
-    public StreamingAttachmentContent(Attachment attachment, Streamable content) {
+    public StreamingResource(Attachment attachment, Resource content) {
         this.attachment = attachment;
         this.content = content;
     }
@@ -64,7 +63,7 @@ public class StreamingAttachmentContent implements StreamingOutput {
         return attachment;
     }
 
-    public Streamable getContent() {
+    public Resource getContent() {
         return content;
     }
 }

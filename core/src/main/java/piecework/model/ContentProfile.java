@@ -99,6 +99,7 @@ public class ContentProfile {
 
         public Builder() {
             this.defaultScheme = Scheme.NONE;
+            this.contentMetadata = new HashMap<String, String>();
         }
 
         public Builder(ContentProfile profile, Sanitizer sanitizer) {

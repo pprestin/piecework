@@ -15,10 +15,13 @@
  */
 package piecework.command;
 
+import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.ServiceLocator;
 import piecework.common.UuidGenerator;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
@@ -26,7 +29,6 @@ import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
-import piecework.persistence.ProcessProvider;
 import piecework.repository.ActivityRepository;
 import piecework.repository.ContentRepository;
 import piecework.repository.DeploymentRepository;
@@ -45,9 +47,9 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment, Proces
     private static final Logger LOG = Logger.getLogger(PublicationCommand.class);
 
     private final String deploymentId;
-    private final ProcessDeploymentResource resource;
+    private final ContentResource resource;
 
-    DeploymentCommand(CommandExecutor commandExecutor, ProcessDeploymentProvider modelProvider, String deploymentId, ProcessDeploymentResource resource) {
+    DeploymentCommand(CommandExecutor commandExecutor, ProcessDeploymentProvider modelProvider, String deploymentId, ContentResource resource) {
         super(commandExecutor, modelProvider);
         this.deploymentId = deploymentId;
         this.resource = resource;
@@ -85,34 +87,22 @@ public class DeploymentCommand extends AbstractCommand<ProcessDeployment, Proces
         if (original == null)
             throw new NotFoundError();
 
+        if (resource == null || StringUtils.isEmpty(resource.getFilename()))
+            throw new BadRequestError();
+
         ProcessDeployment persistedDeployment = null;
         try {
-            String directory = process.getProcessDefinitionKey();
-            String id = uuidGenerator.getNextId();
-            String location = "/" + directory + "/" + id;
-
-            if (resource.getInputStream() == null)
-                throw new BadRequestError();
-
-            Content content = new Content.Builder()
-                    .contentType(resource.getContentType())
-                    .filename(resource.getName())
-                    .location(location)
-                    .inputStream(resource.getInputStream())
-                    .build();
-
+            ContentResource contentResource = null;
             try {
-                contentRepository.save(modelProvider, content);
+                contentResource = contentRepository.save(modelProvider, resource);
             } catch (IOException ioe) {
                 LOG.error("Error saving to content repo", ioe);
                 throw new InternalServerError(Constants.ExceptionCodes.attachment_could_not_be_saved);
             }
 
-            content = contentRepository.findByLocation(modelProvider, location);
-
             // Try to deploy it in the engine -- this is the step that's most likely to fail because
             // the artifact is not formatted correctly, etc..
-            persistedDeployment = facade.deploy(process, original, content);
+            persistedDeployment = facade.deploy(process, original, contentResource);
 
             persistedDeployment = cascadeSave(activityRepository, deploymentRepository, persistedDeployment);
 

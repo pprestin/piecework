@@ -54,7 +54,7 @@ public class FormFactory {
 
     public <P extends ProcessDeploymentProvider> Form form(P modelProvider, FormRequest request, ActionType actionType, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous, String version) throws PieceworkException {
         ViewContext context = new ViewContext(settings, version);
-        Activity activity = request.getActivity();
+        Activity activity = modelProvider.activity();
 
         String formInstanceId = request.getRequestId();
         String processDefinitionKey = request.getProcessDefinitionKey();

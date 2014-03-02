@@ -21,6 +21,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
 import piecework.model.*;
@@ -108,55 +109,55 @@ public class FileSystemContentProviderTest {
     @Test
     public void retrieveFileWithoutPrefix() throws Exception {
         String location = temporaryFile.getAbsolutePath();
-        Content content = contentProvider.findByLocation(modelProvider, location);
-        Assert.assertNull(content);
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+        Assert.assertNull(contentResource);
     }
 
     @Test
     public void retrieveFileWithoutCorrectPrefix() throws Exception {
         String location = "classpath:abc/" + temporaryFile.getAbsolutePath();
-        Content content = contentProvider.findByLocation(modelProvider, location);
-        Assert.assertNull(content);
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+        Assert.assertNull(contentResource);
     }
 
     @Test(expected = ForbiddenError.class)
     public void retrieveFileOutsideApprovedPath() throws Exception {
         File illegalFile = new File(rootDirectory.getParent(), UUID.randomUUID().toString());
         String location = "file:" + illegalFile.getAbsolutePath();
-        Content content = contentProvider.findByLocation(modelProvider, location);
-        Assert.assertNull(content);
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+        Assert.assertNull(contentResource);
     }
 
     @Test
     public void retrieveTestFileFromFilesystem() throws Exception {
         String location = "file:" + temporaryFile.getAbsolutePath();
-        Content content = contentProvider.findByLocation(modelProvider, location);
-        Assert.assertEquals(temporaryFileName, content.getFilename());
-        Assert.assertEquals(location, content.getLocation());
-        Assert.assertEquals(Long.valueOf(69l), content.getLength());
-        String actual = IOUtils.toString(content.getInputStream());
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+        Assert.assertEquals(temporaryFileName, contentResource.getFilename());
+        Assert.assertEquals(location, contentResource.getLocation());
+        Assert.assertEquals(69l, contentResource.contentLength());
+        String actual = IOUtils.toString(contentResource.getInputStream());
         Assert.assertEquals(testData, actual);
     }
 
     @Test
     public void retrieveCssFileFromFilesystem() throws Exception {
         String location = "file:" + temporaryCssFile.getAbsolutePath();
-        Content content = contentProvider.findByLocation(modelProvider, location);
-        Assert.assertEquals("text/css", content.getContentType());
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+        Assert.assertEquals("text/css", contentResource.contentType());
     }
 
     @Test
     public void retrieveJsFileFromFilesystem() throws Exception {
         String location = "file:" + temporaryJsFile.getAbsolutePath();
-        Content content = contentProvider.findByLocation(modelProvider, location);
-        Assert.assertEquals("text/javascript", content.getContentType());
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+        Assert.assertEquals("text/javascript", contentResource.contentType());
     }
 
     @Test
     public void retrieveHtmlFileFromFilesystem() throws Exception {
         String location = "file:" + temporaryHtmlFile.getAbsolutePath();
-        Content content = contentProvider.findByLocation(modelProvider, location);
-        Assert.assertEquals("text/html", content.getContentType());
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+        Assert.assertEquals("text/html", contentResource.contentType());
     }
 
     @Test

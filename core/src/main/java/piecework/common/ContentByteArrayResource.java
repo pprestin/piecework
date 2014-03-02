@@ -18,8 +18,8 @@ package piecework.common;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.core.io.AbstractResource;
-import piecework.model.Content;
-import piecework.ui.DatedByteArrayResource;
+import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,32 +28,32 @@ import java.io.InputStream;
 /**
  * @author James Renfro
  */
-public class ContentResource extends AbstractResource {
-    private static final Logger LOG = Logger.getLogger(ContentResource.class);
+public class ContentByteArrayResource extends AbstractResource {
+    private static final Logger LOG = Logger.getLogger(ContentByteArrayResource.class);
 
-    private final Content content;
+    private final Resource contentResource;
     private byte[] byteArray;
     private long lastModified;
 
-    public ContentResource(Content content) {
-        this.content = content;
+    public ContentByteArrayResource(Resource contentResource) {
+        this.contentResource = contentResource;
         this.lastModified = System.currentTimeMillis();
     }
 
     @Override
     public String getFilename() {
-        return content.getFilename();
+        return contentResource.getFilename();
     }
 
     @Override
     public String getDescription() {
-        return content.getLocation();
+        return null; //contentResource.getLocation();
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
         if (byteArray == null) {
-            InputStream input = content.getResource().getInputStream();
+            InputStream input = contentResource.getInputStream();
             try {
                 byteArray = IOUtils.toByteArray(input);
             } finally {
@@ -65,6 +65,6 @@ public class ContentResource extends AbstractResource {
 
     @Override
     public long lastModified() throws IOException {
-        return content.getResource() != null ? content.getResource().lastModified() : lastModified;
+        return contentResource.lastModified();
     }
 }

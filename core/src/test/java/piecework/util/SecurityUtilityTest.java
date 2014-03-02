@@ -410,6 +410,8 @@ public class SecurityUtilityTest {
         Mockito.doReturn(Boolean.FALSE)
                 .when(principal).hasRole(eq(process), eq(AuthorizationRole.OVERSEER));
         Mockito.doReturn(Boolean.TRUE)
+                .when(principal).hasRole(eq(process), eq(AuthorizationRole.USER));
+        Mockito.doReturn(Boolean.TRUE)
                 .when(task).isCandidateOrAssignee(eq(principal));
 
         SecurityUtility.verifyEntityIsAuthorized(process, task, principal);

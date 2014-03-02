@@ -26,6 +26,7 @@ public class ProcessDeploymentProviderStub extends ProcessProviderStub implement
 
     private ProcessDeployment deployment;
     private ContentProfile contentProfile;
+    private Activity activity;
 
     public ProcessDeploymentProviderStub() {
 
@@ -46,6 +47,12 @@ public class ProcessDeploymentProviderStub extends ProcessProviderStub implement
         this.contentProfile = contentProfile;
     }
 
+
+    @Override
+    public Activity activity() throws PieceworkException {
+        return activity;
+    }
+
     @Override
     public ContentProfile contentProfile() throws PieceworkException {
         if (this.contentProfile != null)
@@ -63,4 +70,7 @@ public class ProcessDeploymentProviderStub extends ProcessProviderStub implement
         return this;
     }
 
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 }

@@ -25,8 +25,11 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.cxf.jaxrs.ext.multipart.*;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.engine.ProcessDeploymentResource;
 import piecework.exception.BadRequestError;
 import piecework.exception.NotFoundError;
@@ -45,7 +48,7 @@ import piecework.resource.ProcessResource;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.settings.UserInterfaceSettings;
 import piecework.ui.Streamable;
-import piecework.ui.streaming.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingResource;
 import piecework.util.FormUtility;
 
 import java.io.IOException;
@@ -127,7 +130,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response createDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId, MultipartBody body) throws PieceworkException {
-        ProcessDeploymentResource.Builder builder = new ProcessDeploymentResource.Builder();
+        BasicContentResource.Builder builder = new BasicContentResource.Builder();
 
         List<org.apache.cxf.jaxrs.ext.multipart.Attachment> attachments = body != null ? body.getAllAttachments() : null;
         if (attachments != null && !attachments.isEmpty()) {
@@ -142,7 +145,7 @@ public class ProcessResourceVersion1 implements ProcessResource {
                     continue;
 
                 builder.contentType(mediaType.toString());
-                builder.name(sanitizer.sanitize(contentDisposition.getParameter("filename")));
+                builder.filename(sanitizer.sanitize(contentDisposition.getParameter("filename")));
 
                 try {
                     builder.inputStream(attachment.getDataHandler().getInputStream());
@@ -205,18 +208,16 @@ public class ProcessResourceVersion1 implements ProcessResource {
 
     @Override
     public Response getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId) throws PieceworkException {
-        Streamable result = processService.getDeploymentResource(rawProcessDefinitionKey, rawDeploymentId, helper.getPrincipal());
+        ContentResource resource = processService.getDeploymentResource(rawProcessDefinitionKey, rawDeploymentId, helper.getPrincipal());
 
-        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(result);
-        String contentDisposition = new StringBuilder("attachment; filename=").append(result.getName()).toString();
-        return Response.ok(streamingAttachmentContent, streamingAttachmentContent.getContent().getContentType()).header("Content-Disposition", contentDisposition).build();
+        String contentDisposition = new StringBuilder("attachment; filename=").append(resource.getFilename()).toString();
+        return Response.ok(resource, resource.contentType()).header("Content-Disposition", contentDisposition).build();
     }
 
     @Override
     public Response getDiagram(String rawProcessDefinitionKey, String rawDeploymentId) throws PieceworkException {
-        Streamable diagram = processService.getDiagram(rawProcessDefinitionKey, rawDeploymentId, helper.getPrincipal());
-        StreamingAttachmentContent streamingAttachmentContent = new StreamingAttachmentContent(diagram);
-        ResponseBuilder responseBuilder = Response.ok(streamingAttachmentContent);
+        ContentResource diagram = processService.getDiagram(rawProcessDefinitionKey, rawDeploymentId, helper.getPrincipal());
+        ResponseBuilder responseBuilder = Response.ok(diagram, diagram.contentType());
         return responseBuilder.build();
     }
 

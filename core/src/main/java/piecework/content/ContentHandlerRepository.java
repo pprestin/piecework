@@ -18,6 +18,7 @@ package piecework.content;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -25,7 +26,6 @@ import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.enumeration.Scheme;
 import piecework.exception.InternalServerError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
 import piecework.persistence.ContentProfileProvider;
 import piecework.repository.ContentRepository;
 import piecework.util.ContentUtility;
@@ -86,7 +86,7 @@ public class ContentHandlerRepository implements ContentRepository {
     }
 
     @Override
-    public Content findByLocation(ContentProfileProvider modelProvider, final String location) throws PieceworkException {
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, final String location) throws PieceworkException {
         if (StringUtils.isEmpty(location))
             return null;
         Scheme scheme = PathUtility.findScheme(location);
@@ -94,22 +94,22 @@ public class ContentHandlerRepository implements ContentRepository {
         List<ContentProvider> contentProviders = lookupContentProviders(modelProvider, scheme);
 
         for (ContentProvider contentProvider : contentProviders) {
-            Content content = contentProvider.findByLocation(modelProvider, location);
-            if (content != null)
-                return content;
+            ContentResource contentResource = contentProvider.findByLocation(modelProvider, location);
+            if (contentResource != null)
+                return contentResource;
         }
 
         return null;
     }
 
     @Override
-    public Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException {
-        ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, content);
+    public ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws PieceworkException, IOException {
+        ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, contentResource);
         // Return the result from the specified receiver (or primary receiver if key is null)
-        Content saved = contentReceiver.save(modelProvider, content);
+        ContentResource saved = contentReceiver.save(modelProvider, contentResource);
         // Backup receivers should also be saved to, but IOExceptions from them
         // should not bubble up
-        backReceivers(new BackupReceiverSave(modelProvider, content));
+        backReceivers(new BackupReceiverSave(modelProvider, contentResource));
         return saved;
     }
 
@@ -143,9 +143,9 @@ public class ContentHandlerRepository implements ContentRepository {
         return contentProviders;
     }
 
-    private <P extends ContentProfileProvider> ContentReceiver lookupContentReceiver(P modelProvider, Content content) throws PieceworkException {
-        if (content == null)
-            throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "Trying to save null content object");
+    private <P extends ContentProfileProvider> ContentReceiver lookupContentReceiver(P modelProvider, ContentResource contentResource) throws PieceworkException {
+//        if (contentResource == null)
+//            throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "Trying to save null content object");
 
         String contentHandlerKey = ContentUtility.contentHandlerKey(modelProvider);
 
@@ -187,17 +187,17 @@ public class ContentHandlerRepository implements ContentRepository {
 
     public class BackupReceiverSave extends BackupReceiverAction {
 
-        private final Content content;
+        private final ContentResource contentResource;
 
-        public BackupReceiverSave(ContentProfileProvider modelProvider, Content content) {
+        public BackupReceiverSave(ContentProfileProvider modelProvider, ContentResource contentResource) {
             super(modelProvider);
-            this.content = content;
+            this.contentResource = contentResource;
         }
 
         public void action(ContentReceiver receiver) {
             try {
                 // Don't bother to get back the result, since it won't be returned
-                receiver.save(modelProvider, content);
+                receiver.save(modelProvider, contentResource);
             } catch (Exception e) {
                 LOG.error("Error saving content to a backup receiver ", e);
             }

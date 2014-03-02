@@ -16,16 +16,14 @@
 package piecework.content.concrete;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
-import piecework.exception.InternalServerError;
-import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.persistence.ContentProfileProvider;
@@ -68,7 +66,7 @@ public class RemoteContentProvider extends GridFSContentProviderReceiver {
     }
 
     @Override
-    public Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
         ContentProfile contentProfile = modelProvider.contentProfile();
 
         // Should never use RemoteContentProvider unless the content profile explicitly

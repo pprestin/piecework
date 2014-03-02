@@ -15,7 +15,6 @@
  */
 package piecework.persistence.concrete;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,20 +23,18 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentProfileProvider;
-import piecework.persistence.ModelProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.*;
 import piecework.settings.UserInterfaceSettings;
-import piecework.ui.streaming.StreamingAttachmentContent;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +63,7 @@ public class ProcessInstanceRepositoryProviderTest {
     ContentRepository contentRepository;
 
     @Mock
-    Content content;
+    ContentResource contentResource;
 
     @Mock
     DeploymentRepository deploymentRepository;
@@ -75,7 +72,7 @@ public class ProcessInstanceRepositoryProviderTest {
     Entity principal;
 
     @Before
-    public void setup() throws PieceworkException {
+    public void setup() throws Exception {
         ProcessDeployment currentDeployment = new ProcessDeployment.Builder()
                 .deploymentId("2")
                 .build();
@@ -128,8 +125,8 @@ public class ProcessInstanceRepositoryProviderTest {
                 .when(attachmentRepository).findAll(any(Iterable.class));
 
         Mockito.doReturn(new ByteArrayInputStream("This is some test data from an input stream".getBytes()))
-                .when(content).getInputStream();
-        Mockito.doReturn(content)
+                .when(contentResource).getInputStream();
+        Mockito.doReturn(contentResource)
                 .when(contentRepository).findByLocation(any(ContentProfileProvider.class), eq("/some/location"));
     }
 

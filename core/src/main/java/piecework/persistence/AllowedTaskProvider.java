@@ -16,12 +16,13 @@
 package piecework.persistence;
 
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.exception.PieceworkException;
-import piecework.model.Entity;
 import piecework.model.SearchResults;
 import piecework.model.Task;
 import piecework.process.AttachmentQueryParameters;
-import piecework.ui.streaming.StreamingAttachmentContent;
+
+import javax.ws.rs.core.StreamingOutput;
 
 /**
  * @author James Renfro
@@ -32,11 +33,11 @@ public interface AllowedTaskProvider extends ProcessInstanceProvider {
 
     Task allowedTask(ViewContext context, boolean limitToActive) throws PieceworkException;
 
-    StreamingAttachmentContent attachment(String attachmentId) throws PieceworkException;
+    ContentResource attachment(String attachmentId) throws PieceworkException;
 
     SearchResults attachments(AttachmentQueryParameters queryParameters, ViewContext context) throws PieceworkException;
 
-    StreamingAttachmentContent value(String fieldName, String fileId) throws PieceworkException;
+    ContentResource value(String fieldName, String fileId) throws PieceworkException;
 
     SearchResults values(String fieldName, ViewContext context) throws PieceworkException;
 

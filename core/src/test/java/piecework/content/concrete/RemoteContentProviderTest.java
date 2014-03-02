@@ -27,7 +27,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.content.config.ContentConfiguration;
 import piecework.enumeration.Scheme;
 import piecework.exception.PieceworkException;
-import piecework.model.Content;
+import piecework.content.ContentResource;
 import piecework.model.ContentProfile;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.test.ProcessDeploymentProviderStub;
@@ -63,12 +63,12 @@ public class RemoteContentProviderTest {
                 .remoteResourceLocations(Collections.singleton("http://localhost:10001/external/some/resource"))
                 .build();
         ProcessDeploymentProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
-        Content content = contentProvider.findByLocation(modelProvider, "http://localhost:10001/external/some/resource");
-        Assert.assertEquals("resource", content.getFilename());
-        Assert.assertEquals("http://localhost:10001/external/some/resource", content.getContentId());
-        Assert.assertEquals("text/plain;charset=UTF-8", content.getContentType());
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, "http://localhost:10001/external/some/resource");
+        Assert.assertEquals("resource", contentResource.getFilename());
+        Assert.assertEquals("http://localhost:10001/external/some/resource", contentResource.getContentId());
+        Assert.assertEquals("text/plain;charset=UTF-8", contentResource.contentType());
         byte[] array = null;
-        InputStream input = content.getInputStream();
+        InputStream input = contentResource.getInputStream();
         String expected = "This is some data from an external server";
         String actual = IOUtils.toString(input);
         Assert.assertEquals(expected, actual);

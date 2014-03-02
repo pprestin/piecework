@@ -13,26 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
-
-import org.springframework.core.io.ByteArrayResource;
-
-import java.io.IOException;
+package piecework.persistence.concrete;
 
 /**
  * @author James Renfro
  */
-public class DatedByteArrayResource extends ByteArrayResource {
+public class HistoryRepositoryProviderTest {
 
-    private long lastModified;
 
-    public DatedByteArrayResource(byte[] byteArray) {
-        super(byteArray);
-        this.lastModified = System.currentTimeMillis();
-    }
-
-    public long lastModified() throws IOException {
-        return lastModified;
-    }
 
 }

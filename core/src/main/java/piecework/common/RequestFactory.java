@@ -17,14 +17,11 @@ package piecework.common;
 
 import piecework.Constants;
 import piecework.enumeration.ActionType;
-import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessProvider;
-import piecework.util.ActivityUtil;
 import piecework.util.ModelUtility;
-import piecework.util.SecurityUtility;
 import piecework.validation.Validation;
 
 import javax.ws.rs.core.MediaType;
@@ -36,7 +33,7 @@ import java.util.List;
 public class RequestFactory {
 
     public <P extends ProcessProvider> FormRequest request(RequestDetails requestDetails, P modelProvider, ActionType actionType, Validation validation, Explanation explanation) throws PieceworkException {
-        Activity activity = ActivityUtil.activity(modelProvider);
+//        Activity activity = ActivityUtility.activity(modelProvider);
 
         Process process = modelProvider.process();
         ProcessInstance instance = ModelUtility.instance(modelProvider);
@@ -53,7 +50,7 @@ public class RequestFactory {
                 .processDefinitionKey(process.getProcessDefinitionKey())
                 .processInstanceId(instance != null ? instance.getProcessInstanceId() : null)
                 .taskId(task != null ? task.getTaskInstanceId() : null)
-                .activity(activity)
+//                .activity(activity)
                 .action(actionType)
                 .explanation(explanation);
 

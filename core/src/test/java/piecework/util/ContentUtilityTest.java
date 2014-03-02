@@ -21,12 +21,9 @@ import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicHeader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -35,7 +32,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import piecework.exception.InternalServerError;
 import piecework.exception.PieceworkException;
-import piecework.model.Content;
+import piecework.content.ContentResource;
 import piecework.model.ContentProfile;
 import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.test.ProcessDeploymentProviderStub;
@@ -91,7 +88,6 @@ public class ContentUtilityTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream("test".getBytes("UTF-8"));
         Date testDate = new Date();
         long length = "test".length();
-        Long contentLength = Long.valueOf(length);
 
         DBObject metadata = new BasicDBObject();
         metadata.put("originalFilename", originalFilename);
@@ -111,15 +107,15 @@ public class ContentUtilityTest {
         Mockito.when(gridFsFile.getLength())
                 .thenReturn(length);
 
-        Content content = ContentUtility.toContent(gridFsFile);
+        ContentResource contentResource = ContentUtility.toContent(gridFsFile);
 
-        Assert.assertEquals(id, content.getContentId());
-        Assert.assertEquals(contentType, content.getContentType());
-        Assert.assertEquals(originalFilename, content.getFilename());
-        Assert.assertEquals(filename, content.getLocation());
-        Assert.assertEquals(inputStream, content.getInputStream());
-        Assert.assertEquals(testDate, content.getLastModified());
-        Assert.assertEquals(contentLength, content.getLength());
+        Assert.assertEquals(id, contentResource.getContentId());
+        Assert.assertEquals(contentType, contentResource.contentType());
+        Assert.assertEquals(originalFilename, contentResource.getFilename());
+        Assert.assertEquals(filename, contentResource.getLocation());
+        Assert.assertEquals(inputStream, contentResource.getInputStream());
+        Assert.assertEquals(testDate.getTime(), contentResource.lastModified());
+        Assert.assertEquals(length, contentResource.contentLength());
     }
 
     @Test
@@ -146,15 +142,15 @@ public class ContentUtilityTest {
         Mockito.when(gridFsResource.contentLength())
                 .thenReturn(length);
 
-        Content content = ContentUtility.toContent(gridFsResource);
+        ContentResource contentResource = ContentUtility.toContent(gridFsResource);
 
-        Assert.assertEquals(id, content.getContentId());
-        Assert.assertEquals(contentType, content.getContentType());
-        Assert.assertEquals(filename, content.getFilename());
-        Assert.assertEquals(filename, content.getLocation());
-        Assert.assertEquals(inputStream, content.getInputStream());
-        Assert.assertEquals(testDate, content.getLastModified());
-        Assert.assertEquals(contentLength, content.getLength());
+        Assert.assertEquals(id, contentResource.getContentId());
+        Assert.assertEquals(contentType, contentResource.contentType());
+        Assert.assertEquals(filename, contentResource.getFilename());
+        Assert.assertEquals(filename, contentResource.getLocation());
+        Assert.assertEquals(inputStream, contentResource.getInputStream());
+        Assert.assertEquals(testDate.getTime(), contentResource.lastModified());
+        Assert.assertEquals(length, contentResource.contentLength());
     }
 
     @Test
@@ -165,14 +161,14 @@ public class ContentUtilityTest {
         String filename = "README.md";
 
         CloseableHttpClient client = HttpClients.createDefault();
-        Content content = ContentUtility.toContent(client, uri);
+        ContentResource contentResource = ContentUtility.toContent(client, uri);
 
-        String actual = IOUtils.toString(content.getInputStream());
+        String actual = IOUtils.toString(contentResource.getInputStream());
 
-        Assert.assertEquals(id, content.getContentId());
-        Assert.assertEquals(contentType, content.getContentType());
-        Assert.assertEquals(filename, content.getFilename());
-        Assert.assertEquals("https://raw.github.com/piecework/piecework/master/README.md", content.getLocation());
+        Assert.assertEquals(id, contentResource.getContentId());
+        Assert.assertEquals(contentType, contentResource.contentType());
+        Assert.assertEquals(filename, contentResource.getFilename());
+        Assert.assertEquals("https://raw.github.com/piecework/piecework/master/README.md", contentResource.getLocation());
         Assert.assertTrue(actual.length() > 0);
 //        Assert.assertEquals(testDate, content.getLastModified());
 //        Assert.assertEquals(Long.valueOf(actual.length()), content.getLength());

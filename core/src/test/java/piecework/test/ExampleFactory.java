@@ -16,12 +16,13 @@
 package piecework.test;
 
 import piecework.Constants;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
 
 import java.io.ByteArrayInputStream;
-import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -29,8 +30,8 @@ import java.util.UUID;
  */
 public class ExampleFactory {
 
-    public static Content exampleContent(String root) {
-        return new Content.Builder()
+    public static ContentResource exampleContent(String root) {
+        return new BasicContentResource.Builder()
                 .contentType("text/plain")
                 .location(root + "/" + UUID.randomUUID().toString())
                 .inputStream(new ByteArrayInputStream("This is a test".getBytes()))

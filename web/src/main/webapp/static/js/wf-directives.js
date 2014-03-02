@@ -904,9 +904,6 @@ angular.module('wf.directives',
                                 $fallbackHtml.hide();
                         }
                     };
-                    scope.loadValueListener = function(event, updatedValue) {
-                        scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
-                    };
                     scope.loadMultipleValues = function(element, values, fieldName, subFieldName, childHtml) {
                         var fallbackHtml = element.find('[data-wf-fallback]');
                         var listElement = element.find('ul');
@@ -922,7 +919,9 @@ angular.module('wf.directives',
                         var eventName = 'wfEvent:value-updated:' + fieldName;
 
                         if (scope.valueUpdatedListener == null)
-                            scope.valueUpdatedListener = scope.$on(eventName, scope.loadValueListener);
+                            scope.valueUpdatedListener = scope.$on(eventName, function(event, updatedValue) {
+                                scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
+                            });
 
                         if (values != null && values.length > 0) {
                             angular.forEach(values, function(value) {
