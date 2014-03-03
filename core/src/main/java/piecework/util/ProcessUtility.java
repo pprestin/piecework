@@ -15,15 +15,11 @@
  */
 package piecework.util;
 
-import org.apache.commons.lang.StringUtils;
-import piecework.common.ViewContext;
-import piecework.enumeration.ActionType;
-import piecework.model.*;
+import piecework.model.Container;
 import piecework.model.Process;
-import piecework.security.concrete.PassthroughSanitizer;
+import piecework.model.ProcessDeploymentVersion;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author James Renfro
@@ -61,90 +57,5 @@ public class ProcessUtility {
 
         return null;
     }
-
-    public static Interaction interaction(Interaction interaction, Map<String, Section> sectionMap, ViewContext context) {
-        if (interaction != null && interaction.getId() != null) {
-            Map<ActionType, Screen> screenMap = interaction.getScreens();
-
-            if (screenMap == null)
-                return interaction;
-
-            Interaction.Builder builder = new Interaction.Builder(interaction, new PassthroughSanitizer());
-            for (Map.Entry<ActionType, Screen> entry : screenMap.entrySet()) {
-                Screen screen = entry.getValue();
-                Screen.Builder screenBuilder = new Screen.Builder(screen, new PassthroughSanitizer());
-                List<Grouping> groupings = screen.getGroupings();
-
-                if (groupings != null) {
-                    for (Grouping grouping : groupings) {
-                        List<String> sectionIds = grouping.getSectionIds();
-                        if (sectionIds != null) {
-                            for (String sectionId : sectionIds) {
-                                screenBuilder.section(sectionMap.get(sectionId));
-                            }
-                        }
-                    }
-                }
-
-                builder.screen(entry.getKey(), screenBuilder.build(context));
-            }
-            return builder.build(context);
-        }
-        return null;
-    }
-
-    public static Interaction delete(Interaction interaction, ActionType actionType, String groupingId, String sectionId) {
-        if (interaction != null && interaction.getId() != null) {
-            Map<ActionType, Screen> screenMap = interaction.getScreens();
-
-            if (screenMap == null)
-                return interaction;
-
-            boolean deleteSection = StringUtils.isNotEmpty(sectionId);
-            boolean deleteGrouping = !deleteSection && StringUtils.isNotEmpty(groupingId);
-            boolean deleteScreen = !deleteGrouping && !deleteSection && actionType != null;
-
-            if (actionType == null)
-                return interaction;
-
-            Interaction.Builder builder = new Interaction.Builder(interaction, new PassthroughSanitizer());
-
-            PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-            for (Map.Entry<ActionType, Screen> entry : screenMap.entrySet()) {
-                ActionType key = entry.getKey();
-                if (deleteScreen && key == actionType)
-                    continue;
-
-                Screen screen = entry.getValue();
-                Screen.Builder screenBuilder = new Screen.Builder(screen, passthroughSanitizer, false);
-
-                List<Grouping> groupings = screen.getGroupings();
-
-                if (groupings != null) {
-                    for (Grouping grouping : groupings) {
-                        if (deleteGrouping && grouping.getGroupingId() != null && grouping.getGroupingId().equals(groupingId))
-                            continue;
-
-                        Grouping.Builder groupingBuilder = new Grouping.Builder(grouping, passthroughSanitizer, false);
-                        List<String> sectionIds = grouping.getSectionIds();
-                        if (sectionIds != null) {
-                            for (String currentSectionId : sectionIds) {
-                                if (deleteSection && currentSectionId != null && currentSectionId.equals(sectionId))
-                                    continue;
-
-                                groupingBuilder.sectionId(sectionId);
-                            }
-                        }
-                        screenBuilder.grouping(groupingBuilder.build());
-                    }
-                }
-
-                builder.screen(entry.getKey(), screenBuilder.build());
-            }
-            return builder.build();
-        }
-        return null;
-    }
-
 
 }

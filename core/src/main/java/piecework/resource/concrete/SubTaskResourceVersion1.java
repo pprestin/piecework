@@ -22,17 +22,19 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.Versions;
 import piecework.command.CommandFactory;
-import piecework.command.ValidationCommand;
+import piecework.command.SubmissionValidationCommand;
+import piecework.enumeration.ActionType;
+import piecework.exception.InternalServerError;
+import piecework.exception.StatusCodeError;
+import piecework.identity.IdentityHelper;
+import piecework.model.FormRequest;
+import piecework.model.RequestDetails;
+import piecework.model.Submission;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.TaskProvider;
 import piecework.resource.SubTaskResource;
-import piecework.service.*;
-import piecework.enumeration.ActionType;
-import piecework.exception.*;
-import piecework.identity.IdentityHelper;
+import piecework.service.RequestService;
 import piecework.settings.SecuritySettings;
-import piecework.model.*;
-import piecework.security.Sanitizer;
 import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplate;
@@ -82,12 +84,12 @@ public class SubTaskResourceVersion1 implements SubTaskResource {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
 
         SubmissionHandler handler = submissionHandlerRegistry.handler(Submission.class);
-
+        ActionType actionType = ActionType.SUBCREATE;
         try{
-            FormRequest formRequest = requestService.create(requestDetails, taskProvider, ActionType.SUBCREATE);
-            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(taskProvider, formRequest);
+            FormRequest formRequest = requestService.create(requestDetails, taskProvider, actionType);
+            SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(taskProvider, formRequest, actionType);
             Submission submission = handler.handle(taskProvider, rawSubmission, template);
-            ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, formRequest, rawSubmission, VERSION);
+            SubmissionValidationCommand<TaskProvider> validationCommand = commandFactory.submissionValidation(taskProvider, formRequest, actionType, submission, VERSION);
             Validation validation = validationCommand.execute();
 
             commandFactory.createSubTask(taskProvider, validation).execute();

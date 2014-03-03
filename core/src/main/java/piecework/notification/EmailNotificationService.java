@@ -15,33 +15,28 @@
  */
 package piecework.notification;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.io.StringReader;
-import java.io.StringWriter;
-import javax.mail.internet.InternetAddress;
-import org.apache.log4j.Logger;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.core.env.Environment;
-import org.springframework.security.core.userdetails.UserDetails;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import piecework.model.Notification;
-import piecework.service.NotificationService;
-import piecework.model.User;
-import piecework.identity.IdentityDetails;
-import piecework.service.IdentityService;
-import piecework.model.Group;
-import piecework.service.GroupService;
-import piecework.Constants;
+import org.apache.cxf.common.util.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import piecework.enumeration.StateChangeType;
+import piecework.model.Group;
+import piecework.model.Notification;
+import piecework.model.User;
+import piecework.service.GroupService;
+import piecework.service.IdentityService;
+import piecework.service.NotificationService;
 import piecework.settings.NotificationSettings;
+
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * send out email notifications
@@ -52,10 +47,10 @@ public class EmailNotificationService implements NotificationService {
     private static final Logger LOG = Logger.getLogger(EmailNotificationService.class);
 
     @Autowired
-    Environment environment;
+    EmailDispatcher emailDispatcher;
 
     @Autowired
-    IdentityService userDetailsService;  // get user details such as user name and email address
+    IdentityService identityService;  // get user details such as user name and email address
 
     @Autowired
     GroupService groupService;	// get group members
@@ -63,23 +58,22 @@ public class EmailNotificationService implements NotificationService {
     @Autowired
     NotificationSettings notificationSettings;
 
+
     /** 
      * expand any macros in notifications and send the notification to recipients.
      * @param  notification notification to send.
      * @param  scope      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Notification notification, Map<String, Object> scope, StateChangeType type) {
+    public boolean send(Notification notification, Map<String, Object> scope, StateChangeType type) {
         // sanity check
         if ( notification == null ) {
-            return;
+            return false;
         }
 
         String event = notification.get(Notification.Constants.EVENT);
         if ( event != null && ! event.equals(type.name()) ) {
-            return;  // notfication not for this event/state change
+            return false;  // notfication not for this event/state change
         }
-
-
 
         // get sender email
         String senderEmail = notification.getSenderEmail();
@@ -95,11 +89,15 @@ public class EmailNotificationService implements NotificationService {
 
         // recipients
         String recipientStr = notification.getRecipients();
+
         MustacheFactory mf = new DefaultMustacheFactory();
+        Mustache mustache;
         StringWriter writer = new StringWriter();
-        Mustache mustache = mf.compile(new StringReader(recipientStr), "recipient");
-        mustache.execute(writer, scope);
-        recipientStr = writer.toString();
+        if (recipientStr != null) {
+            mustache = mf.compile(new StringReader(recipientStr), "recipient");
+            mustache.execute(writer, scope);
+            recipientStr = writer.toString();
+        }
 
         String mailToOverride = notificationSettings.getMailToOverride();
         // override recipients in test environment (e.g. on dev)
@@ -108,7 +106,7 @@ public class EmailNotificationService implements NotificationService {
         }
         List<User> recipients = getUsers(recipientStr);
         if ( recipients == null || recipients.isEmpty() ) {
-            return; // recipients are required
+            return false; // recipients are required
         }
 
         // bcc 
@@ -120,6 +118,12 @@ public class EmailNotificationService implements NotificationService {
 
         // get subject
         String subject = notification.getSubject();
+
+        if (StringUtils.isEmpty(subject)) {
+            LOG.error("No subject provided for email, aborting");
+            return false;
+        }
+
         mf = new DefaultMustacheFactory();
         writer = new StringWriter();
         mustache = mf.compile(new StringReader(subject), "subject");
@@ -128,46 +132,16 @@ public class EmailNotificationService implements NotificationService {
 
         // get body
         String body = notification.getText();
+        if (StringUtils.isEmpty(body)) {
+            LOG.error("No body provided for email, aborting");
+            return false;
+        }
         writer = new StringWriter();
         mustache = mf.compile(new StringReader(body), "text");
         mustache.execute(writer, scope);
         body = writer.toString();
 
-        try {
-            SimpleEmail email = new SimpleEmail();
-            email.setHostName(notificationSettings.getMailServerHost());
-            email.setSmtpPort(notificationSettings.getMailServerPort());
-
-            for (User u : recipients) {
-                String emailAddr = u.getEmailAddress();
-                if ( emailAddr != null && ! emailAddr.isEmpty() ) {
-                    email.addTo(emailAddr, u.getDisplayName());
-                }
-            }
-            List<InternetAddress> toList = email.getToAddresses();
-            if ( toList == null || toList.isEmpty() ) {
-                LOG.error("No email addresses were found for " + recipientStr + ". No emails were sent.");
-                return; // no recipients
-            }
-
-            if ( bcc != null && ! bcc.isEmpty() ) {
-                for (User u : bcc) {
-                    String emailAddr = u.getEmailAddress();
-                    if ( emailAddr != null && ! emailAddr.isEmpty() ) {
-                        email.addBcc(emailAddr, u.getDisplayName());
-                    }
-                }
-            }
-            email.setFrom(senderEmail, senderName);
-            email.setSubject(subject);
-            email.setMsg(body);
-
-            LOG.debug("Subject: " + email.getSubject());
-            LOG.debug(email.getMimeMessage());
-            email.send();
-        } catch (EmailException e) {
-            LOG.error("Unable to send email with subject " + subject);
-        }
+        return emailDispatcher.dispatch(senderEmail, senderName, recipients, bcc, subject, body);
     }
 
     /** 
@@ -176,16 +150,19 @@ public class EmailNotificationService implements NotificationService {
      * @param  notifications a list of notification to send out.
      * @param  scope      a map of key-value pairs to be used for macro expansion.
      */  
-    public void send(Collection<Notification> notifications, Map<String, Object> scope, StateChangeType type) {
+    public int send(Collection<Notification> notifications, Map<String, Object> scope, StateChangeType type) {
 
-         // sanity check
-         if ( notifications == null ) {
-             return;
-         }
+        // sanity check
+        if ( notifications == null ) {
+             return 0;
+        }
 
-         for (Notification n : notifications) {
-             send(n, scope, type);
-         }
+        int count = 0;
+        for (Notification n : notifications) {
+            if (send(n, scope, type))
+                count++;
+        }
+        return count;
     }
 
     /** 
@@ -221,7 +198,7 @@ public class EmailNotificationService implements NotificationService {
                     users.addAll(members);
                 }   
             } else { // assuming userId
-                User recipient = userDetailsService.getUser(id);
+                User recipient = identityService.getUser(id);
                 if ( recipient != null ) { 
                     users.add(recipient);
                 }   
@@ -229,5 +206,8 @@ public class EmailNotificationService implements NotificationService {
         }   
 
         return users;
-    }   
+    }
+
+
+
 }

@@ -17,7 +17,6 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.springframework.data.annotation.Transient;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;

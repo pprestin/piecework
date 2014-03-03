@@ -31,6 +31,7 @@ import piecework.exception.GeneralExceptionMapper;
 import piecework.exception.StatusCodeErrorMapper;
 import piecework.resource.AnonymousFormResource;
 import piecework.resource.AnonymousScriptResource;
+import piecework.security.AccessTracker;
 import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.visitor.HtmlProvider;
 
@@ -77,7 +78,7 @@ public class ApplicationConfiguration {
 	}
 
 	@Bean 
-	public Server apiServer() {
+	public Server apiServer(AccessTracker accessTracker) {
 		Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
 		extensionMappings.put("json", "application/json");
 		
@@ -87,6 +88,7 @@ public class ApplicationConfiguration {
 		sf.setExtensionMappings(extensionMappings);
 		
 		List<Object> providers = new ArrayList<Object>();
+        providers.add(accessTracker);
 		providers.add(generalExceptionMapper);
 		providers.add(statusCodeErrorMapper);
 		providers.add(new AccessDeniedExceptionMapper());
@@ -102,7 +104,7 @@ public class ApplicationConfiguration {
 	}
 
     @Bean
-    public Server applicationServer() {
+    public Server applicationServer(AccessTracker accessTracker) {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
         extensionMappings.put("json", "application/json");
         extensionMappings.put("html", "text/html");
@@ -115,7 +117,7 @@ public class ApplicationConfiguration {
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
-//        providers.add(new CrossOriginResourceSharingFilter());
+        providers.add(accessTracker);
         providers.add(generalExceptionMapper);
         providers.add(statusCodeErrorMapper);
         providers.add(new AccessDeniedExceptionMapper());
@@ -131,7 +133,7 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    public Server formServer() {
+    public Server formServer(AccessTracker accessTracker) {
         Map<Object, Object> extensionMappings = new HashMap<Object, Object>();
         extensionMappings.put("json", "application/json");
         extensionMappings.put("html", "text/html");
@@ -142,6 +144,7 @@ public class ApplicationConfiguration {
         sf.setExtensionMappings(extensionMappings);
 
         List<Object> providers = new ArrayList<Object>();
+        providers.add(accessTracker);
         providers.add(generalExceptionMapper);
         providers.add(statusCodeErrorMapper);
         providers.add(new AccessDeniedExceptionMapper());

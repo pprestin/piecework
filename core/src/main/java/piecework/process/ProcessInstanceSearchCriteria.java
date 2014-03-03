@@ -20,8 +20,8 @@ import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.data.domain.Sort;
-import piecework.security.Sanitizer;
 import piecework.common.ManyMap;
+import piecework.security.Sanitizer;
 
 import java.util.*;
 

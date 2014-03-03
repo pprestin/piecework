@@ -26,26 +26,31 @@ import org.springframework.stereotype.Service;
 import piecework.Command;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.command.*;
+import piecework.command.CommandFactory;
+import piecework.command.ValidationCommand;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
-import piecework.exception.*;
+import piecework.exception.BadRequestError;
+import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
+import piecework.exception.StatusCodeError;
+import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.identity.IdentityHelper;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.TaskProvider;
-import piecework.repository.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.security.data.DataFilterService;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.security.Sanitizer;
+import piecework.security.data.DataFilterService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
 import piecework.validation.Validation;
 
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -146,13 +151,13 @@ public class TaskService {
                 break;
             case ATTACH:
                 request = requestService.create(requestDetails, taskProvider, actionType);
-                ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, null, VERSION);
+                ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, request, actionType, rawSubmission, Submission.class, VERSION);
                 validation = validationCommand.execute();
                 command = commandFactory.attachment(taskProvider, validation);
                 break;
             default:
                 request = requestService.create(requestDetails, taskProvider, actionType);
-                validationCommand = commandFactory.validation(taskProvider, request, rawSubmission, Submission.class, null, VERSION);
+                validationCommand = commandFactory.validation(taskProvider, request, actionType, rawSubmission, Submission.class, VERSION);
                 validation = validationCommand.execute();
                 command = commandFactory.completeTask(taskProvider, validation, actionType);
                 break;

@@ -1,5 +1,6 @@
 package piecework.engine;
 
+import piecework.content.ContentResource;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.exception.PieceworkException;
@@ -38,10 +39,10 @@ public interface ProcessEngineCapabilities {
 
     Task createSubTask(TaskProvider taskProvider, Validation validation) throws PieceworkException;
 
-    ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException;
+    ProcessDeployment deploy(Process process, ProcessDeployment deployment, ContentResource contentResource) throws ProcessEngineException;
 
-    ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException;
+    ContentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException;
 
-    ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException;
+    ContentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException;
 
 }

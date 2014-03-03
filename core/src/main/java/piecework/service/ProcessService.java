@@ -23,11 +23,13 @@ import piecework.Constants;
 import piecework.Versions;
 import piecework.authorization.AuthorizationRole;
 import piecework.command.CommandFactory;
-import piecework.engine.ProcessDeploymentResource;
+import piecework.content.ContentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.CacheName;
-import piecework.exception.*;
+import piecework.exception.InternalServerError;
+import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
@@ -40,11 +42,9 @@ import piecework.repository.ProcessInstanceRepository;
 import piecework.repository.ProcessRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.ui.Streamable;
 import piecework.util.ProcessUtility;
 
 import javax.ws.rs.core.MultivaluedMap;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -102,7 +102,7 @@ public class ProcessService {
         return persist(builder.build());
     }
 
-    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting, Entity principal) throws PieceworkException {
+    public Process createAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ContentResource resource, boolean migrateExisting, Entity principal) throws PieceworkException {
         Process process = create(rawProcess);
 
         ProcessProvider processProvider = modelProviderFactory.processProvider(process.getProcessDefinitionKey(), principal);
@@ -234,7 +234,7 @@ public class ProcessService {
         return Collections.unmodifiableSet(allProcesses);
     }
 
-    public Streamable getDiagram(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
+    public ContentResource getDiagram(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
         Process process = read(rawProcessDefinitionKey, principal);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
@@ -245,7 +245,7 @@ public class ProcessService {
         ProcessDeployment deployment = deploymentService.read(process, deploymentId);
 
         try {
-            ProcessDeploymentResource resource = facade.resource(process, deployment, "image/png");
+            ContentResource resource = facade.resource(process, deployment, "image/png");
             return resource;
         } catch (ProcessEngineException e) {
             LOG.error("Could not generate diagram", e);
@@ -253,18 +253,17 @@ public class ProcessService {
         }
     }
 
-    public ProcessDeploymentResource getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
+    public ContentResource getDeploymentResource(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) throws PieceworkException {
         ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         Process process = read(rawProcessDefinitionKey, principal);
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
 
         ProcessDeployment deployment = deploymentService.read(process, deploymentId);
 
-        Content content = contentRepository.findByLocation(deploymentProvider, deployment.getEngineProcessDefinitionLocation());
-        return new ProcessDeploymentResource.Builder(content).build();
+        return contentRepository.findByLocation(deploymentProvider, deployment.getEngineProcessDefinitionLocation());
     }
 
-    public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ProcessDeploymentResource resource) throws PieceworkException {
+    public ProcessDeployment deploy(String rawProcessDefinitionKey, String rawDeploymentId, ContentResource resource) throws PieceworkException {
         ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, helper.getPrincipal());
         String deploymentId = sanitizer.sanitize(rawDeploymentId);
         return commandFactory.deployment(modelProvider, deploymentId, resource).execute();
@@ -354,7 +353,7 @@ public class ProcessService {
         return persist(builder.build());
     }
 
-    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ProcessDeploymentResource resource, boolean migrateExisting, Entity principal) throws PieceworkException {
+    public Process updateAndPublishDeployment(Process rawProcess, ProcessDeployment rawDeployment, ContentResource resource, boolean migrateExisting, Entity principal) throws PieceworkException {
         ProcessProvider processProvider = modelProviderFactory.processProvider(rawProcess.getProcessDefinitionKey(), principal);
 
         String processDefinitionKey = processProvider.processDefinitionKey();

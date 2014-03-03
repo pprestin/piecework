@@ -1,10 +1,7 @@
 package piecework.repository;
 
+import piecework.content.ContentResource;
 import piecework.exception.PieceworkException;
-import piecework.model.Content;
-import piecework.model.Entity;
-import piecework.model.Process;
-import piecework.model.ProcessInstance;
 import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;
@@ -20,7 +17,7 @@ public interface ContentRepository {
      * provided, a ContentProvider to handle that scheme must also be included in the application
      * context or an exception will be thrown.
      */
-    Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException;
+    ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException;
 
     /*
      * Expires a piece of content so it is no longer available to be found
@@ -31,6 +28,6 @@ public interface ContentRepository {
      * Stores content specific to a process, or if the processDefinitionKey is left null,
      * in a general purpose location.
      */
-    Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException;
+    ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws PieceworkException, IOException;
 
 }

@@ -19,9 +19,9 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.compress.utils.IOUtils;
 import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
+import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
 import piecework.persistence.ContentProfileProvider;
 
 import java.io.ByteArrayInputStream;
@@ -38,12 +38,12 @@ import java.util.regex.Pattern;
  */
 public class InMemoryContentProviderReceiver implements ContentProvider, ContentReceiver {
 
-    private Map<String, Content> contentMap;
-    private Map<String, Content> contentLocationMap;
+    private Map<String, ContentResource> contentMap;
+    private Map<String, ContentResource> contentLocationMap;
 
     public InMemoryContentProviderReceiver() {
-        this.contentMap = new Hashtable<String, Content>();
-        this.contentLocationMap = new Hashtable<String, Content>();
+        this.contentMap = new Hashtable<String, ContentResource>();
+        this.contentLocationMap = new Hashtable<String, ContentResource>();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
-    public synchronized Content findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+    public synchronized ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
         return contentLocationMap.get(location);
     }
 
@@ -62,17 +62,17 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
-    public synchronized Content save(ContentProfileProvider modelProvider, Content content) throws PieceworkException, IOException {
-        String contentId = content.getContentId() == null ? UUID.randomUUID().toString() : content.getContentId();
+    public synchronized ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws PieceworkException, IOException {
+        String contentId = contentResource.getContentId() == null ? UUID.randomUUID().toString() : contentResource.getContentId();
 
         long contentLength = 0;
         InputStream inputStream = null;
         String md5 = null;
 
-        if (content.getInputStream() != null) {
+        if (contentResource.getInputStream() != null) {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             try {
-                contentLength = IOUtils.copy(content.getInputStream(), outputStream);
+                contentLength = IOUtils.copy(contentResource.getInputStream(), outputStream);
 
                 byte[] data = outputStream.toByteArray();
                 inputStream = new ByteArrayInputStream(data);
@@ -87,33 +87,33 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
             }
         }
 
-        Content stored = new Content.Builder(content)
+        ContentResource stored = new BasicContentResource.Builder()
                 .contentId(contentId)
                 .inputStream(inputStream)
                 .length(contentLength)
                 .lastModified(new Date())
-                .md5(md5)
+//                .md5(md5)
                 .build();
 
-        contentLocationMap.put(content.getLocation(), stored);
+        contentLocationMap.put(contentResource.getLocation(), stored);
         contentMap.put(contentId, stored);
 
         return stored;
     }
 
-    public List<Content> findByLocationPattern(String locationPattern) throws IOException {
-        List<Content> contents = new ArrayList<Content>();
+    public List<ContentResource> findByLocationPattern(String locationPattern) throws IOException {
+        List<ContentResource> contentResources = new ArrayList<ContentResource>();
 
         if (locationPattern.contains("*"))
             locationPattern = locationPattern.replace("*", ".*");
 
         Pattern pattern = Pattern.compile(locationPattern, 0);
 
-        for (Map.Entry<String, Content> entry : contentLocationMap.entrySet()) {
+        for (Map.Entry<String, ContentResource> entry : contentLocationMap.entrySet()) {
             if (pattern.matcher(entry.getKey()).matches())
-                contents.add(entry.getValue());
+                contentResources.add(entry.getValue());
         }
-        return contents;
+        return contentResources;
     }
 
     @Override

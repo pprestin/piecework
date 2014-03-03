@@ -15,13 +15,10 @@
  */
 package piecework.ui.streaming;
 
-import org.htmlcleaner.*;
+import piecework.content.ContentResource;
 import piecework.enumeration.DataInjectionStrategy;
-import piecework.model.Content;
 import piecework.model.Form;
 import piecework.model.Process;
-import piecework.ui.visitor.DecoratingVisitor;
-import piecework.ui.visitor.ScriptInjectingVisitor;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
@@ -36,13 +33,13 @@ public class StreamingPageContent implements StreamingOutput {
 
     private final Process process;
     private final Form form;
-    private final Content content;
+    private final ContentResource contentResource;
     private final DataInjectionStrategy strategy;
 
-    public StreamingPageContent(Process process, Form form, Content content, DataInjectionStrategy strategy) {
+    public StreamingPageContent(Process process, Form form, ContentResource contentResource, DataInjectionStrategy strategy) {
         this.process = process;
         this.form = form;
-        this.content = content;
+        this.contentResource = contentResource;
         this.strategy = strategy;
     }
 

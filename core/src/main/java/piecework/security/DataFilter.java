@@ -1,6 +1,5 @@
 package piecework.security;
 
-import piecework.model.Field;
 import piecework.model.Value;
 
 import java.util.List;

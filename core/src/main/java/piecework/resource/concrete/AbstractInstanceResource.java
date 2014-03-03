@@ -28,11 +28,15 @@ import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.export.IteratingDataProvider;
 import piecework.model.*;
-import piecework.persistence.*;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
-import piecework.service.*;
+import piecework.service.ProcessInstanceService;
+import piecework.service.RequestService;
 import piecework.settings.SecuritySettings;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
@@ -87,7 +91,7 @@ public abstract class AbstractInstanceResource {
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         FormRequest request = requestService.create(requestDetails, taskProvider, ActionType.ATTACH);
-        ValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(taskProvider, request, data, type, null, VERSION);
+        ValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(taskProvider, request, ActionType.ATTACH, data, type, VERSION);
         Validation validation = validationCommand.execute();
 
         commandFactory.attachment(taskProvider, validation).execute();
@@ -105,7 +109,7 @@ public abstract class AbstractInstanceResource {
 
         ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         FormRequest request = requestService.create(requestDetails, deploymentProvider);
-        ValidationCommand<ProcessDeploymentProvider> validationCommand = commandFactory.validation(deploymentProvider, request, data, type, null, VERSION);
+        ValidationCommand<ProcessDeploymentProvider> validationCommand = commandFactory.validation(deploymentProvider, request, ActionType.CREATE, data, type, VERSION);
         Validation validation = validationCommand.execute();
         ProcessInstance instance = commandFactory.createInstance(deploymentProvider, validation).execute();
 

@@ -25,11 +25,11 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import piecework.command.AbstractCommand;
 import piecework.command.CommandListener;
+import piecework.common.ManyMap;
 import piecework.exception.AbortCommandException;
 import piecework.exception.BadRequestError;
 import piecework.exception.PieceworkException;
 import piecework.model.Process;
-import piecework.common.ManyMap;
 import piecework.persistence.ProcessProvider;
 
 import javax.annotation.PostConstruct;

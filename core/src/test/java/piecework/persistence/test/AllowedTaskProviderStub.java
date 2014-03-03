@@ -16,12 +16,13 @@
 package piecework.persistence.test;
 
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.persistence.AllowedTaskProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.ui.streaming.StreamingAttachmentContent;
+import piecework.ui.streaming.StreamingResource;
 
 /**
  * @author James Renfro
@@ -30,7 +31,7 @@ public class AllowedTaskProviderStub extends ProcessInstanceProviderStub impleme
 
 
     private Task allowedTask;
-    private StreamingAttachmentContent attachment;
+    private ContentResource attachment;
 
     public AllowedTaskProviderStub(piecework.model.Process process, ProcessDeployment deployment,
                                    ProcessInstance instance, Task allowedTask, Entity principal) {
@@ -49,7 +50,7 @@ public class AllowedTaskProviderStub extends ProcessInstanceProviderStub impleme
     }
 
     @Override
-    public StreamingAttachmentContent attachment(String attachmentId) throws PieceworkException {
+    public ContentResource attachment(String attachmentId) throws PieceworkException {
         return attachment;
     }
 
@@ -59,7 +60,7 @@ public class AllowedTaskProviderStub extends ProcessInstanceProviderStub impleme
     }
 
     @Override
-    public StreamingAttachmentContent value(String fieldName, String fileId) throws PieceworkException {
+    public ContentResource value(String fieldName, String fileId) throws PieceworkException {
         return null;
     }
 
@@ -73,7 +74,7 @@ public class AllowedTaskProviderStub extends ProcessInstanceProviderStub impleme
         return this;
     }
 
-    public AllowedTaskProviderStub attachment(StreamingAttachmentContent attachment) {
+    public AllowedTaskProviderStub attachment(ContentResource attachment) {
         this.attachment = attachment;
         return this;
     }

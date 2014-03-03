@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.model;
+package piecework.content.concrete;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
-import org.springframework.core.io.Resource;
-import piecework.content.concrete.RemoteResource;
-import piecework.ui.Streamable;
+import piecework.content.ContentResource;
 
+import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
@@ -29,40 +30,37 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Abstraction on GridFSFile or GridFSResource -- not a document, but to make GridFS resources
- * look like other model objects for the purpose of keeping the code readable.
- *
  * @author James Renfro
  */
-public class Content implements Serializable, Streamable {
+public class BasicContentResource implements ContentResource, Serializable {
 
-    private static final Logger LOG = Logger.getLogger(Content.class);
+    private static final Logger LOG = Logger.getLogger(BasicContentResource.class);
 
     private final String contentId;
     private final String contentType;
-    private final String fieldName;
+    private final String name;
     private final String filename;
+    private final String description;
     private final String location;
     private final InputStream inputStream;
-    private final Resource resource;
-    private final String md5;
-    private final Date lastModified;
-    private final Long length;
+    private final String eTag;
+    private final long lastModified;
+    private final long length;
     private final Map<String, String> metadata;
 
-    private Content() {
+    private BasicContentResource() {
         this(new Builder());
     }
 
-    private Content(Builder builder) {
+    private BasicContentResource(Builder builder) {
         this.contentId = builder.contentId;
         this.contentType = builder.contentType;
-        this.fieldName = builder.fieldName;
+        this.name = builder.name;
         this.filename = builder.filename;
+        this.description = builder.description;
         this.location = builder.location;
         this.inputStream = builder.inputStream;
-        this.resource = builder.resource;
-        this.md5 = builder.md5;
+        this.eTag = builder.eTag;
         this.lastModified = builder.lastModified;
         this.length = builder.length;
         this.metadata = Collections.unmodifiableMap(builder.metadata);
@@ -72,25 +70,20 @@ public class Content implements Serializable, Streamable {
         return contentId;
     }
 
-    public String getContentType() {
-        if (resource != null && resource instanceof RemoteResource)
-            return ((RemoteResource) resource).contentType();
+    public String contentType() {
         return contentType;
     }
 
     public String getName() {
-        return filename;
-    }
-
-    public String getFieldName() {
-        return fieldName;
+        return name;
     }
 
     public String getFilename() {
-        if (resource != null && resource instanceof RemoteResource)
-            return ((RemoteResource) resource).getFilename();
-
         return filename;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public String getLocation() {
@@ -101,85 +94,48 @@ public class Content implements Serializable, Streamable {
         return metadata;
     }
 
-    // Use getResource instead where possible
     public InputStream getInputStream() {
-        if (resource != null) {
-            try {
-                return resource.getInputStream();
-            } catch (IOException ioe) {
-                LOG.error("Caught an io exception trying to grab the input stream from the resource object", ioe);
-                return null;
-            }
-        }
         return inputStream;
     }
 
-    public Resource getResource() {
-        return resource;
+    public String eTag() {
+        return eTag;
     }
 
-    public String getMd5() {
-        return md5;
-    }
-
-    public Date getLastModified() {
-        if (resource != null && resource instanceof RemoteResource) {
-            try {
-                return new Date(((RemoteResource) resource).lastModified());
-            } catch (IOException ioe) {
-                // Ignore
-                LOG.info("Caught io exception checking last modified on remote resource");
-            }
-        }
+    public long lastModified() {
         return lastModified;
     }
 
-    public Long getLength() {
-        if (resource != null && resource instanceof RemoteResource) {
-            try {
-                return ((RemoteResource) resource).contentLength();
-            } catch (IOException ioe) {
-                // Ignore
-                LOG.info("Caught io exception checking content length on remote resource");
-            }
-        }
+    @Override
+    public long contentLength() {
         return length;
+    }
+
+    @Override
+    public void write(OutputStream output) throws IOException, WebApplicationException {
+        throw new NotImplementedException();
     }
 
     public final static class Builder {
 
         private String contentId;
         private String contentType;
-        private String fieldName;
+        private String name;
         private String filename;
+        private String description;
         private String location;
         private InputStream inputStream;
-        private Resource resource;
-        private String md5;
-        private Date lastModified;
-        private Long length;
+        private String eTag;
+        private long lastModified;
+        private long length = 0l;
         private Map<String, String> metadata;
 
         public Builder() {
             this.metadata = new HashMap<String, String>();
         }
 
-        public Builder(Content content) {
-            this.contentId = content.contentId;
-            this.contentType = content.contentType;
-            this.fieldName = content.fieldName;
-            this.filename = content.filename;
-            this.location = content.location;
-            this.inputStream = content.inputStream;
-            this.resource = content.resource;
-            this.md5 = content.md5;
-            this.lastModified = content.lastModified;
-            this.length = content.length;
-            this.metadata = content.metadata != null ? new HashMap<String, String>(content.metadata) : new HashMap<String, String>();
-        }
-
-        public Content build() {
-            return new Content(this);
+        public BasicContentResource build() {
+            return new BasicContentResource(this);
         }
 
         public Builder contentId(String contentId) {
@@ -192,13 +148,18 @@ public class Content implements Serializable, Streamable {
             return this;
         }
 
-        public Builder fieldName(String fieldName) {
-            this.fieldName = fieldName;
+        public Builder name(String name) {
+            this.name = name;
             return this;
         }
 
         public Builder filename(String filename) {
             this.filename = filename;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
             return this;
         }
 
@@ -212,23 +173,18 @@ public class Content implements Serializable, Streamable {
             return this;
         }
 
-        public Builder resource(Resource resource) {
-            this.resource = resource;
-            return this;
-        }
-
-        public Builder md5(String md5) {
-            this.md5 = md5;
+        public Builder eTag(String eTag) {
+            this.eTag = eTag;
             return this;
         }
 
         public Builder lastModified(Date lastModified) {
-            this.lastModified = lastModified;
+            this.lastModified = lastModified != null ? lastModified.getTime() : 0;
             return this;
         }
 
         public Builder lastModified(long lastModified) {
-            this.lastModified = new Date(lastModified);
+            this.lastModified = lastModified;
             return this;
         }
 

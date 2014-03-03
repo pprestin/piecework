@@ -24,7 +24,9 @@ import piecework.enumeration.OperationType;
 import piecework.exception.ConflictError;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
+import piecework.model.Entity;
+import piecework.model.ProcessDeployment;
+import piecework.model.ProcessInstance;
 import piecework.persistence.ProcessInstanceProvider;
 
 /**

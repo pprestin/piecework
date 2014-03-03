@@ -15,9 +15,9 @@
  */
 package piecework.exception;
 
-import java.util.List;
-
 import piecework.form.legacy.AttributeValidation;
+
+import java.util.List;
 
 /**
  * @author James Renfro

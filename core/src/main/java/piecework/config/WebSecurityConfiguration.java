@@ -16,11 +16,8 @@
 package piecework.config;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.cxf.configuration.jsse.SSLUtils;
-import org.apache.cxf.configuration.security.FiltersType;
 import org.apache.log4j.Logger;
 import org.owasp.validator.html.Policy;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,8 +30,6 @@ import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.BeanIds;
-import org.springframework.security.config.authentication.AuthenticationManagerFactoryBean;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
@@ -42,23 +37,12 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import piecework.authorization.AuthorizationRoleMapper;
 import piecework.authorization.ResourceAccessVoter;
-import piecework.identity.AuthenticationPrincipalConverter;
-import piecework.ldap.LdapSettings;
-import piecework.security.*;
-import piecework.security.concrete.AuthenticationFilterFactoryBean;
-import piecework.security.concrete.CustomAuthenticationManagerFactoryBean;
+import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
+import piecework.security.AuthorityMappingPreAuthenticatedProvider;
 import piecework.security.concrete.DebugAuthenticationFilter;
 import piecework.security.concrete.SingleSignOnAuthenticationFilter;
-import piecework.service.IdentityService;
 
-import javax.annotation.PostConstruct;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URL;
-import java.security.*;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

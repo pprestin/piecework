@@ -15,24 +15,22 @@
  */
 package piecework.model;
 
-import java.io.Serializable;
-import java.util.*;
-
-import javax.xml.bind.annotation.*;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+import piecework.common.ManyMap;
+import piecework.common.ViewContext;
 import piecework.enumeration.OperationType;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
-import piecework.common.ViewContext;
-import piecework.common.ManyMap;
+
+import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -601,6 +599,16 @@ public class ProcessInstance implements Serializable {
                 this.data.put(key, list);
             }
 
+            return this;
+        }
+
+        public Builder formValue(String key, Value value) {
+            if (value != null) {
+                this.data.putOne(key, value);
+
+                if (StringUtils.isNotEmpty(value.getValue()))
+                    this.keywords.add(value.getValue().toLowerCase());
+            }
             return this;
         }
 

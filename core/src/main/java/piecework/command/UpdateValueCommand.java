@@ -22,8 +22,10 @@ import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
-import piecework.model.*;
+import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.ProcessInstance;
+import piecework.model.Task;
 import piecework.persistence.AllowedTaskProvider;
 import piecework.validation.Validation;
 

@@ -16,14 +16,12 @@
 package piecework.process;
 
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-
 import org.apache.commons.lang.StringUtils;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import piecework.Constants;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro

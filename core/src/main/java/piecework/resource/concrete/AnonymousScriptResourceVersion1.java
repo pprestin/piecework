@@ -18,12 +18,15 @@ package piecework.resource.concrete;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.exception.*;
+import piecework.content.ContentResource;
+import piecework.exception.InternalServerError;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.form.FormDisposition;
-import piecework.model.*;
+import piecework.model.Entity;
+import piecework.model.Form;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.resource.AnonymousScriptResource;
@@ -55,13 +58,13 @@ public class AnonymousScriptResourceVersion1 extends AbstractScriptResource impl
         Form form = getForm(rawProcessDefinitionKey, context);
         ServletContext servletContext = context.getServletContext();
 
-        Resource scriptResource;
+        ContentResource scriptResource;
         Entity principal = null;
         ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         FormDisposition disposition = form.getDisposition();
         if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
             try {
-                Resource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                ContentResource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
                 scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, form, pageResource);
             } catch (MisconfiguredProcessException e) {
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
@@ -77,13 +80,14 @@ public class AnonymousScriptResourceVersion1 extends AbstractScriptResource impl
     public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         Form form = getForm(rawProcessDefinitionKey, context);
         ServletContext servletContext = context.getServletContext();
-        Resource stylesheetResource;
+        ContentResource stylesheetResource;
         FormDisposition disposition = form.getDisposition();
         Entity principal = null;
         ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
+
         if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
             try {
-                Resource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                ContentResource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
                 stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, form, pageResource);
             } catch (MisconfiguredProcessException e) {
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);

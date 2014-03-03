@@ -26,8 +26,10 @@ import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
-import piecework.model.*;
+import piecework.model.Attachment;
+import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.ProcessInstance;
 import piecework.persistence.ProcessInstanceProvider;
 
 import java.util.Collection;

@@ -21,15 +21,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.content.concrete.BasicContentResource;
 import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.content.concrete.InMemoryContentProviderReceiver;
 import piecework.content.config.ContentConfiguration;
 import piecework.content.stubs.*;
 import piecework.enumeration.Scheme;
 import piecework.exception.PieceworkException;
-import piecework.model.Content;
 import piecework.model.ContentProfile;
-import piecework.model.Process;
 import piecework.model.User;
 import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.test.ProcessDeploymentProviderStub;
@@ -93,8 +92,8 @@ public class ContentHandlerRepositoryTest {
         Assert.assertEquals(3, contentProviders.size());
         ContentProvider provider = contentProviders.get(0);
         Assert.assertTrue(provider instanceof TestKeyContentProvider);
-        Content content = provider.findByLocation(modelProvider, null);
-        Assert.assertEquals("some-key-content-provider", content.getLocation());
+        ContentResource contentResource = provider.findByLocation(modelProvider, null);
+        Assert.assertEquals("some-key-content-provider", contentResource.getLocation());
     }
 
     @Test
@@ -103,8 +102,8 @@ public class ContentHandlerRepositoryTest {
                 .contentHandlerKey("some-key")
                 .build();
         ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
-        Content content = contentHandlerRepository.findByLocation(modelProvider, "some/location");
-        Assert.assertEquals("some-key-content-provider", content.getLocation());
+        ContentResource contentResource = contentHandlerRepository.findByLocation(modelProvider, "some/location");
+        Assert.assertEquals("some-key-content-provider", contentResource.getLocation());
     }
 
     @Test
@@ -112,8 +111,8 @@ public class ContentHandlerRepositoryTest {
         ContentProfile contentProfile = new ContentProfile.Builder()
                 .build();
         ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
-        Content content = contentHandlerRepository.findByLocation(modelProvider, "some/location");
-        Assert.assertEquals("some-external-content-provider", content.getLocation());
+        ContentResource contentResource = contentHandlerRepository.findByLocation(modelProvider, "some/location");
+        Assert.assertEquals("some-external-content-provider", contentResource.getLocation());
     }
 
     @Test
@@ -131,10 +130,10 @@ public class ContentHandlerRepositoryTest {
                 .build();
         ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
 
-        Content content = new Content.Builder()
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .build();
 
-        Content stored = contentHandlerRepository.save(modelProvider, content);
+        ContentResource stored = contentHandlerRepository.save(modelProvider, contentResource);
         Assert.assertEquals("some-key-content-receiver", stored.getLocation());
     }
 
@@ -143,10 +142,10 @@ public class ContentHandlerRepositoryTest {
         ContentProfile contentProfile = new ContentProfile.Builder()
                 .build();
         ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
-        Content content = new Content.Builder()
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .build();
 
-        Content stored = contentHandlerRepository.save(modelProvider, content);
+        ContentResource stored = contentHandlerRepository.save(modelProvider, contentResource);
         Assert.assertEquals("some-external-content-receiver", stored.getLocation());
     }
 
@@ -160,11 +159,11 @@ public class ContentHandlerRepositoryTest {
         ContentHandlerRegistry registry = contentHandlerRepository.getContentHandlerRegistry();
         ContentReceiver contentReceiver = registry.contentReceiver("some-key");
         Assert.assertTrue(contentReceiver instanceof TestKeyContentReceiver);
-        Content content = new Content.Builder()
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .build();
         User principal = new User.Builder()
                 .build();
-        Content stored = contentReceiver.save(modelProvider, content);
+        ContentResource stored = contentReceiver.save(modelProvider, contentResource);
 
         Assert.assertEquals("some-key-content-receiver", stored.getLocation());
 

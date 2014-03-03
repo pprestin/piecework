@@ -17,11 +17,11 @@ package piecework.util;
 
 import org.apache.cxf.common.util.StringUtils;
 import org.htmlcleaner.TagNode;
+import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
-import piecework.model.Content;
+import piecework.settings.UserInterfaceSettings;
 import piecework.ui.StaticResourceAggregator;
 import piecework.ui.TagAttributeAction;
-import piecework.settings.UserInterfaceSettings;
 
 /**
  * @author James Renfro
@@ -34,7 +34,7 @@ public class PathUtility {
         if (indexOf != -1)
             scheme = location.substring(0, indexOf);
 
-        Content content;
+        ContentResource contentResource;
         if (scheme.equals("http") || scheme.endsWith("https"))
             return Scheme.REMOTE;
         else if (scheme.equals("classpath"))

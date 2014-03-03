@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.repository;
+package piecework.security.concrete;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
-
-import piecework.model.Interaction;
+import junit.framework.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * @author James Renfro
  */
-public interface InteractionRepository extends MongoRepository<Interaction, String> {
+@Ignore
+public class SingleSignOnAuthenticationFilterTest {
+
+    @Test
+    public void verify() {
+        Assert.fail();
+    }
 
 }

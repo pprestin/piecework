@@ -16,7 +16,7 @@
 package piecework;
 
 import piecework.authorization.SuperUserAccessAuthority;
-import piecework.model.*;
+import piecework.model.Application;
 import piecework.service.ProcessService;
 
 /**

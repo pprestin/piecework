@@ -15,24 +15,20 @@
  */
 package piecework.validation;
 
-import java.util.*;
-
+import com.google.common.collect.Sets;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import piecework.exception.BadRequestError;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
-import piecework.model.Process;
-
-import com.google.common.collect.Sets;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.security.data.DataFilterService;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ModelUtility;
 import piecework.util.ValidationUtility;
+
+import java.util.*;
 
 /**
  * @author James Renfro

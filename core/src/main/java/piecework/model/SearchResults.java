@@ -1,21 +1,23 @@
 package piecework.model;
 
-import java.io.Serializable;
-import java.util.*;
-
-import javax.xml.bind.annotation.*;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import piecework.common.ViewContext;
 import piecework.common.ManyMap;
+import piecework.common.ViewContext;
+
+import javax.xml.bind.annotation.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @XmlRootElement(name = SearchResults.Constants.ROOT_ELEMENT_NAME)
 @XmlType(name = SearchResults.Constants.TYPE_NAME)
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlSeeAlso({Button.class, Constraint.class, Field.class, File.class, Form.class, FormValue.class, Interaction.class, Process.class, ProcessInstance.class, QueryParameter.class, Screen.class, Section.class, Task.class})
+@XmlSeeAlso({Button.class, Constraint.class, Field.class, File.class, Form.class, FormValue.class, Process.class, ProcessInstance.class, QueryParameter.class, Task.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchResults implements Serializable {
 

@@ -15,26 +15,26 @@
  */
 package piecework.identity;
 
-import java.security.cert.X509Certificate;
-import java.util.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import piecework.Constants;
 import piecework.authorization.AccessAuthority;
 import piecework.exception.BadRequestError;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.StatusCodeError;
-import piecework.model.*;
-import piecework.model.Process;
 import piecework.model.Application;
+import piecework.model.Entity;
+import piecework.model.Process;
+import piecework.model.User;
 import piecework.repository.ProcessRepository;
+
+import java.security.cert.X509Certificate;
+import java.util.Collection;
 
 /**
  * @author James Renfro

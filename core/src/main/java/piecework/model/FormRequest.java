@@ -17,12 +17,11 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.common.ManyMap;
 import piecework.enumeration.ActionType;
 import piecework.security.Sanitizer;
-import piecework.common.ManyMap;
 
 import java.util.*;
 
@@ -74,14 +73,6 @@ public class FormRequest {
 
     private final Explanation explanation;
 
-//    @Transient
-//    private final ProcessInstance instance;
-//
-//    @Transient
-//    private final ProcessDeployment deployment;
-//
-//    @Transient
-//    private final Task task;
 
     private FormRequest() {
         this(new FormRequest.Builder());
@@ -190,18 +181,6 @@ public class FormRequest {
         return messages;
     }
 
-//    public ProcessInstance getInstance() {
-//        return instance;
-//    }
-//
-//    public Task getTask() {
-//        return task;
-//    }
-//
-//    public ProcessDeployment getDeployment() {
-//        return deployment;
-//    }
-
     public String getUserAgent() {
         return userAgent;
     }
@@ -228,9 +207,6 @@ public class FormRequest {
         private String certificateSubject;
         private String certificateIssuer;
         private String taskId;
-//        private ProcessDeployment deployment;
-//        private ProcessInstance instance;
-//        private Task task;
         private Activity activity;
         private ActionType action;
         private Explanation explanation;
@@ -283,7 +259,6 @@ public class FormRequest {
             this.action = request.action != null ? request.action : ActionType.CREATE;
             this.activity = request.activity != null ? new Activity.Builder(request.activity, sanitizer).build() : null;
             this.explanation = request.explanation;
-//            this.screen = request.screen != null ? new Screen.Builder(request.screen, sanitizer).build() : null;
             this.contentType = sanitizer.sanitize(request.contentType);
             this.acceptableMediaTypes = new ArrayList<String>(request.acceptableMediaTypes);
             this.messages = new ManyMap<String, Message>(request.getMessages());
@@ -383,25 +358,6 @@ public class FormRequest {
             this.action = action;
             return this;
         }
-
-//        public Builder deployment(ProcessDeployment deployment) {
-//            this.deployment = deployment;
-//            return this;
-//        }
-//
-//        public Builder instance(ProcessInstance instance) {
-//            this.instance = instance;
-//            if (instance != null)
-//                this.processInstanceId = instance.getProcessInstanceId();
-//            return this;
-//        }
-//
-//        public Builder task(Task task) {
-//            this.task = task;
-//            if (task != null)
-//                this.taskId = task.getTaskInstanceId();
-//            return this;
-//        }
 
         public Builder referrer(String referrer) {
             this.referrer = referrer;

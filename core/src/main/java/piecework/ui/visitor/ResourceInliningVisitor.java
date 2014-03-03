@@ -17,9 +17,9 @@ package piecework.ui.visitor;
 
 import org.htmlcleaner.TagNode;
 import piecework.model.Explanation;
+import piecework.settings.UserInterfaceSettings;
 import piecework.ui.InlinePageModelSerializer;
 import piecework.ui.TagAttributeAction;
-import piecework.settings.UserInterfaceSettings;
 
 /**
  * @author James Renfro

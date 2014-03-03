@@ -21,7 +21,6 @@ import org.apache.log4j.Logger;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
-import piecework.exception.FormBuildingException;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.form.FormDisposition;

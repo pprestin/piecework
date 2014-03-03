@@ -15,10 +15,10 @@
  */
 package piecework.form;
 
-import java.util.List;
-
 import piecework.Registrant;
 import piecework.model.Option;
+
+import java.util.List;
 
 /**
  * @author James Renfro

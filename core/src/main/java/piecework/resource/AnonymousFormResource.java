@@ -15,28 +15,14 @@
  */
 package piecework.resource;
 
-import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import org.apache.cxf.jaxrs.ext.MessageContext;
+import piecework.PublicApplicationResource;
+import piecework.exception.PieceworkException;
+
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
-
-import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
-
-import piecework.PublicApplicationResource;
-import piecework.authorization.AuthorizationRole;
-import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
-
-import java.util.List;
 
 /**
  * @author James Renfro

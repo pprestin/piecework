@@ -2,7 +2,6 @@ package piecework.persistence;
 
 import piecework.common.ViewContext;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.Process;
 
 /**

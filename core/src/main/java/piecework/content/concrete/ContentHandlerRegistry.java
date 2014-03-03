@@ -15,7 +15,6 @@
  */
 package piecework.content.concrete;
 
-import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.common.ManyMap;
 import piecework.content.ContentProvider;

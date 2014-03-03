@@ -21,7 +21,6 @@ import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentProfileProvider;
-import piecework.persistence.ProcessProvider;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ModelUtility;
 

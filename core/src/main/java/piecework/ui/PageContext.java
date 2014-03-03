@@ -16,7 +16,6 @@
 package piecework.ui;
 
 import piecework.model.Entity;
-import piecework.model.User;
 
 /**
  * @author James Renfro

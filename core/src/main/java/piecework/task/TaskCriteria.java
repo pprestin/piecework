@@ -15,15 +15,15 @@
  */
 package piecework.task;
 
-import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import piecework.common.ManyMap;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
-import piecework.common.ManyMap;
+
+import java.util.*;
 
 /**
  * @author James Renfro

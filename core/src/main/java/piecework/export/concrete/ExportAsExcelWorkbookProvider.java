@@ -26,7 +26,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import piecework.export.IteratingDataProvider;
 import piecework.export.Pager;
-import piecework.model.*;
+import piecework.model.ProcessInstance;
 import piecework.util.ExportUtility;
 
 import javax.ws.rs.WebApplicationException;

@@ -16,7 +16,6 @@
 package piecework;
 
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 
 /**

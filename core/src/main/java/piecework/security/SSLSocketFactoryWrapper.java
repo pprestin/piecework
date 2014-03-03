@@ -24,6 +24,10 @@
 package piecework.security;
 
 
+import org.apache.cxf.common.logging.LogUtils;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -33,11 +37,6 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-
-import org.apache.cxf.common.logging.LogUtils;
 
 public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     

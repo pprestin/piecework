@@ -16,20 +16,17 @@
 package piecework.ldap;
 
 import org.apache.log4j.Logger;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.ldap.search.LdapUserSearch;
-
 import piecework.enumeration.CacheName;
-import piecework.model.User;
 import piecework.model.Group;
+import piecework.model.User;
 import piecework.service.CacheService;
-import piecework.service.IdentityService;
 import piecework.service.GroupService;
+import piecework.service.IdentityService;
 
 
 /**

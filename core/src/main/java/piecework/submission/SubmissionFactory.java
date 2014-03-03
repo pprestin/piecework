@@ -15,10 +15,11 @@
  */
 package piecework.submission;
 
-import org.apache.commons.lang.StringUtils;
 import piecework.enumeration.ActionType;
-import piecework.model.*;
-import piecework.model.Process;
+import piecework.model.Attachment;
+import piecework.model.Entity;
+import piecework.model.Submission;
+import piecework.model.Value;
 
 import java.util.Collection;
 import java.util.Date;

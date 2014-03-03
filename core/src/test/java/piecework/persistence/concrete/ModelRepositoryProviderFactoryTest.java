@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import piecework.authorization.AuthorizationRole;
 import piecework.common.ViewContext;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
@@ -110,6 +111,9 @@ public class ModelRepositoryProviderFactoryTest {
 
         Mockito.doReturn("testuser")
                .when(principal).getUserId();
+
+        Mockito.doReturn(Boolean.TRUE)
+               .when(principal).hasRole(eq(process), eq(AuthorizationRole.USER));
 
         ProcessInstance deletedInstance = new ProcessInstance.Builder()
                 .processDefinitionKey("TEST")

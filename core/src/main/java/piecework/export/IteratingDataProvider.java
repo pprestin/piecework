@@ -17,7 +17,6 @@ package piecework.export;
 
 import javax.ws.rs.core.StreamingOutput;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author James Renfro

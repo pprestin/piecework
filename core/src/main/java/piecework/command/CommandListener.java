@@ -1,6 +1,5 @@
 package piecework.command;
 
-import piecework.Command;
 import piecework.exception.AbortCommandException;
 import piecework.exception.BadRequestError;
 import piecework.persistence.ProcessProvider;

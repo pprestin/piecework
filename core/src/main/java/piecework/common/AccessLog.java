@@ -15,8 +15,6 @@
  */
 package piecework.common;
 
-import java.util.Date;
-
 /**
  * @author James Renfro
  */

@@ -15,16 +15,14 @@
  */
 package piecework.resource.concrete;
 
-import javax.ws.rs.core.*;
-
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
-
-import piecework.persistence.ProcessProvider;
-import piecework.exception.*;
+import piecework.exception.PieceworkException;
 import piecework.resource.AnonymousFormResource;
 
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.util.Map;
 
 /**

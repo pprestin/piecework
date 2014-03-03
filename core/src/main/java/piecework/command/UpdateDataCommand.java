@@ -25,7 +25,7 @@ import piecework.manager.StorageManager;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessProvider;
-import piecework.submission.*;
+import piecework.submission.SubmissionFactory;
 import piecework.util.ModelUtility;
 
 import java.util.List;

@@ -15,22 +15,19 @@
  */
 package piecework.ldap;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.ContextMapper;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
-
 import piecework.identity.DisplayNameConverter;
 import piecework.identity.IdentityDetails;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author James Renfro

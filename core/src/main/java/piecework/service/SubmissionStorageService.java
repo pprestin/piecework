@@ -22,6 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
+import piecework.enumeration.ActionType;
 import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.*;
 import piecework.model.*;
@@ -30,6 +33,7 @@ import piecework.repository.ContentRepository;
 import piecework.security.EncryptionService;
 import piecework.security.MaxSizeInputStream;
 import piecework.security.concrete.PassthroughEncryptionService;
+import piecework.submission.Directive;
 import piecework.submission.SubmissionTemplate;
 
 import javax.annotation.PostConstruct;
@@ -75,7 +79,7 @@ public class SubmissionStorageService {
         if (fieldSubmissionType == FieldSubmissionType.BUTTON) {
             // Note that submitting multiple button messages on a form will result in unpredictable behavior
             Button button = template.getButton(value);
-            button(button, name, value, submissionBuilder);
+            button(modelProvider, button, name, value, submissionBuilder);
             return true;
         } else if (fieldSubmissionType != FieldSubmissionType.INVALID) {
             Field field = template.getField(name);
@@ -94,17 +98,16 @@ public class SubmissionStorageService {
                     metadata = new HashMap<String, String>(field.getMetadataTemplates());
                 }
 
-                Content content = new Content.Builder()
+                ContentResource contentResource = new BasicContentResource.Builder()
                         .contentType(contentType)
-                        .fieldName(name)
+                        .name(name)
                         .filename(value)
                         .inputStream(inputStream)
                         .metadata(metadata)
                         .build();
 
                 try {
-                    content = contentRepository.save(modelProvider, content);
-
+                    contentResource = contentRepository.save(modelProvider, contentResource);
                 } catch (MongoException mongoException) {
                     Throwable cause = mongoException.getCause();
                     if (cause instanceof MaxSizeExceededException) {
@@ -120,8 +123,8 @@ public class SubmissionStorageService {
                     throw new InternalServerError(Constants.ExceptionCodes.content_cannot_be_stored, body);
                 }
 
-                String id = content.getContentId();
-                String location = content.getLocation();
+                String id = contentResource.getContentId();
+                String location = contentResource.getLocation();
 
                 String description = submissionBuilder.getDescription(name);
                 file = new File.Builder()
@@ -131,6 +134,7 @@ public class SubmissionStorageService {
                         .location(location)
                         .contentType(contentType)
                         .build();
+
             } else if (field != null && field.getType().equals(Constants.FieldTypes.URL)) {
                 // Don't bother to store empty urls
                 if (StringUtils.isEmpty(value))
@@ -196,10 +200,28 @@ public class SubmissionStorageService {
         return false;
     }
 
-    private void button(Button button, String name, String value, Submission.Builder submissionBuilder) throws MisconfiguredProcessException {
+    private void button(ContentProfileProvider modelProvider, Button button, String name, String value, Submission.Builder submissionBuilder) throws PieceworkException {
         if (button == null)
             throw new MisconfiguredProcessException("Button of this name (" + name + ") exists, but the button value (" + value + ") has not been configured");
 
-        submissionBuilder.actionType(button.getAction());
+        try {
+            ActionType actionType = StringUtils.isNotEmpty(button.getAction()) ? ActionType.valueOf(button.getAction()) : null;
+
+            if (actionType != null) {
+                submissionBuilder.actionType(actionType);
+
+                // FIXME: Potential pipeline mechanism for sending data back to the Activiti Engine for routing - this would need to be added to the
+                // FIXME: submission object and pass into the ProcessEngineFacade.completeTask() method.
+                // FIXME: Requires some more thought about how additional routing variables could be set
+                Directive directive = new Directive.Builder()
+                        .taskVariable(name, value)
+                        .instanceVariable(name, value)
+                        .build();
+            }
+        } catch (IllegalArgumentException iae) {
+            String processDefinitionKey = modelProvider.processDefinitionKey();
+            throw new MisconfiguredProcessException("Could not determine correct action to take", processDefinitionKey, iae);
+        }
     }
+
 }

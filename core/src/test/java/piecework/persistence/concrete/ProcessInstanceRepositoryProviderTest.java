@@ -15,7 +15,6 @@
  */
 package piecework.persistence.concrete;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,20 +23,19 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentProfileProvider;
-import piecework.persistence.ModelProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.*;
 import piecework.settings.UserInterfaceSettings;
-import piecework.ui.streaming.StreamingAttachmentContent;
+import piecework.test.ProcessFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +64,7 @@ public class ProcessInstanceRepositoryProviderTest {
     ContentRepository contentRepository;
 
     @Mock
-    Content content;
+    ContentResource contentResource;
 
     @Mock
     DeploymentRepository deploymentRepository;
@@ -75,17 +73,25 @@ public class ProcessInstanceRepositoryProviderTest {
     Entity principal;
 
     @Before
-    public void setup() throws PieceworkException {
+    public void setup() throws Exception {
         ProcessDeployment currentDeployment = new ProcessDeployment.Builder()
                 .deploymentId("2")
+                .deploymentLabel("Second")
                 .build();
         ProcessDeployment previousDeployment = new ProcessDeployment.Builder()
                 .deploymentId("1")
+                .deploymentLabel("First")
                 .build();
+
+        ProcessDeploymentVersion version1 = new ProcessDeploymentVersion(previousDeployment);
+        ProcessDeploymentVersion version2 = new ProcessDeploymentVersion(currentDeployment);
+
         Process process = new Process.Builder()
                 .processDefinitionKey("TEST")
-                .deploy(new ProcessDeploymentVersion(previousDeployment), previousDeployment)
-                .deploy(new ProcessDeploymentVersion(currentDeployment), currentDeployment)
+                .version(version1)
+                .version(version2)
+                .deploy(version1, previousDeployment)
+                .deploy(version2, currentDeployment)
                 .build();
 
         ProcessInstance instance = new ProcessInstance.Builder()
@@ -128,8 +134,8 @@ public class ProcessInstanceRepositoryProviderTest {
                 .when(attachmentRepository).findAll(any(Iterable.class));
 
         Mockito.doReturn(new ByteArrayInputStream("This is some test data from an input stream".getBytes()))
-                .when(content).getInputStream();
-        Mockito.doReturn(content)
+                .when(contentResource).getInputStream();
+        Mockito.doReturn(contentResource)
                 .when(contentRepository).findByLocation(any(ContentProfileProvider.class), eq("/some/location"));
     }
 
@@ -195,8 +201,10 @@ public class ProcessInstanceRepositoryProviderTest {
     public void verifySuccessWithContext() throws PieceworkException {
         ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
         ProcessInstanceProvider instanceProvider = processInstanceProvider(processProvider);
-        ProcessInstance instance = instanceProvider.instance(new ViewContext(new UserInterfaceSettings(), "v2"));
+        ProcessInstance instance = instanceProvider.instance(ProcessFactory.viewContext());
         Assert.assertEquals("1234", instance.getProcessInstanceId());
+        Assert.assertEquals("https://somehost.org/piecework/ui/instance/TEST/1234", instance.getLink());
+        Assert.assertEquals("https://somehost.org/piecework/api/v0/instance/TEST/1234", instance.getUri());
         Attachment retrievedAttachment = instance.getAttachments().iterator().next();
         Assert.assertEquals("233", retrievedAttachment.getAttachmentId());
         Assert.assertEquals("image/png", retrievedAttachment.getContentType());
@@ -208,6 +216,17 @@ public class ProcessInstanceRepositoryProviderTest {
         ProcessInstanceProvider instanceProvider = processInstanceProvider(processProvider);
         ProcessDeployment deployment = instanceProvider.deployment();
         Assert.assertEquals("1", deployment.getDeploymentId());
+    }
+
+    @Test
+    public void verifyDiagram() throws PieceworkException {
+        Mockito.doReturn(contentResource)
+               .when(facade).resource(any(Process.class), any(ProcessDeployment.class), eq("image/png"));
+        ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
+        ProcessInstanceProvider instanceProvider = processInstanceProvider(processProvider);
+        ContentResource contentResource = instanceProvider.diagram();
+        Assert.assertNotNull(contentResource);
+        Assert.assertEquals(this.contentResource, contentResource);
     }
 
     private ProcessInstanceProvider processInstanceProvider(ProcessProvider processProvider) {

@@ -26,6 +26,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.engine.activiti.config.TestConfiguration;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
@@ -61,13 +63,14 @@ public class ActivitiEngineProxyTest {
         process = ExampleFactory.exampleProcess();
 
         ClassPathResource classPathResource = new ClassPathResource("META-INF/example.bpmn20.xml");
-        Content content = new Content.Builder()
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .contentType("application/xml")
-                .filename("AdvanceBudgetRequest.bpmn20.xml")
+                .name("example.bpmn20.xml")
+                .filename("example.bpmn20.xml")
                 .inputStream(classPathResource.getInputStream())
                 .build();
 
-        deployment = engineProxy.deploy(process, ExampleFactory.exampleProcessDeployment(), content);
+        deployment = engineProxy.deploy(process, ExampleFactory.exampleProcessDeployment(), contentResource);
 
         process = new Process.Builder(process, new PassthroughSanitizer())
                 .deploy(new ProcessDeploymentVersion(deployment), deployment)

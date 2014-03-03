@@ -13,26 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.ui;
+package piecework.content;
 
-import org.springframework.core.io.ByteArrayResource;
-
+import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 
 /**
+ * Abstraction on GridFSFile or GridFSResource -- not a document, but to make GridFS resources
+ * look like other model objects for the purpose of keeping the code readable.
+ *
  * @author James Renfro
  */
-public class DatedByteArrayResource extends ByteArrayResource {
+public interface ContentResource extends StreamingOutput {
 
-    private long lastModified;
+    String getContentId();
 
-    public DatedByteArrayResource(byte[] byteArray) {
-        super(byteArray);
-        this.lastModified = System.currentTimeMillis();
-    }
+    String contentType();
 
-    public long lastModified() throws IOException {
-        return lastModified;
-    }
+    String getLocation();
+
+    String getName();
+
+    String getFilename();
+
+    String getDescription();
+
+    InputStream getInputStream() throws IOException;
+
+    long contentLength();
+
+    long lastModified();
+
+    String eTag();
+
+    Map<String, String> getMetadata();
 
 }

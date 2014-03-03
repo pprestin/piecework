@@ -1,7 +1,7 @@
 package piecework.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import piecework.model.*;
+import piecework.model.ProcessDeployment;
 
 /**
  * @author James Renfro

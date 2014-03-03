@@ -19,7 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.common.ViewContext;
-import piecework.engine.ProcessDeploymentResource;
+import piecework.content.ContentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
@@ -27,12 +27,11 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
-import piecework.repository.*;
-import piecework.service.IdentityService;
-import piecework.ui.Streamable;
-import piecework.ui.streaming.StreamingAttachmentContent;
+import piecework.repository.AttachmentRepository;
+import piecework.repository.ContentRepository;
+import piecework.repository.DeploymentRepository;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.util.ProcessUtility;
-import piecework.util.TaskUtility;
 
 import java.util.Set;
 
@@ -99,7 +98,7 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
     }
 
     @Override
-    public Streamable diagram() throws PieceworkException {
+    public ContentResource diagram() throws PieceworkException {
         Process process = process();
         ProcessInstance instance = instance();
 
@@ -134,7 +133,7 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
             Process process = process();
             _instance = processInstanceRepository.findOne(processInstanceId);
 
-            if (_instance == null)
+            if (_instance == null || StringUtils.isEmpty(_instance.getProcessDefinitionKey()))
                 throw new NotFoundError(Constants.ExceptionCodes.instance_does_not_exist);
 
             if (!_instance.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))
@@ -157,8 +156,10 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
                     LOG.debug("Retrieving all attachments for instance " + processInstanceId);
                 Iterable<Attachment> attachments = attachmentRepository.findAll(attachmentIds);
 
-                for (Attachment attachment : attachments) {
-                    builder.attachment(new Attachment.Builder(attachment).build(context));
+                if (attachments != null) {
+                    for (Attachment attachment : attachments) {
+                        builder.attachment(new Attachment.Builder(attachment).build(context));
+                    }
                 }
             }
 
@@ -172,6 +173,10 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
             LOG.debug("Retrieved instance for " + processInstanceId + " in " + (System.currentTimeMillis() - start) + " ms");
 
         return _instance;
+    }
+
+    protected synchronized ProcessInstance getInstance() {
+        return this._instance;
     }
 
     protected synchronized void setInstance(ProcessInstance instance) {

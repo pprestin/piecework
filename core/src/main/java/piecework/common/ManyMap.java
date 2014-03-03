@@ -17,6 +17,12 @@ package piecework.common;
 
 import java.util.*;
 
+/**
+ * Map of single key to list of values.
+ *
+ * @param <K>
+ * @param <V>
+ */
 public class ManyMap<K, V> extends Hashtable<K, List<V>> implements Map<K, List<V>> {
     
 	private static final long serialVersionUID = -5990287399286512607L;

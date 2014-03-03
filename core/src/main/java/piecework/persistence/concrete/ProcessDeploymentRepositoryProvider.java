@@ -16,16 +16,12 @@
 package piecework.persistence.concrete;
 
 import org.apache.commons.lang.StringUtils;
-import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.model.ContentProfile;
-import piecework.model.Entity;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessDeployment;
-import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.DeploymentRepository;
@@ -47,6 +43,24 @@ public class ProcessDeploymentRepositoryProvider implements ProcessDeploymentPro
         this.deploymentRepository = deploymentRepository;
         this.processProvider = processProvider;
         this.deploymentId = deploymentId;
+    }
+
+    @Override
+    public Activity activity() throws PieceworkException {
+        ProcessDeployment deployment = deployment();
+
+        Activity activity = null;
+        if (deployment == null)
+            throw new MisconfiguredProcessException("No deployment found");
+
+        String activityKey = deployment.getStartActivityKey();
+        if (activityKey != null)
+            activity = deployment.getActivity(activityKey);
+
+        if (activity != null)
+            return activity;
+
+        throw new MisconfiguredProcessException("Unable to build activity for process");
     }
 
     @Override

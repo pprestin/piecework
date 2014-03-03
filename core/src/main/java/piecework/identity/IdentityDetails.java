@@ -15,11 +15,11 @@
  */
 package piecework.identity;
 
-import java.util.Collection;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.ldap.userdetails.LdapUserDetails;
+
+import java.util.Collection;
 
 /**
  * @author James Renfro

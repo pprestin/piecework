@@ -20,13 +20,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.Registry;
-import piecework.common.ManyMap;
 import piecework.enumeration.FieldTag;
 import piecework.exception.ValidationRuleException;
 import piecework.form.OptionResolver;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.submission.SubmissionTemplate;
+import piecework.model.Constraint;
+import piecework.model.Field;
+import piecework.model.Option;
+import piecework.model.Value;
 import piecework.validation.Validation;
 import piecework.validation.ValidationRule;
 

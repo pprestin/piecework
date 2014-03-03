@@ -25,6 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import piecework.command.config.CommandConfiguration;
 import piecework.common.ManyMap;
+import piecework.enumeration.ActionType;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
@@ -55,13 +56,11 @@ public class ValidationCommandTest {
         Submission mockSubmission = Mockito.mock(Submission.class);
         User mockPrincipal = Mockito.mock(User.class);
 
-        Mockito.doReturn(mockActivity)
-                .when(mockRequest).getActivity();
-
         ManyMap<String, String> data = new ManyMap<String, String>();
 
-        TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
-        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, data, Map.class, null, "v1");
+        TaskProviderStub taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
+        taskProvider.setActivity(mockActivity);
+        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, ActionType.VALIDATE, data, Map.class, "v1");
         Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);
@@ -77,11 +76,9 @@ public class ValidationCommandTest {
         Submission mockSubmission = Mockito.mock(Submission.class);
         User mockPrincipal = Mockito.mock(User.class);
 
-        Mockito.doReturn(mockActivity)
-                .when(mockRequest).getActivity();
-
-        TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
-        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, mockMultipartBody, MultipartBody.class, null, "v1");
+        TaskProviderStub taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
+        taskProvider.setActivity(mockActivity);
+        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, ActionType.VALIDATE, mockMultipartBody, MultipartBody.class, "v1");
         Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);
@@ -96,11 +93,9 @@ public class ValidationCommandTest {
         Submission mockSubmission = Mockito.mock(Submission.class);
         User mockPrincipal = Mockito.mock(User.class);
 
-        Mockito.doReturn(mockActivity)
-               .when(mockRequest).getActivity();
-
-        TaskProvider taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
-        ValidationCommand<TaskProvider> validationCommand = commandFactory.validation(taskProvider, mockRequest, mockSubmission, "v1");
+        TaskProviderStub taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
+        taskProvider.setActivity(mockActivity);
+        SubmissionValidationCommand<TaskProvider> validationCommand = commandFactory.submissionValidation(taskProvider, mockRequest, ActionType.VALIDATE, mockSubmission, "v1");
         Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);

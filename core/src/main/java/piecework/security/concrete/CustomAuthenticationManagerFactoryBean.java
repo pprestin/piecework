@@ -26,8 +26,6 @@ import org.springframework.security.core.userdetails.UserDetailsByNameServiceWra
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import piecework.authorization.AuthorizationRoleMapper;
-import piecework.identity.AuthenticationPrincipalConverter;
-import piecework.ldap.CustomLdapUserDetailsService;
 import piecework.security.AuthorityMappingAnonymousAuthenticationProvider;
 import piecework.security.AuthorityMappingPreAuthenticatedProvider;
 import piecework.service.IdentityService;
@@ -39,6 +37,7 @@ import java.util.List;
 /**
  * @author James Renfro
  */
+@Deprecated
 public class CustomAuthenticationManagerFactoryBean implements FactoryBean<AuthenticationManager> {
 
     private static final Logger LOG = Logger.getLogger(CustomAuthenticationManagerFactoryBean.class);

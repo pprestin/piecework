@@ -18,11 +18,8 @@ package piecework.persistence.test;
 import piecework.common.ViewContext;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
-import piecework.persistence.AllowedTaskProvider;
 import piecework.persistence.TaskProvider;
-import piecework.process.AttachmentQueryParameters;
 import piecework.security.concrete.PassthroughSanitizer;
-import piecework.ui.streaming.StreamingAttachmentContent;
 
 /**
  * @author James Renfro

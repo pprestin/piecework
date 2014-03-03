@@ -2,8 +2,6 @@ package piecework.content;
 
 import piecework.enumeration.Scheme;
 
-import java.util.List;
-
 /**
  * @author James Renfro
  */

@@ -15,31 +15,31 @@
  */
 package piecework.resource.concrete;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
 import piecework.enumeration.ActionType;
-import piecework.exception.*;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
 import piecework.form.FormFactory;
-import piecework.model.*;
+import piecework.model.Entity;
 import piecework.model.Form;
-import piecework.model.Process;
+import piecework.model.FormRequest;
+import piecework.model.RequestDetails;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.security.Sanitizer;
+import piecework.service.RequestService;
 import piecework.settings.SecuritySettings;
-import piecework.service.*;
-import piecework.ui.streaming.ResourceStreamingOutput;
 
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author James Renfro
@@ -132,15 +132,16 @@ public abstract class AbstractScriptResource {
 //        return null;
 //    }
 
-    protected static Response response(Resource resource, String mediaType) throws NotFoundError {
+    protected static Response response(ContentResource resource, String mediaType) throws NotFoundError {
         if (resource == null)
             throw new NotFoundError();
 
         DateTime today = new DateTime();
+        Date lastModifiedDate = resource.lastModified() >= 0 ? new Date(resource.lastModified()) : null;
         return Response
-                .ok(new ResourceStreamingOutput(resource), mediaType)
+                .ok(resource, mediaType)
                 .expires(today.plusDays(1).toDate())
-                .lastModified(lastModified(resource))
+                .lastModified(lastModifiedDate)
                 .build();
     }
 

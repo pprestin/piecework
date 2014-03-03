@@ -18,13 +18,9 @@ package piecework.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import piecework.authorization.AccessAuthority;
 
 import javax.xml.bind.annotation.XmlTransient;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 

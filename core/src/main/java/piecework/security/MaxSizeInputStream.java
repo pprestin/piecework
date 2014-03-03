@@ -16,8 +16,6 @@
 package piecework.security;
 
 
-
-import org.apache.commons.compress.utils.CountingInputStream;
 import piecework.exception.MaxSizeExceededException;
 
 import java.io.BufferedInputStream;

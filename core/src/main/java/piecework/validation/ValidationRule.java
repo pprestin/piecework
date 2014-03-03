@@ -20,7 +20,6 @@ import org.apache.commons.validator.routines.EmailValidator;
 import piecework.exception.ValidationRuleException;
 import piecework.model.*;
 import piecework.util.ConstraintUtil;
-import piecework.common.ManyMap;
 
 import java.util.*;
 import java.util.regex.Pattern;

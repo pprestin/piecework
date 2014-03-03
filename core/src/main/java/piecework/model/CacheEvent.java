@@ -21,7 +21,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ManyMapSet;
 
 import java.util.Date;
-import java.util.Set;
 
 /**
  * @author James Renfro

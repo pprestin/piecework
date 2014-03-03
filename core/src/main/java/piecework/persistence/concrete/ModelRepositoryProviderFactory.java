@@ -28,6 +28,7 @@ import piecework.repository.*;
 import piecework.security.Sanitizer;
 import piecework.service.CacheService;
 import piecework.service.IdentityService;
+import piecework.settings.ContentSettings;
 
 /**
  * Implementation of the ModelProviderFactory that uses injected repositories to retrieve
@@ -51,6 +52,9 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
 
     @Autowired
     ContentRepository contentRepository;
+
+    @Autowired
+    ContentSettings contentSettings;
 
     @Autowired
     DeploymentRepository deploymentRepository;
@@ -146,6 +150,11 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
                         processInstanceRepository, facade, attachmentRepository, contentRepository, deploymentRepository,
                         processInstanceId);
         return instanceProvider;
+    }
+
+    @Override
+    public ContentProfileProvider systemContentProvider(Entity principal) {
+        return new SystemContentProfileProvider(contentSettings, principal);
     }
 
     @Override
