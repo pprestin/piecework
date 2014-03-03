@@ -361,9 +361,20 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        <p>{{form.explanation.messageDetail}}</p>\n" +
     "    </div></div></div>")
   $templateCache.put("templates/buttonbar.html",
-    "<div class=\"btn-toolbar pull-right\" role=\"toolbar\">\n" +
-    "        <button data-ng-if=\"!container.readonly\" data-ng-class=\"button.primary && 'btn-primary'\" data-ng-repeat=\"button in container.buttons\" data-ng-click=\"wizard.clickButton(form, container, button)\" class=\"btn btn-default\" name=\"{{button.name}}\" type=\"{{button.type}}\" value=\"{{button.value}}\">{{button.label}}</button>\n" +
-    "    </div>");
+    "<div data-ng-if=\"!container.readonly && container.buttons.length>0\" class=\"btn-toolbar pull-right\" role=\"toolbar\">\n" +
+    "    <div data-ng-repeat=\"button in container.buttons\" class=\"btn-group dropup\">\n" +
+    "        <button data-ng-class=\"button.primary && 'btn-primary'\" data-ng-click=\"wizard.clickButton(form, container, button)\" class=\"btn btn-default\" name=\"{{button.name}}\" type=\"{{button.type}}\" value=\"{{button.value}}\">{{button.label}}</button>\n" +
+    "        <button data-ng-if=\"button.children.length>0\" type=\"button\" class=\"btn btn-default dropdown-toggle\" data-toggle=\"dropdown\">\n" +
+    "            <span class=\"caret\"></span>\n" +
+    "        </button>\n" +
+    "        <ul data-ng-if=\"button.children.length>0\" class=\"dropdown-menu\">\n" +
+    "            <li data-ng-repeat=\"child in button.children\" data-ng-if=\" child.ordinal < container.activeChildIndex \"> \n" +
+    "        <button data-ng-click=\"wizard.clickButton(form, container, button)\" class=\"btn-link\" name=\"{{button.name}}\" type=\"{{button.type}}\" value=\"{{child.value}}\">{{child.label}}</button>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </div>\n" +
+    "</div>"
+    );
   $templateCache.put("templates/form.html",
     "<div data-wf-toolbar></div>\n" +
     "<form data-wf-form=\"\" name=\"myForm\" action=\"/\" method=\"POST\" novalidate=\"novalidate\">\n" +
