@@ -37,9 +37,9 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.model.*;
-import piecework.repository.custom.ProcessInstanceRepositoryCustom;
 import piecework.process.ProcessInstanceQueryBuilder;
 import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.repository.custom.ProcessInstanceRepositoryCustom;
 
 import java.util.*;
 

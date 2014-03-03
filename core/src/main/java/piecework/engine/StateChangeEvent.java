@@ -15,10 +15,7 @@
  */
 package piecework.engine;
 
-import piecework.enumeration.ActionType;
 import piecework.enumeration.StateChangeType;
-import piecework.model.Process;
-import piecework.model.ProcessInstance;
 import piecework.model.Task;
 import piecework.persistence.ProcessInstanceProvider;
 

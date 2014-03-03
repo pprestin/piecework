@@ -28,15 +28,18 @@ import piecework.common.ViewContext;
 import piecework.content.ContentResource;
 import piecework.content.concrete.BasicContentResource;
 import piecework.engine.ProcessEngineFacade;
+import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.AllowedTaskProvider;
 import piecework.persistence.ProcessProvider;
+import piecework.process.AttachmentQueryParameters;
 import piecework.repository.*;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.IdentityService;
 import piecework.settings.UserInterfaceSettings;
+import piecework.test.ProcessFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -94,6 +97,7 @@ public class AllowedTaskRepositoryProviderTest {
 
         ProcessInstance instance = new ProcessInstance.Builder()
                 .processDefinitionKey("TEST")
+                .processInstanceId("334222")
                 .task(new Task.Builder()
                         .taskInstanceId("1000")
                         .candidateAssigneeId("testuser")
@@ -112,11 +116,24 @@ public class AllowedTaskRepositoryProviderTest {
                         .candidateAssigneeId("another")
                         .active()
                         .build())
+                .formValue("SomeFile", new File.Builder()
+                        .id("877")
+                        .contentType("text/html")
+                        .location("/TEST/some/other/path/test.html")
+                        .name("Test.html")
+                        .fieldName("SomeFile")
+                        .processDefinitionKey("TEST")
+                        .description("A quick description of the sample file")
+                        .build())
                 .attachmentId("233")
                 .build();
 
-        ContentResource contentResource = new BasicContentResource.Builder()
+        ContentResource attachmentContentResource = new BasicContentResource.Builder()
                 .inputStream(new ByteArrayInputStream("This is some test data from an input stream".getBytes()))
+                .build();
+
+        ContentResource valueContentResource = new BasicContentResource.Builder()
+                .inputStream(new ByteArrayInputStream("<html><body>Hello World</body></html>".getBytes()))
                 .build();
 
         Attachment att1 = new Attachment.Builder()
@@ -141,8 +158,10 @@ public class AllowedTaskRepositoryProviderTest {
         ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
         this.allowedTaskProvider = allowedTaskProvider(processProvider);
 
-        Mockito.doReturn(contentResource)
+        Mockito.doReturn(attachmentContentResource)
                 .when(contentRepository).findByLocation(eq(allowedTaskProvider), eq("/TEST/some/path/file.txt"));
+        Mockito.doReturn(valueContentResource)
+                .when(contentRepository).findByLocation(eq(allowedTaskProvider), eq("/TEST/some/other/path/test.html"));
     }
 
     @Test
@@ -174,18 +193,66 @@ public class AllowedTaskRepositoryProviderTest {
 
     @Test
     public void verifyAllowedTaskViewContext() throws Exception {
-        UserInterfaceSettings settings = Mockito.mock(UserInterfaceSettings.class);
-        Mockito.doReturn("https://somehost.org")
-                .when(settings).getHostUri();
-        Mockito.doReturn("/piecework/ui")
-                .when(settings).getApplicationUrl();
-        Mockito.doReturn("/piecework/api")
-                .when(settings).getServiceUrl();
-
-        Task task = allowedTaskProvider.allowedTask(new ViewContext(settings, "v0"), true);
+        Task task = allowedTaskProvider.allowedTask(ProcessFactory.viewContext(), true);
         Assert.assertEquals(TESTUSER_ACTIVE_TASK_ID, task.getTaskInstanceId());
         Assert.assertEquals("https://somehost.org/piecework/ui/task/999", task.getLink());
         Assert.assertEquals("https://somehost.org/piecework/api/v0/task/999", task.getUri());
+    }
+
+    @Test
+    public void verifyAttachments() throws Exception {
+        SearchResults searchResults = allowedTaskProvider.attachments(new AttachmentQueryParameters(), ProcessFactory.viewContext());
+        Assert.assertNotNull(searchResults);
+        Assert.assertEquals(1, searchResults.getList().size());
+        Attachment attachment = (Attachment)searchResults.getList().get(0);
+        Assert.assertEquals("https://somehost.org/piecework/ui/instance/TEST/334222/attachment/233", attachment.getLink());
+    }
+
+    @Test
+    public void verifyAttachmentsLimitToContentType() throws Exception {
+        AttachmentQueryParameters queryParameters = new AttachmentQueryParameters();
+        queryParameters.setContentType("text/plain");
+        SearchResults searchResults = allowedTaskProvider.attachments(queryParameters, ProcessFactory.viewContext());
+        Assert.assertEquals(1, searchResults.getList().size());
+        Assert.assertEquals(1l, searchResults.getTotal().longValue());
+    }
+
+    @Test
+    public void verifyAttachmentsLimitToContentTypeExclude() throws Exception {
+        AttachmentQueryParameters queryParameters = new AttachmentQueryParameters();
+        queryParameters.setContentType("text/html");
+        SearchResults searchResults = allowedTaskProvider.attachments(queryParameters, ProcessFactory.viewContext());
+        Assert.assertEquals(0l, searchResults.getTotal().longValue());
+    }
+
+    @Test
+    public void verifyValue() throws Exception {
+        ContentResource value = allowedTaskProvider.value("SomeFile", "877");
+        Assert.assertNotNull(value);
+        String expected = "<html><body>Hello World</body></html>";
+        String actual = IOUtils.toString(value.getInputStream());
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test(expected = NotFoundError.class)
+    public void verifyInvalidValue() throws Exception {
+        allowedTaskProvider.value("SomeFile", "233");
+    }
+
+    @Test
+    public void verifyValues() throws Exception {
+        SearchResults searchResults = allowedTaskProvider.values("SomeFile", ProcessFactory.viewContext());
+        Assert.assertEquals(1l, searchResults.getTotal().longValue());
+        Assert.assertEquals(1, searchResults.getList().size());
+        File file = (File)searchResults.getList().get(0);
+        Assert.assertEquals("https://somehost.org/piecework/ui/instance/TEST/334222/value/SomeFile/877", file.getLink());
+        Assert.assertEquals("Test.html", file.getName());
+    }
+
+    @Test
+    public void verifyValuesEmpty() throws Exception {
+        SearchResults searchResults = allowedTaskProvider.values("SomeOtherFile", ProcessFactory.viewContext());
+        Assert.assertEquals(0l, searchResults.getTotal().longValue());
     }
 
     private AllowedTaskProvider allowedTaskProvider(ProcessProvider processProvider) {

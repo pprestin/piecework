@@ -22,12 +22,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import piecework.Constants;
+import piecework.content.ContentResource;
 import piecework.content.concrete.BasicContentResource;
 import piecework.content.concrete.RemoteResource;
 import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.content.ContentResource;
 import piecework.model.ContentProfile;
 import piecework.persistence.ContentProfileProvider;
 

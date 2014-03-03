@@ -17,8 +17,6 @@ package piecework.content.concrete;
 
 import org.springframework.core.io.ByteArrayResource;
 
-import java.io.IOException;
-
 /**
  * @author James Renfro
  */

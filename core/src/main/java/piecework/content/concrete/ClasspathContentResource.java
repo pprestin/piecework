@@ -15,21 +15,9 @@
  */
 package piecework.content.concrete;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.jcajce.provider.digest.MD5;
 import org.springframework.core.io.ClassPathResource;
 import piecework.content.ContentResource;
-
-import javax.ws.rs.WebApplicationException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * @author James Renfro

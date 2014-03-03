@@ -18,13 +18,10 @@ package piecework.content;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import piecework.Constants;
 import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.enumeration.Scheme;
-import piecework.exception.InternalServerError;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
 import piecework.repository.ContentRepository;
@@ -33,7 +30,8 @@ import piecework.util.PathUtility;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of ContentRepository that finds any ContentProvider beans in the

@@ -15,22 +15,14 @@
  */
 package piecework.resource.concrete;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.cxf.jaxrs.ext.multipart.*;
+import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-
+import piecework.common.ViewContext;
 import piecework.content.ContentResource;
 import piecework.content.concrete.BasicContentResource;
-import piecework.engine.ProcessDeploymentResource;
 import piecework.exception.BadRequestError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
@@ -40,17 +32,20 @@ import piecework.model.Process;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessProvider;
+import piecework.resource.ProcessResource;
 import piecework.security.Sanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.DeploymentService;
 import piecework.service.ProcessService;
-import piecework.common.ViewContext;
-import piecework.resource.ProcessResource;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.settings.UserInterfaceSettings;
-import piecework.ui.Streamable;
-import piecework.ui.streaming.StreamingResource;
 import piecework.util.FormUtility;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.List;
 

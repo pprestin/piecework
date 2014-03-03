@@ -25,7 +25,7 @@ import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
+import piecework.model.ContentProfile;
 import piecework.persistence.ContentProfileProvider;
 import piecework.util.ContentUtility;
 

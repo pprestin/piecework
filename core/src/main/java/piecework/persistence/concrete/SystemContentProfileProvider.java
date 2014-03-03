@@ -18,11 +18,11 @@ package piecework.persistence.concrete;
 import piecework.common.ViewContext;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
+import piecework.model.ContentProfile;
+import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.persistence.ContentProfileProvider;
 import piecework.settings.ContentSettings;
-import piecework.settings.UserInterfaceSettings;
 
 /**
  * @author James Renfro

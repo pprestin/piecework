@@ -15,16 +15,11 @@
  */
 package piecework.ldap;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.ldap.SizeLimitExceededException;
-import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.filter.*;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,9 +29,7 @@ import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsService;
 import piecework.authorization.AccessAuthority;
 import piecework.authorization.AccessFactory;
-import piecework.authorization.AuthorizationRoleMapper;
 import piecework.enumeration.CacheName;
-import piecework.identity.AuthenticationPrincipalConverter;
 import piecework.identity.IdentityDetails;
 import piecework.model.User;
 import piecework.service.CacheService;

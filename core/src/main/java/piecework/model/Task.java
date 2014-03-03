@@ -17,12 +17,9 @@ package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.ComparisonChain;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.Document;
-import piecework.Constants;
 import piecework.authorization.AccessAuthority;
 import piecework.common.ViewContext;
 import piecework.security.Sanitizer;

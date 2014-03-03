@@ -18,8 +18,8 @@ package piecework.ui.visitor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.TagNode;
-import piecework.ui.InlinePageModelSerializer;
 import piecework.settings.UserInterfaceSettings;
+import piecework.ui.InlinePageModelSerializer;
 import piecework.util.PathUtility;
 
 import java.util.Map;

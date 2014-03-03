@@ -66,63 +66,9 @@ public class ExampleFactory {
                 .build();
     }
 
-    public static Section exampleSectionWithTwoFields() {
-        return new Section.Builder()
-                .tagId("basic")
-                .field(employeeNameField())
-                .field(budgetNumberField())
-                .ordinal(1)
-                .build();
-    }
-
-    public static Section exampleSectionWithOneField() {
-        return new Section.Builder()
-                .tagId("supplemental")
-                .field(supervisorIdField())
-                .ordinal(2)
-                .build();
-    }
-
-    public static Section exampleSectionWithConfirmationNumber() {
-        return new Section.Builder()
-                .tagId("confirmation")
-                .field(confirmationField())
-                .ordinal(1)
-                .build();
-    }
-
-    public static Screen exampleScreenWithTwoSections() {
-
-        return new Screen.Builder()
-                .section(exampleSectionWithTwoFields())
-                .section(exampleSectionWithOneField())
-                .attachmentAllowed(false)
-                .build();
-    }
-
-    public static Screen exampleThankYouScreen() {
-        return new Screen.Builder()
-                .section(exampleSectionWithConfirmationNumber())
-                .attachmentAllowed(false)
-                .build();
-    }
-
-    public static Interaction exampleInteractionWithTwoScreens() {
-        return new Interaction.Builder()
-                .label("Example Interaction")
-                .screen(exampleScreenWithTwoSections())
-                .screen(ActionType.COMPLETE, exampleThankYouScreen())
-                .build();
-    }
-
     public static ProcessDeployment exampleProcessDeployment() {
         return new ProcessDeployment.Builder()
                 .engineProcessDefinitionLocation("META-INF/example.bpmn20.xml")
-//                .interaction(exampleInteractionWithTwoScreens())
-//                .interaction(exampleInteractionForTaskReview())
-//                .section(exampleSectionWithTwoFields())
-//                .section(exampleSectionWithConfirmationNumber())
-//                .section(exampleSectionWithOneField())
                 .engine("activiti")
                 .engineProcessDefinitionKey("example")
                 .build();

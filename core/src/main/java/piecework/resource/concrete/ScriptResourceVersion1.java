@@ -18,30 +18,30 @@ package piecework.resource.concrete;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.content.ContentResource;
+import piecework.exception.*;
 import piecework.form.FormDisposition;
+import piecework.identity.IdentityHelper;
+import piecework.model.Entity;
+import piecework.model.Form;
+import piecework.model.Process;
 import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessDeploymentProvider;
-import piecework.service.RequestService;
-import piecework.exception.*;
-import piecework.identity.IdentityHelper;
-import piecework.model.*;
-import piecework.model.Process;
 import piecework.resource.ScriptResource;
 import piecework.security.Sanitizer;
+import piecework.service.FormTemplateService;
+import piecework.service.RequestService;
 import piecework.service.UserInterfaceService;
 import piecework.settings.SecuritySettings;
-import piecework.service.FormTemplateService;
 import piecework.util.UserInterfaceUtility;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.Set;
 
 /**
  * @author James Renfro

@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import piecework.exception.PieceworkException;
 import piecework.model.ChartData;
 import piecework.model.ChartDataset;
-import piecework.model.Process;
 import piecework.model.Report;
 import piecework.persistence.ProcessProvider;
 

@@ -20,11 +20,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import piecework.content.ContentPolicy;
+import piecework.common.ManyMap;
 import piecework.enumeration.FlowElementType;
 import piecework.enumeration.State;
 import piecework.security.Sanitizer;
-import piecework.common.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;

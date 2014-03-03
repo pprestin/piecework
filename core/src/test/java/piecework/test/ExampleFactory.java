@@ -30,22 +30,6 @@ import java.util.UUID;
  */
 public class ExampleFactory {
 
-    public static ContentResource exampleContent(String root) {
-        return new BasicContentResource.Builder()
-                .contentType("text/plain")
-                .location(root + "/" + UUID.randomUUID().toString())
-                .inputStream(new ByteArrayInputStream("This is a test".getBytes()))
-                .build();
-    }
-
-    public static FormRequest exampleFormRequest(String formInstanceId) {
-        return new FormRequest.Builder()
-                .requestId(formInstanceId)
-//                .screen(exampleContainer(Constants.ScreenTypes.WIZARD))
-                .build();
-    }
-
-
     public static Field employeeNameField() {
         return new Field.Builder()
                 .fieldId("000100")
@@ -178,124 +162,8 @@ public class ExampleFactory {
                 .build();
     }
 
-    public static Section exampleSectionWithTwoFields() {
-        return new Section.Builder()
-                .sectionId("00001")
-                .tagId("basic")
-                .field(employeeNameField())
-                .field(budgetNumberField())
-                .ordinal(1)
-                .build();
-    }
-
-    public static Section exampleSectionWithOneField() {
-        return new Section.Builder()
-                .sectionId("00002")
-                .tagId("supplemental")
-                .field(supervisorIdField())
-                .field(actionTypeField())
-                .field(locationField())
-                .field(descriptionField())
-                .field(allowedField())
-                .field(applicableField())
-                .ordinal(2)
-                .build();
-    }
-
-    public static Section exampleSectionWithConfirmationNumber() {
-        return new Section.Builder()
-                .tagId("confirmation")
-                .field(confirmationField())
-                .ordinal(1)
-                .build();
-    }
-
-//    public static Container exampleContainer(String type) {
-//
-//        return new Container.Builder()
-//                .title("First screen")
-//                .grouping(new Grouping.Builder()
-//                        .groupingId("A")
-//                        .button(new Button.Builder().buttonId("b1").label("Next").type("button-link").value("next").tooltip("Go to next step").build())
-//                        .sectionId(exampleSectionWithTwoFields().getSectionId())
-//                        .build())
-//                .attachmentAllowed(false)
-//                .location("/test/example1.html")
-//                .build();
-//    }
-
-//    public static Screen exampleThankYouScreen() {
-//        return new Screen.Builder()
-//                .title("Second screen")
-//                .grouping(new Grouping.Builder()
-//                        .groupingId("B")
-//                        .button(new Button.Builder().buttonId("b2").name("next").label("Next").type("button").value("submit").tooltip("Complete").build())
-//                        .sectionId(exampleSectionWithConfirmationNumber().getSectionId())
-//                        .build())
-//                .attachmentAllowed(false)
-//                .build();
-//    }
-//
-//    public static Screen exampleScreenForReview(String type) {
-//
-//        return new Screen.Builder()
-//                .title("Review screen")
-//                .type(type)
-//                .grouping(new Grouping.Builder()
-//                        .groupingId("A")
-//                        .button(new Button.Builder().buttonId("b1").name("next").label("Next").type("button-link").value("next").tooltip("Go to next step").build())
-//                        .sectionId(exampleSectionWithTwoFields().getSectionId())
-//                        .build())
-//                .attachmentAllowed(false)
-//                .build();
-//    }
-//
-//    public static Interaction exampleInteractionWithTwoScreens() {
-//        return new Interaction.Builder()
-//                .label("Example Interaction")
-//                .screen(exampleContainer(Constants.ScreenTypes.WIZARD))
-//                .screen(ActionType.COMPLETE, exampleThankYouScreen())
-//                .build();
-//    }
-//
-//    public static Interaction exampleInteractionForTaskReview() {
-//        return new Interaction.Builder()
-//                .label("Example Interaction for Review")
-//                .screen(exampleScreenForReview(Constants.ScreenTypes.WIZARD))
-//                .screen(ActionType.COMPLETE, exampleThankYouScreen())
-//                .taskDefinitionKey("Review")
-//                .build();
-//    }
-
-//    public static Form exampleForm() {
-//        Process process = exampleProcess();
-//        return new Form.Builder()
-//                .processDefinitionKey(process.getProcessDefinitionKey())
-//                .submissionType(Constants.SubmissionTypes.INTERIM)
-//                .formInstanceId("12345")
-//                .variable(employeeNameField().getName(), Collections.singletonList(new Value("Joe Testington")))
-//                .container(exampleContainer(Constants.ScreenTypes.STANDARD))
-//                .build();
-//    }
-//
-//    public static Form exampleFormWithWizardTemplate() {
-//        Process process = exampleProcess();
-//        return new Form.Builder()
-//                .processDefinitionKey(process.getProcessDefinitionKey())
-//                .submissionType(Constants.SubmissionTypes.INTERIM)
-//                .formInstanceId("12345")
-//                .variable(employeeNameField().getName(), Collections.singletonList(new Value("Joe Testington")))
-//                .screen(exampleContainer(Constants.ScreenTypes.WIZARD_TEMPLATE))
-//                .build();
-//    }
-
     public static ProcessDeployment exampleProcessDeployment() {
         return new ProcessDeployment.Builder()
-//                .interaction(exampleInteractionWithTwoScreens())
-//                .interaction(exampleInteractionForTaskReview())
-//                .section(exampleSectionWithTwoFields())
-//                .section(exampleSectionWithConfirmationNumber())
-//                .section(exampleSectionWithOneField())
                 .engine("activiti")
                 .engineProcessDefinitionKey("example")
                 .build();
@@ -317,63 +185,6 @@ public class ExampleFactory {
                 .processDefinitionLabel(process.getProcessDefinitionLabel())
                 .engineProcessInstanceId(UUID.randomUUID().toString())
                 .build();
-    }
-
-    public static Process simpleThreeInteractionProcess() {
-
-        Screen startScreen = new Screen.Builder()
-                .screenId("1")
-                .title("Start Screen")
-                .build();
-
-        Screen startConfirmationScreen = new Screen.Builder()
-                .screenId("2")
-                .title("Start Confirmation Screen")
-                .build();
-
-        Interaction startInteraction = new Interaction.Builder()
-                .screen(startScreen)
-                .screen(ActionType.COMPLETE, startConfirmationScreen)
-                .build();
-
-        Screen task1Screen = new Screen.Builder()
-                .screenId("3")
-                .title("Task 1 Screen")
-                .build();
-
-        Screen task1ConfirmationScreen = new Screen.Builder()
-                .screenId("4")
-                .title("Task 1 Confirmation Screen")
-                .build();
-
-        Screen task1RejectionScreen = new Screen.Builder()
-                .screenId("5")
-                .title("Task 1 Rejection Screen")
-                .build();
-
-        Interaction task1Interaction = new Interaction.Builder()
-                .taskDefinitionKey("TASK1")
-                .screen(task1Screen)
-                .screen(ActionType.COMPLETE, task1ConfirmationScreen)
-                .screen(ActionType.REJECT, task1RejectionScreen)
-                .build();
-
-        Interaction task2Interaction = new Interaction.Builder()
-                .taskDefinitionKey("TASK2")
-                .build();
-
-        ProcessDeployment deployment = new ProcessDeployment.Builder()
-//                .interaction(startInteraction)
-//                .interaction(task1Interaction)
-//                .interaction(task2Interaction)
-                .build();
-
-        ProcessDeploymentVersion version = new ProcessDeploymentVersion(deployment);
-        return new Process.Builder()
-                .version(version)
-                .deploy(version, deployment)
-                .build();
-
     }
 
 }

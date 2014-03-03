@@ -15,20 +15,18 @@
  */
 package piecework.security;
 
-import java.security.cert.X509Certificate;
-import java.util.Collection;
-import java.util.Collections;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import piecework.identity.AuthenticationPrincipalConverter;
+
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Handles the remapping of authorities using a GrantedAuthoritiesMapper the same way that it's done in other

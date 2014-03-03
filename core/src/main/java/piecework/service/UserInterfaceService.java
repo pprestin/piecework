@@ -18,16 +18,20 @@ package piecework.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
-import org.htmlcleaner.*;
+import org.htmlcleaner.CleanerProperties;
+import org.htmlcleaner.HtmlCleaner;
+import org.htmlcleaner.TagNode;
+import org.htmlcleaner.TagNodeVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import piecework.common.ContentByteArrayResource;
 import piecework.content.ContentResource;
 import piecework.enumeration.CacheName;
-import piecework.exception.*;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
+import piecework.exception.StatusCodeError;
 import piecework.form.FormDisposition;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
@@ -36,7 +40,8 @@ import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
-import piecework.ui.*;
+import piecework.ui.CustomJaxbJsonProvider;
+import piecework.ui.InlinePageModelSerializer;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
 import piecework.ui.visitor.*;
 import piecework.util.UserInterfaceUtility;
@@ -46,7 +51,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @author James Renfro
@@ -61,9 +68,6 @@ public class UserInterfaceService {
 
     @Autowired
     private CacheService cacheService;
-
-    @Autowired
-    private Environment environment;
 
     @Autowired
     private FormTemplateService formTemplateService;
@@ -92,18 +96,18 @@ public class UserInterfaceService {
         }
     }
 
-    public boolean hasExternalScriptResource(Class<?> type) {
-        if (type.equals(SearchResults.class))
-            return true;
-        if (InputStream.class.isAssignableFrom(type))
-            return false;
-        try {
-            ContentResource resource = formTemplateService.getTemplateResource(type, null);
-            return resource != null;
-        } catch (NotFoundError nfe) {
-            return false;
-        }
-    }
+//    public boolean hasExternalScriptResource(Class<?> type) {
+//        if (type.equals(SearchResults.class))
+//            return true;
+//        if (InputStream.class.isAssignableFrom(type))
+//            return false;
+//        try {
+//            ContentResource resource = formTemplateService.getTemplateResource(type, null);
+//            return resource != null;
+//        } catch (NotFoundError nfe) {
+//            return false;
+//        }
+//    }
 
     public StreamingOutput getExplanationAsStreaming(ServletContext servletContext, Explanation explanation) {
         try {

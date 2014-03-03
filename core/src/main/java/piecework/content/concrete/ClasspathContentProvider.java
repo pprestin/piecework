@@ -23,14 +23,12 @@ import org.springframework.stereotype.Service;
 import piecework.content.ContentProvider;
 import piecework.content.ContentResource;
 import piecework.enumeration.AlarmSeverity;
-import piecework.enumeration.CacheName;
 import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
+import piecework.model.ContentProfile;
 import piecework.persistence.ContentProfileProvider;
 import piecework.security.AccessTracker;
-import piecework.service.CacheService;
 import piecework.util.ContentUtility;
 
 /**

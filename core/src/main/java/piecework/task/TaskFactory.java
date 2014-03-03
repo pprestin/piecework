@@ -20,7 +20,9 @@ import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.engine.EngineTask;
 import piecework.enumeration.ActionType;
-import piecework.model.*;
+import piecework.model.ProcessInstance;
+import piecework.model.Task;
+import piecework.model.User;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 

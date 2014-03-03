@@ -17,7 +17,9 @@ package piecework.model.bind;
 
 import piecework.model.Value;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**

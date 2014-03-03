@@ -15,8 +15,8 @@
  */
 package piecework.ui.streaming;
 
-import piecework.enumeration.DataInjectionStrategy;
 import piecework.content.ContentResource;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.model.Form;
 import piecework.model.Process;
 

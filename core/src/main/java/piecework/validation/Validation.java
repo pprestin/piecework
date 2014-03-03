@@ -15,13 +15,15 @@
  */
 package piecework.validation;
 
+import piecework.Constants;
+import piecework.common.ManyMap;
+import piecework.model.Attachment;
+import piecework.model.Message;
+import piecework.model.Submission;
+import piecework.model.Value;
+
 import java.io.Serializable;
 import java.util.*;
-
-import piecework.Constants;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.common.ManyMap;
 
 /**
  * @author James Renfro

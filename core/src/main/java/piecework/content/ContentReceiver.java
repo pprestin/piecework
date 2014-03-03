@@ -1,6 +1,5 @@
 package piecework.content;
 
-import org.springframework.core.io.Resource;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
 

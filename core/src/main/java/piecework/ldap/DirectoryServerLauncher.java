@@ -15,11 +15,11 @@
  */
 package piecework.ldap;
 
-import java.io.File;
-
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.ldap.server.ApacheDSContainer;
+
+import java.io.File;
 
 /**
  * @author James Renfro

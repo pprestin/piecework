@@ -33,6 +33,7 @@ import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.*;
 import piecework.settings.UserInterfaceSettings;
+import piecework.test.ProcessFactory;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
@@ -75,14 +76,22 @@ public class ProcessInstanceRepositoryProviderTest {
     public void setup() throws Exception {
         ProcessDeployment currentDeployment = new ProcessDeployment.Builder()
                 .deploymentId("2")
+                .deploymentLabel("Second")
                 .build();
         ProcessDeployment previousDeployment = new ProcessDeployment.Builder()
                 .deploymentId("1")
+                .deploymentLabel("First")
                 .build();
+
+        ProcessDeploymentVersion version1 = new ProcessDeploymentVersion(previousDeployment);
+        ProcessDeploymentVersion version2 = new ProcessDeploymentVersion(currentDeployment);
+
         Process process = new Process.Builder()
                 .processDefinitionKey("TEST")
-                .deploy(new ProcessDeploymentVersion(previousDeployment), previousDeployment)
-                .deploy(new ProcessDeploymentVersion(currentDeployment), currentDeployment)
+                .version(version1)
+                .version(version2)
+                .deploy(version1, previousDeployment)
+                .deploy(version2, currentDeployment)
                 .build();
 
         ProcessInstance instance = new ProcessInstance.Builder()
@@ -192,8 +201,10 @@ public class ProcessInstanceRepositoryProviderTest {
     public void verifySuccessWithContext() throws PieceworkException {
         ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
         ProcessInstanceProvider instanceProvider = processInstanceProvider(processProvider);
-        ProcessInstance instance = instanceProvider.instance(new ViewContext(new UserInterfaceSettings(), "v2"));
+        ProcessInstance instance = instanceProvider.instance(ProcessFactory.viewContext());
         Assert.assertEquals("1234", instance.getProcessInstanceId());
+        Assert.assertEquals("https://somehost.org/piecework/ui/instance/TEST/1234", instance.getLink());
+        Assert.assertEquals("https://somehost.org/piecework/api/v0/instance/TEST/1234", instance.getUri());
         Attachment retrievedAttachment = instance.getAttachments().iterator().next();
         Assert.assertEquals("233", retrievedAttachment.getAttachmentId());
         Assert.assertEquals("image/png", retrievedAttachment.getContentType());
@@ -205,6 +216,17 @@ public class ProcessInstanceRepositoryProviderTest {
         ProcessInstanceProvider instanceProvider = processInstanceProvider(processProvider);
         ProcessDeployment deployment = instanceProvider.deployment();
         Assert.assertEquals("1", deployment.getDeploymentId());
+    }
+
+    @Test
+    public void verifyDiagram() throws PieceworkException {
+        Mockito.doReturn(contentResource)
+               .when(facade).resource(any(Process.class), any(ProcessDeployment.class), eq("image/png"));
+        ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
+        ProcessInstanceProvider instanceProvider = processInstanceProvider(processProvider);
+        ContentResource contentResource = instanceProvider.diagram();
+        Assert.assertNotNull(contentResource);
+        Assert.assertEquals(this.contentResource, contentResource);
     }
 
     private ProcessInstanceProvider processInstanceProvider(ProcessProvider processProvider) {

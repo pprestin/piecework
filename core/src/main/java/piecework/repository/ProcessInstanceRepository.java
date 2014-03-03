@@ -17,7 +17,7 @@ package piecework.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
-import piecework.model.*;
+import piecework.model.ProcessInstance;
 import piecework.repository.custom.ProcessInstanceRepositoryCustom;
 
 import java.util.List;

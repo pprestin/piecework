@@ -22,8 +22,6 @@ import piecework.model.SearchResults;
 import piecework.model.Task;
 import piecework.process.AttachmentQueryParameters;
 
-import javax.ws.rs.core.StreamingOutput;
-
 /**
  * @author James Renfro
  */

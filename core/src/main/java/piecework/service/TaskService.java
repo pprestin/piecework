@@ -26,26 +26,31 @@ import org.springframework.stereotype.Service;
 import piecework.Command;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.command.*;
+import piecework.command.CommandFactory;
+import piecework.command.ValidationCommand;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
-import piecework.exception.*;
+import piecework.exception.BadRequestError;
+import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
+import piecework.exception.StatusCodeError;
+import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.identity.IdentityHelper;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.TaskProvider;
-import piecework.repository.ProcessInstanceRepository;
 import piecework.process.ProcessInstanceSearchCriteria;
-import piecework.security.data.DataFilterService;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.security.Sanitizer;
+import piecework.security.data.DataFilterService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
 import piecework.validation.Validation;
 
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro

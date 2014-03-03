@@ -17,11 +17,11 @@ package piecework.util;
 
 import org.apache.cxf.common.util.StringUtils;
 import org.htmlcleaner.TagNode;
-import piecework.enumeration.Scheme;
 import piecework.content.ContentResource;
+import piecework.enumeration.Scheme;
+import piecework.settings.UserInterfaceSettings;
 import piecework.ui.StaticResourceAggregator;
 import piecework.ui.TagAttributeAction;
-import piecework.settings.UserInterfaceSettings;
 
 /**
  * @author James Renfro

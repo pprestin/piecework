@@ -24,7 +24,6 @@ import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
 import piecework.persistence.ContentProfileProvider;
-import piecework.persistence.ProcessProvider;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ModelUtility;
 

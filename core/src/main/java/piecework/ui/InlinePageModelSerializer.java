@@ -20,7 +20,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
-import org.springframework.core.io.Resource;
 import piecework.content.ContentResource;
 import piecework.designer.model.view.IndexView;
 import piecework.form.FormDisposition;

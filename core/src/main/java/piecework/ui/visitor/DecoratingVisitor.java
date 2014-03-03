@@ -22,13 +22,16 @@ import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
+import piecework.common.ManyMap;
 import piecework.enumeration.FieldTag;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.settings.UserInterfaceSettings;
-import piecework.common.ManyMap;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Decorates HTML based on

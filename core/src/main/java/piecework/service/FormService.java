@@ -16,18 +16,7 @@
 package piecework.service;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import piecework.command.CommandFactory;
-import piecework.command.SubmissionCommandResponse;
-import piecework.enumeration.ActionType;
-import piecework.exception.PieceworkException;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.persistence.ProcessDeploymentProvider;
-import piecework.validation.Validation;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * @author James Renfro

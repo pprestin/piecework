@@ -18,6 +18,7 @@ package piecework.command;
 import org.apache.commons.lang.StringUtils;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.ManyMap;
 import piecework.engine.ProcessEngineFacade;
 import piecework.enumeration.ActionType;
 import piecework.exception.ForbiddenError;
@@ -29,7 +30,6 @@ import piecework.model.Process;
 import piecework.persistence.AllowedTaskProvider;
 import piecework.submission.SubmissionFactory;
 import piecework.util.Base64Utility;
-import piecework.common.ManyMap;
 
 import java.util.ArrayList;
 import java.util.List;

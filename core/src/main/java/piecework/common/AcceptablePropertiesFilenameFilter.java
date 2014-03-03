@@ -15,15 +15,15 @@
  */
 package piecework.common;
 
+import org.apache.log4j.Logger;
+import org.springframework.core.env.Environment;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.springframework.core.env.Environment;
 
 /**
  * @author James Renfro

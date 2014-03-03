@@ -19,30 +19,21 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.SystemUser;
+import piecework.common.ViewContext;
 import piecework.enumeration.StateChangeType;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.Form;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.TaskProvider;
-import piecework.service.ProcessInstanceService;
-import piecework.repository.ProcessInstanceRepository;
-import piecework.service.ProcessService;
-import piecework.service.TaskService;
-import piecework.task.TaskFactory;
 import piecework.service.NotificationService;
-import piecework.Versions;
-import piecework.common.ViewContext;
+import piecework.service.ProcessInstanceService;
+import piecework.service.TaskService;
+import piecework.settings.UserInterfaceSettings;
+import piecework.task.TaskFactory;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -50,6 +41,7 @@ import java.util.Set;
 @Service
 public class EngineStateSynchronizer {
 
+    private static final String VERSION = "v1";
     private static final Logger LOG = Logger.getLogger(EngineStateSynchronizer.class);
 
     @Autowired
@@ -65,10 +57,10 @@ public class EngineStateSynchronizer {
     TaskService taskService;
 
     @Autowired
-    Versions versions;
+    NotificationService notificationService;
 
     @Autowired
-    NotificationService notificationService;
+    UserInterfaceSettings settings;
 
 
     public void onProcessInstanceEvent(StateChangeType type, String processInstanceId, EngineContext context) {
@@ -140,7 +132,7 @@ public class EngineStateSynchronizer {
         scope.put("TASK_LABEL", task.getTaskLabel());
 
         // task URL
-        ViewContext viewContext = versions.getVersion1();
+        ViewContext viewContext = new ViewContext(settings, VERSION);
         String taskUrl = viewContext.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, task.getProcessDefinitionKey(), "?taskId=" + task.getTaskInstanceId());
         scope.put("TASK_URL", taskUrl);
 

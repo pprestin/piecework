@@ -22,8 +22,10 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
+import piecework.model.Entity;
 import piecework.model.Process;
-import piecework.model.*;
+import piecework.model.ProcessInstance;
+import piecework.model.Task;
 import piecework.persistence.ProcessInstanceProvider;
 
 /**

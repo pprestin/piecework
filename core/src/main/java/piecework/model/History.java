@@ -16,13 +16,13 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
-import piecework.enumeration.EventType;
 
 import javax.xml.bind.annotation.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author James Renfro

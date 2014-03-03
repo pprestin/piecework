@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.tool;
+package piecework.repository.concrete;
+
+import junit.framework.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * @author James Renfro
  */
-public class QuickStartProcessDesigner {
+@Ignore
+public class ProcessInstanceRepositoryCustomImplTest {
 
-    private final String processDefinitionKey;
-    private final String engineProcessDefinitionKey;
-    private final String processDefinitionLabel;
-
-    public QuickStartProcessDesigner(String processDefinitionKey, String engineProcessDefinitionKey, String processDefinitionLabel) {
-        this.processDefinitionKey = processDefinitionKey;
-        this.engineProcessDefinitionKey = engineProcessDefinitionKey;
-        this.processDefinitionLabel = processDefinitionLabel;
+    @Test
+    public void verify() {
+        Assert.fail();
     }
-
-
-
 
 }

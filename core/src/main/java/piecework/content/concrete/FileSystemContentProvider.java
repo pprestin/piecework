@@ -29,14 +29,14 @@ import piecework.enumeration.Scheme;
 import piecework.exception.ForbiddenError;
 import piecework.exception.InternalServerError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
+import piecework.model.ContentProfile;
 import piecework.persistence.ContentProfileProvider;
 import piecework.security.AccessTracker;
 import piecework.util.FileUtility;
 
 import javax.annotation.PostConstruct;
-import java.io.*;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * @author James Renfro

@@ -16,13 +16,12 @@
 package piecework.persistence.concrete;
 
 import org.springframework.cache.Cache;
-import org.springframework.stereotype.Service;
 import piecework.common.ViewContext;
 import piecework.enumeration.CacheName;
 import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
+import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.persistence.ProcessProvider;
 import piecework.security.concrete.PassthroughSanitizer;

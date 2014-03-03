@@ -15,23 +15,15 @@
  */
 package piecework.command;
 
-import com.google.common.collect.Sets;
-import org.apache.log4j.Logger;
-import piecework.Constants;
-import piecework.ServiceLocator;
 import piecework.enumeration.ActionType;
-import piecework.exception.*;
-import piecework.model.*;
+import piecework.exception.PieceworkException;
+import piecework.model.FormRequest;
 import piecework.persistence.ProcessDeploymentProvider;
-import piecework.util.ModelUtility;
-import piecework.validation.ValidationFactory;
-import piecework.submission.SubmissionHandler;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplate;
 import piecework.submission.SubmissionTemplateFactory;
 import piecework.validation.Validation;
-
-import java.util.*;
+import piecework.validation.ValidationFactory;
 
 /**
  * @author James Renfro

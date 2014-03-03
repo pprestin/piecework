@@ -15,22 +15,14 @@
  */
 package piecework.model;
 
-import java.io.Serializable;
-import java.util.UUID;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
-
-import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
+import piecework.security.Sanitizer;
+
+import javax.xml.bind.annotation.*;
+import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * @author James Renfro

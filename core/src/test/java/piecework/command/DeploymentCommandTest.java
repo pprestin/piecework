@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.UuidGenerator;
 import piecework.content.ContentResource;
-import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.BadRequestError;
 import piecework.exception.NotFoundError;

@@ -28,8 +28,10 @@ import piecework.exception.GoneError;
 import piecework.exception.NotFoundError;
 import piecework.model.Process;
 import piecework.exception.PieceworkException;
+import piecework.model.User;
 import piecework.persistence.ProcessProvider;
 import piecework.service.CacheService;
+import piecework.test.ProcessFactory;
 
 import static org.mockito.Matchers.eq;
 
@@ -54,13 +56,23 @@ public class CachingProcessProviderTest {
     @Mock
     Cache.ValueWrapper valueWrapper;
 
+    @Mock
+    User principal;
+
+    private Process cachedProcess;
 
     @Before
     public void setup() throws PieceworkException {
+        Mockito.doReturn(principal)
+                .when(mockProcessProvider).principal();
         Mockito.doReturn(mockPersistedProcess)
                .when(mockProcessProvider).process();
         Mockito.doReturn(valueWrapper)
                 .when(mockCacheService).get(eq(CacheName.PROCESS), eq("CACHED-TEST"));
+
+        cachedProcess = new Process.Builder()
+                .processDefinitionKey("CACHED-TEST")
+                .build();
     }
 
     @Test(expected = NotFoundError.class)
@@ -91,24 +103,55 @@ public class CachingProcessProviderTest {
     public void verifyCachedReturned() throws PieceworkException {
         Mockito.doReturn("CACHED-TEST")
                 .when(mockProcessProvider).processDefinitionKey();
-        Mockito.doReturn(mockCachedProcess)
+        Mockito.doReturn(cachedProcess)
                 .when(valueWrapper).get();
 
         ProcessProvider processProvider = new CachingProcessProvider(mockCacheService, mockProcessProvider);
         Process process = processProvider.process();
-        Assert.assertEquals(mockCachedProcess, process);
+        Assert.assertEquals(cachedProcess, process);
     }
 
     @Test
     public void verifyNotCachedReturned() throws PieceworkException {
         Mockito.doReturn("TEST")
                 .when(mockProcessProvider).processDefinitionKey();
-        Mockito.doReturn(mockCachedProcess)
+        Mockito.doReturn(cachedProcess)
                 .when(valueWrapper).get();
 
         ProcessProvider processProvider = new CachingProcessProvider(mockCacheService, mockProcessProvider);
         Process process = processProvider.process();
         Assert.assertEquals(mockPersistedProcess, process);
+    }
+
+    @Test
+    public void verifyWithViewContext() throws PieceworkException {
+        Mockito.doReturn("CACHED-TEST")
+                .when(mockProcessProvider).processDefinitionKey();
+        Mockito.doReturn(cachedProcess)
+                .when(valueWrapper).get();
+        ProcessProvider processProvider = new CachingProcessProvider(mockCacheService, mockProcessProvider);
+        Process process = processProvider.process(ProcessFactory.viewContext());
+        Assert.assertEquals("https://somehost.org/piecework/ui/process/CACHED-TEST", process.getLink());
+    }
+
+    @Test
+    public void verifyProcessDefinitionKey() throws PieceworkException {
+        Mockito.doReturn("CACHED-TEST")
+                .when(mockProcessProvider).processDefinitionKey();
+        Mockito.doReturn(cachedProcess)
+                .when(valueWrapper).get();
+        ProcessProvider provider = new CachingProcessProvider(mockCacheService, mockProcessProvider);
+        Assert.assertEquals("CACHED-TEST", provider.processDefinitionKey());
+    }
+
+    @Test
+    public void verifyPrincipal() throws PieceworkException {
+        Mockito.doReturn("CACHED-TEST")
+                .when(mockProcessProvider).processDefinitionKey();
+        Mockito.doReturn(cachedProcess)
+                .when(valueWrapper).get();
+        ProcessProvider provider = new CachingProcessProvider(mockCacheService, mockProcessProvider);
+        Assert.assertEquals(principal, provider.principal());
     }
 
 }

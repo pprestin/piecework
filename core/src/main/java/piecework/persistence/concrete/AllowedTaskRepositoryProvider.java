@@ -230,6 +230,9 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
         }
         return new SearchResults.Builder()
                 .items(files)
+                .firstResult(0)
+                .maxResults(files.size())
+                .total(Long.valueOf(files.size()))
                 .build();
     }
 }

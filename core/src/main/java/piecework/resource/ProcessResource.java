@@ -15,21 +15,19 @@
  */
 package piecework.resource;
 
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import piecework.ApiResource;
+import piecework.ApplicationResource;
+import piecework.authorization.AuthorizationRole;
+import piecework.exception.PieceworkException;
+import piecework.model.*;
+import piecework.model.Process;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
-import piecework.ApiResource;
-import piecework.ApplicationResource;
-import piecework.Resource;
-import piecework.authorization.AuthorizationRole;
-import piecework.exception.PieceworkException;
-import piecework.model.*;
-import piecework.exception.StatusCodeError;
-import piecework.model.Process;
 
 /**
  * @author James Renfro

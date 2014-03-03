@@ -15,19 +15,17 @@
  */
 package piecework.resource;
 
+import piecework.ApplicationResource;
+import piecework.authorization.AuthorizationRole;
+import piecework.designer.model.view.IndexView;
+import piecework.exception.StatusCodeError;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
-
-import piecework.ApplicationResource;
-import piecework.Resource;
-import piecework.authorization.AuthorizationRole;
-import piecework.designer.model.view.IndexView;
-import piecework.exception.StatusCodeError;
-
 import java.util.List;
 
 /**

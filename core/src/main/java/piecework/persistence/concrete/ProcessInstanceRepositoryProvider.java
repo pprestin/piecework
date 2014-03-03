@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.content.ContentResource;
-import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.exception.*;
@@ -28,8 +27,10 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
-import piecework.repository.*;
-import piecework.ui.Streamable;
+import piecework.repository.AttachmentRepository;
+import piecework.repository.ContentRepository;
+import piecework.repository.DeploymentRepository;
+import piecework.repository.ProcessInstanceRepository;
 import piecework.util.ProcessUtility;
 
 import java.util.Set;
@@ -132,7 +133,7 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
             Process process = process();
             _instance = processInstanceRepository.findOne(processInstanceId);
 
-            if (_instance == null)
+            if (_instance == null || StringUtils.isEmpty(_instance.getProcessDefinitionKey()))
                 throw new NotFoundError(Constants.ExceptionCodes.instance_does_not_exist);
 
             if (!_instance.getProcessDefinitionKey().equals(process.getProcessDefinitionKey()))

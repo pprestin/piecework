@@ -1,7 +1,6 @@
 package piecework.enumeration;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.io.Serializable;
 

@@ -16,12 +16,15 @@
 package piecework.test;
 
 import com.google.common.collect.Sets;
+import org.mockito.Mockito;
 import piecework.Constants;
+import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.ActivityUsageType;
 import piecework.enumeration.DataInjectionStrategy;
 import piecework.enumeration.FlowElementType;
 import piecework.model.*;
+import piecework.settings.UserInterfaceSettings;
 
 import java.util.Arrays;
 import java.util.List;
@@ -141,6 +144,18 @@ public class ProcessFactory {
 
         return builder.build();
     }
+
+    public static ViewContext viewContext() {
+        UserInterfaceSettings settings = Mockito.mock(UserInterfaceSettings.class);
+        Mockito.doReturn("https://somehost.org")
+                .when(settings).getHostUri();
+        Mockito.doReturn("/piecework/ui")
+                .when(settings).getApplicationUrl();
+        Mockito.doReturn("/piecework/api")
+                .when(settings).getServiceUrl();
+        return new ViewContext(settings, "v0");
+    }
+
 
     public static final class GeneralInformation {
         public static Field NAME = new Field.Builder()

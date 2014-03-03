@@ -36,7 +36,6 @@ import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
 import piecework.security.AccessTracker;
-import piecework.util.ContentUtility;
 
 import java.io.IOException;
 

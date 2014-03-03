@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import piecework.common.UuidGenerator;
 import piecework.content.ContentResource;
-import piecework.engine.ProcessDeploymentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
@@ -78,7 +77,7 @@ public class PublicationCommandTest {
     piecework.model.Process process;
 
     @Mock
-    ProcessDeploymentResource resource;
+    ContentResource resource;
 
     @Mock
     ProcessDeployment deployment;
@@ -113,7 +112,7 @@ public class PublicationCommandTest {
                 .when(deployment).isDeployed();
         when(deploymentRepository.findOne(deploymentId))
                 .thenReturn(deployment);
-        when(resource.getContentType())
+        when(resource.contentType())
                 .thenReturn("text/xml");
         when(resource.getInputStream())
                 .thenReturn(new ByteArrayInputStream("Test".getBytes()));
@@ -137,7 +136,7 @@ public class PublicationCommandTest {
                 .when(deployment).isDeployed();
         when(deploymentRepository.findOne(deploymentId))
                 .thenReturn(deployment);
-        when(resource.getContentType())
+        when(resource.contentType())
                 .thenReturn("text/xml");
         when(resource.getInputStream())
                 .thenReturn(new ByteArrayInputStream("Test".getBytes()));

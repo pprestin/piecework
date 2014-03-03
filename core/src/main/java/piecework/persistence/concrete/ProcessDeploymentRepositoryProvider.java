@@ -16,20 +16,15 @@
 package piecework.persistence.concrete;
 
 import org.apache.commons.lang.StringUtils;
-import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.DeploymentRepository;
-import piecework.util.ModelUtility;
-
-import java.util.Map;
 
 /**
  * @author James Renfro

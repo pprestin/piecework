@@ -15,23 +15,21 @@
  */
 package piecework.model;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.xml.bind.annotation.*;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.cxf.common.util.StringUtils;
 import org.springframework.data.annotation.Id;
-
 import org.springframework.security.core.userdetails.UserDetails;
 import piecework.authorization.AccessAuthority;
+import piecework.common.ManyMap;
+import piecework.common.ViewContext;
 import piecework.identity.IdentityDetails;
 import piecework.security.Sanitizer;
-import piecework.common.ViewContext;
-import piecework.common.ManyMap;
+
+import javax.xml.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro

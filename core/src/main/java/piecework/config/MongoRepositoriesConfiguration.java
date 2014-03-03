@@ -19,20 +19,13 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.Repository;
-import piecework.repository.AuthorizationRepository;
-import piecework.repository.InteractionRepository;
-import piecework.repository.ScreenRepository;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.repository.ProcessInstanceRepository;
-import piecework.repository.ProcessRepository;
-import piecework.repository.RequestRepository;
-import piecework.repository.SubmissionRepository;
+import piecework.repository.*;
 
 /**
  * @author James Renfro
@@ -53,11 +46,6 @@ public class MongoRepositoriesConfiguration {
     }
 
     @Bean
-    public InteractionRepository interactionRepository() {
-        return factoryBean(InteractionRepository.class, Interaction.class);
-    }
-
-    @Bean
     public ProcessRepository processRepository() {
         return factoryBean(ProcessRepository.class, Process.class);
     }
@@ -70,11 +58,6 @@ public class MongoRepositoriesConfiguration {
     @Bean
     public RequestRepository requestRepository() {
         return factoryBean(RequestRepository.class, FormRequest.class);
-    }
-
-    @Bean
-    public ScreenRepository screenRepository() {
-        return factoryBean(ScreenRepository.class, Screen.class);
     }
 
     @Bean

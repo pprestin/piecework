@@ -15,18 +15,15 @@
  */
 package piecework.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import piecework.common.ViewContext;
+import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import piecework.security.Sanitizer;
-import piecework.common.ViewContext;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author James Renfro

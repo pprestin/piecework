@@ -15,13 +15,6 @@
  */
 package piecework;
 
-import piecework.form.FieldAttributeDefinition;
-import piecework.form.FieldTagDefinition;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * This interface contains constant messages for resource parameters - path, query, etc.
  * 

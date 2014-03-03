@@ -18,10 +18,6 @@ package piecework.task;
 import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
-import piecework.model.Value;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author James Renfro

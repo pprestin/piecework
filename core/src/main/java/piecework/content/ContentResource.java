@@ -15,19 +15,9 @@
  */
 package piecework.content;
 
-import org.apache.log4j.Logger;
-import org.springframework.core.io.AbstractResource;
-import org.springframework.core.io.Resource;
-import piecework.content.concrete.RemoteResource;
-import piecework.ui.Streamable;
-
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

@@ -1,7 +1,7 @@
 package piecework.repository;
 
-import piecework.exception.PieceworkException;
 import piecework.content.ContentResource;
+import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;

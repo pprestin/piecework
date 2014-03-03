@@ -15,22 +15,8 @@
  */
 package piecework.persistence;
 
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.stereotype.Service;
-import piecework.enumeration.CacheName;
-import piecework.exception.GoneError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.repository.ActivityRepository;
-import piecework.repository.DeploymentRepository;
-import piecework.repository.ProcessInstanceRepository;
-import piecework.repository.ProcessRepository;
-import piecework.security.Sanitizer;
-import piecework.service.CacheService;
+import piecework.model.Entity;
+import piecework.model.FormRequest;
 
 /**
  * @author James Renfro

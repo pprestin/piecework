@@ -1,6 +1,5 @@
 package piecework.persistence;
 
-import piecework.content.ContentPolicy;
 import piecework.exception.PieceworkException;
 import piecework.model.ContentProfile;
 

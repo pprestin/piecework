@@ -24,9 +24,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import piecework.Constants;
 import piecework.enumeration.OperationType;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.security.concrete.PassthroughSanitizer;
 
 import java.io.StringReader;
 import java.io.StringWriter;

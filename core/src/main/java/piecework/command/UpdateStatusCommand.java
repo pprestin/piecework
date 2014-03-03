@@ -23,7 +23,7 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.PieceworkException;
-import piecework.model.*;
+import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.persistence.ProcessInstanceProvider;
 

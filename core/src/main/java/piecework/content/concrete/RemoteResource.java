@@ -29,17 +29,14 @@ import org.apache.http.client.utils.DateUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.springframework.core.io.Resource;
 import piecework.content.ContentResource;
 import piecework.util.FileUtility;
 
 import javax.ws.rs.WebApplicationException;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;

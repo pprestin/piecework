@@ -20,11 +20,13 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.data.DataFilterService;
 import piecework.service.CacheService;
 import piecework.settings.NotificationSettings;
+import piecework.settings.SecuritySettings;
 import piecework.settings.UserInterfaceSettings;
 
 /**
@@ -57,6 +59,11 @@ public class DataFilterTestConfiguration {
     @Bean
     public NotificationSettings notificationSettings() {
         return new NotificationSettings();
+    }
+
+    @Bean
+    public SecuritySettings securitySettings(Environment environment) {
+        return new SecuritySettings(environment);
     }
 
     @Bean
