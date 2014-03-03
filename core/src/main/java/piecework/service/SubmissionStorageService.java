@@ -29,6 +29,7 @@ import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.repository.ContentRepository;
 import piecework.security.EncryptionService;
 import piecework.security.MaxSizeInputStream;
@@ -80,6 +81,20 @@ public class SubmissionStorageService {
             // Note that submitting multiple button messages on a form will result in unpredictable behavior
             Button button = template.getButton(value);
             button(modelProvider, button, name, value, submissionBuilder);
+
+            // set actionValue for current task
+            String taskId = template.getTaskId();
+            if ( taskId != null && modelProvider!= null && modelProvider instanceof ProcessInstanceProvider ) { 
+                ProcessInstanceProvider pirp = (ProcessInstanceProvider) modelProvider;
+                ProcessInstance pi = pirp.instance();
+                if ( pi != null ) {
+                    Task task = pi.getTask(taskId);
+                    if ( task != null ) {
+                        submissionBuilder.formValue(task.getTaskDefinitionKey() + "_actionValue", value);
+                    }
+                }
+            }   
+
             return true;
         } else if (fieldSubmissionType != FieldSubmissionType.INVALID) {
             Field field = template.getField(name);
