@@ -15,12 +15,10 @@
  */
 package piecework.validation;
 
+import org.apache.commons.lang.StringUtils;
 import piecework.Constants;
 import piecework.common.ManyMap;
-import piecework.model.Attachment;
-import piecework.model.Message;
-import piecework.model.Submission;
-import piecework.model.Value;
+import piecework.model.*;
 
 import java.io.Serializable;
 import java.util.*;
@@ -211,6 +209,25 @@ public class Validation implements Serializable {
             return this;
         }
 
+        public Builder formFileValue(String key, File file) {
+            if (StringUtils.isNotEmpty(key) && file != null) {
+                List<Value> values = this.data.get(key);
+                List<Value> adjusted = new ArrayList<Value>();
+                if (values != null && !values.isEmpty()) {
+                    for (Value value : values) {
+                        if (value instanceof File) {
+                            File current = File.class.cast(value);
+                            if (current != null && !current.getName().equals(file.getName()))
+                                adjusted.add(current);
+                        }
+                    }
+                }
+                adjusted.add(file);
+                this.data.put(key, adjusted);
+            }
+            return this;
+        }
+
         public Builder attachment(Attachment attachment) {
             if (this.attachments == null)
                 this.attachments = new ArrayList<Attachment>();
@@ -235,8 +252,8 @@ public class Validation implements Serializable {
 
         public Builder submission(Submission submission) {
             this.submission = submission;
-            if (submission != null)
-                attachments(submission.getAttachments());
+//            if (submission != null)
+//                attachments(submission.getAttachments());
             return this;
         }
 

@@ -17,6 +17,7 @@ package piecework.content.concrete;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.lang.NotImplementedException;
 import piecework.content.ContentProvider;
 import piecework.content.ContentReceiver;
 import piecework.content.ContentResource;
@@ -47,6 +48,16 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     }
 
     @Override
+    public ContentResource checkout(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return null;
+    }
+
+    @Override
+    public boolean release(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return false;
+    }
+
+    @Override
     public boolean expire(ContentProfileProvider modelProvider, String location) throws IOException {
         return false;
     }
@@ -59,6 +70,11 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     @Override
     public synchronized Scheme getScheme() {
         return Scheme.REPOSITORY;
+    }
+
+    @Override
+    public synchronized ContentResource replace(ContentProfileProvider modelProvider, ContentResource contentResource, String location) throws PieceworkException, IOException {
+        throw new NotImplementedException();
     }
 
     @Override

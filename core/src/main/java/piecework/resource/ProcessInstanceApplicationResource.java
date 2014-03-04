@@ -94,6 +94,12 @@ public interface ProcessInstanceApplicationResource extends ApplicationResource 
     Response history(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
 
     @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}/checkout")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response checkout(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
+
+    @POST
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}/removal")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     @Consumes("application/x-www-form-urlencoded")

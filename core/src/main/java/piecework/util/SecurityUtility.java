@@ -33,10 +33,7 @@ import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.validation.Validation;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -99,19 +96,35 @@ public class SecurityUtility {
         return restrictedFields;
     }
 
-    public static ManyMap<String, Value> filter(Map<String, List<Value>> original, DataFilter... dataFilters) {
+    public static ManyMap<String, Value> filter(Set<Field> fields, Map<String, List<Value>> original, DataFilter... dataFilters) {
         ManyMap<String, Value> map = new ManyMap<String, Value>();
 
-        if (original != null && !original.isEmpty()) {
-            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
-                String key = entry.getKey();
-                List<Value> values = entry.getValue();
+        // Need to allow for adding default values -- in which case, the map may be empty
+        Set<String> keys = new HashSet<String>();
+        if (fields != null && !fields.isEmpty()) {
+            for (Field field : fields) {
+                if (StringUtils.isEmpty(field.getName()))
+                    continue;
+                keys.add(field.getName());
+            }
+        }
+
+        if (original == null)
+            original = Collections.emptyMap();
+
+        if (!original.isEmpty()) {
+            keys.addAll(original.keySet());
+        }
+
+        if (keys != null && !keys.isEmpty()) {
+            for (String key : keys) {
+                List<Value> values = original.get(key);
                 if (dataFilters != null) {
                     for (DataFilter dataFilter : dataFilters) {
                         values = dataFilter.filter(key, values);
                     }
                 }
-                if (!values.isEmpty())
+                if (values != null && !values.isEmpty())
                     map.put(key, values);
             }
         }

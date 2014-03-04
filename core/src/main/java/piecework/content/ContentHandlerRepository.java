@@ -72,6 +72,12 @@ public class ContentHandlerRepository implements ContentRepository {
     }
 
     @Override
+    public ContentResource checkoutByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, null);
+        return contentReceiver.checkout(modelProvider, location);
+    }
+
+    @Override
     public boolean expireByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
         ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, null);
         // Return the result from the specified receiver (or primary receiver if key is null)
@@ -98,6 +104,24 @@ public class ContentHandlerRepository implements ContentRepository {
         }
 
         return null;
+    }
+
+    @Override
+    public boolean releaseByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, null);
+        // Return the result from the specified receiver (or primary receiver if key is null)
+        return contentReceiver.release(modelProvider, location);
+    }
+
+    @Override
+    public ContentResource replace(ContentProfileProvider modelProvider, ContentResource contentResource, String location) throws PieceworkException, IOException {
+        ContentReceiver contentReceiver = lookupContentReceiver(modelProvider, contentResource);
+        // Return the result from the specified receiver (or primary receiver if key is null)
+        ContentResource saved = contentReceiver.replace(modelProvider, contentResource, location);
+        // Backup receivers should also be saved to, but IOExceptions from them
+        // should not bubble up
+        backReceivers(new BackupReceiverReplace(modelProvider, contentResource, location));
+        return saved;
     }
 
     @Override
@@ -178,6 +202,28 @@ public class ContentHandlerRepository implements ContentRepository {
                 receiver.expire(modelProvider, location);
             } catch (Exception e) {
                 LOG.error("Error expiring content for a backup receiver ", e);
+            }
+        }
+
+    }
+
+    public class BackupReceiverReplace extends BackupReceiverAction {
+
+        private final ContentResource contentResource;
+        private final String location;
+
+        public BackupReceiverReplace(ContentProfileProvider modelProvider, ContentResource contentResource, String location) {
+            super(modelProvider);
+            this.contentResource = contentResource;
+            this.location = location;
+        }
+
+        public void action(ContentReceiver receiver) {
+            try {
+                // Don't bother to get back the result, since it won't be returned
+                receiver.replace(modelProvider, contentResource, location);
+            } catch (Exception e) {
+                LOG.error("Error saving content to a backup receiver ", e);
             }
         }
 

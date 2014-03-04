@@ -15,11 +15,15 @@
  */
 package piecework.util;
 
+import piecework.common.ViewContext;
 import piecework.exception.PieceworkException;
-import piecework.model.ProcessDeployment;
-import piecework.model.ProcessInstance;
-import piecework.model.Task;
+import piecework.model.*;
 import piecework.persistence.*;
+import piecework.process.AttachmentQueryParameters;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -76,5 +80,21 @@ public class ModelUtility {
         }
         return null;
     }
+
+    public static <P extends ProcessProvider> List<Attachment> attachments(P modelProvider, ViewContext context) throws  PieceworkException {
+        if (modelProvider instanceof AllowedTaskProvider) {
+            AllowedTaskProvider allowedTaskProvider = AllowedTaskProvider.class.cast(modelProvider);
+            SearchResults searchResults = allowedTaskProvider.attachments(new AttachmentQueryParameters(), context);
+            List<Attachment> attachments = new ArrayList<Attachment>();
+            if (searchResults != null && searchResults.getList() != null) {
+                for (Object object : searchResults.getList()) {
+                    attachments.add(Attachment.class.cast(object));
+                }
+            }
+            return attachments;
+        }
+        return Collections.emptyList();
+    }
+
 
 }

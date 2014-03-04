@@ -75,6 +75,10 @@ public class ValidationRule {
         this.required = builder.required;
     }
 
+    public ValidationRuleType getType() {
+        return type;
+    }
+
     public String toString() {
         return new StringBuilder("{ rule: \"")
                 .append(type.toString())

@@ -40,6 +40,7 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,40 +99,25 @@ public class SubmissionStorageService {
                     metadata = new HashMap<String, String>(field.getMetadataTemplates());
                 }
 
+                String description = submissionBuilder.getDescription(name);
+                if (StringUtils.isEmpty(description))
+                    description = value;
+
                 ContentResource contentResource = new BasicContentResource.Builder()
                         .contentType(contentType)
                         .name(name)
+                        .description(description)
                         .filename(value)
                         .inputStream(inputStream)
+                        .lastModified(new Date())
+                        .lastModifiedBy(actingAsId)
                         .metadata(metadata)
                         .build();
 
-                try {
-                    contentResource = contentRepository.save(modelProvider, contentResource);
-                } catch (MongoException mongoException) {
-                    Throwable cause = mongoException.getCause();
-                    if (cause instanceof MaxSizeExceededException) {
-                        MaxSizeExceededException sizeExceededException = MaxSizeExceededException.class.cast(cause);
-                        throw new BadRequestError(Constants.ExceptionCodes.attachment_is_too_large, Long.valueOf(sizeExceededException.getMaxSize()));
-                    } else {
-                        LOG.error("Failed to store file to mongo", mongoException);
-                        throw new InternalServerError();
-                    }
-                } catch (IOException ioe) {
-                    LOG.error(ioe);
-                    String body = ioe.getMessage();
-                    throw new InternalServerError(Constants.ExceptionCodes.content_cannot_be_stored, body);
-                }
-
-                String id = contentResource.getContentId();
-                String location = contentResource.getLocation();
-
-                String description = submissionBuilder.getDescription(name);
                 file = new File.Builder()
-                        .id(id)
                         .name(value)
                         .description(description)
-                        .location(location)
+                        .contentResource(contentResource)
                         .contentType(contentType)
                         .build();
 
@@ -142,6 +128,8 @@ public class SubmissionStorageService {
 
                 String id = uuidGenerator.getNextId();
                 String description = submissionBuilder.getDescription(name);
+                if (StringUtils.isEmpty(description))
+                    description = value;
                 file = new File.Builder()
                         .id(id)
                         .name(value)
@@ -170,26 +158,41 @@ public class SubmissionStorageService {
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
-                String location;
-                if (file != null) {
-                    contentType = file.getContentType();
-                    location = file.getLocation();
-                } else {
-                    contentType = MediaType.TEXT_PLAIN;
-                    location = null;
-                    // Don't bother to save 'notes' if they're empty
-                    if (StringUtils.isEmpty(value))
-                        return false;
+//                String location;
+//                if (file != null) {
+//                    try {
+//                        ContentResource contentResource = contentRepository.save(modelProvider, file.getContentResource());
+//
+//                        contentType = contentResource.contentType();
+//                        location = contentResource.getLocation();
+//
+//                    } catch (IOException ioe) {
+//                        LOG.error("Unable to add attachment content", ioe);
+//                        return false;
+//                    }
+//                } else {
+//                    contentType = MediaType.TEXT_PLAIN;
+//                    location = null;
+//                    // Don't bother to save 'notes' if they're empty
+//                    if (StringUtils.isEmpty(value))
+//                        return false;
+//                }
+//                Attachment attachmentDetails = new Attachment.Builder()
+//                        .contentType(contentType)
+//                        .location(location)
+//                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
+//                        .description(value)
+//                        .userId(actingAsId)
+//                        .name(name)
+//                        .build();
+
+                if (file == null) {
+                    file = new File.Builder()
+                            .contentType(MediaType.TEXT_PLAIN)
+                            .description(value)
+                            .build();
                 }
-                Attachment attachmentDetails = new Attachment.Builder()
-                        .contentType(contentType)
-                        .location(location)
-                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
-                        .description(value)
-                        .userId(actingAsId)
-                        .name(name)
-                        .build();
-                submissionBuilder.attachment(attachmentDetails);
+                submissionBuilder.attachment(file);
             }
 
             return true;

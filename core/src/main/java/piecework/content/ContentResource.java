@@ -18,6 +18,8 @@ package piecework.content;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,7 +28,7 @@ import java.util.Map;
  *
  * @author James Renfro
  */
-public interface ContentResource extends StreamingOutput {
+public interface ContentResource extends StreamingOutput, Serializable {
 
     String getContentId();
 
@@ -46,7 +48,11 @@ public interface ContentResource extends StreamingOutput {
 
     long lastModified();
 
+    String lastModifiedBy();
+
     String eTag();
+
+    List<Version> versions();
 
     Map<String, String> getMetadata();
 

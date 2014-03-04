@@ -21,6 +21,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
@@ -84,7 +85,7 @@ public class Attachment implements Serializable, Comparable<Attachment> {
 	@XmlTransient
     @JsonIgnore
     private final boolean isDeleted;
-	
+
 	private Attachment() {
         this(new Attachment.Builder(), new ViewContext());
     }
