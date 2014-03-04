@@ -161,7 +161,7 @@ public class DataFilterService {
         Task task = ModelUtility.task(modelProvider);
         Entity principal = modelProvider.principal();
 
-        if (task != null && task.isAssignee(principal))
+        if (task != null && task.isAssignee(principal) && task.isActive())
             decryptValuesFilter = new DecryptValuesFilter(modelProvider, reason, accessTracker, encryptionService, false);
         else
             decryptValuesFilter = new MaskRestrictedValuesFilter(modelProvider, encryptionService);
@@ -187,7 +187,7 @@ public class DataFilterService {
         Task task = ModelUtility.task(modelProvider);
         Entity principal = modelProvider.principal();
 
-        if (task != null && task.isAssignee(principal))
+        if (task != null && task.isAssignee(principal) && task.isActive())
             decryptValuesFilter = new DecryptValuesFilter(modelProvider, reason, accessTracker, encryptionService, false);
         else
             decryptValuesFilter = new MaskRestrictedValuesFilter(modelProvider, encryptionService);
