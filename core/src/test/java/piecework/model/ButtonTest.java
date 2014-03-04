@@ -19,8 +19,6 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static junit.framework.Assert.*;
-//import org.mockito.Mock;
-//import org.mockito.runners.MockitoJUnitRunner;
 import piecework.model.Button;
 import piecework.Constants;
 import piecework.enumeration.ActionType;
