@@ -97,7 +97,7 @@ public class FormFactory {
             boolean isAllowAny = activity.isAllowAny();
 
             if (anonymous || task == null)
-                data = dataFilterService.allValidationData(validation, fields, isAllowAny);
+                data = dataFilterService.allValidationData(validation, fields, isAllowAny, principal);
             else {
                 // This reason will only be used if the user actually has been assigned the task -- the dataFilterService
                 // will verify that

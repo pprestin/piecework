@@ -153,27 +153,27 @@ public class ContentUtilityTest {
         Assert.assertEquals(length, contentResource.contentLength());
     }
 
-    @Test
-    public void uriToContent() throws IOException {
-        URI uri = URI.create("https://raw.github.com/piecework/piecework/master/README.md");
-        String id = uri.toString();
-        String contentType = "text/plain; charset=utf-8";
-        String filename = "README.md";
-
-        CloseableHttpClient client = HttpClients.createDefault();
-        ContentResource contentResource = ContentUtility.toContent(client, uri);
-
-        String actual = IOUtils.toString(contentResource.getInputStream());
-
-        Assert.assertEquals(id, contentResource.getContentId());
-        Assert.assertEquals(contentType, contentResource.contentType());
-        Assert.assertEquals(filename, contentResource.getFilename());
-        Assert.assertEquals("https://raw.github.com/piecework/piecework/master/README.md", contentResource.getLocation());
-        Assert.assertTrue(actual.length() > 0);
-//        Assert.assertEquals(testDate, content.getLastModified());
-//        Assert.assertEquals(Long.valueOf(actual.length()), content.getLength());
-//        Assert.assertEquals(eTag, content.getMd5());
-    }
+//    @Test
+//    public void uriToContent() throws IOException {
+//        URI uri = URI.create("https://raw.github.com/piecework/piecework/master/README.md");
+//        String id = uri.toString();
+//        String contentType = "text/plain; charset=utf-8";
+//        String filename = "README.md";
+//
+//        CloseableHttpClient client = HttpClients.createDefault();
+//        ContentResource contentResource = ContentUtility.toContent(client, uri);
+//
+//        String actual = IOUtils.toString(contentResource.getInputStream());
+//
+//        Assert.assertEquals(id, contentResource.getContentId());
+//        Assert.assertEquals(contentType, contentResource.contentType());
+//        Assert.assertEquals(filename, contentResource.getFilename());
+//        Assert.assertEquals("https://raw.github.com/piecework/piecework/master/README.md", contentResource.getLocation());
+//        Assert.assertTrue(actual.length() > 0);
+////        Assert.assertEquals(testDate, content.getLastModified());
+////        Assert.assertEquals(Long.valueOf(actual.length()), content.getLength());
+////        Assert.assertEquals(eTag, content.getMd5());
+//    }
 
     @Test
     public void validateValidRemoteLocation() {

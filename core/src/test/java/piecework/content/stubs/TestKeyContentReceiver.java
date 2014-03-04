@@ -29,8 +29,27 @@ import java.io.IOException;
 public class TestKeyContentReceiver implements ContentReceiver {
 
     @Override
+    public ContentResource checkout(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
+                .location("some-key-content-receiver")
+                .build();
+    }
+
+    @Override
+    public boolean release(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return false;
+    }
+
+    @Override
     public boolean expire(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
         return true;
+    }
+
+    @Override
+    public ContentResource replace(ContentProfileProvider modelProvider, ContentResource contentResource, String location) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
+                .location("some-key-content-receiver")
+                .build();
     }
 
     @Override

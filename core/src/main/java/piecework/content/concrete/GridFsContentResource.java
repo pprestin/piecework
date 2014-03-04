@@ -22,12 +22,14 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import piecework.content.ContentResource;
+import piecework.content.Version;
 
 import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -43,17 +45,20 @@ public class GridFsContentResource implements ContentResource {
     public final static String DESCRIPTION = "description";
     public final static String E_TAG = "eTag";
     public final static String LAST_MODIFIED = "lastModified";
+    public final static String LAST_MODIFIED_BY = "lastModifiedBy";
 
     private final GridFSFile file;
     private final GridFsOperations gridFsOperations;
     private final String location;
     private final DBObject metadata;
+    private final List<Version> versions;
 
-    public GridFsContentResource(GridFsOperations gridFsOperations, GridFSFile file, String location) {
+    public GridFsContentResource(GridFsOperations gridFsOperations, GridFSFile file, String location, List<Version> versions) {
         this.gridFsOperations = gridFsOperations;
         this.file = file;
         this.location = location;
         this.metadata = file.getMetaData();
+        this.versions = versions;
     }
 
     @Override
@@ -103,6 +108,11 @@ public class GridFsContentResource implements ContentResource {
     }
 
     @Override
+    public String lastModifiedBy() {
+        return metadata != null ? String.class.cast(metadata.get(LAST_MODIFIED_BY)) : null;
+    }
+
+    @Override
     public String eTag() {
         return metadata != null ? String.class.cast(metadata.get(E_TAG)) : null;
     }
@@ -110,6 +120,11 @@ public class GridFsContentResource implements ContentResource {
     @Override
     public Map<String, String> getMetadata() {
         return Collections.emptyMap();
+    }
+
+    @Override
+    public List<Version> versions() {
+        return versions;
     }
 
     @Override

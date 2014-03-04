@@ -34,6 +34,25 @@ public class TestExternalContentReceiver implements ContentReceiver {
     }
 
     @Override
+    public ContentResource checkout(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
+                .location("some-external-content-receiver")
+                .build();
+    }
+
+    @Override
+    public boolean release(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return false;
+    }
+
+    @Override
+    public ContentResource replace(ContentProfileProvider modelProvider, ContentResource contentResource, String location) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
+                .location("some-external-content-receiver")
+                .build();
+    }
+
+    @Override
     public ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws PieceworkException, IOException {
         return new BasicContentResource.Builder()
                 .location("some-external-content-receiver")

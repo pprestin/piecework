@@ -41,6 +41,7 @@ import piecework.security.AccessTracker;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Collections;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -77,8 +78,10 @@ public class GridFSContentProviderReceiverTest {
                .when(modelProvider).processDefinitionKey();
         Mockito.doReturn("50000000001")
                .when(uuidGenerator).getNextId();
+        Mockito.doReturn(Collections.singletonList(gridFSDBFile))
+               .when(gridFsOperations).find(any(Query.class));
         Mockito.doReturn(gridFSDBFile)
-               .when(gridFsOperations).findOne(any(Query.class));
+                .when(gridFsOperations).findOne(any(Query.class));
         Mockito.doReturn("60000000001")
                .when(gridFSDBFile).getId();
         Mockito.doReturn(new ByteArrayInputStream("Some sample data".getBytes()))

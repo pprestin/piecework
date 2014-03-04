@@ -30,6 +30,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import piecework.content.ContentResource;
+import piecework.content.Version;
 import piecework.util.FileUtility;
 
 import javax.ws.rs.WebApplicationException;
@@ -39,6 +40,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -87,6 +89,16 @@ public class RemoteResource implements ContentResource {
     public synchronized long lastModified()  {
         ensureInitialized();
         return lastModified;
+    }
+
+    @Override
+    public String lastModifiedBy() {
+        return null;
+    }
+
+    @Override
+    public List<Version> versions() {
+        return Collections.<Version>emptyList();
     }
 
     public synchronized String eTag() {

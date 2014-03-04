@@ -312,8 +312,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfFile', ['$sce', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
-        function($sce, attachmentService, dialogs, notificationService, taskService, wizardService) {
+    .directive('wfFile', ['$http', '$sce', '$window', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
+        function($http, $sce, $window, attachmentService, dialogs, notificationService, taskService, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -322,7 +322,64 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/file.html',
                 link: function (scope, element, attr) {
+                    scope.checkoutFile = function(file) {
+                        var url = file.link + '/checkout';
+                        $http.post($sce.trustAsResourceUrl(url), null, {
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            transformRequest: angular.identity
+                        })
+                        .success(function(data, status, headers, config) {
+                            scope.checkedOut = true;
+                            $window.location.href = file.link;
+                        });
+                    };
+                    scope.checkinFile = function(file) {
+                        scope.checkedOut = false;
+                    };
+                    scope.deleteFile = function(file) {
+                        var url = file.link + '/removal.json';
+                        $http.post($sce.trustAsResourceUrl(url), null, {
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            transformRequest: angular.identity
+                        })
+                        .success(function(data, status, headers, config) {
+                            var files = [];
+                            angular.forEach(scope.files, function(current) {
+                                if (current != null && current.name != file.name) {
+                                    files.push(current);
+                                }
+                            });
+                            scope.files = files;
+                        })
+                        .error(function(data, status, headers, config) {
 
+                        });
+                    };
+                    scope.edit = function() {
+                        scope.editing = !scope.editing;
+                    };
+                    scope.showDetails = function(file) {
+                        file.detailed = !file.detailed;
+                    };
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
+                        scope.form = form;
+                        var data = form.data;
+                        var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
+                        scope.files = [];
+                        angular.forEach(values, function(file) {
+                            file.detailed = false;
+                            scope.files.push(file);
+                        });
+                    });
+                    scope.$on('wfEvent:invalid', function(event, validation) {
+                        if (validation != null && validation[scope.name] != null) {
+                            scope.error = validation[scope.name];
+                        }
+                    });
+                    scope.cannotCheckout = true;
+                    scope.checkedOut = false;
+                    scope.editing = false;
+                    scope.files = [];
                 }
             }
         }
@@ -436,8 +493,8 @@ angular.module('wf.directives',
 
          }
      ])
-    .directive('wfForm', ['$http', '$location', '$sce', '$window', 'formPageUri', 'formResourceUri', 'wizardService',
-        function($http, $location, $sce, $window, formPageUri, formResourceUri, wizardService) {
+    .directive('wfForm', ['$http', '$location', '$sce', '$window', 'formPageUri', 'formResourceUri', 'notificationService', 'wizardService',
+        function($http, $location, $sce, $window, formPageUri, formResourceUri, notificationService, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -772,10 +829,16 @@ angular.module('wf.directives',
                         if (form != null && form.data != null)
                             scope.reloadForm(form);
                     });
-                    scope.$on('fileuploadfail', function(event, data) {
+                    scope.$root.$on('fileuploadfail', function(event, data) {
                         var message = angular.fromJson(data.jqXHR.responseText);
-
-                        notificationService.notify(scope.$root, message.messageDetail);
+                        if (message != null && message.items != null) {
+                            var validation = {};
+                            angular.forEach(message.items, function(item) {
+                                validation[item.propertyName] = item.message;
+                            });
+                            scope.$root.$broadcast('wfEvent:invalid', validation);
+                        }
+//                        notificationService.notify(scope.$root, message.messageDetail);
                     });
                     scope.$on('fileuploadstart', function() {
                         scope.state.sending = true;
@@ -943,6 +1006,7 @@ angular.module('wf.directives',
                         }
                         var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
 
+//                        scope.some.files = values;
                         var childHtml = element.find('li:first');
                         var fallbackHtml = element.find('[data-wf-fallback]');
                         if (!childHtml.hasClass('template')) {

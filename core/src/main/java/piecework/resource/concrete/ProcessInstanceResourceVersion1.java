@@ -171,6 +171,16 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
     }
 
     @Override
+    public Response checkout(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        accessTracker.track(requestDetails, true, false);
+
+        AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
+        accessTracker.track(requestDetails, true, false);
+        return FormUtility.noContentResponse(settings, allowedTaskProvider, false);
+    }
+
+    @Override
     public Response removal(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
         AllowedTaskProvider allowedTaskProvider = doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, helper.getPrincipal());
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
@@ -204,7 +214,7 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         if (isInline)
             return FormUtility.okResponse(settings, allowedTaskProvider, contentResource, contentResource.contentType(), false);
 
-        String contentDisposition = new StringBuilder("attachment; filename=").append(contentResource.getName()).toString();
+        String contentDisposition = new StringBuilder("attachment; filename=").append(contentResource.getFilename()).toString();
 
         List<Header> headers = Collections.<Header>singletonList(new BasicHeader("Content-Disposition", contentDisposition));
         return FormUtility.okResponse(settings, allowedTaskProvider, contentResource, contentResource.contentType(), headers, false);

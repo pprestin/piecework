@@ -478,26 +478,46 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "         </div>\n" +
     "     </nav>");
   $templateCache.put("templates/file.html",
-    "<div class=\"well\" data-wf-list=\"{{name}}\">\n" +
-        "<div class=\"fade\" data-ng-class=\"{in: active()}\">\n" +
-        "                <!-- The global progress bar -->\n" +
-        "                <div class=\"progress progress-striped active ng-scope\" data-file-upload-progress=\"progress()\"><div class=\"progress-bar progress-bar-success\" data-ng-style=\"{width: num + '%'}\"></div></div>\n" +
-        "                <!-- The extended global progress state -->\n" +
-        "                <div class=\"progress-extended\">&nbsp;</div>\n" +
-        "            </div>" +
-
-    "   <p data-wf-fallback class=\"muted\">No documents</p>\n" +
-    "   <ul class=\"process-variable-list\">\n" +
-    "     <li>\n" +
-    "        <i data-wf-delete class=\"fa fa-times text-danger wf-delete-item\" title=\"Delete item\" style=\"font-size:14px;\"></i>&nbsp;&nbsp;\n" +
-    "        <i class=\"fa fa-download\" style=\"font-size:1.4em;color:#666;\"></i>&nbsp;&nbsp;<a rel=\"external\" data-wf-link></a>\n" +
-    "     </li>\n" +
-    "   </ul>\n" +
-    "</div>\n" +
-    "<span class=\"btn btn-default fileinput-button pull-right\" data-ng-class=\"{disabled: disabled}\">\n" +
-    "   <i ng-hide=\"state.sending\" class=\"fa fa-cloud-upload\"></i>  <i ng-show=\"state.sending\" class='fa fa-spinner fa-spin'></i> {{label}}\n" +
-    "   <input type=\"file\" name=\"{{name}}\" multiple=\"multiple\" ng-disabled=\"disabled\">\n" +
-    "</span>");
+    '       <ul class="list-group"> ' +
+    '           <li class="list-group-item" style="background-color:#EFEFEF">{{label}} ' +
+    '               <div class="btn-toolbar pull-right">' +
+    '                   <div data-ng-click="edit()" data-ng-show="files" class="btn btn-default btn-xs" title="To delete files, click unlock then click on red x">' +
+    '                       <i data-ng-class="editing ? \'fa-unlock\' : \'fa-lock\'" class="fa"></i>' +
+    '                   </div>' +
+    '               </div>' +
+    '               <div class="clearfix"></div>' +
+    '           </li>' +
+    '           <li data-ng-show="error" class="list-group-item"><div class="alert alert-danger">{{error}}</div></li>' +
+    '           <li data-ng-hide="files" class="list-group-item"><span class="text-muted">No documents</span></li>' +
+    '           <li data-ng-repeat="file in files" class="list-group-item">' +
+    '               <div>' +
+    '                   <i data-ng-click="showDetails(file)" data-ng-class="file.detailed ? \'fa-angle-up\' : \'fa-angle-down\'" data-ng-hide="editing" class="fa pull-right" style="cursor:pointer;padding-top: 4px"></i>' +
+    '                   <a data-ng-href="{{file.link}}" data-ng-class="checkedOut ? \'text-danger\' : \'\'"><i data-ng-hide="editing" class="fa fa-cloud-download"></i> {{file.name}}</a>&nbsp;&nbsp;&nbsp;' +
+    '                   <div data-ng-click="checkinFile(file)" data-ng-hide="editing || !checkedOut" class="btn btn-default btn-xs">' +
+    '                       <span class="fa-stack"><i class="fa fa-key fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x text-danger"></i></span></div>' +
+    '                   <div data-ng-click="checkoutFile(file)" data-ng-hide="cannotCheckout || editing || checkedOut" class="btn btn-default btn-xs"><i class="fa fa-key"></i> Checkout</div>' +
+    '                   <i data-ng-click="deleteFile(file)" data-ng-show="editing" class=\"fa fa-times text-danger wf-delete-item pull-right\" title=\"Delete item\" style=\"font-size:14px;padding-top: 4px\"></i>' +
+    '               </div>' +
+    '               <div data-ng-show="file.detailed"><p/>' +
+    '                   <table class="table table-condensed">' +
+    '                       <thead><tr><th>Version</th><th>Upload date</th><th>Uploader</th></tr></thead>' +
+    '                       <tbody>' +
+    '                           <tr data-ng-repeat="version in file.versions"><td>{{version.label}}</td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdBy}}</td></tr>' +
+    '                       </tbody>' +
+    '                   </table>' +
+    '               </div>' +
+    '           </li>' +
+    '           <li class="list-group-item" style="background-color:#EFEFEF">' +
+    '               <p data-ng-show="checkedOut" class="pull-left">One or more files are checked out</p>' +
+    '               <div class="btn-toolbar pull-right">' +
+    '                   <div data-ng-class="checkedOut ? \'btn-danger\' : \'\'" class="btn btn-default btn-xs fileinput-button">' +
+    '                       <i ng-hide="state.sending" class="fa fa-cloud-upload"></i> Upload' +
+    '                       <input type="file" name="{{name}}" multiple="multiple" ng-disabled="disabled">' +
+    '                   </div>' +
+    '               </div>' +
+    '               <div class="clearfix"></div>' +
+    '           </li>' +
+    '       </ul> ');
   $templateCache.put("templates/fileupload.html",
     "   <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{getAttachmentUrl()}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +
     "       <span class=\"btn btn-default navbar-btn fileinput-button\" data-ng-class=\"{disabled: disabled}\">\n" +

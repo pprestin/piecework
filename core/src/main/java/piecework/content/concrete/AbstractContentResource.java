@@ -19,12 +19,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.core.io.Resource;
 import piecework.content.ContentResource;
+import piecework.content.Version;
 
 import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -79,6 +81,16 @@ public abstract class AbstractContentResource<R extends Resource> implements Con
             LOG.warn("Unable to retrieve last modified for classpath resource " + getLocation(), ioe);
             return -1;
         }
+    }
+
+    @Override
+    public String lastModifiedBy() {
+        return null;
+    }
+
+    @Override
+    public List<Version> versions() {
+        return Collections.<Version>emptyList();
     }
 
     @Override

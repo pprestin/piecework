@@ -18,16 +18,14 @@ package piecework.content.concrete;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import piecework.content.ContentResource;
+import piecework.content.Version;
 
 import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -45,8 +43,10 @@ public class BasicContentResource implements ContentResource, Serializable {
     private final InputStream inputStream;
     private final String eTag;
     private final long lastModified;
+    private final String lastModifiedBy;
     private final long length;
     private final Map<String, String> metadata;
+    private final List<Version> versions;
 
     private BasicContentResource() {
         this(new Builder());
@@ -62,8 +62,10 @@ public class BasicContentResource implements ContentResource, Serializable {
         this.inputStream = builder.inputStream;
         this.eTag = builder.eTag;
         this.lastModified = builder.lastModified;
+        this.lastModifiedBy = builder.lastModifiedBy;
         this.length = builder.length;
         this.metadata = Collections.unmodifiableMap(builder.metadata);
+        this.versions = Collections.unmodifiableList(builder.versions);
     }
 
     public String getContentId() {
@@ -112,6 +114,16 @@ public class BasicContentResource implements ContentResource, Serializable {
     }
 
     @Override
+    public String lastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    @Override
+    public List<Version> versions() {
+        return versions;
+    }
+
+    @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
         throw new NotImplementedException();
     }
@@ -127,11 +139,14 @@ public class BasicContentResource implements ContentResource, Serializable {
         private InputStream inputStream;
         private String eTag;
         private long lastModified;
+        private String lastModifiedBy;
         private long length = 0l;
         private Map<String, String> metadata;
+        private List<Version> versions;
 
         public Builder() {
             this.metadata = new HashMap<String, String>();
+            this.versions = new ArrayList<Version>();
         }
 
         public BasicContentResource build() {
@@ -183,6 +198,11 @@ public class BasicContentResource implements ContentResource, Serializable {
             return this;
         }
 
+        public Builder lastModifiedBy(String lastModifiedBy) {
+            this.lastModifiedBy = lastModifiedBy;
+            return this;
+        }
+
         public Builder lastModified(long lastModified) {
             this.lastModified = lastModified;
             return this;
@@ -201,6 +221,12 @@ public class BasicContentResource implements ContentResource, Serializable {
         public Builder metadata(Map<String, String> metadata) {
             if (metadata != null)
                 this.metadata = new HashMap<String, String>(metadata);
+            return this;
+        }
+
+        public Builder version(Version version) {
+            if (version != null)
+                this.versions.add(version);
             return this;
         }
     }

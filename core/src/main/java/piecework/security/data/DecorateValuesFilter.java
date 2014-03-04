@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.model.*;
 import piecework.security.DataFilter;
 import piecework.security.concrete.PassthroughSanitizer;
@@ -81,8 +82,8 @@ public class DecorateValuesFilter implements DataFilter {
                 File file = File.class.cast(value);
 
                 list.add(new File.Builder(file, passthroughSanitizer)
-                        .processDefinitionKey(instance.getProcessDefinitionKey())
-                        .processInstanceId(instance.getProcessInstanceId())
+                        .processDefinitionKey(instance != null ? instance.getProcessDefinitionKey() : null)
+                        .processInstanceId(instance != null ? instance.getProcessInstanceId() : null)
                         .fieldName(key)
                         .build(context));
             } else {
