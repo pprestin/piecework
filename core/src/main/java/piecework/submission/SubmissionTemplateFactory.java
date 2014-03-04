@@ -135,6 +135,16 @@ public class SubmissionTemplateFactory {
                             if (button == null)
                                 continue;
                             builder.button(button);
+
+                            // get child buttons as well
+                            List<Button> children = button.getChildren();
+                            if ( children != null ) { 
+                                for (Button child : children) {
+                                    if ( child != null ) { 
+                                        builder.button(child);
+                                    }   
+                                }   
+                            }   
                         }
                     }
                 }
