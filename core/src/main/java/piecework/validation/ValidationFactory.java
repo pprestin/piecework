@@ -55,20 +55,20 @@ public class ValidationFactory {
     @Autowired
     UserInterfaceSettings settings;
 
-    public <P extends ProcessDeploymentProvider> Validation validation(P modelProvider, SubmissionTemplate template, Submission submission, String version, boolean throwException) throws PieceworkException {
+    public <P extends ProcessDeploymentProvider> Validation validation(P modelProvider, SubmissionTemplate template, Submission submission, String version, boolean onlyAcceptValidInputs, boolean ignoreException) throws PieceworkException {
         long time = 0;
 
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
 
         // Validate the submission
-        Validation validation = validate(modelProvider, submission, template, version, throwException);
+        Validation validation = validate(modelProvider, submission, template, version, onlyAcceptValidInputs);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Validation took " + (System.currentTimeMillis() - time) + " ms");
 
         Map<String, List<Message>> results = validation.getResults();
-        if (results != null && !results.isEmpty()) {
+        if (!ignoreException && results != null && !results.isEmpty()) {
             // Throw an exception if the submitter needs to adjust the data
             throw new BadRequestError(validation);
         }
@@ -108,6 +108,20 @@ public class ValidationFactory {
 
             for (File file : attachments) {
                 try {
+                    // Handle comments
+                    if (file.getContentResource() == null) {
+                        Attachment attachment = new Attachment.Builder()
+                                .contentType(file.getContentType())
+                                .processDefinitionKey(modelProvider.processDefinitionKey())
+                                .description(file.getDescription())
+                                .userId(file.getFilerId())
+                                .name(file.getName())
+                                .build();
+
+                        validationBuilder.attachment(attachment);
+                        continue;
+                    }
+
                     boolean isReplace = StringUtils.isNotEmpty(file.getName()) && existingAttachmentLocations.containsKey(file.getName());
 
                     ContentResource contentResource = saveOrReplace(modelProvider, file, existingAttachmentLocations);

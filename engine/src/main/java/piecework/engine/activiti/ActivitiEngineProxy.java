@@ -34,6 +34,7 @@ import org.activiti.engine.task.TaskQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
@@ -48,8 +49,8 @@ import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
 import piecework.persistence.TaskProvider;
+import piecework.common.SearchCriteria;
 import piecework.repository.ProcessInstanceRepository;
-import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
@@ -327,7 +328,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-	public ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+	public ProcessExecution findExecution(SearchCriteria criteria) throws ProcessEngineException {
 
         if (! criteria.getEngines().contains(getKey()))
             return null;
@@ -355,7 +356,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
 	@Override
-	public ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+	public ProcessExecutionResults findExecutions(SearchCriteria criteria) throws ProcessEngineException {
         if (! criteria.getEngines().contains(getKey()))
             return null;
 
@@ -675,7 +676,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         return activitiInstance;
     }
 
-    private HistoricProcessInstanceQuery instanceQuery(ProcessInstanceSearchCriteria criteria) {
+    private HistoricProcessInstanceQuery instanceQuery(SearchCriteria criteria) {
         HistoricProcessInstanceQuery query = processEngine.getHistoryService().createHistoricProcessInstanceQuery();
 
         // Activiti only allows us to filter by a single process definition key at a time -- so if there are more than 1
@@ -705,22 +706,23 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (criteria.getInitiatedBy() != null)
             query.startedBy(criteria.getInitiatedBy());
 
-        ProcessInstanceSearchCriteria.OrderBy orderBy = criteria.getOrderBy();
-        if (orderBy != null) {
-            switch (orderBy) {
-                case START_TIME_ASC:
-                    query.orderByProcessInstanceStartTime().asc();
-                    break;
-                case START_TIME_DESC:
-                    query.orderByProcessInstanceStartTime().desc();
-                    break;
-                case END_TIME_ASC:
-                    query.orderByProcessInstanceEndTime().asc();
-                    break;
-                case END_TIME_DESC:
-                    query.orderByProcessInstanceEndTime().desc();
-                    break;
-            }
+        Sort sort = criteria.getSort(new PassthroughSanitizer());
+
+        if (sort != null) {
+//            switch (orderBy) {
+//                case START_TIME_ASC:
+//                    query.orderByProcessInstanceStartTime().asc();
+//                    break;
+//                case START_TIME_DESC:
+//                    query.orderByProcessInstanceStartTime().desc();
+//                    break;
+//                case END_TIME_ASC:
+//                    query.orderByProcessInstanceEndTime().asc();
+//                    break;
+//                case END_TIME_DESC:
+//                    query.orderByProcessInstanceEndTime().desc();
+//                    break;
+//            }
         } else {
             query.orderByProcessInstanceEndTime().desc();
         }

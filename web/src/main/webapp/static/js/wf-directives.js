@@ -1279,6 +1279,7 @@ angular.module('wf.directives',
                     scope.criteria.processDefinitionKey = '';
                     scope.criteria.processStatus = 'open';
                     scope.criteria.taskStatus = 'all';
+                    scope.criteria.orderBy = 'START_TIME_ASC';
 
                     scope.exportCsv = function(selectedForms) {
                         var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.criteria.processDefinitionKey;
@@ -1287,6 +1288,24 @@ angular.module('wf.directives',
                         if (scope.criteria.startedBefore != null)
                             url += '&startedBefore=' + scope.criteria.startedBefore;
                         $window.location.href = url;
+                    };
+
+                    scope.getFacets = function($viewValue) {
+                        var facets = new Array();
+                        facets.push({displayName: 'Budget',label:'budget'});
+//                        if (response != null && response.data != null && response.data.list != null) {
+//                            angular.forEach(response.data.list, function(item) {
+//                                var person = {
+//                                    displayName: item.displayName,
+//                                    userId: item.userId,
+//                                    toString: function() {
+//                                        return this.displayName;
+//                                    }
+//                                };
+//                                people.push(person);
+//                            });
+//                        }
+                        return facets;
                     };
 
                     scope.processStatusDescription = {

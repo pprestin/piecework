@@ -447,7 +447,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                     <button data-ng-click=\"dialogs.openActivateModal([form])\" data-ng-show=\"form.history && form.task.taskStatus == 'Suspended'\" class=\"btn btn-default navbar-btn\" id=\"activate-dialog-button\" title=\"Activate process\" type=\"button\"><i class=\"fa fa-play\"></i></button>\n" +
     "                     <button data-ng-click=\"dialogs.openRestartModal([form])\" data-ng-show=\"form.history && (form.task.taskStatus == 'Cancelled' || form.task.taskStatus == 'Completed')\" class=\"btn btn-default navbar-btn\" title=\"Restart process\" type=\"button\"><i class=\"fa fa-rotate-left\"></i></button>\n" +
     "                 </div>\n" +
-    "                 <div class=\"navbar-right btn-toolbar\">\n" +
+    "                 <div class=\"navbar-right btn-toolbar wf-right-btn-toolbar\">\n" +
     //"                     <ul class=\"responsive-pull-right navbar-nav btn-toolbar\">  \n" +
     "                         <p data-ng-show=\"form.history && form.task.active && form.task.assignee\" class=\"navbar-text text-primary\">Assigned to {{form.task.assignee.displayName}}</p>\n" +
     "                         <div data-ng-show=\"form.task.active\" class=\"btn-group\">\n" +
@@ -622,7 +622,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <div class=\"container\">\n" +
     "                <form class=\"navbar-form navbar-left form-inline\" role=\"search\">\n" +
     "                    <div class=\"row\">\n" +
-    "                        <input style=\"width: 200px\" title=\"Search by keyword\" role=\"\" class=\"form-control searchField\" data-ng-model=\"criteria.keyword\" placeholder=\"Search\" id=\"keyword\" type=\"text\">\n" +
+    "                        <input style=\"width: 400px\" title=\"Search by keyword\" role=\"\" class=\"form-control searchField\" data-ng-model=\"criteria.keyword\" placeholder=\"Search\" id=\"keyword\" type=\"text\">\n" +
     "                        <button data-ng-click=\"refreshSearch()\" class=\"btn btn-default navbar-btn\" role=\"button\" id=\"instanceSearchButton\" type=\"submit\">&nbsp;&nbsp;<i ng-show=\"searching\" class='fa fa-spinner fa-spin fa-lg'></i><i ng-show=\"!searching\" class=\"fa fa-search\"></i>&nbsp;&nbsp;</button>\n" +
     "                        <span data-ng-if=\"definitions\" class=\"dropdown\">\n" +
     "                            <button class=\"btn btn-default navbar-btn dropdown-toggle\" data-toggle=\"dropdown\" data-target=\"new-form-dropdown\" id=\"new-form-button\" type=\"button\"><i class=\"fa fa-play-circle-o\"></i> <b class=\"caret\"></b></button>\n" +
@@ -791,7 +791,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                        </ul>\n" +
     "                    </div>\n" +
     "                </form>\n" +
-    "                <div class=\"navbar-right btn-toolbar\">\n" +
+    "                <div class=\"navbar-right btn-toolbar wf-right-btn-toolbar\">\n" +
     "                    <button data-ng-click=\"dialogs.openAssignModal(getFormsSelected(['Open']))\" data-ng-show=\"isFormSelected(['Open'])\" class=\"btn btn-default navbar-btn incomplete-selected-result-btn\" id=\"assign-dialog-button\" title=\"Assign task\" type=\"button\"><i class=\"fa fa-user fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openHistoryModal(getFormsSelected())\" data-ng-show=\"isFormSelected()\" data-ng-disabled=\"!isSingleFormSelected()\" class=\"btn btn-default navbar-btn selected-result-btn\" id=\"history-dialog-button\" title=\"History\" type=\"button\"><i class=\"fa fa-calendar-o fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openActivateModal(getFormsSelected(['Suspended']))\" data-ng-show=\"isFormSelected(['Suspended'])\" class=\"btn btn-default navbar-btn\" id=\"activate-dialog-button\" title=\"Activate process\" type=\"button\"><i class=\"fa fa-play fa-white\"></i></button>\n" +

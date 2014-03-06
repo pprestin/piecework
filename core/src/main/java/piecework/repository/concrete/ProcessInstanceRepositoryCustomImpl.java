@@ -36,10 +36,13 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
+import piecework.common.SearchQueryParameters;
 import piecework.model.*;
-import piecework.process.ProcessInstanceQueryBuilder;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchQueryBuilder;
+import piecework.common.SearchCriteria;
 import piecework.repository.custom.ProcessInstanceRepositoryCustom;
+import piecework.security.Sanitizer;
+import piecework.util.SearchUtility;
 
 import java.util.*;
 
@@ -61,9 +64,9 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     MongoTemplate mongoOperations;
 
     @Override
-    public Page<ProcessInstance> findByCriteria(ProcessInstanceSearchCriteria criteria, Pageable pageable) {
+    public Page<ProcessInstance> findByCriteria(Set<String> processDefinitionKeys, SearchCriteria criteria, Pageable pageable, Sanitizer sanitizer) {
         // Otherwise, look up all instances that match the query
-        Query query = new ProcessInstanceQueryBuilder(criteria).build();
+        Query query = new SearchQueryBuilder(criteria).build(processDefinitionKeys, sanitizer);
         query.skip(pageable.getOffset());
         query.limit(pageable.getPageSize());
 
@@ -72,6 +75,22 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         // Don't include form data in the result unless it's requested
         if (! criteria.isIncludeVariables())
             field.exclude("data");
+
+        return findByQuery(query, pageable);
+    }
+
+    @Override
+    public Page<ProcessInstance> findByQueryParameters(Set<String> processDefinitionKeys, SearchQueryParameters queryParameters, Pageable pageable, Sanitizer sanitizer) {
+        // Otherwise, look up all instances that match the query
+        Query query = SearchUtility.query(queryParameters, processDefinitionKeys, sanitizer);
+        query.skip(pageable.getOffset());
+        query.limit(pageable.getPageSize());
+
+        org.springframework.data.mongodb.core.query.Field field = query.fields();
+
+        // Don't include form data in the result unless it's requested
+//        if (! criteria.isIncludeVariables())
+        field.exclude("data");
 
         return findByQuery(query, pageable);
     }

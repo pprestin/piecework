@@ -7,7 +7,7 @@ import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.TaskProvider;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchCriteria;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.validation.Validation;
@@ -27,9 +27,9 @@ public interface ProcessEngineCapabilities {
 
     boolean suspend(Process process, ProcessDeployment deployment, ProcessInstance instance) throws ProcessEngineException;
 
-    ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException;
+    ProcessExecution findExecution(SearchCriteria criteria) throws ProcessEngineException;
 
-    ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException;
+    ProcessExecutionResults findExecutions(SearchCriteria criteria) throws ProcessEngineException;
 
     Task findTask(Process process, ProcessDeployment deployment, String taskId, boolean limitToActive) throws ProcessEngineException;
 

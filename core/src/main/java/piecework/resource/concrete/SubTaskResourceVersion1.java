@@ -89,7 +89,7 @@ public class SubTaskResourceVersion1 implements SubTaskResource {
             FormRequest formRequest = requestService.create(requestDetails, taskProvider, actionType);
             SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(taskProvider, formRequest, actionType);
             Submission submission = handler.handle(taskProvider, rawSubmission, template);
-            SubmissionValidationCommand<TaskProvider> validationCommand = commandFactory.submissionValidation(taskProvider, formRequest, actionType, submission, VERSION);
+            SubmissionValidationCommand<TaskProvider> validationCommand = commandFactory.submissionValidation(taskProvider, formRequest, actionType, submission, VERSION, false);
             Validation validation = validationCommand.execute();
 
             commandFactory.createSubTask(taskProvider, validation).execute();

@@ -31,7 +31,7 @@ import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.TaskProvider;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchCriteria;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
@@ -85,7 +85,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+    public ProcessExecution findExecution(SearchCriteria criteria) throws ProcessEngineException {
         ProcessExecution execution = null;
         if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
             for (String engine : criteria.getEngines()) {
@@ -101,7 +101,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+    public ProcessExecutionResults findExecutions(SearchCriteria criteria) throws ProcessEngineException {
         ProcessExecutionResults.Builder builder = null;
         if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
             for (String engine : criteria.getEngines()) {

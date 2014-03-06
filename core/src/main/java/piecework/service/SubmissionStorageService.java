@@ -203,8 +203,10 @@ public class SubmissionStorageService {
 
                 if (file == null) {
                     file = new File.Builder()
+                            .name(name)
                             .contentType(MediaType.TEXT_PLAIN)
                             .description(value)
+                            .filerId(actingAsId)
                             .build();
                 }
                 submissionBuilder.attachment(file);

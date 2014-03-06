@@ -95,7 +95,7 @@ public class ValidationCommandTest {
 
         TaskProviderStub taskProvider = new TaskProviderStub(mockProcess, mockDeployment, null, null, mockPrincipal);
         taskProvider.setActivity(mockActivity);
-        SubmissionValidationCommand<TaskProvider> validationCommand = commandFactory.submissionValidation(taskProvider, mockRequest, ActionType.VALIDATE, mockSubmission, "v1");
+        SubmissionValidationCommand<TaskProvider> validationCommand = commandFactory.submissionValidation(taskProvider, mockRequest, ActionType.VALIDATE, mockSubmission, "v1", false);
         Validation validation = validationCommand.execute();
 
         Assert.assertNotNull(validation);

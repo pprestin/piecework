@@ -119,19 +119,19 @@ public class FormResourceTest {
 
     @Test(expected = NotFoundError.class)
     public void readByTaskIdNoProcess() throws PieceworkException {
-        formResource.read(null, "INVALID_PROCESS_KEY", "INVALID_PROCESS_INSTANCE_ID", null, null, null);
+        formResource.read(null, "INVALID_PROCESS_KEY", "INVALID_PROCESS_INSTANCE_ID", null, null, null, null);
     }
 
     @Test(expected = ForbiddenError.class)
     public void readByTaskIdNoInstance() throws PieceworkException {
-        formResource.read(null, TEST_REMOTE_PROCESS_DEFINITION_KEY, "INVALID_TASK_INSTANCE_ID", null, null, null);
+        formResource.read(null, TEST_REMOTE_PROCESS_DEFINITION_KEY, "INVALID_TASK_INSTANCE_ID", null, null, null, null);
     }
 
     @Test
     public void readByTaskIdHtml() throws PieceworkException {
         setupValidInstanceData();
 
-        Response response = formResource.read(null, TEST_REMOTE_PROCESS_DEFINITION_KEY, "1234", null, null, "1");
+        Response response = formResource.read(null, TEST_REMOTE_PROCESS_DEFINITION_KEY, "1234", null, null, null, "1");
 
         Assert.assertEquals(303, response.getStatus());
         String location = response.getHeaderString(HttpHeaders.LOCATION);
@@ -151,7 +151,7 @@ public class FormResourceTest {
         Mockito.doReturn(httpHeaders)
                .when(context).getHttpHeaders();
 
-        Response response = formResource.read(context, TEST_REMOTE_PROCESS_DEFINITION_KEY, "1234", null, null, "1");
+        Response response = formResource.read(context, TEST_REMOTE_PROCESS_DEFINITION_KEY, "1234", null, null, null, "1");
 
         Assert.assertEquals(200, response.getStatus());
         Form form = Form.class.cast(response.getEntity());

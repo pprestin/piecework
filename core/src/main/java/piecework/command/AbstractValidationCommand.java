@@ -93,9 +93,9 @@ public abstract class AbstractValidationCommand<P extends ProcessDeploymentProvi
             throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "No action type provided");
         }
 
-        boolean throwException = !ignoreThrowException && !UNEXCEPTIONAL_ACTION_TYPES.contains(validatedActionType);
+//        boolean throwException = !ignoreThrowException && !UNEXCEPTIONAL_ACTION_TYPES.contains(validatedActionType);
 
-        return validationFactory.validation(modelProvider, template, submission, version, throwException);
+        return validationFactory.validation(modelProvider, template, submission, version, !UNEXCEPTIONAL_ACTION_TYPES.contains(validatedActionType), ignoreThrowException);
     }
 
     private Task verifyTask() throws PieceworkException {

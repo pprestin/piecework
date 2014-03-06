@@ -17,19 +17,23 @@ package piecework.process;
 
 import org.junit.Assert;
 import org.junit.Test;
+import piecework.common.FacetFactory;
 import piecework.common.ManyMap;
+import piecework.common.SearchCriteria;
+import piecework.model.Process;
 import piecework.security.concrete.PassthroughSanitizer;
 
+import java.util.Collections;
 import java.util.Date;
 
 /**
  * @author James Renfro
  */
-public class ProcessInstanceSearchCriteriaTest {
+public class SearchCriteriaTest {
 
     @Test
     public void limitToProcessDefinitionKeys() {
-        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
+        SearchCriteria criteria = new SearchCriteria.Builder()
                 .processDefinitionKey("TEST-1")
                 .processDefinitionKey("TEST-2")
                 .build();
@@ -42,8 +46,8 @@ public class ProcessInstanceSearchCriteriaTest {
         ManyMap<String, String> queryParameters = new ManyMap<String, String>();
         queryParameters.putOne("processDefinitionKey", "TEST-1");
         queryParameters.putOne("processDefinitionKey", "TEST-2");
-        ProcessInstanceSearchCriteria criteria =
-                new ProcessInstanceSearchCriteria.Builder(queryParameters, new PassthroughSanitizer())
+        SearchCriteria criteria =
+                new SearchCriteria.Builder(queryParameters, Collections.<Process>emptySet(), FacetFactory.facetMap(Collections.<Process>emptySet()), new PassthroughSanitizer())
                     .processDefinitionKey("TEST-1")
                     .processDefinitionKey("TEST-3")
                     .build();
@@ -56,8 +60,8 @@ public class ProcessInstanceSearchCriteriaTest {
         ManyMap<String, String> queryParameters = new ManyMap<String, String>();
         queryParameters.putOne("startedAfter", "2014-02-11T05:35:26.608Z");
 
-        ProcessInstanceSearchCriteria criteria =
-                new ProcessInstanceSearchCriteria.Builder(queryParameters, new PassthroughSanitizer())
+        SearchCriteria criteria =
+                new SearchCriteria.Builder(queryParameters, Collections.<Process>emptySet(), FacetFactory.facetMap(Collections.<Process>emptySet()), new PassthroughSanitizer())
                         .build();
 
         Date date = criteria.getStartedAfter();
@@ -69,8 +73,8 @@ public class ProcessInstanceSearchCriteriaTest {
         ManyMap<String, String> queryParameters = new ManyMap<String, String>();
         queryParameters.putOne("startedBefore", "2014-02-11T05:35:26.608Z");
 
-        ProcessInstanceSearchCriteria criteria =
-                new ProcessInstanceSearchCriteria.Builder(queryParameters, new PassthroughSanitizer())
+        SearchCriteria criteria =
+                new SearchCriteria.Builder(queryParameters, Collections.<Process>emptySet(), FacetFactory.facetMap(Collections.<Process>emptySet()), new PassthroughSanitizer())
                         .build();
 
         Date date = criteria.getStartedBefore();

@@ -20,6 +20,7 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.cxf.rs.security.cors.LocalPreflight;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.SearchQueryParameters;
 import piecework.exception.PieceworkException;
 import piecework.model.SearchResults;
 
@@ -47,7 +48,7 @@ public interface FormResource extends ApplicationResource {
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces({"text/html","application/json"})
-    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId, @QueryParam("redirectCount") String redirectCount) throws PieceworkException;
+    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId, @QueryParam("validationId") String validationId, @QueryParam("redirectCount") String redirectCount) throws PieceworkException;
 
     @OPTIONS
     @Path("{processDefinitionKey}/{requestId}")
@@ -89,6 +90,6 @@ public interface FormResource extends ApplicationResource {
     @Path("")
     @RolesAllowed({AuthorizationRole.OVERSEER, AuthorizationRole.USER})
     @Produces({"text/html", "application/json", "text/csv"})
-    SearchResults search(@Context MessageContext context) throws PieceworkException;
+    SearchResults search(@Context MessageContext context, @QueryParam("") SearchQueryParameters queryParameters) throws PieceworkException;
 
 }

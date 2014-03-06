@@ -139,8 +139,8 @@ public class CommandFactory {
         return new UpdateValueCommand(commandExecutor, allowedTaskProvider, validation);
     }
 
-    public <P extends ProcessDeploymentProvider> SubmissionValidationCommand submissionValidation(P modelProvider, FormRequest request, ActionType actionType, Submission submission, String version) {
-        return new SubmissionValidationCommand<P>(commandExecutor, modelProvider, request, actionType, submission, version);
+    public <P extends ProcessDeploymentProvider> SubmissionValidationCommand submissionValidation(P modelProvider, FormRequest request, ActionType actionType, Submission submission, String version, boolean throwException) {
+        return new SubmissionValidationCommand<P>(commandExecutor, modelProvider, request, actionType, submission, version, throwException);
     }
 
     public <P extends ProcessDeploymentProvider> ValidationCommand validation(P modelProvider, FormRequest request, ActionType actionType, Object object, Class<?> type, String version) {

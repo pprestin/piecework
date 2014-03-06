@@ -13,20 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common;
+package piecework.persistence;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import piecework.common.SearchCriteria;
+import piecework.common.SearchQueryParameters;
+import piecework.common.ViewContext;
+import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 
+import javax.swing.text.View;
 import java.util.Set;
 
 /**
  * @author James Renfro
  */
-public interface PageHandler<T> {
+public interface SearchProvider extends ModelProvider {
 
-    SearchResults handle(Page<T> page, Pageable pageable, Set<Process> allowedProcesses);
+    SearchResults facets(String label, ViewContext context) throws PieceworkException;
+
+    SearchResults forms(SearchCriteria criteria, ViewContext context) throws PieceworkException;
+
+    Set<Process> processes(String ... allowedRoles);
+
+    Set<Process> processes(Set<String> processDefinitionKeys);
+
+    SearchResults tasks(SearchCriteria criteria, ViewContext context) throws PieceworkException;
 
 }

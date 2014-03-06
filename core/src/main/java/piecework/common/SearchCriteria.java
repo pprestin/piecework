@@ -13,23 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.process;
+package piecework.common;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.data.domain.Sort;
-import piecework.common.ManyMap;
+import piecework.model.Facet;
+import piecework.model.Process;
+import piecework.model.SearchFacet;
 import piecework.security.Sanitizer;
+import piecework.util.SearchUtility;
 
 import java.util.*;
 
 /**
  * @author James Renfro
  */
-public class ProcessInstanceSearchCriteria {
-    private static final Logger LOG = Logger.getLogger(ProcessInstanceSearchCriteria.class);
+public class SearchCriteria {
+    private static final Logger LOG = Logger.getLogger(SearchCriteria.class);
 
     public enum OrderBy { START_TIME_ASC, START_TIME_DESC, END_TIME_ASC, END_TIME_DESC };
 
@@ -59,15 +62,17 @@ public class ProcessInstanceSearchCriteria {
     private final Integer firstResult;
     private final Integer maxResults;
     private final boolean includeVariables;
+    private final Map<SearchFacet, String> facetParameters;
     private final Map<String, List<String>> contentParameters;
     private final Map<String, List<String>> sanitizedParameters;
-    private final OrderBy orderBy;
+    private String direction;
+    private List<String> sortBy;
 
-    private ProcessInstanceSearchCriteria() {
+    private SearchCriteria() {
         this(new Builder());
     }
 
-    private ProcessInstanceSearchCriteria(Builder builder) {
+    private SearchCriteria(Builder builder) {
         this.processDefinitionKeys = Collections.unmodifiableSet(builder.processDefinitionKeys);
         this.processInstanceIds = Collections.unmodifiableSet(builder.processInstanceIds);
         this.engines = Collections.unmodifiableSet(builder.engines);
@@ -91,12 +96,14 @@ public class ProcessInstanceSearchCriteria {
         this.completedBefore = builder.completedBefore;
         this.completedAfter = builder.completedAfter;
         this.initiatedBy = builder.initiatedBy;
-        this.orderBy = builder.orderBy;
         this.firstResult = builder.firstResult;
         this.maxResults = builder.maxResults;
+        this.facetParameters = Collections.unmodifiableMap(builder.facetParameters);
         this.contentParameters = Collections.unmodifiableMap(builder.contentParameters);
         this.sanitizedParameters = Collections.unmodifiableMap(builder.sanitizedParameters);
         this.includeVariables = builder.includeVariables;
+        this.sortBy = Collections.unmodifiableList(builder.sortBy);
+        this.direction = builder.direction;
     }
 
     public Set<String> getProcessDefinitionKeys() {
@@ -143,8 +150,16 @@ public class ProcessInstanceSearchCriteria {
         return taskStatus;
     }
 
+    public String getDirection() {
+        return direction;
+    }
+
     public List<String> getKeywords() {
         return keywords;
+    }
+
+    public Map<SearchFacet, String> getFacetParameters() {
+        return facetParameters;
     }
 
     public Map<String, List<String>> getContentParameters() {
@@ -199,8 +214,8 @@ public class ProcessInstanceSearchCriteria {
         return initiatedBy;
     }
 
-    public OrderBy getOrderBy() {
-        return orderBy;
+    public List<String> getSortBy() {
+        return sortBy;
     }
 
     public Integer getFirstResult() {
@@ -215,28 +230,8 @@ public class ProcessInstanceSearchCriteria {
         return includeVariables;
     }
 
-    public Sort getSort() {
-        Sort.Direction direction = Sort.Direction.DESC;
-        String sortProperty = "startTime";
-        switch (getOrderBy()) {
-            case START_TIME_ASC:
-                direction = Sort.Direction.ASC;
-                sortProperty = "startTime";
-                break;
-            case START_TIME_DESC:
-                direction = Sort.Direction.DESC;
-                sortProperty = "startTime";
-                break;
-            case END_TIME_ASC:
-                direction = Sort.Direction.ASC;
-                sortProperty = "endTime";
-                break;
-            case END_TIME_DESC:
-                direction = Sort.Direction.DESC;
-                sortProperty = "endTime";
-                break;
-        }
-        return new Sort(direction, sortProperty);
+    public Sort getSort(Sanitizer sanitizer) {
+        return SearchUtility.sort(this, sanitizer);
     }
 
     public final static class Builder {
@@ -263,27 +258,31 @@ public class ProcessInstanceSearchCriteria {
         private Date completedBefore;
         private Date completedAfter;
         private String initiatedBy;
-        private OrderBy orderBy = OrderBy.START_TIME_DESC;
+        private String direction;
+        private List<String> sortBy;
         private Integer firstResult;
         private Integer maxResults;
         private List<String> keywords;
+        private Map<SearchFacet, String> facetParameters;
         private ManyMap<String, String> contentParameters;
         private ManyMap<String, String> sanitizedParameters;
         private boolean includeVariables;
 
         public Builder() {
-            this(null, null);
+            this(null, null, null, null);
         }
 
-        public Builder(Map<String, List<String>> queryParameters, Sanitizer sanitizer) {
+        public Builder(Map<String, List<String>> queryParameters, Set<Process> processes, Map<String, Facet> facetMap, Sanitizer sanitizer) {
             this.limitToProcessDefinitionKeys = new HashSet<String>();
             this.processDefinitionKeys = new HashSet<String>();
             this.processInstanceIds = new HashSet<String>();
             this.engines = new HashSet<String>();
             this.engineProcessDefinitionKeys = new HashSet<String>();
             this.keywords = new ArrayList<String>();
+            this.facetParameters = new HashMap<SearchFacet, String>();
             this.contentParameters = new ManyMap<String, String>();
             this.sanitizedParameters = new ManyMap<String, String>();
+            this.sortBy = new ArrayList<String>();
             if (queryParameters != null && sanitizer != null) {
                 DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeParser();
                 for (Map.Entry<String, List<String>> rawQueryParameterEntry : queryParameters.entrySet()) {
@@ -332,8 +331,10 @@ public class ProcessInstanceSearchCriteria {
                                     this.taskStatus = value;
                                 else if (key.equals("initiatedBy"))
                                     this.initiatedBy = value;
-                                else if (key.equals("orderBy"))
-                                    this.orderBy = ProcessInstanceSearchCriteria.OrderBy.valueOf(value);
+                                else if (key.equals("sortBy"))
+                                    this.sortBy.add(value);
+                                else if (key.equals("direction"))
+                                    this.direction = value;
                                 else if (key.equals("completedAfter"))
                                     this.completedAfter = dateTimeFormatter.parseDateTime(value).toDate();
                                 else if (key.equals("completedBefore"))
@@ -351,6 +352,10 @@ public class ProcessInstanceSearchCriteria {
                                 else if (key.equals("verbose")) {
                                     if (value != null && value.equals("true"))
                                         this.includeVariables = true;
+                                } else if (facetMap.containsKey(key)) {
+                                    Facet facet = facetMap.get(key);
+                                    if (facet != null && facet instanceof SearchFacet && StringUtils.isNotEmpty(value))
+                                        this.facetParameters.put(SearchFacet.class.cast(facet), value);
                                 } else {
                                     if (key.startsWith("__"))
                                         this.contentParameters.putOne(key.substring(2), value);
@@ -367,10 +372,15 @@ public class ProcessInstanceSearchCriteria {
                     }
                 }
             }
+            if (processes != null) {
+                for (Process process : processes) {
+                    processDefinitionKey(process.getProcessDefinitionKey());
+                }
+            }
         }
 
-        public ProcessInstanceSearchCriteria build() {
-            return new ProcessInstanceSearchCriteria(this);
+        public SearchCriteria build() {
+            return new SearchCriteria(this);
         }
 
         public Builder processDefinitionKey(String processDefinitionKey) {
@@ -463,6 +473,11 @@ public class ProcessInstanceSearchCriteria {
             return this;
         }
 
+        public Builder direction(String direction) {
+            this.direction = direction;
+            return this;
+        }
+
         public Builder applicationStatus(String applicationStatus) {
             this.applicationStatus = applicationStatus;
             return this;
@@ -483,8 +498,9 @@ public class ProcessInstanceSearchCriteria {
             return this;
         }
 
-        public Builder orderBy(OrderBy orderBy) {
-            this.orderBy = orderBy;
+        public Builder sortBy(String sortBy) {
+            if (StringUtils.isNotEmpty(sortBy))
+                this.sortBy.add(sortBy);
             return this;
         }
 

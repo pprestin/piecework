@@ -17,16 +17,17 @@ package piecework.task;
 
 import org.apache.cxf.common.util.StringUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import piecework.Constants;
 import piecework.common.PageHandler;
+import piecework.common.SearchQueryParameters;
 import piecework.common.ViewContext;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchCriteria;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 
-import javax.ws.rs.core.MultivaluedMap;
 import java.util.*;
 
 /**
@@ -34,53 +35,87 @@ import java.util.*;
  */
 public abstract class TaskPageHandler implements PageHandler<ProcessInstance> {
 
-    private final MultivaluedMap<String, String> rawQueryParameters;
+//    private final MultivaluedMap<String, String> rawQueryParameters;
+//    private final SearchQueryParameters queryParameters;
+    private final String processStatus;
+    private final String taskStatus;
     private final TaskFilter taskFilter;
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
     private final Sanitizer sanitizer;
     private final ViewContext version;
 
-    private ProcessInstanceSearchCriteria executionCriteria;
-    private SearchResults.Builder resultsBuilder;
+//    private SearchCriteria executionCriteria;
+//    private SearchResults.Builder resultsBuilder;
 
-    public TaskPageHandler(MultivaluedMap<String, String> rawQueryParameters, TaskFilter taskFilter, Sanitizer sanitizer, ViewContext version) {
-        this.rawQueryParameters = rawQueryParameters;
+    public TaskPageHandler(SearchCriteria criteria, TaskFilter taskFilter, Sanitizer sanitizer, ViewContext version) {
+//        this.rawQueryParameters = rawQueryParameters;
+        this.processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;
+        this.taskStatus = criteria.getTaskStatus() != null ? sanitizer.sanitize(criteria.getTaskStatus()) : Constants.TaskStatuses.ALL;
+
         this.taskFilter = taskFilter;
         this.sanitizer = sanitizer;
         this.version = version;
     }
 
-    public ProcessInstanceSearchCriteria criteria(Set<Process> allowedProcesses) {
-        resultsBuilder = new SearchResults.Builder()
+//    public SearchCriteria criteria(Set<Process> allowedProcesses) {
+//        resultsBuilder = new SearchResults.Builder()
+//                .resourceLabel("Tasks")
+//                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
+//                .link(version.getApplicationUri());
+//
+//        if (taskFilter.isWrapWithForm())
+//            resultsBuilder.resourceName(Form.Constants.ROOT_ELEMENT_NAME)
+//                    .link(version.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME));
+//
+//        SearchCriteria.Builder executionCriteriaBuilder =
+//                new SearchCriteria.Builder(rawQueryParameters, sanitizer);
+//
+//        addDefinitions(executionCriteriaBuilder, resultsBuilder, allowedProcesses);
+//
+//        this.executionCriteria = executionCriteriaBuilder.build();
+//        resultsBuilder.parameters(executionCriteria.getSanitizedParameters());
+//        return this.executionCriteria;
+//    }
+
+    public SearchResults handle(Page<ProcessInstance> page, Pageable pageable, Set<Process> allowedProcesses) {
+        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
                 .resourceLabel("Tasks")
                 .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
                 .link(version.getApplicationUri());
 
-        if (taskFilter.isWrapWithForm())
-            resultsBuilder.resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-                    .link(version.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME));
+        if (allowedProcesses == null || allowedProcesses.isEmpty())
+            return resultsBuilder.build(version);
 
-        ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
-                new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
+        List<Process> alphabetical = new ArrayList<Process>(allowedProcesses);
+        Collections.sort(alphabetical, new Comparator<Process>() {
+            @Override
+            public int compare(Process o1, Process o2) {
+                if (org.apache.commons.lang.StringUtils.isEmpty(o1.getProcessDefinitionLabel()))
+                    return 0;
+                if (org.apache.commons.lang.StringUtils.isEmpty(o2.getProcessDefinitionLabel()))
+                    return 1;
+                return o1.getProcessDefinitionLabel().compareTo(o2.getProcessDefinitionLabel());
+            }
+        });
+        for (Process allowedProcess : alphabetical) {
+            if (allowedProcess.getProcessDefinitionKey() != null) {
+                Process definition = new Process.Builder(allowedProcess, sanitizer).build(version);
+                if (taskFilter.isWrapWithForm()) {
+                    resultsBuilder.definition(new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(version)).build(version));
+                } else {
+                    resultsBuilder.definition(definition);
+                }
+            }
+        }
 
-        addDefinitions(executionCriteriaBuilder, resultsBuilder, allowedProcesses);
-
-        this.executionCriteria = executionCriteriaBuilder.build();
-        resultsBuilder.parameters(executionCriteria.getSanitizedParameters());
-        return this.executionCriteria;
-    }
-
-    public SearchResults handle(Page<ProcessInstance> page) {
         if (page.hasContent()) {
-            String processStatus = executionCriteria.getProcessStatus() != null ? executionCriteria.getProcessStatus() : Constants.ProcessStatuses.OPEN;
-            String taskStatus = executionCriteria.getTaskStatus() != null ? executionCriteria.getTaskStatus() : Constants.TaskStatuses.ALL;
             int count = 0;
 
             // Loop once through list to get the deployment ids
             Set<String> deploymentIds = taskFilter.getDeploymentIds(page.getContent());
 
             // Retrieve a map of deployment objects from Mongo
-            Map<String, ProcessDeployment> deploymentMap = getDeploymentMap(deploymentIds);
+//            Map<String, ProcessDeployment> deploymentMap = getDeploymentMap(deploymentIds);
 
             List<TaskDeployment> rawTasks = new ArrayList<TaskDeployment>();
             Set<String> userIds = new HashSet<String>();
@@ -89,8 +124,8 @@ public abstract class TaskPageHandler implements PageHandler<ProcessInstance> {
             // task, instance, and deployment
             for (ProcessInstance instance : page.getContent()) {
                 ProcessDeployment processDeployment = null;
-                if (taskFilter.isWrapWithForm())
-                    processDeployment = deploymentMap.get(instance.getDeploymentId());
+//                if (taskFilter.isWrapWithForm())
+//                    processDeployment = deploymentMap.get(instance.getDeploymentId());
 
                 Set<Task> tasks = instance.getTasks();
                 if (tasks != null && !tasks.isEmpty()) {
@@ -110,23 +145,9 @@ public abstract class TaskPageHandler implements PageHandler<ProcessInstance> {
                 count++;
             }
 
-            if (executionCriteria.getMaxResults() != null || executionCriteria.getFirstResult() != null) {
-                if (executionCriteria.getFirstResult() != null)
-                    resultsBuilder.firstResult(executionCriteria.getFirstResult());
-                else
-                    resultsBuilder.firstResult(1);
-
-                if (executionCriteria.getMaxResults() != null)
-                    resultsBuilder.maxResults(executionCriteria.getMaxResults());
-                else
-                    resultsBuilder.maxResults(count);
-
-                resultsBuilder.total(Long.valueOf(count));
-            } else {
-                resultsBuilder.firstResult(1);
-                resultsBuilder.maxResults(count);
-                resultsBuilder.total(Long.valueOf(count));
-            }
+            resultsBuilder.firstResult(pageable.getOffset());
+            resultsBuilder.maxResults(pageable.getPageSize());
+            resultsBuilder.total(Long.valueOf(count));
         }
         if (taskFilter.getPrincipal() != null && taskFilter.getPrincipal() instanceof User)
             resultsBuilder.currentUser(User.class.cast(taskFilter.getPrincipal()));
@@ -134,11 +155,11 @@ public abstract class TaskPageHandler implements PageHandler<ProcessInstance> {
         return resultsBuilder.build(version);
     }
 
-    protected abstract Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds);
+//    protected abstract Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds);
 
     protected abstract Map<String, User> getUserMap(Set<String> userIds);
 
-    private void addDefinitions(ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder, SearchResults.Builder resultsBuilder, Set<Process> allowedProcesses) {
+    private void addDefinitions(SearchCriteria.Builder executionCriteriaBuilder, SearchResults.Builder resultsBuilder, Set<Process> allowedProcesses) {
         if (allowedProcesses == null || allowedProcesses.isEmpty())
             return;
 

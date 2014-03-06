@@ -27,10 +27,7 @@ import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -72,6 +69,8 @@ public class Process implements Serializable {
 
     @XmlElement
     private final ProcessCodeRepository repository;
+
+    private final List<Facet> facets;
 
     @XmlTransient
     @JsonIgnore
@@ -123,6 +122,7 @@ public class Process implements Serializable {
         this.participantSummary = builder.participantSummary;
         this.repository = builder.repository;
 		this.deployment = builder.deployment;
+        this.facets = Collections.unmodifiableList(builder.facets);
         this.versions = Collections.unmodifiableList(builder.versions);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
@@ -151,6 +151,10 @@ public class Process implements Serializable {
 
     public ProcessCodeRepository getRepository() {
         return repository;
+    }
+
+    public List<Facet> getFacets() {
+        return facets;
     }
 
     @XmlTransient
@@ -242,6 +246,7 @@ public class Process implements Serializable {
         private String processSummary;
         private String participantSummary;
         private ProcessCodeRepository repository;
+        private List<Facet> facets;
 		private ProcessDeployment deployment;
         private List<ProcessDeploymentVersion> versions;
         private boolean isAnonymousSubmissionAllowed;
@@ -252,6 +257,7 @@ public class Process implements Serializable {
 		
 		public Builder() {
 			super();
+            this.facets = new ArrayList<Facet>();
             this.versions = new ArrayList<ProcessDeploymentVersion>();
             this.version = 1;
 		}
@@ -266,6 +272,7 @@ public class Process implements Serializable {
             this.processSummary = sanitizer.sanitize(process.processSummary);
             this.participantSummary = sanitizer.sanitize(process.participantSummary);
             this.repository = process.repository != null ? new ProcessCodeRepository.Builder(process.repository, sanitizer).build() : null;
+            this.facets = process.facets != null && !process.facets.isEmpty() ? new ArrayList<Facet>(process.facets) : new ArrayList<Facet>();
             this.deployment = process.deployment != null ? new ProcessDeployment.Builder(process.deployment, sanitizer, true).build() : null;
             if (process.versions == null || process.versions.isEmpty())
                 this.versions = new ArrayList<ProcessDeploymentVersion>();
@@ -317,6 +324,17 @@ public class Process implements Serializable {
             this.deploymentVersion = version.getVersion();
             this.deploymentDate = new Date();
             this.deployment = deployment;
+            return this;
+        }
+
+        public Builder facet(Facet facet) {
+            this.facets.add(facet);
+            return this;
+        }
+
+        public Builder facets(Collection<Facet> facets) {
+            if (facets != null && !facets.isEmpty())
+                this.facets.addAll(facets);
             return this;
         }
 

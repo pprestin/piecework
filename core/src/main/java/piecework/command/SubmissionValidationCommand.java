@@ -31,8 +31,8 @@ import piecework.validation.ValidationFactory;
  */
 public class SubmissionValidationCommand<P extends ProcessDeploymentProvider> extends AbstractValidationCommand<P> {
 
-    SubmissionValidationCommand(CommandExecutor commandExecutor, P modelProvider, FormRequest request, ActionType actionType, Submission submission, String version) {
-        super(commandExecutor, modelProvider, request, actionType, null, null, submission, version, true);
+    SubmissionValidationCommand(CommandExecutor commandExecutor, P modelProvider, FormRequest request, ActionType actionType, Submission submission, String version, boolean ignoreException) {
+        super(commandExecutor, modelProvider, request, actionType, null, null, submission, version, ignoreException);
     }
 
     Validation execute(SubmissionHandlerRegistry submissionHandlerRegistry, SubmissionTemplateFactory submissionTemplateFactory, ValidationFactory validationFactory) throws PieceworkException {

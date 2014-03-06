@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common;
+package piecework.repository;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import piecework.model.*;
-import piecework.model.Process;
-
-import java.util.Set;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import piecework.model.Task;
+import piecework.validation.Validation;
 
 /**
  * @author James Renfro
  */
-public interface PageHandler<T> {
-
-    SearchResults handle(Page<T> page, Pageable pageable, Set<Process> allowedProcesses);
+public interface ValidationRepository extends MongoRepository<Validation, String> {
 
 }

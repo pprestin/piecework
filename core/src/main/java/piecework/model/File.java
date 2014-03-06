@@ -60,7 +60,8 @@ public class File extends Value {
     @XmlAttribute
     private final String uri;
 
-
+    @XmlAttribute
+    private final String filerId;
 
     @XmlElementWrapper(name = "versions")
     @XmlElement(name = "version")
@@ -85,6 +86,7 @@ public class File extends Value {
         this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
         this.uri = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getServiceUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
         this.contentResource = builder.contentResource;
+        this.filerId = builder.filerId;
         this.versions = builder.versions != null && !builder.versions.isEmpty() ? new ArrayList<Version>(builder.versions) : new ArrayList<Version>();
     }
 
@@ -123,6 +125,10 @@ public class File extends Value {
         return uri;
     }
 
+    public String getFilerId() {
+        return filerId;
+    }
+
     public List<Version> getVersions() {
         return versions;
     }
@@ -155,6 +161,7 @@ public class File extends Value {
         private String fieldName;
         private String link;
         private ContentResource contentResource;
+        private String filerId;
         private List<Version> versions = new ArrayList<Version>();
 
         public Builder() {
@@ -168,6 +175,7 @@ public class File extends Value {
             this.name = file.name;
             this.contentType = file.contentType;
             this.contentResource = file.contentResource;
+            this.filerId = file.filerId;
             this.versions = file.versions != null && !file.versions.isEmpty() ? new ArrayList<Version>(file.versions) : new ArrayList<Version>();
         }
 
@@ -178,6 +186,7 @@ public class File extends Value {
             this.name = sanitizer.sanitize(file.name);
             this.contentType = sanitizer.sanitize(file.contentType);
             this.contentResource = file.contentResource;
+            this.filerId = file.filerId;
             this.versions = file.versions != null && !file.versions.isEmpty() ? new ArrayList<Version>(file.versions) : new ArrayList<Version>();
         }
 
@@ -221,6 +230,11 @@ public class File extends Value {
 
         public Builder contentResource(ContentResource contentResource) {
             this.contentResource = contentResource;
+            return this;
+        }
+
+        public Builder filerId(String filerId) {
+            this.filerId = filerId;
             return this;
         }
 

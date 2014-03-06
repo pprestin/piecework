@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import piecework.model.*;
-import piecework.model.Process;
-
-import java.util.Set;
+package piecework.model;
 
 /**
  * @author James Renfro
  */
-public interface PageHandler<T> {
+public class DataSearchFacet extends SearchFacet {
 
-    SearchResults handle(Page<T> page, Pageable pageable, Set<Process> allowedProcesses);
+    public DataSearchFacet(String name, String label) {
+        super("data." + name + ".value", name, label);
+    }
 
 }

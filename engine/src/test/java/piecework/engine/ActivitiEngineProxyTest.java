@@ -33,7 +33,7 @@ import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchCriteria;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.common.ManyMap;
 
@@ -83,7 +83,7 @@ public class ActivitiEngineProxyTest {
 		String instanceId = engineProxy.start(process, deployment, instance);
 		Assert.assertNotNull(instanceId);
 
-        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
+        SearchCriteria criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -102,7 +102,7 @@ public class ActivitiEngineProxyTest {
         String instanceId = engineProxy.start(process, deployment, instance);
 		Assert.assertNotNull(instanceId);
 
-        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
+        SearchCriteria criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -125,7 +125,7 @@ public class ActivitiEngineProxyTest {
         Assert.assertNotNull(instanceId);
 
         // First, retrieve without including variables
-        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
+        SearchCriteria criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -138,7 +138,7 @@ public class ActivitiEngineProxyTest {
         Assert.assertNull(execution.getData());
 
         // Then include variables in criteria
-        criteria = new ProcessInstanceSearchCriteria.Builder()
+        criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)

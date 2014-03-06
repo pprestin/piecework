@@ -13,20 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common;
+package piecework.model;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import piecework.model.*;
-import piecework.model.Process;
+import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.util.Set;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author James Renfro
  */
-public interface PageHandler<T> {
+public class SearchFacet extends Facet {
 
-    SearchResults handle(Page<T> page, Pageable pageable, Set<Process> allowedProcesses);
+    private final String query;
+
+    public SearchFacet(String query, String name, String label) {
+        this(query, name, label, String.class);
+    }
+
+    public SearchFacet(String query, String name, String label, Class<?> type) {
+        super(name, label, type);
+        this.query = query;
+    }
+
+    public Criteria criteria(String value) {
+        return where(query).is(value);
+    }
+
+    public String getQuery() {
+        return query;
+    }
 
 }

@@ -28,6 +28,7 @@ import piecework.authorization.AuthorizationRole;
 import piecework.command.AbstractOperationCommand;
 import piecework.command.CommandFactory;
 import piecework.command.UpdateDataCommand;
+import piecework.common.FacetFactory;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.*;
@@ -39,8 +40,8 @@ import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessInstanceProvider;
-import piecework.process.ProcessInstanceQueryBuilder;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchQueryBuilder;
+import piecework.common.SearchCriteria;
 import piecework.repository.AttachmentRepository;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.security.Sanitizer;
@@ -162,14 +163,15 @@ public class ProcessInstanceService {
     }
 
     public IteratingDataProvider<?> exportProvider(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean isCSV) throws PieceworkException {
-        ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
-                new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
+
+        SearchCriteria.Builder executionCriteriaBuilder =
+                new SearchCriteria.Builder(rawQueryParameters, allowedProcesses, FacetFactory.facetMap(allowedProcesses), sanitizer);
 
         executionCriteriaBuilder.processStatus(Constants.ProcessStatuses.ALL);
         executionCriteriaBuilder.maxResults(50000);
 
-        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
-        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
         if (!allowedProcesses.isEmpty()) {
             Map<String, Process> allowedProcessMap = new HashMap<String, Process>();
             for (Process allowedProcess : allowedProcesses) {
@@ -180,7 +182,7 @@ public class ProcessInstanceService {
                     executionCriteriaBuilder.processDefinitionKey(allowedProcessDefinitionKey);
                 }
             }
-            ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
+            SearchCriteria executionCriteria = executionCriteriaBuilder.build();
             processDefinitionKeys = executionCriteria.getProcessDefinitionKeys();
             if (processDefinitionKeys.size() != 1)
                 throw new BadRequestError();
@@ -188,8 +190,8 @@ public class ProcessInstanceService {
             String processDefinitionKey = processDefinitionKeys.iterator().next();
             Process process = modelProviderFactory.processProvider(processDefinitionKey, principal).process();
 
-            Query query = new ProcessInstanceQueryBuilder(executionCriteria).build();
-            ProcessInstanceQueryPager pager = new ProcessInstanceQueryPager(query, processInstanceRepository, executionCriteria.getSort());
+            Query query = new SearchQueryBuilder(executionCriteria).build(processDefinitionKeys, sanitizer);
+            ProcessInstanceQueryPager pager = new ProcessInstanceQueryPager(query, processInstanceRepository, executionCriteria.getSort(sanitizer));
 
             List<Field> fields = ExportUtility.exportFields(process.getDeployment());
             Map<String, String> headerMap = ExportUtility.headerMap(fields);
@@ -201,8 +203,11 @@ public class ProcessInstanceService {
     }
 
     public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws StatusCodeError {
-        ProcessInstanceSearchCriteria.Builder executionCriteriaBuilder =
-                new ProcessInstanceSearchCriteria.Builder(rawQueryParameters, sanitizer);
+        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
+
+        SearchCriteria.Builder executionCriteriaBuilder =
+                new SearchCriteria.Builder(rawQueryParameters, allowedProcesses, FacetFactory.facetMap(allowedProcesses), sanitizer);
 
         ViewContext context = new ViewContext(settings, VERSION);
 
@@ -211,8 +216,6 @@ public class ProcessInstanceService {
                 .resourceName(ProcessInstance.Constants.ROOT_ELEMENT_NAME)
                 .link(context.getApplicationUri());
 
-        Set<String> processDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
-        Set<Process> allowedProcesses = processService.findProcesses(processDefinitionKeys);
         if (!allowedProcesses.isEmpty()) {
             for (Process allowedProcess : allowedProcesses) {
                 String allowedProcessDefinitionKey = allowedProcess.getProcessDefinitionKey();
@@ -222,7 +225,7 @@ public class ProcessInstanceService {
                     resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).build(context));
                 }
             }
-            ProcessInstanceSearchCriteria executionCriteria = executionCriteriaBuilder.build();
+            SearchCriteria executionCriteria = executionCriteriaBuilder.build();
 
             if (executionCriteria.getSanitizedParameters() != null) {
                 for (Map.Entry<String, List<String>> entry : executionCriteria.getSanitizedParameters().entrySet()) {
@@ -233,8 +236,8 @@ public class ProcessInstanceService {
             int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
             int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
 
-            Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort());
-            Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
+            Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort(sanitizer));
+            Page<ProcessInstance> page = processInstanceRepository.findByCriteria(processDefinitionKeys, executionCriteria, pageable, sanitizer);
 
             if (page.hasContent()) {
                 for (ProcessInstance instance : page.getContent()) {

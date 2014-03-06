@@ -15,6 +15,7 @@
  */
 package piecework.persistence;
 
+import piecework.exception.PieceworkException;
 import piecework.model.Entity;
 import piecework.model.FormRequest;
 
@@ -42,5 +43,7 @@ public interface ModelProviderFactory {
     TaskProvider taskProvider(String processDefinitionKey, String taskId, Entity principal);
 
     <P extends ProcessDeploymentProvider> P provider(FormRequest request, Entity principal);
+
+    SearchProvider searchProvider(Entity principal);
 
 }

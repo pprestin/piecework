@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.common;
+package piecework.model;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import piecework.model.*;
-import piecework.model.Process;
-
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * @author James Renfro
  */
-public interface PageHandler<T> {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SearchResponse {
 
-    SearchResults handle(Page<T> page, Pageable pageable, Set<Process> allowedProcesses);
+
+    private int pageNumber;
+    private int pageSize;
+    private int total;
+
+
 
 }

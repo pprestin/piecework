@@ -347,8 +347,10 @@ public class ProcessService {
                .processDefinitionLabel(update.getProcessDefinitionLabel())
                .participantSummary(update.getParticipantSummary())
                .processSummary(update.getProcessSummary())
+               .facets(update.getFacets())
                .allowAnonymousSubmission(update.isAnonymousSubmissionAllowed())
                .assignmentRestrictedToCandidates(update.isAssignmentRestrictedToCandidates());
+
 
         return persist(builder.build());
     }

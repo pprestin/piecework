@@ -77,6 +77,14 @@ public class FormDisposition {
         return new URI(pageUri.getScheme(), pageUri.getUserInfo(), pageUri.getHost(), pageUri.getPort(), pageUri.getPath(), query, null);
     }
 
+    public URI getInvalidPageUri(Validation validation) throws URISyntaxException {
+        String query = null;
+        if (validation != null && StringUtils.isNotEmpty(validation.getValidationId()))
+            query = "validationId=" + validation.getValidationId();
+
+        return new URI(pageUri.getScheme(), pageUri.getUserInfo(), pageUri.getHost(), pageUri.getPort(), pageUri.getPath(), query, null);
+    }
+
     public URI getResponsePageUri(FormRequest formRequest) throws URISyntaxException {
         String query = null;
         if (formRequest != null && StringUtils.isNotEmpty(formRequest.getRequestId()))

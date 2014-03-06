@@ -15,17 +15,12 @@
  */
 package piecework.service;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import piecework.Command;
 import piecework.Constants;
-import piecework.authorization.AuthorizationRole;
 import piecework.command.CommandFactory;
 import piecework.command.ValidationCommand;
 import piecework.common.ViewContext;
@@ -33,24 +28,15 @@ import piecework.enumeration.ActionType;
 import piecework.exception.BadRequestError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
-import piecework.model.Process;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.TaskProvider;
-import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.security.Sanitizer;
 import piecework.security.data.DataFilterService;
 import piecework.settings.UserInterfaceSettings;
-import piecework.task.TaskFilter;
-import piecework.task.TaskPageHandler;
 import piecework.validation.Validation;
-
-import javax.ws.rs.core.MultivaluedMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author James Renfro
@@ -193,46 +179,46 @@ public class TaskService {
 //        }
 //    }
 
-    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
-        long time = 0;
-        if (LOG.isDebugEnabled())
-            time = System.currentTimeMillis();
-
-        Set<String> overseerProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
-        Set<String> userProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.USER);
-
-        Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
-        Set<Process> allowedProcesses = processService.findProcesses(allProcessDefinitionKeys);
-
-        TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, wrapWithForm, includeData);
-        TaskPageHandler pageHandler = new TaskPageHandler(rawQueryParameters, taskFilter, sanitizer, new ViewContext(settings, VERSION)){
-
-            protected Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds) {
-                return deploymentService.getDeploymentMap(deploymentIds);
-            }
-
-            @Override
-            protected Map<String, User> getUserMap(Set<String> userIds) {
-                return identityService.findUsers(userIds);
-            }
-
-        };
-
-        ProcessInstanceSearchCriteria executionCriteria = pageHandler.criteria(allowedProcesses);
-
-        int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
-        int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
-
-        Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort());
-        Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
-
-        SearchResults results = pageHandler.handle(page);
-
-        if (LOG.isDebugEnabled())
-            LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
-
-        return results;
-    }
+//    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
+//        long time = 0;
+//        if (LOG.isDebugEnabled())
+//            time = System.currentTimeMillis();
+//
+//        Set<String> overseerProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
+//        Set<String> userProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.USER);
+//
+//        Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
+//        Set<Process> allowedProcesses = processService.findProcesses(allProcessDefinitionKeys);
+//
+//        TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, wrapWithForm, includeData);
+//        TaskPageHandler pageHandler = new TaskPageHandler(rawQueryParameters, taskFilter, sanitizer, new ViewContext(settings, VERSION)){
+//
+//            protected Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds) {
+//                return deploymentService.getDeploymentMap(deploymentIds);
+//            }
+//
+//            @Override
+//            protected Map<String, User> getUserMap(Set<String> userIds) {
+//                return identityService.findUsers(userIds);
+//            }
+//
+//        };
+//
+//        SearchCriteria executionCriteria = pageHandler.criteria(allowedProcesses);
+//
+//        int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
+//        int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
+//
+//        Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort());
+//        Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
+//
+//        SearchResults results = pageHandler.handle(page);
+//
+//        if (LOG.isDebugEnabled())
+//            LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
+//
+//        return results;
+//    }
 
 //    public Task read(ProcessInstance instance, String taskId) {
 //        if (instance != null && StringUtils.isNotEmpty(taskId)) {

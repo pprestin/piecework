@@ -4,6 +4,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.SearchQueryParameters;
 import piecework.exception.PieceworkException;
 import piecework.model.SearchResults;
 import piecework.model.Submission;
@@ -49,8 +50,8 @@ public interface TaskResource extends ApplicationResource, ApiResource {
     @GET
     @Path("")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
-    SearchResults search(@Context MessageContext context) throws PieceworkException;
+    SearchResults search(@Context MessageContext context, @QueryParam("") SearchQueryParameters queryParameters) throws PieceworkException;
 
-    SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException;
+//    SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws PieceworkException;
 
 }

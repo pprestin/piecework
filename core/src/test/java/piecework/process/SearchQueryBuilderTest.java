@@ -23,7 +23,7 @@ import org.junit.Test;
  * @author James Renfro
  */
 @Ignore
-public class ProcessInstanceQueryBuilderTest {
+public class SearchQueryBuilderTest {
 
     @Test
     public void verify() {
