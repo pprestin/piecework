@@ -155,7 +155,7 @@ public class ContentHandlerRepository implements ContentRepository {
         // intended to be readonly
         List<ContentProvider> contentProviders;
 
-        if (scheme == Scheme.REPOSITORY) {
+        if (scheme == Scheme.REPOSITORY || scheme == Scheme.REMOTE) {
             String contentHandlerKey = ContentUtility.contentHandlerKey(modelProvider);
             contentProviders = contentHandlerRegistry.providers(scheme, contentHandlerKey);
         } else {

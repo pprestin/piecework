@@ -214,7 +214,7 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
         if (isInline)
             return FormUtility.okResponse(settings, allowedTaskProvider, contentResource, contentResource.contentType(), false);
 
-        String contentDisposition = new StringBuilder("attachment; filename=").append(contentResource.getFilename()).toString();
+        String contentDisposition = new StringBuilder("attachment; filename=\"").append(contentResource.getFilename()).append("\"").toString();
 
         List<Header> headers = Collections.<Header>singletonList(new BasicHeader("Content-Disposition", contentDisposition));
         return FormUtility.okResponse(settings, allowedTaskProvider, contentResource, contentResource.contentType(), headers, false);
