@@ -19,13 +19,11 @@ import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
-import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
 import piecework.model.Entity;
 import piecework.model.ProcessInstance;
 import piecework.model.Submission;
-import piecework.persistence.ProcessProvider;
+import piecework.persistence.ContentProfileProvider;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ModelUtility;
 
@@ -41,7 +39,7 @@ public class MultipartSubmissionHandler extends AbstractSubmissionHandler<Multip
     private static final Logger LOG = Logger.getLogger(MultipartSubmissionHandler.class);
 
     @Override
-    protected <P extends ProcessProvider> Submission handleInternal(P modelProvider, MultipartBody body, SubmissionTemplate template) throws PieceworkException {
+    protected Submission handleInternal(ContentProfileProvider modelProvider, MultipartBody body, SubmissionTemplate template) throws PieceworkException {
         Entity principal = modelProvider.principal();
         ProcessInstance instance = ModelUtility.instance(modelProvider);
 
@@ -58,7 +56,7 @@ public class MultipartSubmissionHandler extends AbstractSubmissionHandler<Multip
                 if (mediaType == null)
                     continue;
 
-                handleAllContentTypes(instance, template, submissionBuilder, attachment, actingAsId, principal);
+                handleAllContentTypes(modelProvider, template, submissionBuilder, attachment, actingAsId);
             }
         }
         return submissionBuilder.build();

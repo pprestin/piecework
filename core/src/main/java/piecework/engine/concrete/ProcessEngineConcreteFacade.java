@@ -15,28 +15,30 @@
  */
 package piecework.engine.concrete;
 
-import java.util.*;
-
 import org.apache.commons.collections.map.MultiKeyMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import piecework.Registry;
-import piecework.engine.*;
+import piecework.content.ContentResource;
+import piecework.engine.ProcessEngineFacade;
+import piecework.engine.ProcessEngineProxy;
+import piecework.engine.ProcessExecutionResults;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.ActionType;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.TaskProvider;
+import piecework.common.SearchCriteria;
 import piecework.repository.ProcessInstanceRepository;
-import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
 import piecework.task.TaskResults;
 import piecework.validation.Validation;
+
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -83,7 +85,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+    public ProcessExecution findExecution(SearchCriteria criteria) throws ProcessEngineException {
         ProcessExecution execution = null;
         if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
             for (String engine : criteria.getEngines()) {
@@ -99,7 +101,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+    public ProcessExecutionResults findExecutions(SearchCriteria criteria) throws ProcessEngineException {
         ProcessExecutionResults.Builder builder = null;
         if (criteria.getEngines() != null && !criteria.getEngines().isEmpty()) {
             for (String engine : criteria.getEngines()) {
@@ -262,15 +264,15 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException {
+    public ProcessDeployment deploy(Process process, ProcessDeployment deployment, ContentResource contentResource) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
-        return proxy.deploy(process, deployment, content);
+        return proxy.deploy(process, deployment, contentResource);
     }
 
     @Override
-    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
+    public ContentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");
@@ -278,7 +280,7 @@ public class ProcessEngineConcreteFacade implements ProcessEngineFacade {
     }
 
     @Override
-    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException {
+    public ContentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException {
         ProcessEngineProxy proxy = registry.retrieve(ProcessEngineProxy.class, deployment.getEngine());
         if (proxy == null)
             throw new ProcessEngineException("Not found");

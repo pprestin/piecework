@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
 import piecework.designer.model.view.IndexView;
 import piecework.enumeration.CacheName;
 import piecework.exception.NotFoundError;
@@ -32,6 +33,7 @@ import piecework.model.Explanation;
 import piecework.model.Form;
 import piecework.model.Report;
 import piecework.model.SearchResults;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 
@@ -162,12 +164,12 @@ public class UserInterfaceUtilityTest {
     public void testTemplateFromClasspath() throws NotFoundError, IOException {
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
-        Resource resource = UserInterfaceUtility.template(templatesDirectory, templateName);
+        ContentResource resource = UserInterfaceUtility.template(templatesDirectory, templateName);
         Assert.assertNotNull(resource);
         String resourceContent = IOUtils.toString(resource.getInputStream());
         Assert.assertTrue(resourceContent.length() > 10);
         Assert.assertEquals("Form.template.html", resource.getFilename());
-        Assert.assertEquals(resourceContent.length(), UserInterfaceUtility.resourceSize(resource));
+        Assert.assertEquals(resourceContent.length(), resource.contentLength());
     }
 
     @Test
@@ -175,10 +177,11 @@ public class UserInterfaceUtilityTest {
         Mockito.doReturn(getWorkingDirectory())
                .when(settings).getAssetsDirectoryPath();
 
+        ProcessDeploymentProvider modelProvider = null;
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
-        Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings, null);
+        ContentResource template = UserInterfaceUtility.template(templatesDirectory, templateName);
+        ContentResource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, modelProvider, form, template, contentRepository, servletContext, settings);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
         Assert.assertTrue(IOUtils.toString(resource.getInputStream()).length() > 10);
@@ -198,10 +201,11 @@ public class UserInterfaceUtilityTest {
         Mockito.doReturn(disposition)
                 .when(form).getDisposition();
 
+        ProcessDeploymentProvider modelProvider = null;
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
-        Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, form, template, contentRepository, servletContext, settings, null);
+        ContentResource template = UserInterfaceUtility.template(templatesDirectory, templateName);
+        ContentResource resource = UserInterfaceUtility.resource(CacheName.SCRIPT, modelProvider, form, template, contentRepository, servletContext, settings);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
 
@@ -235,17 +239,18 @@ public class UserInterfaceUtilityTest {
         Mockito.doReturn(disposition)
                 .when(form).getDisposition();
 
+        ProcessDeploymentProvider modelProvider = null;
         String templateName = UserInterfaceUtility.templateName(Form.class, null);
         File templatesDirectory = null;
-        Resource template = UserInterfaceUtility.template(templatesDirectory, templateName);
-        Resource resource = UserInterfaceUtility.resource(CacheName.STYLESHEET, form, template, contentRepository, servletContext, settings, null);
+        ContentResource template = UserInterfaceUtility.template(templatesDirectory, templateName);
+        ContentResource resource = UserInterfaceUtility.resource(CacheName.STYLESHEET, modelProvider, form, template, contentRepository, servletContext, settings);
         Assert.assertNotNull(resource);
         Assert.assertNotNull(resource.getInputStream());
 
         String scriptResourceContent = IOUtils.toString(resource.getInputStream(), "UTF-8");
         Assert.assertTrue(scriptResourceContent.length() > 10);
         Assert.assertFalse(scriptResourceContent.contains(hostUri));
-        Assert.assertEquals(scriptResourceContent.length(), UserInterfaceUtility.resourceSize(resource));
+        Assert.assertEquals(scriptResourceContent.length(), resource.contentLength());
     }
 
 }

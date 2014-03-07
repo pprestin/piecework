@@ -22,8 +22,6 @@
  */
 package piecework.ldap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 //import org.apache.directory.server.core.DefaultDirectoryService;
 //import org.apache.directory.server.core.authn.AuthenticationInterceptor;
 //import org.apache.directory.server.core.exception.ExceptionInterceptor;
@@ -36,17 +34,6 @@ import org.apache.commons.logging.LogFactory;
 //import org.apache.directory.server.ldap.LdapServer;
 //import org.apache.directory.server.protocol.shared.store.LdifFileLoader;
 //import org.apache.directory.server.protocol.shared.transport.TcpTransport;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.util.Assert;
-
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *

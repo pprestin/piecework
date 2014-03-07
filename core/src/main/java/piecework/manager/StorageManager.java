@@ -23,11 +23,14 @@ import piecework.Constants;
 import piecework.common.OperationResult;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.OperationType;
+import piecework.exception.InternalServerError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.repository.AttachmentRepository;
+import piecework.repository.ContentRepository;
 import piecework.repository.DeploymentRepository;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.util.ProcessInstanceUtility;
@@ -47,6 +50,9 @@ public class StorageManager {
     private AttachmentRepository attachmentRepository;
 
     @Autowired
+    private ContentRepository contentRepository;
+
+    @Autowired
     private DeploymentRepository deploymentRepository;
 
     @Autowired
@@ -61,6 +67,14 @@ public class StorageManager {
         }
 
         return processInstanceRepository.update(instance.getProcessInstanceId(), Constants.ProcessStatuses.COMPLETE, completionStatus, data);
+    }
+
+    public boolean expire(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+        try {
+            return contentRepository.expireByLocation(modelProvider, location);
+        } catch (java.io.IOException e) {
+            throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, e.getMessage());
+        }
     }
 
     public ProcessInstance get(String processInstanceId) {

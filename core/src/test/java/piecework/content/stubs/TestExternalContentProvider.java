@@ -16,10 +16,11 @@
 package piecework.content.stubs;
 
 import piecework.content.ContentProvider;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.enumeration.Scheme;
-import piecework.model.*;
-
-import java.io.IOException;
+import piecework.exception.PieceworkException;
+import piecework.persistence.ContentProfileProvider;
 
 /**
  * @author James Renfro
@@ -27,8 +28,8 @@ import java.io.IOException;
 public class TestExternalContentProvider implements ContentProvider {
 
     @Override
-    public Content findByPath(piecework.model.Process process, String base, String location, Entity principal) throws IOException {
-        return new Content.Builder()
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+        return new BasicContentResource.Builder()
                 .location("some-external-content-provider")
                 .build();
     }

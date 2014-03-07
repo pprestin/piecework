@@ -25,14 +25,39 @@ import piecework.persistence.ProcessDeploymentProvider;
 public class ProcessDeploymentProviderStub extends ProcessProviderStub implements ProcessDeploymentProvider {
 
     private ProcessDeployment deployment;
+    private ContentProfile contentProfile;
+    private Activity activity;
 
     public ProcessDeploymentProviderStub() {
 
     }
 
+    public ProcessDeploymentProviderStub(ContentProfile contentProfile) {
+        this.contentProfile = contentProfile;
+    }
+
     public ProcessDeploymentProviderStub(piecework.model.Process process, ProcessDeployment deployment, Entity principal) {
         super(process, principal);
         this.deployment = deployment;
+    }
+
+    public ProcessDeploymentProviderStub(piecework.model.Process process, ProcessDeployment deployment, ContentProfile contentProfile, Entity principal) {
+        super(process, principal);
+        this.deployment = deployment;
+        this.contentProfile = contentProfile;
+    }
+
+
+    @Override
+    public Activity activity() throws PieceworkException {
+        return activity;
+    }
+
+    @Override
+    public ContentProfile contentProfile() throws PieceworkException {
+        if (this.contentProfile != null)
+            return contentProfile;
+        return deployment != null ? deployment.getContentProfile() : null;
     }
 
     @Override
@@ -45,4 +70,7 @@ public class ProcessDeploymentProviderStub extends ProcessProviderStub implement
         return this;
     }
 
+    public void setActivity(Activity activity) {
+        this.activity = activity;
+    }
 }

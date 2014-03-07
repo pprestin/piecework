@@ -15,28 +15,17 @@
  */
 package piecework.service;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import piecework.designer.model.view.IndexView;
+import piecework.content.ContentResource;
 import piecework.exception.NotFoundError;
-import piecework.model.Explanation;
-import piecework.model.Form;
-import piecework.model.Report;
-import piecework.model.SearchResults;
 import piecework.util.UserInterfaceUtility;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author James Renfro
@@ -65,12 +54,12 @@ public class FormTemplateService {
 //        return UserInterfaceUtility.externalScriptResource(type, t, scriptsDirectory);
 //    }
 
-    public Resource getTemplateResource(Class<?> type, Object t) throws NotFoundError {
+    public ContentResource getTemplateResource(Class<?> type, Object t) throws NotFoundError {
         String templateName = UserInterfaceUtility.templateName(type, t);
         return getTemplateResource(templateName);
     }
 
-    public Resource getTemplateResource(String templateName) throws NotFoundError {
+    public ContentResource getTemplateResource(String templateName) throws NotFoundError {
         return UserInterfaceUtility.template(templatesDirectory, templateName);
     }
 

@@ -26,12 +26,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.engine.activiti.config.TestConfiguration;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.engine.test.ExampleFactory;
 import piecework.model.*;
 import piecework.model.Process;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchCriteria;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.common.ManyMap;
 
@@ -61,13 +63,14 @@ public class ActivitiEngineProxyTest {
         process = ExampleFactory.exampleProcess();
 
         ClassPathResource classPathResource = new ClassPathResource("META-INF/example.bpmn20.xml");
-        Content content = new Content.Builder()
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .contentType("application/xml")
-                .filename("AdvanceBudgetRequest.bpmn20.xml")
+                .name("example.bpmn20.xml")
+                .filename("example.bpmn20.xml")
                 .inputStream(classPathResource.getInputStream())
                 .build();
 
-        deployment = engineProxy.deploy(process, ExampleFactory.exampleProcessDeployment(), content);
+        deployment = engineProxy.deploy(process, ExampleFactory.exampleProcessDeployment(), contentResource);
 
         process = new Process.Builder(process, new PassthroughSanitizer())
                 .deploy(new ProcessDeploymentVersion(deployment), deployment)
@@ -80,7 +83,7 @@ public class ActivitiEngineProxyTest {
 		String instanceId = engineProxy.start(process, deployment, instance);
 		Assert.assertNotNull(instanceId);
 
-        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
+        SearchCriteria criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -99,7 +102,7 @@ public class ActivitiEngineProxyTest {
         String instanceId = engineProxy.start(process, deployment, instance);
 		Assert.assertNotNull(instanceId);
 
-        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
+        SearchCriteria criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -122,7 +125,7 @@ public class ActivitiEngineProxyTest {
         Assert.assertNotNull(instanceId);
 
         // First, retrieve without including variables
-        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria.Builder()
+        SearchCriteria criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)
@@ -135,7 +138,7 @@ public class ActivitiEngineProxyTest {
         Assert.assertNull(execution.getData());
 
         // Then include variables in criteria
-        criteria = new ProcessInstanceSearchCriteria.Builder()
+        criteria = new SearchCriteria.Builder()
                 .engine(deployment.getEngine())
                 .engineProcessDefinitionKey(deployment.getEngineProcessDefinitionKey())
                 .executionId(instanceId)

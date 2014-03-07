@@ -15,22 +15,16 @@
  */
 package piecework.resource.concrete;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import piecework.Versions;
+import piecework.designer.model.view.IndexView;
+import piecework.exception.StatusCodeError;
+import piecework.resource.DesignerResource;
+
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import piecework.Versions;
-import piecework.common.ViewContext;
-import piecework.model.Form;
-import piecework.resource.DesignerResource;
-import piecework.designer.model.view.IndexView;
-import piecework.exception.StatusCodeError;
-
 import java.util.List;
 
 /**

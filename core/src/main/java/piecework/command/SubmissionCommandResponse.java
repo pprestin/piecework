@@ -17,16 +17,19 @@ package piecework.command;
 
 import piecework.model.FormRequest;
 import piecework.model.Submission;
+import piecework.persistence.ProcessDeploymentProvider;
 
 /**
  * @author James Renfro
  */
-public class SubmissionCommandResponse {
+public class SubmissionCommandResponse<P extends ProcessDeploymentProvider> {
 
+    private final P modelProvider;
     private final Submission submission;
     private final FormRequest nextRequest;
 
-    public SubmissionCommandResponse(Submission submission, FormRequest nextRequest) {
+    public SubmissionCommandResponse(P modelProvider, Submission submission, FormRequest nextRequest) {
+        this.modelProvider = modelProvider;
         this.submission = submission;
         this.nextRequest = nextRequest;
     }
@@ -37,5 +40,9 @@ public class SubmissionCommandResponse {
 
     public FormRequest getNextRequest() {
         return nextRequest;
+    }
+
+    public P getModelProvider() {
+        return modelProvider;
     }
 }

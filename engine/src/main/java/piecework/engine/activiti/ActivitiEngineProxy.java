@@ -15,6 +15,7 @@
  */
 package piecework.engine.activiti;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -33,9 +34,12 @@ import org.activiti.engine.task.TaskQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import piecework.Constants;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.engine.exception.TaskAlreadyClaimedException;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.FlowElementType;
@@ -45,8 +49,8 @@ import piecework.engine.*;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.model.Process;
 import piecework.persistence.TaskProvider;
+import piecework.common.SearchCriteria;
 import piecework.repository.ProcessInstanceRepository;
-import piecework.process.ProcessInstanceSearchCriteria;
 import piecework.identity.IdentityHelper;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.task.TaskCriteria;
@@ -256,7 +260,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
 
     @Override
-    public ProcessDeployment deploy(Process process, ProcessDeployment deployment, Content content) throws ProcessEngineException {
+    public ProcessDeployment deploy(Process process, ProcessDeployment deployment, ContentResource contentResource) throws ProcessEngineException {
         Entity principal = helper.getPrincipal();
         String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
@@ -264,8 +268,15 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (!deployment.getEngine().equals(getKey()))
             return null;
 
+        InputStream inputStream;
+
+        try {
+            inputStream = contentResource.getInputStream();
+        } catch (IOException ioe) {
+            throw new ProcessEngineException("Unable to read input stream to deploy", ioe);
+        }
         Deployment activitiDeployment = processEngine.getRepositoryService().createDeployment()
-                .addInputStream(content.getName(), content.getInputStream())
+                .addInputStream(contentResource.getFilename(), inputStream)
                 .deploy();
 
         LOG.debug("Deployed new process definition to activiti: " + activitiDeployment.getId() + " : " + activitiDeployment.getName());
@@ -308,8 +319,8 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 
             updated.engineProcessDefinitionId(deployedProcessDefinition != null ? deployedProcessDefinition.getId() : null)
                 .engineDeploymentId(activitiDeployment.getId())
-                .engineProcessDefinitionLocation(content.getLocation())
-                .engineProcessDefinitionResource(content.getFilename())
+                .engineProcessDefinitionLocation(contentResource.getLocation())
+                .engineProcessDefinitionResource(contentResource.getFilename())
                 .deploy();
         }
 
@@ -317,7 +328,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-	public ProcessExecution findExecution(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+	public ProcessExecution findExecution(SearchCriteria criteria) throws ProcessEngineException {
 
         if (! criteria.getEngines().contains(getKey()))
             return null;
@@ -345,7 +356,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
 	}
 
 	@Override
-	public ProcessExecutionResults findExecutions(ProcessInstanceSearchCriteria criteria) throws ProcessEngineException {
+	public ProcessExecutionResults findExecutions(SearchCriteria criteria) throws ProcessEngineException {
         if (! criteria.getEngines().contains(getKey()))
             return null;
 
@@ -520,16 +531,16 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
     @Override
-    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
+    public ContentResource resource(Process process, ProcessDeployment deployment, String contentType) throws ProcessEngineException {
         InputStream inputStream = processEngine.getRepositoryService().getProcessDiagram(deployment.getEngineProcessDefinitionId());
-        return new ProcessDeploymentResource.Builder().name("").inputStream(inputStream).contentType("image/png").build();
+        return new BasicContentResource.Builder().inputStream(inputStream).contentType("image/png").build();
     }
 
     @Override
-    public ProcessDeploymentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException {
+    public ContentResource resource(Process process, ProcessDeployment deployment, ProcessInstance instance, String contentType) throws ProcessEngineException {
         BpmnModel bpmnModel = processEngine.getRepositoryService().getBpmnModel(deployment.getEngineProcessDefinitionId());
         InputStream inputStream = ProcessDiagramGenerator.generateDiagram(bpmnModel, "png", processEngine.getRuntimeService().getActiveActivityIds(instance.getEngineProcessInstanceId()));
-        return new ProcessDeploymentResource.Builder().name("").inputStream(inputStream).contentType("image/png").build();
+        return new BasicContentResource.Builder().inputStream(inputStream).contentType("image/png").build();
     }
 
     private Task convert(org.activiti.engine.task.Task instance, Process process, boolean includeDetails) {
@@ -665,7 +676,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         return activitiInstance;
     }
 
-    private HistoricProcessInstanceQuery instanceQuery(ProcessInstanceSearchCriteria criteria) {
+    private HistoricProcessInstanceQuery instanceQuery(SearchCriteria criteria) {
         HistoricProcessInstanceQuery query = processEngine.getHistoryService().createHistoricProcessInstanceQuery();
 
         // Activiti only allows us to filter by a single process definition key at a time -- so if there are more than 1
@@ -695,22 +706,23 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         if (criteria.getInitiatedBy() != null)
             query.startedBy(criteria.getInitiatedBy());
 
-        ProcessInstanceSearchCriteria.OrderBy orderBy = criteria.getOrderBy();
-        if (orderBy != null) {
-            switch (orderBy) {
-                case START_TIME_ASC:
-                    query.orderByProcessInstanceStartTime().asc();
-                    break;
-                case START_TIME_DESC:
-                    query.orderByProcessInstanceStartTime().desc();
-                    break;
-                case END_TIME_ASC:
-                    query.orderByProcessInstanceEndTime().asc();
-                    break;
-                case END_TIME_DESC:
-                    query.orderByProcessInstanceEndTime().desc();
-                    break;
-            }
+        Sort sort = criteria.getSort(new PassthroughSanitizer());
+
+        if (sort != null) {
+//            switch (orderBy) {
+//                case START_TIME_ASC:
+//                    query.orderByProcessInstanceStartTime().asc();
+//                    break;
+//                case START_TIME_DESC:
+//                    query.orderByProcessInstanceStartTime().desc();
+//                    break;
+//                case END_TIME_ASC:
+//                    query.orderByProcessInstanceEndTime().asc();
+//                    break;
+//                case END_TIME_DESC:
+//                    query.orderByProcessInstanceEndTime().desc();
+//                    break;
+//            }
         } else {
             query.orderByProcessInstanceEndTime().desc();
         }

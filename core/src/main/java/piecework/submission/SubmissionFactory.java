@@ -15,10 +15,8 @@
  */
 package piecework.submission;
 
-import org.apache.commons.lang.StringUtils;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
-import piecework.model.Process;
 
 import java.util.Collection;
 import java.util.Date;
@@ -34,7 +32,7 @@ import java.util.Map;
  */
 public class SubmissionFactory {
 
-    public static Submission submission(ActionType actionType, String processDefinitionKey, String taskId, String requestId, Map<String, List<Value>> data, Collection<Attachment> attachments, Entity principal) {
+    public static Submission submission(ActionType actionType, String processDefinitionKey, String taskId, String requestId, Map<String, List<Value>> data, Collection<File> attachments, Entity principal) {
         String principalId = principal != null ? principal.getEntityId() : "anonymous";
         Submission.Builder submissionBuilder = new Submission.Builder();
 

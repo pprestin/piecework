@@ -19,12 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
 import piecework.exception.StatusCodeError;
-import piecework.service.IdentityService;
 import piecework.identity.PersonSearchCriteria;
 import piecework.model.ProcessInstance;
 import piecework.model.SearchResults;
 import piecework.model.User;
 import piecework.resource.PersonResource;
+import piecework.service.IdentityService;
 
 import java.util.List;
 

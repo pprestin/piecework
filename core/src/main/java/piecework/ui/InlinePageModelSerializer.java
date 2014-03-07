@@ -20,7 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
-import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
 import piecework.designer.model.view.IndexView;
 import piecework.form.FormDisposition;
 import piecework.model.*;
@@ -97,7 +97,7 @@ public class InlinePageModelSerializer {
         return script;
     }
 
-    public TagNode getScriptContent(Resource resource) {
+    public TagNode getScriptContent(ContentResource resource) {
         TagNode script = new TagNode("script");
         script.addAttribute("id", "piecework-context");
         script.addAttribute("type", "text/javascript");
@@ -138,7 +138,7 @@ public class InlinePageModelSerializer {
         return script;
     }
 
-    public TagNode getStylesheetContent(Resource resource) {
+    public TagNode getStylesheetContent(ContentResource resource) {
         TagNode style = new TagNode("style");
         style.addAttribute("id", "piecework-context");
         style.addAttribute("type", "text/css");

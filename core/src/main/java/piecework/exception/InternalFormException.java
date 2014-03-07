@@ -17,8 +17,6 @@ package piecework.exception;
 
 import piecework.model.Form;
 
-import java.net.URI;
-
 /**
  * @author James Renfro
  */

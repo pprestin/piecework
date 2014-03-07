@@ -17,7 +17,6 @@ package piecework.form;
 
 import org.apache.commons.lang.StringUtils;
 import piecework.common.ViewContext;
-import piecework.enumeration.ActionType;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.validation.Validation;
@@ -74,6 +73,14 @@ public class FormDisposition {
         String query = null;
         if (submission != null && StringUtils.isNotEmpty(submission.getSubmissionId()))
             query = "submissionId=" + submission.getSubmissionId();
+
+        return new URI(pageUri.getScheme(), pageUri.getUserInfo(), pageUri.getHost(), pageUri.getPort(), pageUri.getPath(), query, null);
+    }
+
+    public URI getInvalidPageUri(Validation validation) throws URISyntaxException {
+        String query = null;
+        if (validation != null && StringUtils.isNotEmpty(validation.getValidationId()))
+            query = "validationId=" + validation.getValidationId();
 
         return new URI(pageUri.getScheme(), pageUri.getUserInfo(), pageUri.getHost(), pageUri.getPort(), pageUri.getPath(), query, null);
     }

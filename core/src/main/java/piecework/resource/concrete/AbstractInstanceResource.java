@@ -18,7 +18,6 @@ package piecework.resource.concrete;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import piecework.Constants;
-import piecework.authorization.AuthorizationRole;
 import piecework.command.CommandFactory;
 import piecework.command.ValidationCommand;
 import piecework.common.ViewContext;
@@ -28,14 +27,16 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.export.IteratingDataProvider;
-import piecework.identity.IdentityHelper;
 import piecework.model.*;
-import piecework.model.Process;
-import piecework.persistence.*;
+import piecework.persistence.AllowedTaskProvider;
+import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
-import piecework.service.*;
+import piecework.service.ProcessInstanceService;
+import piecework.service.RequestService;
 import piecework.settings.SecuritySettings;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
@@ -45,7 +46,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.net.URI;
 import java.util.List;
 
 /**
@@ -57,9 +57,6 @@ public abstract class AbstractInstanceResource {
 
     @Autowired
     AccessTracker accessTracker;
-
-    @Autowired
-    AttachmentService attachmentService;
 
     @Autowired
     CommandFactory commandFactory;
@@ -94,12 +91,12 @@ public abstract class AbstractInstanceResource {
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         FormRequest request = requestService.create(requestDetails, taskProvider, ActionType.ATTACH);
-        ValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(taskProvider, request, data, type, VERSION);
+        ValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(taskProvider, request, ActionType.ATTACH, data, type, VERSION);
         Validation validation = validationCommand.execute();
 
-        commandFactory.attachment(taskProvider, validation).execute();
+        ProcessInstance instance = commandFactory.attachment(taskProvider, validation).execute();
 
-        ProcessInstance instance = taskProvider.instance();
+//        ProcessInstance instance = taskProvider.instance();
         SearchResults searchResults = taskProvider.attachments(new AttachmentQueryParameters(), new ViewContext(settings, VERSION));
 
         return FormUtility.okResponse(settings, taskProvider, searchResults, null, false);
@@ -112,7 +109,7 @@ public abstract class AbstractInstanceResource {
 
         ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         FormRequest request = requestService.create(requestDetails, deploymentProvider);
-        ValidationCommand<ProcessDeploymentProvider> validationCommand = commandFactory.validation(deploymentProvider, request, data, type, VERSION);
+        ValidationCommand<ProcessDeploymentProvider> validationCommand = commandFactory.validation(deploymentProvider, request, ActionType.CREATE, data, type, VERSION);
         Validation validation = validationCommand.execute();
         ProcessInstance instance = commandFactory.createInstance(deploymentProvider, validation).execute();
 

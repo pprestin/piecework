@@ -15,10 +15,8 @@
  */
 package piecework.util;
 
-import piecework.Constants;
 import piecework.model.Constraint;
 import piecework.model.Field;
-import piecework.model.FormValue;
 import piecework.model.Value;
 
 import java.util.List;

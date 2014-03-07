@@ -34,7 +34,7 @@ angular.module('wf',
           }
 
           return function(matchItem, query) {
-              var displayName = matchItem.displayName;
+              var displayName = matchItem.displayName != null ? matchItem.displayName : matchItem;
               return query ? displayName.replace(new RegExp(escapeRegexp(query), 'gi'), '<strong>$&</strong>') : displayName;
           };
 

@@ -15,24 +15,23 @@
  */
 package piecework.model;
 
-import java.io.Serializable;
-import java.util.*;
-
-import javax.xml.bind.annotation.*;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+import piecework.common.ManyMap;
+import piecework.common.ViewContext;
 import piecework.enumeration.OperationType;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
-import piecework.common.ViewContext;
-import piecework.common.ManyMap;
+
+import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -86,6 +85,10 @@ public class ProcessInstance implements Serializable {
 
     @XmlElement
     private final Date startTime;
+
+    @XmlElement
+    @LastModifiedDate
+    private final Date lastModifiedTime;
 
     @XmlElement
     private final Date endTime;
@@ -156,7 +159,6 @@ public class ProcessInstance implements Serializable {
         this.keywords = builder.keywords;
         this.tasks = Collections.unmodifiableMap(builder.tasks);
         this.activityMap = builder.activityMap != null ? Collections.unmodifiableMap(builder.activityMap) : null;
-
         if (context != null) {
             if (builder.data != null && !builder.data.isEmpty()) {
                 ManyMap<String, Value> data = new ManyMap<String, Value>();
@@ -194,6 +196,7 @@ public class ProcessInstance implements Serializable {
         this.operations = Collections.unmodifiableList(builder.operations);
         this.submissionIds = builder.submissionIds != null ? Collections.unmodifiableList(builder.submissionIds) : null;
         this.startTime = builder.startTime;
+        this.lastModifiedTime = builder.lastModifiedTime;
         this.endTime = builder.endTime;
         this.initiatorId = builder.initiatorId;
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId) : null;
@@ -359,6 +362,7 @@ public class ProcessInstance implements Serializable {
         private List<String> submissionIds;
         private Map<String, Task> tasks;
         private Date startTime;
+        private Date lastModifiedTime;
         private Date endTime;
         private String initiatorId;
         private boolean isDeleted;
@@ -391,7 +395,7 @@ public class ProcessInstance implements Serializable {
             this.endTime = instance.endTime;
             this.initiatorId = instance.initiatorId;
             this.isDeleted = instance.isDeleted;
-
+            this.lastModifiedTime = instance.lastModifiedTime;
             if (instance.attachments != null && !instance.attachments.isEmpty())
                 this.attachments = new TreeSet<Attachment>(instance.attachments);
             else
@@ -601,6 +605,16 @@ public class ProcessInstance implements Serializable {
                 this.data.put(key, list);
             }
 
+            return this;
+        }
+
+        public Builder formValue(String key, Value value) {
+            if (value != null) {
+                this.data.putOne(key, value);
+
+                if (StringUtils.isNotEmpty(value.getValue()))
+                    this.keywords.add(value.getValue().toLowerCase());
+            }
             return this;
         }
 

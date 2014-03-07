@@ -18,14 +18,14 @@ package piecework.ui.visitor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.TagNode;
-import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
 import piecework.form.FormDisposition;
-import piecework.model.Entity;
-import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
+import piecework.settings.UserInterfaceSettings;
 import piecework.ui.StaticResourceAggregator;
 import piecework.ui.TagAttributeAction;
-import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
 
 import javax.servlet.ServletContext;
@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * @author James Renfro
  */
-public class StaticResourceAggregatingVisitor extends HtmlProviderVisitor {
+public class StaticResourceAggregatingVisitor<P extends ProcessDeploymentProvider> extends HtmlProviderVisitor {
 
     private static final String NEWLINE = System.getProperty("line.separator");
     private static final Logger LOG = Logger.getLogger(StaticResourceAggregatingVisitor.class);
@@ -45,10 +45,10 @@ public class StaticResourceAggregatingVisitor extends HtmlProviderVisitor {
     private final Map<String, TagAttributeAction> scriptAttributeActionMap;
     private final Map<String, TagAttributeAction> linkAttributeActionMap;
 
-    public StaticResourceAggregatingVisitor(ServletContext servletContext, Process process, FormDisposition disposition, UserInterfaceSettings settings, ContentRepository contentRepository, Entity principal, boolean isAnonymous) {
+    public StaticResourceAggregatingVisitor(ServletContext servletContext, ContentProfileProvider modelProvider, FormDisposition disposition, UserInterfaceSettings settings, ContentRepository contentRepository, boolean isAnonymous) {
         super(settings, isAnonymous);
-        this.scriptAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, disposition, principal);
-        this.stylesheetAggregator = new StaticResourceAggregator(servletContext, process, contentRepository, settings, disposition, principal);
+        this.scriptAggregator = new StaticResourceAggregator(servletContext, modelProvider, contentRepository, settings, disposition);
+        this.stylesheetAggregator = new StaticResourceAggregator(servletContext, modelProvider, contentRepository, settings, disposition);
         this.scriptAttributeActionMap = new HashMap<String, TagAttributeAction>();
         this.linkAttributeActionMap = new HashMap<String, TagAttributeAction>();
     }
@@ -61,11 +61,11 @@ public class StaticResourceAggregatingVisitor extends HtmlProviderVisitor {
         return getTagAction(tagNode, "src", this.scriptAttributeActionMap);
     }
 
-    public Resource getScriptResource() {
+    public ContentResource getScriptResource() {
         return this.scriptAggregator.getStaticResource();
     }
 
-    public Resource getStylesheetResource() {
+    public ContentResource getStylesheetResource() {
         if (StringUtils.isNotEmpty(settings.getCustomStylesheetUrl()))
             this.stylesheetAggregator.handle(settings.getCustomStylesheetUrl());
         return this.stylesheetAggregator.getStaticResource();

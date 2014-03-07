@@ -22,19 +22,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.UuidGenerator;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
+import piecework.enumeration.ActionType;
 import piecework.enumeration.FieldSubmissionType;
 import piecework.exception.*;
 import piecework.model.*;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.repository.ContentRepository;
 import piecework.security.EncryptionService;
 import piecework.security.MaxSizeInputStream;
 import piecework.security.concrete.PassthroughEncryptionService;
+import piecework.submission.Directive;
 import piecework.submission.SubmissionTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,28 +71,37 @@ public class SubmissionStorageService {
             encryptionService = new PassthroughEncryptionService();
     }
 
-    public boolean store(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
-        return store(instance, template, submissionBuilder, name, value, actingAsId, null, MediaType.TEXT_PLAIN, principal);
+    public <P extends ContentProfileProvider> boolean store(P modelProvider, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId) throws PieceworkException {
+        return store(modelProvider, template, submissionBuilder, name, value, actingAsId, null, MediaType.TEXT_PLAIN);
     }
 
-    public boolean store(ProcessInstance instance, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, InputStream inputStream, String contentType, Entity principal) throws MisconfiguredProcessException, StatusCodeError {
+    public <P extends ContentProfileProvider> boolean store(P modelProvider, SubmissionTemplate template, Submission.Builder submissionBuilder, String name, String value, String actingAsId, InputStream inputStream, String contentType) throws PieceworkException {
         FieldSubmissionType fieldSubmissionType = template.fieldSubmissionType(name);
 
         if (fieldSubmissionType == FieldSubmissionType.BUTTON) {
             // Note that submitting multiple button messages on a form will result in unpredictable behavior
             Button button = template.getButton(value);
-            button(button, name, value, submissionBuilder);
+            button(modelProvider, button, name, value, submissionBuilder);
+
+            // set actionValue for current task
+            String taskId = template.getTaskId();
+            if ( taskId != null && modelProvider!= null && modelProvider instanceof ProcessInstanceProvider ) { 
+                ProcessInstanceProvider pirp = (ProcessInstanceProvider) modelProvider;
+                ProcessInstance pi = pirp.instance();
+                if ( pi != null ) {
+                    Task task = pi.getTask(taskId);
+                    if ( task != null ) {
+                        submissionBuilder.formValue(task.getTaskDefinitionKey() + "_actionValue", value);
+                    }
+                }
+            }   
+
             return true;
         } else if (fieldSubmissionType != FieldSubmissionType.INVALID) {
             Field field = template.getField(name);
-            String location = null;
             File file = null;
 
             if (inputStream != null) {
-                String directory = StringUtils.isNotEmpty(submissionBuilder.getProcessDefinitionKey()) ? submissionBuilder.getProcessDefinitionKey() : "submissions";
-                String id = uuidGenerator.getNextId();
-                location = "/" + directory + "/" + id;
-
                 if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(template.getMaxAttachmentSize()) * 1024l);
                 else if (field != null && field.getMaxValueLength() > 0)
@@ -98,42 +114,28 @@ public class SubmissionStorageService {
                     metadata = new HashMap<String, String>(field.getMetadataTemplates());
                 }
 
-                Content content = new Content.Builder()
+                String description = submissionBuilder.getDescription(name);
+                if (StringUtils.isEmpty(description))
+                    description = value;
+
+                ContentResource contentResource = new BasicContentResource.Builder()
                         .contentType(contentType)
+                        .name(name)
+                        .description(description)
                         .filename(value)
-                        .location(location)
                         .inputStream(inputStream)
+                        .lastModified(new Date())
+                        .lastModifiedBy(actingAsId)
                         .metadata(metadata)
                         .build();
 
-                try {
-                    content = contentRepository.save(template.getProcess(), instance, content, principal);
-
-                } catch (MongoException mongoException) {
-                    Throwable cause = mongoException.getCause();
-                    if (cause instanceof MaxSizeExceededException) {
-                        MaxSizeExceededException sizeExceededException = MaxSizeExceededException.class.cast(cause);
-                        throw new BadRequestError(Constants.ExceptionCodes.attachment_is_too_large, Long.valueOf(sizeExceededException.getMaxSize()));
-                    } else {
-                        LOG.error("Failed to store file to mongo", mongoException);
-                        throw new InternalServerError();
-                    }
-                } catch (IOException ioe) {
-                    LOG.error(ioe);
-                    String body = ioe.getMessage();
-                    throw new InternalServerError(Constants.ExceptionCodes.content_cannot_be_stored, body);
-                }
-
-                location = content.getLocation();
-
-                String description = submissionBuilder.getDescription(name);
                 file = new File.Builder()
-                        .id(id)
                         .name(value)
                         .description(description)
-                        .location(location)
+                        .contentResource(contentResource)
                         .contentType(contentType)
                         .build();
+
             } else if (field != null && field.getType().equals(Constants.FieldTypes.URL)) {
                 // Don't bother to store empty urls
                 if (StringUtils.isEmpty(value))
@@ -141,6 +143,8 @@ public class SubmissionStorageService {
 
                 String id = uuidGenerator.getNextId();
                 String description = submissionBuilder.getDescription(name);
+                if (StringUtils.isEmpty(description))
+                    description = value;
                 file = new File.Builder()
                         .id(id)
                         .name(value)
@@ -169,25 +173,43 @@ public class SubmissionStorageService {
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
-                if (file != null) {
-                    contentType = file.getContentType();
-                    location = file.getLocation();
-                } else {
-                    contentType = MediaType.TEXT_PLAIN;
-                    location = null;
-                    // Don't bother to save 'notes' if they're empty
-                    if (StringUtils.isEmpty(value))
-                        return false;
+//                String location;
+//                if (file != null) {
+//                    try {
+//                        ContentResource contentResource = contentRepository.save(modelProvider, file.getContentResource());
+//
+//                        contentType = contentResource.contentType();
+//                        location = contentResource.getLocation();
+//
+//                    } catch (IOException ioe) {
+//                        LOG.error("Unable to add attachment content", ioe);
+//                        return false;
+//                    }
+//                } else {
+//                    contentType = MediaType.TEXT_PLAIN;
+//                    location = null;
+//                    // Don't bother to save 'notes' if they're empty
+//                    if (StringUtils.isEmpty(value))
+//                        return false;
+//                }
+//                Attachment attachmentDetails = new Attachment.Builder()
+//                        .contentType(contentType)
+//                        .location(location)
+//                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
+//                        .description(value)
+//                        .userId(actingAsId)
+//                        .name(name)
+//                        .build();
+
+                if (file == null) {
+                    file = new File.Builder()
+                            .name(name)
+                            .contentType(MediaType.TEXT_PLAIN)
+                            .description(value)
+                            .filerId(actingAsId)
+                            .build();
                 }
-                Attachment attachmentDetails = new Attachment.Builder()
-                        .contentType(contentType)
-                        .location(location)
-                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
-                        .description(value)
-                        .userId(actingAsId)
-                        .name(name)
-                        .build();
-                submissionBuilder.attachment(attachmentDetails);
+                submissionBuilder.attachment(file);
             }
 
             return true;
@@ -198,10 +220,28 @@ public class SubmissionStorageService {
         return false;
     }
 
-    private void button(Button button, String name, String value, Submission.Builder submissionBuilder) throws MisconfiguredProcessException {
+    private void button(ContentProfileProvider modelProvider, Button button, String name, String value, Submission.Builder submissionBuilder) throws PieceworkException {
         if (button == null)
             throw new MisconfiguredProcessException("Button of this name (" + name + ") exists, but the button value (" + value + ") has not been configured");
 
-        submissionBuilder.actionType(button.getAction());
+        try {
+            ActionType actionType = StringUtils.isNotEmpty(button.getAction()) ? ActionType.valueOf(button.getAction()) : null;
+
+            if (actionType != null) {
+                submissionBuilder.actionType(actionType);
+
+                // FIXME: Potential pipeline mechanism for sending data back to the Activiti Engine for routing - this would need to be added to the
+                // FIXME: submission object and pass into the ProcessEngineFacade.completeTask() method.
+                // FIXME: Requires some more thought about how additional routing variables could be set
+                Directive directive = new Directive.Builder()
+                        .taskVariable(name, value)
+                        .instanceVariable(name, value)
+                        .build();
+            }
+        } catch (IllegalArgumentException iae) {
+            String processDefinitionKey = modelProvider.processDefinitionKey();
+            throw new MisconfiguredProcessException("Could not determine correct action to take", processDefinitionKey, iae);
+        }
     }
+
 }

@@ -1,28 +1,18 @@
 package piecework.resource;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.cxf.rs.security.cors.CrossOriginResourceSharing;
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.cxf.rs.security.cors.LocalPreflight;
-import piecework.ApiResource;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.exception.PieceworkException;
-import piecework.model.OperationDetails;
-import piecework.model.SearchResults;
-import piecework.exception.StatusCodeError;
-import piecework.model.ProcessInstance;
+import piecework.process.AttachmentQueryParameters;
 
 import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
-import piecework.model.Submission;
-import piecework.process.AttachmentQueryParameters;
 
 /**
  * @author James Renfro
@@ -102,6 +92,18 @@ public interface ProcessInstanceApplicationResource extends ApplicationResource 
     @Path("{processDefinitionKey}/{processInstanceId}/history")
     @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
     Response history(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId) throws PieceworkException;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}/checkout")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response checkout(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
+
+    @POST
+    @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}/removal")
+    @RolesAllowed({AuthorizationRole.USER, AuthorizationRole.OVERSEER})
+    @Consumes("application/x-www-form-urlencoded")
+    Response removal(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @PathParam("processInstanceId") String processInstanceId, @PathParam("fieldName") String fieldName, @PathParam("valueId") String valueId) throws PieceworkException;
 
     @DELETE
     @Path("{processDefinitionKey}/{processInstanceId}/value/{fieldName}/{valueId}")

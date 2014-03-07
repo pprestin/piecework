@@ -23,18 +23,20 @@ import piecework.Constants;
 import piecework.common.ManyMap;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
-import piecework.exception.FormBuildingException;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
-import piecework.security.data.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.security.data.DataFilterService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.*;
 import piecework.validation.Validation;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -54,7 +56,7 @@ public class FormFactory {
 
     public <P extends ProcessDeploymentProvider> Form form(P modelProvider, FormRequest request, ActionType actionType, Validation validation, Explanation explanation, boolean includeRestrictedData, boolean anonymous, String version) throws PieceworkException {
         ViewContext context = new ViewContext(settings, version);
-        Activity activity = request.getActivity();
+        Activity activity = modelProvider.activity();
 
         String formInstanceId = request.getRequestId();
         String processDefinitionKey = request.getProcessDefinitionKey();
@@ -95,7 +97,7 @@ public class FormFactory {
             boolean isAllowAny = activity.isAllowAny();
 
             if (anonymous || task == null)
-                data = dataFilterService.allValidationData(validation, fields, isAllowAny);
+                data = dataFilterService.allValidationData(validation, fields, isAllowAny, principal);
             else {
                 // This reason will only be used if the user actually has been assigned the task -- the dataFilterService
                 // will verify that

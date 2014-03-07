@@ -15,22 +15,20 @@
  */
 package piecework.model;
 
-import java.util.*;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+import piecework.common.ManyMap;
 import piecework.enumeration.ActionType;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
 import piecework.security.Sanitizer;
-import piecework.common.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.*;
 
 /**
  * @author James Renfro
@@ -69,7 +67,7 @@ public class Submission {
 
     @XmlElementWrapper(name="attachments")
     @XmlElementRef
-    private final List<Attachment> attachments;
+    private final List<File> attachments;
 
     @DBRef
     private final Map<String, Activity> activityMap;
@@ -143,7 +141,7 @@ public class Submission {
         return data;
     }
 
-    public List<Attachment> getAttachments() {
+    public List<File> getAttachments() {
         return attachments;
     }
 
@@ -180,7 +178,7 @@ public class Submission {
         private ActionType actionType;
         private ManyMap<String, Value> data;
         private Map<String, String> descriptionMap;
-        private List<Attachment> attachments;
+        private List<File> attachments;
         private Map<String, Activity> activityMap;
         private Date submissionDate;
         private User submitter;
@@ -189,7 +187,7 @@ public class Submission {
 
         public Builder() {
             super();
-            this.attachments = new ArrayList<Attachment>();
+            this.attachments = new ArrayList<File>();
             this.actionType = null;
             this.data = new ManyMap<String, Value>();
             this.descriptionMap = new HashMap<String, String>();
@@ -234,12 +232,12 @@ public class Submission {
                 this.data = new ManyMap<String, Value>();
 
             if (submission.attachments != null && !submission.attachments.isEmpty()) {
-                this.attachments = new ArrayList<Attachment>();
-                for (Attachment attachment : submission.attachments) {
-                    this.attachments.add(new Attachment.Builder(attachment, sanitizer).build());
+                this.attachments = new ArrayList<File>();
+                for (File attachment : submission.attachments) {
+                    this.attachments.add(new File.Builder(attachment).build());
                 }
             } else {
-                this.attachments = new ArrayList<Attachment>();
+                this.attachments = new ArrayList<File>();
             }
 
             if (submission.activityMap != null && !submission.activityMap.isEmpty()) {
@@ -308,14 +306,14 @@ public class Submission {
             return this;
         }
 
-        public Builder attachment(Attachment attachment) {
+        public Builder attachment(File attachment) {
             this.attachments.add(attachment);
             return this;
         }
 
-        public Builder attachments(Collection<Attachment> attachments) {
+        public Builder attachments(Collection<File> attachments) {
             if (attachments != null)
-                this.attachments = new ArrayList<Attachment>(attachments);
+                this.attachments = new ArrayList<File>(attachments);
             return this;
         }
 

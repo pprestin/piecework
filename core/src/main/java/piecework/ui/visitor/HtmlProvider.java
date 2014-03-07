@@ -18,7 +18,6 @@ package piecework.ui.visitor;
 import org.apache.cxf.jaxrs.provider.AbstractConfigurableProvider;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import piecework.exception.NotFoundError;
 import piecework.identity.IdentityHelper;
 import piecework.model.Explanation;
@@ -29,7 +28,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
@@ -72,7 +72,7 @@ public class HtmlProvider extends AbstractConfigurableProvider implements Messag
             StreamingOutput streamingOutput;
 
             if (type.equals(Explanation.class))
-                streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, Explanation.class.cast(t), helper.getPrincipal());
+                streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, Explanation.class.cast(t));
             else
                 streamingOutput = userInterfaceService.getDefaultPageAsStreaming(type, t);
 

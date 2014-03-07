@@ -15,17 +15,16 @@
  */
 package piecework.authorization;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Collection;
-
-import javax.ws.rs.PathParam;
-
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.vote.RoleVoter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+
+import javax.ws.rs.PathParam;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Collection;
 
 /**
  * @author James Renfro

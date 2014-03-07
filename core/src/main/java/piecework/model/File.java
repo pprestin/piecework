@@ -19,10 +19,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.data.annotation.Transient;
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
+import piecework.content.Version;
 import piecework.security.Sanitizer;
 
 import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author James Renfro
@@ -54,6 +60,19 @@ public class File extends Value {
     @XmlAttribute
     private final String uri;
 
+    @XmlAttribute
+    private final String filerId;
+
+    @XmlElementWrapper(name = "versions")
+    @XmlElement(name = "version")
+    private final List<Version> versions;
+
+    @XmlTransient
+    @JsonIgnore
+    @Transient
+    private transient final ContentResource contentResource;
+
+
     private File() {
         this(new Builder(), null);
     }
@@ -66,6 +85,9 @@ public class File extends Value {
         this.description = builder.description;
         this.link = builder.link == null && context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
         this.uri = context != null && StringUtils.isNotEmpty(builder.processInstanceId) ? context.getServiceUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey, builder.processInstanceId, "value", builder.fieldName, builder.id) : builder.link;
+        this.contentResource = builder.contentResource;
+        this.filerId = builder.filerId;
+        this.versions = builder.versions != null && !builder.versions.isEmpty() ? new ArrayList<Version>(builder.versions) : new ArrayList<Version>();
     }
 
     @JsonIgnore
@@ -90,12 +112,25 @@ public class File extends Value {
         return location;
     }
 
+    @JsonIgnore
+    public ContentResource getContentResource() {
+        return contentResource;
+    }
+
     public String getLink() {
         return link;
     }
 
     public String getUri() {
         return uri;
+    }
+
+    public String getFilerId() {
+        return filerId;
+    }
+
+    public List<Version> getVersions() {
+        return versions;
     }
 
     @JsonIgnore
@@ -125,6 +160,9 @@ public class File extends Value {
         private String processInstanceId;
         private String fieldName;
         private String link;
+        private ContentResource contentResource;
+        private String filerId;
+        private List<Version> versions = new ArrayList<Version>();
 
         public Builder() {
             super();
@@ -134,17 +172,22 @@ public class File extends Value {
             this.id = file.id;
             this.description = file.description;
             this.location = file.location;
-            this.contentType = file.contentType;
             this.name = file.name;
-            this.description = file.description;
+            this.contentType = file.contentType;
+            this.contentResource = file.contentResource;
+            this.filerId = file.filerId;
+            this.versions = file.versions != null && !file.versions.isEmpty() ? new ArrayList<Version>(file.versions) : new ArrayList<Version>();
         }
 
         public Builder(File file, Sanitizer sanitizer) {
             this.id = sanitizer.sanitize(file.id);
-            this.location = sanitizer.sanitize(file.location);
-            this.contentType = sanitizer.sanitize(file.contentType);
-            this.name = sanitizer.sanitize(file.name);
             this.description = sanitizer.sanitize(file.description);
+            this.location = sanitizer.sanitize(file.location);
+            this.name = sanitizer.sanitize(file.name);
+            this.contentType = sanitizer.sanitize(file.contentType);
+            this.contentResource = file.contentResource;
+            this.filerId = file.filerId;
+            this.versions = file.versions != null && !file.versions.isEmpty() ? new ArrayList<Version>(file.versions) : new ArrayList<Version>();
         }
 
         public File build() {
@@ -185,6 +228,16 @@ public class File extends Value {
             return this;
         }
 
+        public Builder contentResource(ContentResource contentResource) {
+            this.contentResource = contentResource;
+            return this;
+        }
+
+        public Builder filerId(String filerId) {
+            this.filerId = filerId;
+            return this;
+        }
+
         public Builder processDefinitionKey(String processDefinitionKey) {
             this.processDefinitionKey = processDefinitionKey;
             return this;
@@ -197,6 +250,12 @@ public class File extends Value {
 
         public Builder link(String link) {
             this.link = link;
+            return this;
+        }
+
+        public Builder versions(List<Version> versions) {
+            if (versions != null && !versions.isEmpty())
+                this.versions.addAll(versions);
             return this;
         }
 

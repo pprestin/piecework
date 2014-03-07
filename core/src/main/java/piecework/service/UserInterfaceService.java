@@ -18,24 +18,30 @@ package piecework.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
-import org.htmlcleaner.*;
+import org.htmlcleaner.CleanerProperties;
+import org.htmlcleaner.HtmlCleaner;
+import org.htmlcleaner.TagNode;
+import org.htmlcleaner.TagNodeVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import piecework.common.ContentResource;
+import piecework.content.ContentResource;
 import piecework.enumeration.CacheName;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
 import piecework.exception.StatusCodeError;
 import piecework.form.FormDisposition;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
-import piecework.ui.*;
+import piecework.ui.CustomJaxbJsonProvider;
+import piecework.ui.InlinePageModelSerializer;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
 import piecework.ui.visitor.*;
 import piecework.util.UserInterfaceUtility;
@@ -45,7 +51,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @author James Renfro
@@ -60,9 +68,6 @@ public class UserInterfaceService {
 
     @Autowired
     private CacheService cacheService;
-
-    @Autowired
-    private Environment environment;
 
     @Autowired
     private FormTemplateService formTemplateService;
@@ -84,35 +89,35 @@ public class UserInterfaceService {
             return false;
 
         try {
-            Resource resource = formTemplateService.getTemplateResource(type, null);
-            return resource != null && resource.exists();
+            ContentResource resource = formTemplateService.getTemplateResource(type, null);
+            return resource != null;
         } catch (NotFoundError nfe) {
             return false;
         }
     }
 
-    public boolean hasExternalScriptResource(Class<?> type) {
-        if (type.equals(SearchResults.class))
-            return true;
-        if (InputStream.class.isAssignableFrom(type))
-            return false;
-        try {
-            Resource resource = formTemplateService.getTemplateResource(type, null);
-            return resource != null && resource.exists();
-        } catch (NotFoundError nfe) {
-            return false;
-        }
-    }
+//    public boolean hasExternalScriptResource(Class<?> type) {
+//        if (type.equals(SearchResults.class))
+//            return true;
+//        if (InputStream.class.isAssignableFrom(type))
+//            return false;
+//        try {
+//            ContentResource resource = formTemplateService.getTemplateResource(type, null);
+//            return resource != null;
+//        } catch (NotFoundError nfe) {
+//            return false;
+//        }
+//    }
 
-    public StreamingOutput getExplanationAsStreaming(ServletContext servletContext, Explanation explanation, Entity principal) {
+    public StreamingOutput getExplanationAsStreaming(ServletContext servletContext, Explanation explanation) {
         try {
-            Resource template = formTemplateService.getTemplateResource(Explanation.class, explanation);
-            if (template.exists()) {
+            ContentResource template = formTemplateService.getTemplateResource(Explanation.class, explanation);
+            if (template != null) {
                 Entity user = helper.getPrincipal();
                 ObjectMapper objectMapper = jsonProvider.locateMapper(Explanation.class, MediaType.APPLICATION_JSON_TYPE);
                 InlinePageModelSerializer modelSerializer = new InlinePageModelSerializer(settings, explanation, Explanation.class, user, objectMapper);
                 StaticResourceAggregatingVisitor aggregatingVisitor =
-                        new StaticResourceAggregatingVisitor(servletContext, null, null, settings, contentRepository, principal, true);
+                        new StaticResourceAggregatingVisitor(servletContext, null, null, settings, contentRepository, true);
 
                 InputStream inputStream = template.getInputStream();
                 // Sanity check
@@ -138,8 +143,8 @@ public class UserInterfaceService {
     }
 
     public StreamingOutput getDefaultPageAsStreaming(Class<?> type, Object t) throws IOException, NotFoundError {
-        Resource template = formTemplateService.getTemplateResource(type, t);
-        if (template.exists()) {
+        ContentResource template = formTemplateService.getTemplateResource(type, t);
+        if (template != null) {
             Entity user = helper.getPrincipal();
             ObjectMapper objectMapper = jsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
 
@@ -157,26 +162,26 @@ public class UserInterfaceService {
         return null;
     }
 
-    public Resource getCustomPage(Form form, Entity principal) throws MisconfiguredProcessException {
+    public ContentResource getCustomPage(ContentProfileProvider modelProvider, Form form) throws PieceworkException {
         // Sanity checks
         if (form == null)
             throw new MisconfiguredProcessException("No form");
 
-        Content content = getContentFromDisposition(form.getProcess(), form.getDisposition(), principal);
-        return new ContentResource(content);
+        return getContentFromDisposition(modelProvider, form.getDisposition());
     }
 
-    public StreamingOutput getCustomPageAsStreaming(final Process process, final Form form, Entity principal) throws MisconfiguredProcessException, IOException {
+    public <P extends ProcessDeploymentProvider> StreamingOutput getCustomPageAsStreaming(P modelProvider, final Form form) throws PieceworkException, IOException {
         // Sanity checks
         if (form == null)
             throw new MisconfiguredProcessException("No form");
 
         FormDisposition disposition = form.getDisposition();
-        Content content = getContentFromDisposition(process, disposition, principal);
+        ContentResource contentResource = getContentFromDisposition(modelProvider, disposition);
 
         TagNodeVisitor visitor;
         switch (disposition.getType()) {
             case CUSTOM:
+                Process process = modelProvider.process();
                 visitor = new DecoratingVisitor(settings, process, form);
                 break;
             case REMOTE:
@@ -186,75 +191,36 @@ public class UserInterfaceService {
                 visitor = new ScriptInjectingVisitor(form);
                 break;
         }
-        return new HtmlCleanerStreamingOutput(content.getInputStream(), visitor);
+        return new HtmlCleanerStreamingOutput(contentResource.getInputStream(), visitor);
     }
 
-//    public StreamingOutput getExternalScriptAsStreaming(Class<?> type, Object t) throws IOException {
-//        if (type.equals(Form.class)) {
-//            Form form = Form.class.cast(t);
-//            if (form.isExternal() && form.getContainer() != null && !form.getContainer().isReadonly()) {
-//                Entity user = helper.getPrincipal();
-//                Resource script = formTemplateService.getExternalScriptResource(type, t);
-//
-//                PageContext pageContext = new PageContext.Builder()
-//                        .applicationTitle(settings.getApplicationTitle())
-//                        .assetsUrl(settings.getAssetsUrl())
-//                        .user(user)
-//                        .build();
-//
-//                ObjectMapper objectMapper = jsonProvider.locateMapper(type, MediaType.APPLICATION_JSON_TYPE);
-//
-//                final String pageContextAsJson = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(pageContext);
-//                final String modelAsJson = objectMapper.writer().writeValueAsString(t);
-//                final boolean isExplanation = type != null && type.equals(Explanation.class);
-//
-//                Map<String, String> scopes = new HashMap<String, String>();
-//
-//                scopes.put("pageContext", pageContextAsJson);
-//                scopes.put("model", modelAsJson);
-//
-//                return new TemplateResourceStreamingOutput(script, scopes);
-//            }
-//        }
-//        return null;
-//    }
-
-    public Resource getScriptResource(ServletContext servletContext, Form form, Entity principal) throws StatusCodeError {
-        Resource template = formTemplateService.getTemplateResource(Form.class, form);
-        return getScriptResource(servletContext, form, template, principal);
+    public ContentResource getScriptResource(ServletContext servletContext, ContentProfileProvider modelProvider, Form form) throws StatusCodeError {
+        ContentResource template = formTemplateService.getTemplateResource(Form.class, form);
+        return getScriptResource(servletContext, modelProvider, form, template);
     }
 
-    public Resource getScriptResource(ServletContext servletContext, Form form, Resource template, Entity principal) throws StatusCodeError {
-        return getResource(CacheName.SCRIPT, servletContext, form, template, principal);
+    public ContentResource getScriptResource(ServletContext servletContext, ContentProfileProvider modelProvider, Form form, ContentResource template) throws StatusCodeError {
+        return getResource(CacheName.SCRIPT, servletContext, modelProvider, form, template);
     }
 
-    public Resource getScriptResource(ServletContext servletContext, String templateName, boolean isAnonymous, Entity principal) throws StatusCodeError {
-        Resource template = formTemplateService.getTemplateResource(templateName);
-        return getResource(CacheName.SCRIPT, servletContext, null, template, principal);
+    public ContentResource getScriptResource(ServletContext servletContext, ContentProfileProvider modelProvider, String templateName, boolean isAnonymous) throws StatusCodeError {
+        ContentResource template = formTemplateService.getTemplateResource(templateName);
+        return getResource(CacheName.SCRIPT, servletContext, modelProvider, null, template);
     }
 
-    public Resource getStylesheetResource(ServletContext servletContext, Form form, Entity principal) throws StatusCodeError {
-        Resource template = formTemplateService.getTemplateResource(Form.class, form);
-        return getStylesheetResource(servletContext, form, template, principal);
+    public ContentResource getStylesheetResource(ServletContext servletContext, ContentProfileProvider modelProvider, Form form) throws StatusCodeError {
+        ContentResource template = formTemplateService.getTemplateResource(Form.class, form);
+        return getStylesheetResource(servletContext, modelProvider, form, template);
     }
 
-    public Resource getStylesheetResource(ServletContext servletContext, Form form, Resource template, Entity principal) throws StatusCodeError {
-        return getResource(CacheName.STYLESHEET, servletContext, form, template, principal);
+    public ContentResource getStylesheetResource(ServletContext servletContext, ContentProfileProvider modelProvider, Form form, ContentResource template) throws StatusCodeError {
+        return getResource(CacheName.STYLESHEET, servletContext, modelProvider, form, template);
     }
 
-    public Resource getStylesheetResource(ServletContext servletContext, String templateName, Entity principal) throws StatusCodeError {
-        Resource template = formTemplateService.getTemplateResource(templateName);
-        return getResource(CacheName.STYLESHEET, servletContext, null, template, principal);
+    public ContentResource getStylesheetResource(ServletContext servletContext, ContentProfileProvider modelProvider, String templateName) throws StatusCodeError {
+        ContentResource template = formTemplateService.getTemplateResource(templateName);
+        return getResource(CacheName.STYLESHEET, servletContext, modelProvider, null, template);
     }
-
-//    public boolean serveExternalScriptResource(Class<?> type, Object t, OutputStream out) throws IOException {
-//        StreamingOutput streamingOutput = getExternalScriptAsStreaming(type, t);
-//        if (streamingOutput != null) {
-//            streamingOutput.write(out);
-//            return true;
-//        }
-//        return false;
-//    }
 
     public boolean servePage(StreamingOutput streamingOutput, OutputStream out) throws IOException {
         if (streamingOutput != null) {
@@ -267,8 +233,8 @@ public class UserInterfaceService {
 
     public long getPageSize(Class<?> type, Object t) {
         try {
-            Resource resource = formTemplateService.getTemplateResource(type, t);
-            return UserInterfaceUtility.resourceSize(resource);
+            ContentResource resource = formTemplateService.getTemplateResource(type, t);
+            return resource.contentLength();
         } catch (NotFoundError nfe) {
             return 0;
         }
@@ -279,7 +245,7 @@ public class UserInterfaceService {
 //        return UserInterfaceUtility.resourceSize(resource);
 //    }
 
-    private Content getContentFromDisposition(Process process, FormDisposition disposition, Entity principal) throws MisconfiguredProcessException {
+    private ContentResource getContentFromDisposition(ContentProfileProvider modelProvider, FormDisposition disposition) throws PieceworkException {
         if (disposition == null)
             throw new MisconfiguredProcessException("No form disposition");
         if (disposition.getType() != FormDisposition.FormDispositionType.CUSTOM)
@@ -287,38 +253,37 @@ public class UserInterfaceService {
         if (StringUtils.isEmpty(disposition.getPath()))
             throw new MisconfiguredProcessException("Form disposition path is empty");
 
-        Content content = contentRepository.findByLocation(process, disposition.getBase(), disposition.getPath(), principal);
-        if (content == null)
+        String base = disposition.getBase();
+        String path = disposition.getPath();
+        String location = base + "/" + path;
+
+        ContentResource contentResource = contentRepository.findByLocation(modelProvider, location);
+        if (contentResource == null)
             throw new MisconfiguredProcessException("No content found for disposition base: " + disposition.getBase() + " and path: " + disposition.getPath());
 
-        return content;
+        return contentResource;
     }
 
-    private Resource getResourceFromCache(Resource template, CacheName cacheName) {
-        try {
-            Cache.ValueWrapper wrapper = settings.isDisableResourceCaching() ? null : cacheService.get(cacheName, template.getFilename());
+    private ContentResource getResourceFromCache(ContentResource template, CacheName cacheName) {
 
-            if (wrapper != null) {
-                Resource resource = (Resource) wrapper.get();
+        Cache.ValueWrapper wrapper = settings.isDisableResourceCaching() ? null : cacheService.get(cacheName, template.getFilename());
 
-                if (resource != null && resource.exists() && resource.lastModified() >= template.lastModified())
-                    return resource;
-            }
-        } catch (IOException ioe) {
-            LOG.error("Unable to read template", ioe);
+        if (wrapper != null) {
+            ContentResource resource = (ContentResource) wrapper.get();
+
+            if (resource != null && (resource.lastModified() <= 0 || resource.lastModified() >= template.lastModified()))
+                return resource;
         }
+
         return null;
     }
 
-    private Resource getResource(CacheName cacheName, ServletContext servletContext, Form form, Resource template, Entity principal) throws StatusCodeError {
-        if (!template.exists())
-            throw new NotFoundError();
-
-        Resource scriptResource = getResourceFromCache(template, cacheName);
+    private ContentResource getResource(CacheName cacheName, ServletContext servletContext, ContentProfileProvider modelProvider, Form form, ContentResource template) throws StatusCodeError {
+        ContentResource scriptResource = getResourceFromCache(template, cacheName);
         if (scriptResource != null)
             return scriptResource;
 
-        scriptResource = UserInterfaceUtility.resource(cacheName, form, template, contentRepository, servletContext, settings, principal);
+        scriptResource = UserInterfaceUtility.resource(cacheName, modelProvider, form, template, contentRepository, servletContext, settings);
         cacheService.put(cacheName, template.getFilename(), scriptResource);
 
         return scriptResource;

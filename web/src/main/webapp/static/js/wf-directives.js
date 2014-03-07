@@ -312,8 +312,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfFile', ['$sce', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
-        function($sce, attachmentService, dialogs, notificationService, taskService, wizardService) {
+    .directive('wfFile', ['$http', '$sce', '$window', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
+        function($http, $sce, $window, attachmentService, dialogs, notificationService, taskService, wizardService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -322,51 +322,64 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/file.html',
                 link: function (scope, element, attr) {
-//                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
-//                        scope.form = form;
-//                    });
+                    scope.checkoutFile = function(file) {
+                        var url = file.link + '/checkout';
+                        $http.post($sce.trustAsResourceUrl(url), null, {
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            transformRequest: angular.identity
+                        })
+                        .success(function(data, status, headers, config) {
+                            scope.checkedOut = true;
+                            $window.location.href = file.link;
+                        });
+                    };
+                    scope.checkinFile = function(file) {
+                        scope.checkedOut = false;
+                    };
+                    scope.deleteFile = function(file) {
+                        var url = file.link + '/removal.json';
+                        $http.post($sce.trustAsResourceUrl(url), null, {
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            transformRequest: angular.identity
+                        })
+                        .success(function(data, status, headers, config) {
+                            var files = [];
+                            angular.forEach(scope.files, function(current) {
+                                if (current != null && current.name != file.name) {
+                                    files.push(current);
+                                }
+                            });
+                            scope.files = files;
+                        })
+                        .error(function(data, status, headers, config) {
 
-//                    scope.onChange = function() {
-//                        if (scope.form == null)
-//                            return;
-//
-//                        var fieldName = scope.name;
-//                        var data = new FormData();
-//                        var $inputs = element.find(':input[type="file"]');
-//                        $inputs.each(function(index, input) {
-//                            var $input = $(input);
-//                            data.append(input.name, $input.val());
-//                        });
-//
-//                        var url = scope.form.attachment;
-//                        if (fieldName != 'attachments') {
-//                            url = url.replace('/attachment', '/value');
-//                            url += '/' + fieldName;
-//                        }
-//
-//                        $.ajax({
-//                            url : url,
-//                            data : data,
-//                            processData : false,
-//                            contentType : false,
-//                            type : 'POST'
-//                        })
-//                        .done(function(data, textStatus, jqXHR) {
-//                            $inputs.val('');
-//                            if (fieldName == 'attachments')
-//                                scope.$root.$broadcast('wfEvent:attachments', data.list);
-//                            else
-//                                scope.$root.$broadcast('wfEvent:value-updated:' + fieldName, data);
-//                        })
-//                        .fail(function(jqXHR, textStatus, errorThrown) {
-//                            var data = $.parseJSON(jqXHR.responseText);
-//                            var selector = '.process-alert[data-element="' + fieldName + '"]';
-//                            var message = data.messageDetail;
-//                            var $alert = $(selector);
-//                            $alert.show();
-//                            $alert.text(message);
-//                        });
-//                    }
+                        });
+                    };
+                    scope.edit = function() {
+                        scope.editing = !scope.editing;
+                    };
+                    scope.showDetails = function(file) {
+                        file.detailed = !file.detailed;
+                    };
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
+                        scope.form = form;
+                        var data = form.data;
+                        var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
+                        scope.files = [];
+                        angular.forEach(values, function(file) {
+                            file.detailed = false;
+                            scope.files.push(file);
+                        });
+                    });
+                    scope.$on('wfEvent:invalid', function(event, validation) {
+                        if (validation != null && validation[scope.name] != null) {
+                            scope.error = validation[scope.name];
+                        }
+                    });
+                    scope.cannotCheckout = true;
+                    scope.checkedOut = false;
+                    scope.editing = false;
+                    scope.files = [];
                 }
             }
         }
@@ -480,11 +493,10 @@ angular.module('wf.directives',
 
          }
      ])
-    .directive('wfForm', ['$http', '$location', '$sce', '$window', 'formPageUri', 'formResourceUri', 'wizardService',
-        function($http, $location, $sce, $window, formPageUri, formResourceUri, wizardService) {
+    .directive('wfForm', ['$http', '$location', '$sce', '$window', 'formPageUri', 'formResourceUri', 'notificationService', 'wizardService',
+        function($http, $location, $sce, $window, formPageUri, formResourceUri, notificationService, wizardService) {
             return {
                 restrict: 'AE',
-//                controller: 'FileUploadController',
                 scope: {
 
                 },
@@ -645,7 +657,9 @@ angular.module('wf.directives',
                         var data = form.data;
                         var validation = form.validation;
                         var formElement = element[0];
-                        angular.forEach(formElement.elements, function(input) {
+//                        angular.forEach(formElement.elements, function(input) {
+
+                        element.find(':input').each(function(index, input) {
                             if (input.attributes['data-wf-blank'])
                                 return;
                             if (input.name != null) {
@@ -706,7 +720,9 @@ angular.module('wf.directives',
                                         if (value != null) {
                                             if (input.type == 'checkbox' || input.type == 'radio') {
                                                 if (input.value == value)
-                                                    input.checked = true;
+                                                    angular.element(input).prop('checked', true);
+//                                                    input.checked = true;
+
                                             } else if (input.type == 'select') {
                                                 angular.forEach(input.options, function(option) {
                                                     if (option.value == value)
@@ -721,7 +737,8 @@ angular.module('wf.directives',
                                                 else
                                                     current = value;
 
-                                                input.value = typeof(current) === 'string' ? current : current.name;
+                                                var specificValue = typeof(current) === 'string' ? current : current.name;
+                                                angular.element(input).val(specificValue);
                                             }
                                         }
                                     });
@@ -812,10 +829,16 @@ angular.module('wf.directives',
                         if (form != null && form.data != null)
                             scope.reloadForm(form);
                     });
-                    scope.$on('fileuploadfail', function(event, data) {
+                    scope.$root.$on('fileuploadfail', function(event, data) {
                         var message = angular.fromJson(data.jqXHR.responseText);
-
-                        notificationService.notify(scope.$root, message.messageDetail);
+                        if (message != null && message.items != null) {
+                            var validation = {};
+                            angular.forEach(message.items, function(item) {
+                                validation[item.propertyName] = item.message;
+                            });
+                            scope.$root.$broadcast('wfEvent:invalid', validation);
+                        }
+//                        notificationService.notify(scope.$root, message.messageDetail);
                     });
                     scope.$on('fileuploadstart', function() {
                         scope.state.sending = true;
@@ -868,8 +891,8 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfList', ['attachmentService', 'dateFilter',
-        function(attachmentService, dateFilter) {
+    .directive('wfList', ['$http', '$sce', 'attachmentService', 'dateFilter',
+        function($http, $sce, attachmentService, dateFilter) {
             return {
                 restrict: 'A',
                 scope: {
@@ -919,14 +942,18 @@ angular.module('wf.directives',
                                 var $listElement = $target.find('ul');
                                 var $listItem = $(event.target).closest('li');
                                 var $fallbackHtml = $target.find('[data-wf-fallback]');
-                                $.ajax({
-                                    url : realValue.link,
-                                    type : 'DELETE',
-                                    success: function() {
-                                        $listItem.remove();
-                                        if ($listElement.find('li').length == 1)
-                                            $fallbackHtml.show();
-                                    }
+                                var url = realValue.link + '/removal.json';
+                                $http.post($sce.trustAsResourceUrl(url), null, {
+                                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                    transformRequest: angular.identity
+                                })
+                                .success(function(data, status, headers, config) {
+                                    $listItem.remove();
+                                    if ($listElement.find('li').length == 1)
+                                        $fallbackHtml.show();
+                                })
+                                .error(function(data, status, headers, config) {
+
                                 });
                             });
 
@@ -939,9 +966,6 @@ angular.module('wf.directives',
                             if ($listItems.length > 0)
                                 $fallbackHtml.hide();
                         }
-                    };
-                    scope.loadValueListener = function(event, updatedValue) {
-                        scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
                     };
                     scope.loadMultipleValues = function(element, values, fieldName, subFieldName, childHtml) {
                         var fallbackHtml = element.find('[data-wf-fallback]');
@@ -958,7 +982,9 @@ angular.module('wf.directives',
                         var eventName = 'wfEvent:value-updated:' + fieldName;
 
                         if (scope.valueUpdatedListener == null)
-                            scope.valueUpdatedListener = scope.$on(eventName, scope.loadValueListener);
+                            scope.valueUpdatedListener = scope.$on(eventName, function(event, updatedValue) {
+                                scope.loadValue(listElement, updatedValue, fieldName, subFieldName, childHtml, fallbackHtml);
+                            });
 
                         if (values != null && values.length > 0) {
                             angular.forEach(values, function(value) {
@@ -980,6 +1006,7 @@ angular.module('wf.directives',
                         }
                         var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
 
+//                        scope.some.files = values;
                         var childHtml = element.find('li:first');
                         var fallbackHtml = element.find('[data-wf-fallback]');
                         if (!childHtml.hasClass('template')) {
@@ -1252,6 +1279,7 @@ angular.module('wf.directives',
                     scope.criteria.processDefinitionKey = '';
                     scope.criteria.processStatus = 'open';
                     scope.criteria.taskStatus = 'all';
+                    scope.criteria.orderBy = 'START_TIME_ASC';
 
                     scope.exportCsv = function(selectedForms) {
                         var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.criteria.processDefinitionKey;
@@ -1260,6 +1288,24 @@ angular.module('wf.directives',
                         if (scope.criteria.startedBefore != null)
                             url += '&startedBefore=' + scope.criteria.startedBefore;
                         $window.location.href = url;
+                    };
+
+                    scope.getFacets = function($viewValue) {
+                        var facets = new Array();
+                        facets.push({displayName: 'Budget',label:'budget'});
+//                        if (response != null && response.data != null && response.data.list != null) {
+//                            angular.forEach(response.data.list, function(item) {
+//                                var person = {
+//                                    displayName: item.displayName,
+//                                    userId: item.userId,
+//                                    toString: function() {
+//                                        return this.displayName;
+//                                    }
+//                                };
+//                                people.push(person);
+//                            });
+//                        }
+                        return facets;
                     };
 
                     scope.processStatusDescription = {

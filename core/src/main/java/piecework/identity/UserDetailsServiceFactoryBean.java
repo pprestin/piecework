@@ -24,7 +24,10 @@ import org.springframework.security.ldap.search.LdapUserSearch;
 import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import piecework.ServiceLocator;
-import piecework.ldap.*;
+import piecework.ldap.CustomLdapUserDetailsMapper;
+import piecework.ldap.CustomLdapUserDetailsService;
+import piecework.ldap.LdapSettings;
+import piecework.ldap.LdapUtility;
 import piecework.service.CacheService;
 
 import javax.net.ssl.SSLSocketFactory;

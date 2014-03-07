@@ -18,6 +18,11 @@ package piecework.security;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import org.apache.cxf.common.util.StringUtils;
+import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.cxf.jaxrs.ext.RequestHandler;
+import org.apache.cxf.jaxrs.model.ClassResourceInfo;
+import org.apache.cxf.message.*;
+import org.apache.cxf.message.Message;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -33,19 +38,22 @@ import piecework.persistence.ProcessProvider;
 import piecework.repository.AccessEventRepository;
 import piecework.service.CacheService;
 import piecework.settings.NotificationSettings;
+import piecework.settings.SecuritySettings;
 import piecework.util.ModelUtility;
 
 import javax.annotation.PostConstruct;
 import javax.mail.internet.InternetAddress;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
 /**
  * @author James Renfro
  */
 @Service
-public class AccessTracker {
+public class AccessTracker implements RequestHandler {
 
     private static final Logger LOG = Logger.getLogger(AccessTracker.class);
+    private static final String crLf = Character.toString((char)13) + Character.toString((char)10);
 
     @Autowired
     AccessEventRepository accessEventRepository;
@@ -54,28 +62,21 @@ public class AccessTracker {
     CacheService cacheService;
 
     @Autowired
-    Environment environment;
-
-    @Autowired
     NotificationSettings notificationSettings;
 
-    private long accessCacheInterval;
-    private long accessCountLimit;
+    @Autowired
+    SecuritySettings securitySettings;
 
-    @PostConstruct
-    public void init() {
-        // Default to 1000 calls in 5 minutes
-        Long intervalInMinutes = environment.getProperty("access.cache.interval.minutes", Long.class, Long.valueOf(5l));
-        this.accessCacheInterval = intervalInMinutes.longValue() * 60 * 1000;
-        this.accessCountLimit = environment.getProperty("access.count.limit", Long.class, Long.valueOf(1000));
-    }
 
     public void alarm(final AlarmSeverity severity, final String message) {
+        alarm(severity, message, null);
+    }
+
+    public void alarm(final AlarmSeverity severity, final String message, final Entity principal) {
         try {
             SimpleEmail email = new SimpleEmail();
             email.setHostName(notificationSettings.getMailServerHost());
             email.setSmtpPort(notificationSettings.getMailServerPort());
-
             String adminEmail = notificationSettings.getAdminEmail();
 
             LOG.error("Alarming at severity " + severity + " : " + message);
@@ -93,9 +94,17 @@ public class AccessTracker {
                 return; // no recipients
             }
 
+            String subject = notificationSettings.getApplicationName() + " is issuing " + severity + " alarm";
+            StringBuilder body = new StringBuilder(message);
+
+            if (principal != null)
+                body.append(crLf).append(crLf).append("Action attempted as principal " + principal.getEntityId());
+            else
+                body.append(crLf).append(crLf).append("Action attempted by anonymous principal");
+
             email.setFrom(notificationSettings.getMailFromAddress(), notificationSettings.getMailFromLabel());
-            email.setSubject("Alarm from piecework: " + severity);
-            email.setMsg(message);
+            email.setSubject(subject);
+            email.setMsg(body.toString());
 
             LOG.debug("Subject: " + email.getSubject());
             LOG.debug(email.getMimeMessage());
@@ -105,7 +114,12 @@ public class AccessTracker {
         }
     }
 
-    public void track(final RequestDetails requestDetails, final boolean isUpdate, final boolean isAnonymous) {
+    @Override
+    public Response handleRequest(Message message, ClassResourceInfo resourceClass) {
+        MessageContext context = message.get(MessageContext.class);
+        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
+        boolean isAnonymous = StringUtils.isEmpty(requestDetails.getRemoteUser());
+
         CacheName cacheName = isAnonymous ? CacheName.ACCESS_ANONYMOUS : CacheName.ACCESS_AUTHENTICATED;
         String key = isAnonymous ? requestDetails.getRemoteAddr() : requestDetails.getRemoteUser();
 
@@ -116,21 +130,51 @@ public class AccessTracker {
         if (wrapper != null) {
             previousAccessLog = AccessLog.class.cast(wrapper.get());
 
-            if (previousAccessLog != null && !previousAccessLog.isExpired(accessCacheInterval)) {
+            if (previousAccessLog != null && !previousAccessLog.isExpired(securitySettings.getAccessCacheInterval())) {
                 accessLog = new AccessLog(previousAccessLog);
             }
         }
 
         if (accessLog == null)
-            accessLog = new AccessLog(accessCountLimit);
+            accessLog = new AccessLog(securitySettings.getAccessCountLimit());
 
         cacheService.put(cacheName, key, accessLog);
 
         if (accessLog.isAlarming()) {
-            String message = "Access attempt " + accessLog.getAccessCount() + " by " + key;
-            LOG.warn(message);
-            alarm(AlarmSeverity.MINOR, message);
+            String alarmMessage = "Access attempt " + accessLog.getAccessCount() + " by " + key;
+            LOG.warn(alarmMessage);
+            alarm(AlarmSeverity.MINOR, alarmMessage);
+            return Response.status(Response.Status.FORBIDDEN).build();
         }
+        return null;
+    }
+
+    public void track(final RequestDetails requestDetails, final boolean isUpdate, final boolean isAnonymous) {
+//        CacheName cacheName = isAnonymous ? CacheName.ACCESS_ANONYMOUS : CacheName.ACCESS_AUTHENTICATED;
+//        String key = isAnonymous ? requestDetails.getRemoteAddr() : requestDetails.getRemoteUser();
+//
+//        Cache.ValueWrapper wrapper = cacheService.get(cacheName, key);
+//
+//        AccessLog accessLog = null;
+//        AccessLog previousAccessLog = null;
+//        if (wrapper != null) {
+//            previousAccessLog = AccessLog.class.cast(wrapper.get());
+//
+//            if (previousAccessLog != null && !previousAccessLog.isExpired(securitySettings.getAccessCacheInterval())) {
+//                accessLog = new AccessLog(previousAccessLog);
+//            }
+//        }
+//
+//        if (accessLog == null)
+//            accessLog = new AccessLog(securitySettings.getAccessCountLimit());
+//
+//        cacheService.put(cacheName, key, accessLog);
+//
+//        if (accessLog.isAlarming()) {
+//            String message = "Access attempt " + accessLog.getAccessCount() + " by " + key;
+//            LOG.warn(message);
+//            alarm(AlarmSeverity.MINOR, message);
+//        }
     }
 
     public <P extends ProcessProvider> void track(final P modelProvider, final String secretId, final String key, final String reason, final boolean isAnonymousAllowed) throws PieceworkException {

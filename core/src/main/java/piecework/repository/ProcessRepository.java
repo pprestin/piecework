@@ -16,7 +16,6 @@
 package piecework.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-
 import org.springframework.data.mongodb.repository.Query;
 import piecework.model.Process;
 

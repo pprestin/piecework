@@ -15,21 +15,25 @@
  */
 package piecework.content.concrete;
 
-import org.apache.commons.lang.StringUtils;
+import com.google.common.collect.Sets;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
-import piecework.model.*;
-import piecework.model.Process;
+import piecework.exception.ForbiddenError;
+import piecework.exception.PieceworkException;
+import piecework.model.ContentProfile;
+import piecework.persistence.ContentProfileProvider;
 import piecework.util.ContentUtility;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -38,6 +42,7 @@ import java.net.URI;
 public class RemoteContentProvider extends GridFSContentProviderReceiver {
 
     private static final Logger LOG = Logger.getLogger(RemoteContentProvider.class);
+    private static final Set<String> VALID_URI_SCHEMES = Sets.newHashSet("http", "https");
 
     private CloseableHttpClient client;
 
@@ -47,12 +52,6 @@ public class RemoteContentProvider extends GridFSContentProviderReceiver {
         cm.setMaxTotal(100);
 
         this.client = HttpClients.custom().setConnectionManager(cm).build();
-//        CacheConfig cacheConfig = CacheConfig.custom()
-//                .build();
-//        CachingHttpClientBuilder builder = CachingHttpClients.custom();
-//        builder.setConnectionManager(cm);
-//        builder.setCacheConfig(cacheConfig);
-//        this.client = builder.build();
     }
 
     @PreDestroy
@@ -67,78 +66,36 @@ public class RemoteContentProvider extends GridFSContentProviderReceiver {
     }
 
     @Override
-    public Content findByPath(Process process, String base, String location, Entity principal) {
-        String url = "";
-        if (StringUtils.isNotEmpty(base))
-            url += base;
-        if (StringUtils.isNotEmpty(location))
-            url += location;
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException {
+        ContentProfile contentProfile = modelProvider.contentProfile();
+
+        // Should never use RemoteContentProvider unless the content profile explicitly
+        // whitelists specific URLs
+        if (contentProfile == null)
+            return null;
+
+        Set<String> remoteResourceLocations = contentProfile.getRemoteResourceLocations();
 
         URI uri;
         try {
-            uri = URI.create(url);
+            uri = URI.create(location);
 
-            // A known scheme is necessary if we're going to retrieve the item remotely
-            String scheme = uri.getScheme();
-            if (StringUtils.isEmpty(scheme) || (!scheme.equals("http") && !scheme.equals("https")))
-                return null;
+            // Ensure that code does not try to access a local URI
+            if (!uri.isAbsolute()) {
+                LOG.error("Attempting to resolve a relative uri");
+                throw new ForbiddenError();
+            }
+
+            // Ensure that code only tries to access uris with valid schemes
+            ContentUtility.validateScheme(uri, VALID_URI_SCHEMES);
+            ContentUtility.validateRemoteLocation(remoteResourceLocations, uri);
+
+            return ContentUtility.toContent(client, uri);
         } catch (IllegalArgumentException iae) {
+            LOG.error("Caught exception trying to find by remote location", iae);
             return null;
         }
-
-        //String storageLocation = "/remote/" + uri.getHost() + "/" + uri.getPath();
-
-//        // Check to see if we already have a cached copy of this file
-//        GridFSDBFile file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
-//        if (file != null) {
-//            LOG.debug("Retrieved remote resource " + location + " from " + storageLocation);
-//            // TODO: Add logic to check normal caching and time-to-live based on expires header
-//            DBObject metadata = file.getMetaData();
-//            Date uploadDate = file.getUploadDate();
-//            return ContentUtility.toContent(file);
-//        }
-
-        return ContentUtility.toContent(client, uri);
     }
-
-
-//    private Content retrieve(URI uri) {
-//        GridFSDBFile file = null;
-////        HttpContext context = new BasicHttpContext();
-//        HttpCacheContext context = HttpCacheContext.create();
-//        HttpGet get = new HttpGet(uri);
-//        CloseableHttpResponse response = null;
-//        try {
-//            LOG.info("Retrieving resource from " + uri.toString());
-//            response = client.execute(get, context);
-//            HttpEntity entity = response.getEntity();
-//            Header lastModifiedHeader = response.getFirstHeader("Last-Modified");
-//            Date lastModified = lastModifiedHeader != null && StringUtils.isNotEmpty(lastModifiedHeader.getValue()) ? DateUtils.parseDate(lastModifiedHeader.getValue()) : null;
-//            Header eTagHeader = response.getFirstHeader("ETag");
-//            String eTag = eTagHeader != null ? eTagHeader.getValue() : null;
-//
-//            return ContentUtility.toContent(uri, entity, lastModified, eTag);
-////            if (entity != null) {
-////                BasicDBObject metadata = new BasicDBObject();
-////                metadata.put("originalFilename", location);
-////                gridFsOperations.store(entity.getContent(), storageLocation, entity.getContentType().getValue(), metadata);
-////                file = gridFsOperations.findOne(query(GridFsCriteria.whereFilename().is(storageLocation)));
-////            }
-//        } catch (Exception e) {
-//            LOG.error("Unable to retrieve remote resource", e);
-//        } finally {
-//            if (response != null) {
-//                try {
-//                    response.close();
-//                } catch (IOException ioe) {
-//                    LOG.error("Unable to close response", ioe);
-//                }
-//            }
-//        }
-//
-//        return null;
-//    }
-
 
     @Override
     public Scheme getScheme() {

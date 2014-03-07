@@ -24,9 +24,11 @@ import piecework.authorization.AuthorizationRole;
 import piecework.common.ManyMap;
 import piecework.exception.BadRequestError;
 import piecework.exception.ForbiddenError;
+import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ProcessProvider;
 import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.validation.Validation;
@@ -94,19 +96,35 @@ public class SecurityUtility {
         return restrictedFields;
     }
 
-    public static ManyMap<String, Value> filter(Map<String, List<Value>> original, DataFilter... dataFilters) {
+    public static ManyMap<String, Value> filter(Set<Field> fields, Map<String, List<Value>> original, DataFilter... dataFilters) {
         ManyMap<String, Value> map = new ManyMap<String, Value>();
 
-        if (original != null && !original.isEmpty()) {
-            for (Map.Entry<String, List<Value>> entry : original.entrySet()) {
-                String key = entry.getKey();
-                List<Value> values = entry.getValue();
+        // Need to allow for adding default values -- in which case, the map may be empty
+        Set<String> keys = new HashSet<String>();
+        if (fields != null && !fields.isEmpty()) {
+            for (Field field : fields) {
+                if (StringUtils.isEmpty(field.getName()))
+                    continue;
+                keys.add(field.getName());
+            }
+        }
+
+        if (original == null)
+            original = Collections.emptyMap();
+
+        if (!original.isEmpty()) {
+            keys.addAll(original.keySet());
+        }
+
+        if (keys != null && !keys.isEmpty()) {
+            for (String key : keys) {
+                List<Value> values = original.get(key);
                 if (dataFilters != null) {
                     for (DataFilter dataFilter : dataFilters) {
                         values = dataFilter.filter(key, values);
                     }
                 }
-                if (!values.isEmpty())
+                if (values != null && !values.isEmpty())
                     map.put(key, values);
             }
         }
@@ -138,11 +156,28 @@ public class SecurityUtility {
         }
 
         if (!principal.hasRole(process, AuthorizationRole.OVERSEER)) {
+            if (!principal.hasRole(process, AuthorizationRole.USER)) {
+                LOG.warn("Forbidden: Unauthorized principal (not a user) " + principal.toString() + " attempting to access task " + taskId);
+                throw new ForbiddenError();
+            }
             if (task != null && !task.isCandidateOrAssignee(principal)) {
-                LOG.warn("Forbidden: Unauthorized principal " + principal.toString() + " attempting to access task " + taskId);
+                LOG.warn("Forbidden: Unauthorized principal (not candidate or assignee) " + principal.toString() + " attempting to access task " + taskId);
                 throw new ForbiddenError();
             }
         }
+    }
+
+    public static ProcessProvider verifyProcessAllowsAnonymousSubmission(final ProcessProvider processProvider) throws PieceworkException {
+        Process process = processProvider.process();
+
+        if (process == null)
+            throw new NotFoundError();
+
+        // Since this is a public resource, don't provide any additional information back beyond the fact that this form does not exist
+        if (!process.isAnonymousSubmissionAllowed())
+            throw new NotFoundError();
+
+        return processProvider;
     }
 
     public static void verifyRequestIntegrity(AccessTracker accessTracker, String processDefinitionKey, FormRequest formRequest, RequestDetails request) throws ForbiddenError {

@@ -18,29 +18,51 @@ package piecework.util;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.poi.util.IOUtils;
+import org.apache.log4j.Logger;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
+import piecework.Constants;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
 import piecework.content.concrete.RemoteResource;
-import piecework.model.Content;
+import piecework.exception.InternalServerError;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
+import piecework.model.ContentProfile;
+import piecework.persistence.ContentProfileProvider;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.util.Date;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * @author James Renfro
  */
 public class ContentUtility {
 
-    public static Content toContent(GridFsResource resource) throws IOException {
+    private static final Logger LOG = Logger.getLogger(ContentUtility.class);
+
+    public static String contentHandlerKey(ContentProfileProvider modelProvider) throws PieceworkException {
+        if (modelProvider == null)
+            throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "Couldn't get content handler key from null data model provider");
+
+        try {
+            ContentProfile contentProfile = modelProvider.contentProfile();
+            if (contentProfile != null && StringUtils.isNotEmpty(contentProfile.getContentHandlerKey()))
+                return contentProfile.getContentHandlerKey();
+        } catch (MisconfiguredProcessException e) {
+            // Ignore -- this can happen
+            LOG.debug("Couldn't find a deployment - this might be a deployment command call");
+        }
+
+        return null;
+    }
+
+    public static ContentResource toContent(GridFsResource resource) throws IOException {
         String resourceId = resource.getId().toString();
 
-        return new Content.Builder()
+        return new BasicContentResource.Builder()
                 .contentId(resourceId)
                 .contentType(resource.getContentType())
                 .filename(resource.getFilename())
@@ -51,7 +73,7 @@ public class ContentUtility {
                 .build();
     }
 
-    public static Content toContent(GridFSDBFile file) {
+    public static ContentResource toContent(GridFSDBFile file) {
         if (file == null)
             return null;
 
@@ -59,7 +81,7 @@ public class ContentUtility {
         DBObject metadata = file.getMetaData();
         String originalFileName = metadata != null ? String.class.cast(metadata.get("originalFilename")) : null;
 
-        return new Content.Builder()
+        return new BasicContentResource.Builder()
                 .contentId(fileId)
                 .contentType(file.getContentType())
                 .filename(originalFileName)
@@ -67,21 +89,40 @@ public class ContentUtility {
                 .inputStream(file.getInputStream())
                 .lastModified(file.getUploadDate())
                 .length(Long.valueOf(file.getLength()))
-                .md5(file.getMD5())
+//                .md5(file.getMD5())
                 .build();
     }
 
-    public static Content toContent(CloseableHttpClient client, URI uri) {
+    public static ContentResource toContent(CloseableHttpClient client, URI uri) {
         if (client == null)
             return null;
 
         String url = uri.toString();
 
-        return new Content.Builder()
-                .contentId(url)
-                .location(url)
-                .resource(new RemoteResource(client, uri))
-                .build();
+        return new RemoteResource(client, uri);
+    }
+
+    public static boolean validateClasspath(String base, String classpath) {
+        String normalizedBase = org.springframework.util.StringUtils.cleanPath(base);
+        String normalizedPath = org.springframework.util.StringUtils.cleanPath(classpath);
+        return classpath.startsWith(base);
+    }
+
+    public static boolean validateRemoteLocation(Set<String> acceptableRegularExpressions, URI uri) {
+        String location = uri.toString();
+        if (acceptableRegularExpressions != null && !acceptableRegularExpressions.isEmpty()) {
+            for (String acceptableRegularExpression : acceptableRegularExpressions) {
+                Pattern pattern = Pattern.compile(acceptableRegularExpression);
+                if (pattern.matcher(location).matches())
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean validateScheme(URI uri, Set<String> validSchemes) throws PieceworkException {
+        String scheme = uri.getScheme();
+        return StringUtils.isNotEmpty(scheme) && validSchemes != null && validSchemes.contains(scheme);
     }
 
 }

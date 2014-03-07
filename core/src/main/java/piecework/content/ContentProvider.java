@@ -1,17 +1,15 @@
 package piecework.content;
 
 import piecework.enumeration.Scheme;
-import piecework.model.*;
-import piecework.model.Process;
-
-import java.io.IOException;
+import piecework.exception.PieceworkException;
+import piecework.persistence.ContentProfileProvider;
 
 /**
  * @author James Renfro
  */
 public interface ContentProvider {
 
-    Content findByPath(Process process, String base, String location, Entity principal) throws IOException;
+    ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException;
 
     Scheme getScheme();
 

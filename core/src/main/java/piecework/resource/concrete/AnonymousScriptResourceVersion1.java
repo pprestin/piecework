@@ -18,18 +18,20 @@ package piecework.resource.concrete;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
-import piecework.exception.*;
+import piecework.content.ContentResource;
+import piecework.exception.InternalServerError;
+import piecework.exception.MisconfiguredProcessException;
+import piecework.exception.PieceworkException;
 import piecework.form.FormDisposition;
-import piecework.model.*;
-import piecework.model.Process;
+import piecework.model.Entity;
+import piecework.model.Form;
 import piecework.persistence.ModelProviderFactory;
-import piecework.repository.ProcessRepository;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.resource.AnonymousScriptResource;
 import piecework.service.FormTemplateService;
-import piecework.service.ProcessService;
+import piecework.service.UserInterfaceService;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Response;
@@ -45,24 +47,30 @@ public class AnonymousScriptResourceVersion1 extends AbstractScriptResource impl
     @Autowired
     private FormTemplateService formTemplateService;
 
+    @Autowired
+    private ModelProviderFactory modelProviderFactory;
+
+    @Autowired
+    private UserInterfaceService userInterfaceService;
+
     @Override
     public Response readScript(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         Form form = getForm(rawProcessDefinitionKey, context);
         ServletContext servletContext = context.getServletContext();
 
-        Resource scriptResource;
+        ContentResource scriptResource;
         Entity principal = null;
-
+        ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         FormDisposition disposition = form.getDisposition();
         if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
             try {
-                Resource pageResource = userInterfaceService.getCustomPage(form, null);
-                scriptResource = userInterfaceService.getScriptResource(servletContext, form, pageResource, principal);
+                ContentResource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, form, pageResource);
             } catch (MisconfiguredProcessException e) {
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
             }
         } else {
-            scriptResource = userInterfaceService.getScriptResource(servletContext, form, principal);
+            scriptResource = userInterfaceService.getScriptResource(servletContext, modelProvider, form);
         }
 
         return response(scriptResource, "text/javascript");
@@ -72,18 +80,20 @@ public class AnonymousScriptResourceVersion1 extends AbstractScriptResource impl
     public Response readStylesheet(final String rawProcessDefinitionKey, final MessageContext context) throws PieceworkException {
         Form form = getForm(rawProcessDefinitionKey, context);
         ServletContext servletContext = context.getServletContext();
-        Resource stylesheetResource;
+        ContentResource stylesheetResource;
         FormDisposition disposition = form.getDisposition();
         Entity principal = null;
+        ProcessDeploymentProvider modelProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
+
         if (disposition != null && disposition.getType() == FormDisposition.FormDispositionType.CUSTOM) {
             try {
-                Resource pageResource = userInterfaceService.getCustomPage(form, null);
-                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, pageResource, principal);
+                ContentResource pageResource = userInterfaceService.getCustomPage(modelProvider, form);
+                stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, form, pageResource);
             } catch (MisconfiguredProcessException e) {
                 throw new InternalServerError(Constants.ExceptionCodes.process_is_misconfigured);
             }
         } else {
-            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, form, principal);
+            stylesheetResource = userInterfaceService.getStylesheetResource(servletContext, modelProvider, form);
         }
 
         return response(stylesheetResource, "text/css");

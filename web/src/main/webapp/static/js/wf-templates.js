@@ -361,9 +361,20 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        <p>{{form.explanation.messageDetail}}</p>\n" +
     "    </div></div></div>")
   $templateCache.put("templates/buttonbar.html",
-    "<div class=\"btn-toolbar pull-right\" role=\"toolbar\">\n" +
-    "        <button data-ng-if=\"!container.readonly\" data-ng-class=\"button.primary && 'btn-primary'\" data-ng-repeat=\"button in container.buttons\" data-ng-click=\"wizard.clickButton(form, container, button)\" class=\"btn btn-default\" name=\"{{button.name}}\" type=\"{{button.type}}\" value=\"{{button.value}}\">{{button.label}}</button>\n" +
-    "    </div>");
+    "<div data-ng-if=\"!container.readonly && container.buttons.length>0\" class=\"btn-toolbar pull-right\" role=\"toolbar\">\n" +
+    "    <div data-ng-repeat=\"button in container.buttons\" class=\"btn-group dropup\">\n" +
+    "        <button data-ng-class=\"button.primary && 'btn-primary'\" data-ng-click=\"wizard.clickButton(form, container, button)\" class=\"btn btn-default\" name=\"{{button.name}}\" type=\"{{button.type}}\" value=\"{{button.value}}\">{{button.label}}</button>\n" +
+    "        <button data-ng-if=\"button.children.length>0\" type=\"button\" class=\"btn btn-default dropdown-toggle\" data-toggle=\"dropdown\">\n" +
+    "            <span class=\"caret\"></span>\n" +
+    "        </button>\n" +
+    "        <ul data-ng-if=\"button.children.length>0\" class=\"dropdown-menu\">\n" +
+    "            <li data-ng-repeat=\"child in button.children\" data-ng-if=\" child.ordinal < container.activeChildIndex \"> \n" +
+    "        <button data-ng-click=\"wizard.clickButton(form, container, button)\" class=\"btn-link\" name=\"{{button.name}}\" type=\"{{button.type}}\" value=\"{{child.value}}\">{{child.label}}</button>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </div>\n" +
+    "</div>"
+    );
   $templateCache.put("templates/form.html",
     "<div data-wf-toolbar></div>\n" +
     "<form data-wf-form=\"\" name=\"myForm\" action=\"/\" method=\"POST\" novalidate=\"novalidate\">\n" +
@@ -436,7 +447,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                     <button data-ng-click=\"dialogs.openActivateModal([form])\" data-ng-show=\"form.history && form.task.taskStatus == 'Suspended'\" class=\"btn btn-default navbar-btn\" id=\"activate-dialog-button\" title=\"Activate process\" type=\"button\"><i class=\"fa fa-play\"></i></button>\n" +
     "                     <button data-ng-click=\"dialogs.openRestartModal([form])\" data-ng-show=\"form.history && (form.task.taskStatus == 'Cancelled' || form.task.taskStatus == 'Completed')\" class=\"btn btn-default navbar-btn\" title=\"Restart process\" type=\"button\"><i class=\"fa fa-rotate-left\"></i></button>\n" +
     "                 </div>\n" +
-    "                 <div class=\"navbar-right btn-toolbar\">\n" +
+    "                 <div class=\"navbar-right btn-toolbar wf-right-btn-toolbar\">\n" +
     //"                     <ul class=\"responsive-pull-right navbar-nav btn-toolbar\">  \n" +
     "                         <p data-ng-show=\"form.history && form.task.active && form.task.assignee\" class=\"navbar-text text-primary\">Assigned to {{form.task.assignee.displayName}}</p>\n" +
     "                         <div data-ng-show=\"form.task.active\" class=\"btn-group\">\n" +
@@ -467,19 +478,46 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "         </div>\n" +
     "     </nav>");
   $templateCache.put("templates/file.html",
-    "<div class=\"well\" data-wf-list=\"{{name}}\">\n" +
-    "   <p data-wf-fallback class=\"muted\">No documents</p>\n" +
-    "   <ul class=\"process-variable-list\">\n" +
-    "     <li>\n" +
-    "        <i data-wf-delete class=\"fa fa-times text-danger\" title=\"Delete item\" style=\"font-size:14px;\"></i>&nbsp;&nbsp;\n" +
-    "        <i class=\"fa fa-download\" style=\"font-size:1.4em;color:#666;\"></i>&nbsp;&nbsp;<a rel=\"external\" data-wf-link></a>\n" +
-    "     </li>\n" +
-    "   </ul>\n" +
-    "</div>\n" +
-    "<span class=\"btn btn-default fileinput-button pull-right\" data-ng-class=\"{disabled: disabled}\">\n" +
-    "   <i ng-hide=\"state.sending\" class=\"fa fa-cloud-upload\"></i>  <i ng-show=\"state.sending\" class='fa fa-spinner fa-spin'></i> {{label}}\n" +
-    "   <input type=\"file\" name=\"{{name}}\" multiple=\"\" ng-disabled=\"disabled\">\n" +
-    "</span>");
+    '       <ul class="list-group"> ' +
+    '           <li class="list-group-item" style="background-color:#EFEFEF">{{label}} ' +
+    '               <div class="btn-toolbar pull-right">' +
+    '                   <div data-ng-click="edit()" data-ng-show="files" class="btn btn-default btn-xs" title="To delete files, click unlock then click on red x">' +
+    '                       <i data-ng-class="editing ? \'fa-unlock\' : \'fa-lock\'" class="fa"></i>' +
+    '                   </div>' +
+    '               </div>' +
+    '               <div class="clearfix"></div>' +
+    '           </li>' +
+    '           <li data-ng-show="error" class="list-group-item"><div class="alert alert-danger">{{error}}</div></li>' +
+    '           <li data-ng-hide="files" class="list-group-item"><span class="text-muted">No documents</span></li>' +
+    '           <li data-ng-repeat="file in files" class="list-group-item">' +
+    '               <div>' +
+    '                   <i data-ng-click="showDetails(file)" data-ng-class="file.detailed ? \'fa-angle-up\' : \'fa-angle-down\'" data-ng-hide="editing" class="fa pull-right" style="cursor:pointer;padding-top: 4px"></i>' +
+    '                   <a data-ng-href="{{file.link}}" data-ng-class="checkedOut ? \'text-danger\' : \'\'"><i data-ng-hide="editing" class="fa fa-cloud-download"></i> {{file.name}}</a>&nbsp;&nbsp;&nbsp;' +
+    '                   <div data-ng-click="checkinFile(file)" data-ng-hide="editing || !checkedOut" class="btn btn-default btn-xs">' +
+    '                       <span class="fa-stack"><i class="fa fa-key fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x text-danger"></i></span></div>' +
+    '                   <div data-ng-click="checkoutFile(file)" data-ng-hide="cannotCheckout || editing || checkedOut" class="btn btn-default btn-xs"><i class="fa fa-key"></i> Checkout</div>' +
+    '                   <i data-ng-click="deleteFile(file)" data-ng-show="editing" class=\"fa fa-times text-danger wf-delete-item pull-right\" title=\"Delete item\" style=\"font-size:14px;padding-top: 4px\"></i>' +
+    '               </div>' +
+    '               <div data-ng-show="file.detailed"><p/>' +
+    '                   <table class="table table-condensed">' +
+    '                       <thead><tr><th>Version</th><th>Upload date</th><th>Uploader</th></tr></thead>' +
+    '                       <tbody>' +
+    '                           <tr data-ng-repeat="version in file.versions"><td>{{version.label}}</td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdBy}}</td></tr>' +
+    '                       </tbody>' +
+    '                   </table>' +
+    '               </div>' +
+    '           </li>' +
+    '           <li class="list-group-item" style="background-color:#EFEFEF">' +
+    '               <p data-ng-show="checkedOut" class="pull-left">One or more files are checked out</p>' +
+    '               <div class="btn-toolbar pull-right">' +
+    '                   <div data-ng-class="checkedOut ? \'btn-danger\' : \'\'" class="btn btn-default btn-xs fileinput-button">' +
+    '                       <i ng-hide="state.sending" class="fa fa-cloud-upload"></i> Upload' +
+    '                       <input type="file" name="{{name}}" multiple="multiple" ng-disabled="disabled">' +
+    '                   </div>' +
+    '               </div>' +
+    '               <div class="clearfix"></div>' +
+    '           </li>' +
+    '       </ul> ');
   $templateCache.put("templates/fileupload.html",
     "   <form data-ng-show=\"form.allowAttachments && form.history\" class=\"navbar-left form-inline\" id=\"fileupload\" action=\"{{getAttachmentUrl()}}\" method=\"POST\" enctype=\"multipart/form-data\" data-file-upload=\"fileUploadOptions\">\n" +
     "       <span class=\"btn btn-default navbar-btn fileinput-button\" data-ng-class=\"{disabled: disabled}\">\n" +
@@ -584,7 +622,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <div class=\"container\">\n" +
     "                <form class=\"navbar-form navbar-left form-inline\" role=\"search\">\n" +
     "                    <div class=\"row\">\n" +
-    "                        <input style=\"width: 200px\" title=\"Search by keyword\" role=\"\" class=\"form-control searchField\" data-ng-model=\"criteria.keyword\" placeholder=\"Search\" id=\"keyword\" type=\"text\">\n" +
+    "                        <input style=\"width: 400px\" title=\"Search by keyword\" role=\"\" class=\"form-control searchField\" data-ng-model=\"criteria.keyword\" placeholder=\"Search\" id=\"keyword\" type=\"text\">\n" +
     "                        <button data-ng-click=\"refreshSearch()\" class=\"btn btn-default navbar-btn\" role=\"button\" id=\"instanceSearchButton\" type=\"submit\">&nbsp;&nbsp;<i ng-show=\"searching\" class='fa fa-spinner fa-spin fa-lg'></i><i ng-show=\"!searching\" class=\"fa fa-search\"></i>&nbsp;&nbsp;</button>\n" +
     "                        <span data-ng-if=\"definitions\" class=\"dropdown\">\n" +
     "                            <button class=\"btn btn-default navbar-btn dropdown-toggle\" data-toggle=\"dropdown\" data-target=\"new-form-dropdown\" id=\"new-form-button\" type=\"button\"><i class=\"fa fa-play-circle-o\"></i> <b class=\"caret\"></b></button>\n" +
@@ -753,7 +791,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                        </ul>\n" +
     "                    </div>\n" +
     "                </form>\n" +
-    "                <div class=\"navbar-right btn-toolbar\">\n" +
+    "                <div class=\"navbar-right btn-toolbar wf-right-btn-toolbar\">\n" +
     "                    <button data-ng-click=\"dialogs.openAssignModal(getFormsSelected(['Open']))\" data-ng-show=\"isFormSelected(['Open'])\" class=\"btn btn-default navbar-btn incomplete-selected-result-btn\" id=\"assign-dialog-button\" title=\"Assign task\" type=\"button\"><i class=\"fa fa-user fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openHistoryModal(getFormsSelected())\" data-ng-show=\"isFormSelected()\" data-ng-disabled=\"!isSingleFormSelected()\" class=\"btn btn-default navbar-btn selected-result-btn\" id=\"history-dialog-button\" title=\"History\" type=\"button\"><i class=\"fa fa-calendar-o fa-white\"></i></button>\n" +
     "                    <button data-ng-click=\"dialogs.openActivateModal(getFormsSelected(['Suspended']))\" data-ng-show=\"isFormSelected(['Suspended'])\" class=\"btn btn-default navbar-btn\" id=\"activate-dialog-button\" title=\"Activate process\" type=\"button\"><i class=\"fa fa-play fa-white\"></i></button>\n" +

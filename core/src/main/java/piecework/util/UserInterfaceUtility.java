@@ -24,13 +24,16 @@ import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
+import piecework.content.concrete.ClasspathContentResource;
+import piecework.content.concrete.FileSystemContentResource;
 import piecework.designer.model.view.IndexView;
 import piecework.enumeration.CacheName;
 import piecework.exception.NotFoundError;
 import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 import piecework.ui.visitor.StaticResourceAggregatingVisitor;
@@ -128,26 +131,29 @@ public class UserInterfaceUtility {
         return templateNameBuilder.toString();
     }
 
-    public static Resource template(File templatesDirectory, String templateName) throws NotFoundError {
-        Resource resource = null;
+    public static ContentResource template(File templatesDirectory, String templateName) throws NotFoundError {
+        ContentResource resource = null;
         if (templatesDirectory != null) {
             File file = new File(templatesDirectory, templateName);
-            resource = new FileSystemResource(file);
+            FileSystemResource fileSystemResource = new FileSystemResource(file);
 
-            if (!resource.exists())
+            if (!fileSystemResource.exists())
                 throw new NotFoundError();
 
+            resource = new FileSystemContentResource(fileSystemResource);
         } else {
-            resource = new ClassPathResource(TEMPLATES_CLASSPATH_PREFIX + templateName);
+            ClassPathResource classPathResource = new ClassPathResource(TEMPLATES_CLASSPATH_PREFIX + templateName);
 
-            if (!resource.exists())
+            if (!classPathResource.exists())
                 throw new NotFoundError();
+
+            resource = new ClasspathContentResource(classPathResource);
         }
 
         return resource;
     }
 
-    public static Resource resource(CacheName cacheName, Form form, Resource template, ContentRepository contentRepository, ServletContext servletContext, UserInterfaceSettings settings, Entity principal) {
+    public static ContentResource resource(CacheName cacheName, ContentProfileProvider modelProvider, Form form, ContentResource template, ContentRepository contentRepository, ServletContext servletContext, UserInterfaceSettings settings) {
         Process process = form != null ? form.getProcess() : null;
         FormDisposition disposition = form != null ? form.getDisposition() : null;
         boolean isAnonymous = form != null && form.isAnonymous();
@@ -157,7 +163,7 @@ public class UserInterfaceUtility {
         CleanerProperties cleanerProperties = new CleanerProperties();
         cleanerProperties.setOmitXmlDeclaration(true);
         HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
-        visitor = new StaticResourceAggregatingVisitor(servletContext, process, disposition, settings, contentRepository, principal, isAnonymous);
+        visitor = new StaticResourceAggregatingVisitor(servletContext, modelProvider, disposition, settings, contentRepository, isAnonymous);
 
         InputStream inputStream = null;
         try {
@@ -178,16 +184,16 @@ public class UserInterfaceUtility {
         return null;
     }
 
-    public static long resourceSize(Resource resource) {
-        long size = 0;
-        if (resource.exists()) {
-            try {
-                size = resource.contentLength();
-            } catch (IOException e) {
-                LOG.error("Unable to determine size of template for " + resource.getFilename(), e);
-            }
-        }
-        return size;
-    }
+//    public static long resourceSize(ContentResource resource) {
+//        long size = 0;
+//        if (resource.exists()) {
+//            try {
+//                size = resource.contentLength();
+//            } catch (IOException e) {
+//                LOG.error("Unable to determine size of template for " + resource.getFilename(), e);
+//            }
+//        }
+//        return size;
+//    }
 
 }

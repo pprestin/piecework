@@ -106,4 +106,47 @@ public class ProcessDeploymentRepositoryProviderTest {
         Mockito.verify(mockProcess, times(1)).getDeployment();
     }
 
+    @Test
+    public void verifyProcessDefinitionKey() throws PieceworkException {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
+        Mockito.doReturn(process)
+                .when(processRepository).findOne(eq("TEST"));
+        ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, process.getProcessDefinitionKey(), principal);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentRepositoryProvider(processProvider);
+        Assert.assertEquals("TEST", deploymentProvider.processDefinitionKey());
+    }
+
+    @Test
+    public void verifyProfile() throws Exception {
+        Process mockProcess = Mockito.mock(Process.class);
+        ProcessDeployment mockDeployment = Mockito.mock(ProcessDeployment.class);
+        Mockito.doReturn(mockProcess)
+                .when(processRepository).findOne(eq("TEST"));
+        Mockito.doReturn(mockDeployment)
+                .when(mockProcess).getDeployment();
+        Mockito.doReturn(new ContentProfile.Builder()
+                    .baseDirectory("/etc/some/path")
+                    .build())
+                .when(mockDeployment).getContentProfile();
+
+        ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentRepositoryProvider(processProvider);
+        ContentProfile contentProfile = deploymentProvider.contentProfile();
+        Assert.assertEquals("/etc/some/path", contentProfile.getBaseDirectory());
+    }
+
+    @Test
+    public void verifyPrincipal() throws PieceworkException {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
+        Mockito.doReturn(process)
+                .when(processRepository).findOne(eq("TEST"));
+        ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, process.getProcessDefinitionKey(), principal);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentRepositoryProvider(processProvider);
+        Assert.assertEquals(principal, deploymentProvider.principal());
+    }
+
 }

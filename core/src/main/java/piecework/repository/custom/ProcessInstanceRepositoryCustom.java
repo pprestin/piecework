@@ -3,8 +3,10 @@ package piecework.repository.custom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Query;
+import piecework.common.SearchQueryParameters;
 import piecework.model.*;
-import piecework.process.ProcessInstanceSearchCriteria;
+import piecework.common.SearchCriteria;
+import piecework.security.Sanitizer;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,9 @@ import java.util.Set;
  */
 public interface ProcessInstanceRepositoryCustom {
 
-    Page<ProcessInstance> findByCriteria(ProcessInstanceSearchCriteria criteria, Pageable pageable);
+    Page<ProcessInstance> findByCriteria(Set<String> processDefinitionKeys, SearchCriteria criteria, Pageable pageable, Sanitizer sanitizer);
+
+    Page<ProcessInstance> findByQueryParameters(Set<String> processDefinitionKeys, SearchQueryParameters queryParameters, Pageable pageable, Sanitizer sanitizer);
 
     Page<ProcessInstance> findByQuery(Query query, Pageable pageable);
 

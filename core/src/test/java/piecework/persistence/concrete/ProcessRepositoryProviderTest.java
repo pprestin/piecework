@@ -26,6 +26,7 @@ import piecework.model.Entity;
 import piecework.model.Process;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.ProcessRepository;
+import piecework.test.ProcessFactory;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
@@ -42,13 +43,13 @@ public class ProcessRepositoryProviderTest {
     @Mock
     Entity principal;
 
-    @Test(expected= BadRequestError.class)
+    @Test(expected = BadRequestError.class)
     public void verifyErrorOnNullKey() throws PieceworkException {
         ProcessProvider provider = new ProcessRepositoryProvider(processRepository, null, principal);
         provider.process();
     }
 
-    @Test(expected= BadRequestError.class)
+    @Test(expected = BadRequestError.class)
     public void verifyErrorOnEmptyKey() throws PieceworkException {
         ProcessProvider provider = new ProcessRepositoryProvider(processRepository, "", principal);
         provider.process();
@@ -110,6 +111,38 @@ public class ProcessRepositoryProviderTest {
         Process second = provider.process();
         Mockito.verify(processRepository, times(1)).findOne(eq("TEST"));
         Assert.assertEquals(first, second);
+    }
+
+    @Test
+    public void verifyWithViewContext() throws PieceworkException {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
+        Mockito.doReturn(process)
+                .when(processRepository).findOne(eq("TEST"));
+        ProcessProvider provider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
+        Process stored = provider.process(ProcessFactory.viewContext());
+        Assert.assertEquals("https://somehost.org/piecework/ui/process/TEST", stored.getLink());
+    }
+
+    @Test
+    public void verifyProcessDefinitionKey() throws PieceworkException {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
+        Mockito.doReturn(process)
+                .when(processRepository).findOne(eq("TEST"));
+        ProcessProvider provider = new ProcessRepositoryProvider(processRepository, process.getProcessDefinitionKey(), principal);
+        Assert.assertEquals("TEST", provider.processDefinitionKey());
+    }
+
+    @Test
+    public void verifyPrincipal() throws PieceworkException {
+        Process mockProcess = Mockito.mock(Process.class);
+        Mockito.doReturn(mockProcess)
+                .when(processRepository).findOne(eq("TEST"));
+        ProcessProvider provider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
+        Assert.assertEquals(principal, provider.principal());
     }
 
 }

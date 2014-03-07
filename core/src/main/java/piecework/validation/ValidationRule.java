@@ -20,7 +20,6 @@ import org.apache.commons.validator.routines.EmailValidator;
 import piecework.exception.ValidationRuleException;
 import piecework.model.*;
 import piecework.util.ConstraintUtil;
-import piecework.common.ManyMap;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -74,6 +73,10 @@ public class ValidationRule {
         this.maxValueLength = builder.maxValueLength;
         this.minValueLength = builder.minValueLength;
         this.required = builder.required;
+    }
+
+    public ValidationRuleType getType() {
+        return type;
     }
 
     public String toString() {

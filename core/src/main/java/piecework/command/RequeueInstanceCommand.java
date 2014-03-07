@@ -24,15 +24,11 @@ import piecework.exception.ForbiddenError;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
-import piecework.model.*;
+import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.ProcessDeployment;
+import piecework.model.ProcessInstance;
 import piecework.persistence.ProcessInstanceProvider;
-import piecework.validation.Validation;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Takes an existing process instance and requeues it (attaches it to a new engine process instance)

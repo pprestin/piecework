@@ -1,9 +1,8 @@
 package piecework.repository;
 
-import piecework.model.Content;
-import piecework.model.Entity;
-import piecework.model.Process;
-import piecework.model.ProcessInstance;
+import piecework.content.ContentResource;
+import piecework.exception.PieceworkException;
+import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;
 
@@ -13,25 +12,42 @@ import java.io.IOException;
 public interface ContentRepository {
 
     /*
-     * Retrieves content from a full path location. This should only be called in cases where
-     * the application is determining the location without incorporating any user input, since
-     * creative use of ../ could conceivably allow an end-user to retrieve something they're
-     * not supposed to see.
+     * Retrieves content from a location and marks it as 'checked out' so it cannot be edited until it is
+     * checked back in again. This location can include a prefix to indicate the
+     * appropriate scheme, such as file: or classpath:, but in the case where a scheme is
+     * provided, a ContentProvider to handle that scheme must also be included in the application
+     * context or an exception will be thrown.
      */
-    Content findByLocation(Process process, String location, Entity principal);
+    ContentResource checkoutByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException;
 
     /*
-     * Retrieves content from a location relative to a base path -- only below that path, for
-     * security reasons, since in some cases the location portion may be provided by the
-     * end-user.
-     *
+     * Retrieves content from a location. This location can include a prefix to indicate the
+     * appropriate scheme, such as file: or classpath:, but in the case where a scheme is
+     * provided, a ContentProvider to handle that scheme must also be included in the application
+     * context or an exception will be thrown.
      */
-    Content findByLocation(Process process, String base, String location, Entity principal);
+    ContentResource findByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException;
+
+    /*
+     * Expires a piece of content so it is no longer available to be found
+     */
+    boolean expireByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException;
+
+    /*
+     * Releases checked out content
+     */
+    boolean releaseByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException;
+
+    /*
+     * Replaces an existing content resource, and assuming that the underlying provider is able to handle it, creates
+     * a new version
+     */
+    ContentResource replace(ContentProfileProvider modelProvider, ContentResource contentResource, String location) throws PieceworkException, IOException;
 
     /*
      * Stores content specific to a process, or if the processDefinitionKey is left null,
      * in a general purpose location.
      */
-    Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException;
+    ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws PieceworkException, IOException;
 
 }

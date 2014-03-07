@@ -15,9 +15,9 @@
  */
 package piecework.exception;
 
-import javax.ws.rs.core.Response;
-
 import piecework.model.Explanation;
+
+import javax.ws.rs.core.Response;
 
 /**
  * This utility class builds an error response for a StatusCodeError.

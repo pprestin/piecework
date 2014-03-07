@@ -26,8 +26,10 @@ import piecework.model.ProcessInstance;
 import piecework.persistence.*;
 import piecework.repository.*;
 import piecework.security.Sanitizer;
+import piecework.security.data.DataFilterService;
 import piecework.service.CacheService;
 import piecework.service.IdentityService;
+import piecework.settings.ContentSettings;
 
 /**
  * Implementation of the ModelProviderFactory that uses injected repositories to retrieve
@@ -51,6 +53,12 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
 
     @Autowired
     ContentRepository contentRepository;
+
+    @Autowired
+    ContentSettings contentSettings;
+
+    @Autowired
+    DataFilterService dataFilterService;
 
     @Autowired
     DeploymentRepository deploymentRepository;
@@ -91,6 +99,13 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
     @Override
     public ProcessDeploymentProvider deploymentProvider(String rawProcessDefinitionKey, Entity principal) {
         ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentRepositoryProvider(processProvider(rawProcessDefinitionKey, principal));
+        return deploymentProvider;
+    }
+
+    @Override
+    public ProcessDeploymentProvider deploymentProvider(String rawProcessDefinitionKey, String rawDeploymentId, Entity principal) {
+        String deploymentId = sanitizer.sanitize(rawDeploymentId);
+        ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentRepositoryProvider(deploymentRepository, processProvider(rawProcessDefinitionKey, principal), deploymentId);
         return deploymentProvider;
     }
 
@@ -139,6 +154,16 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
                         processInstanceRepository, facade, attachmentRepository, contentRepository, deploymentRepository,
                         processInstanceId);
         return instanceProvider;
+    }
+
+    @Override
+    public SearchProvider searchProvider(Entity principal) {
+        return new SearchRepositoryProvider(processRepository, processInstanceRepository, cacheService, dataFilterService, identityService, sanitizer, principal);
+    }
+
+    @Override
+    public ContentProfileProvider systemContentProvider(Entity principal) {
+        return new SystemContentProfileProvider(contentSettings, principal);
     }
 
     @Override

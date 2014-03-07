@@ -639,3 +639,11 @@ select.form-control {
 .user-information name .caret {
     border-top: 4px solid #ffffff;
 }
+
+.wf-delete-item {
+    cursor: pointer;
+}
+
+.wf-right-btn-toolbar {
+    margin-top: 8px;
+}

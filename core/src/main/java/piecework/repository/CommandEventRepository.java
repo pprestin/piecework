@@ -16,7 +16,6 @@
 package piecework.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import piecework.model.AccessEvent;
 import piecework.model.CommandEvent;
 
 /**

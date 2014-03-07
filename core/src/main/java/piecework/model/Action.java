@@ -15,15 +15,9 @@
  */
 package piecework.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import piecework.enumeration.DataInjectionStrategy;
 
 import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Set;
 
 /**
  * @author James Renfro

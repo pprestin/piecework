@@ -20,34 +20,33 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import piecework.Versions;
+import piecework.authorization.AuthorizationRole;
+import piecework.common.FacetFactory;
+import piecework.common.SearchCriteria;
+import piecework.common.SearchQueryParameters;
+import piecework.common.ViewContext;
+import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
+import piecework.exception.StatusCodeError;
+import piecework.identity.IdentityHelper;
+import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ModelProviderFactory;
+import piecework.persistence.SearchProvider;
 import piecework.persistence.TaskProvider;
-import piecework.security.AccessTracker;
-import piecework.service.*;
-import piecework.model.RequestDetails;
-import piecework.settings.UserInterfaceSettings;
-import piecework.submission.SubmissionHandlerRegistry;
-import piecework.submission.SubmissionTemplateFactory;
-import piecework.model.SearchResults;
-import piecework.common.ViewContext;
-import piecework.exception.*;
-import piecework.identity.IdentityHelper;
-import piecework.settings.SecuritySettings;
-import piecework.model.*;
-import piecework.security.Sanitizer;
-import piecework.security.concrete.PassthroughSanitizer;
 import piecework.resource.TaskResource;
+import piecework.security.AccessTracker;
+import piecework.security.Sanitizer;
+import piecework.service.TaskService;
+import piecework.settings.SecuritySettings;
+import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
-import piecework.validation.Validation;
-import piecework.validation.ValidationFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -118,41 +117,44 @@ public class TaskResourceVersion1 implements TaskResource {
     }
 
     @Override
-    public SearchResults search(MessageContext context) throws StatusCodeError {
+    public SearchResults search(MessageContext context, SearchQueryParameters queryParameters) throws PieceworkException {
         UriInfo uriInfo = context != null ? context.getContext(UriInfo.class) : null;
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, false);
-
-        return search(rawQueryParameters);
+        SearchProvider searchProvider = modelProviderFactory.searchProvider(helper.getPrincipal());
+        Set<Process> processes = searchProvider.processes(AuthorizationRole.USER, AuthorizationRole.OVERSEER);
+        return search(new SearchCriteria.Builder(rawQueryParameters, processes, FacetFactory.facetMap(processes), sanitizer).build());
     }
 
-    @Override
-    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters) throws StatusCodeError {
+    public SearchResults search(SearchCriteria criteria) throws PieceworkException {
         Entity principal = helper.getPrincipal();
-        SearchResults results = taskService.search(rawQueryParameters, principal, false, false);
+//        SearchResults results = taskService.search(rawQueryParameters, principal, false, false);
 
         ViewContext version = new ViewContext(settings, VERSION);
 
-        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
-                .resourceLabel("Tasks")
-                .link(version.getApplicationUri(Task.Constants.ROOT_ELEMENT_NAME))
-                .uri(version.getServiceUri(Task.Constants.ROOT_ELEMENT_NAME));
+        SearchProvider searchProvider = modelProviderFactory.searchProvider(principal);
+        return searchProvider.tasks(criteria, version);
 
-        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-        List<?> items = results.getList();
-        if (items != null && !items.isEmpty()) {
-            for (Object item : items) {
-                Task task = Task.class.cast(item);
-                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer).build(version));
-            }
-        }
-
-        resultsBuilder.firstResult(results.getFirstResult());
-        resultsBuilder.maxResults(results.getMaxResults());
-        resultsBuilder.total(Long.valueOf(results.getTotal()));
-
-        return resultsBuilder.build(version);
+//        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
+//                .resourceLabel("Tasks")
+//                .link(version.getApplicationUri(Task.Constants.ROOT_ELEMENT_NAME))
+//                .uri(version.getServiceUri(Task.Constants.ROOT_ELEMENT_NAME));
+//
+//        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
+//        List<?> items = results.getList();
+//        if (items != null && !items.isEmpty()) {
+//            for (Object item : items) {
+//                Task task = Task.class.cast(item);
+//                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer).build(version));
+//            }
+//        }
+//
+//        resultsBuilder.firstResult(results.getFirstResult());
+//        resultsBuilder.maxResults(results.getMaxResults());
+//        resultsBuilder.total(Long.valueOf(results.getTotal()));
+//
+//        return resultsBuilder.build(version);
     }
 
     @Override

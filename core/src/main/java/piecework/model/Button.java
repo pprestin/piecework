@@ -15,25 +15,18 @@
  */
 package piecework.model;
 
-import java.io.Serializable;
-import java.util.UUID;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
-
-import piecework.security.Sanitizer;
 import piecework.common.ViewContext;
+import piecework.security.Sanitizer;
+
+import javax.xml.bind.annotation.*;
+import java.io.Serializable;
+import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * @author James Renfro
@@ -82,6 +75,12 @@ public class Button implements Serializable {
     @JsonIgnore
     private final boolean isDeleted;
 
+    // children is used for split buttons with
+    // dropdown menu
+    @XmlElementWrapper(name="children")
+    @XmlElementRef
+    private final List<Button> children;
+
     private Button() {
         this(new Button.Builder(), new ViewContext());
     }
@@ -98,6 +97,7 @@ public class Button implements Serializable {
         this.isDeleted = builder.isDeleted;
         this.primary = builder.primary;
         this.link = builder.link;
+        this.children = builder.children != null ? Collections.unmodifiableList(builder.children) : null;
     }
     
     public String getButtonId() {
@@ -144,6 +144,10 @@ public class Button implements Serializable {
         return primary;
     }
 
+    public List<Button> getChildren() {
+        return children;
+    }   
+
     public final static class Builder {
 
     	private String buttonId;
@@ -158,6 +162,7 @@ public class Button implements Serializable {
         private int ordinal;
         private boolean isDeleted;
         private boolean primary;
+        private List<Button> children;
 
         public Builder() {
             super();
@@ -175,6 +180,18 @@ public class Button implements Serializable {
             this.ordinal = button.ordinal;
             this.isDeleted = button.isDeleted;
             this.primary = button.primary;
+            this.children = new ArrayList<Button>();
+
+            if (button.children != null && !button.children.isEmpty()) {
+                this.children = new ArrayList<Button>(button.children.size());
+                for (Button child : button.children) {
+                        this.children.add(new Button.Builder(child, sanitizer).build());
+                }
+            } else {
+                this.children = new ArrayList<Button>();
+            }
+
+
         }
 
         public Button build() {
@@ -247,6 +264,14 @@ public class Button implements Serializable {
 
         public Builder primary() {
             this.primary = true;
+            return this;
+        }
+
+        public Builder child(Button child) {
+            if (this.children == null) {
+                this.children = new ArrayList<Button>();
+            }
+            this.children.add(child);
             return this;
         }
     }

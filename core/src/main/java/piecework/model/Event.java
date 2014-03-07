@@ -16,14 +16,13 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.ComparisonChain;
 import org.apache.commons.lang.StringUtils;
-import piecework.common.ViewContext;
 import piecework.enumeration.EventType;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Date;
+import java.util.UUID;
 
 /**
  * @author James Renfro

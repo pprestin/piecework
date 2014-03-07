@@ -24,14 +24,10 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import piecework.Constants;
 import piecework.enumeration.OperationType;
-import piecework.security.concrete.PassthroughSanitizer;
-import piecework.ui.streaming.StreamingAttachmentContent;
-import piecework.validation.Validation;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.security.concrete.PassthroughSanitizer;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;

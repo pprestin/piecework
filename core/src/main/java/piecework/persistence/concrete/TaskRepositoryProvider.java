@@ -18,9 +18,8 @@ package piecework.persistence.concrete;
 import piecework.common.ViewContext;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.PieceworkException;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.ProcessInstance;
-import piecework.model.Task;
 import piecework.persistence.ProcessProvider;
 import piecework.persistence.TaskProvider;
 import piecework.repository.AttachmentRepository;
@@ -28,6 +27,7 @@ import piecework.repository.ContentRepository;
 import piecework.repository.DeploymentRepository;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.service.IdentityService;
+import piecework.util.ActivityUtility;
 import piecework.util.TaskUtility;
 
 /**
@@ -48,19 +48,33 @@ public class TaskRepositoryProvider extends ProcessInstanceRepositoryProvider im
     }
 
     @Override
+    public Activity activity() throws PieceworkException {
+        Process process = process();
+        ProcessDeployment deployment = deployment();
+        ProcessInstance instance = instance();
+        Task task = task();
+
+        return ActivityUtility.activity(process, deployment, instance, task);
+    }
+
+    @Override
     public Task task() throws PieceworkException {
         return task(null, false);
     }
 
     @Override
     public synchronized ProcessInstance instance(ViewContext context) throws PieceworkException {
-        Process process = process();
-        ProcessInstance instance = processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
+        ProcessInstance instance = getInstance();
 
-        if (instance == null)
-            return null;
+        if (instance == null) {
+            Process process = process();
+            instance = processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
 
-        setInstance(instance);
+            if (instance == null)
+                return null;
+
+            setInstance(instance);
+        }
         return instance;
     }
 

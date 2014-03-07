@@ -67,10 +67,10 @@ public class Process implements Serializable {
     @XmlElement
     private final String deploymentVersion;
 
-    private final String contentReceiverKey;
-
     @XmlElement
     private final ProcessCodeRepository repository;
+
+    private final List<Facet> facets;
 
     @XmlTransient
     @JsonIgnore
@@ -122,7 +122,7 @@ public class Process implements Serializable {
         this.participantSummary = builder.participantSummary;
         this.repository = builder.repository;
 		this.deployment = builder.deployment;
-        this.contentReceiverKey = builder.contentReceiverKey;
+        this.facets = Collections.unmodifiableList(builder.facets);
         this.versions = Collections.unmodifiableList(builder.versions);
         this.link = context != null ? context.getApplicationUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
 		this.uri = context != null ? context.getServiceUri(Constants.ROOT_ELEMENT_NAME, builder.processDefinitionKey) : null;
@@ -153,14 +153,14 @@ public class Process implements Serializable {
         return repository;
     }
 
+    public List<Facet> getFacets() {
+        return facets;
+    }
+
     @XmlTransient
     @JsonIgnore
     public ProcessDeployment getDeployment() {
         return deployment;
-    }
-
-    public String getContentReceiverKey() {
-        return contentReceiverKey;
     }
 
     public String getDeploymentId() {
@@ -245,8 +245,8 @@ public class Process implements Serializable {
         private String deploymentVersion;
         private String processSummary;
         private String participantSummary;
-        private String contentReceiverKey;
         private ProcessCodeRepository repository;
+        private List<Facet> facets;
 		private ProcessDeployment deployment;
         private List<ProcessDeploymentVersion> versions;
         private boolean isAnonymousSubmissionAllowed;
@@ -257,6 +257,7 @@ public class Process implements Serializable {
 		
 		public Builder() {
 			super();
+            this.facets = new ArrayList<Facet>();
             this.versions = new ArrayList<ProcessDeploymentVersion>();
             this.version = 1;
 		}
@@ -271,12 +272,12 @@ public class Process implements Serializable {
             this.processSummary = sanitizer.sanitize(process.processSummary);
             this.participantSummary = sanitizer.sanitize(process.participantSummary);
             this.repository = process.repository != null ? new ProcessCodeRepository.Builder(process.repository, sanitizer).build() : null;
+            this.facets = process.facets != null && !process.facets.isEmpty() ? new ArrayList<Facet>(process.facets) : new ArrayList<Facet>();
             this.deployment = process.deployment != null ? new ProcessDeployment.Builder(process.deployment, sanitizer, true).build() : null;
             if (process.versions == null || process.versions.isEmpty())
                 this.versions = new ArrayList<ProcessDeploymentVersion>();
             else
                 this.versions = new ArrayList<ProcessDeploymentVersion>(process.versions);
-            this.contentReceiverKey = process.contentReceiverKey;
             this.isAnonymousSubmissionAllowed = process.isAnonymousSubmissionAllowed;
             this.isDeleted = process.isDeleted;
             this.allowPerInstanceActivities = process.allowPerInstanceActivities;
@@ -312,11 +313,6 @@ public class Process implements Serializable {
             return this;
         }
 
-        public Builder contentReceiverKey(String contentReceiverKey) {
-            this.contentReceiverKey = contentReceiverKey;
-            return this;
-        }
-
         public Builder repository(ProcessCodeRepository repository) {
             this.repository = repository;
             return this;
@@ -328,6 +324,17 @@ public class Process implements Serializable {
             this.deploymentVersion = version.getVersion();
             this.deploymentDate = new Date();
             this.deployment = deployment;
+            return this;
+        }
+
+        public Builder facet(Facet facet) {
+            this.facets.add(facet);
+            return this;
+        }
+
+        public Builder facets(Collection<Facet> facets) {
+            if (facets != null && !facets.isEmpty())
+                this.facets.addAll(facets);
             return this;
         }
 

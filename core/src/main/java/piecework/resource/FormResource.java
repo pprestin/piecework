@@ -20,15 +20,15 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.cxf.rs.security.cors.LocalPreflight;
 import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
+import piecework.common.SearchQueryParameters;
 import piecework.exception.PieceworkException;
 import piecework.model.SearchResults;
-import piecework.exception.StatusCodeError;
 
 import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.util.List;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 /**
  * @author James Renfro
@@ -48,7 +48,7 @@ public interface FormResource extends ApplicationResource {
     @Path("{processDefinitionKey}")
     @RolesAllowed({AuthorizationRole.OWNER, AuthorizationRole.INITIATOR, AuthorizationRole.USER})
     @Produces({"text/html","application/json"})
-    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId, @QueryParam("redirectCount") String redirectCount) throws PieceworkException;
+    Response read(@Context MessageContext context, @PathParam("processDefinitionKey") String processDefinitionKey, @QueryParam("taskId") String taskId, @QueryParam("requestId") String requestId, @QueryParam("submissionId") String submissionId, @QueryParam("validationId") String validationId, @QueryParam("redirectCount") String redirectCount) throws PieceworkException;
 
     @OPTIONS
     @Path("{processDefinitionKey}/{requestId}")
@@ -90,6 +90,6 @@ public interface FormResource extends ApplicationResource {
     @Path("")
     @RolesAllowed({AuthorizationRole.OVERSEER, AuthorizationRole.USER})
     @Produces({"text/html", "application/json", "text/csv"})
-    SearchResults search(@Context MessageContext context) throws PieceworkException;
+    SearchResults search(@Context MessageContext context, @QueryParam("") SearchQueryParameters queryParameters) throws PieceworkException;
 
 }

@@ -15,12 +15,13 @@
  */
 package piecework.model;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import javax.xml.bind.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
+
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Jiefeng Shen

@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
@@ -35,7 +36,7 @@ import piecework.repository.ProcessInstanceRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.service.IdentityService;
-import piecework.ui.streaming.StreamingAttachmentContent;
+import piecework.util.ActivityUtility;
 import piecework.util.Base64Utility;
 import piecework.util.ProcessInstanceUtility;
 import piecework.util.TaskUtility;
@@ -62,6 +63,16 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
     }
 
     @Override
+    public Activity activity() throws PieceworkException {
+        Process process = process();
+        ProcessDeployment deployment = deployment();
+        ProcessInstance instance = instance();
+        Task task = allowedTask(false);
+
+        return ActivityUtility.activity(process, deployment, instance, task);
+    }
+
+    @Override
     public Task allowedTask(boolean limitToActive) throws PieceworkException {
         return TaskUtility.findTask(identityService, process(), instance(), null, principal(), limitToActive, null);
     }
@@ -72,12 +83,11 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
     }
 
     @Override
-    public StreamingAttachmentContent attachment(String attachmentId) throws PieceworkException {
+    public ContentResource attachment(String attachmentId) throws PieceworkException {
         Task allowedTask = allowedTask(false);
         if (allowedTask == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
-        Process process = process();
         ProcessInstance instance = instance(new ViewContext());
 
         Set<Attachment> storedAttachments = instance.getAttachments();
@@ -86,9 +96,7 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
                 if (StringUtils.isEmpty(attachmentId) || StringUtils.isEmpty(storedAttachment.getAttachmentId()) || !attachmentId.equals(storedAttachment.getAttachmentId()))
                     continue;
 
-                Content content = contentRepository.findByLocation(process, storedAttachment.getLocation(), principal());
-                if (content != null)
-                    return new StreamingAttachmentContent(storedAttachment, content);
+                return contentRepository.findByLocation(this, storedAttachment.getLocation());
             }
         }
 
@@ -170,7 +178,7 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
     }
 
     @Override
-    public StreamingAttachmentContent value(String fieldName, String fileId) throws PieceworkException {
+    public ContentResource value(String fieldName, String fileId) throws PieceworkException {
         Task allowedTask = allowedTask(false);
         if (allowedTask == null)
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
@@ -184,9 +192,9 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
         if (value != null) {
             if (value instanceof File) {
                 File file = File.class.cast(value);
-                Content content = contentRepository.findByLocation(process, file.getLocation(), principal());
-                if (content != null)
-                    return new StreamingAttachmentContent(null, content);
+                ContentResource contentResource = contentRepository.findByLocation(this, file.getLocation());
+                if (contentResource != null)
+                    return contentResource;
             }
         }
 
@@ -222,6 +230,9 @@ public class AllowedTaskRepositoryProvider extends ProcessInstanceRepositoryProv
         }
         return new SearchResults.Builder()
                 .items(files)
+                .firstResult(0)
+                .maxResults(files.size())
+                .total(Long.valueOf(files.size()))
                 .build();
     }
 }

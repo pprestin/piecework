@@ -17,12 +17,12 @@ package piecework.submission;
 
 import org.apache.commons.lang.StringUtils;
 import piecework.Constants;
+import piecework.common.ManyMap;
 import piecework.enumeration.FieldSubmissionType;
 import piecework.model.Button;
 import piecework.model.Field;
 import piecework.model.Process;
 import piecework.model.ProcessDeployment;
-import piecework.common.ManyMap;
 import piecework.validation.ValidationRule;
 
 import java.util.*;

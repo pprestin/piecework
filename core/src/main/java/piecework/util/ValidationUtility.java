@@ -16,20 +16,26 @@
 package piecework.util;
 
 import com.google.common.collect.Sets;
+import com.mongodb.MongoException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.Registry;
-import piecework.common.ManyMap;
+import piecework.content.ContentResource;
 import piecework.enumeration.FieldTag;
+import piecework.exception.BadRequestError;
+import piecework.exception.InternalServerError;
+import piecework.exception.MaxSizeExceededException;
 import piecework.exception.ValidationRuleException;
 import piecework.form.OptionResolver;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.submission.SubmissionTemplate;
+import piecework.model.Constraint;
+import piecework.model.Field;
+import piecework.model.Option;
+import piecework.model.Value;
 import piecework.validation.Validation;
 import piecework.validation.ValidationRule;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -56,60 +62,6 @@ public class ValidationUtility {
             }
         }
         return fieldName;
-    }
-
-    public static void validateField(Validation.Builder validationBuilder, Field field,
-                                     List<ValidationRule> rules, Set<String> fieldNames,
-                                     Map<String, List<Value>> submissionData,
-                                     Map<String, List<Value>> instanceData,
-                                     Map<String, List<Value>> decryptedSubmissionData,
-                                     Map<String, List<Value>> decryptedInstanceData,
-                                     boolean onlyAcceptValidInputs) {
-
-        String fieldName = fieldName(field, submissionData);
-
-        if (fieldName == null) {
-            LOG.warn("Field is missing name " + field.getFieldId());
-            return;
-        }
-
-        if (rules != null) {
-            for (ValidationRule rule : rules) {
-                try {
-                    rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
-                } catch (ValidationRuleException e) {
-                    LOG.warn("Invalid input: " + e.getMessage() + " " + e.getRule());
-
-                    validationBuilder.error(rule.getName(), e.getMessage());
-                    if (onlyAcceptValidInputs) {
-                        fieldNames.remove(rule.getName());
-                    }
-                }
-            }
-        }
-
-        if (fieldNames.contains(fieldName)) {
-
-            List<? extends Value> values = submissionData.get(fieldName);
-            List<? extends Value> previousValues = instanceData != null ? instanceData.get(fieldName) : Collections.<Value>emptyList();
-
-            boolean isFileField = field.getType() != null && (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
-            if (values == null) {
-                // Files are a special case, in that we don't want to wipe them out if they aren't resubmitted
-                // on every request
-                if (isFileField)
-                    values = previousValues;
-
-            } else if (isFileField && field.getMaxInputs() > 1) {
-                // With file fields that accept multiple files, we want to append each submission
-                values = ValidationUtility.append(values, previousValues);
-            }
-
-            if (values == null)
-                values = Collections.emptyList();
-
-            validationBuilder.formValue(fieldName, values.toArray(new Value[values.size()]));
-        }
     }
 
     public static List<? extends Value> append(List<? extends Value> values, List<? extends Value> previousValues) {

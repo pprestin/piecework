@@ -16,13 +16,17 @@
 package piecework.common;
 
 import org.springframework.data.domain.Page;
-import piecework.model.SearchResults;
+import org.springframework.data.domain.Pageable;
+import piecework.model.*;
+import piecework.model.Process;
+
+import java.util.Set;
 
 /**
  * @author James Renfro
  */
 public interface PageHandler<T> {
 
-    SearchResults handle(Page<T> page);
+    SearchResults handle(Page<T> page, Pageable pageable, Set<Process> allowedProcesses);
 
 }

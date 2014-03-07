@@ -15,18 +15,56 @@
  */
 package piecework.service;
 
+import junit.framework.Assert;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import piecework.identity.IdentityHelper;
+import piecework.model.SearchResults;
+import piecework.repository.ContentRepository;
+import piecework.settings.UserInterfaceSettings;
+import piecework.ui.CustomJaxbJsonProvider;
+
+import java.io.BufferedInputStream;
 
 /**
  * @author James Renfro
  */
-@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class UserInterfaceServiceTest {
 
+    @InjectMocks
+    UserInterfaceService userInterfaceService;
 
+    @Mock
+    ContentRepository contentRepository;
 
+    @Mock
+    CacheService cacheService;
+
+    @Mock
+    FormTemplateService formTemplateService;
+
+    @Mock
+    IdentityHelper helper;
+
+    @Mock
+    CustomJaxbJsonProvider jsonProvider;
+
+    @Mock
+    UserInterfaceSettings settings;
+
+    @Test
+    public void verifySearchResultsHasPage() {
+        Assert.assertTrue(userInterfaceService.hasPage(SearchResults.class));
+    }
+
+    @Test
+    public void verifyInputStreamDoesNotHavePage() {
+        Assert.assertFalse(userInterfaceService.hasPage(BufferedInputStream.class));
+    }
 
 }

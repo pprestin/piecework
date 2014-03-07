@@ -16,8 +16,10 @@
 package piecework.content.stubs;
 
 import piecework.content.ContentReceiver;
-import piecework.model.*;
-import piecework.model.Process;
+import piecework.content.ContentResource;
+import piecework.content.concrete.BasicContentResource;
+import piecework.exception.PieceworkException;
+import piecework.persistence.ContentProfileProvider;
 
 import java.io.IOException;
 
@@ -27,8 +29,32 @@ import java.io.IOException;
 public class TestExternalContentReceiver implements ContentReceiver {
 
     @Override
-    public Content save(Process process, ProcessInstance instance, Content content, Entity principal) throws IOException {
-        return new Content.Builder()
+    public boolean expire(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return true;
+    }
+
+    @Override
+    public ContentResource checkout(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
+                .location("some-external-content-receiver")
+                .build();
+    }
+
+    @Override
+    public boolean release(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
+        return false;
+    }
+
+    @Override
+    public ContentResource replace(ContentProfileProvider modelProvider, ContentResource contentResource, String location) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
+                .location("some-external-content-receiver")
+                .build();
+    }
+
+    @Override
+    public ContentResource save(ContentProfileProvider modelProvider, ContentResource contentResource) throws PieceworkException, IOException {
+        return new BasicContentResource.Builder()
                 .location("some-external-content-receiver")
                 .build();
     }

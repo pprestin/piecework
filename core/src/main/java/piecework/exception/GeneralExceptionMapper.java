@@ -15,15 +15,6 @@
  */
 package piecework.exception;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +24,14 @@ import piecework.identity.IdentityHelper;
 import piecework.model.Explanation;
 import piecework.service.UserInterfaceService;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 import java.util.List;
 
 
@@ -102,7 +101,7 @@ public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException>
         if (!mediaType.equals(MediaType.TEXT_HTML_TYPE))
             return Response.status(status).entity(explanation).build();
 
-        StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation, helper.getPrincipal());
+        StreamingOutput streamingOutput = userInterfaceService.getExplanationAsStreaming(servletContext, explanation);
         return Response.status(status).entity(streamingOutput).type(MediaType.TEXT_HTML_TYPE).build();
 	}
 

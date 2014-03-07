@@ -21,14 +21,17 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.content.concrete.BasicContentResource;
 import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.content.concrete.InMemoryContentProviderReceiver;
 import piecework.content.config.ContentConfiguration;
 import piecework.content.stubs.*;
 import piecework.enumeration.Scheme;
-import piecework.model.Content;
-import piecework.model.Process;
+import piecework.exception.PieceworkException;
+import piecework.model.ContentProfile;
 import piecework.model.User;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
 
 import java.io.IOException;
 import java.util.List;
@@ -79,33 +82,37 @@ public class ContentHandlerRepositoryTest {
     }
 
     @Test
-    public void testContentProviderByKey() throws IOException {
+    public void testContentProviderByKey() throws PieceworkException, IOException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .contentHandlerKey("some-key")
+                .build();
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
         ContentHandlerRegistry registry = contentHandlerRepository.getContentHandlerRegistry();
         List<ContentProvider> contentProviders = registry.providers(Scheme.REPOSITORY, "some-key");
         Assert.assertEquals(3, contentProviders.size());
         ContentProvider provider = contentProviders.get(0);
         Assert.assertTrue(provider instanceof TestKeyContentProvider);
-        Content content = provider.findByPath(null, null, null, null);
-        Assert.assertEquals("some-key-content-provider", content.getLocation());
+        ContentResource contentResource = provider.findByLocation(modelProvider, null);
+        Assert.assertEquals("some-key-content-provider", contentResource.getLocation());
     }
 
     @Test
-    public void testContentProviderFullByKey() throws IOException {
-        Process process = new Process.Builder()
-                .processDefinitionKey("TEST")
-                .contentReceiverKey("some-key")
+    public void testContentProviderFullByKey() throws PieceworkException, IOException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .contentHandlerKey("some-key")
                 .build();
-        Content content = contentHandlerRepository.findByLocation(process, "some/location", null);
-        Assert.assertEquals("some-key-content-provider", content.getLocation());
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        ContentResource contentResource = contentHandlerRepository.findByLocation(modelProvider, "some/location");
+        Assert.assertEquals("some-key-content-provider", contentResource.getLocation());
     }
 
     @Test
-    public void testContentProviderFullWithoutKey() throws IOException {
-        Process process = new Process.Builder()
-                .processDefinitionKey("TEST")
+    public void testContentProviderFullWithoutKey() throws PieceworkException, IOException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
                 .build();
-        Content content = contentHandlerRepository.findByLocation(process, "some/location", null);
-        Assert.assertEquals("some-external-content-provider", content.getLocation());
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        ContentResource contentResource = contentHandlerRepository.findByLocation(modelProvider, "some/location");
+        Assert.assertEquals("some-external-content-provider", contentResource.getLocation());
     }
 
     @Test
@@ -117,42 +124,50 @@ public class ContentHandlerRepositoryTest {
     }
 
     @Test
-    public void testContentReceiverFullByKey() throws IOException {
-        Process process = new Process.Builder()
-                .processDefinitionKey("TEST")
-                .contentReceiverKey("some-key")
+    public void testContentReceiverSaveByKey() throws PieceworkException, IOException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .contentHandlerKey("some-key")
                 .build();
-        Content content = new Content.Builder()
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .build();
 
-        Content stored = contentHandlerRepository.save(process, null, content, null);
+        ContentResource stored = contentHandlerRepository.save(modelProvider, contentResource);
         Assert.assertEquals("some-key-content-receiver", stored.getLocation());
     }
 
     @Test
-    public void testContentReceiverFullWithoutKey() throws IOException {
-        Process process = new Process.Builder()
-                .processDefinitionKey("TEST")
+    public void testContentReceiverSaveWithoutKey() throws PieceworkException, IOException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
                 .build();
-        Content content = new Content.Builder()
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .build();
 
-        Content stored = contentHandlerRepository.save(process, null, content, null);
+        ContentResource stored = contentHandlerRepository.save(modelProvider, contentResource);
         Assert.assertEquals("some-external-content-receiver", stored.getLocation());
     }
 
     @Test
-    public void testContentReceiverByKey() throws IOException {
+    public void testContentReceiverLookupSaveAndExpireByKey() throws PieceworkException, IOException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .contentHandlerKey("some-key")
+                .build();
+        ContentProfileProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+
         ContentHandlerRegistry registry = contentHandlerRepository.getContentHandlerRegistry();
         ContentReceiver contentReceiver = registry.contentReceiver("some-key");
         Assert.assertTrue(contentReceiver instanceof TestKeyContentReceiver);
-        Content content = new Content.Builder()
+        ContentResource contentResource = new BasicContentResource.Builder()
                 .build();
         User principal = new User.Builder()
                 .build();
-        Content stored = contentReceiver.save(null, null, content, principal);
+        ContentResource stored = contentReceiver.save(modelProvider, contentResource);
 
         Assert.assertEquals("some-key-content-receiver", stored.getLocation());
+
+        contentReceiver.expire(modelProvider, stored.getLocation());
     }
 
 }

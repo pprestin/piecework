@@ -30,6 +30,7 @@ public class NotificationSettings {
     @Autowired
     Environment environment;
 
+    private String applicationName;
     private String mailServerHost;
     private int mailServerPort;
     private String mailFromAddress;
@@ -39,11 +40,16 @@ public class NotificationSettings {
 
     @PostConstruct
     public void init() {
+        this.applicationName = environment.getProperty("application.name");
         this.mailServerHost = environment.getProperty("mail.server.host");
         this.mailServerPort = environment.getProperty("mail.server.port", Integer.class, 25);
         this.mailFromAddress = environment.getProperty("mail.from.address");
         this.mailFromLabel = environment.getProperty("mail.from.label");
         this.mailToOverride = environment.getProperty("mail.to.override");
+    }
+
+    public String getApplicationName() {
+        return applicationName;
     }
 
     public String getMailServerHost() {

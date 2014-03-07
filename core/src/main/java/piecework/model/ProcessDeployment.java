@@ -20,10 +20,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import piecework.common.ManyMap;
 import piecework.enumeration.FlowElementType;
 import piecework.enumeration.State;
 import piecework.security.Sanitizer;
-import piecework.common.ManyMap;
 
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
@@ -52,6 +52,9 @@ public class ProcessDeployment implements Serializable {
 
     @XmlElement
     private final String processInstanceLabelTemplate;
+
+    @XmlElement
+    private final ContentProfile contentProfile;
 
     @XmlElement
     private final String engine;
@@ -110,6 +113,7 @@ public class ProcessDeployment implements Serializable {
 
     private final ManyMap<String, Notification> notificationMap;
 
+
     private ProcessDeployment() {
         this(new ProcessDeployment.Builder());
     }
@@ -120,6 +124,7 @@ public class ProcessDeployment implements Serializable {
         this.deploymentLabel = builder.deploymentLabel;
         this.deploymentVersion = builder.deploymentVersion;
         this.processInstanceLabelTemplate = builder.processInstanceLabelTemplate;
+        this.contentProfile = builder.contentProfile;
         this.engine = builder.engine;
         this.engineProcessDefinitionKey = builder.engineProcessDefinitionKey;
         this.engineProcessDefinitionLocation = builder.engineProcessDefinitionLocation;
@@ -155,6 +160,10 @@ public class ProcessDeployment implements Serializable {
 
     public String getProcessInstanceLabelTemplate() {
         return processInstanceLabelTemplate;
+    }
+
+    public ContentProfile getContentProfile() {
+        return contentProfile;
     }
 
     public String getEngine() {
@@ -283,6 +292,7 @@ public class ProcessDeployment implements Serializable {
         private String deploymentLabel;
         private String deploymentVersion;
         private String processInstanceLabelTemplate;
+        private ContentProfile contentProfile;
         private String engine;
         private String engineProcessDefinitionKey;
         private String engineProcessDefinitionId;
@@ -306,6 +316,7 @@ public class ProcessDeployment implements Serializable {
 
         public Builder() {
             super();
+            this.contentProfile = new ContentProfile.Builder().build();
             this.activityMap = new HashMap<String, Activity>();
             this.notificationMap = new ManyMap<String, Notification>();
             this.flowElements = new ArrayList<FlowElement>();
@@ -321,6 +332,7 @@ public class ProcessDeployment implements Serializable {
             this.deploymentLabel = deployment.deploymentLabel;
             this.deploymentVersion = deployment.deploymentVersion;
             this.processInstanceLabelTemplate = sanitizer.sanitize(deployment.processInstanceLabelTemplate);
+            this.contentProfile = deployment.contentProfile != null ? new ContentProfile.Builder(deployment.contentProfile, sanitizer).build() : new ContentProfile.Builder().build();
             this.engine = sanitizer.sanitize(deployment.engine);
             this.engineProcessDefinitionKey = sanitizer.sanitize(deployment.engineProcessDefinitionKey);
             this.engineProcessDefinitionId = sanitizer.sanitize(deployment.engineProcessDefinitionId);
@@ -398,6 +410,11 @@ public class ProcessDeployment implements Serializable {
 
         public Builder processInstanceLabelTemplate(String processInstanceLabelTemplate) {
             this.processInstanceLabelTemplate = processInstanceLabelTemplate;
+            return this;
+        }
+
+        public Builder contentProfile(ContentProfile contentProfile) {
+            this.contentProfile = contentProfile;
             return this;
         }
 

@@ -28,6 +28,8 @@ public class SecuritySettings {
     private final String actAsUserHeader;
     private final String keystoreFile;
     private final char[] keystorePassword;
+    private final long accessCacheInterval;
+    private final long accessCountLimit;
 
     public SecuritySettings(Environment environment) {
         this.certificateIssuerHeader = environment.getProperty(Constants.Settings.CERTIFICATE_ISSUER_HEADER);
@@ -35,6 +37,18 @@ public class SecuritySettings {
         this.actAsUserHeader = environment.getProperty(Constants.Settings.ACT_AS_USER_HEADER);
         this.keystoreFile = environment.getProperty(Constants.Settings.KEYSTORE_FILE);
         this.keystorePassword = environment.getProperty(Constants.Settings.KEYSTORE_PASSWORD, "").toCharArray();
+        // Default to 1000 calls in 5 minutes
+        Long intervalInMinutes = environment.getProperty("access.cache.interval.minutes", Long.class, Long.valueOf(5l));
+        this.accessCacheInterval = intervalInMinutes.longValue() * 60 * 1000;
+        this.accessCountLimit = environment.getProperty("access.count.limit", Long.class, Long.valueOf(1000));
+    }
+
+    public long getAccessCacheInterval() {
+        return accessCacheInterval;
+    }
+
+    public long getAccessCountLimit() {
+        return accessCountLimit;
     }
 
     public String getCertificateIssuerHeader() {

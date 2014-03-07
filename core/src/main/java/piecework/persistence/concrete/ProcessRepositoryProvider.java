@@ -16,7 +16,6 @@
 package piecework.persistence.concrete;
 
 import org.apache.cxf.common.util.StringUtils;
-import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.exception.*;

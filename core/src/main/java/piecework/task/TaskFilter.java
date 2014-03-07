@@ -20,8 +20,8 @@ import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.enumeration.ActionType;
 import piecework.model.*;
-import piecework.security.data.DataFilterService;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.security.data.DataFilterService;
 import piecework.util.SecurityUtility;
 
 import java.util.*;
@@ -51,7 +51,7 @@ public class TaskFilter {
             ProcessDeployment processDeployment = deployment.getDeployment();
             Activity activity = processDeployment != null ? processDeployment.getActivity(rebuilt.getTaskDefinitionKey()) : null;
             Action createAction = activity != null ? activity.action(ActionType.CREATE) : null;
-            boolean external = createAction != null && StringUtils.isNotEmpty(createAction.getLocation());
+//            boolean external = createAction != null && StringUtils.isNotEmpty(createAction.getLocation());
 
             Map<String, List<Value>> data = null;
             ProcessInstance instance = deployment.getInstance();
@@ -67,7 +67,7 @@ public class TaskFilter {
                     .processDefinitionKey(rebuilt.getProcessDefinitionKey())
                     .instance(instance, version1)
                     .data(data)
-                    .external(external)
+//                    .external(external)
                     .build(version1);
         }
         return rebuilt;
@@ -89,7 +89,7 @@ public class TaskFilter {
     }
 
     public Set<String> getDeploymentIds(Iterable<ProcessInstance> instances) {
-        if (wrapWithForm) {
+        if (includeData) {
             Set<String> deploymentIds = new HashSet<String>();
             for (ProcessInstance instance : instances) {
                 if (instance.getDeploymentId() != null)
@@ -98,7 +98,7 @@ public class TaskFilter {
             return deploymentIds;
         }
         return Collections.emptySet();
-        }
+    }
 
     public boolean isWrapWithForm() {
         return wrapWithForm;

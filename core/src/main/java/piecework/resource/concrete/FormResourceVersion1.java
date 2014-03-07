@@ -22,22 +22,28 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Versions;
+import piecework.authorization.AuthorizationRole;
+import piecework.common.FacetFactory;
+import piecework.common.SearchCriteria;
+import piecework.common.SearchQueryParameters;
 import piecework.exception.PieceworkException;
+import piecework.identity.IdentityHelper;
 import piecework.model.Entity;
-import piecework.model.ProcessDeployment;
+import piecework.model.Process;
 import piecework.model.SearchResults;
 import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.SearchProvider;
 import piecework.resource.FormResource;
-import piecework.model.Process;
-import piecework.identity.IdentityHelper;
 import piecework.security.Sanitizer;
-import piecework.security.data.UserInputSanitizer;
 import piecework.service.ProcessService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.FormUtility;
 
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author James Renfro
@@ -69,7 +75,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawRequestId, final String rawSubmissionId, final String redirectCount) throws PieceworkException {
+    public Response read(final MessageContext context, final String rawProcessDefinitionKey, final String rawTaskId, final String rawRequestId, final String rawSubmissionId, final String rawValidationId, final String redirectCount) throws PieceworkException {
 
         int count = StringUtils.isNotEmpty(redirectCount) ? Integer.valueOf(redirectCount) : 1;
 
@@ -79,6 +85,8 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
             return taskForm(context, rawProcessDefinitionKey, rawTaskId, count, principal);
         if (StringUtils.isNotEmpty(rawRequestId))
             return requestForm(context, rawProcessDefinitionKey, rawRequestId, principal);
+        if (StringUtils.isNotEmpty(rawValidationId))
+            return validationForm(context, rawProcessDefinitionKey, rawValidationId, principal);
         if (StringUtils.isNotEmpty(rawSubmissionId))
             return submissionForm(context, rawProcessDefinitionKey, rawSubmissionId, principal);
 
@@ -112,10 +120,12 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public SearchResults search(MessageContext context) throws PieceworkException {
+    public SearchResults search(MessageContext context, SearchQueryParameters queryParameters) throws PieceworkException {
         UriInfo uriInfo = context.getContext(UriInfo.class);
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        return search(context, rawQueryParameters, helper.getPrincipal());
+        SearchProvider searchProvider = modelProviderFactory.searchProvider(helper.getPrincipal());
+        Set<Process> processes = searchProvider.processes(AuthorizationRole.USER, AuthorizationRole.OVERSEER);
+        return search(context, new SearchCriteria.Builder(rawQueryParameters, processes, FacetFactory.facetMap(processes), sanitizer).build(), helper.getPrincipal());
     }
 
     @Override

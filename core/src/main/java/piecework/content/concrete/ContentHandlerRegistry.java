@@ -15,7 +15,6 @@
  */
 package piecework.content.concrete;
 
-import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.common.ManyMap;
 import piecework.content.ContentProvider;
@@ -197,7 +196,10 @@ public class ContentHandlerRegistry {
         public List<ContentProvider> providers(Scheme scheme, String key) {
             if (key == null || contentProviderKeyMap == null || contentProviderKeyMap.isEmpty())
                 return providers(scheme);
-            ContentProvider contentProvider = scheme == Scheme.REPOSITORY ? contentProviderKeyMap.get(key) : null;
+            ContentProvider contentProvider = contentProviderKeyMap.get(key);
+            if (contentProvider == null)
+                return providers(scheme);
+
             List<ContentProvider> allProviders = new ArrayList<ContentProvider>();
             if (contentProvider != null)
                 allProviders.add(contentProvider);

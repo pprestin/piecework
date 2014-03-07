@@ -20,14 +20,28 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import piecework.model.Content;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import piecework.content.config.ContentConfiguration;
+import piecework.enumeration.Scheme;
+import piecework.exception.PieceworkException;
+import piecework.content.ContentResource;
+import piecework.model.ContentProfile;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
+import piecework.security.AccessTracker;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 
 /**
  * @author James Renfro
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes={ContentConfiguration.class})
 public class RemoteContentProviderTest {
 
     private RemoteContentProvider contentProvider = new RemoteContentProvider();
@@ -35,6 +49,7 @@ public class RemoteContentProviderTest {
     @Before
     public void setup() {
         contentProvider.init();
+        contentProvider.accessTracker = Mockito.mock(AccessTracker.class);
     }
 
     @After
@@ -43,20 +58,30 @@ public class RemoteContentProviderTest {
     }
 
     @Test
-    public void retrieveContentHappyPath() throws IOException {
-        Content content = contentProvider.findByPath(null, "https://raw.github.com/", "piecework/piecework/master/README.md", null);
-        Assert.assertEquals("README.md", content.getFilename());
-        Assert.assertEquals("https://raw.github.com/piecework/piecework/master/README.md", content.getContentId());
-        Assert.assertEquals("text/plain; charset=utf-8", content.getContentType());
+    public void retrieveContentHappyPath() throws PieceworkException, IOException {
+        ContentProfile contentProfile = new ContentProfile.Builder()
+                .remoteResourceLocations(Collections.singleton("http://localhost:10001/external/some/resource"))
+                .build();
+        ProcessDeploymentProvider modelProvider = new ProcessDeploymentProviderStub(contentProfile);
+        ContentResource contentResource = contentProvider.findByLocation(modelProvider, "http://localhost:10001/external/some/resource");
+        Assert.assertEquals("resource", contentResource.getFilename());
+        Assert.assertEquals("http://localhost:10001/external/some/resource", contentResource.getContentId());
+        Assert.assertEquals("text/plain;charset=UTF-8", contentResource.contentType());
         byte[] array = null;
-        InputStream input = content.getInputStream();
-        try {
-            array = IOUtils.toByteArray(input);
-        } finally {
-            IOUtils.closeQuietly(input);
-        }
-        Assert.assertNotNull(array);
-        Assert.assertTrue(array.length > 0);
+        InputStream input = contentResource.getInputStream();
+        String expected = "This is some data from an external server";
+        String actual = IOUtils.toString(input);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void verifyKey() {
+        Assert.assertEquals("default-remote", contentProvider.getKey());
+    }
+
+    @Test
+    public void verifyScheme() {
+        Assert.assertEquals(Scheme.REMOTE, contentProvider.getScheme());
     }
 
 }

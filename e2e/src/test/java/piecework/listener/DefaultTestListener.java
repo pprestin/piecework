@@ -23,10 +23,10 @@ import org.testng.TestListenerAdapter;
 public class DefaultTestListener extends TestListenerAdapter {
   @Override
   public void onTestFailure(ITestResult tr) {
-    System.out.print("\033[31m");	// set red font color
+//    System.out.print("\033[31m");	// set red font color
     System.out.println("F");
     System.out.println(tr.getTestClass().getName() + "." + tr.getName() + " FAILED");
-    System.out.print("\033[0m");	// reset to normal 
+//   System.out.print("\033[0m");	// reset to normal 
   }
  
   @Override

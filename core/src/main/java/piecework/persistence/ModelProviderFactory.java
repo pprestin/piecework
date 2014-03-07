@@ -15,22 +15,9 @@
  */
 package piecework.persistence;
 
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.stereotype.Service;
-import piecework.enumeration.CacheName;
-import piecework.exception.GoneError;
-import piecework.exception.NotFoundError;
-import piecework.exception.StatusCodeError;
-import piecework.model.*;
-import piecework.model.Process;
-import piecework.repository.ActivityRepository;
-import piecework.repository.DeploymentRepository;
-import piecework.repository.ProcessInstanceRepository;
-import piecework.repository.ProcessRepository;
-import piecework.security.Sanitizer;
-import piecework.service.CacheService;
+import piecework.exception.PieceworkException;
+import piecework.model.Entity;
+import piecework.model.FormRequest;
 
 /**
  * @author James Renfro
@@ -39,9 +26,13 @@ public interface ModelProviderFactory {
 
     AllowedTaskProvider allowedTaskProvider(String processDefinitionKey, String processInstanceId, Entity principal);
 
+    ContentProfileProvider systemContentProvider(Entity principal);
+
     ProcessProvider processProvider(String processDefinitionKey, Entity principal);
 
     ProcessDeploymentProvider deploymentProvider(String processDefinitionKey, Entity principal);
+
+    ProcessDeploymentProvider deploymentProvider(String processDefinitionKey, String deploymentId, Entity principal);
 
     HistoryProvider historyProvider(String processDefinitionKey, String processInstanceId, Entity principal);
 
@@ -52,5 +43,7 @@ public interface ModelProviderFactory {
     TaskProvider taskProvider(String processDefinitionKey, String taskId, Entity principal);
 
     <P extends ProcessDeploymentProvider> P provider(FormRequest request, Entity principal);
+
+    SearchProvider searchProvider(Entity principal);
 
 }

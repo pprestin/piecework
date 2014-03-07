@@ -15,13 +15,6 @@
  */
 package piecework;
 
-import piecework.form.FieldAttributeDefinition;
-import piecework.form.FieldTagDefinition;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * This interface contains constant messages for resource parameters - path, query, etc.
  * 
@@ -118,6 +111,7 @@ public interface Constants {
         public static final String request_type_required = "request_type_required";
         public static final String screen_id_invalid = "screen_id_invalid";
         public static final String system_action_only = "system_action_only";
+        public static final String system_misconfigured = "system_misconfigured";
         public static final String task_action_invalid = "task_action_invalid";
         public static final String subtask_create_invalid = "subtask_create_invalid";
         public static final String task_does_not_exist = "task_does_not_exist";

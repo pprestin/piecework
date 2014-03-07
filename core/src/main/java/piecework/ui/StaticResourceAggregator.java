@@ -26,13 +26,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.web.context.support.ServletContextResource;
+import piecework.content.ContentResource;
+import piecework.content.concrete.DatedByteArrayContentResource;
 import piecework.enumeration.Scheme;
 import piecework.form.FormDisposition;
-import piecework.model.Content;
-import piecework.model.Entity;
-import piecework.model.Process;
+import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.PathUtility;
@@ -52,32 +53,30 @@ import java.util.Map;
  *
  * @author James Renfro
  */
-public class StaticResourceAggregator {
+public class StaticResourceAggregator<P extends ProcessDeploymentProvider> {
 
     private static final String NEWLINE = System.getProperty("line.separator");
     private static final Logger LOG = Logger.getLogger(StaticResourceAggregator.class);
 
     private final ServletContext servletContext;
-    private final Process process;
+    private final ContentProfileProvider modelProvider;
     private final ContentRepository contentRepository;
     private final StringBuffer buffer;
     private final UserInterfaceSettings settings;
     private final FormDisposition formDisposition;
-    private final Entity principal;
 
-    public StaticResourceAggregator(ServletContext servletContext, Process process, ContentRepository contentRepository, UserInterfaceSettings settings, FormDisposition formDisposition, Entity principal) {
+    public StaticResourceAggregator(ServletContext servletContext, ContentProfileProvider modelProvider, ContentRepository contentRepository, UserInterfaceSettings settings, FormDisposition formDisposition) {
         this.servletContext = servletContext;
-        this.process = process;
+        this.modelProvider = modelProvider;
         this.contentRepository = contentRepository;
         this.buffer = new StringBuffer();
         this.settings = settings;
         this.formDisposition = formDisposition;
-        this.principal = principal;
     }
 
-    public Resource getStaticResource() {
+    public ContentResource getStaticResource() {
         String content = this.buffer.toString();
-        return new DatedByteArrayResource(content.getBytes(Charset.forName("UTF-8")));
+        return new DatedByteArrayContentResource(new ByteArrayResource(content.getBytes(Charset.forName("UTF-8"))));
     }
 
     public String handle(String path) {
@@ -245,9 +244,9 @@ public class StaticResourceAggregator {
             if (scheme != Scheme.REPOSITORY)
                 base = null;
 
-            Content content = contentRepository.findByLocation(process, base, path, principal);
-            if (content != null) {
-                return new BufferedReader(new InputStreamReader(content.getInputStream()));
+            ContentResource contentResource = modelProvider != null ? contentRepository.findByLocation(modelProvider, fullPath) : null;
+            if (contentResource != null) {
+                return new BufferedReader(new InputStreamReader(contentResource.getInputStream()));
             }
             return null;
         }

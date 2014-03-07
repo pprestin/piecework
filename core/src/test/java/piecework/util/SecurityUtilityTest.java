@@ -278,7 +278,8 @@ public class SecurityUtilityTest {
         ManyMap<String, Value> original = new ManyMap<String, Value>();
         original.putOne("test-1", new Value("one"));
         original.putOne("test-2", new Value("another"));
-        ManyMap<String, Value> filtered = SecurityUtility.filter(original);
+        Set<Field> fields = null;
+        ManyMap<String, Value> filtered = SecurityUtility.filter(fields, original);
         Assert.assertEquals(original, filtered);
     }
 
@@ -288,7 +289,7 @@ public class SecurityUtilityTest {
         original.putOne("test-1", new Value("one"));
         original.putOne("test-2", new Value("another"));
         Set<Field> fields = new HashSet<Field>();
-        ManyMap<String, Value> filtered = SecurityUtility.filter(original, new LimitFieldsFilter(fields, false));
+        ManyMap<String, Value> filtered = SecurityUtility.filter(fields, original, new LimitFieldsFilter(fields, false));
         Assert.assertTrue(filtered.isEmpty());
     }
 
@@ -301,7 +302,7 @@ public class SecurityUtilityTest {
         fields.add(new Field.Builder()
                 .name("test-3")
                 .build());
-        ManyMap<String, Value> filtered = SecurityUtility.filter(original, new LimitFieldsFilter(fields, false));
+        ManyMap<String, Value> filtered = SecurityUtility.filter(fields, original, new LimitFieldsFilter(fields, false));
         Assert.assertTrue(filtered.isEmpty());
     }
 
@@ -314,7 +315,7 @@ public class SecurityUtilityTest {
         fields.add(new Field.Builder()
                 .name("test-2")
                 .build());
-        ManyMap<String, Value> filtered = SecurityUtility.filter(original, new LimitFieldsFilter(fields, false));
+        ManyMap<String, Value> filtered = SecurityUtility.filter(fields, original, new LimitFieldsFilter(fields, false));
         Assert.assertEquals(1, filtered.size());
         Assert.assertEquals("another", filtered.getOne("test-2").toString());
     }
@@ -333,7 +334,7 @@ public class SecurityUtilityTest {
                 .name("test-2")
                 .restricted()
                 .build());
-        ManyMap<String, Value> filtered = SecurityUtility.filter(original, new LimitFieldsFilter(fields, false));
+        ManyMap<String, Value> filtered = SecurityUtility.filter(fields, original, new LimitFieldsFilter(fields, false));
         Assert.assertTrue(filtered.isEmpty());
     }
 
@@ -351,7 +352,7 @@ public class SecurityUtilityTest {
                 .name("test-2")
                 .restricted()
                 .build());
-        ManyMap<String, Value> filtered = SecurityUtility.filter(original, new LimitFieldsFilter(fields, true));
+        ManyMap<String, Value> filtered = SecurityUtility.filter(fields, original, new LimitFieldsFilter(fields, true));
         Assert.assertEquals(1, filtered.size());
         Assert.assertEquals("another", filtered.getOne("test-2").toString());
     }
@@ -409,6 +410,8 @@ public class SecurityUtilityTest {
                 .when(principal).getEntityId();
         Mockito.doReturn(Boolean.FALSE)
                 .when(principal).hasRole(eq(process), eq(AuthorizationRole.OVERSEER));
+        Mockito.doReturn(Boolean.TRUE)
+                .when(principal).hasRole(eq(process), eq(AuthorizationRole.USER));
         Mockito.doReturn(Boolean.TRUE)
                 .when(task).isCandidateOrAssignee(eq(principal));
 

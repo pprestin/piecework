@@ -26,6 +26,8 @@ import piecework.common.ManyMap;
 import piecework.model.Field;
 import piecework.model.Message;
 import piecework.model.Value;
+import piecework.persistence.ProcessDeploymentProvider;
+import piecework.persistence.test.ProcessDeploymentProviderStub;
 import piecework.test.config.IntegrationTestConfiguration;
 import piecework.util.ValidationUtility;
 import piecework.validation.config.ValidationConfiguration;
@@ -45,10 +47,64 @@ public class ValidationFactoryTest {
     @Autowired
     ValidationFactory validationFactory;
 
-
     @Test
     public void verifyApplicationContext() {
         Assert.assertTrue(true);
+    }
+
+    @Test
+    public void testValidateValidRequiredField() {
+        ProcessDeploymentProvider modelProvider = new ProcessDeploymentProviderStub();
+
+        String fieldName = "TestField";
+
+        Field field = new Field.Builder()
+                .name(fieldName)
+                .editable()
+                .required()
+                .build();
+        Validation.Builder builder = new Validation.Builder();
+        List<ValidationRule> rules = new ArrayList<ValidationRule>(ValidationUtility.validationRules(field, null));
+        Set<String> fieldNames = new HashSet<String>();
+        fieldNames.add(fieldName);
+        ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
+        ManyMap<String, Value> instanceData = new ManyMap<String, Value>();
+        submissionData.putOne(fieldName, new Value("TestValue"));
+
+        validationFactory.validateField(modelProvider, builder, field, rules, fieldNames,
+                submissionData, instanceData, submissionData, instanceData, true, false);
+
+        Validation validation = builder.build();
+        Assert.assertEquals(submissionData, validation.getData());
+        Assert.assertEquals(0, validation.getResults().size());
+    }
+
+    @Test
+    public void testValidateMissingRequiredField() {
+        ProcessDeploymentProvider modelProvider = new ProcessDeploymentProviderStub();
+
+        String fieldName = "TestField";
+
+        Field field = new Field.Builder()
+                .name(fieldName)
+                .editable()
+                .required()
+                .build();
+        Validation.Builder builder = new Validation.Builder();
+        List<ValidationRule> rules = new ArrayList<ValidationRule>(ValidationUtility.validationRules(field, null));
+        Set<String> fieldNames = new HashSet<String>();
+        fieldNames.add(fieldName);
+        ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
+        ManyMap<String, Value> instanceData = new ManyMap<String, Value>();
+
+        validationFactory.validateField(modelProvider, builder, field, rules, fieldNames,
+                submissionData, instanceData, submissionData, instanceData, true, false);
+
+        Validation validation = builder.build();
+        List<Message> messages = validation.getResults().get(fieldName);
+        Assert.assertEquals(1, messages.size());
+        Assert.assertEquals("Field is required", messages.get(0).getText());
+        Assert.assertTrue(validation.getData().isEmpty());
     }
 
 //    @Test

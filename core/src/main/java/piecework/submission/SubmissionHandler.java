@@ -15,21 +15,16 @@
  */
 package piecework.submission;
 
-import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
-import piecework.model.Entity;
-import piecework.model.FormRequest;
-import piecework.model.ProcessInstance;
 import piecework.model.Submission;
-import piecework.persistence.ProcessProvider;
+import piecework.persistence.ContentProfileProvider;
 
 /**
  * @author James Renfro
  */
 public interface SubmissionHandler<T> {
 
-    <P extends ProcessProvider> Submission handle(P provider, T submission, SubmissionTemplate template) throws PieceworkException;
+    Submission handle(ContentProfileProvider provider, T submission, SubmissionTemplate template) throws PieceworkException;
 
     Class<?> getType();
 

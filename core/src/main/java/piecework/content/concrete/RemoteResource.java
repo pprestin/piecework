@@ -15,6 +15,7 @@
  */
 package piecework.content.concrete;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
@@ -28,20 +29,24 @@ import org.apache.http.client.utils.DateUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.springframework.core.io.Resource;
+import piecework.content.ContentResource;
+import piecework.content.Version;
 import piecework.util.FileUtility;
 
-import java.io.File;
+import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
-import java.net.URL;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author James Renfro
  */
-public class RemoteResource implements Resource {
+public class RemoteResource implements ContentResource {
 
     private static final Logger LOG = Logger.getLogger(RemoteResource.class);
 
@@ -60,45 +65,40 @@ public class RemoteResource implements Resource {
     }
 
     @Override
-    public boolean exists() {
-        return true;
+    public String getContentId() {
+        return this.uri.toString();
     }
 
     @Override
-    public boolean isReadable() {
-        return true;
+    public String getLocation() {
+        return this.uri.toString();
     }
 
     @Override
-    public boolean isOpen() {
-        return true;
+    public Map<String, String> getMetadata() {
+        return Collections.emptyMap();
     }
 
     @Override
-    public URL getURL() throws IOException {
-        return uri.toURL();
-    }
-
-    @Override
-    public URI getURI() throws IOException {
-        return uri;
-    }
-
-    @Override
-    public File getFile() throws IOException {
-        return null;
-    }
-
-    @Override
-    public synchronized long contentLength() throws IOException {
+    public synchronized long contentLength() {
         ensureInitialized();
         return contentLength;
     }
 
     @Override
-    public synchronized long lastModified() throws IOException {
+    public synchronized long lastModified()  {
         ensureInitialized();
         return lastModified;
+    }
+
+    @Override
+    public String lastModifiedBy() {
+        return null;
+    }
+
+    @Override
+    public List<Version> versions() {
+        return Collections.<Version>emptyList();
     }
 
     public synchronized String eTag() {
@@ -107,7 +107,7 @@ public class RemoteResource implements Resource {
     }
 
     @Override
-    public Resource createRelative(String relativePath) throws IOException {
+    public String getName() {
         return null;
     }
 
@@ -206,6 +206,16 @@ public class RemoteResource implements Resource {
             throw new IOException("Unable to retrieve remote resource content", e);
         } finally {
 
+        }
+    }
+
+    @Override
+    public void write(OutputStream output) throws IOException, WebApplicationException {
+        InputStream input = getInputStream();
+        try {
+            IOUtils.copy(input, output);
+        } finally {
+            IOUtils.closeQuietly(input);
         }
     }
 

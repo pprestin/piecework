@@ -17,12 +17,19 @@ package piecework.content.concrete;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import piecework.content.ContentProvider;
+import piecework.content.ContentResource;
+import piecework.enumeration.AlarmSeverity;
 import piecework.enumeration.Scheme;
-import piecework.model.*;
-import piecework.model.Process;
+import piecework.exception.ForbiddenError;
+import piecework.exception.PieceworkException;
+import piecework.model.ContentProfile;
+import piecework.persistence.ContentProfileProvider;
+import piecework.security.AccessTracker;
+import piecework.util.ContentUtility;
 
 /**
  * @author James Renfro
@@ -32,47 +39,41 @@ public class ClasspathContentProvider implements ContentProvider {
 
     private static final Logger LOG = Logger.getLogger(ClasspathContentProvider.class);
 
-    @Override
-    public Content findByPath(Process process, String base, String path, Entity principal) {
-        if (StringUtils.isEmpty(base)) {
-            LOG.warn("Cannot retrieve a classpath resource without a base path");
-            return null;
-        }
+    @Autowired
+    AccessTracker accessTracker;
 
-        if (!base.startsWith("classpath:")) {
+    @Override
+    public ContentResource findByLocation(ContentProfileProvider modelProvider, String rawPath) throws PieceworkException {
+
+        if (!rawPath.startsWith(ClasspathContentResource.PREFIX)) {
             LOG.error("Should not be looking for a classpath resource without the classpath prefix");
             return null;
         }
 
-        String classpathBase = base.substring("classpath:".length());
+        String path = rawPath.substring(ClasspathContentResource.PREFIX.length());
 
-        // Make sure that the base ends with a slash
-        if (!classpathBase.endsWith("/"))
-            classpathBase += "/";
+        ContentProfile contentProfile = modelProvider.contentProfile();
+        // Show never use ClasspathContentProvider unless the content profile explicitly
+        // specifies a base classpath
+        if (contentProfile == null || StringUtils.isEmpty(contentProfile.getBaseClasspath()))
+            return null;
 
-        String location = org.springframework.util.StringUtils.applyRelativePath(classpathBase, path);
-        ClassPathResource resource = new ClassPathResource(location);
+        String baseClasspath = contentProfile.getBaseClasspath();
 
-        location = "classpath:" + resource.getPath();
+        if (!ContentUtility.validateClasspath(baseClasspath, path)) {
+            accessTracker.alarm(AlarmSeverity.MINOR, "Attempt to access classpath " + path + " outside of " + baseClasspath + " forbidden", modelProvider.principal());
+            throw new ForbiddenError();
+        }
 
-        String contentType = null;
+        ClassPathResource resource = new ClassPathResource(path);
 
         if (!resource.exists()) {
-            LOG.warn("No classpath resource exists for " + location);
+            LOG.warn("No classpath resource exists for " + resource.getPath());
             return null;
         }
 
-        if (location.endsWith(".css"))
-            contentType = "text/css";
-        else if (location.endsWith(".js"))
-            contentType = "application/json";
-        else if (location.endsWith(".html"))
-            contentType = "text/html";
-
-        return new Content.Builder().resource(resource).contentType(contentType).location(location).filename(resource.getFilename()).build();
+        return new ClasspathContentResource(resource);
     }
-
-
 
     @Override
     public Scheme getScheme() {

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
+import piecework.content.ContentResource;
 import piecework.enumeration.OperationType;
 import piecework.exception.ForbiddenError;
 import piecework.exception.NotFoundError;
@@ -31,7 +32,6 @@ import piecework.persistence.AllowedTaskProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.process.AttachmentQueryParameters;
 import piecework.resource.ProcessInstanceApiResource;
-import piecework.ui.streaming.StreamingAttachmentContent;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -64,13 +64,13 @@ public class ProcessInstanceApiResourceVersion1 extends AbstractInstanceResource
         if (allowedTask == null)
             throw new ForbiddenError();
 
-        StreamingAttachmentContent content = allowedTaskProvider.attachment(attachmentId);
+        ContentResource content = allowedTaskProvider.attachment(attachmentId);
 
         if (content == null)
             throw new NotFoundError(Constants.ExceptionCodes.attachment_does_not_exist, attachmentId);
 
-        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getAttachment().getDescription()).toString();
-        return Response.ok(content, content.getAttachment().getContentType()).header("Content-Disposition", contentDisposition).build();
+        String contentDisposition = new StringBuilder("attachment; filename=").append(content.getFilename()).toString();
+        return Response.ok(content, content.contentType()).header("Content-Disposition", contentDisposition).build();
     }
 
     @Override

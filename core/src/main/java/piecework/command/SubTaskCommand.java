@@ -15,16 +15,20 @@
  */
 package piecework.command;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
-import piecework.exception.*;
+import piecework.exception.ForbiddenError;
+import piecework.exception.InternalServerError;
+import piecework.exception.NotFoundError;
+import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
-import piecework.model.*;
+import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.ProcessInstance;
+import piecework.model.Task;
 import piecework.persistence.TaskProvider;
 import piecework.validation.Validation;
 

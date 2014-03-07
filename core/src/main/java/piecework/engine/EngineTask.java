@@ -18,7 +18,6 @@ package piecework.engine;
 import piecework.enumeration.ActionType;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 /**

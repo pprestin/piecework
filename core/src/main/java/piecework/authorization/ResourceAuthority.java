@@ -15,11 +15,13 @@
  */
 package piecework.authorization;
 
-import java.util.*;
-
 import org.springframework.security.core.GrantedAuthority;
 import piecework.model.Process;
 import piecework.security.Sanitizer;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author James Renfro

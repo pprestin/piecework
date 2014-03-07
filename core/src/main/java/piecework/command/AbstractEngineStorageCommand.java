@@ -19,8 +19,7 @@ import piecework.ServiceLocator;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
-import piecework.model.*;
-import piecework.model.Process;
+import piecework.model.ProcessInstance;
 import piecework.persistence.ProcessProvider;
 
 /**

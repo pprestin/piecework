@@ -16,12 +16,12 @@
 package piecework.authorization;
 
 import org.apache.log4j.Logger;
-
-import java.util.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author James Renfro
