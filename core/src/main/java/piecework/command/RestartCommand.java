@@ -91,6 +91,9 @@ public class RestartCommand extends AbstractCommand<ProcessInstance, ProcessInst
                 OperationResult result = operation(processEngineFacade);
                 updated = storageManager.store(operation, result, instance, principal);
 
+                if (updated.getProcessStatus() != null && (updated.getProcessStatus().equals(Constants.ProcessStatuses.OPEN) || updated.getProcessStatus().equals(Constants.ProcessStatuses.QUEUED)))
+                    commandFactory.cancellation(modelProvider, "Restarted").execute();
+
                 if (LOG.isDebugEnabled())
                     LOG.debug("Executed instance state command " + this.toString());
 

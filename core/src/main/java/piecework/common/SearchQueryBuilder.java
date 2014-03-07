@@ -26,6 +26,7 @@ import piecework.model.SearchFacet;
 import piecework.security.Sanitizer;
 import piecework.util.SearchUtility;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,6 +54,8 @@ public class SearchQueryBuilder {
             filteredProcessDefinitionKeys = allowedProcessDefinitionKeys;
 
         query.addCriteria(where("processDefinitionKey").in(filteredProcessDefinitionKeys));
+
+        List<String> sortBy = searchCriteria.getSortBy();
 
         Map<SearchFacet, String> facetParameters = searchCriteria.getFacetParameters();
         if (facetParameters != null && !facetParameters.isEmpty()) {
@@ -121,10 +124,12 @@ public class SearchQueryBuilder {
 
         if (searchCriteria.getSortBy() != null && StringUtils.isNotEmpty(searchCriteria.getDirection())) {
             query.with(SearchUtility.sort(searchCriteria, sanitizer));
-        } else {
-            query.with(new Sort(Sort.Direction.DESC, "lastModifiedTime")
-                .and(new Sort(Sort.Direction.DESC, "startTime")));
         }
+
+//        else {
+//            query.with(new Sort(Sort.Direction.DESC, "lastModifiedTime")
+//                .and(new Sort(Sort.Direction.DESC, "startTime")));
+//        }
 
 //        if (searchCriteria.getOrderBy() != null) {
 //            switch (searchCriteria.getOrderBy()) {

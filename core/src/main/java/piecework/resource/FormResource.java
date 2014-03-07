@@ -22,6 +22,7 @@ import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.SearchQueryParameters;
 import piecework.exception.PieceworkException;
+import piecework.model.SearchResponse;
 import piecework.model.SearchResults;
 
 import javax.annotation.security.RolesAllowed;
@@ -90,6 +91,6 @@ public interface FormResource extends ApplicationResource {
     @Path("")
     @RolesAllowed({AuthorizationRole.OVERSEER, AuthorizationRole.USER})
     @Produces({"text/html", "application/json", "text/csv"})
-    SearchResults search(@Context MessageContext context, @QueryParam("") SearchQueryParameters queryParameters) throws PieceworkException;
+    Response search(@Context MessageContext context, @QueryParam("") SearchQueryParameters queryParameters) throws PieceworkException;
 
 }

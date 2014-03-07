@@ -38,17 +38,25 @@ public class FacetFactory {
     public static List<Facet> facets(Set<Process> processes) {
         // The system has a default set of facets that is not process-dependent
         List<Facet> facets = new ArrayList<Facet>();
-        facets.add(new SearchFacet("processInstanceLabel", "InstanceLabel", "Label"));
-        facets.add(new SearchFacet("processStatus", "ProcessStatus", "Process Status"));
+//        facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label"));
+//        facets.add(new SearchFacet("processStatus", "processStatus", "Process Status"));
 //        facets.add(new Facet("tasks..taskStatus", "TaskStatus", "Task Status"));
 //        facets.add(new Facet("tasks..taskLabel", "TaskLabel", "Task"));
 //        facets.add(new Facet("tasks..assignee", "Assignee", "Assignee", User.class));
 //        facets.add(new Facet("tasks..startTime", "TaskStart", "Start Time", Date.class));
 //        facets.add(new Facet("tasks..endTime", "TaskEnd", "End Time", Date.class));
 //        facets.add(new Facet("tasks..dueDate", "TaskDue", "Task Due", Date.class));
-        facets.add(new SearchFacet("startTime", "InstanceStartTime", "Created", Date.class));
-        facets.add(new SearchFacet("lastModifiedTime", "InstanceLastModified", "Last Modified", Date.class));
-        facets.add(new SearchFacet("endTime", "InstanceEndTime", "Completed", Date.class));
+
+        if (processes != null) {
+            for (Process process : processes) {
+                if (process.getFacets() != null && !process.getFacets().isEmpty())
+                    facets.addAll(process.getFacets());
+            }
+        }
+
+        facets.add(new SearchFacet("startTime", "startTime", "Created", "date"));
+        facets.add(new SearchFacet("endTime", "endTime", "Completed", "date"));
+        facets.add(new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date"));
 
         return facets;
     }

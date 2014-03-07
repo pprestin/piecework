@@ -263,6 +263,10 @@ public class ProcessInstance implements Serializable {
         return startTime;
     }
 
+    public Date getLastModifiedTime() {
+        return lastModifiedTime;
+    }
+
     public Date getEndTime() {
         return endTime;
     }

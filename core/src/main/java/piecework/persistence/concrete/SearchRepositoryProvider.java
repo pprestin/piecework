@@ -16,14 +16,18 @@
 package piecework.persistence.concrete;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.cache.Cache;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.FacetFactory;
 import piecework.common.SearchCriteria;
 import piecework.common.ViewContext;
+import piecework.enumeration.ActionType;
 import piecework.enumeration.CacheName;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
@@ -32,12 +36,17 @@ import piecework.persistence.SearchProvider;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.repository.ProcessRepository;
 import piecework.security.Sanitizer;
+import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.data.DataFilterService;
 import piecework.service.CacheService;
 import piecework.service.IdentityService;
+import piecework.task.TaskDeployment;
+import piecework.task.TaskFactory;
 import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
+import piecework.util.ProcessInstanceUtility;
 import piecework.util.SearchUtility;
+import piecework.util.SecurityUtility;
 
 import java.util.*;
 
@@ -85,7 +94,7 @@ public class SearchRepositoryProvider implements SearchProvider {
     }
 
     @Override
-    public SearchResults forms(SearchCriteria criteria, ViewContext context) throws PieceworkException {
+    public SearchResponse forms(SearchCriteria criteria, ViewContext context) throws PieceworkException {
         long time = 0;
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
@@ -110,12 +119,197 @@ public class SearchRepositoryProvider implements SearchProvider {
 
         Page<ProcessInstance> page = instanceRepository.findByCriteria(allProcessDefinitionKeys, criteria, pageable, sanitizer);
 
-        SearchResults results = pageHandler.handle(page, pageable, allowedProcesses);
+        SearchResponse response = new SearchResponse();
+
+//        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
+//                .resourceLabel("Tasks")
+//                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
+//                .link(context.getApplicationUri());
+
+        if (allowedProcesses == null || allowedProcesses.isEmpty())
+            return response;
+
+        List<Process> alphabetical = new ArrayList<Process>(allowedProcesses);
+        Collections.sort(alphabetical, new Comparator<Process>() {
+            @Override
+            public int compare(Process o1, Process o2) {
+                if (org.apache.commons.lang.StringUtils.isEmpty(o1.getProcessDefinitionLabel()))
+                    return 0;
+                if (org.apache.commons.lang.StringUtils.isEmpty(o2.getProcessDefinitionLabel()))
+                    return 1;
+                return o1.getProcessDefinitionLabel().compareTo(o2.getProcessDefinitionLabel());
+            }
+        });
+
+        List<Map<String, String>> metadata = new ArrayList<Map<String, String>>();
+        for (Process allowedProcess : alphabetical) {
+            if (allowedProcess.getProcessDefinitionKey() != null) {
+                Process definition = allowedProcess;
+                Form form = new Form.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).task(new Task.Builder().processDefinitionKey(definition.getProcessDefinitionKey()).processDefinitionLabel(definition.getProcessDefinitionLabel()).build(context)).build(context);
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("processDefinitionKey", definition.getProcessDefinitionKey());
+                map.put("processDefinitionLabel", definition.getProcessDefinitionLabel());
+                map.put("link", form.getLink());
+                metadata.add(map);
+            }
+        }
+        response.setMetadata(metadata);
+
+        if (page.hasContent()) {
+            int count = 0;
+
+            String processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;
+            String taskStatus = criteria.getTaskStatus() != null ? sanitizer.sanitize(criteria.getTaskStatus()) : Constants.TaskStatuses.ALL;
+
+
+            // Loop once through list to get the deployment ids
+            Set<String> deploymentIds = taskFilter.getDeploymentIds(page.getContent());
+
+            // Retrieve a map of deployment objects from Mongo
+//            Map<String, ProcessDeployment> deploymentMap = getDeploymentMap(deploymentIds);
+
+            List<TaskDeployment> taskDeployments = new ArrayList<TaskDeployment>();
+            Set<String> userIds = new HashSet<String>();
+
+            List<Facet> facets = FacetFactory.facets(allowedProcesses);
+            response.setFacets(facets);
+
+
+//            Map<String, Map<String, Object>> instanceDataMap =
+//                    new HashMap<String, Map<String, Object>>();
+            // Loop again through the list to get all user ids and build the intermediate object including
+            // task, instance, and deployment
+            for (ProcessInstance instance : page.getContent()) {
+                String processDefinitionKey = instance.getProcessDefinitionKey();
+                String processInstanceId = instance.getProcessInstanceId();
+
+                ProcessDeployment processDeployment = null;
+//                if (taskFilter.isWrapWithForm())
+//                    processDeployment = deploymentMap.get(instance.getDeploymentId());
+
+                Map<String, Object> instanceData = new HashMap<String, Object>();
+//                instanceDataMap.put(instance.getProcessInstanceId(), instanceData);
+
+                instanceData.put("processInstanceId", processInstanceId);
+                instanceData.put("processInstanceLabel", instance.getProcessInstanceLabel());
+                instanceData.put("processDefinitionLabel", instance.getProcessDefinitionLabel());
+                instanceData.put("processStatus", instance.getProcessStatus());
+                instanceData.put("startTime", instance.getStartTime());
+                instanceData.put("lastModifiedTime", instance.getLastModifiedTime());
+                instanceData.put("endTime", instance.getEndTime());
+
+                String activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
+                String attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
+                String cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
+                String history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+                String restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
+                String suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+
+                instanceData.put("activation", activation);
+                instanceData.put("attachment", attachment);
+                instanceData.put("cancellation", cancellation);
+                instanceData.put("history", history);
+                instanceData.put("restart", restart);
+                instanceData.put("suspension", suspension);
+
+                Map<String, List<Value>> valueData = instance.getData();
+                if (valueData != null && !valueData.isEmpty()) {
+                    for (Facet facet : facets) {
+                        if (facet instanceof DataSearchFacet) {
+                            DataSearchFacet dataSearchFacet = DataSearchFacet.class.cast(facet);
+                            String name = dataSearchFacet.getName();
+                            String value = ProcessInstanceUtility.firstString(name, valueData);
+                            if (StringUtils.isNotEmpty(value))
+                                instanceData.put(name, value);
+                        }
+                    }
+                }
+
+                Set<Task> tasks = instance.getTasks();
+                if (tasks != null && !tasks.isEmpty()) {
+                    for (Task task : tasks) {
+                        if (include(task, processStatus, taskStatus, overseerProcessDefinitionKeys, principal)) {
+                            taskDeployments.add(new TaskDeployment(processDeployment, instance, task, instanceData));
+                            userIds.addAll(task.getAssigneeAndCandidateAssigneeIds());
+                        }
+                    }
+                }
+            }
+
+            Map<String, User> userMap = identityService.findUsers(userIds);
+
+            List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
+
+            for (TaskDeployment taskDeployment : taskDeployments) {
+                Map<String, Object> map = new HashMap<String, Object>();
+                Map<String, Object> instanceData = taskDeployment.getInstanceData();
+
+                if (instanceData != null && !instanceData.isEmpty())
+                    map.putAll(instanceData);
+
+                Task task = TaskFactory.task(taskDeployment.getTask(), new PassthroughSanitizer(), userMap, context);
+                String processDefinitionKey = task.getProcessDefinitionKey();
+
+                map.put("assignee", task.getAssignee());
+                map.put("candidateAssignees", task.getCandidateAssignees());
+
+                map.put("formInstanceId", task.getTaskInstanceId());
+                map.put("taskClaimTime", task.getClaimTime());
+                map.put("taskDueDate", task.getDueDate());
+                map.put("taskStartTime", task.getStartTime());
+                map.put("taskEndTime", task.getEndTime());
+                map.put("taskLabel", task.getTaskLabel());
+                map.put("taskDescription", task.getTaskDescription());
+                map.put("taskStatus", task.getTaskStatus());
+                map.put("active", task.isActive());
+
+                String assignment = context != null && task != null && task.getTaskInstanceId() != null ? context.getApplicationUri(Task.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, task.getTaskInstanceId(), "assign") : null;
+
+                map.put("assignment", assignment);
+                map.put("link", context != null ? context.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, processDefinitionKey) + "?taskId=" + task.getTaskInstanceId() : null);
+
+//                if (includeData) {
+//                    Set<Field> fields = SecurityUtility.fields(activity, createAction);
+//                    data = dataFilterService.unrestrictedInstanceData(instance, fields);
+//                }
+//
+//                return new Form.Builder()
+//                        .formInstanceId(rebuilt.getTaskInstanceId())
+//                        .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
+//                        .processDefinitionKey(rebuilt.getProcessDefinitionKey())
+//                        .instance(instance, version1)
+//                        .data(data)
+////                    .external(external)
+//                        .build(version1);
+
+                data.add(map);
+                count++;
+            }
+            response.setData(data);
+//            if (criteria.getSortBy() != null && !criteria.getSortBy().isEmpty()) {
+//                String sortBy = criteria.getSortBy().iterator().next();
+//                response.setSortBy(sortBy);
+//            }
+            response.setSortBy(criteria.getOriginalSortBy());
+            response.setDirection(criteria.getDirection());
+
+//            resultsBuilder.firstResult(pageable.getOffset());
+//            resultsBuilder.maxResults(pageable.getPageSize());
+//            resultsBuilder.total(Long.valueOf(count));
+        }
+//        if (taskFilter.getPrincipal() != null && taskFilter.getPrincipal() instanceof User)
+//            resultsBuilder.currentUser(User.class.cast(taskFilter.getPrincipal()));
+//
+//        return resultsBuilder.build(version);
+
 
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
 
-        return results;
+        if (principal instanceof User)
+            response.setCurrentUser(User.class.cast(principal));
+
+        return response;
     }
 
     public Set<Process> processes(String ... allowedRoles) {
@@ -202,5 +396,21 @@ public class SearchRepositoryProvider implements SearchProvider {
     @Override
     public Entity principal() {
         return principal;
+    }
+
+
+    private static boolean include(Task task, String processStatus, String taskStatus, Set<String> overseerProcessDefinitionKeys, Entity principal) {
+        if (!processStatus.equals(Constants.ProcessStatuses.QUEUED)) {
+            if (!processStatus.equals(Constants.ProcessStatuses.ALL) &&
+                    !processStatus.equalsIgnoreCase(task.getTaskStatus()))
+                return false;
+        }
+
+        if (!taskStatus.equals(Constants.TaskStatuses.ALL) &&
+                !taskStatus.equalsIgnoreCase(task.getTaskStatus()))
+            return false;
+
+        return overseerProcessDefinitionKeys.contains(task.getProcessDefinitionKey())
+                || task.isCandidateOrAssignee(principal);
     }
 }

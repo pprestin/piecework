@@ -67,6 +67,7 @@ public class SearchCriteria {
     private final Map<String, List<String>> sanitizedParameters;
     private String direction;
     private List<String> sortBy;
+    private String originalSortBy;
 
     private SearchCriteria() {
         this(new Builder());
@@ -103,6 +104,7 @@ public class SearchCriteria {
         this.sanitizedParameters = Collections.unmodifiableMap(builder.sanitizedParameters);
         this.includeVariables = builder.includeVariables;
         this.sortBy = Collections.unmodifiableList(builder.sortBy);
+        this.originalSortBy = builder.originalSortBy;
         this.direction = builder.direction;
     }
 
@@ -218,6 +220,10 @@ public class SearchCriteria {
         return sortBy;
     }
 
+    public String getOriginalSortBy() {
+        return originalSortBy;
+    }
+
     public Integer getFirstResult() {
         return firstResult;
     }
@@ -260,6 +266,7 @@ public class SearchCriteria {
         private String initiatedBy;
         private String direction;
         private List<String> sortBy;
+        private String originalSortBy;
         private Integer firstResult;
         private Integer maxResults;
         private List<String> keywords;
@@ -331,9 +338,17 @@ public class SearchCriteria {
                                     this.taskStatus = value;
                                 else if (key.equals("initiatedBy"))
                                     this.initiatedBy = value;
-                                else if (key.equals("sortBy"))
-                                    this.sortBy.add(value);
-                                else if (key.equals("direction"))
+                                else if (key.equals("sortBy")) {
+                                    if (StringUtils.isNotEmpty(value)) {
+                                        Facet facet = facetMap.get(value);
+                                        if (facet != null && facet instanceof SearchFacet)
+                                            this.sortBy.add(SearchFacet.class.cast(facet).getQuery());
+                                        else
+                                            this.sortBy.add(value);
+
+                                        this.originalSortBy = value;
+                                    }
+                                } else if (key.equals("direction"))
                                     this.direction = value;
                                 else if (key.equals("completedAfter"))
                                     this.completedAfter = dateTimeFormatter.parseDateTime(value).toDate();
@@ -377,6 +392,15 @@ public class SearchCriteria {
                     processDefinitionKey(process.getProcessDefinitionKey());
                 }
             }
+
+            if (this.sortBy.isEmpty()) {
+                this.originalSortBy = "lastModifiedTime";
+                this.sortBy.add("lastModifiedTime");
+//                this.sortBy.add("startTime");
+            }
+
+            if (StringUtils.isEmpty(direction))
+                this.direction = "desc";
         }
 
         public SearchCriteria build() {

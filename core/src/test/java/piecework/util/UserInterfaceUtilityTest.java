@@ -24,15 +24,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.io.Resource;
+import piecework.common.ViewContext;
 import piecework.content.ContentResource;
 import piecework.designer.model.view.IndexView;
 import piecework.enumeration.CacheName;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.NotFoundError;
 import piecework.form.FormDisposition;
-import piecework.model.Explanation;
-import piecework.model.Form;
-import piecework.model.Report;
-import piecework.model.SearchResults;
+import piecework.model.*;
+import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.settings.UserInterfaceSettings;
@@ -70,6 +70,52 @@ public class UserInterfaceUtilityTest {
     @Before
     public void setup() {
 
+    }
+
+    @Test
+    public void testScriptNameForm() throws Exception {
+        Process process = new Process.Builder()
+                .build();
+        ProcessDeployment deployment = new ProcessDeployment.Builder()
+                .build();
+        Container container = null;
+        String location = null;
+        DataInjectionStrategy strategy = DataInjectionStrategy.NONE;
+        Action action = new Action(container, location, strategy);
+        ViewContext context = new ViewContext();
+        Form form = new Form.Builder()
+                .disposition(FormDisposition.Builder.build(process, deployment, action, context))
+                .build();
+
+        Assert.assertEquals("Form.js", UserInterfaceUtility.scriptName(Form.class, form));
+    }
+
+    @Test
+    public void testScriptNameFormRemote() throws Exception {
+        Process process = new Process.Builder()
+                .build();
+        ProcessDeployment deployment = new ProcessDeployment.Builder()
+                .build();
+        Container container = null;
+        String location = null;
+        DataInjectionStrategy strategy = DataInjectionStrategy.REMOTE;
+        Action action = new Action(container, location, strategy);
+        ViewContext context = new ViewContext();
+        Form form = new Form.Builder()
+                .disposition(FormDisposition.Builder.build(process, deployment, action, context))
+                .build();
+
+        Assert.assertEquals("Form.js", UserInterfaceUtility.scriptName(Form.class, form));
+    }
+
+    @Test
+    public void testScriptNameSearchResponse() throws Exception {
+        Assert.assertEquals("SearchResponse.js", UserInterfaceUtility.scriptName(SearchResponse.class, Mockito.mock(SearchResponse.class)));
+    }
+
+    @Test
+    public void testScriptNameSearchResponseNullObject() throws Exception {
+        Assert.assertEquals("SearchResponse.js", UserInterfaceUtility.scriptName(SearchResponse.class, null));
     }
 
     @Test

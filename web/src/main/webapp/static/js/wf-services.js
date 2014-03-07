@@ -584,8 +584,9 @@ angular.module('wf.services',
         function($http, $rootScope, $sce, notificationService) {
             return {
                 assignTask: function($scope, form, assignee, success, failure) {
-                    if (form.task != null) {
-                        if (typeof(form.task.taskStatus) !== 'undefined' && form.task.taskStatus == 'Suspended')
+                    var taskStatus = form.task != null ? form.task.taskStatus : form.taskStatus;
+                    if (taskStatus != null) {
+                        if (typeof(taskStatus) !== 'undefined' && taskStatus == 'Suspended')
                             notificationService.notify($scope, 'Cannot assign a suspended task');
 
                         var url = form.assignment;

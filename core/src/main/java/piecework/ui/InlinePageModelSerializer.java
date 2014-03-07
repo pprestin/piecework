@@ -17,6 +17,7 @@ package piecework.ui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.ContentNode;
 import org.htmlcleaner.TagNode;
@@ -25,6 +26,7 @@ import piecework.designer.model.view.IndexView;
 import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.settings.UserInterfaceSettings;
+import piecework.util.UserInterfaceUtility;
 
 import java.io.IOException;
 
@@ -116,25 +118,31 @@ public class InlinePageModelSerializer {
         script.addAttribute("type", "text/javascript");
         script.addAttribute("rel", "script");
 
-        if (type.equals(Form.class)) {
-            Form form = Form.class.cast(t);
-            FormDisposition disposition = form.getDisposition();
-            String url;
-            if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
-                url = settings.getPublicUrl() + "/resource/script/" + form.getProcess().getProcessDefinitionKey() + ".js";
-            else
-                url = settings.getApplicationUrl() + "/resource/script/Form.js";
+        String scriptName = UserInterfaceUtility.scriptName(type, t);
 
-            script.addAttribute("src", url);
-        } else if (type.equals(Report.class)) {
-            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/Report.js");
-        } else if (type.equals(SearchResults.class)) {
-            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/SearchResults.form.js");
-        } else if (type.equals(IndexView.class)) {
-            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/IndexView.js");
-        } else if (type.equals(Explanation.class)) {
-            script.addAttribute("href", settings.getPublicUrl() + "/resource/script/Explanation.js");
+        if (StringUtils.isNotEmpty(scriptName)) {
+            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/" + scriptName);
         }
+
+//        if (type.equals(Form.class)) {
+//            Form form = Form.class.cast(t);
+//            FormDisposition disposition = form.getDisposition();
+//            String url;
+//            if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+//                url = settings.getPublicUrl() + "/resource/script/" + form.getProcess().getProcessDefinitionKey() + ".js";
+//            else
+//                url = settings.getApplicationUrl() + "/resource/script/Form.js";
+//
+//            script.addAttribute("src", url);
+//        } else if (type.equals(Report.class)) {
+//            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/Report.js");
+//        } else if (type.equals(SearchResults.class)) {
+//            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/SearchResults.form.js");
+//        } else if (type.equals(IndexView.class)) {
+//            script.addAttribute("src", settings.getApplicationUrl() + "/resource/script/IndexView.js");
+//        } else if (type.equals(Explanation.class)) {
+//            script.addAttribute("href", settings.getPublicUrl() + "/resource/script/Explanation.js");
+//        }
         return script;
     }
 
@@ -157,26 +165,32 @@ public class InlinePageModelSerializer {
         link.addAttribute("type", "text/css");
         link.addAttribute("rel", "stylesheet");
 
-        if (type.equals(Form.class)) {
-            Form form = Form.class.cast(t);
-            FormDisposition disposition = form.getDisposition();
-            String url;
-            if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
-                url = settings.getPublicUrl() + "/resource/css/" + form.getProcess().getProcessDefinitionKey() + ".css";
-            else
-                url = settings.getApplicationUrl() + "/resource/css/Form.css";
+        String stylesheetName = UserInterfaceUtility.stylesheetName(type, t);
 
-            link.addAttribute("href", url);
-
-        } else if (type.equals(Report.class)) {
-            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/Report.css");
-        } else if (type.equals(SearchResults.class)) {
-            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/SearchResults.form.css");
-        } else if (type.equals(IndexView.class)) {
-            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/IndexView.css");
-        } else if (type.equals(Explanation.class)) {
-            link.addAttribute("href", settings.getPublicUrl() + "/resource/css/Explanation.css");
+        if (StringUtils.isNotEmpty(stylesheetName)) {
+            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/" + stylesheetName);
         }
+
+//        if (type.equals(Form.class)) {
+//            Form form = Form.class.cast(t);
+//            FormDisposition disposition = form.getDisposition();
+//            String url;
+//            if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+//                url = settings.getPublicUrl() + "/resource/css/" + form.getProcess().getProcessDefinitionKey() + ".css";
+//            else
+//                url = settings.getApplicationUrl() + "/resource/css/Form.css";
+//
+//            link.addAttribute("href", url);
+//
+//        } else if (type.equals(Report.class)) {
+//            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/Report.css");
+//        } else if (type.equals(SearchResults.class)) {
+//            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/SearchResults.form.css");
+//        } else if (type.equals(IndexView.class)) {
+//            link.addAttribute("href", settings.getApplicationUrl() + "/resource/css/IndexView.css");
+//        } else if (type.equals(Explanation.class)) {
+//            link.addAttribute("href", settings.getPublicUrl() + "/resource/css/Explanation.css");
+//        }
 
         return link;
     }
