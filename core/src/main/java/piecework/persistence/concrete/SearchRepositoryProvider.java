@@ -148,16 +148,17 @@ public class SearchRepositoryProvider implements SearchProvider {
         }
         response.setMetadata(metadata);
 
+
+        String processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;
+        String taskStatus = criteria.getTaskStatus() != null ? sanitizer.sanitize(criteria.getTaskStatus()) : Constants.TaskStatuses.ALL;
+
+        List<TaskDeployment> taskDeployments = new ArrayList<TaskDeployment>();
+        Set<String> userIds = new HashSet<String>();
+
+        List<Facet> facets = FacetFactory.facets(allowedProcesses);
+        response.setFacets(facets);
+
         if (page.hasContent()) {
-            String processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;
-            String taskStatus = criteria.getTaskStatus() != null ? sanitizer.sanitize(criteria.getTaskStatus()) : Constants.TaskStatuses.ALL;
-
-            List<TaskDeployment> taskDeployments = new ArrayList<TaskDeployment>();
-            Set<String> userIds = new HashSet<String>();
-
-            List<Facet> facets = FacetFactory.facets(allowedProcesses);
-            response.setFacets(facets);
-
             // Loop again through the list to get all user ids and build the intermediate object including
             // task, instance, and deployment
             for (ProcessInstance instance : page.getContent()) {
@@ -253,8 +254,6 @@ public class SearchRepositoryProvider implements SearchProvider {
 
                 data.add(map);
             }
-            response.setData(data);
-
             List<FacetSort> postQuerySortBy = criteria.getPostQuerySortBy();
             if (postQuerySortBy != null && !postQuerySortBy.isEmpty()) {
                 Collections.reverse(postQuerySortBy);
@@ -265,15 +264,17 @@ public class SearchRepositoryProvider implements SearchProvider {
                 }
             }
 
-            List<FacetSort> facetSortList = criteria.getSortBy();
-            List<String> sortBy = new ArrayList<String>();
-            if (facetSortList != null) {
-                for (FacetSort facetSort : facetSortList) {
-                    sortBy.add(facetSort.toString());
-                }
-            }
-            response.setSortBy(sortBy);
+            response.setData(data);
         }
+
+        List<FacetSort> facetSortList = criteria.getSortBy();
+        List<String> sortBy = new ArrayList<String>();
+        if (facetSortList != null) {
+            for (FacetSort facetSort : facetSortList) {
+                sortBy.add(facetSort.toString());
+            }
+        }
+        response.setSortBy(sortBy);
 
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
