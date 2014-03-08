@@ -18,10 +18,19 @@ package piecework.model;
 /**
  * @author James Renfro
  */
-public class DataSearchFacet extends SearchFacet {
+public class DataFilterFacet extends Facet {
 
-    public DataSearchFacet(String name, String label) {
-        super("data." + name + ".value", name, label, false);
+    public DataFilterFacet() {
     }
+
+    public DataFilterFacet(String name, String label, boolean required) {
+        super(name, label, required);
+    }
+
+    public DataFilterFacet(String name, String label, String type, boolean required) {
+        super(name, label, type, required);
+    }
+
+
 
 }

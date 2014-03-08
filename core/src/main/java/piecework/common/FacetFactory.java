@@ -15,10 +15,8 @@
  */
 package piecework.common;
 
-import piecework.model.Facet;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.SearchFacet;
-import piecework.model.User;
 
 import java.util.*;
 
@@ -38,11 +36,12 @@ public class FacetFactory {
     public static List<Facet> facets(Set<Process> processes) {
         // The system has a default set of facets that is not process-dependent
         List<Facet> facets = new ArrayList<Facet>();
-//        facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label"));
+        facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label", true));
 //        facets.add(new SearchFacet("processStatus", "processStatus", "Process Status"));
-//        facets.add(new Facet("tasks..taskStatus", "TaskStatus", "Task Status"));
-//        facets.add(new Facet("tasks..taskLabel", "TaskLabel", "Task"));
-//        facets.add(new Facet("tasks..assignee", "Assignee", "Assignee", User.class));
+        facets.add(new DataFilterFacet("taskStatus", "Status", true));
+        facets.add(new DataFilterFacet("taskLabel", "Task", true));
+        facets.add(new DataFilterFacet("assignee", "Assignee", "user", true));
+
 //        facets.add(new Facet("tasks..startTime", "TaskStart", "Start Time", Date.class));
 //        facets.add(new Facet("tasks..endTime", "TaskEnd", "End Time", Date.class));
 //        facets.add(new Facet("tasks..dueDate", "TaskDue", "Task Due", Date.class));
@@ -54,11 +53,15 @@ public class FacetFactory {
             }
         }
 
-        facets.add(new SearchFacet("startTime", "startTime", "Created", "date"));
-        facets.add(new SearchFacet("endTime", "endTime", "Completed", "date"));
-        facets.add(new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date"));
+        facets.add(new SearchFacet("startTime", "startTime", "Created", "date", false));
+        facets.add(new SearchFacet("endTime", "endTime", "Completed", "date", false));
+        facets.add(new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date", true));
 
         return facets;
+    }
+
+    public static SearchFacet defaultSearch() {
+        return new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date", true);
     }
 
 }

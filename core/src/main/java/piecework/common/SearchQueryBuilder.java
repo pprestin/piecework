@@ -55,7 +55,7 @@ public class SearchQueryBuilder {
 
         query.addCriteria(where("processDefinitionKey").in(filteredProcessDefinitionKeys));
 
-        List<String> sortBy = searchCriteria.getSortBy();
+//        List<String> sortBy = searchCriteria.getSortBy();
 
         Map<SearchFacet, String> facetParameters = searchCriteria.getFacetParameters();
         if (facetParameters != null && !facetParameters.isEmpty()) {
@@ -122,7 +122,9 @@ public class SearchQueryBuilder {
         if (searchCriteria.getFirstResult() != null)
             query.skip(searchCriteria.getFirstResult());
 
-        if (searchCriteria.getSortBy() != null && StringUtils.isNotEmpty(searchCriteria.getDirection())) {
+        if (searchCriteria.getSortBy() != null) {
+            boolean hasSearchFilter = false;
+
             query.with(SearchUtility.sort(searchCriteria, sanitizer));
         }
 

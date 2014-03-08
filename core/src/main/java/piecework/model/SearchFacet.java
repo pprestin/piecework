@@ -26,12 +26,12 @@ public class SearchFacet extends Facet {
 
     private final String query;
 
-    public SearchFacet(String query, String name, String label) {
-        this(query, name, label, "string");
+    public SearchFacet(String query, String name, String label, boolean required) {
+        this(query, name, label, "string", required);
     }
 
-    public SearchFacet(String query, String name, String label, String type) {
-        super(name, label, type);
+    public SearchFacet(String query, String name, String label, String type, boolean required) {
+        super(name, label, type, required);
         this.query = query;
     }
 

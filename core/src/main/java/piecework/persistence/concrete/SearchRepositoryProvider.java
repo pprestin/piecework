@@ -24,9 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
-import piecework.common.FacetFactory;
-import piecework.common.SearchCriteria;
-import piecework.common.ViewContext;
+import piecework.common.*;
 import piecework.enumeration.ActionType;
 import piecework.enumeration.CacheName;
 import piecework.exception.PieceworkException;
@@ -121,11 +119,6 @@ public class SearchRepositoryProvider implements SearchProvider {
 
         SearchResponse response = new SearchResponse();
 
-//        SearchResults.Builder resultsBuilder = new SearchResults.Builder()
-//                .resourceLabel("Tasks")
-//                .resourceName(Form.Constants.ROOT_ELEMENT_NAME)
-//                .link(context.getApplicationUri());
-
         if (allowedProcesses == null || allowedProcesses.isEmpty())
             return response;
 
@@ -156,17 +149,8 @@ public class SearchRepositoryProvider implements SearchProvider {
         response.setMetadata(metadata);
 
         if (page.hasContent()) {
-            int count = 0;
-
             String processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;
             String taskStatus = criteria.getTaskStatus() != null ? sanitizer.sanitize(criteria.getTaskStatus()) : Constants.TaskStatuses.ALL;
-
-
-            // Loop once through list to get the deployment ids
-            Set<String> deploymentIds = taskFilter.getDeploymentIds(page.getContent());
-
-            // Retrieve a map of deployment objects from Mongo
-//            Map<String, ProcessDeployment> deploymentMap = getDeploymentMap(deploymentIds);
 
             List<TaskDeployment> taskDeployments = new ArrayList<TaskDeployment>();
             Set<String> userIds = new HashSet<String>();
@@ -174,9 +158,6 @@ public class SearchRepositoryProvider implements SearchProvider {
             List<Facet> facets = FacetFactory.facets(allowedProcesses);
             response.setFacets(facets);
 
-
-//            Map<String, Map<String, Object>> instanceDataMap =
-//                    new HashMap<String, Map<String, Object>>();
             // Loop again through the list to get all user ids and build the intermediate object including
             // task, instance, and deployment
             for (ProcessInstance instance : page.getContent()) {
@@ -184,11 +165,8 @@ public class SearchRepositoryProvider implements SearchProvider {
                 String processInstanceId = instance.getProcessInstanceId();
 
                 ProcessDeployment processDeployment = null;
-//                if (taskFilter.isWrapWithForm())
-//                    processDeployment = deploymentMap.get(instance.getDeploymentId());
 
                 Map<String, Object> instanceData = new HashMap<String, Object>();
-//                instanceDataMap.put(instance.getProcessInstanceId(), instanceData);
 
                 instanceData.put("processInstanceId", processInstanceId);
                 instanceData.put("processInstanceLabel", instance.getProcessInstanceLabel());
@@ -272,36 +250,30 @@ public class SearchRepositoryProvider implements SearchProvider {
 //                    Set<Field> fields = SecurityUtility.fields(activity, createAction);
 //                    data = dataFilterService.unrestrictedInstanceData(instance, fields);
 //                }
-//
-//                return new Form.Builder()
-//                        .formInstanceId(rebuilt.getTaskInstanceId())
-//                        .taskSubresources(rebuilt.getProcessDefinitionKey(), rebuilt, version1)
-//                        .processDefinitionKey(rebuilt.getProcessDefinitionKey())
-//                        .instance(instance, version1)
-//                        .data(data)
-////                    .external(external)
-//                        .build(version1);
 
                 data.add(map);
-                count++;
             }
             response.setData(data);
-//            if (criteria.getSortBy() != null && !criteria.getSortBy().isEmpty()) {
-//                String sortBy = criteria.getSortBy().iterator().next();
-//                response.setSortBy(sortBy);
-//            }
-            response.setSortBy(criteria.getOriginalSortBy());
-            response.setDirection(criteria.getDirection());
 
-//            resultsBuilder.firstResult(pageable.getOffset());
-//            resultsBuilder.maxResults(pageable.getPageSize());
-//            resultsBuilder.total(Long.valueOf(count));
+            List<FacetSort> postQuerySortBy = criteria.getPostQuerySortBy();
+            if (postQuerySortBy != null && !postQuerySortBy.isEmpty()) {
+                Collections.reverse(postQuerySortBy);
+                for (FacetSort facetSort : postQuerySortBy) {
+                    Collections.sort(data, new DataFilterFacetComparator(facetSort.getFacet()));
+                    if (facetSort.getDirection().equals(Sort.Direction.ASC))
+                        Collections.reverse(data);
+                }
+            }
+
+            List<FacetSort> facetSortList = criteria.getSortBy();
+            List<String> sortBy = new ArrayList<String>();
+            if (facetSortList != null) {
+                for (FacetSort facetSort : facetSortList) {
+                    sortBy.add(facetSort.toString());
+                }
+            }
+            response.setSortBy(sortBy);
         }
-//        if (taskFilter.getPrincipal() != null && taskFilter.getPrincipal() instanceof User)
-//            resultsBuilder.currentUser(User.class.cast(taskFilter.getPrincipal()));
-//
-//        return resultsBuilder.build(version);
-
 
         if (LOG.isDebugEnabled())
             LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");

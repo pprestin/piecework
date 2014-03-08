@@ -93,6 +93,7 @@ public class UserInterfaceUtilityTest {
     @Test
     public void testScriptNameFormRemote() throws Exception {
         Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
                 .build();
         ProcessDeployment deployment = new ProcessDeployment.Builder()
                 .build();
@@ -102,10 +103,11 @@ public class UserInterfaceUtilityTest {
         Action action = new Action(container, location, strategy);
         ViewContext context = new ViewContext();
         Form form = new Form.Builder()
+                .process(process)
                 .disposition(FormDisposition.Builder.build(process, deployment, action, context))
                 .build();
 
-        Assert.assertEquals("Form.js", UserInterfaceUtility.scriptName(Form.class, form));
+        Assert.assertEquals("TEST.js", UserInterfaceUtility.scriptName(Form.class, form));
     }
 
     @Test

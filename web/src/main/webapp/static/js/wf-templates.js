@@ -3,7 +3,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<div class=\"modal-dialog\">\n" +
     "    <div class=\"modal-content\">\n" +
     "        <div class=\"modal-header\">\n" +
-    "            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n" +
+    "            <button ng-click=\"cancel()\" type=\"button\" class=\"close\" aria-hidden=\"true\">&times;</button>\n" +
     "            <h4 class=\"modal-title\">Are you sure you want to reactivate this process?</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
@@ -44,7 +44,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<div class=\"modal-dialog\">\n" +
     "    <div class=\"modal-content\">\n" +
     "        <div class=\"modal-header bg-danger\">\n" +
-    "            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n" +
+    "            <button type=\"button\" class=\"close\" ng-click=\"cancel()\" aria-hidden=\"true\">&times;</button>\n" +
     "            <h4 class=\"modal-title\">Are you sure you want to cancel/delete this process?</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
@@ -55,6 +55,26 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        <div class=\"modal-footer\">\n" +
     "            <button ng-click=\"cancel()\" type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\" aria-hidden=\"true\">Cancel</button>\n" +
     "            <button ng-click=\"ok(reason)\" type=\"button\" class=\"btn btn-danger\" id=\"delete-button\">Delete</button>\n" +
+    "        </div>\n" +
+    "    </div>\n" +
+    "</div>");
+  $templateCache.put("templates/columns-modal-dialog.html",
+    "<div class=\"modal-dialog\">\n" +
+    "    <div class=\"modal-content\">\n" +
+    "        <div class=\"modal-header\">\n" +
+    "            <button type=\"button\" class=\"close\" ng-click=\"cancel()\" aria-hidden=\"true\">&times;</button>\n" +
+    "            <h4 class=\"modal-title\">Columns</h4>\n" +
+    "        </div>\n" +
+    "        <div class=\"modal-body\">\n" +
+    "           <ul>" +
+    "               <li data-ng-repeat=\"facet in facets\"><input type=\"checkbox\" data-ng-checked=\"facet.selected\" data-ng-click=\"selectFacet(facet)\">&nbsp;&nbsp;&nbsp;{{facet.label}}</li>" +
+    "           </ul>" +
+//    "            <p>Reactivating a process resumes execution.</p>\n" +
+//    "            <textarea class=\"form-control input-block-level\" placeholder=\"Enter a reason\" ng-model=\"reason\" id=\"activate-reason\" rows=\"4\"></textarea>\n" +
+    "        </div>\n" +
+    "        <div class=\"modal-footer\">\n" +
+//    "            <button ng-click=\"cancel()\" type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\" aria-hidden=\"true\">Cancel</button>\n" +
+//    "            <button ng-click=\"ok(reason)\" type=\"button\" id=\"activate-button\" class=\"btn btn-primary\">Activate</button>\n" +
     "        </div>\n" +
     "    </div>\n" +
     "</div>");
@@ -95,7 +115,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<div class=\"modal-dialog\">\n" +
     "    <div class=\"modal-content\">\n" +
     "        <div class=\"modal-header\">\n" +
-    "            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" type=\"button\" aria-hidden=\"true\">&times;</button>\n" +
+    "            <button ng-click=\"cancel()\" type=\"button\" class=\"close\" type=\"button\" aria-hidden=\"true\">&times;</button>\n" +
     "            <h4 class=\"modal-title\">History</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
@@ -159,7 +179,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<div class=\"modal-dialog\">\n" +
     "    <div class=\"modal-content\">\n" +
     "        <div class=\"modal-header\">\n" +
-    "            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n" +
+    "            <button ng-click=\"cancel()\" type=\"button\" class=\"close\" aria-hidden=\"true\">&times;</button>\n" +
     "            <h4 class=\"modal-title\">Are you sure you want to restart this process?</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
@@ -176,7 +196,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<div class=\"modal-dialog\">\n" +
     "    <div class=\"modal-content\">\n" +
     "        <div class=\"modal-header\">\n" +
-    "            <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n" +
+    "            <button ng-click=\"cancel()\" type=\"button\" class=\"close\" aria-hidden=\"true\">&times;</button>\n" +
     "            <h4 class=\"modal-title\">Are you sure you want to suspend this process?</h4>\n" +
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
@@ -810,59 +830,60 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        <table class=\"search-results table table-hover\">\n" +
     "            <thead>\n" +
     "            <tr>\n" +
-    "                <th><i class=\"icon-check\"></i></th>\n" +
-    "                <th>Label</th>\n" +
-    "                <th class=\"hidden-sm hidden-xs\">Status</th>\n" +
-    "                <th class=\"hidden-sm hidden-xs\">Task</th>\n" +
-    "                <th class=\"hidden-xs\">Assignee</th>\n" +
-//    "                <th>Last Modified</th>\n" +
-    "                <th data-ng-repeat=\"facet in selectedFacets\" class=\"hidden-sm hidden-xs\" style=\"white-space:nowrap\">" +
-    "                   <a href=\"#\" data-ng-click=\"doSort(facet)\">{{facet.label}} <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"criteria.direction == 'desc' ? 'fa-caret-down' : 'fa-caret-up'\" class=\"fa\"></i></a>" +
+    "                <th></th>" +
+    "                <th data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
+    "                   <a href=\"#\" data-ng-click=\"doSort(facet)\">{{facet.label}} <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a>" +
     "                </th>" +
+    "                <th>" +
+    "                   <div data-ng-click=\"dialogs.openColumnsModal(facets)\" class=\"btn btn-link btn-xs\"><i class=\"fa fa-columns\"></i>" +
+    "                </th>" +
+    "            </tr>" +
+    "            <tr>" +
+    "                <th><input data-ng-click=\"selectAllForms(forms)\" data-ng-checked=\"allChecked\" type=\"checkbox\" class=\"result-checkbox\"/></th>\n" +
+    "               <th data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
+    "                   <input data-ng-keyup=\"doChangeFilter(facet)\" data-ng-model=\"facet.model\" class=\"form-control natural input-sm\" type=\"text\" name=\"{{facet.name}}\" placeholder=\"Filter by {{facet.label}}\"/>" +
+    "               </th>" +
+    "               <th><i data-ng-click=\"doFilter()\" class=\"fa fa-filter fa-2x\"></i></th>" +
     "            </tr>\n" +
     "            </thead>\n" +
     "            <tbody>\n" +
     "            <tr data-ng-repeat=\"form in forms\">\n" +
-    "                <td><input data-ng-click=\"selectForm(form)\" type=\"checkbox\" class=\"result-checkbox\"/></td>\n" +
-    "                <td>\n" +
-    "                    <a href=\"{{form.link}}\" target=\"_self\" rel=\"external\">{{form.processInstanceLabel}}</a>\n" +
-    "                </td>\n" +
-    "                <td class=\"hidden-sm hidden-xs\">{{form.taskStatus}}</td>\n" +
-    "                <td class=\"hidden-sm hidden-xs\" style=\"cursor:pointer\"><span class=\"use-tooltip\" title=\"{{form.taskDescription}}\" data-placement=\"right\" data-trigger=\"hover\">{{form.taskLabel}}</span></td>\n" +
-    "                <td class=\"hidden-xs\">{{form.assignee ? form.assignee.displayName : 'Nobody'}}</td>\n" +
-//    "                <td>{{form.instanceLastModified|date:'MMM d, y H:mm'}}</td>\n" +
-    "                <td class=\"hidden-sm hidden-xs\" data-ng-repeat=\"facet in selectedFacets\">{{getFacetValue(form, facet)}}</td>" +
-//    "                <td>{{form.taskStartTime|date:'MMM d, y H:mm'}}<span data-ng-if=\"form.taskEndTime\"> - {{form.taskEndTime|date:'MMM d, y H:mm'}}</span></td>\n" +
+    "                <td><input data-ng-click=\"selectForm(form)\" data-ng-checked=\"form.checked\" type=\"checkbox\" class=\"result-checkbox\"/></td>\n" +
+    "                <td data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\">" +
+    "                   <span data-ng-show=\"facet.link\"><a href=\"{{form.link}}\" target=\"_self\" rel=\"external\">{{getFacetValue(form, facet)}}</a></span>" +
+    "                   <span data-ng-hide=\"facet.link\">{{getFacetValue(form, facet)}}</span>" +
+    "                </td>" +
+    "                <td></td>" +
     "            </tr>\n" +
     "            </tbody>\n" +
     "        </table>");
 
-  $templateCache.put("templates/searchresults.html",
-    "<h2 data-ng-bind=\"isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : 'Tasks'\"></h2>\n" +
-    "        <table class=\"search-results table table-hover\">\n" +
-    "            <thead>\n" +
-    "            <tr>\n" +
-    "                <th><i class=\"icon-check\"></i></th>\n" +
-    "                <th>Label</th>\n" +
-    "                <th class=\"hidden-sm hidden-xs\">Status</th>\n" +
-    "                <th class=\"hidden-sm hidden-xs\">Task</th>\n" +
-    "                <th class=\"hidden-xs\">Assignee</th>\n" +
-    "                <th>Date</th>\n" +
-    "            </tr>\n" +
-    "            </thead>\n" +
-    "            <tbody>\n" +
-    "            <tr data-ng-repeat=\"form in forms\">\n" +
-    "                <td><input data-ng-click=\"selectForm(form)\" type=\"checkbox\" class=\"result-checkbox\"/></td>\n" +
-    "                <td>\n" +
-    "                    <a href=\"{{form.link}}\" target=\"_self\" rel=\"external\">{{form.task.processInstanceLabel}}</a>\n" +
-    "                </td>\n" +
-    "                <td class=\"hidden-sm hidden-xs\">{{form.task.taskStatus}}</td>\n" +
-    "                <td class=\"hidden-sm hidden-xs\" style=\"cursor:pointer\"><span class=\"use-tooltip\" title=\"{{form.task.taskDescription}}\" data-placement=\"right\" data-trigger=\"hover\">{{form.task.taskLabel}}</span></td>\n" +
-    "                <td class=\"hidden-xs\">{{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</td>\n" +
-    "                <td>{{form.task.startTime|date:'MMM d, y H:mm'}}<span data-ng-if=\"form.task.endTime\"> - {{form.task.endTime|date:'MMM d, y H:mm'}}</span></td>\n" +
-    "            </tr>\n" +
-    "            </tbody>\n" +
-    "        </table>");
+//  $templateCache.put("templates/searchresults.html",
+//    "<h2 data-ng-bind=\"isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : 'Tasks'\"></h2>\n" +
+//    "        <table class=\"search-results table table-hover\">\n" +
+//    "            <thead>\n" +
+//    "            <tr>\n" +
+//    "                <th><i class=\"icon-check\"></i></th>\n" +
+//    "                <th>Label</th>\n" +
+//    "                <th class=\"hidden-sm hidden-xs\">Status</th>\n" +
+//    "                <th class=\"hidden-sm hidden-xs\">Task</th>\n" +
+//    "                <th class=\"hidden-xs\">Assignee</th>\n" +
+//    "                <th>Date</th>\n" +
+//    "            </tr>\n" +
+//    "            </thead>\n" +
+//    "            <tbody>\n" +
+//    "            <tr data-ng-repeat=\"form in forms\">\n" +
+//    "                <td><input data-ng-click=\"selectForm(form)\" type=\"checkbox\" class=\"result-checkbox\"/></td>\n" +
+//    "                <td>\n" +
+//    "                    <a href=\"{{form.link}}\" target=\"_self\" rel=\"external\">{{form.task.processInstanceLabel}}</a>\n" +
+//    "                </td>\n" +
+//    "                <td class=\"hidden-sm hidden-xs\">{{form.task.taskStatus}}</td>\n" +
+//    "                <td class=\"hidden-sm hidden-xs\" style=\"cursor:pointer\"><span class=\"use-tooltip\" title=\"{{form.task.taskDescription}}\" data-placement=\"right\" data-trigger=\"hover\">{{form.task.taskLabel}}</span></td>\n" +
+//    "                <td class=\"hidden-xs\">{{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</td>\n" +
+//    "                <td>{{form.task.startTime|date:'MMM d, y H:mm'}}<span data-ng-if=\"form.task.endTime\"> - {{form.task.endTime|date:'MMM d, y H:mm'}}</span></td>\n" +
+//    "            </tr>\n" +
+//    "            </tbody>\n" +
+//    "        </table>");
    $templateCache.put("templates/searchtoolbar.html",
     "<nav class=\"navbar navbar-default navbar-ex1-collapse\" style=\"margin-bottom: 0px;border-radius: 0px\">\n" +
     "        <div class=\"navbar-header\">\n" +
@@ -877,7 +898,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <div class=\"container\">\n" +
     "                <form class=\"navbar-form navbar-left form-inline\" role=\"search\">\n" +
     "                    <div class=\"row\">\n" +
-    "                        <input style=\"width: 400px\" title=\"Search by keyword\" role=\"\" class=\"form-control searchField\" data-ng-model=\"criteria.keyword\" placeholder=\"Search\" id=\"keyword\" type=\"text\">\n" +
+    "                        <input data-ng-keyup=\"onSearchKeyUp()\" style=\"width: 400px\" title=\"Search by keyword\" role=\"\" class=\"form-control searchField\" data-ng-model=\"criteria.keyword\" placeholder=\"Search\" id=\"keyword\" type=\"text\">\n" +
     "                        <button data-ng-click=\"refreshSearch()\" class=\"btn btn-default navbar-btn\" role=\"button\" id=\"instanceSearchButton\" type=\"submit\">&nbsp;&nbsp;<i ng-show=\"searching\" class='fa fa-spinner fa-spin fa-lg'></i><i ng-show=\"!searching\" class=\"fa fa-search\"></i>&nbsp;&nbsp;</button>\n" +
     "                        <span data-ng-if=\"definitions\" class=\"dropdown\">\n" +
     "                            <button class=\"btn btn-default navbar-btn dropdown-toggle\" data-toggle=\"dropdown\" data-target=\"new-form-dropdown\" id=\"new-form-button\" type=\"button\"><i class=\"fa fa-play-circle-o\"></i> <b class=\"caret\"></b></button>\n" +

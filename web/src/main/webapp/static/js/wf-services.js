@@ -169,6 +169,20 @@ angular.module('wf.services',
                         $modalInstance.dismiss('cancel');
                     };
                 }],
+               'ColumnsModalController': ['$rootScope', '$scope', '$modalInstance', 'facets', function ($rootScope, $scope, $modalInstance, facets) {
+                    $scope.facets = facets;
+                    $scope.selectFacet = function(facet) {
+                        facet.selected = !facet.selected;
+                        $scope.$root.$broadcast('wfEvent:facet-changed', facet);
+                    };
+                    $scope.ok = function (comment) {
+
+                    };
+
+                    $scope.cancel = function () {
+                        $modalInstance.dismiss('cancel');
+                    };
+                }],
                 'CommentModalController': ['$rootScope', '$scope', '$modalInstance', 'selectedForms', function ($rootScope, $scope, $modalInstance, selectedForms) {
                     $scope.selectedForms = selectedForms;
                     $scope.ok = function (comment) {
@@ -383,6 +397,20 @@ angular.module('wf.services',
                         resolve: {
                             selectedForms: function () {
                                 return selectedForms;
+                            }
+                        },
+                        windowClass: 'in'
+                    });
+                    modalInstance.result.then(function () {}, function () {});
+                },
+                openColumnsModal: function(facets) {
+                    var modalInstance = $modal.open({
+                        backdrop: true,
+                        templateUrl: 'templates/columns-modal-dialog.html',
+                        controller: controllerService.ColumnsModalController,
+                        resolve: {
+                            facets: function () {
+                                return facets;
                             }
                         },
                         windowClass: 'in'

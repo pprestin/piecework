@@ -22,8 +22,6 @@ import piecework.ApplicationResource;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.SearchQueryParameters;
 import piecework.exception.PieceworkException;
-import piecework.model.SearchResponse;
-import piecework.model.SearchResults;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;

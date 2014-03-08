@@ -29,7 +29,7 @@ public class SearchResponse {
     private List<Facet> facets;
     private List<Map<String, String>> metadata;
     private List<Map<String, Object>> data;
-    private String sortBy;
+    private List<String> sortBy;
     private String direction;
     private int pageNumber;
     private int pageSize;
@@ -60,11 +60,11 @@ public class SearchResponse {
         this.data = data;
     }
 
-    public String getSortBy() {
+    public List<String> getSortBy() {
         return sortBy;
     }
 
-    public void setSortBy(String sortBy) {
+    public void setSortBy(List<String> sortBy) {
         this.sortBy = sortBy;
     }
 

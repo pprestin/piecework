@@ -249,6 +249,10 @@ input.form-control {
     width: auto;
 }
 
+input.form-control.natural {
+    width: 100%;
+}
+
 .interaction-screen {
 
 }
@@ -613,8 +617,13 @@ select.form-control {
   margin: 0;
 }
 
-.search-results {
-
+.search-results input[type="checkbox"] {
+    background-color: white;
+    border: 1px solid #AAAAAA;
+    margin: 0px;
+    vertical-align: top;
+    width: 20px;
+    zoom: 1.2;
 }
 
 .search-results .search-result {
