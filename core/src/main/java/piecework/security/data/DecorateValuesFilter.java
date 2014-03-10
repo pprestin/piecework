@@ -20,9 +20,11 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import piecework.common.ViewContext;
 import piecework.content.ContentResource;
+import piecework.content.Version;
 import piecework.model.*;
 import piecework.security.DataFilter;
 import piecework.security.concrete.PassthroughSanitizer;
+import piecework.service.IdentityService;
 import piecework.settings.UserInterfaceSettings;
 
 import java.util.*;
@@ -39,12 +41,14 @@ public class DecorateValuesFilter implements DataFilter {
     private final Map<String, Value> defaultValueMap;
     private final PassthroughSanitizer passthroughSanitizer;
     private final ProcessInstance instance;
+    private final IdentityService identityService;
     private final ViewContext context;
 
-    public DecorateValuesFilter(ProcessInstance instance, Task task, Set<Field> fields, UserInterfaceSettings settings, Entity principal, String version) {
+    public DecorateValuesFilter(ProcessInstance instance, Task task, Set<Field> fields, UserInterfaceSettings settings, Entity principal, IdentityService identityService, String version) {
         this.defaultValueMap = new HashMap<String, Value>();
         this.passthroughSanitizer = new PassthroughSanitizer();
         this.instance = instance;
+        this.identityService = identityService;
         this.context = new ViewContext(settings, version);
         if (fields != null && !fields.isEmpty()) {
             for (Field field : fields) {
@@ -81,10 +85,27 @@ public class DecorateValuesFilter implements DataFilter {
             if (value instanceof File) {
                 File file = File.class.cast(value);
 
+                List<Version> undecoratedVersions = file.getVersions();
+                List<Version> versions = new ArrayList<Version>();
+                if (instance != null && undecoratedVersions != null && !undecoratedVersions.isEmpty()) {
+                    Set<String> userIds = new HashSet<String>();
+                    for (Version undecoratedVersion : undecoratedVersions) {
+                        if (StringUtils.isNotEmpty(undecoratedVersion.getCreatedBy()))
+                            userIds.add(undecoratedVersion.getCreatedBy());
+                    }
+                    Map<String, User> userMap = new HashMap<String, User>();
+                    if (!userIds.isEmpty() && identityService != null)
+                        userMap = identityService.findUsers(userIds);
+                    for (Version undecoratedVersion : undecoratedVersions) {
+                        versions.add(new Version(undecoratedVersion, userMap, instance.getProcessDefinitionKey(), instance.getProcessInstanceId(), key, context));
+                    }
+                }
+
                 list.add(new File.Builder(file, passthroughSanitizer)
                         .processDefinitionKey(instance != null ? instance.getProcessDefinitionKey() : null)
                         .processInstanceId(instance != null ? instance.getProcessInstanceId() : null)
                         .fieldName(key)
+                        .versions(versions)
                         .build(context));
             } else {
                 list.add(value);

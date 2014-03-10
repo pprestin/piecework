@@ -163,7 +163,10 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
                 Object createdByObj = dbObject != null ? dbObject.get(GridFsContentResource.LAST_MODIFIED_BY) : null;
                 String createdBy = createdByObj != null ? createdByObj.toString() : null;
 
-                versions.add(new Version("" + count, createdBy, createDate.longValue()));
+                String versionId = file != null && file.getUploadDate() != null ? file.getId().toString() + "?uploadDate=" + file.getUploadDate().getTime() : null;
+                String versionLocation = file != null && file.getUploadDate() != null ? location + "?uploadDate=" + file.getUploadDate().getTime() : null;
+
+                versions.add(new Version("" + count, createdBy, createDate.longValue(), versionId, versionLocation));
                 if (current == null)
                     latest = file;
                 count++;

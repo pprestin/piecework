@@ -217,6 +217,7 @@ public class FormUtility {
                     builder.header(header.getName(), header.getValue());
             }
         }
+        builder.header("X-UA-Compatible", "IE=edge");
 
         return builder.build();
     }

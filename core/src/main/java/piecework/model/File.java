@@ -255,7 +255,7 @@ public class File extends Value {
 
         public Builder versions(List<Version> versions) {
             if (versions != null && !versions.isEmpty())
-                this.versions.addAll(versions);
+                this.versions = new ArrayList<Version>(versions);
             return this;
         }
 

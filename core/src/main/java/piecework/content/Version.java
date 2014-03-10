@@ -15,10 +15,14 @@
  */
 package piecework.content;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.StringUtils;
+import piecework.common.ViewContext;
+import piecework.model.ProcessInstance;
+import piecework.model.User;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author James Renfro
@@ -29,11 +33,39 @@ public class Version implements Serializable {
     private final String label;
     private final String createdBy;
     private final long createDate;
+    private final String contentId;
+    private final String location;
+    private transient final User createdByUser;
+    private transient final String link;
 
-    public Version(String label, String createdBy, long createDate) {
+    public Version() {
+        this.label = null;
+        this.createdBy = null;
+        this.createDate = 0l;
+        this.contentId = null;
+        this.location = null;
+        this.createdByUser = null;
+        this.link = null;
+    }
+
+    public Version(Version version, Map<String, User> userMap, String processDefinitionKey, String processInstanceId, String fieldName, ViewContext context) {
+        this.label = version.getLabel();
+        this.createdBy = version.getCreatedBy();
+        this.createDate = version.getCreateDate();
+        this.contentId = version.getContentId();
+        this.location = version.getLocation();
+        this.createdByUser = version.getCreatedBy() != null ? userMap.get(version.getCreatedBy()) : null;
+        this.link = context != null && StringUtils.isNotEmpty(processInstanceId) ? context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "value", fieldName, version.getContentId()) : null;
+    }
+
+    public Version(String label, String createdBy, long createDate, String id, String location) {
         this.label = label;
         this.createdBy = createdBy;
         this.createDate = createDate;
+        this.contentId = id;
+        this.location = location;
+        this.createdByUser = null;
+        this.link = null;
     }
 
     public String getLabel() {
@@ -48,4 +80,19 @@ public class Version implements Serializable {
         return createDate;
     }
 
+    public String getContentId() {
+        return contentId;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public User getCreatedByUser() {
+        return createdByUser;
+    }
+
+    public String getLink() {
+        return link;
+    }
 }

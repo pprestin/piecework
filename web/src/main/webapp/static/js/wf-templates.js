@@ -225,7 +225,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                            <button data-ng-show=\"state.isEditingAttachments\" data-ng-click=\"deleteAttachment(attachment)\" class=\"delete-attachments-button text-danger close \" type=\"button\">&times;</button>\n" +
     "                            <span data-ng-if=\"attachment.name == 'comment'\" title=\"{{attachment.description}}\">{{attachment.description}}</span>\n" +
     "                            <span data-ng-if=\"attachment.name != 'comment'\" class=\"pw-attachment-file\">\n" +
-    "                                <i class=\"fa fa-download\"></i> <a href=\"{{attachment.link}}\" target=\"_self\" title=\"{{attachment.description}}\">{{attachment.description}}</a>\n" +
+    "                                <i class=\"fa fa-download\"></i> <a href=\"{{attachment.link}}\" target=\"_self\" title=\"{{attachment.description}}\">{{attachment.name}}</a>\n" +
     "                            </span>\n" +
     "                        </div>\n" +
     "                    </div>\n" +
@@ -507,7 +507,10 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '               </div>' +
     '               <div class="clearfix"></div>' +
     '           </li>' +
-    '           <li data-ng-show="error" class="list-group-item"><div class="alert alert-danger">{{error}}</div></li>' +
+    '           <li data-ng-show="error" class="list-group-item">' +
+    '               <button type=\"button\" class=\"close\" type=\"button\" data-ng-click=\"error = null\" aria-hidden=\"true\">&times;&nbsp;</button>' +
+    '               <div class="alert alert-danger">{{error}}</div>' +
+    '           </li>' +
     '           <li data-ng-hide="files" class="list-group-item"><span class="text-muted">No documents</span></li>' +
     '           <li data-ng-repeat="file in files" class="list-group-item">' +
     '               <div>' +
@@ -522,7 +525,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                   <table class="table table-condensed">' +
     '                       <thead><tr><th>Version</th><th>Upload date</th><th>Uploader</th></tr></thead>' +
     '                       <tbody>' +
-    '                           <tr data-ng-repeat="version in file.versions"><td>{{version.label}}</td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdBy}}</td></tr>' +
+    '                           <tr data-ng-repeat="version in file.versions"><td><a data-ng-href="{{version.link}}">{{version.label}}</a></td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdByUser.displayName}}</td></tr>' +
     '                       </tbody>' +
     '                   </table>' +
     '               </div>' +

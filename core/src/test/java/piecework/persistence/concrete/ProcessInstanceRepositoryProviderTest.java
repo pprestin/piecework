@@ -22,7 +22,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import piecework.common.ViewContext;
 import piecework.content.ContentResource;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.*;
@@ -32,7 +31,6 @@ import piecework.persistence.ContentProfileProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.ProcessProvider;
 import piecework.repository.*;
-import piecework.settings.UserInterfaceSettings;
 import piecework.test.ProcessFactory;
 
 import java.io.ByteArrayInputStream;
