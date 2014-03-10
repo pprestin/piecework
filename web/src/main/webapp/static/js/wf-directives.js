@@ -1415,6 +1415,9 @@ angular.module('wf.directives',
                     scope.doChangeFilter = function(facet) {
                         console.log(facet.name);
                         scope.criteria[facet.name] = facet.model;
+                        if (scope.criteria[facet.name]!= null && scope.criteria[facet.name].length > 1) {
+                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        }
                     };
                     scope.doSort = function(facet) {
                         // If already sorting by this facet then switch the direction
@@ -1490,39 +1493,42 @@ angular.module('wf.directives',
                     });
                     scope.$on('wfEvent:found', function(event, results) {
                         scope.forms = results.data;
-                        scope.selectedFormMap = new Object();
-                        scope.criteria.sortBy = results.sortBy;
 
-                        scope.facetMap = localStorageService.get("facetMap");
-                        if (scope.facetMap == null || scope.facetMap.length == 0) {
-                            scope.facetMap = {};
-                        }
+                        if (scope.facets == null) {
+                            scope.selectedFormMap = new Object();
+                            scope.criteria.sortBy = results.sortBy;
 
-                        scope.facets = [];
-                        angular.forEach(results.facets, function(facet) {
-                            facet.link = facet.name == 'processInstanceLabel';
-                            var localFacet = scope.facetMap[facet.name];
-                            if (localFacet != null)
-                                facet.selected = localFacet.selected;
-                            else
-                                facet.selected = facet.required;
-                            scope.facetMap[facet.name] = facet;
-                            scope.facets.push(facet);
-                        });
-
-                        localStorageService.set("facetMap", scope.facetMap);
-
-                        angular.forEach(scope.criteria.sortBy, function(sortBy) {
-                            var indexOf = sortBy.indexOf(':');
-                            if (indexOf != -1) {
-                                var name = sortBy.substring(0, indexOf);
-                                var direction = sortBy.substring(indexOf+1);
-                                var facet = scope.facetMap[name];
-                                if (facet != null) {
-                                    facet.direction = direction;
-                                }
+                            scope.facetMap = localStorageService.get("facetMap");
+                            if (scope.facetMap == null || scope.facetMap.length == 0) {
+                                scope.facetMap = {};
                             }
-                        });
+
+                            scope.facets = [];
+                            angular.forEach(results.facets, function(facet) {
+                                facet.link = facet.name == 'processInstanceLabel';
+                                var localFacet = scope.facetMap[facet.name];
+                                if (localFacet != null)
+                                    facet.selected = localFacet.selected;
+                                else
+                                    facet.selected = facet.required;
+                                scope.facetMap[facet.name] = facet;
+                                scope.facets.push(facet);
+                            });
+
+                            localStorageService.set("facetMap", scope.facetMap);
+
+                            angular.forEach(scope.criteria.sortBy, function(sortBy) {
+                                var indexOf = sortBy.indexOf(':');
+                                if (indexOf != -1) {
+                                    var name = sortBy.substring(0, indexOf);
+                                    var direction = sortBy.substring(indexOf+1);
+                                    var facet = scope.facetMap[name];
+                                    if (facet != null) {
+                                        facet.direction = direction;
+                                    }
+                                }
+                            });
+                        }
                     });
                     scope.$on('wfEvent:search', function(event, criteria) {
                         if (typeof(criteria) !== 'undefined') {
@@ -1735,14 +1741,16 @@ angular.module('wf.directives',
 
                     scope.$on('wfEvent:found', function(event, results) {
                         scope.searching = false;
-                        scope.definitions = results.metadata;
-                        scope.selectedFormMap = {};
-                        scope.$root.currentUser = results.currentUser;
-                        angular.forEach(results.metadata, function(definition) {
-                            scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
-                        });
-                        if (results.metadata != null && results.metadata.length == 1)
-                            scope.criteria.processDefinitionKey = results.metadata[0].processDefinitionKey;
+                        if (scope.definitions == null) {
+                            scope.definitions = results.metadata;
+                            scope.selectedFormMap = {};
+                            scope.$root.currentUser = results.currentUser;
+                            angular.forEach(results.metadata, function(definition) {
+                                scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
+                            });
+                            if (results.metadata != null && results.metadata.length == 1)
+                                scope.criteria.processDefinitionKey = results.metadata[0].processDefinitionKey;
+                        }
                     });
                     scope.$on('wfEvent:search', function(event, criteria) {
                         scope.searching = true;
