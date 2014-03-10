@@ -15,6 +15,7 @@
  */
 package piecework.security.config;
 
+import org.mockito.Mockito;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,7 @@ import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.data.DataFilterService;
 import piecework.service.CacheService;
+import piecework.service.IdentityService;
 import piecework.settings.NotificationSettings;
 import piecework.settings.SecuritySettings;
 import piecework.settings.UserInterfaceSettings;
@@ -54,6 +56,11 @@ public class DataFilterTestConfiguration {
     @Bean
     public DataFilterService dataFilterService() {
         return new DataFilterService();
+    }
+
+    @Bean
+    public IdentityService identityService() {
+        return Mockito.mock(IdentityService.class);
     }
 
     @Bean
