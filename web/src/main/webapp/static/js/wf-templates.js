@@ -205,7 +205,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                            <button data-ng-show=\"state.isEditingAttachments\" data-ng-click=\"deleteAttachment(attachment)\" class=\"delete-attachments-button text-danger close \" type=\"button\">&times;</button>\n" +
     "                            <span data-ng-if=\"attachment.name == 'comment'\" title=\"{{attachment.description}}\">{{attachment.description}}</span>\n" +
     "                            <span data-ng-if=\"attachment.name != 'comment'\" class=\"pw-attachment-file\">\n" +
-    "                                <i class=\"fa fa-download\"></i> <a href=\"{{attachment.link}}\" target=\"_self\" title=\"{{attachment.description}}\">{{attachment.description}}</a>\n" +
+    "                                <i class=\"fa fa-download\"></i> <a href=\"{{attachment.link}}\" target=\"_self\" title=\"{{attachment.description}}\">{{attachment.name}}</a>\n" +
     "                            </span>\n" +
     "                        </div>\n" +
     "                    </div>\n" +

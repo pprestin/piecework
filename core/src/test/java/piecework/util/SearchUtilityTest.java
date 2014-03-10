@@ -16,6 +16,7 @@
 package piecework.util;
 
 import junit.framework.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,6 +29,7 @@ import java.util.Collections;
 /**
  * @author James Renfro
  */
+@Ignore
 public class SearchUtilityTest {
 
     @Test

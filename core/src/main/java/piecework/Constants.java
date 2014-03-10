@@ -88,6 +88,7 @@ public interface Constants {
         public static final String attachment_does_not_exist = "attachment_does_not_exist";
         public static final String attachment_is_too_large = "attachment_is_too_large";
         public static final String certificate_does_not_match = "certificate_does_not_match";
+        public static final String content_cannot_be_retrieved = "content_cannot_be_retrieved";
         public static final String content_cannot_be_stored = "content_cannot_be_stored";
         public static final String encryption_error = "encryption_error";
         public static final String form_access_forbidden = "form_access_forbidden";
