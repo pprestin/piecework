@@ -95,6 +95,7 @@ public class ValidationFactory {
         Task task = null;
         Validation.Builder validationBuilder = new Validation.Builder().submission(submission);
 
+        IOException ioe = null;
         List<File> attachments = submission.getAttachments();
         if (template.isAttachmentAllowed() && attachments != null) {
             Map<String, String> existingAttachmentLocations = new HashMap<String, String>();
@@ -143,11 +144,15 @@ public class ValidationFactory {
                             existingAttachmentLocations.put(attachment.getName(), attachment.getLocation());
                     }
 
-                } catch (Exception e) {
+                } catch (IOException e) {
                     LOG.error("Unable to store content", e);
+                    ioe = e;
                 }
             }
         }
+
+        if (ioe != null)
+            throw new InternalServerError(Constants.ExceptionCodes.content_cannot_be_stored, ioe.getMessage());
 
         boolean isAllowAny = template.isAnyFieldAllowed();
 
@@ -340,7 +345,7 @@ public class ValidationFactory {
                             return;
                         } catch (IOException ioe) {
                             LOG.error("Unable to store file. The content management system may be down or not responding", ioe);
-                            validationBuilder.error(fieldName, "Unable to store file. The content management system may be down or not responding");
+                            validationBuilder.error(fieldName, "Unable to store file. " + ioe.getMessage());
                             return;
                         } catch (BadRequestError be) {
                             LOG.error("Unable to store file. Invalid.", be);

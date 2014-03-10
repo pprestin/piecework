@@ -487,7 +487,10 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '               </div>' +
     '               <div class="clearfix"></div>' +
     '           </li>' +
-    '           <li data-ng-show="error" class="list-group-item"><div class="alert alert-danger">{{error}}</div></li>' +
+    '           <li data-ng-show="error" class="list-group-item">' +
+    '               <button type=\"button\" class=\"close\" type=\"button\" data-ng-click=\"error = null\" aria-hidden=\"true\">&times;&nbsp;</button>' +
+    '               <div class="alert alert-danger">{{error}}</div>' +
+    '           </li>' +
     '           <li data-ng-hide="files" class="list-group-item"><span class="text-muted">No documents</span></li>' +
     '           <li data-ng-repeat="file in files" class="list-group-item">' +
     '               <div>' +
