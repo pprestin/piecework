@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.content.ContentResource;
+import piecework.content.Version;
 import piecework.exception.*;
 import piecework.model.*;
 import piecework.persistence.ProcessDeploymentProvider;
@@ -255,7 +256,7 @@ public class ValidationFactory {
                 // Need to track how many files have been added in order to respect the max inputs constraint
                 int numberOfFiles = 0;
                 Map<String, String> existingFileLocations = new HashMap<String, String>();
-
+                Map<String, List<Version>> previousVersionMap = new HashMap<String, List<Version>>();
                 // File fields are special -- instead of replacing the values, it's necessary to append them to the end of the previous values
                 if (previousValues != null && !previousValues.isEmpty()) {
                     // Obviously these won't have a ContentResource attached, and shouldn't be re-stored to the repository, but then need to be
@@ -265,8 +266,10 @@ public class ValidationFactory {
                         validationBuilder.formFileValue(fieldName, file);
 
                         // Track the existing file names so we can treat files of the same name as a new version rather than a new file entirely
-                        if (StringUtils.isNotEmpty(file.getName()) && StringUtils.isNotEmpty(file.getLocation()))
+                        if (StringUtils.isNotEmpty(file.getName()) && StringUtils.isNotEmpty(file.getLocation())) {
                             existingFileLocations.put(file.getName(), file.getLocation());
+                            previousVersionMap.put(file.getName(), file.getVersions());
+                        }
 
                         // Update the number of files, but let's assume that we don't need to check that we're within the max inputs during this
                         // loop since that should have been covered when these files were uploaded
@@ -292,10 +295,25 @@ public class ValidationFactory {
                                 String id = contentResource.getContentId();
                                 String location = contentResource.getLocation();
 
+                                List<Version> versions = contentResource.versions();
+                                // If the content repository doesn't keep track of versions, then we can
+                                // at least track the versions uploaded here
+                                if (versions == null || versions.isEmpty()) {
+                                    versions = new ArrayList<Version>();
+                                    int count = 1;
+                                    List<Version> previousVersions = previousVersionMap.get(file.getName());
+                                    if (previousVersions != null && !previousVersions.isEmpty()) {
+                                        versions.addAll(previousVersions);
+                                        count = previousVersions.size() + 1;
+                                    }
+
+                                    versions.add(new Version("v" + count, modelProvider.principal().getEntityId(), new Date().getTime(), id, location));
+                                }
+
                                 File persisted = new File.Builder(file)
                                         .id(id)
                                         .location(location)
-                                        .versions(contentResource.versions())
+                                        .versions(versions)
                                         .build();
 
                                 validationBuilder.formFileValue(fieldName, persisted);

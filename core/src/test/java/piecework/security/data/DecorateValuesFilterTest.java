@@ -56,7 +56,7 @@ public class DecorateValuesFilterTest {
                 .build();
         Set<Field> fields = new HashSet<Field>();
 
-        this.filter = new DecorateValuesFilter(instance, null, fields, settings, principal, "v0");
+        this.filter = new DecorateValuesFilter(instance, null, fields, settings, principal, null, "v0");
     }
 
     @Test

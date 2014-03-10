@@ -502,7 +502,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                   <table class="table table-condensed">' +
     '                       <thead><tr><th>Version</th><th>Upload date</th><th>Uploader</th></tr></thead>' +
     '                       <tbody>' +
-    '                           <tr data-ng-repeat="version in file.versions"><td>{{version.label}}</td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdBy}}</td></tr>' +
+    '                           <tr data-ng-repeat="version in file.versions"><td><a data-ng-href="{{version.link}}">{{version.label}}</a></td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdByUser.displayName}}</td></tr>' +
     '                       </tbody>' +
     '                   </table>' +
     '               </div>' +

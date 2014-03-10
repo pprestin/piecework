@@ -60,11 +60,10 @@ public class StorageManager {
 
     public ProcessInstance archive(ProcessInstance instance, Map<String, List<Value>> data) {
         String deploymentId = instance.getDeploymentId();
-        ProcessDeployment deployment = deploymentRepository.findOne(deploymentId);
+        ProcessDeployment deployment = StringUtils.isNotEmpty(deploymentId) ? deploymentRepository.findOne(deploymentId) : null;
         String completionStatus = null;
-        if (deployment != null) {
+        if (deployment != null)
             completionStatus = deployment.getCompletionStatus();
-        }
 
         return processInstanceRepository.update(instance.getProcessInstanceId(), Constants.ProcessStatuses.COMPLETE, completionStatus, data);
     }

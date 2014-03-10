@@ -116,7 +116,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             throw new ProcessEngineException("No process has been published for " + process.getProcessDefinitionKey());
 
         String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
-        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
+        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(instance.getEngineProcessInstanceId(), null);
 
         if (activitiInstance != null) {
             processEngine.getRuntimeService().activateProcessInstanceById(activitiInstance.getProcessInstanceId());
@@ -141,12 +141,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         Entity principal = helper.getPrincipal();
         String userId = principal != null ? principal.getEntityId() : null;
         processEngine.getIdentityService().setAuthenticatedUserId(userId);
-
-        if (deployment == null)
-            throw new ProcessEngineException("Deployment missing for " + process.getProcessDefinitionKey());
-
-        String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
-        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
+        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(instance.getEngineProcessInstanceId(), null);
 		
 		if (activitiInstance != null) {
             processEngine.getRuntimeService().deleteProcessInstance(activitiInstance.getProcessInstanceId(), Constants.DeleteReasons.CANCELLED);
@@ -166,7 +161,7 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             throw new ProcessEngineException("Deployment missing for " + process.getProcessDefinitionKey());
 
         String engineProcessDefinitionKey = deployment.getEngineProcessDefinitionKey();
-        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(engineProcessDefinitionKey, instance.getEngineProcessInstanceId(), null);
+        org.activiti.engine.runtime.ProcessInstance activitiInstance = findActivitiInstance(instance.getEngineProcessInstanceId(), null);
 
         if (activitiInstance != null) {
             processEngine.getRuntimeService().suspendProcessInstanceById(activitiInstance.getProcessInstanceId());
@@ -640,18 +635,16 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
     }
 
 
-    private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessDefinitionKey, String engineProcessInstanceId, String processBusinessKey) {
+    private org.activiti.engine.runtime.ProcessInstance findActivitiInstance(String engineProcessInstanceId, String processBusinessKey) {
 		org.activiti.engine.runtime.ProcessInstance activitiInstance = null;
 		if (engineProcessInstanceId == null)
 			activitiInstance = processEngine.getRuntimeService()
 				.createProcessInstanceQuery()
-//				.processDefinitionKey(engineProcessDefinitionKey)
 				.processInstanceBusinessKey(processBusinessKey)
 				.singleResult();
 		else
             activitiInstance = processEngine.getRuntimeService()
 				.createProcessInstanceQuery()
-//				.processDefinitionKey(engineProcessDefinitionKey)
 				.processInstanceId(engineProcessInstanceId)
 				.singleResult();
 

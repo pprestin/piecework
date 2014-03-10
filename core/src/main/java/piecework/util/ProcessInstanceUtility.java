@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import piecework.Constants;
+import piecework.content.Version;
 import piecework.enumeration.OperationType;
 import piecework.model.*;
 import piecework.model.Process;
@@ -186,6 +187,20 @@ public class ProcessInstanceUtility {
 
                         if (file.getId().equals(valueId))
                             return file;
+
+                        List<Version> versions = file.getVersions();
+                        if (versions != null && !versions.isEmpty()) {
+                            for (Version version : versions) {
+                                if (version != null && StringUtils.isNotEmpty(version.getContentId()) && valueId.equals(version.getContentId())) {
+                                    File previous = new File.Builder(file)
+                                            .id(version.getContentId())
+                                            .location(version.getLocation())
+                                            .build();
+                                    return previous;
+                                }
+                            }
+                        }
+
                     } else {
                         String link = value.getValue();
                         String id = Base64Utility.safeBase64(link);

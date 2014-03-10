@@ -15,14 +15,15 @@
  */
 package piecework.command;
 
+import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.OperationResult;
 import piecework.engine.ProcessEngineFacade;
 import piecework.engine.exception.ProcessEngineException;
 import piecework.enumeration.OperationType;
-import piecework.exception.ConflictError;
 import piecework.exception.ForbiddenError;
+import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.model.Entity;
 import piecework.model.Process;
@@ -36,6 +37,8 @@ import piecework.persistence.ProcessInstanceProvider;
  * @author James Renfro
  */
 public class CancellationCommand extends AbstractOperationCommand {
+
+    private static final Logger LOG = Logger.getLogger(CancellationCommand.class);
 
     CancellationCommand(CommandExecutor commandExecutor, ProcessInstanceProvider instanceProvider, String applicationStatusExplanation) {
         super(commandExecutor, instanceProvider, null, OperationType.CANCELLATION, null, applicationStatusExplanation);
@@ -55,8 +58,9 @@ public class CancellationCommand extends AbstractOperationCommand {
             throw new ForbiddenError(Constants.ExceptionCodes.insufficient_permission);
 
         ProcessDeployment deployment = modelProvider.deployment();
+        // Don't bother throwing an exception if we fail to cancel -- just log it
         if (!facade.cancel(process, deployment, instance))
-            throw new ConflictError(Constants.ExceptionCodes.invalid_process_status);
+            LOG.fatal("Unable to really cancel the process instance execution... might be a serious issue, but not going to bother the user about it");
         return new OperationResult(applicationStatusExplanation, deployment.getCancellationStatus(), Constants.ProcessStatuses.CANCELLED, applicationStatusExplanation);
     }
 }

@@ -30,6 +30,7 @@ import piecework.security.AccessTracker;
 import piecework.security.DataFilter;
 import piecework.security.EncryptionService;
 import piecework.security.concrete.PassthroughEncryptionService;
+import piecework.service.IdentityService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.ModelUtility;
 import piecework.util.SecurityUtility;
@@ -53,6 +54,9 @@ public class DataFilterService {
 
     @Autowired(required = false)
     private EncryptionService encryptionService;
+
+    @Autowired
+    private IdentityService identityService;
 
     @Autowired
     private UserInterfaceSettings settings;
@@ -149,7 +153,7 @@ public class DataFilterService {
 
         // Need to include restricted fields since they are submitted by the requesting user
         DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
-        DataFilter decorateValuesFilter = new DecorateValuesFilter(null, null, fields, settings, principal, null);
+        DataFilter decorateValuesFilter = new DecorateValuesFilter(null, null, fields, settings, principal, identityService, null);
         return SecurityUtility.filter(fields, validationData, limitFieldsFilter, decorateValuesFilter);
     }
 
@@ -167,7 +171,7 @@ public class DataFilterService {
             decryptValuesFilter = new MaskRestrictedValuesFilter(modelProvider, encryptionService);
 
         DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
-        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, version);
+        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, identityService, version);
         return SecurityUtility.filter(fields, instanceData, limitFieldsFilter, decryptValuesFilter, decorateValuesFilter);
     }
 
@@ -193,7 +197,7 @@ public class DataFilterService {
             decryptValuesFilter = new MaskRestrictedValuesFilter(modelProvider, encryptionService);
 
         DataFilter limitFieldsFilter = isAllowAny ? new NoOpFilter() : new LimitFieldsFilter(fields, true);
-        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, version);
+        DataFilter decorateValuesFilter = new DecorateValuesFilter(instance, task, fields, settings, principal, identityService, version);
         return SecurityUtility.filter(fields, combinedData, limitFieldsFilter, decryptValuesFilter, decorateValuesFilter);
     }
 

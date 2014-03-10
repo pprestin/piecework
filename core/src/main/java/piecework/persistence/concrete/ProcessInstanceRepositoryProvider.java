@@ -87,12 +87,15 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
             throw new MisconfiguredProcessException("No deployment or deployment id is empty", process.getProcessDefinitionKey());
 
         // It's okay not to have an instance here, but if we have one, it needs to have a deployment id
-        if (instance != null && StringUtils.isEmpty(instance.getDeploymentId()))
-            throw new MisconfiguredProcessException("Instance deployment id is empty", process.getProcessDefinitionKey());
+        if (instance != null && StringUtils.isEmpty(instance.getDeploymentId())) {
+            LOG.fatal("No deployment id found for this instance " + instance.getProcessInstanceId() + " -- failing back to process deployment");
+            return _deployment;
+        }
 
         if (!useCurrentDeployment(instance, _deployment)) {
             String deploymentId = instance.getDeploymentId();
-            return deploymentRepository.findOne(deploymentId);
+            ProcessDeployment actual = deploymentRepository.findOne(deploymentId);
+            return actual;
         }
         return _deployment;
     }
