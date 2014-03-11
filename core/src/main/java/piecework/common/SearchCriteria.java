@@ -64,6 +64,7 @@ public class SearchCriteria {
     private final Integer maxResults;
     private final boolean includeVariables;
     private final Map<SearchFacet, String> facetParameters;
+    private final Map<DataFilterFacet, String> filterFacetParameters;
     private final Map<String, List<String>> contentParameters;
     private final Map<String, List<String>> sanitizedParameters;
     private final List<FacetSort> sortBy;
@@ -99,6 +100,7 @@ public class SearchCriteria {
         this.firstResult = builder.firstResult;
         this.maxResults = builder.maxResults;
         this.facetParameters = Collections.unmodifiableMap(builder.facetParameters);
+        this.filterFacetParameters = Collections.unmodifiableMap(builder.filterFacetParameters);
         this.contentParameters = Collections.unmodifiableMap(builder.contentParameters);
         this.sanitizedParameters = Collections.unmodifiableMap(builder.sanitizedParameters);
         this.includeVariables = builder.includeVariables;
@@ -156,6 +158,8 @@ public class SearchCriteria {
     public Map<SearchFacet, String> getFacetParameters() {
         return facetParameters;
     }
+
+    public Map<DataFilterFacet, String> getFilterFacetParameters() { return filterFacetParameters; }
 
     public Map<String, List<String>> getContentParameters() {
         return contentParameters;
@@ -283,6 +287,7 @@ public class SearchCriteria {
         private Integer maxResults;
         private List<String> keywords;
         private Map<SearchFacet, String> facetParameters;
+        private Map<DataFilterFacet, String> filterFacetParameters;
         private ManyMap<String, String> contentParameters;
         private ManyMap<String, String> sanitizedParameters;
         private boolean includeVariables;
@@ -299,6 +304,7 @@ public class SearchCriteria {
             this.engineProcessDefinitionKeys = new HashSet<String>();
             this.keywords = new ArrayList<String>();
             this.facetParameters = new HashMap<SearchFacet, String>();
+            this.filterFacetParameters = new HashMap<DataFilterFacet, String>();
             this.contentParameters = new ManyMap<String, String>();
             this.sanitizedParameters = new ManyMap<String, String>();
             this.sortBy = new ArrayList<FacetSort>();
@@ -334,10 +340,10 @@ public class SearchCriteria {
                                     this.queued = Boolean.valueOf(value);
                                 else if (key.equals("all"))
                                     this.all = Boolean.valueOf(value);
-                                else if (key.equals("processDefinitionLabel"))
-                                    this.processDefinitionLabel = value;
-                                else if (key.equals("processInstanceLabel"))
-                                    this.processInstanceLabel = value;
+//                                else if (key.equals("processDefinitionLabel"))
+//                                    this.processDefinitionLabel = value;
+//                                else if (key.equals("processInstanceLabel"))
+//                                    this.processInstanceLabel = value;
                                 else if (key.equals("applicationStatus"))
                                     this.applicationStatus = value;
                                 else if (key.equals("applicationStatus"))
@@ -385,8 +391,12 @@ public class SearchCriteria {
                                         this.includeVariables = true;
                                 } else if (facetMap.containsKey(key)) {
                                     Facet facet = facetMap.get(key);
-                                    if (facet != null && facet instanceof SearchFacet && StringUtils.isNotEmpty(value))
-                                        this.facetParameters.put(SearchFacet.class.cast(facet), value);
+                                    if (facet != null && StringUtils.isNotEmpty(value)) {
+                                        if (facet instanceof SearchFacet)
+                                            this.facetParameters.put(SearchFacet.class.cast(facet), value);
+                                        else if (facet instanceof DataFilterFacet)
+                                            this.filterFacetParameters.put(DataFilterFacet.class.cast(facet), value);
+                                    }
                                 } else {
                                     if (key.startsWith("__"))
                                         this.contentParameters.putOne(key.substring(2), value);

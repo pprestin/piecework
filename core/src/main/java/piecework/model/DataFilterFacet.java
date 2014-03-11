@@ -18,7 +18,7 @@ package piecework.model;
 /**
  * @author James Renfro
  */
-public class DataFilterFacet extends Facet {
+public abstract class DataFilterFacet extends Facet {
 
     public DataFilterFacet() {
     }
@@ -31,6 +31,6 @@ public class DataFilterFacet extends Facet {
         super(name, label, type, required);
     }
 
-
+    public abstract boolean include(Task task, String value);
 
 }

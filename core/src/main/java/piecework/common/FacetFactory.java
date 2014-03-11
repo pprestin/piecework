@@ -15,6 +15,7 @@
  */
 package piecework.common;
 
+import org.apache.commons.lang.StringUtils;
 import piecework.model.*;
 import piecework.model.Process;
 
@@ -38,9 +39,30 @@ public class FacetFactory {
         List<Facet> facets = new ArrayList<Facet>();
         facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label", true));
 //        facets.add(new SearchFacet("processStatus", "processStatus", "Process Status"));
-        facets.add(new DataFilterFacet("taskStatus", "Status", true));
-        facets.add(new DataFilterFacet("taskLabel", "Task", true));
-        facets.add(new DataFilterFacet("assignee", "Assignee", "user", true));
+        facets.add(new DataFilterFacet("taskStatus", "Status", true) {
+            @Override
+            public boolean include(Task task, String value) {
+                String lowercaseValue = value != null ?  value.toLowerCase() : "";
+                String taskStatus = task != null && StringUtils.isNotEmpty(task.getTaskStatus()) ? task.getTaskStatus().toLowerCase() : null;
+                return taskStatus != null && taskStatus.contains(lowercaseValue);
+            }
+        });
+        facets.add(new DataFilterFacet("taskLabel", "Task", true) {
+            @Override
+            public boolean include(Task task, String value) {
+                String lowercaseValue = value != null ?  value.toLowerCase() : "";
+                String taskLabel = task != null && StringUtils.isNotEmpty(task.getTaskLabel()) ? task.getTaskLabel().toLowerCase() : null;
+                return taskLabel != null && taskLabel.contains(lowercaseValue);
+            }
+        });
+        facets.add(new DataFilterFacet("assignee", "Assignee", "user", true){
+            @Override
+            public boolean include(Task task, String value) {
+                String lowercaseValue = value != null ?  value.toLowerCase() : "";
+                String assigneeDisplayName = task != null && task.getAssignee() != null && StringUtils.isNotEmpty(task.getAssignee().getDisplayName()) ? task.getAssignee().getDisplayName().toLowerCase() : null;
+                return assigneeDisplayName != null && assigneeDisplayName.contains(lowercaseValue);
+            }
+        });
 
 //        facets.add(new Facet("tasks..startTime", "TaskStart", "Start Time", Date.class));
 //        facets.add(new Facet("tasks..endTime", "TaskEnd", "End Time", Date.class));

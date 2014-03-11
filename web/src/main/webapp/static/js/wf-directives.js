@@ -1409,15 +1409,24 @@ angular.module('wf.directives',
 
                     scope.dialogs = dialogs;
                     scope.isFiltering = true;
+                    scope.clearFilter = function(facet) {
+                        scope.criteria[facet.name] = '';
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
                     scope.doFilter = function() {
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     };
                     scope.doChangeFilter = function(facet) {
                         console.log(facet.name);
-                        scope.criteria[facet.name] = facet.model;
-                        if (scope.criteria[facet.name]!= null && scope.criteria[facet.name].length > 1) {
+//                        scope.criteria[facet.name] = facet.model;
+                        if (scope.criteria[facet.name] != null) {
                             scope.$root.$broadcast('wfEvent:search', scope.criteria);
                         }
+                    };
+                    scope.upFilterKeyUp = function(facet) {
+                        if (scope.filterTimeout != null)
+                            clearTimeout(scope.filterTimeout);
+                        scope.filterTimeout = setTimeout(scope.doChangeFilter, 300, facet);
                     };
                     scope.doSort = function(facet) {
                         // If already sorting by this facet then switch the direction
@@ -1494,7 +1503,8 @@ angular.module('wf.directives',
                     scope.$on('wfEvent:found', function(event, results) {
                         scope.forms = results.data;
 
-                        if (scope.facets == null) {
+                        //if (scope.facets == null) {
+                        if (true) {
                             scope.selectedFormMap = new Object();
                             scope.criteria.sortBy = results.sortBy;
 
@@ -1503,7 +1513,12 @@ angular.module('wf.directives',
                                 scope.facetMap = {};
                             }
 
-                            scope.facets = [];
+                            var includeFacets = false;
+                            if (scope.facets == null) {
+                                includeFacets = true;
+                                scope.facets = [];
+                            }
+
                             angular.forEach(results.facets, function(facet) {
                                 facet.link = facet.name == 'processInstanceLabel';
                                 var localFacet = scope.facetMap[facet.name];
@@ -1512,7 +1527,8 @@ angular.module('wf.directives',
                                 else
                                     facet.selected = facet.required;
                                 scope.facetMap[facet.name] = facet;
-                                scope.facets.push(facet);
+                                if (includeFacets)
+                                    scope.facets.push(facet);
                             });
 
                             localStorageService.set("facetMap", scope.facetMap);
@@ -1652,7 +1668,7 @@ angular.module('wf.directives',
                         return scope.dates.dateRanges[selectedKey];
                     };
 
-                    scope.criteria = null; //localStorageService.get("criteria");
+                    scope.criteria = localStorageService.get("criteria");
                     if (scope.criteria == null) {
                         console.log("New criteria");
                         scope.criteria = new Object();
@@ -1774,12 +1790,15 @@ angular.module('wf.directives',
                     scope.model = $window.piecework.model;
                     if (typeof(scope.model) !== 'undefined' && typeof(scope.model.total) !== 'undefined') {
                         scope.$on('wfEvent:results-linked', function(event) {
-                           scope.$root.$broadcast('wfEvent:found', scope.model);
-                           delete $window.piecework['model'];
+                            delete scope.model['data'];
+                            scope.$root.$broadcast('wfEvent:found', scope.model);
+                            delete $window.piecework['model'];
+                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
                         });
                     } else {
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     }
+
                 }
             }
         }

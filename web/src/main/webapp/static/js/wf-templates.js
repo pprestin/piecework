@@ -832,21 +832,28 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "<h2 data-ng-bind=\"isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : 'Tasks'\"></h2>\n" +
     "        <table class=\"search-results table table-hover\">\n" +
     "            <thead>\n" +
-    "            <tr>\n" +
-    "                <th></th>" +
-    "                <th data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
-    "                   <a href=\"#\" data-ng-click=\"doSort(facet)\">{{facet.label}} <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a>" +
-    "                </th>" +
-    "                <th>" +
-    "                   <div data-ng-click=\"dialogs.openColumnsModal(facets)\" class=\"btn btn-link btn-xs\"><i class=\"fa fa-columns\"></i>" +
-    "                </th>" +
-    "            </tr>" +
+//    "            <tr>\n" +
+//    "                <th></th>" +
+//    "                <th data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
+//    "                   <a href=\"#\" data-ng-click=\"doSort(facet)\">{{facet.label}} <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a>" +
+//    "                </th>" +
+//    "                <th>" +
+//    "                   <div data-ng-click=\"dialogs.openColumnsModal(facets)\" class=\"btn btn-link btn-xs\"><i class=\"fa fa-columns\"></i>" +
+//    "                </th>" +
+//    "            </tr>" +
     "            <tr>" +
-    "                <th><input data-ng-click=\"selectAllForms(forms)\" data-ng-checked=\"allChecked\" type=\"checkbox\" class=\"result-checkbox\"/></th>\n" +
+    "               <th><input data-ng-click=\"selectAllForms(forms)\" data-ng-checked=\"allChecked\" type=\"checkbox\" class=\"result-checkbox\"/></th>\n" +
     "               <th data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
-    "                   <input data-ng-keyup=\"doChangeFilter(facet)\" data-ng-model=\"facet.model\" class=\"form-control natural input-sm\" type=\"text\" name=\"{{facet.name}}\" placeholder=\"Filter by {{facet.label}}\"/>" +
+    "                   <div class=\"form-group has-feedback\">\n" +
+    "                       <label class=\"control-label\"><a href=\"#\" data-ng-click=\"doSort(facet)\"><b>{{facet.label}}</b> <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a></label>\n" +
+    "                       <input data-ng-keyup=\"upFilterKeyUp(facet)\" data-ng-model=\"criteria[facet.name]\" autocomplete=\"off\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Filter by {{facet.label}}\">\n" +
+    "                       <span data-ng-click=\"clearFilter(facet)\" aria-hidden=\"true\" class=\"form-control-feedback\"><i class=\"fa fa-times-circle\"></i></span>\n" +
+    "                   </div>" +
     "               </th>" +
-    "               <th><i data-ng-click=\"doFilter()\" class=\"fa fa-filter fa-2x\"></i></th>" +
+    "               <th>" +
+    "                   <div data-ng-click=\"dialogs.openColumnsModal(facets)\" class=\"btn btn-link btn-xs\"><i class=\"fa fa-columns fa-2x\"></i></div>" +
+    "               </th>" +
+//    "               <th><i data-ng-click=\"doFilter()\" class=\"fa fa-filter fa-2x\"></i></th>" +
     "            </tr>\n" +
     "            </thead>\n" +
     "            <tbody>\n" +

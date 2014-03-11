@@ -25,7 +25,6 @@ import org.springframework.data.domain.Sort;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.*;
-import piecework.enumeration.ActionType;
 import piecework.enumeration.CacheName;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
@@ -44,7 +43,6 @@ import piecework.task.TaskFilter;
 import piecework.task.TaskPageHandler;
 import piecework.util.ProcessInstanceUtility;
 import piecework.util.SearchUtility;
-import piecework.util.SecurityUtility;
 
 import java.util.*;
 
@@ -158,6 +156,8 @@ public class SearchRepositoryProvider implements SearchProvider {
         List<Facet> facets = FacetFactory.facets(allowedProcesses);
         response.setFacets(facets);
 
+        Map<DataFilterFacet, String> filterFacetParameters = criteria.getFilterFacetParameters();
+
         if (page.hasContent()) {
             // Loop again through the list to get all user ids and build the intermediate object including
             // task, instance, and deployment
@@ -228,6 +228,9 @@ public class SearchRepositoryProvider implements SearchProvider {
 
                 Task task = TaskFactory.task(taskDeployment.getTask(), new PassthroughSanitizer(), userMap, context);
                 String processDefinitionKey = task.getProcessDefinitionKey();
+
+                if (!include(task, filterFacetParameters))
+                    continue;
 
                 map.put("assignee", task.getAssignee());
                 map.put("candidateAssignees", task.getCandidateAssignees());
@@ -371,6 +374,23 @@ public class SearchRepositoryProvider implements SearchProvider {
         return principal;
     }
 
+    private static boolean include(Task task, Map<DataFilterFacet, String> filterFacetParameters) {
+        if (filterFacetParameters != null && !filterFacetParameters.isEmpty()) {
+            boolean doInclude = false;
+            for (Map.Entry<DataFilterFacet, String> entry : filterFacetParameters.entrySet()) {
+                DataFilterFacet facet = entry.getKey();
+                String value = entry.getValue();
+
+                if (facet.include(task, value)) {
+                    doInclude = true;
+                    break;
+                }
+            }
+            if (!doInclude)
+                return false;
+        }
+        return true;
+    }
 
     private static boolean include(Task task, String processStatus, String taskStatus, Set<String> overseerProcessDefinitionKeys, Entity principal) {
         if (!processStatus.equals(Constants.ProcessStatuses.QUEUED)) {

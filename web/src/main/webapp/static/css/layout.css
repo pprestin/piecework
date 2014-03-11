@@ -250,7 +250,7 @@ input.form-control {
 }
 
 input.form-control.natural {
-    width: 100%;
+    /*width: 100%;*/
 }
 
 .interaction-screen {
@@ -261,17 +261,21 @@ select.form-control {
     width: auto;
 }
 
-.form-group.input-append label {
-    display: block;
+.form-group {
+    margin-bottom: 0px;
 }
 
-.form-group.input-append .form-control {
-    display: inline-block;
-}
+/*.form-group.input-append label {*/
+    /*display: block;*/
+/*}*/
 
-.form-control.input-append div.btn-group {
-    display: inline-block;
-}
+/*.form-group.input-append .form-control {*/
+    /*display: inline-block;*/
+/*}*/
+
+/*.form-control.input-append div.btn-group {*/
+    /*display: inline-block;*/
+/*}*/
 
 .hidden-checkbox {
     /*display: none !important; */

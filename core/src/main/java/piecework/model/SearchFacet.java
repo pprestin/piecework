@@ -36,7 +36,7 @@ public class SearchFacet extends Facet {
     }
 
     public Criteria criteria(String value) {
-        return where(query).regex(value);
+        return where(query).regex(value, "i");
     }
 
     public String getQuery() {
