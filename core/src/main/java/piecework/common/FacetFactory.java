@@ -43,7 +43,7 @@ public class FacetFactory {
             public boolean include(Task task, String value) {
                 String lowercaseValue = value != null ?  value.toLowerCase() : "";
                 String taskStatus = task != null && StringUtils.isNotEmpty(task.getTaskStatus()) ? task.getTaskStatus().toLowerCase() : null;
-                return taskStatus != null && taskStatus.contains(lowercaseValue);
+                return taskStatus != null && ( lowercaseValue.equals("all") || taskStatus.contains(lowercaseValue));
             }
         });
         facets.add(new DataFilterFacet("taskLabel", "Task", true) {
