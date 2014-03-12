@@ -15,7 +15,16 @@
  */
 package piecework.model;
 
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.data.mongodb.core.query.Criteria;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -23,20 +32,48 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  * @author James Renfro
  */
 public class SearchFacet extends Facet {
-
+    private static final Logger LOG = Logger.getLogger(SearchFacet.class);
     private final String query;
 
-    public SearchFacet(String query, String name, String label) {
-        this(query, name, label, String.class);
+    public SearchFacet(String query, String name, String label, boolean required) {
+        this(query, name, label, "string", required);
     }
 
-    public SearchFacet(String query, String name, String label, Class<?> type) {
-        super(name, label, type);
+    public SearchFacet(String query, String name, String label, String type, boolean required) {
+        super(name, label, type, required);
         this.query = query;
     }
 
     public Criteria criteria(String value) {
-        return where(query).is(value);
+        Criteria criteria = where(query);
+        if (getType() != null && getType().equals("date")) {
+            if (value.contains("\""))
+                value = value.replaceAll("\"", "");
+            DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeParser();
+            try {
+                DateTime dateTime = dateTimeFormatter.parseDateTime(value);
+                criteria.gt(dateTime.toDate());
+            } catch (Exception e) {
+                LOG.warn("Unable to parse " + value + " as a datetime object", e);
+            }
+            return criteria;
+        }
+
+        List<String> tokens = new ArrayList<String>();
+        String resultString = value.replaceAll("[^\\p{L}\\p{Nd}\\-]", ",");
+        String[] components = resultString.split(",");
+        if (components != null && components.length > 0)
+            tokens.addAll(Arrays.asList(components));
+
+        int count = 0;
+        List<Pattern> dbObjects = new ArrayList<Pattern>();
+        for (String token : tokens) {
+            dbObjects.add(Pattern.compile(token, Pattern.CASE_INSENSITIVE));
+            count++;
+        }
+        if (count > 0)
+            criteria.all(dbObjects);
+        return criteria;
     }
 
     public String getQuery() {

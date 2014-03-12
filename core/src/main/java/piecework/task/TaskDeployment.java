@@ -19,6 +19,8 @@ import piecework.model.ProcessDeployment;
 import piecework.model.ProcessInstance;
 import piecework.model.Task;
 
+import java.util.Map;
+
 /**
  * @author James Renfro
  */
@@ -27,11 +29,20 @@ public class TaskDeployment {
     private final ProcessDeployment deployment;
     private final ProcessInstance instance;
     private final Task task;
+    private final Map<String, Object> instanceData;
 
     public TaskDeployment(ProcessDeployment deployment, ProcessInstance instance, Task task) {
         this.deployment = deployment;
         this.instance = instance;
         this.task = task;
+        this.instanceData = null;
+    }
+
+    public TaskDeployment(ProcessDeployment deployment, ProcessInstance instance, Task task, Map<String, Object> instanceData) {
+        this.deployment = deployment;
+        this.instance = instance;
+        this.task = task;
+        this.instanceData = instanceData;
     }
 
     public ProcessDeployment getDeployment() {
@@ -44,5 +55,9 @@ public class TaskDeployment {
 
     public Task getTask() {
         return task;
+    }
+
+    public Map<String, Object> getInstanceData() {
+        return instanceData;
     }
 }

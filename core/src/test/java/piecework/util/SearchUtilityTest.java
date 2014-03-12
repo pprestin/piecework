@@ -20,11 +20,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import piecework.common.FacetSort;
 import piecework.common.SearchCriteria;
-import piecework.common.SearchQueryParameters;
+import piecework.model.SearchFacet;
 import piecework.security.concrete.PassthroughSanitizer;
-
-import java.util.Collections;
 
 /**
  * @author James Renfro
@@ -35,8 +34,7 @@ public class SearchUtilityTest {
     @Test
     public void verifySort() {
         SearchCriteria criteria = new SearchCriteria.Builder()
-                .direction("asc")
-                .sortBy("processInstanceLabel")
+                .sortBy(new FacetSort(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label", false), "asc"))
                 .build();
 
         Sort sort = SearchUtility.sort(criteria, new PassthroughSanitizer());
@@ -46,8 +44,7 @@ public class SearchUtilityTest {
     @Test
     public void verifySortDesc() {
         SearchCriteria criteria = new SearchCriteria.Builder()
-                .direction("desc")
-                .sortBy("startTime")
+                .sortBy(new FacetSort(new SearchFacet("startTime", "startTime", "Start Time", "date", true), "desc"))
                 .build();
 
         Sort sort = SearchUtility.sort(criteria, new PassthroughSanitizer());
@@ -57,8 +54,7 @@ public class SearchUtilityTest {
     @Test
     public void verifyPageable() {
         SearchCriteria criteria = new SearchCriteria.Builder()
-                .direction("desc")
-                .sortBy("startTime")
+                .sortBy(new FacetSort(new SearchFacet("startTime", "startTime", "Start Time", "date", true), "desc"))
                 .firstResult(10)
                 .maxResults(30)
                 .build();

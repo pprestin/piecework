@@ -21,12 +21,14 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import piecework.common.ManyMap;
 import piecework.common.ViewContext;
 import piecework.enumeration.OperationType;
 import piecework.model.bind.FormNameMessageMapAdapter;
 import piecework.model.bind.FormNameValueEntryMapAdapter;
+import piecework.util.ProcessInstanceUtility;
 
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -55,9 +57,11 @@ public class ProcessInstance implements Serializable {
     private final String alias;
 
     @XmlAttribute
+    @Indexed
     private final String processDefinitionKey;
 
     @XmlElement
+    @Indexed
     private final String processDefinitionLabel;
     
     @XmlElement
@@ -76,6 +80,7 @@ public class ProcessInstance implements Serializable {
     private final String previousApplicationStatus;
 
     @XmlJavaTypeAdapter(FormNameValueEntryMapAdapter.class)
+    @Indexed
     private final Map<String, List<Value>> data;
 
     @XmlJavaTypeAdapter(FormNameMessageMapAdapter.class)
@@ -84,13 +89,16 @@ public class ProcessInstance implements Serializable {
     private final Map<String, Activity> activityMap;
 
     @XmlElement
+    @Indexed
     private final Date startTime;
 
     @XmlElement
     @LastModifiedDate
+    @Indexed
     private final Date lastModifiedTime;
 
     @XmlElement
+    @Indexed
     private final Date endTime;
 
     @XmlElement
@@ -112,6 +120,7 @@ public class ProcessInstance implements Serializable {
 
     @XmlTransient
     @JsonIgnore
+    @Indexed
     private final Set<String> keywords;
 
     @XmlTransient
@@ -261,6 +270,10 @@ public class ProcessInstance implements Serializable {
 
     public Date getStartTime() {
         return startTime;
+    }
+
+    public Date getLastModifiedTime() {
+        return lastModifiedTime;
     }
 
     public Date getEndTime() {
@@ -579,14 +592,15 @@ public class ProcessInstance implements Serializable {
                         if (value == null)
                             continue;
 
-                        if (value instanceof File) {
-                            File file = File.class.cast(value);
-                            if (StringUtils.isNotEmpty(file.getName()))
-                                this.keywords.add(file.getName().toLowerCase());
-                        } else {
-                            if (StringUtils.isNotEmpty(value.getValue()))
-                                this.keywords.add(value.getValue().toLowerCase());
-                        }
+                        this.keywords.addAll(ProcessInstanceUtility.keywords(value));
+//                        if (value instanceof File) {
+//                            File file = File.class.cast(value);
+//                            if (StringUtils.isNotEmpty(file.getName()))
+//                                this.keywords.add(file.getName().toLowerCase());
+//                        } else {
+//                            if (StringUtils.isNotEmpty(value.getValue()))
+//                                this.keywords.add(value.getValue().toLowerCase());
+//                        }
                     }
                 }
             }
@@ -600,7 +614,8 @@ public class ProcessInstance implements Serializable {
                 for (String value : values) {
                     list.add(new Value(value));
                     if (StringUtils.isNotEmpty(value))
-                        this.keywords.add(value.toLowerCase());
+                        this.keywords.addAll(ProcessInstanceUtility.keywords(new Value(value)));
+//                        this.keywords.add(value.toLowerCase());
                 }
                 this.data.put(key, list);
             }
@@ -613,7 +628,8 @@ public class ProcessInstance implements Serializable {
                 this.data.putOne(key, value);
 
                 if (StringUtils.isNotEmpty(value.getValue()))
-                    this.keywords.add(value.getValue().toLowerCase());
+                    this.keywords.addAll(ProcessInstanceUtility.keywords(value));
+//                    this.keywords.add(value.getValue().toLowerCase());
             }
             return this;
         }

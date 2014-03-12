@@ -334,7 +334,10 @@ public class Process implements Serializable {
 
         public Builder facets(Collection<Facet> facets) {
             if (facets != null && !facets.isEmpty())
-                this.facets.addAll(facets);
+                this.facets = new ArrayList<Facet>(facets);
+            else
+                this.facets = new ArrayList<Facet>();
+
             return this;
         }
 

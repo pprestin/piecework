@@ -16,30 +16,33 @@
 package piecework.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.springframework.data.mongodb.core.query.Criteria;
+
+import java.io.Serializable;
 
 /**
  * @author James Renfro
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Facet {
+public class Facet implements Serializable {
 
     private final String name;
     private final String label;
-    private final Class<?> type;
+    private final String type;
+    private final boolean required;
     
     public Facet() {
-        this(null, null);
+        this(null, null, false);
     }
 
-    public Facet(String name, String label) {
-        this(name, label, String.class);
+    public Facet(String name, String label, boolean required) {
+        this(name, label, "string", required);
     }
 
-    public Facet(String name, String label, Class<?> type) {
+    public Facet(String name, String label, String type, boolean required) {
         this.name = name;
         this.label = label;
         this.type = type;
+        this.required = required;
     }
 
     public String getName() {
@@ -50,8 +53,11 @@ public class Facet {
         return label;
     }
 
-    public Class<?> getType() {
+    public String getType() {
         return type;
     }
 
+    public boolean isRequired() {
+        return required;
+    }
 }

@@ -30,6 +30,7 @@ import piecework.exception.PieceworkException;
 import piecework.identity.IdentityHelper;
 import piecework.model.Entity;
 import piecework.model.Process;
+import piecework.model.SearchResponse;
 import piecework.model.SearchResults;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.SearchProvider;
@@ -120,12 +121,14 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
     }
 
     @Override
-    public SearchResults search(MessageContext context, SearchQueryParameters queryParameters) throws PieceworkException {
+    public Response search(MessageContext context, SearchQueryParameters queryParameters) throws PieceworkException {
         UriInfo uriInfo = context.getContext(UriInfo.class);
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         SearchProvider searchProvider = modelProviderFactory.searchProvider(helper.getPrincipal());
         Set<Process> processes = searchProvider.processes(AuthorizationRole.USER, AuthorizationRole.OVERSEER);
-        return search(context, new SearchCriteria.Builder(rawQueryParameters, processes, FacetFactory.facetMap(processes), sanitizer).build(), helper.getPrincipal());
+        SearchResponse searchResponse = search(context, new SearchCriteria.Builder(rawQueryParameters, processes, FacetFactory.facetMap(processes), sanitizer).build(), helper.getPrincipal());
+
+        return Response.ok(searchResponse).build();
     }
 
     @Override

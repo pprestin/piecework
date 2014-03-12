@@ -195,6 +195,10 @@ div.screen-footer {
     margin-bottom: 20px;
 }
 
+.btn-toolbar>.btn, .btn-toolbar>.btn-group, .btn-toolbar>.input-group {
+    margin-left: 2px;
+}
+
 .chart-sm {
     height: 300px;
     width: 500px;
@@ -249,6 +253,10 @@ input.form-control {
     width: auto;
 }
 
+input.form-control.natural {
+    width: 100%;
+}
+
 .interaction-screen {
 
 }
@@ -257,17 +265,21 @@ select.form-control {
     width: auto;
 }
 
-.form-group.input-append label {
-    display: block;
+.form-group {
+    margin-bottom: 0px;
 }
 
-.form-group.input-append .form-control {
-    display: inline-block;
-}
+/*.form-group.input-append label {*/
+    /*display: block;*/
+/*}*/
 
-.form-control.input-append div.btn-group {
-    display: inline-block;
-}
+/*.form-group.input-append .form-control {*/
+    /*display: inline-block;*/
+/*}*/
+
+/*.form-control.input-append div.btn-group {*/
+    /*display: inline-block;*/
+/*}*/
 
 .hidden-checkbox {
     /*display: none !important; */
@@ -613,8 +625,13 @@ select.form-control {
   margin: 0;
 }
 
-.search-results {
-
+.search-results input[type="checkbox"] {
+    background-color: white;
+    border: 1px solid #AAAAAA;
+    margin: 0px;
+    vertical-align: top;
+    width: 20px;
+    zoom: 1.2;
 }
 
 .search-results .search-result {
@@ -642,6 +659,10 @@ select.form-control {
 
 .wf-delete-item {
     cursor: pointer;
+}
+
+.wf-filter {
+
 }
 
 .wf-right-btn-toolbar {

@@ -15,10 +15,9 @@
  */
 package piecework.common;
 
-import piecework.model.Facet;
+import org.apache.commons.lang.StringUtils;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.SearchFacet;
-import piecework.model.User;
 
 import java.util.*;
 
@@ -38,19 +37,47 @@ public class FacetFactory {
     public static List<Facet> facets(Set<Process> processes) {
         // The system has a default set of facets that is not process-dependent
         List<Facet> facets = new ArrayList<Facet>();
-        facets.add(new SearchFacet("processInstanceLabel", "InstanceLabel", "Label"));
-        facets.add(new SearchFacet("processStatus", "ProcessStatus", "Process Status"));
-//        facets.add(new Facet("tasks..taskStatus", "TaskStatus", "Task Status"));
-//        facets.add(new Facet("tasks..taskLabel", "TaskLabel", "Task"));
-//        facets.add(new Facet("tasks..assignee", "Assignee", "Assignee", User.class));
-//        facets.add(new Facet("tasks..startTime", "TaskStart", "Start Time", Date.class));
-//        facets.add(new Facet("tasks..endTime", "TaskEnd", "End Time", Date.class));
-//        facets.add(new Facet("tasks..dueDate", "TaskDue", "Task Due", Date.class));
-        facets.add(new SearchFacet("startTime", "InstanceStartTime", "Created", Date.class));
-        facets.add(new SearchFacet("lastModifiedTime", "InstanceLastModified", "Last Modified", Date.class));
-        facets.add(new SearchFacet("endTime", "InstanceEndTime", "Completed", Date.class));
+        facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label", true));
+        facets.add(new DataFilterFacet("taskStatus", "Status", true) {
+            @Override
+            public boolean include(Task task, String value) {
+                String lowercaseValue = value != null ?  value.toLowerCase() : "";
+                String taskStatus = task != null && StringUtils.isNotEmpty(task.getTaskStatus()) ? task.getTaskStatus().toLowerCase() : null;
+                return taskStatus != null && taskStatus.contains(lowercaseValue);
+            }
+        });
+        facets.add(new DataFilterFacet("taskLabel", "Task", true) {
+            @Override
+            public boolean include(Task task, String value) {
+                String lowercaseValue = value != null ?  value.toLowerCase() : "";
+                String taskLabel = task != null && StringUtils.isNotEmpty(task.getTaskLabel()) ? task.getTaskLabel().toLowerCase() : null;
+                return taskLabel != null && taskLabel.contains(lowercaseValue);
+            }
+        });
+        facets.add(new DataFilterFacet("assignee", "Assignee", "user", true){
+            @Override
+            public boolean include(Task task, String value) {
+                String lowercaseValue = value != null ?  value.toLowerCase() : "";
+                String assigneeDisplayName = task != null && task.getAssignee() != null && StringUtils.isNotEmpty(task.getAssignee().getDisplayName()) ? task.getAssignee().getDisplayName().toLowerCase() : null;
+                return assigneeDisplayName != null && assigneeDisplayName.contains(lowercaseValue);
+            }
+        });
+        if (processes != null) {
+            for (Process process : processes) {
+                if (process.getFacets() != null && !process.getFacets().isEmpty())
+                    facets.addAll(process.getFacets());
+            }
+        }
+
+        facets.add(new SearchFacet("startTime", "startTime", "Created", "date", false));
+        facets.add(new SearchFacet("endTime", "endTime", "Completed", "date", false));
+        facets.add(new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date", true));
 
         return facets;
+    }
+
+    public static SearchFacet defaultSearch() {
+        return new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date", true);
     }
 
 }

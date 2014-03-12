@@ -21,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
+import piecework.common.FacetSort;
 import piecework.common.SearchCriteria;
 import piecework.common.SearchQueryParameters;
 import piecework.model.*;
@@ -133,22 +134,18 @@ public class SearchUtility {
     }
 
     public static final Sort sort(SearchCriteria criteria, Sanitizer sanitizer) {
-        Sort.Direction direction = Sort.Direction.DESC;
-        if (StringUtils.isNotEmpty(criteria.getDirection()) &&
-                (criteria.getDirection().equalsIgnoreCase("asc") ||
-                        criteria.getDirection().equalsIgnoreCase("desc")))
-            direction = Sort.Direction.fromString(criteria.getDirection());
-
         Sort sort = null;
         if (criteria.getSortBy() != null && !criteria.getSortBy().isEmpty()) {
-            for (String raw : criteria.getSortBy()) {
-                String property = sanitizer.sanitize(raw);
-                if (StringUtils.isEmpty(property))
+            for (FacetSort facetSort : criteria.getSortBy()) {
+                if (facetSort == null)
                     continue;
-                if (sort == null)
-                    sort = new Sort(direction, property);
-                else
-                    sort.and(new Sort(direction, property));
+                if (facetSort.getFacet() instanceof SearchFacet) {
+                    Sort.Order order = new Sort.Order(facetSort.getDirection(), ((SearchFacet) facetSort.getFacet()).getQuery());
+                    if (sort == null)
+                        sort = new Sort(order);
+                    else
+                        sort.and(new Sort(order));
+                }
             }
         }
         return sort;

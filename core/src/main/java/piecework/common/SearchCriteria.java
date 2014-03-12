@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.data.domain.Sort;
+import piecework.model.DataFilterFacet;
 import piecework.model.Facet;
 import piecework.model.Process;
 import piecework.model.SearchFacet;
@@ -63,10 +64,10 @@ public class SearchCriteria {
     private final Integer maxResults;
     private final boolean includeVariables;
     private final Map<SearchFacet, String> facetParameters;
+    private final Map<DataFilterFacet, String> filterFacetParameters;
     private final Map<String, List<String>> contentParameters;
     private final Map<String, List<String>> sanitizedParameters;
-    private String direction;
-    private List<String> sortBy;
+    private final List<FacetSort> sortBy;
 
     private SearchCriteria() {
         this(new Builder());
@@ -99,11 +100,11 @@ public class SearchCriteria {
         this.firstResult = builder.firstResult;
         this.maxResults = builder.maxResults;
         this.facetParameters = Collections.unmodifiableMap(builder.facetParameters);
+        this.filterFacetParameters = Collections.unmodifiableMap(builder.filterFacetParameters);
         this.contentParameters = Collections.unmodifiableMap(builder.contentParameters);
         this.sanitizedParameters = Collections.unmodifiableMap(builder.sanitizedParameters);
         this.includeVariables = builder.includeVariables;
         this.sortBy = Collections.unmodifiableList(builder.sortBy);
-        this.direction = builder.direction;
     }
 
     public Set<String> getProcessDefinitionKeys() {
@@ -150,10 +151,6 @@ public class SearchCriteria {
         return taskStatus;
     }
 
-    public String getDirection() {
-        return direction;
-    }
-
     public List<String> getKeywords() {
         return keywords;
     }
@@ -161,6 +158,8 @@ public class SearchCriteria {
     public Map<SearchFacet, String> getFacetParameters() {
         return facetParameters;
     }
+
+    public Map<DataFilterFacet, String> getFilterFacetParameters() { return filterFacetParameters; }
 
     public Map<String, List<String>> getContentParameters() {
         return contentParameters;
@@ -214,8 +213,32 @@ public class SearchCriteria {
         return initiatedBy;
     }
 
-    public List<String> getSortBy() {
+    public List<FacetSort> getSortBy() {
         return sortBy;
+    }
+
+    public List<FacetSort> getQueryableSortBy() {
+        List<FacetSort> filtered = new ArrayList<FacetSort>();
+        if (sortBy != null) {
+            for (FacetSort facetSort : sortBy) {
+                if (facetSort.getFacet() instanceof SearchFacet)
+                    filtered.add(facetSort);
+            }
+        }
+
+        return filtered;
+    }
+
+    public List<FacetSort> getPostQuerySortBy() {
+        List<FacetSort> filtered = new ArrayList<FacetSort>();
+        if (sortBy != null) {
+            for (FacetSort facetSort : sortBy) {
+                if (facetSort.getFacet() instanceof DataFilterFacet)
+                    filtered.add(facetSort);
+            }
+        }
+
+        return filtered;
     }
 
     public Integer getFirstResult() {
@@ -259,11 +282,12 @@ public class SearchCriteria {
         private Date completedAfter;
         private String initiatedBy;
         private String direction;
-        private List<String> sortBy;
+        private List<FacetSort> sortBy;
         private Integer firstResult;
         private Integer maxResults;
         private List<String> keywords;
         private Map<SearchFacet, String> facetParameters;
+        private Map<DataFilterFacet, String> filterFacetParameters;
         private ManyMap<String, String> contentParameters;
         private ManyMap<String, String> sanitizedParameters;
         private boolean includeVariables;
@@ -280,9 +304,10 @@ public class SearchCriteria {
             this.engineProcessDefinitionKeys = new HashSet<String>();
             this.keywords = new ArrayList<String>();
             this.facetParameters = new HashMap<SearchFacet, String>();
+            this.filterFacetParameters = new HashMap<DataFilterFacet, String>();
             this.contentParameters = new ManyMap<String, String>();
             this.sanitizedParameters = new ManyMap<String, String>();
-            this.sortBy = new ArrayList<String>();
+            this.sortBy = new ArrayList<FacetSort>();
             if (queryParameters != null && sanitizer != null) {
                 DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeParser();
                 for (Map.Entry<String, List<String>> rawQueryParameterEntry : queryParameters.entrySet()) {
@@ -315,10 +340,10 @@ public class SearchCriteria {
                                     this.queued = Boolean.valueOf(value);
                                 else if (key.equals("all"))
                                     this.all = Boolean.valueOf(value);
-                                else if (key.equals("processDefinitionLabel"))
-                                    this.processDefinitionLabel = value;
-                                else if (key.equals("processInstanceLabel"))
-                                    this.processInstanceLabel = value;
+//                                else if (key.equals("processDefinitionLabel"))
+//                                    this.processDefinitionLabel = value;
+//                                else if (key.equals("processInstanceLabel"))
+//                                    this.processInstanceLabel = value;
                                 else if (key.equals("applicationStatus"))
                                     this.applicationStatus = value;
                                 else if (key.equals("applicationStatus"))
@@ -327,13 +352,25 @@ public class SearchCriteria {
                                     this.applicationStatusExplanation = value;
                                 else if (key.equals("processStatus"))
                                     this.processStatus = value;
-                                else if (key.equals("taskStatus"))
-                                    this.taskStatus = value;
+//                                else if (key.equals("taskStatus"))
+//                                    this.taskStatus = value;
                                 else if (key.equals("initiatedBy"))
                                     this.initiatedBy = value;
-                                else if (key.equals("sortBy"))
-                                    this.sortBy.add(value);
-                                else if (key.equals("direction"))
+                                else if (key.equals("sortBy")) {
+                                    if (StringUtils.isNotEmpty(value)) {
+                                        int indexOf = value.indexOf(':');
+                                        String facetKey = value;
+                                        String direction = "desc";
+                                        if (indexOf != -1 && (indexOf+1) < value.length()) {
+                                            facetKey = value.substring(0, indexOf);
+                                            direction = value.substring(indexOf + 1);
+                                        }
+
+                                        Facet facet = facetMap.get(facetKey);
+                                        if (facet != null)
+                                            this.sortBy.add(new FacetSort(facet, direction));
+                                    }
+                                } else if (key.equals("direction"))
                                     this.direction = value;
                                 else if (key.equals("completedAfter"))
                                     this.completedAfter = dateTimeFormatter.parseDateTime(value).toDate();
@@ -354,8 +391,12 @@ public class SearchCriteria {
                                         this.includeVariables = true;
                                 } else if (facetMap.containsKey(key)) {
                                     Facet facet = facetMap.get(key);
-                                    if (facet != null && facet instanceof SearchFacet && StringUtils.isNotEmpty(value))
-                                        this.facetParameters.put(SearchFacet.class.cast(facet), value);
+                                    if (facet != null && StringUtils.isNotEmpty(value)) {
+                                        if (facet instanceof SearchFacet)
+                                            this.facetParameters.put(SearchFacet.class.cast(facet), value);
+                                        else if (facet instanceof DataFilterFacet)
+                                            this.filterFacetParameters.put(DataFilterFacet.class.cast(facet), value);
+                                    }
                                 } else {
                                     if (key.startsWith("__"))
                                         this.contentParameters.putOne(key.substring(2), value);
@@ -380,6 +421,9 @@ public class SearchCriteria {
         }
 
         public SearchCriteria build() {
+            if (this.sortBy.isEmpty())
+                this.sortBy.add(new FacetSort(FacetFactory.defaultSearch(), "desc"));
+
             return new SearchCriteria(this);
         }
 
@@ -498,8 +542,8 @@ public class SearchCriteria {
             return this;
         }
 
-        public Builder sortBy(String sortBy) {
-            if (StringUtils.isNotEmpty(sortBy))
+        public Builder sortBy(FacetSort sortBy) {
+            if (sortBy != null)
                 this.sortBy.add(sortBy);
             return this;
         }

@@ -351,7 +351,6 @@ public class ProcessService {
                .allowAnonymousSubmission(update.isAnonymousSubmissionAllowed())
                .assignmentRestrictedToCandidates(update.isAssignmentRestrictedToCandidates());
 
-
         return persist(builder.build());
     }
 

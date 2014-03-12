@@ -73,6 +73,54 @@ public class UserInterfaceUtilityTest {
     }
 
     @Test
+    public void testScriptNameForm() throws Exception {
+        Process process = new Process.Builder()
+                .build();
+        ProcessDeployment deployment = new ProcessDeployment.Builder()
+                .build();
+        Container container = null;
+        String location = null;
+        DataInjectionStrategy strategy = DataInjectionStrategy.NONE;
+        Action action = new Action(container, location, strategy);
+        ViewContext context = new ViewContext();
+        Form form = new Form.Builder()
+                .disposition(FormDisposition.Builder.build(process, deployment, action, context))
+                .build();
+
+        Assert.assertEquals("Form.js", UserInterfaceUtility.scriptName(Form.class, form));
+    }
+
+    @Test
+    public void testScriptNameFormRemote() throws Exception {
+        Process process = new Process.Builder()
+                .processDefinitionKey("TEST")
+                .build();
+        ProcessDeployment deployment = new ProcessDeployment.Builder()
+                .build();
+        Container container = null;
+        String location = null;
+        DataInjectionStrategy strategy = DataInjectionStrategy.REMOTE;
+        Action action = new Action(container, location, strategy);
+        ViewContext context = new ViewContext();
+        Form form = new Form.Builder()
+                .process(process)
+                .disposition(FormDisposition.Builder.build(process, deployment, action, context))
+                .build();
+
+        Assert.assertEquals("TEST.js", UserInterfaceUtility.scriptName(Form.class, form));
+    }
+
+    @Test
+    public void testScriptNameSearchResponse() throws Exception {
+        Assert.assertEquals("SearchResponse.js", UserInterfaceUtility.scriptName(SearchResponse.class, Mockito.mock(SearchResponse.class)));
+    }
+
+    @Test
+    public void testScriptNameSearchResponseNullObject() throws Exception {
+        Assert.assertEquals("SearchResponse.js", UserInterfaceUtility.scriptName(SearchResponse.class, null));
+    }
+
+    @Test
     public void testTemplateNameExplanationAnonymous() throws NotFoundError {
         Assert.assertEquals("Explanation.anonymous.template.html", UserInterfaceUtility.templateName("Explanation", true));
     }

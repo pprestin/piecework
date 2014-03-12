@@ -225,7 +225,7 @@ public abstract class AbstractFormResource {
         return response(taskProvider, request, ActionType.CREATE, mediaType, count);
     }
 
-    protected SearchResults search(final MessageContext context, final SearchCriteria criteria, Entity principal) throws PieceworkException {
+    protected SearchResponse search(final MessageContext context, final SearchCriteria criteria, Entity principal) throws PieceworkException {
         if (isAnonymous() || principal == null) {
             String message = "Someone is attempting to view a list of forms through an anonymous resource. This is never allowed.";
             LOG.error(message);

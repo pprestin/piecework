@@ -17,8 +17,12 @@ package piecework.common;
 
 
 import com.google.common.collect.Sets;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.apache.commons.lang.StringUtils;
+import org.bson.BSON;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import piecework.Constants;
 import piecework.common.SearchCriteria;
@@ -26,8 +30,8 @@ import piecework.model.SearchFacet;
 import piecework.security.Sanitizer;
 import piecework.util.SearchUtility;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -53,6 +57,8 @@ public class SearchQueryBuilder {
             filteredProcessDefinitionKeys = allowedProcessDefinitionKeys;
 
         query.addCriteria(where("processDefinitionKey").in(filteredProcessDefinitionKeys));
+
+//        List<String> sortBy = searchCriteria.getSortBy();
 
         Map<SearchFacet, String> facetParameters = searchCriteria.getFacetParameters();
         if (facetParameters != null && !facetParameters.isEmpty()) {
@@ -109,8 +115,23 @@ public class SearchQueryBuilder {
             query.addCriteria(where("endTime").gt(searchCriteria.getCompletedAfter()));
 
         if (!searchCriteria.getKeywords().isEmpty()) {
-            for (String keyword : searchCriteria.getKeywords())
-                query.addCriteria(where("keywords").regex(keyword.toLowerCase()));
+            List<String> tokens = new ArrayList<String>();
+            for (String keyword : searchCriteria.getKeywords()) {
+                String resultString = keyword.replaceAll("[^\\p{L}\\p{Nd}]\\-", ",");
+                String[] components = resultString.split(",");
+                if (components != null && components.length > 0)
+                    tokens.addAll(Arrays.asList(components));
+            }
+
+            int count = 0;
+            Criteria criteria = where("keywords");
+            List<Pattern> dbObjects = new ArrayList<Pattern>();
+            for (String keyword : tokens) {
+                dbObjects.add(Pattern.compile(keyword, 0));
+                count++;
+            }
+            if (count > 0)
+                query.addCriteria(criteria.all(dbObjects));
         }
 
         if (searchCriteria.getMaxResults() != null)
@@ -119,31 +140,8 @@ public class SearchQueryBuilder {
         if (searchCriteria.getFirstResult() != null)
             query.skip(searchCriteria.getFirstResult());
 
-        if (searchCriteria.getSortBy() != null && StringUtils.isNotEmpty(searchCriteria.getDirection())) {
+        if (searchCriteria.getSortBy() != null)
             query.with(SearchUtility.sort(searchCriteria, sanitizer));
-        } else {
-            query.with(new Sort(Sort.Direction.DESC, "lastModifiedTime")
-                .and(new Sort(Sort.Direction.DESC, "startTime")));
-        }
-
-//        if (searchCriteria.getOrderBy() != null) {
-//            switch (searchCriteria.getOrderBy()) {
-//                case START_TIME_ASC:
-//                    query.with(new Sort(Sort.Direction.ASC, "startTime"));
-//                    break;
-//                case START_TIME_DESC:
-//                    query.with(new Sort(Sort.Direction.DESC, "startTime"));
-//                    break;
-//                case END_TIME_ASC:
-//                    query.with(new Sort(Sort.Direction.ASC, "endTime"));
-//                    break;
-//                case END_TIME_DESC:
-//                    query.with(new Sort(Sort.Direction.DESC, "endTime"));
-//                    break;
-//            }
-//        } else {
-//            query.with(new Sort(Sort.Direction.DESC, "startTime"));
-//        }
 
         return query;
     }

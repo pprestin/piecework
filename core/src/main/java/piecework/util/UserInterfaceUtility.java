@@ -51,7 +51,7 @@ import java.util.Set;
  */
 public class UserInterfaceUtility {
     private static final Set<Class<?>> ACCEPTABLE_TEMPLATE_CLASSES =
-            Sets.newHashSet(Explanation.class, Form.class, IndexView.class, Report.class, SearchResults.class);
+            Sets.newHashSet(Explanation.class, Form.class, IndexView.class, Report.class, SearchResponse.class, SearchResults.class);
     private static final Map<String, Class<?>> ACCEPTABLE_TEMPLATE_NAME_MAP;
 
     static {
@@ -93,6 +93,66 @@ public class UserInterfaceUtility {
 //
 //        return resource;
 //    }
+
+    public static String scriptName(Class<?> type, Object t) {
+        if (t != null && !type.isInstance(t))
+            return null;
+        if (!ACCEPTABLE_TEMPLATE_CLASSES.contains(type))
+            return null;
+
+        StringBuilder templateNameBuilder = new StringBuilder();
+
+        if (t != null) {
+            if (type.equals(SearchResults.class)) {
+                SearchResults results = SearchResults.class.cast(t);
+                templateNameBuilder.append(".").append(results.getResourceName());
+            } else if (type.equals(Form.class)) {
+                Form form = Form.class.cast(t);
+                FormDisposition disposition = form.getDisposition();
+                if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+                    templateNameBuilder.append(form.getProcess().getProcessDefinitionKey());
+                else
+                    templateNameBuilder.append(type.getSimpleName());
+            } else {
+                templateNameBuilder.append(type.getSimpleName());
+            }
+        } else {
+            templateNameBuilder.append(type.getSimpleName());
+        }
+
+        templateNameBuilder.append(".js");
+        return templateNameBuilder.toString();
+    }
+
+    public static String stylesheetName(Class<?> type, Object t) {
+        if (t != null && !type.isInstance(t))
+            return null;
+        if (!ACCEPTABLE_TEMPLATE_CLASSES.contains(type))
+            return null;
+
+        StringBuilder templateNameBuilder = new StringBuilder();
+
+        if (t != null) {
+            if (type.equals(SearchResults.class)) {
+                SearchResults results = SearchResults.class.cast(t);
+                templateNameBuilder.append(".").append(results.getResourceName());
+            } else if (type.equals(Form.class)) {
+                Form form = Form.class.cast(t);
+                FormDisposition disposition = form.getDisposition();
+                if (disposition.getType() != FormDisposition.FormDispositionType.DEFAULT)
+                    templateNameBuilder.append(form.getProcess().getProcessDefinitionKey());
+                else
+                    templateNameBuilder.append(type.getSimpleName());
+            } else {
+                templateNameBuilder.append(type.getSimpleName());
+            }
+        } else {
+            templateNameBuilder.append(type.getSimpleName());
+        }
+
+        templateNameBuilder.append(".css");
+        return templateNameBuilder.toString();
+    }
 
     public static String templateName(String id, boolean anonymous) throws NotFoundError {
         if (StringUtils.isNotEmpty(id)) {

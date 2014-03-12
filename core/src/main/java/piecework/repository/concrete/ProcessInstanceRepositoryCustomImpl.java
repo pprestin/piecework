@@ -42,6 +42,7 @@ import piecework.common.SearchQueryBuilder;
 import piecework.common.SearchCriteria;
 import piecework.repository.custom.ProcessInstanceRepositoryCustom;
 import piecework.security.Sanitizer;
+import piecework.util.ProcessInstanceUtility;
 import piecework.util.SearchUtility;
 
 import java.util.*;
@@ -70,11 +71,11 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         query.skip(pageable.getOffset());
         query.limit(pageable.getPageSize());
 
-        org.springframework.data.mongodb.core.query.Field field = query.fields();
+//        org.springframework.data.mongodb.core.query.Field field = query.fields();
 
         // Don't include form data in the result unless it's requested
-        if (! criteria.isIncludeVariables())
-            field.exclude("data");
+//        if (! criteria.isIncludeVariables())
+//            field.exclude("data");
 
         return findByQuery(query, pageable);
     }
@@ -127,7 +128,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     @Override
     public boolean update(String id, String engineProcessInstanceId) {
         WriteResult result = mongoOperations.updateFirst(new Query(where("_id").is(id)),
-                new Update().set("engineProcessInstanceId", engineProcessInstanceId),
+                new Update().set("engineProcessInstanceId", engineProcessInstanceId)
+                            .set("lastModifiedTime", new Date()),
                 ProcessInstance.class);
         String error = result.getError();
         if (StringUtils.isNotEmpty(error)) {
@@ -161,6 +163,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         }
 
         update.push("operations", operation);
+        update.set("lastModifiedTime", new Date());
 
         FindAndModifyOptions options = new FindAndModifyOptions();
         options.returnNew(true);
@@ -174,7 +177,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         query.addCriteria(where("processInstanceId").is(id));
 
         Update update = new Update();
-        update.set("tasks." + task.getTaskInstanceId(), task);
+        update.set("tasks." + task.getTaskInstanceId(), task)
+              .set("lastModifiedTime", new Date());
         FindAndModifyOptions options = new FindAndModifyOptions();
         options.returnNew(true);
         ProcessInstance stored = mongoOperations.findAndModify(query, update, options, ProcessInstance.class);
@@ -186,7 +190,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     public ProcessInstance update(String id, String processStatus, String applicationStatus, Map<String, List<Value>> data) {
         Update update = new Update().set("endTime", new Date())
                 .set("applicationStatus", applicationStatus)
-                .set("processStatus", Constants.ProcessStatuses.COMPLETE);
+                .set("processStatus", Constants.ProcessStatuses.COMPLETE)
+                .set("lastModifiedTime", new Date());
         include(update, data);
         return mongoOperations.findAndModify(new Query(where("_id").is(id)),
                 update,
@@ -206,6 +211,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
         include(update, label);
         include(update, submission);
         includeMessages(update, messages);
+
+        update.set("lastModifiedTime", new Date());
 
         return mongoOperations.findAndModify(query, update, OPTIONS, ProcessInstance.class);
     }
@@ -265,18 +272,12 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                             clz = User.class;
                         else if (value instanceof Secret)
                             clz = Secret.class;
-                        else {
-                            String strValue = value.getValue();
-                            if (StringUtils.isNotEmpty(strValue)) {
-                                if (strValue.contains("-")) {
-                                    keywords.add(strValue.replaceAll("-", "").toLowerCase());
-                                }
-                                keywords.add(strValue.toLowerCase());
-                            }
-                        }
-                        if (clz != null) {
+
+                        keywords.addAll(ProcessInstanceUtility.keywords(value));
+
+                        if (clz != null)
                             typeMapper.writeType(clz, DBObject.class.cast(dbObject));
-                        }
+
                         dbObjects.add(dbObject);
                     }
                 }
