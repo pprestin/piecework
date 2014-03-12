@@ -837,7 +837,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                       <label class=\"control-label\"><a href=\"#\" data-ng-click=\"doSort(facet)\"><b>{{facet.label}}</b> <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a></label>\n" +
     "                       <div class=\"wf-filter\">" +
     '                           <div data-ng-show="facet.type == \'date\'"> ' +
-    '                               <input type="text" class="form-control input-sm" datepicker-popup data-ng-model=\"criteria[facet.name]\" is-open="opened" min="minDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" /> ' +
+    '                               <input data-ng-change="onDateChange(facet)" type="text" class="form-control input-sm" datepicker-popup data-ng-model=\"criteria[facet.name]\" is-open="opened" min="minDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" placeholder=\"{{facet.label}}\"/> ' +
 //    '                               <span class="input-group-btn">  ' +
 //    '                                   <button class="btn btn-default btn-sm" ng-click="open($event)"><i class="fa fa-calendar"></i></button> ' +
 //    '                               </span> ' +

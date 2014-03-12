@@ -47,6 +47,8 @@ public class SearchFacet extends Facet {
     public Criteria criteria(String value) {
         Criteria criteria = where(query);
         if (getType() != null && getType().equals("date")) {
+            if (value.contains("\""))
+                value = value.replaceAll("\"", "");
             DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeParser();
             try {
                 DateTime dateTime = dateTimeFormatter.parseDateTime(value);

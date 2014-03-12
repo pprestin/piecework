@@ -1409,7 +1409,7 @@ angular.module('wf.directives',
                     };
                     scope.today();
 
-                    scope.showWeeks = true;
+                    scope.showWeeks = false;
                     scope.toggleWeeks = function () {
                         scope.showWeeks = ! scope.showWeeks;
                     };
@@ -1418,15 +1418,15 @@ angular.module('wf.directives',
                         scope.dt = null;
                     };
 
-                    // Disable weekend selection
-                    scope.disabled = function(date, mode) {
-                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
-                    };
+//                    // Disable weekend selection
+//                    scope.disabled = function(date, mode) {
+//                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
+//                    };
 
                     scope.toggleMin = function() {
                         scope.minDate = ( scope.minDate ) ? null : new Date();
                     };
-                    scope.toggleMin();
+//                    scope.toggleMin();
 
                     scope.open = function($event) {
                         $event.preventDefault();
@@ -1437,7 +1437,8 @@ angular.module('wf.directives',
 
                     scope.dateOptions = {
                         'year-format': "'yy'",
-                        'starting-day': 1
+                        'show-weeks': false,
+                        'starting-day': 0
                     };
 
                     if (typeof(scope.criteria) === 'undefined')
@@ -1510,6 +1511,9 @@ angular.module('wf.directives',
                                 return true;
                         });
                         return isSorting;
+                    };
+                    scope.onDateChange = function(facet) {
+                        scope.doChangeFilter(facet);
                     };
                     scope.processSearchResults = function(results) {
                         scope.$root.$broadcast('wfEvent:found', results);
