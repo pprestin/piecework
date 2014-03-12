@@ -46,6 +46,7 @@ public class NotificationSettings {
         this.mailFromAddress = environment.getProperty("mail.from.address");
         this.mailFromLabel = environment.getProperty("mail.from.label");
         this.mailToOverride = environment.getProperty("mail.to.override");
+        this.adminEmail = environment.getProperty("mail.to.administrator");
     }
 
     public String getApplicationName() {

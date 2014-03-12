@@ -40,6 +40,32 @@ public class ProcessInstanceUtility {
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.mediumDateTime();
 
+    public static Set<String> keywords(Value value) {
+        Set<String> keywords = new HashSet<String>();
+        if (value instanceof File) {
+            File  file = File.class.cast(value);
+            if (StringUtils.isNotEmpty(file.getName()))
+                keywords.add(file.getName().toLowerCase());
+        } else if (value instanceof User) {
+            User user = User.class.cast(value);
+            keywords.add(user.getVisibleId());
+            if (StringUtils.isNotEmpty(user.getDisplayName())) {
+                String lowerCase = user.getDisplayName().toLowerCase();
+                keywords.add(lowerCase);
+                String[] names = lowerCase.split("\\s+");
+                if (names != null && names.length > 0)
+                    keywords.addAll(Arrays.asList(names));
+            }
+        } else if (value instanceof Value) {
+            String strValue = value.getValue();
+            if (StringUtils.isNotEmpty(strValue)) {
+                String resultString = strValue.toLowerCase().replaceAll("[^\\p{L}\\p{Nd}]", "");
+                keywords.add(resultString);
+            }
+        }
+        return keywords;
+    }
+
     public static Set<Task> tasks(Set<Task> originals, OperationType operation) {
         Set<Task> tasks = new TreeSet<Task>();
         if (originals != null && !originals.isEmpty()) {

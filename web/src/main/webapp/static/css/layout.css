@@ -195,6 +195,10 @@ div.screen-footer {
     margin-bottom: 20px;
 }
 
+.btn-toolbar>.btn, .btn-toolbar>.btn-group, .btn-toolbar>.input-group {
+    margin-left: 2px;
+}
+
 .chart-sm {
     height: 300px;
     width: 500px;
@@ -250,7 +254,7 @@ input.form-control {
 }
 
 input.form-control.natural {
-    /*width: 100%;*/
+    width: 100%;
 }
 
 .interaction-screen {
@@ -655,6 +659,10 @@ select.form-control {
 
 .wf-delete-item {
     cursor: pointer;
+}
+
+.wf-filter {
+
 }
 
 .wf-right-btn-toolbar {

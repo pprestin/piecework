@@ -352,8 +352,8 @@ public class SearchCriteria {
                                     this.applicationStatusExplanation = value;
                                 else if (key.equals("processStatus"))
                                     this.processStatus = value;
-                                else if (key.equals("taskStatus"))
-                                    this.taskStatus = value;
+//                                else if (key.equals("taskStatus"))
+//                                    this.taskStatus = value;
                                 else if (key.equals("initiatedBy"))
                                     this.initiatedBy = value;
                                 else if (key.equals("sortBy")) {

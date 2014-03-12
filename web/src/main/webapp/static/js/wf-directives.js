@@ -1404,9 +1404,46 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/searchresponse.html',
                 link: function (scope, element) {
+                    scope.today = function() {
+                        scope.dt = new Date();
+                    };
+                    scope.today();
+
+                    scope.showWeeks = true;
+                    scope.toggleWeeks = function () {
+                        scope.showWeeks = ! scope.showWeeks;
+                    };
+
+                    scope.clear = function () {
+                        scope.dt = null;
+                    };
+
+                    // Disable weekend selection
+                    scope.disabled = function(date, mode) {
+                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
+                    };
+
+                    scope.toggleMin = function() {
+                        scope.minDate = ( scope.minDate ) ? null : new Date();
+                    };
+                    scope.toggleMin();
+
+                    scope.open = function($event) {
+                        $event.preventDefault();
+                        $event.stopPropagation();
+
+                        scope.opened = true;
+                    };
+
+                    scope.dateOptions = {
+                        'year-format': "'yy'",
+                        'starting-day': 1
+                    };
+
                     if (typeof(scope.criteria) === 'undefined')
                        scope.criteria = {};
 
+//                    $('.wf-filter').hide();
                     scope.dialogs = dialogs;
                     scope.isFiltering = true;
                     scope.clearFilter = function(facet) {
@@ -1423,7 +1460,15 @@ angular.module('wf.directives',
                             scope.$root.$broadcast('wfEvent:search', scope.criteria);
                         }
                     };
-                    scope.upFilterKeyUp = function(facet) {
+                    scope.hasFilter = function(facet) {
+                        var filterValue = scope.criteria[facet.name];
+                        return typeof(filterValue) !== 'undefined' && filterValue != null && filterValue != '' && filterValue.length > 0;
+                    };
+                    scope.upFilterKeyUp = function(facet, event) {
+                        if (event.keyCode == 27) {
+                            scope.clearFilter(facet);
+                            return;
+                        }
                         if (scope.filterTimeout != null)
                             clearTimeout(scope.filterTimeout);
                         scope.filterTimeout = setTimeout(scope.doChangeFilter, 300, facet);
@@ -1495,6 +1540,12 @@ angular.module('wf.directives',
                     };
 
                     var SearchResponse = $resource('./form', {processStatus:'@processStatus'});
+                    scope.$on('wfEvent:columns-toggle', function(event) {
+                        dialogs.openColumnsModal(scope.facets);
+                    });
+                    scope.$on('wfEvent:filter-toggle', function(event) {
+                        $('.wf-filter').toggleClass('ng-hide');
+                    });
                     scope.$on('wfEvent:facet-changed', function(event, facet) {
                         console.log("Storing facets");
                         scope.facetMap[facet.name].selected = facet.selected;
@@ -1502,6 +1553,13 @@ angular.module('wf.directives',
                     });
                     scope.$on('wfEvent:found', function(event, results) {
                         scope.forms = results.data;
+
+                        if (scope.processDefinitionDescription == null)
+                            scope.processDefinitionDescription = {};
+
+                        angular.forEach(results.metadata, function(definition) {
+                            scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
+                        });
 
                         //if (scope.facets == null) {
                         if (true) {
@@ -1549,6 +1607,10 @@ angular.module('wf.directives',
                     scope.$on('wfEvent:search', function(event, criteria) {
                         if (typeof(criteria) !== 'undefined') {
                             scope.criteria = criteria;
+                        }
+                        if (criteria.keywords != null && typeof(criteria.keywords) == 'string') {
+                            criteria.keyword = criteria.keywords.split(' ');
+//                            criteria.keywords = null;
                         }
                         SearchResponse.get(scope.criteria, scope.processSearchResults);
                     });
@@ -1672,6 +1734,7 @@ angular.module('wf.directives',
                     if (scope.criteria == null) {
                         console.log("New criteria");
                         scope.criteria = new Object();
+                        scope.criteria.keywords = [];
                         scope.criteria.processDefinitionKey = '';
                         scope.criteria.processStatus = 'open';
                         scope.criteria.taskStatus = 'all';
@@ -1705,6 +1768,14 @@ angular.module('wf.directives',
 
                     scope.showReportPanel = function() {
 
+                    };
+
+                    scope.toggleColumns = function() {
+                        scope.$root.$broadcast('wfEvent:columns-toggle');
+                    };
+
+                    scope.toggleFilter = function() {
+                        scope.$root.$broadcast('wfEvent:filter-toggle');
                     };
 
                     scope.getFormsSelected = function(taskStatuses) {
@@ -1777,9 +1848,15 @@ angular.module('wf.directives',
                     scope.dialogs = dialogs;
 
                     scope.onSearchKeyUp = function() {
-                        if (scope.criteria.keyword != null && scope.criteria.keyword.length > 2) {
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        }
+                        if (scope.searchTimeout != null)
+                            clearTimeout(scope.refreshSearch);
+                        scope.searchTimeout = setTimeout(scope.refreshSearch, 300);
+                    };
+
+                    scope.clearSearch = function() {
+                        scope.criteria.keyword = '';
+                        scope.criteria.keywords = '';
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     };
 
                     scope.refreshSearch = function() {

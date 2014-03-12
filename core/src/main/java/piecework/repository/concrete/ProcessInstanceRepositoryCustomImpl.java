@@ -42,6 +42,7 @@ import piecework.common.SearchQueryBuilder;
 import piecework.common.SearchCriteria;
 import piecework.repository.custom.ProcessInstanceRepositoryCustom;
 import piecework.security.Sanitizer;
+import piecework.util.ProcessInstanceUtility;
 import piecework.util.SearchUtility;
 
 import java.util.*;
@@ -271,18 +272,12 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                             clz = User.class;
                         else if (value instanceof Secret)
                             clz = Secret.class;
-                        else {
-                            String strValue = value.getValue();
-                            if (StringUtils.isNotEmpty(strValue)) {
-                                if (strValue.contains("-")) {
-                                    keywords.add(strValue.replaceAll("-", "").toLowerCase());
-                                }
-                                keywords.add(strValue.toLowerCase());
-                            }
-                        }
-                        if (clz != null) {
+
+                        keywords.addAll(ProcessInstanceUtility.keywords(value));
+
+                        if (clz != null)
                             typeMapper.writeType(clz, DBObject.class.cast(dbObject));
-                        }
+
                         dbObjects.add(dbObject);
                     }
                 }
