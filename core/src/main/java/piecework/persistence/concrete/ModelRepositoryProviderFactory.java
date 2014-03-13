@@ -78,6 +78,9 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
     @Autowired
     Sanitizer sanitizer;
 
+    @Autowired
+    BucketListRepository bucketListRepository;
+
     @Override
     public AllowedTaskProvider allowedTaskProvider(String rawProcessDefinitionKey, String rawProcessInstanceId, Entity principal) {
         String processInstanceId = sanitizer.sanitize(rawProcessInstanceId);
@@ -158,7 +161,7 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
 
     @Override
     public SearchProvider searchProvider(Entity principal) {
-        return new SearchRepositoryProvider(processRepository, processInstanceRepository, cacheService, dataFilterService, identityService, sanitizer, principal);
+        return new SearchRepositoryProvider(processRepository, processInstanceRepository, bucketListRepository, cacheService, dataFilterService, identityService, sanitizer, principal);
     }
 
     @Override

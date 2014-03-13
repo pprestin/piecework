@@ -32,6 +32,7 @@ import piecework.security.data.DataFilterService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.*;
 import piecework.validation.Validation;
+import piecework.repository.BucketListRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +52,9 @@ public class FormFactory {
 
     @Autowired
     UserInterfaceSettings settings;
+
+    @Autowired
+    BucketListRepository bucketListRepository;
 
     private final PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
 
@@ -138,6 +142,15 @@ public class FormFactory {
 
         if (actionType != ActionType.COMPLETE && instance != null)
             builder.applicationStatusExplanation(instance.getApplicationStatusExplanation());
+
+        // handle buckets
+        if ( process != null ) {
+            String pg = process.getProcessGroup();
+            if ( StringUtils.isNotEmpty(pg) ) {
+                BucketList bucketList = bucketListRepository.findOne(pg);
+                builder.bucketList(bucketList);
+            }
+        }
 
         return builder.build(context);
     }

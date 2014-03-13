@@ -1711,8 +1711,8 @@ angular.module('wf.directives',
 //            }
 //        }
 //    ])
-    .directive('wfSearchToolbar', ['$window', 'attachmentService', 'dialogs', 'localStorageService', 'notificationService', 'taskService', 'wizardService',
-        function($window, attachmentService, dialogs, localStorageService, notificationService, taskService, wizardService) {
+    .directive('wfSearchToolbar', ['$window', 'attachmentService', 'dialogs', 'localStorageService', 'notificationService', 'taskService', 'wizardService', 'instanceService',
+        function($window, attachmentService, dialogs, localStorageService, notificationService, taskService, wizardService, instanceService) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -1886,6 +1886,7 @@ angular.module('wf.directives',
                             if (results.metadata != null && results.metadata.length == 1)
                                 scope.criteria.processDefinitionKey = results.metadata[0].processDefinitionKey;
                         }
+                        scope.bucketList = results.bucketList;
                     });
                     scope.$on('wfEvent:search', function(event, criteria) {
                         scope.searching = true;
@@ -1923,6 +1924,19 @@ angular.module('wf.directives',
                     } else {
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     }
+
+                    scope.changeBucket = function(selectedForms, bucket) {
+                        var success = function(scope, data, status, headers, config, form) {
+                            form.Bucket = bucket;
+                        };   
+
+                        var failure = function(scope, data, status, headers, config, form) {
+                        };   
+
+                        angular.forEach(selectedForms, function(form) {
+                           instanceService.changeBucket(scope, form, bucket, success, failure);
+                        });  
+                    };
 
                 }
             }

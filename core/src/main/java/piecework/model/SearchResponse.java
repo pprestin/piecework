@@ -35,6 +35,7 @@ public class SearchResponse {
     private int pageSize;
     private int total;
     private User currentUser;
+    private BucketList bucketList;
 
     public List<Facet> getFacets() {
         return facets;
@@ -106,5 +107,13 @@ public class SearchResponse {
 
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
+    }
+
+    public BucketList getBucketList() {
+        return bucketList;
+    }
+ 
+    public void setBucketList(BucketList bucketList) {
+        this.bucketList = bucketList;
     }
 }

@@ -65,6 +65,11 @@ public class MongoRepositoriesConfiguration {
         return factoryBean(SubmissionRepository.class, Submission.class);
     }
 
+    @Bean
+    public BucketListRepository bucketListRepository() {
+        return factoryBean(BucketListRepository.class, BucketList.class);
+    }
+
     private <T extends Repository<S, String>, S> T factoryBean(Class<T> repositoryInterface, Class<S> type) {
         MongoRepositoryFactoryBean<T, S, String> factory = new MongoRepositoryFactoryBean<T, S, String>();
         factory.setMongoOperations(mongoOperations);
