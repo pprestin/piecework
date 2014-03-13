@@ -38,7 +38,7 @@ public class FacetFactory {
         // The system has a default set of facets that is not process-dependent
         List<Facet> facets = new ArrayList<Facet>();
         facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label", true));
-        facets.add(new DataFilterFacet("taskStatus", "Status", true) {
+        facets.add(new DataFilterFacet("taskStatus", "Status", false) {
             @Override
             public boolean include(Task task, String value) {
                 String lowercaseValue = value != null ?  value.toLowerCase() : "";
@@ -46,7 +46,7 @@ public class FacetFactory {
                 return taskStatus != null && ( lowercaseValue.equals("all") || taskStatus.contains(lowercaseValue));
             }
         });
-        facets.add(new DataFilterFacet("taskLabel", "Task", true) {
+        facets.add(new DataFilterFacet("taskLabel", "Task", false) {
             @Override
             public boolean include(Task task, String value) {
                 String lowercaseValue = value != null ?  value.toLowerCase() : "";

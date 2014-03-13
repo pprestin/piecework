@@ -333,9 +333,13 @@ public abstract class AbstractFormResource {
         Validation validation = null;
         Explanation explanation = null;
 
-        if (e instanceof BadRequestError)
+        if (e instanceof BadRequestError) {
             validation = ((BadRequestError)e).getValidation();
-        else {
+        } else if (e instanceof StatusCodeError) {
+            StatusCodeError error = StatusCodeError.class.cast(e);
+            int statusCode = error.getStatusCode();
+            explanation = ErrorResponseBuilder.buildExplanation(statusCode, error.getLocalizedMessage(), error.getMessageDetail());
+        } else {
             String detail = e.getMessage() != null ? e.getMessage() : "";
             explanation = new Explanation();
             explanation.setMessage("Unable to complete task");

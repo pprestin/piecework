@@ -127,7 +127,7 @@ public class SearchUtility {
 
     public static final Pageable pageable(SearchCriteria criteria, Sanitizer sanitizer) {
         int firstResult = criteria.getFirstResult() != null ? criteria.getFirstResult() : 0;
-        int maxResult = criteria.getMaxResults() != null ? criteria.getMaxResults() : 1000;
+        int maxResult = criteria.getMaxResults() != null ? criteria.getMaxResults() : 100;
         Sort sort = SearchUtility.sort(criteria, sanitizer);
         PageRequest pageRequest = new PageRequest(firstResult, maxResult, sort);
         return pageRequest;
