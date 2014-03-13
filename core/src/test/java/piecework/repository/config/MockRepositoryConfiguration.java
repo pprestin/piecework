@@ -98,6 +98,11 @@ public class MockRepositoryConfiguration {
         return mockRepository(ValidationRepository.class);
     }
 
+    @Bean
+    public BucketListRepository bucketListRepository() {
+        return mockRepository(BucketListRepository.class);
+    } 
+
     private static <R extends MongoRepository> R mockRepository(Class<R> cls) {
         R mock = Mockito.mock(cls);
         Mockito.doAnswer(new Answer() {
