@@ -32,6 +32,7 @@ import piecework.model.Process;
 import piecework.persistence.SearchProvider;
 import piecework.repository.ProcessInstanceRepository;
 import piecework.repository.ProcessRepository;
+import piecework.repository.BucketListRepository;
 import piecework.security.Sanitizer;
 import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.data.DataFilterService;
@@ -55,6 +56,7 @@ public class SearchRepositoryProvider implements SearchProvider {
 
     private final ProcessRepository processRepository;
     private final ProcessInstanceRepository instanceRepository;
+    private final BucketListRepository bucketListRepository;
     private final CacheService cacheService;
     private final DataFilterService dataFilterService;
     private final IdentityService identityService;
@@ -62,10 +64,12 @@ public class SearchRepositoryProvider implements SearchProvider {
     private final Entity principal;
 
     public SearchRepositoryProvider(ProcessRepository processRepository, ProcessInstanceRepository instanceRepository,
+                                    BucketListRepository bucketListRepository,
                                     CacheService cacheService, DataFilterService dataFilterService,
                                     IdentityService identityService, Sanitizer sanitizer, Entity principal) {
         this.processRepository = processRepository;
         this.instanceRepository = instanceRepository;
+        this.bucketListRepository = bucketListRepository;
         this.cacheService = cacheService;
         this.dataFilterService = dataFilterService;
         this.identityService = identityService;
@@ -133,6 +137,7 @@ public class SearchRepositoryProvider implements SearchProvider {
         });
 
         List<Map<String, String>> metadata = new ArrayList<Map<String, String>>();
+        Set<String> pgs = new HashSet<String>();
         for (Process allowedProcess : alphabetical) {
             if (allowedProcess.getProcessDefinitionKey() != null) {
                 Process definition = allowedProcess;
@@ -142,9 +147,37 @@ public class SearchRepositoryProvider implements SearchProvider {
                 map.put("processDefinitionLabel", definition.getProcessDefinitionLabel());
                 map.put("link", form.getLink());
                 metadata.add(map);
+                if ( StringUtils.isNotEmpty(allowedProcess.getProcessGroup()) ) {
+                     pgs.add(allowedProcess.getProcessGroup());
+                }
             }
         }
         response.setMetadata(metadata);
+
+        // bucket list stuff
+        String pg = null;
+
+        // get process group from allowed processes
+        if ( pgs.size() == 1 ) {
+            pg = pgs.toArray()[0].toString();
+        } else { 
+            // then try to get process group from query
+            Map<String, List<String>> contentParameter = criteria.getContentParameters();
+            if ( contentParameter != null ) {
+                List<String> vlist = contentParameter.get("pg");
+                if ( vlist != null && vlist.size() > 0 ) {
+                    pg = vlist.get(0);
+                }
+            }
+        }
+
+        if ( pg != null && bucketListRepository != null ) {
+            BucketList bucketList = bucketListRepository.findOne(pg);
+            if ( bucketList != null ) {
+                response.setBucketList(bucketList);
+            }
+        }
+
 
 
         String processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;
@@ -183,6 +216,7 @@ public class SearchRepositoryProvider implements SearchProvider {
                 String history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
                 String restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
                 String suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+                String bucketUrl = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "value/Bucket");
 
                 instanceData.put("activation", activation);
                 instanceData.put("attachment", attachment);
@@ -190,6 +224,7 @@ public class SearchRepositoryProvider implements SearchProvider {
                 instanceData.put("history", history);
                 instanceData.put("restart", restart);
                 instanceData.put("suspension", suspension);
+                instanceData.put("bucketUrl", bucketUrl);
 
                 Map<String, List<Value>> valueData = instance.getData();
                 if (valueData != null && !valueData.isEmpty()) {
