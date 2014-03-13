@@ -251,8 +251,8 @@ public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource im
 
         String fieldName = sanitizer.sanitize(rawFieldName);
 
-        ManyMap<String, Value> data = new ManyMap<String, Value>();
-        data.putOne(fieldName, new Value(sanitizer.sanitize(value)));
+        ManyMap<String, String> data = new ManyMap<String, String>();
+        data.putOne(fieldName, sanitizer.sanitize(value));
 
         FormRequest request = requestService.create(requestDetails, allowedTaskProvider, ActionType.UPDATE);
         FieldValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.fieldValidation(allowedTaskProvider, request, data, Map.class, fieldName, VERSION);
