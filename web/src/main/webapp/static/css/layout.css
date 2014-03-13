@@ -373,6 +373,10 @@ select.form-control {
     width: 20px;
 }
 
+.navbar-btn {
+    margin-top: 10px;
+}
+
 .nav.navbar-thin {
     padding: 0px 40px;
 }

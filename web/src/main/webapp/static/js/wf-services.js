@@ -582,11 +582,19 @@ angular.module('wf.services',
             }
         }
     ])
-    .factory('personService', ['$http', '$sce',
-        function($http, $sce) {
+    .factory('personService', ['$http', '$rootScope', '$sce',
+        function($http, $rootScope, $sce) {
             return {
                 getPeople: function(displayNameLike) {
-                    var url = './person.json?displayNameLike=' + displayNameLike;
+                    var rootUri = '.';
+                    var formUri = $rootScope.form != null ? $rootScope.form.root : null;
+                    if (formUri != null && formUri) {
+                        var indexOf = formUri.indexOf('/form');
+                        if (indexOf != -1) {
+                            rootUri = formUri.substring(0, indexOf);
+                        }
+                    }
+                    var url = rootUri + '/person.json?displayNameLike=' + displayNameLike;
 
                     return $http.get($sce.trustAsResourceUrl(url)).then(function(response) {
                         var people = new Array();

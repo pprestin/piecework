@@ -268,6 +268,7 @@ public class SearchRepositoryProvider implements SearchProvider {
             }
 
             response.setData(data);
+            response.setTotal((int)page.getTotalElements());
         }
 
         List<FacetSort> facetSortList = criteria.getSortBy();

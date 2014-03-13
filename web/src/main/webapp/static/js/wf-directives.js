@@ -318,13 +318,15 @@ angular.module('wf.directives',
                 restrict: 'AE',
                 scope: {
                     'name': '@',
-                    'label': '@'
+                    'label': '@',
+                    'image': '@'
                 },
                 templateUrl: 'templates/file.html',
                 link: function (scope, element, attr) {
-                    if (attr.image) {
-                        scope.isImage = true;
-                    };
+//                    scope.isImage = false;
+//                    if (attr.image != null && attr.image == 'true') {
+//                        scope.isImage = true;
+//                    };
                     scope.checkoutFile = function(file) {
                         var url = file.link + '/checkout';
                         $http.post($sce.trustAsResourceUrl(url), null, {
@@ -1140,6 +1142,28 @@ angular.module('wf.directives',
             }
         }
     ])
+    .directive('wfPerson', ['personService',
+        function(personService) {
+            return {
+                restrict: 'AE',
+                scope: {
+                    name : '='
+                },
+                templateUrl: 'templates/person.html',
+                transclude: true,
+                link: function (scope, element, attr) {
+//                    scope.person = {};
+                    scope.disabled = typeof(attr.disabled) !== 'undefined' && attr.disabled == 'true';
+                    scope.enabled = !scope.disabled;
+                    scope.required = typeof(attr.required) !== 'undefined' && attr.required == 'true';
+                    scope.getPeople = personService.getPeople;
+                    scope.isDisabled = function() {
+                        return scope.disabled;
+                    };
+                }
+            }
+        }
+    ])
     .directive('wfReview', ['wizardService',
          function(wizardService) {
              return {
@@ -1450,9 +1474,22 @@ angular.module('wf.directives',
 //                    $('.wf-filter').hide();
                     scope.dialogs = dialogs;
                     scope.isFiltering = false;
+                    scope.clearAllFilters = function() {
+                        var didClear = false;
+                        angular.forEach(scope.facets, function(facet) {
+                            if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '') {
+                                scope.criteria[facet.name] = '';
+                                didClear = true;
+                            }
+                        });
+                        if (didClear)
+                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        scope.isFiltering = false;
+                    };
                     scope.clearFilter = function(facet) {
                         scope.criteria[facet.name] = '';
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        scope.isFiltering = false;
                     };
                     scope.doFilter = function() {
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
@@ -1498,6 +1535,9 @@ angular.module('wf.directives',
                             return form[facet.name] != null ? form[facet.name].displayName : 'Nobody';
 //                        if (facet.name == 'processInstanceLabel')
 //                            return '<a href="' + form.link + '" target=\"_self\" rel=\"external\">' + form[facet.name] + '</a>';
+
+                        if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '')
+                            scope.isFiltering = true;
 
                         return form[facet.name];
                     };
@@ -1551,7 +1591,9 @@ angular.module('wf.directives',
                         dialogs.openColumnsModal(scope.facets);
                     });
                     scope.$on('wfEvent:filter-toggle', function(event) {
-                        $('.wf-filter').toggleClass('ng-hide');
+                        scope.isFiltering = !scope.isFiltering;
+                        if (!scope.isFiltering)
+                            scope.clearAllFilters();
                     });
                     scope.$on('wfEvent:facet-changed', function(event, facet) {
                         console.log("Storing facets");
@@ -1617,7 +1659,6 @@ angular.module('wf.directives',
                         }
                         if (scope.criteria.keywords != null && typeof(scope.criteria.keywords) == 'string') {
                             scope.criteria.keyword = scope.criteria.keywords.split(' ');
-//                            criteria.keywords = null;
                         }
                         SearchResponse.get(scope.criteria, scope.processSearchResults);
                     });
