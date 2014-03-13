@@ -67,7 +67,7 @@ public class ProcessDeploymentRepositoryProvider implements ProcessDeploymentPro
     public ContentProfile contentProfile() throws PieceworkException {
         ProcessDeployment deployment = deployment();
         ContentProfile contentProfile;
-        if (deployment.getContentProfile() != null)
+        if (deployment != null && deployment.getContentProfile() != null)
             contentProfile = deployment.getContentProfile();
         else
             contentProfile = new ContentProfile.Builder().build();

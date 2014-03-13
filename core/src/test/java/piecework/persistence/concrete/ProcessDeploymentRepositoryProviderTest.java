@@ -80,14 +80,14 @@ public class ProcessDeploymentRepositoryProviderTest {
         deploymentProvider.deployment();
     }
 
-    @Test(expected = MisconfiguredProcessException.class)
-    public void verifyErrorOnNullDeployment() throws PieceworkException {
+    @Test
+    public void verifyNoErrorOnNullDeployment() throws PieceworkException {
         Process mockProcess = Mockito.mock(Process.class);
         Mockito.doReturn(mockProcess)
                 .when(processRepository).findOne(eq("TEST"));
         ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, "TEST", principal);
         ProcessDeploymentProvider deploymentProvider = new ProcessDeploymentRepositoryProvider(processProvider);
-        deploymentProvider.deployment();
+        Assert.assertNull(deploymentProvider.deployment());
     }
 
     @Test
