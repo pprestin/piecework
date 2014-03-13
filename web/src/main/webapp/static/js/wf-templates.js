@@ -1081,6 +1081,12 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "                    <button data-ng-click=\"exportCsv(getFormsSelected())\" data-ng-show=\"!isFormSelected()\" data-ng-disabled=\"!isSingleProcessSelected()\" class=\"btn btn-default navbar-btn\" title=\"Export as CSV\" type=\"button\"><i class=\"fa fa-download\"></i> Export</button>\n" +
     "                    <button data-ng-click=\"toggleColumns()\" data-ng-show=\"!isFormSelected()\" class=\"btn btn-default\"><i class=\"fa fa-columns fa-1x\"></i></button>" +
     "                    <button data-ng-click=\"toggleFilter()\" data-ng-show=\"!isFormSelected()\" class=\"btn btn-default\"><i class=\"fa fa-filter fa-1x\"></i></button>" +
+    "                    <span data-ng-if=\"bucketList.buckets.length > 0\" class=\"dropdown\">\n" +
+    "                        <button class=\"btn btn-default navbar-btn dropdown-toggle\" data-toggle=\"dropdown\" data-target=\"new-form-dropdown\" id=\"new-form-button\" type=\"button\"><i class=\"fa fa-tag\"></i><b class=\"caret\"></b></button>\n" +
+    "                        <ul id=\"new-form-dropdown\" class=\"dropdown-menu\" role=\"menu\" aria-labelledby=\"new-form-button\">\n" +
+    "                            <li data-ng-repeat=\"bucket in bucketList.buckets\" data-ng-click=\"changeBucket(getFormsSelected(), bucket)\" class=\"presentation\" role=\"menuitem\"><a>{{bucket}}</a></li>\n" +
+    "                        </ul>\n" +
+    "                    </span>\n" +
     "                </div>\n" +
     "            </div>\n" +
     "        </div>\n" +

@@ -556,6 +556,18 @@ angular.module('wf.services',
                 suspend: function($scope, form, reason, success, failure) {
                     var url = form.suspension;
                     httpHelper.send(url, $scope, form, reason, success, failure);
+                },
+                changeBucket: function($scope, form, bucket, success, failure) {
+                    var url = form.bucketUrl;
+                    $http.post($sce.trustAsResourceUrl(url), bucket, {
+                            headers: {'Content-Type': 'text/plain'}
+                        })  
+                        .success(function(data, status, headers, config) {
+                            success($scope, data, status, headers, config, form, bucket);
+                        })  
+                        .error(function(data, status, headers, config) {
+                            failure($scope, data, status, headers, config, form, bucket);
+                        }); 
                 }
             };
         }

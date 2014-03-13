@@ -140,6 +140,9 @@ public class Form {
 
     private final User currentUser;
 
+    // bucket stuff
+    private final String bucketUrl;
+    private final BucketList bucketList;
 
     private Form() {
         this(new Form.Builder(), new ViewContext());
@@ -182,6 +185,8 @@ public class Form {
         this.anonymous = builder.anonymous;
         this.disposition = builder.disposition;
         this.currentUser = builder.currentUser;
+        this.bucketUrl = builder.bucketUrl;
+        this.bucketList = builder.bucketList;
     }
 
     public String getFormInstanceId() {
@@ -327,6 +332,14 @@ public class Form {
         return currentUser;
     }
 
+    public String getBucketUrl() {
+        return bucketUrl;
+    }
+
+    public BucketList getBucketList() {
+        return bucketList;
+    }
+
     public final static class Builder {
 
         private String formInstanceId;
@@ -358,6 +371,8 @@ public class Form {
         private FormDisposition disposition;
         private Process process;
         private User currentUser;
+        private String bucketUrl;
+        private BucketList bucketList;
 
         public Builder() {
             super();
@@ -395,6 +410,7 @@ public class Form {
             this.anonymous = form.anonymous;
             this.process = form.process;
             this.currentUser = form.currentUser;
+            this.bucketList = form.bucketList != null ? new BucketList.Builder(form.bucketList, sanitizer).build() : null;
         }
 
         public Form build() {
@@ -424,6 +440,7 @@ public class Form {
                 this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
                 this.restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
                 this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+                this.bucketUrl = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "value/Bucket");
                 if (attachments != null && !attachments.isEmpty()) {
                     PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
                     this.attachmentCount = attachments.size();
@@ -446,6 +463,7 @@ public class Form {
             this.history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
             this.restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
             this.suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+            this.bucketUrl = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "value/Bucket");
             if (attachments != null && !attachments.isEmpty()) {
                 PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
                 this.attachmentCount = attachments.size();
@@ -502,6 +520,11 @@ public class Form {
 
         public Builder task(Task task) {
             this.task = task;
+            return this;
+        }
+
+        public Builder bucketList(BucketList bucketList) {
+            this.bucketList = bucketList;
             return this;
         }
 

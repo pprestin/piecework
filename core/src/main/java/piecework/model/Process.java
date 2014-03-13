@@ -50,6 +50,9 @@ public class Process implements Serializable {
     private final String processDefinitionLabel;
 
     @XmlElement
+    private final String processGroup;
+
+    @XmlElement
     private final String processSummary;
 
     @XmlElement
@@ -114,6 +117,7 @@ public class Process implements Serializable {
 	private Process(Process.Builder builder, ViewContext context) {
 		this.processDefinitionKey = builder.processDefinitionKey;
         this.processDefinitionLabel = builder.processDefinitionLabel;
+        this.processGroup = builder.processGroup;
         this.deploymentId = builder.deploymentId;
         this.deploymentLabel = builder.deploymentLabel;
         this.deploymentDate = builder.deploymentDate;
@@ -139,6 +143,10 @@ public class Process implements Serializable {
 
     public String getProcessDefinitionLabel() {
         return processDefinitionLabel;
+    }
+
+    public String getProcessGroup() {
+        return processGroup;
     }
 
     public String getProcessSummary() {
@@ -239,6 +247,7 @@ public class Process implements Serializable {
 		
 		private String processDefinitionKey;
         private String processDefinitionLabel;
+        private String processGroup;
         private String deploymentId;
         private String deploymentLabel;
         private Date deploymentDate;
@@ -265,6 +274,7 @@ public class Process implements Serializable {
 		public Builder(Process process, Sanitizer sanitizer) {
 			this.processDefinitionKey = sanitizer.sanitize(process.processDefinitionKey);
             this.processDefinitionLabel = sanitizer.sanitize(process.processDefinitionLabel);
+            this.processGroup = sanitizer.sanitize(process.processGroup);
             this.deploymentId = sanitizer.sanitize(process.deploymentId);
             this.deploymentLabel = sanitizer.sanitize(process.deploymentLabel);
             this.deploymentDate = process.deploymentDate;
@@ -300,6 +310,11 @@ public class Process implements Serializable {
 
         public Builder processDefinitionLabel(String processDefinitionLabel) {
             this.processDefinitionLabel = processDefinitionLabel;
+            return this;
+        }
+
+        public Builder processGroup(String processGroup) {
+            this.processGroup = processGroup;
             return this;
         }
 
