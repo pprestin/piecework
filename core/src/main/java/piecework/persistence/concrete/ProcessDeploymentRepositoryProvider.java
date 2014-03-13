@@ -97,8 +97,8 @@ public class ProcessDeploymentRepositoryProvider implements ProcessDeploymentPro
         Process process = process();
         ProcessDeployment deployment = process.getDeployment();
 
-        if (deployment == null)
-            throw new MisconfiguredProcessException("No deployment can be found for this process: " + process.getProcessDefinitionKey());
+//        if (deployment == null)
+//           throw new MisconfiguredProcessException("No deployment can be found for this process: " + process.getProcessDefinitionKey());
 
         return deployment;
     }

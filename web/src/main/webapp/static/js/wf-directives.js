@@ -322,6 +322,9 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/file.html',
                 link: function (scope, element, attr) {
+                    if (attr.image) {
+                        scope.isImage = true;
+                    };
                     scope.checkoutFile = function(file) {
                         var url = file.link + '/checkout';
                         $http.post($sce.trustAsResourceUrl(url), null, {
@@ -1446,7 +1449,7 @@ angular.module('wf.directives',
 
 //                    $('.wf-filter').hide();
                     scope.dialogs = dialogs;
-                    scope.isFiltering = true;
+                    scope.isFiltering = false;
                     scope.clearFilter = function(facet) {
                         scope.criteria[facet.name] = '';
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
@@ -1612,8 +1615,8 @@ angular.module('wf.directives',
                         if (typeof(criteria) !== 'undefined') {
                             scope.criteria = criteria;
                         }
-                        if (criteria.keywords != null && typeof(criteria.keywords) == 'string') {
-                            criteria.keyword = criteria.keywords.split(' ');
+                        if (scope.criteria.keywords != null && typeof(scope.criteria.keywords) == 'string') {
+                            scope.criteria.keyword = scope.criteria.keywords.split(' ');
 //                            criteria.keywords = null;
                         }
                         SearchResponse.get(scope.criteria, scope.processSearchResults);

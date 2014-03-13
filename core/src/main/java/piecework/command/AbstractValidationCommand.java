@@ -77,7 +77,8 @@ public abstract class AbstractValidationCommand<P extends ProcessDeploymentProvi
     abstract Validation execute(SubmissionHandlerRegistry submissionHandlerRegistry, SubmissionTemplateFactory submissionTemplateFactory, ValidationFactory validationFactory) throws PieceworkException;
 
     protected Validation validation(SubmissionHandlerRegistry submissionHandlerRegistry, ValidationFactory validationFactory, SubmissionTemplate template) throws PieceworkException {
-        verifyTask();
+        if (actionType == null || actionType != ActionType.ATTACH)
+            verifyTask();
 
         SubmissionHandler handler = type != null ? submissionHandlerRegistry.handler(type) : null;
         Submission submission = this.submission == null ? handler.handle(modelProvider, object, template) : this.submission;

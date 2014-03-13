@@ -513,6 +513,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '           <li data-ng-repeat="file in files" class="list-group-item">' +
     '               <div>' +
     '                   <i data-ng-click="showDetails(file)" data-ng-class="file.detailed ? \'fa-angle-up\' : \'fa-angle-down\'" data-ng-hide="editing" class="fa pull-right" style="cursor:pointer;padding-top: 4px"></i>' +
+    '                   <img data-ng-show="{{isImage}}" data-wf-image="{{name}}" class="" data-ng-src="{{file.link}}" alt="" /><br />' +
     '                   <a data-ng-href="{{file.link}}" data-ng-class="checkedOut ? \'text-danger\' : \'\'"><i data-ng-hide="editing" class="fa fa-cloud-download"></i> {{file.name}}</a>&nbsp;&nbsp;&nbsp;' +
     '                   <div data-ng-click="checkinFile(file)" data-ng-hide="editing || !checkedOut" class="btn btn-default btn-xs">' +
     '                       <span class="fa-stack"><i class="fa fa-key fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x text-danger"></i></span></div>' +
@@ -835,14 +836,10 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "               <th data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
     "                   <div class=\"form-group has-feedback\">\n" +
     "                       <label class=\"control-label\"><a href=\"#\" data-ng-click=\"doSort(facet)\"><b>{{facet.label}}</b> <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a></label>\n" +
-    "                       <div class=\"wf-filter\">" +
+    "                       <div data-ng-show=\"isFiltering\" class=\"wf-filter\">" +
     '                           <div data-ng-show="facet.type == \'date\'"> ' +
     '                               <input data-ng-change="onDateChange(facet)" type="text" class="form-control input-sm" datepicker-popup data-ng-model=\"criteria[facet.name]\" is-open="opened" min="minDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" placeholder=\"{{facet.label}}\"/> ' +
-//    '                               <span class="input-group-btn">  ' +
-//    '                                   <button class="btn btn-default btn-sm" ng-click="open($event)"><i class="fa fa-calendar"></i></button> ' +
-//    '                               </span> ' +
     '                           </div> ' +
-    //"                           <input data-ng-show=\"facet.type == 'date'\" class=\"form-control input-sm natural\" type=\"date\"/>" +
     "                           <input data-ng-keyup=\"upFilterKeyUp(facet, $event)\" data-ng-hide=\"facet.type == 'date'\" data-ng-model=\"criteria[facet.name]\" autocomplete=\"off\" type=\"text\" class=\"form-control input-sm natural\" placeholder=\"{{facet.label}}\">\n" +
     "                           <span data-ng-click=\"clearFilter(facet)\" data-ng-show=\"hasFilter(facet)\" aria-hidden=\"true\" class=\"form-control-feedback\"><i class=\"fa fa-times-circle text-muted\"></i></span>\n" +
     "                       </div>" +
