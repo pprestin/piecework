@@ -472,6 +472,25 @@ angular.module('wf.services',
                         windowClass: 'in'
                     });
                     modalInstance.result.then(function () {}, function () {});
+                },
+                alert: function(message) {
+                    var modalInstance = $modal.open({
+                        backdrop: true,
+                        templateUrl: 'templates/alert-modal-dialog.html',
+                        controller: ['$rootScope', '$scope', '$modalInstance', 'message', function ($rootScope, $scope, $modalInstance, message) {
+                            $scope.message = message;
+                            $scope.ok= function () {
+                                $modalInstance.dismiss('ok');
+                            };
+                        }],
+                        resolve: {
+                            message: function () {
+                                return message;
+                            }
+                        },
+                        windowClass: 'in'
+                    });
+                    modalInstance.result.then(function () {}, function () {});
                 }
             };
         }

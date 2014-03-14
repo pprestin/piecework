@@ -208,6 +208,18 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </div>\n" +
 //    "    </div>\n" +
     "</div>");
+  $templateCache.put('templates/alert-modal-dialog.html',
+    '    <div class="modal-content">\n' +
+    '        <div class="modal-header">\n' +
+    '            <h4 class="modal-title">ALERT</h4>\n' +
+    '        </div>\n' +
+    '        <div class="modal-body">\n' +
+    '            <p>{{message}}</p>\n' +
+    '        </div>\n' +
+    '        <div class="modal-footer">\n' +
+    '            <button ng-click="ok()" type="button" id="ok-button" class="btn btn-primary">OK</button>\n' +
+    '        </div>\n' +
+    '</div>');
   $templateCache.put("templates/attachments.html",
     "<div data-ng-show=\"state.isViewingAttachments\" class=\"pw-attachments col-md-4\">\n" +
     "        <div class=\"panel panel-default\">\n" +
@@ -1041,8 +1053,9 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                       <i data-ng-class="isFiltering ? \'fa-ban\' : \'fa-filter\'" class="fa"></i>' +
     '                    </button>' +
     '                    <span data-ng-if="bucketList.buckets.length > 0" class="dropdown">\n' +
-    '                        <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-tag"></i><b class="caret"></b></button>\n' +
+    '                        <button class="btn btn-default navbar-btn dropdown-toggle" data-ng-disabled="!isFormSelected()" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-tag"></i><b class="caret"></b></button>\n' +
     '                        <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
+    '                            <li class="presentation" role="menuitem"><b>&nbsp;&nbsp;&nbsp;&nbsp;Change Bucket</b></li>\n' +
     '                            <li data-ng-repeat="bucket in bucketList.buckets" data-ng-click="changeBucket(getFormsSelected(), bucket)" class="presentation" role="menuitem"><a>{{bucket}}</a></li>\n' +
     '                        </ul>\n' +
     '                    </span>\n ' +
