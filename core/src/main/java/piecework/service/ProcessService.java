@@ -349,7 +349,8 @@ public class ProcessService {
                .processSummary(update.getProcessSummary())
                .facets(update.getFacets())
                .allowAnonymousSubmission(update.isAnonymousSubmissionAllowed())
-               .assignmentRestrictedToCandidates(update.isAssignmentRestrictedToCandidates());
+               .assignmentRestrictedToCandidates(update.isAssignmentRestrictedToCandidates())
+               .processGroup(update.getProcessGroup());
 
         return persist(builder.build());
     }
