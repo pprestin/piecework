@@ -1790,7 +1790,9 @@ angular.module('wf.directives',
                         };   
 
                         angular.forEach(selectedForms, function(form) {
-                           instanceService.changeBucket(scope, form, bucket, success, failure);
+                            if (form.Bucket !== bucket) {
+                               instanceService.changeBucket(scope, form, bucket, success, failure);
+                            }
                         });  
                     };
 
