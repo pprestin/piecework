@@ -29,7 +29,16 @@ public class FacetFactory {
     public static Map<String, Facet> facetMap(Set<Process> processes) {
         Map<String, Facet> facetMap = new HashMap<String, Facet>();
         for (Facet facet : facets(processes)) {
-            facetMap.put(facet.getName(), facet);
+            if (facet.getType().equals("date") && facet instanceof SearchFacet) {
+                SearchFacet searchFacet = SearchFacet.class.cast(facet);
+                String beforeName = searchFacet.getName() + "Before";
+                String afterName = searchFacet.getName() + "After";
+                DateSearchFacet dateSearchFacet = new DateSearchFacet(searchFacet.getQuery(), searchFacet.getName(), searchFacet.getLabel(), searchFacet.getType(), searchFacet.isRequired());
+                facetMap.put(afterName, dateSearchFacet);
+                facetMap.put(beforeName, dateSearchFacet);
+            } else {
+                facetMap.put(facet.getName(), facet);
+            }
         }
         return facetMap;
     }

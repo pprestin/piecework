@@ -60,12 +60,12 @@ public class SearchQueryBuilder {
 
 //        List<String> sortBy = searchCriteria.getSortBy();
 
-        Map<SearchFacet, String> facetParameters = searchCriteria.getFacetParameters();
+        Map<SearchFacet, Object> facetParameters = searchCriteria.getFacetParameters();
         if (facetParameters != null && !facetParameters.isEmpty()) {
-            for (Map.Entry<SearchFacet, String> entry : facetParameters.entrySet()) {
+            for (Map.Entry<SearchFacet, Object> entry : facetParameters.entrySet()) {
                 if (entry.getKey() == null)
                     continue;
-                if (StringUtils.isEmpty(entry.getValue()))
+                if (entry.getValue() == null)
                     continue;
 
                 query.addCriteria(entry.getKey().criteria(entry.getValue()));
@@ -102,12 +102,12 @@ public class SearchQueryBuilder {
         if (StringUtils.isNotEmpty(searchCriteria.getInitiatedBy()))
             query.addCriteria(where("initiatorId").is(searchCriteria.getInitiatedBy()));
 
-        if (searchCriteria.getStartedBefore() != null && searchCriteria.getStartedAfter() != null)
-            query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()).gt(searchCriteria.getStartedAfter()));
-        else if (searchCriteria.getStartedBefore() != null)
-            query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()));
-        else if (searchCriteria.getStartedAfter() != null)
-            query.addCriteria(where("startTime").gt(searchCriteria.getStartedAfter()));
+//        if (searchCriteria.getStartedBefore() != null && searchCriteria.getStartedAfter() != null)
+//            query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()).gt(searchCriteria.getStartedAfter()));
+//        else if (searchCriteria.getStartedBefore() != null)
+//            query.addCriteria(where("startTime").lt(searchCriteria.getStartedBefore()));
+//        else if (searchCriteria.getStartedAfter() != null)
+//            query.addCriteria(where("startTime").gt(searchCriteria.getStartedAfter()));
 
         if (searchCriteria.getCompletedBefore() != null)
             query.addCriteria(where("endTime").lt(searchCriteria.getCompletedBefore()));

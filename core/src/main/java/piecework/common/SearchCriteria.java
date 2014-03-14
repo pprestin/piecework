@@ -20,10 +20,8 @@ import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.data.domain.Sort;
-import piecework.model.DataFilterFacet;
-import piecework.model.Facet;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.SearchFacet;
 import piecework.security.Sanitizer;
 import piecework.util.SearchUtility;
 
@@ -63,7 +61,7 @@ public class SearchCriteria {
     private final Integer firstResult;
     private final Integer maxResults;
     private final boolean includeVariables;
-    private final Map<SearchFacet, String> facetParameters;
+    private final Map<SearchFacet, Object> facetParameters;
     private final Map<DataFilterFacet, String> filterFacetParameters;
     private final Map<String, List<String>> contentParameters;
     private final Map<String, List<String>> sanitizedParameters;
@@ -155,7 +153,7 @@ public class SearchCriteria {
         return keywords;
     }
 
-    public Map<SearchFacet, String> getFacetParameters() {
+    public Map<SearchFacet, Object> getFacetParameters() {
         return facetParameters;
     }
 
@@ -286,7 +284,7 @@ public class SearchCriteria {
         private Integer firstResult;
         private Integer maxResults;
         private List<String> keywords;
-        private Map<SearchFacet, String> facetParameters;
+        private Map<SearchFacet, Object> facetParameters;
         private Map<DataFilterFacet, String> filterFacetParameters;
         private ManyMap<String, String> contentParameters;
         private ManyMap<String, String> sanitizedParameters;
@@ -303,7 +301,7 @@ public class SearchCriteria {
             this.engines = new HashSet<String>();
             this.engineProcessDefinitionKeys = new HashSet<String>();
             this.keywords = new ArrayList<String>();
-            this.facetParameters = new HashMap<SearchFacet, String>();
+            this.facetParameters = new HashMap<SearchFacet, Object>();
             this.filterFacetParameters = new HashMap<DataFilterFacet, String>();
             this.contentParameters = new ManyMap<String, String>();
             this.sanitizedParameters = new ManyMap<String, String>();
@@ -392,7 +390,19 @@ public class SearchCriteria {
                                 } else if (facetMap.containsKey(key)) {
                                     Facet facet = facetMap.get(key);
                                     if (facet != null && StringUtils.isNotEmpty(value)) {
-                                        if (facet instanceof SearchFacet)
+                                        if (facet instanceof DateSearchFacet) {
+                                            DateSearchFacet dateSearchFacet = DateSearchFacet.class.cast(facet);
+                                            DateRange dateRange = DateRange.class.cast(this.facetParameters.get(dateSearchFacet));
+                                            if (dateRange == null) {
+                                                dateRange = new DateRange();
+                                                this.facetParameters.put(dateSearchFacet, dateRange);
+                                            }
+                                            if (key.endsWith("After"))
+                                                dateRange.setAfter(value);
+                                            else if (key.endsWith("Before"))
+                                                dateRange.setBefore(value);
+
+                                        } else if (facet instanceof SearchFacet)
                                             this.facetParameters.put(SearchFacet.class.cast(facet), value);
                                         else if (facet instanceof DataFilterFacet)
                                             this.filterFacetParameters.put(DataFilterFacet.class.cast(facet), value);

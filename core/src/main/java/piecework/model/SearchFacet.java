@@ -31,9 +31,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 /**
  * @author James Renfro
  */
-public class SearchFacet extends Facet {
+public class SearchFacet<T> extends Facet {
     private static final Logger LOG = Logger.getLogger(SearchFacet.class);
-    private final String query;
+    protected final String query;
 
     public SearchFacet(String query, String name, String label, boolean required) {
         this(query, name, label, "string", required);
@@ -44,21 +44,10 @@ public class SearchFacet extends Facet {
         this.query = query;
     }
 
-    public Criteria criteria(String value) {
-        Criteria criteria = where(query);
-        if (getType() != null && getType().equals("date")) {
-            if (value.contains("\""))
-                value = value.replaceAll("\"", "");
-            DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeParser();
-            try {
-                DateTime dateTime = dateTimeFormatter.parseDateTime(value);
-                criteria.gt(dateTime.toDate());
-            } catch (Exception e) {
-                LOG.warn("Unable to parse " + value + " as a datetime object", e);
-            }
-            return criteria;
-        }
+    public Criteria criteria(T object) {
+        String value = object.toString();
 
+        Criteria criteria = where(query);
         List<String> tokens = new ArrayList<String>();
         String resultString = value.replaceAll("[^\\p{L}\\p{Nd}\\-]", ",");
         String[] components = resultString.split(",");

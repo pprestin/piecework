@@ -832,6 +832,12 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            </div>\n" +
     "        </div>\n" +
     "    </nav>");
+  $templateCache.put("templates/daterange.html",
+    '<input data-ng-change="afterChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/> ' +
+    '<input data-ng-change="beforeChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/> ' +
+
+//    '<input size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" is-open="beforeOpened" min="beforeMinDate" datepicker-options="dateOptions" date-disabled="beforeDisabled(date, mode)" ng-required="true" close-text="Close" placeholder="Before"/> ' +
+    '');
   $templateCache.put("templates/searchresponse.html",
     "<h2 data-ng-bind=\"isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : ''\"></h2>\n" +
     "        <table class=\"search-results table table-hover\">\n" +
@@ -839,13 +845,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            <tr>" +
     "               <th><input data-ng-click=\"selectAllForms(forms)\" data-ng-checked=\"allChecked\" type=\"checkbox\" class=\"result-checkbox\"/></th>\n" +
     "               <th data-ng-show=\"facet.selected\" data-ng-class=\"facet.required ? '' : 'hidden-sm hidden-xs'\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
-    "                   <div class=\"form-group has-feedback\">\n" +
+    "                   <div data-ng-class=\"facet.type !== 'date' ? 'has-feedback' : ''\" class=\"form-group\">\n" +
     "                       <label class=\"control-label\"><a href=\"#\" data-ng-click=\"doSort(facet)\"><b>{{facet.label}}</b> <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a></label>\n" +
-    "                       <div data-ng-show=\"isFiltering\" class=\"wf-filter\">" +
+    '                       <div data-ng-show="isFiltering" class="wf-filter">' +
     '                           <div data-ng-show="facet.type == \'date\'"> ' +
-    '                               <input data-ng-change="onDateChange(facet)" type="text" class="form-control input-sm" datepicker-popup data-ng-model=\"criteria[facet.name]\" is-open="opened" min="minDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" placeholder=\"{{facet.label}} after\"/> ' +
+    '                               <div data-wf-date-range data-name="facet.name" data-criteria="criteria" />' +
     '                           </div> ' +
-    "                           <input data-ng-keyup=\"upFilterKeyUp(facet, $event)\" data-ng-hide=\"facet.type == 'date'\" data-ng-model=\"criteria[facet.name]\" autocomplete=\"off\" type=\"text\" class=\"form-control input-sm natural\" placeholder=\"{{facet.label}}\">\n" +
+    "                           <input data-ng-keyup=\"onFilterKeyUp(facet, $event)\" data-ng-hide=\"facet.type == 'date'\" data-ng-model=\"criteria[facet.name]\" autocomplete=\"off\" type=\"text\" class=\"form-control input-sm natural\" placeholder=\"{{facet.label}}\">\n" +
     "                           <span data-ng-click=\"clearFilter(facet)\" data-ng-show=\"hasFilter(facet)\" aria-hidden=\"true\" class=\"form-control-feedback\"><i class=\"fa fa-times-circle text-muted\"></i></span>\n" +
     "                       </div>" +
     "                   </div>" +
@@ -904,7 +910,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                <div class="row"><form class="navbar-form navbar-left form-inline" role="search">\n' +
     '                    <div class="row">\n' +
     '                       <div class="form-group has-feedback">\n' +
-    '                           <input data-ng-keyup="onSearchKeyUp()" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
+    '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
     '                           <span data-ng-click="clearSearch()" data-ng-show="criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
     '                       </div>' +
     '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i ng-show="searching" class="fa fa-spinner fa-spin fa-lg"></i><i ng-show="!searching" class="fa fa-search"></i>&nbsp;&nbsp;</button>\n' +
@@ -995,29 +1001,29 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                                    </ul>\n' +
     '                                </div>\n' +
     '                            </li>\n' +
-    '                            <li>\n' +
-    '                                <div data-ng-hide="dates.isNonCustomDateRange()">\n' +
-    '                                    <input type="datetime-local" data-ng-model="dates.customStartedAfter" data-ng-change="dates.refreshCustomDate()" />\n' +
-    '                                    <input type="datetime-local" data-ng-model="dates.customStartedBefore" data-ng-change="dates.refreshCustomDate()" />\n' +
-    '                                    <button type="button" class="close" data-ng-click="dates.selectDateRange(\'any\')" aria-hidden="true" style="float:none;">&times;</button>\n' +
-    '                                </div>\n' +
-    '                                <div data-ng-show="dates.isNonCustomDateRange()" class="dropdown">\n' +
-    '                                    <a id="date-limit-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
-    '                                        <span class="dropdown-toggle-text">{{dates.showNonCustomDateRange()}}</span>\n' +
-    '                                        <b class="caret"></b>\n' +
-    '                                    </a>\n' +
-    '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
-    '                                        <li role="presentation" class="dropdown-header">Date range</li>\n' +
-    '                                        <li data-ng-repeat="dateRangeKey in dates.dateRangeKeys" role="presentation">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" data-ng-change="dates.selectDateRange(dateRangeKey)" data-ng-model="dates.selectedDateRange" data-ng-true-value="{{dateRangeKey}}" role="menuitem" checked="dates.selectedDateRangeKey == dateRangeKey"/> &nbsp;{{dates.dateRanges[dateRangeKey]}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                    </ul>\n' +
-    '                                </div>\n' +
-    '                            </li>\n' +
+//    '                            <li>\n' +
+//    '                                <div data-ng-hide="dates.isNonCustomDateRange()">\n' +
+//    '                                    <input type="datetime-local" data-ng-model="dates.customStartedAfter" data-ng-change="dates.refreshCustomDate()" />\n' +
+//    '                                    <input type="datetime-local" data-ng-model="dates.customStartedBefore" data-ng-change="dates.refreshCustomDate()" />\n' +
+//    '                                    <button type="button" class="close" data-ng-click="dates.selectDateRange(\'any\')" aria-hidden="true" style="float:none;">&times;</button>\n' +
+//    '                                </div>\n' +
+//    '                                <div data-ng-show="dates.isNonCustomDateRange()" class="dropdown">\n' +
+//    '                                    <a id="date-limit-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+//    '                                        <span class="dropdown-toggle-text">{{dates.showNonCustomDateRange()}}</span>\n' +
+//    '                                        <b class="caret"></b>\n' +
+//    '                                    </a>\n' +
+//    '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
+//    '                                        <li role="presentation" class="dropdown-header">Date range</li>\n' +
+//    '                                        <li data-ng-repeat="dateRangeKey in dates.dateRangeKeys" role="presentation">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" data-ng-change="dates.selectDateRange(dateRangeKey)" data-ng-model="dates.selectedDateRange" data-ng-true-value="{{dateRangeKey}}" role="menuitem" checked="dates.selectedDateRangeKey == dateRangeKey"/> &nbsp;{{dates.dateRanges[dateRangeKey]}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                    </ul>\n' +
+//    '                                </div>\n' +
+//    '                            </li>\n' +
     '                        </ul>\n' +
     '                    </div>\n' +
     '                </form>\n' +

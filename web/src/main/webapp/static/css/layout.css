@@ -661,6 +661,11 @@ select.form-control {
     border-top: 4px solid #ffffff;
 }
 
+.wf-datepicker {
+    display: inline-block;
+    *display: inline;
+}
+
 .wf-delete-item {
     cursor: pointer;
 }

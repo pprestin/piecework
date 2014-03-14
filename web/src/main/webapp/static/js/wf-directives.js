@@ -203,6 +203,109 @@ angular.module('wf.directives',
             }
         }
     ])
+    .directive('wfDateRange', [
+        function() {
+            return {
+                restrict: 'AE',
+                scope: {
+                    criteria : '=',
+                    name : '='
+                },
+                templateUrl: 'templates/daterange.html',
+                transclude: true,
+                link: function (scope, element) {
+                    var afterName = scope.name + 'After';
+                    var beforeName = scope.name + 'Before';
+
+                    scope.after = scope.criteria[afterName];
+                    scope.before = scope.criteria[beforeName];
+
+                    scope.afterChange = function() {
+                        if (scope.criteria[afterName] != scope.after) {
+                            scope.before = null;
+                            scope.criteria[beforeName] = null;
+                            scope.beforeMinDate = scope.after;
+                            scope.criteria[afterName] = scope.after;
+                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        }
+                    };
+
+                    scope.beforeChange = function() {
+                        if (scope.criteria[beforeName] != scope.before) {
+                            scope.criteria[beforeName] = scope.before;
+                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        }
+                    };
+
+                    scope.today = function() {
+                        scope.dt = new Date();
+                    };
+                    scope.today();
+
+                    scope['show-weeks'] = false;
+                    scope.toggleWeeks = function () {
+                        scope.showWeeks = ! scope.showWeeks;
+                    };
+
+                    scope.clear = function () {
+                        scope.dt = null;
+                        scope.after = null;
+                        scope.before = null;
+                        scope.criteria[afterName] = null;
+                        scope.criteria[beforeName] = null;
+                    };
+
+//                    // Disable weekend selection
+//                    scope.disabled = function(date, mode) {
+//                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
+//                    };
+
+                    scope.toggleMin = function() {
+                        scope.minDate = ( scope.minDate ) ? null : new Date();
+                    };
+//                    scope.toggleMin();
+
+                    scope.afterOpen = function($event) {
+                        $event.preventDefault();
+                        $event.stopPropagation();
+                        scope.afterOpened = true;
+                    };
+
+                    scope.beforeOpen = function($event) {
+                        $event.preventDefault();
+                        $event.stopPropagation();
+                        scope.beforeOpened = true;
+                    };
+
+                    scope.dateOptions = {
+                        'year-format': "'yy'",
+                        'show-weeks': false,
+                        'starting-day': 0
+                    };
+
+                    scope.$on('wfEvent:clear-filters', function() {
+                        scope.after = null;
+                        scope.before = null;
+                        var didClear = false;
+
+                        if (scope.criteria[beforeName] != null) {
+                            delete scope.criteria[beforeName];
+                            didClear = true;
+                        }
+                        if (scope.criteria[afterName] != null) {
+                            delete scope.criteria[afterName];
+                            didClear = true;
+                        }
+
+                        if (didClear)
+                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+
+                        scope.isFiltering = false;
+                    });
+                }
+            }
+        }
+    ])
     .directive('wfField', ['personService',
         function(personService) {
             return {
@@ -1239,189 +1342,6 @@ angular.module('wf.directives',
             }
         }
     ])
-//    .directive('wfSearchbar', ['$window', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
-//        function($window, attachmentService, dialogs, notificationService, taskService, wizardService) {
-//            return {
-//                restrict: 'AE',
-//                scope: {
-//
-//                },
-//                templateUrl: 'templates/searchbar.html',
-//                link: function (scope, element) {
-//                    if (typeof(scope.selectedFormMap) === 'undefined')
-//                        scope.selectedFormMap = {};
-//                    scope.context = $window.piecework.context;
-//                    scope.state = new Object();
-//                    scope.state.isCollapsed = false;
-//                    scope.state.toggleCollapse = function() {
-//                        scope.state.isCollapsed = !scope.state.isCollapsed;
-//                    };
-//
-//                    scope.dates = new Object();
-//                    scope.dates.selectedDateRangeKey = 'any';
-//                    scope.dates.dateRangeKeys = ['any', '1-hour', '1-day', '1-week', '1-month', '1-year', 'custom'];
-//                    scope.dates.dateRanges = {
-//                        'any' : 'Any date',
-//                        '1-hour' : 'Past 1 hour',
-//                        '1-day' : 'Past 1 day',
-//                        '1-week' : 'Past 1 week',
-//                        '1-month' : 'Past 1 month',
-//                        '1-year' : 'Past 1 year',
-//                        'custom' : 'Custom date range'
-//                    };
-//                    scope.dates.isNonCustomDateRange = function() {
-//                        return scope.dates.selectedDateRangeKey != 'custom';
-//                    };
-//                    scope.dates.refreshCustomDate = function() {
-//                        scope.criteria.startedAfter = scope.dates.customStartedAfter;
-//                        scope.criteria.startedBefore = scope.dates.customStartedBefore;
-//                        scope.refreshSearch();
-//                    };
-//                    scope.dates.selectDateRange = function(dateRangeKey) {
-//                        scope.dates.selectedDateRangeKey = dateRangeKey;
-//                        scope.criteria.startedAfter = null;
-//                        scope.criteria.startedBefore = null;
-//                        if (dateRangeKey == '1-hour') {
-//                            scope.criteria.startedAfter = moment().subtract('hours', 1).toISOString();
-//                        } else if (dateRangeKey == '1-day') {
-//                            scope.criteria.startedAfter = moment().subtract('days', 1).toISOString();
-//                        } else if (dateRangeKey == '1-week') {
-//                            scope.criteria.startedAfter = moment().subtract('weeks', 1).toISOString();
-//                        } else if (dateRangeKey == '1-month') {
-//                            scope.criteria.startedAfter = moment().subtract('months', 1).toISOString();
-//                        } else if (dateRangeKey == '1-year') {
-//                            scope.criteria.startedAfter = moment().subtract('years', 1).toISOString();
-//                        } else if (dateRangeKey == 'custom') {
-//                            scope.dates.customStartedAfter = moment().subtract('years', 1).format('YYYY-MM-DDTHH:mm:ss.00');
-//                            scope.dates.customStartedBefore = moment().format('YYYY-MM-DDTHH:mm:ss.00');
-//                        }
-//                        if (dateRangeKey != 'custom')
-//                            scope.refreshSearch();
-//                    };
-//                    scope.dates.showNonCustomDateRange = function() {
-//                        var selectedKey = scope.dates.selectedDateRangeKey;
-//                        return scope.dates.dateRanges[selectedKey];
-//                    };
-//                    scope.criteria = new Object();
-//                    scope.criteria.processDefinitionKey = '';
-//                    scope.criteria.processStatus = 'open';
-//                    scope.criteria.taskStatus = 'all';
-//                    scope.criteria.orderBy = 'START_TIME_ASC';
-//
-//                    scope.exportCsv = function(selectedForms) {
-//                        var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.criteria.processDefinitionKey;
-//                        if (scope.criteria.startedAfter != null)
-//                            url += '&startedAfter=' + scope.criteria.startedAfter;
-//                        if (scope.criteria.startedBefore != null)
-//                            url += '&startedBefore=' + scope.criteria.startedBefore;
-//                        $window.location.href = url;
-//                    };
-//
-//                    scope.processStatusDescription = {
-//                        'open': 'Active',
-//                        'complete': 'Completed',
-//                        'cancelled': 'Cancelled',
-//                        'suspended': 'Suspended',
-//                        'queued': 'Queued',
-//                        'all': 'Any status'
-//                    };
-//                    scope.taskStatusDescription = {
-//                        'Open': 'Open tasks',
-//                        'Complete': 'Completed tasks',
-//                        'Cancelled': 'Cancelled tasks',
-//                        'Rejected': 'Rejected tasks',
-//                        'Suspended': 'Suspended tasks',
-//                        'all': 'All tasks'
-//                    };
-//
-//                    scope.showReportPanel = function() {
-//
-//                    };
-//
-//                    scope.getFormsSelected = function(taskStatuses) {
-//                        var formIds = Object.keys(scope.selectedFormMap);
-//                        var selectedForms = new Array();
-//                        var acceptableTaskStatuses = new Object();
-//                        angular.forEach(taskStatuses, function(taskStatus) {
-//                            acceptableTaskStatuses[taskStatus] = true;
-//                        });
-//                        angular.forEach(formIds, function(formId) {
-//                            var form = scope.selectedFormMap[formId];
-//                            if (typeof(form) !== 'undefined' && form != null && form.task != null) {
-//                                if (typeof(taskStatuses) === 'undefined' || taskStatuses == null ||
-//                                    acceptableTaskStatuses[form.task.taskStatus] != null)
-//                                    selectedForms.push(form);
-//                            }
-//                        });
-//                        return selectedForms;
-//                    };
-//
-//                    scope.isSingleFormSelected = function(taskStatuses) {
-//                        if (typeof(taskStatuses) !== 'undefined' && taskStatuses != null) {
-//                            var selectedForms = scope.getFormsSelected(taskStatuses);
-//                            return selectedForms.length === 1;
-//                        }
-//
-//                        return Object.keys(scope.selectedFormMap).length === 1;
-//                    };
-//
-//                    scope.isFormSelected = function(taskStatuses) {
-//                        if (typeof(taskStatuses) !== 'undefined' && taskStatuses != null) {
-//                            var selectedForms = scope.getFormsSelected(taskStatuses);
-//                            return selectedForms.length !== 0;
-//                        }
-//
-//                        return Object.keys(scope.selectedFormMap).length !== 0;
-//                    };
-//
-//                    scope.isSingleProcessSelected = function() {
-//                        return scope.criteria.processDefinitionKey != null && scope.criteria.processDefinitionKey != '';
-//                    };
-//
-//                    scope.isSingleProcessSelectable = function() {
-//                        return typeof(scope.definitions) !== 'undefined' && scope.definitions.length == 1;
-//                    };
-//
-//                    scope.$on('wfEvent:change-selection', function(event, selectedFormMap) {
-//                        scope.selectedFormMap = selectedFormMap;
-//                    });
-//
-//                    scope.$on('wfEvent:found', function(event, results) {
-//                        scope.searching = false;
-//                        scope.definitions = results.definitions;
-//                        scope.selectedFormMap = {};
-//                        scope.$root.currentUser = results.currentUser;
-//                        scope.processDefinitionDescription = new Object();
-//                        angular.forEach(results.definitions, function(definition) {
-//                            scope.processDefinitionDescription[definition.task.processDefinitionKey] = definition.task.processDefinitionLabel;
-//                        });
-//                        if (results.definitions != null && results.definitions.length == 1)
-//                            scope.criteria.processDefinitionKey = results.definitions[0].task.processDefinitionKey;
-//                        scope.processDefinitionDescription[''] = 'Any process';
-//                    });
-//                    scope.$on('wfEvent:search', function(event, criteria) {
-//                        scope.searching = true;
-//                    });
-//
-//                    scope.dialogs = dialogs;
-//
-//                    scope.refreshSearch = function() {
-//                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
-//                    };
-//
-//                    scope.model = $window.piecework.model;
-//                    if (typeof(scope.model) !== 'undefined' && typeof(scope.model.total) !== 'undefined') {
-//                        scope.$on('wfEvent:results-linked', function(event) {
-//                           scope.$root.$broadcast('wfEvent:found', scope.model);
-//                           delete $window.piecework['model'];
-//                        });
-//                    } else {
-//                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
-//                    }
-//                }
-//            }
-//        }
-//    ])
      .directive('wfSearchResponse', ['$filter', '$resource', 'attachmentService', 'dialogs', 'localStorageService', 'notificationService', 'taskService', 'wizardService',
         function($filter, $resource, attachmentService, dialogs, localStorageService, notificationService, taskService, wizardService) {
             return {
@@ -1474,22 +1394,10 @@ angular.module('wf.directives',
 //                    $('.wf-filter').hide();
                     scope.dialogs = dialogs;
                     scope.isFiltering = false;
-                    scope.clearAllFilters = function() {
-                        var didClear = false;
-                        angular.forEach(scope.facets, function(facet) {
-                            if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '') {
-                                scope.criteria[facet.name] = '';
-                                didClear = true;
-                            }
-                        });
-                        if (didClear)
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        scope.isFiltering = false;
-                    };
                     scope.clearFilter = function(facet) {
-                        scope.criteria[facet.name] = '';
+                        delete scope.criteria[facet.name];
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        scope.isFiltering = false;
+//                        scope.isFiltering = false;
                     };
                     scope.doFilter = function() {
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
@@ -1505,7 +1413,7 @@ angular.module('wf.directives',
                         var filterValue = scope.criteria[facet.name];
                         return typeof(filterValue) !== 'undefined' && filterValue != null && filterValue != '' && filterValue.length > 0;
                     };
-                    scope.upFilterKeyUp = function(facet, event) {
+                    scope.onFilterKeyUp = function(facet, event) {
                         if (event.keyCode == 27) {
                             scope.clearFilter(facet);
                             return;
@@ -1533,9 +1441,6 @@ angular.module('wf.directives',
                             return $filter('date')(form[facet.name], 'MMM d, y H:mm');
                         if (facet.type == 'user')
                             return form[facet.name] != null ? form[facet.name].displayName : 'Nobody';
-//                        if (facet.name == 'processInstanceLabel')
-//                            return '<a href="' + form.link + '" target=\"_self\" rel=\"external\">' + form[facet.name] + '</a>';
-
                         if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '')
                             scope.isFiltering = true;
 
@@ -1587,13 +1492,25 @@ angular.module('wf.directives',
                     };
 
                     var SearchResponse = $resource('./form', {processStatus:'@processStatus'});
+                    scope.$on('wfEvent:clear-filters', function() {
+                        var didClear = false;
+                        angular.forEach(scope.facets, function(facet) {
+                            if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '') {
+                                delete scope.criteria[facet.name];
+                                didClear = true;
+                            }
+                        });
+                        if (didClear)
+                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        scope.isFiltering = false;
+                    });
                     scope.$on('wfEvent:columns-toggle', function(event) {
                         dialogs.openColumnsModal(scope.facets);
                     });
                     scope.$on('wfEvent:filter-toggle', function(event) {
                         scope.isFiltering = !scope.isFiltering;
                         if (!scope.isFiltering)
-                            scope.clearAllFilters();
+                            scope.$root.$broadcast('wfEvent:clear-filters');
                     });
                     scope.$on('wfEvent:facet-changed', function(event, facet) {
                         console.log("Storing facets");
@@ -1610,7 +1527,6 @@ angular.module('wf.directives',
                             scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
                         });
 
-                        //if (scope.facets == null) {
                         if (true) {
                             scope.selectedFormMap = new Object();
                             scope.criteria.sortBy = results.sortBy;
@@ -1659,6 +1575,30 @@ angular.module('wf.directives',
                         }
                         if (scope.criteria.keywords != null && typeof(scope.criteria.keywords) == 'string') {
                             scope.criteria.keyword = scope.criteria.keywords.split(' ');
+                        }
+                        if (scope.facets != null) {
+                            angular.forEach(scope.facets, function(facet) {
+                                var isFilteringThisFacet = false;
+                                if (facet.type == 'date') {
+                                    var afterName = facet.name + 'After';
+                                    var beforeName = facet.name + 'Before';
+                                    var afterCriterion = scope.criteria[afterName];
+                                    var beforeCriterion = scope.criteria[beforeName];
+                                    if (afterCriterion != null && afterCriterion != '')
+                                        isFilteringThisFacet = true;
+                                    else if (beforeCriterion != null && beforeCriterion != '')
+                                        isFilteringThisFacet = true;
+                                } else {
+                                    var criterion = scope.criteria[facet.name];
+                                    if (criterion != null && criterion != '')
+                                        isFilteringThisFacet = true;
+                                }
+
+                                if (isFilteringThisFacet) {
+                                    facet.selected = true;
+                                    scope.isFiltering = true;
+                                }
+                            });
                         }
                         SearchResponse.get(scope.criteria, scope.processSearchResults);
                     });
@@ -1732,51 +1672,51 @@ angular.module('wf.directives',
                     scope.processDefinitionDescription = new Object();
                     scope.processDefinitionDescription[''] = 'Any process';
 
-                    scope.dates = new Object();
-                    scope.dates.selectedDateRangeKey = 'any';
-                    scope.dates.dateRangeKeys = ['any', '1-hour', '1-day', '1-week', '1-month', '1-year', 'custom'];
-                    scope.dates.dateRanges = {
-                        'any' : 'Any date',
-                        '1-hour' : 'Past 1 hour',
-                        '1-day' : 'Past 1 day',
-                        '1-week' : 'Past 1 week',
-                        '1-month' : 'Past 1 month',
-                        '1-year' : 'Past 1 year',
-                        'custom' : 'Custom date range'
-                    };
-                    scope.dates.isNonCustomDateRange = function() {
-                        return scope.dates.selectedDateRangeKey != 'custom';
-                    };
-                    scope.dates.refreshCustomDate = function() {
-                        scope.criteria.startedAfter = scope.dates.customStartedAfter;
-                        scope.criteria.startedBefore = scope.dates.customStartedBefore;
-                        scope.refreshSearch();
-                    };
-                    scope.dates.selectDateRange = function(dateRangeKey) {
-                        scope.dates.selectedDateRangeKey = dateRangeKey;
-                        scope.criteria.startedAfter = null;
-                        scope.criteria.startedBefore = null;
-                        if (dateRangeKey == '1-hour') {
-                            scope.criteria.startedAfter = moment().subtract('hours', 1).toISOString();
-                        } else if (dateRangeKey == '1-day') {
-                            scope.criteria.startedAfter = moment().subtract('days', 1).toISOString();
-                        } else if (dateRangeKey == '1-week') {
-                            scope.criteria.startedAfter = moment().subtract('weeks', 1).toISOString();
-                        } else if (dateRangeKey == '1-month') {
-                            scope.criteria.startedAfter = moment().subtract('months', 1).toISOString();
-                        } else if (dateRangeKey == '1-year') {
-                            scope.criteria.startedAfter = moment().subtract('years', 1).toISOString();
-                        } else if (dateRangeKey == 'custom') {
-                            scope.dates.customStartedAfter = moment().subtract('years', 1).format('YYYY-MM-DDTHH:mm:ss.00');
-                            scope.dates.customStartedBefore = moment().format('YYYY-MM-DDTHH:mm:ss.00');
-                        }
-                        if (dateRangeKey != 'custom')
-                            scope.refreshSearch();
-                    };
-                    scope.dates.showNonCustomDateRange = function() {
-                        var selectedKey = scope.dates.selectedDateRangeKey;
-                        return scope.dates.dateRanges[selectedKey];
-                    };
+//                    scope.dates = new Object();
+//                    scope.dates.selectedDateRangeKey = 'any';
+//                    scope.dates.dateRangeKeys = ['any', '1-hour', '1-day', '1-week', '1-month', '1-year', 'custom'];
+//                    scope.dates.dateRanges = {
+//                        'any' : 'Any date',
+//                        '1-hour' : 'Past 1 hour',
+//                        '1-day' : 'Past 1 day',
+//                        '1-week' : 'Past 1 week',
+//                        '1-month' : 'Past 1 month',
+//                        '1-year' : 'Past 1 year',
+//                        'custom' : 'Custom date range'
+//                    };
+//                    scope.dates.isNonCustomDateRange = function() {
+//                        return scope.dates.selectedDateRangeKey != 'custom';
+//                    };
+//                    scope.dates.refreshCustomDate = function() {
+//                        scope.criteria.startedAfter = scope.dates.customStartedAfter;
+//                        scope.criteria.startedBefore = scope.dates.customStartedBefore;
+//                        scope.refreshSearch();
+//                    };
+//                    scope.dates.selectDateRange = function(dateRangeKey) {
+//                        scope.dates.selectedDateRangeKey = dateRangeKey;
+//                        scope.criteria.startedAfter = null;
+//                        scope.criteria.startedBefore = null;
+//                        if (dateRangeKey == '1-hour') {
+//                            scope.criteria.startedAfter = moment().subtract('hours', 1).toISOString();
+//                        } else if (dateRangeKey == '1-day') {
+//                            scope.criteria.startedAfter = moment().subtract('days', 1).toISOString();
+//                        } else if (dateRangeKey == '1-week') {
+//                            scope.criteria.startedAfter = moment().subtract('weeks', 1).toISOString();
+//                        } else if (dateRangeKey == '1-month') {
+//                            scope.criteria.startedAfter = moment().subtract('months', 1).toISOString();
+//                        } else if (dateRangeKey == '1-year') {
+//                            scope.criteria.startedAfter = moment().subtract('years', 1).toISOString();
+//                        } else if (dateRangeKey == 'custom') {
+//                            scope.dates.customStartedAfter = moment().subtract('years', 1).format('YYYY-MM-DDTHH:mm:ss.00');
+//                            scope.dates.customStartedBefore = moment().format('YYYY-MM-DDTHH:mm:ss.00');
+//                        }
+//                        if (dateRangeKey != 'custom')
+//                            scope.refreshSearch();
+//                    };
+//                    scope.dates.showNonCustomDateRange = function() {
+//                        var selectedKey = scope.dates.selectedDateRangeKey;
+//                        return scope.dates.dateRanges[selectedKey];
+//                    };
 
                     scope.criteria = localStorageService.get("criteria");
                     if (scope.criteria == null) {
@@ -1896,7 +1836,11 @@ angular.module('wf.directives',
 
                     scope.dialogs = dialogs;
 
-                    scope.onSearchKeyUp = function() {
+                    scope.onSearchKeyUp = function(event) {
+                        if (event.keyCode == 27) {
+                            scope.clearSearch();
+                            return;
+                        }
                         if (scope.searchTimeout != null)
                             clearTimeout(scope.refreshSearch);
                         scope.searchTimeout = setTimeout(scope.refreshSearch, 300);

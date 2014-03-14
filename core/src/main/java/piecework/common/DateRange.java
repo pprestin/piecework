@@ -13,23 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package piecework.model;
+package piecework.common;
 
 /**
  * @author James Renfro
  */
-public class DataSearchFacet extends SearchFacet {
+public class DateRange {
 
-    public DataSearchFacet() {
-        this(null, null, null);
+    private String after;
+    private String before;
+
+    public DateRange() {
+
     }
 
-    public DataSearchFacet(String name, String label) {
-        this(name, label, "string");
+    public String getAfter() {
+        return after;
     }
 
-    public DataSearchFacet(String name, String label, String type) {
-        super("data." + name + ".value", name, label, type, false);
+    public void setAfter(String after) {
+        if (after.contains("\""))
+            after = after.replaceAll("\"", "");
+        this.after = after;
     }
 
+    public String getBefore() {
+        return before;
+    }
+
+    public void setBefore(String before) {
+        if (before.contains("\""))
+            before = before.replaceAll("\"", "");
+        this.before = before;
+    }
 }
