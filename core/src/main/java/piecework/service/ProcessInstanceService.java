@@ -49,6 +49,7 @@ import piecework.security.concrete.PassthroughSanitizer;
 import piecework.security.data.DataFilterService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.util.ExportUtility;
+import piecework.util.SearchUtility;
 import piecework.validation.ValidationFactory;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -170,7 +171,7 @@ public class ProcessInstanceService {
                 new SearchCriteria.Builder(rawQueryParameters, allowedProcesses, FacetFactory.facetMap(allowedProcesses), sanitizer);
 
         executionCriteriaBuilder.processStatus(Constants.ProcessStatuses.ALL);
-        executionCriteriaBuilder.maxResults(50000);
+        executionCriteriaBuilder.pageSize(50000);
 
         if (!allowedProcesses.isEmpty()) {
             Map<String, Process> allowedProcessMap = new HashMap<String, Process>();
@@ -225,19 +226,16 @@ public class ProcessInstanceService {
                     resultsBuilder.definition(new Process.Builder(allowedProcess, new PassthroughSanitizer()).build(context));
                 }
             }
-            SearchCriteria executionCriteria = executionCriteriaBuilder.build();
+            SearchCriteria searchCriteria = executionCriteriaBuilder.build();
 
-            if (executionCriteria.getSanitizedParameters() != null) {
-                for (Map.Entry<String, List<String>> entry : executionCriteria.getSanitizedParameters().entrySet()) {
+            if (searchCriteria.getSanitizedParameters() != null) {
+                for (Map.Entry<String, List<String>> entry : searchCriteria.getSanitizedParameters().entrySet()) {
                     resultsBuilder.parameter(entry.getKey(), entry.getValue());
                 }
             }
 
-            int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
-            int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
-
-            Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort(sanitizer));
-            Page<ProcessInstance> page = processInstanceRepository.findByCriteria(processDefinitionKeys, executionCriteria, pageable, sanitizer);
+            Pageable pageable = SearchUtility.pageable(searchCriteria, sanitizer);
+            Page<ProcessInstance> page = processInstanceRepository.findByCriteria(processDefinitionKeys, searchCriteria, pageable, sanitizer);
 
             if (page.hasContent()) {
                 for (ProcessInstance instance : page.getContent()) {

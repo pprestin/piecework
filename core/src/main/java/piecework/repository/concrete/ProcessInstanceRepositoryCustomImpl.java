@@ -68,8 +68,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
     public Page<ProcessInstance> findByCriteria(Set<String> processDefinitionKeys, SearchCriteria criteria, Pageable pageable, Sanitizer sanitizer) {
         // Otherwise, look up all instances that match the query
         Query query = new SearchQueryBuilder(criteria).build(processDefinitionKeys, sanitizer);
-        query.skip(pageable.getOffset());
-        query.limit(pageable.getPageSize());
+//        query.skip(pageable.getOffset());
+//        query.limit(pageable.getPageSize());
 
 //        org.springframework.data.mongodb.core.query.Field field = query.fields();
 
@@ -77,7 +77,7 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
 //        if (! criteria.isIncludeVariables())
 //            field.exclude("data");
 
-        return findByQuery(query, pageable);
+        return findByQuery(query, pageable, true);
     }
 
     @Override
@@ -93,24 +93,26 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
 //        if (! criteria.isIncludeVariables())
         field.exclude("data");
 
-        return findByQuery(query, pageable);
+        return findByQuery(query, pageable, true);
     }
 
     @Override
-    public Page<ProcessInstance> findByQuery(Query query, Pageable request) {
+    public Page<ProcessInstance> findByQuery(Query query, Pageable request, boolean includeTotal) {
         long start = 0;
         if (LOG.isDebugEnabled())
             start = System.currentTimeMillis();
 
-        List<ProcessInstance> processInstances = mongoOperations.find(query, ProcessInstance.class);
+        List<ProcessInstance> processInstances = mongoOperations.find(query.with(request), ProcessInstance.class);
 
         long total = 0;
 
         // We only need to look up a total if we're not on the first page or the page is full
-        if (query.getSkip() > 0 || processInstances.size() == query.getLimit())
-            total = mongoOperations.count(query, ProcessInstance.class);
-        else
-            total = processInstances.size();
+        if (includeTotal) {
+            if (query.getSkip() > 0 || processInstances.size() == query.getLimit())
+                total = mongoOperations.count(query, ProcessInstance.class);
+            else
+                total = processInstances.size();
+        }
 
         Page<ProcessInstance> page = new PageImpl<ProcessInstance>(processInstances, request, total);
         if (LOG.isDebugEnabled())

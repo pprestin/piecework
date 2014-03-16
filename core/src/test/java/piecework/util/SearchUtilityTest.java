@@ -55,12 +55,12 @@ public class SearchUtilityTest {
     public void verifyPageable() {
         SearchCriteria criteria = new SearchCriteria.Builder()
                 .sortBy(new FacetSort(new SearchFacet("startTime", "startTime", "Start Time", "date", true), "desc"))
-                .firstResult(10)
-                .maxResults(30)
+                .page(2)
+                .pageSize(30)
                 .build();
 
         Pageable pageable = SearchUtility.pageable(criteria, new PassthroughSanitizer());
-        Assert.assertEquals(300, pageable.getOffset());
+        Assert.assertEquals(60, pageable.getOffset());
         Assert.assertEquals(30, pageable.getPageSize());
         Assert.assertEquals("startTime: DESC", pageable.getSort().toString());
     }

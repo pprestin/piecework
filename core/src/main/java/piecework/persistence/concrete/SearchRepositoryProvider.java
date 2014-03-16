@@ -20,8 +20,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.cache.Cache;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Query;
 import piecework.Constants;
 import piecework.authorization.AuthorizationRole;
 import piecework.common.*;
@@ -94,7 +96,7 @@ public class SearchRepositoryProvider implements SearchProvider {
     }
 
     @Override
-    public SearchResponse forms(SearchCriteria criteria, ViewContext context) throws PieceworkException {
+    public SearchResponse forms(SearchCriteria criteria, ViewContext context, boolean excludeData) throws PieceworkException {
         long time = 0;
         if (LOG.isDebugEnabled())
             time = System.currentTimeMillis();
@@ -105,19 +107,17 @@ public class SearchRepositoryProvider implements SearchProvider {
         Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
         Set<piecework.model.Process> allowedProcesses = processes(allProcessDefinitionKeys);
 
-        Pageable pageable = SearchUtility.pageable(criteria, sanitizer);
 
-        TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, true, false);
-        TaskPageHandler pageHandler = new TaskPageHandler(criteria, taskFilter, sanitizer, context){
 
-            @Override
-            protected Map<String, User> getUserMap(Set<String> userIds) {
-                return identityService.findUsers(userIds);
-            }
-
-        };
-
-        Page<ProcessInstance> page = instanceRepository.findByCriteria(allProcessDefinitionKeys, criteria, pageable, sanitizer);
+//        TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, true, false);
+//        TaskPageHandler pageHandler = new TaskPageHandler(criteria, taskFilter, sanitizer, context){
+//
+//            @Override
+//            protected Map<String, User> getUserMap(Set<String> userIds) {
+//                return identityService.findUsers(userIds);
+//            }
+//
+//        };
 
         SearchResponse response = new SearchResponse();
 
@@ -178,8 +178,6 @@ public class SearchRepositoryProvider implements SearchProvider {
             }
         }
 
-
-
         String processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;
         String taskStatus = criteria.getTaskStatus() != null ? sanitizer.sanitize(criteria.getTaskStatus()) : Constants.TaskStatuses.ALL;
 
@@ -191,120 +189,145 @@ public class SearchRepositoryProvider implements SearchProvider {
 
         Map<DataFilterFacet, String> filterFacetParameters = criteria.getFilterFacetParameters();
 
-        if (page.hasContent()) {
-            // Loop again through the list to get all user ids and build the intermediate object including
-            // task, instance, and deployment
-            for (ProcessInstance instance : page.getContent()) {
-                String processDefinitionKey = instance.getProcessDefinitionKey();
-                String processInstanceId = instance.getProcessInstanceId();
 
-                ProcessDeployment processDeployment = null;
+        if (!excludeData) {
+            Query query = new SearchQueryBuilder(criteria).build(allProcessDefinitionKeys, sanitizer);
 
-                Map<String, Object> instanceData = new HashMap<String, Object>();
+            int instancePageNumber = 0;
+            int instancePageSize = 1000;
+            Sort sort = SearchUtility.sort(criteria, sanitizer);
+            Pageable pageable = new PageRequest(instancePageNumber, instancePageSize, sort);
+            Page<ProcessInstance> page = instanceRepository.findByQuery(query, pageable, true);
 
-                instanceData.put("processInstanceId", processInstanceId);
-                instanceData.put("processInstanceLabel", instance.getProcessInstanceLabel());
-                instanceData.put("processDefinitionLabel", instance.getProcessDefinitionLabel());
-                instanceData.put("processStatus", instance.getProcessStatus());
-                instanceData.put("startTime", instance.getStartTime());
-                instanceData.put("lastModifiedTime", instance.getLastModifiedTime());
-                instanceData.put("endTime", instance.getEndTime());
+            Pageable taskPageable = new PageRequest(criteria.getPageNumber(), 200);
+            long total = page.getTotalElements();
+            long taskCounter = 0;
+            long instanceCounter = 0;
+            long start = taskPageable.getOffset();
+            long end = taskPageable.getOffset() + taskPageable.getPageSize();
 
-                String activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
-                String attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
-                String cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
-                String history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
-                String restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
-                String suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
-                String bucketUrl = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "value/Bucket");
+            while (instanceCounter < total  && page.hasContent()) {
+                // Loop again through the list to get all user ids and build the intermediate object including
+                // task, instance, and deployment
+                for (ProcessInstance instance : page.getContent()) {
+                    String processDefinitionKey = instance.getProcessDefinitionKey();
+                    String processInstanceId = instance.getProcessInstanceId();
 
-                instanceData.put("activation", activation);
-                instanceData.put("attachment", attachment);
-                instanceData.put("cancellation", cancellation);
-                instanceData.put("history", history);
-                instanceData.put("restart", restart);
-                instanceData.put("suspension", suspension);
-                instanceData.put("bucketUrl", bucketUrl);
+                    instanceCounter++;
 
-                Map<String, List<Value>> valueData = instance.getData();
-                if (valueData != null && !valueData.isEmpty()) {
-                    for (Facet facet : facets) {
-                        if (facet instanceof DataSearchFacet) {
-                            DataSearchFacet dataSearchFacet = DataSearchFacet.class.cast(facet);
-                            String name = dataSearchFacet.getName();
-                            String value = ProcessInstanceUtility.firstString(name, valueData);
-                            if (StringUtils.isNotEmpty(value))
-                                instanceData.put(name, value);
+                    ProcessDeployment processDeployment = null;
+
+                    Map<String, Object> instanceData = new HashMap<String, Object>();
+
+                    instanceData.put("processInstanceId", processInstanceId);
+                    instanceData.put("processInstanceLabel", instance.getProcessInstanceLabel());
+                    instanceData.put("processDefinitionLabel", instance.getProcessDefinitionLabel());
+                    instanceData.put("processStatus", instance.getProcessStatus());
+                    instanceData.put("startTime", instance.getStartTime());
+                    instanceData.put("lastModifiedTime", instance.getLastModifiedTime());
+                    instanceData.put("endTime", instance.getEndTime());
+
+                    String activation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "activation");
+                    String attachment = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, Attachment.Constants.ROOT_ELEMENT_NAME);
+                    String cancellation = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "cancellation");
+                    String history = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, History.Constants.ROOT_ELEMENT_NAME);
+                    String restart = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "restart");
+                    String suspension = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "suspension");
+                    String bucketUrl = context.getApplicationUri(ProcessInstance.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, processInstanceId, "value/Bucket");
+
+                    instanceData.put("activation", activation);
+                    instanceData.put("attachment", attachment);
+                    instanceData.put("cancellation", cancellation);
+                    instanceData.put("history", history);
+                    instanceData.put("restart", restart);
+                    instanceData.put("suspension", suspension);
+                    instanceData.put("bucketUrl", bucketUrl);
+
+                    Map<String, List<Value>> valueData = instance.getData();
+                    if (valueData != null && !valueData.isEmpty()) {
+                        for (Facet facet : facets) {
+                            if (facet instanceof DataSearchFacet) {
+                                DataSearchFacet dataSearchFacet = DataSearchFacet.class.cast(facet);
+                                String name = dataSearchFacet.getName();
+                                String value = ProcessInstanceUtility.firstString(name, valueData);
+                                if (StringUtils.isNotEmpty(value))
+                                    instanceData.put(name, value);
+                            }
+                        }
+                    }
+
+                    Set<Task> tasks = instance.getTasks();
+                    if (tasks != null && !tasks.isEmpty()) {
+                        for (Task task : tasks) {
+                            if (include(task, processStatus, taskStatus, overseerProcessDefinitionKeys, principal)) {
+                                if (taskCounter >= start && taskCounter < end) {
+                                    taskDeployments.add(new TaskDeployment(taskCounter, processDeployment, instance, task, instanceData));
+                                    userIds.addAll(task.getAssigneeAndCandidateAssigneeIds());
+                                }
+                                taskCounter++;
+                            }
                         }
                     }
                 }
 
-                Set<Task> tasks = instance.getTasks();
-                if (tasks != null && !tasks.isEmpty()) {
-                    for (Task task : tasks) {
-                        if (include(task, processStatus, taskStatus, overseerProcessDefinitionKeys, principal)) {
-                            taskDeployments.add(new TaskDeployment(processDeployment, instance, task, instanceData));
-                            userIds.addAll(task.getAssigneeAndCandidateAssigneeIds());
-                        }
-                    }
-                }
+                instancePageNumber++;
+                Pageable nextPage = new PageRequest(instancePageNumber, instancePageSize, sort);
+                page = instanceRepository.findByQuery(query, nextPage, false);
             }
 
-            Map<String, User> userMap = identityService.findUsers(userIds);
-
-            List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
-
-            for (TaskDeployment taskDeployment : taskDeployments) {
-                Map<String, Object> map = new HashMap<String, Object>();
-                Map<String, Object> instanceData = taskDeployment.getInstanceData();
-
-                if (instanceData != null && !instanceData.isEmpty())
-                    map.putAll(instanceData);
-
-                Task task = TaskFactory.task(taskDeployment.getTask(), new PassthroughSanitizer(), userMap, context);
-                String processDefinitionKey = task.getProcessDefinitionKey();
-
-                if (!include(task, filterFacetParameters))
-                    continue;
-
-                map.put("assignee", task.getAssignee());
-                map.put("candidateAssignees", task.getCandidateAssignees());
-
-                map.put("formInstanceId", task.getTaskInstanceId());
-                map.put("taskClaimTime", task.getClaimTime());
-                map.put("taskDueDate", task.getDueDate());
-                map.put("taskStartTime", task.getStartTime());
-                map.put("taskEndTime", task.getEndTime());
-                map.put("taskLabel", task.getTaskLabel());
-                map.put("taskDescription", task.getTaskDescription());
-                map.put("taskStatus", task.getTaskStatus());
-                map.put("active", task.isActive());
-
-                String assignment = context != null && task != null && task.getTaskInstanceId() != null ? context.getApplicationUri(Task.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, task.getTaskInstanceId(), "assign") : null;
-
-                map.put("assignment", assignment);
-                map.put("link", context != null ? context.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, processDefinitionKey) + "?taskId=" + task.getTaskInstanceId() : null);
-
-//                if (includeData) {
-//                    Set<Field> fields = SecurityUtility.fields(activity, createAction);
-//                    data = dataFilterService.unrestrictedInstanceData(instance, fields);
-//                }
-
-                data.add(map);
-            }
-            List<FacetSort> postQuerySortBy = criteria.getPostQuerySortBy();
-            if (postQuerySortBy != null && !postQuerySortBy.isEmpty()) {
-                Collections.reverse(postQuerySortBy);
-                for (FacetSort facetSort : postQuerySortBy) {
-                    Collections.sort(data, new DataFilterFacetComparator(facetSort.getFacet()));
-                    if (facetSort.getDirection().equals(Sort.Direction.ASC))
-                        Collections.reverse(data);
-                }
-            }
-
-            response.setData(data);
-            response.setTotal((int)page.getTotalElements());
+            response.setTotal((int)taskCounter);
+            response.setPageNumber(taskPageable.getPageNumber());
+            response.setPageSize(taskPageable.getPageSize());
         }
+
+        Map<String, User> userMap = identityService.findUsers(userIds);
+
+        List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
+
+        for (TaskDeployment taskDeployment : taskDeployments) {
+            Map<String, Object> map = new HashMap<String, Object>();
+            Map<String, Object> instanceData = taskDeployment.getInstanceData();
+
+            if (instanceData != null && !instanceData.isEmpty())
+                map.putAll(instanceData);
+
+            Task task = TaskFactory.task(taskDeployment.getTask(), new PassthroughSanitizer(), userMap, context);
+            String processDefinitionKey = task.getProcessDefinitionKey();
+
+            if (!include(task, filterFacetParameters))
+                continue;
+
+            map.put("itemNumber", taskDeployment.getItemNumber());
+            map.put("assignee", task.getAssignee());
+            map.put("candidateAssignees", task.getCandidateAssignees());
+
+            map.put("formInstanceId", task.getTaskInstanceId());
+            map.put("taskClaimTime", task.getClaimTime());
+            map.put("taskDueDate", task.getDueDate());
+            map.put("taskStartTime", task.getStartTime());
+            map.put("taskEndTime", task.getEndTime());
+            map.put("taskLabel", task.getTaskLabel());
+            map.put("taskDescription", task.getTaskDescription());
+            map.put("taskStatus", task.getTaskStatus());
+            map.put("active", task.isActive());
+
+            String assignment = context != null && task != null && task.getTaskInstanceId() != null ? context.getApplicationUri(Task.Constants.ROOT_ELEMENT_NAME, processDefinitionKey, task.getTaskInstanceId(), "assign") : null;
+
+            map.put("assignment", assignment);
+            map.put("link", context != null ? context.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, processDefinitionKey) + "?taskId=" + task.getTaskInstanceId() : null);
+            data.add(map);
+        }
+        List<FacetSort> postQuerySortBy = criteria.getPostQuerySortBy();
+        if (postQuerySortBy != null && !postQuerySortBy.isEmpty()) {
+            Collections.reverse(postQuerySortBy);
+            for (FacetSort facetSort : postQuerySortBy) {
+                Collections.sort(data, new DataFilterFacetComparator(facetSort.getFacet()));
+                if (facetSort.getDirection().equals(Sort.Direction.ASC))
+                    Collections.reverse(data);
+            }
+        }
+
+        response.setData(data);
 
         List<FacetSort> facetSortList = criteria.getSortBy();
         List<String> sortBy = new ArrayList<String>();

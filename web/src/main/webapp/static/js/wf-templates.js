@@ -839,35 +839,52 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
 //    '<input size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" is-open="beforeOpened" min="beforeMinDate" datepicker-options="dateOptions" date-disabled="beforeDisabled(date, mode)" ng-required="true" close-text="Close" placeholder="Before"/> ' +
     '');
   $templateCache.put("templates/searchresponse.html",
-    "<h2 data-ng-bind=\"isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : ''\"></h2>\n" +
-    "        <table class=\"search-results table table-hover\">\n" +
-    "            <thead>\n" +
-    "            <tr>" +
-    "               <th><input data-ng-click=\"selectAllForms(forms)\" data-ng-checked=\"allChecked\" type=\"checkbox\" class=\"result-checkbox\"/></th>\n" +
-    "               <th data-ng-show=\"facet.selected\" data-ng-class=\"facet.required ? '' : 'hidden-sm hidden-xs'\" data-ng-repeat=\"facet in facets\" style=\"white-space:nowrap\">" +
-    "                   <div data-ng-class=\"facet.type !== 'date' ? 'has-feedback' : ''\" class=\"form-group\">\n" +
-    "                       <label class=\"control-label\"><a href=\"#\" data-ng-click=\"doSort(facet)\"><b>{{facet.label}}</b> <i data-ng-show=\"isSorting(facet)\" data-ng-class=\"facet.direction == 'asc' ? 'fa-caret-up' : 'fa-caret-down'\" class=\"fa\"></i></a></label>\n" +
+    '       <div class="pull-right">{{paging.total}} task{{paging.total != 1 ? \'s\' : \'\'}}</div>' +
+    '       <h2 data-ng-bind="isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : \'&nbsp;\'"></h2>\n' +
+    '       <table class="table table-hover">\n' +
+    '            <thead>\n' +
+    '            <tr>' +
+    '               <th><input data-ng-click="selectAllForms(forms)" data-ng-checked="allChecked" type="checkbox" class="result-checkbox"/></th>\n' +
+//    '               <th class="text-muted"></th>' +
+    '               <th data-ng-show="facet.selected" data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in facets" style="white-space:nowrap">' +
+    '                   <div data-ng-class="facet.type !== \'date\' ? \'has-feedback\' : \'\'" class="form-group">\n' +
+    '                       <label class="control-label"><a href="#" data-ng-click="doSort(facet)"><b>{{facet.label}}</b> <i data-ng-show="isSorting(facet)" data-ng-class="facet.direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>\n' +
     '                       <div data-ng-show="isFiltering" class="wf-filter">' +
     '                           <div data-ng-show="facet.type == \'date\'"> ' +
     '                               <div data-wf-date-range data-name="facet.name" data-criteria="criteria" />' +
     '                           </div> ' +
-    "                           <input data-ng-keyup=\"onFilterKeyUp(facet, $event)\" data-ng-hide=\"facet.type == 'date'\" data-ng-model=\"criteria[facet.name]\" autocomplete=\"off\" type=\"text\" class=\"form-control input-sm natural\" placeholder=\"{{facet.label}}\">\n" +
-    "                           <span data-ng-click=\"clearFilter(facet)\" data-ng-show=\"hasFilter(facet)\" aria-hidden=\"true\" class=\"form-control-feedback\"><i class=\"fa fa-times-circle text-muted\"></i></span>\n" +
-    "                       </div>" +
-    "                   </div>" +
-    "               </th>" +
-    "            </tr>\n" +
-    "            </thead>\n" +
-    "            <tbody>\n" +
-    "            <tr data-ng-repeat=\"form in forms\">\n" +
-    "                <td><input data-ng-click=\"selectForm(form)\" data-ng-checked=\"form.checked\" type=\"checkbox\" class=\"result-checkbox\"/></td>\n" +
-    "                <td data-ng-class=\"facet.required ? '' : 'hidden-sm hidden-xs'\" data-ng-show=\"facet.selected\" data-ng-repeat=\"facet in facets\">" +
-    "                   <span data-ng-show=\"facet.link\"><a href=\"{{form.link}}\" target=\"_self\" rel=\"external\">{{getFacetValue(form, facet)}}</a></span>" +
-    "                   <span data-ng-hide=\"facet.link\">{{getFacetValue(form, facet)}}</span>" +
-    "                </td>" +
-    "            </tr>\n" +
-    "            </tbody>\n" +
-    "        </table>");
+    '                           <input data-ng-keyup="onFilterKeyUp(facet, $event)" data-ng-hide="facet.type == \'date\'" data-ng-model="criteria[facet.name]" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="{{facet.label}}">\n' +
+    '                           <span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+    '                       </div>' +
+    '                   </div>' +
+    '               </th>' +
+    '            </tr>\n' +
+    '            </thead>\n' +
+    '            <tbody>\n' +
+    '            <tr data-ng-repeat="form in forms">\n' +
+    '                <td><input data-ng-click="selectForm(form)" data-ng-checked="form.checked" type="checkbox" class="result-checkbox"/></td>\n' +
+//    '                <td class="text-muted">{{form.itemNumber}}</td>' +
+    '                <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-show="facet.selected" data-ng-repeat="facet in facets">' +
+    '                   <span data-ng-show="facet.link"><a href="{{form.link}}" target="_self" rel="external">{{getFacetValue(form, facet)}}</a></span>' +
+    '                   <span data-ng-hide="facet.link">{{getFacetValue(form, facet)}}</span>' +
+    '                </td>' +
+    '            </tr>\n' +
+    '            </tbody>' +
+    '           \n' +
+    '       </table>' +
+    '       <ul data-ng-show="paging.required" class="pagination pull-right"> ' +
+    '           <li><a data-ng-click="paging.previousPage()">&larr; Previous</a></li> ' +
+    '           <li data-ng-class="pageNumber == paging.pageNumber ? \'active\' : \'\'" data-ng-repeat="pageNumber in paging.pageNumbers"><a data-ng-click="paging.toPage(pageNumber)">{{pageNumber}}</a></li> ' +
+    '           <li><a data-ng-click="paging.nextPage()">Next &rarr;</a></li> ' +
+    '       </ul>' +
+
+//    '       <select data-ng-model="paging.pageSize" data-ng-change="paging.changePageSize($event)" class="form-control">' +
+//    '           <option value="10">10</option>' +
+//    '           <option value="100">100</option>' +
+//    '           <option value="1000">1000</option>' +
+//    '           <option value="10000">10,000</option>' +
+//    '       </select>'
+    '');
 
 //  $templateCache.put("templates/searchresults.html",
 //    "<h2 data-ng-bind=\"isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : 'Tasks'\"></h2>\n" +

@@ -1351,48 +1351,68 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/searchresponse.html',
                 link: function (scope, element) {
-                    scope.today = function() {
-                        scope.dt = new Date();
-                    };
-                    scope.today();
-
-                    scope.showWeeks = false;
-                    scope.toggleWeeks = function () {
-                        scope.showWeeks = ! scope.showWeeks;
-                    };
-
-                    scope.clear = function () {
-                        scope.dt = null;
-                    };
-
-//                    // Disable weekend selection
-//                    scope.disabled = function(date, mode) {
-//                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
+//                    scope.today = function() {
+//                        scope.dt = new Date();
 //                    };
-
-                    scope.toggleMin = function() {
-                        scope.minDate = ( scope.minDate ) ? null : new Date();
-                    };
-//                    scope.toggleMin();
-
-                    scope.open = function($event) {
-                        $event.preventDefault();
-                        $event.stopPropagation();
-
-                        scope.opened = true;
-                    };
-
-                    scope.dateOptions = {
-                        'year-format': "'yy'",
-                        'show-weeks': false,
-                        'starting-day': 0
-                    };
+//                    scope.today();
+//
+//                    scope.showWeeks = false;
+//                    scope.toggleWeeks = function () {
+//                        scope.showWeeks = ! scope.showWeeks;
+//                    };
+//
+//                    scope.clear = function () {
+//                        scope.dt = null;
+//                    };
+//
+////                    // Disable weekend selection
+////                    scope.disabled = function(date, mode) {
+////                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
+////                    };
+//
+//                    scope.toggleMin = function() {
+//                        scope.minDate = ( scope.minDate ) ? null : new Date();
+//                    };
+////                    scope.toggleMin();
+//
+//                    scope.open = function($event) {
+//                        $event.preventDefault();
+//                        $event.stopPropagation();
+//
+//                        scope.opened = true;
+//                    };
+//
+//                    scope.dateOptions = {
+//                        'year-format': "'yy'",
+//                        'show-weeks': false,
+//                        'starting-day': 0
+//                    };
 
                     if (typeof(scope.criteria) === 'undefined')
                        scope.criteria = {};
 
 //                    $('.wf-filter').hide();
                     scope.dialogs = dialogs;
+
+                    scope.paging = {};
+                    scope.paging.pageNumbers = [1,2,3,4,5];
+                    scope.paging.changePageSize = function(event) {
+                        scope.criteria.pageSize = scope.paging.pageSize;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+                    scope.paging.previousPage = function() {
+                        scope.criteria.pageNumber = scope.paging.pageNumber >= 2 ? scope.paging.pageNumber - 2 : 0;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+                    scope.paging.toPage = function(pageNumber) {
+                        scope.criteria.pageNumber = pageNumber - 1;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+                    scope.paging.nextPage = function() {
+                        scope.criteria.pageNumber = scope.paging.pageNumber;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+
                     scope.isFiltering = false;
                     scope.clearFilter = function(facet) {
                         delete scope.criteria[facet.name];
@@ -1519,6 +1539,17 @@ angular.module('wf.directives',
                     });
                     scope.$on('wfEvent:found', function(event, results) {
                         scope.forms = results.data;
+                        scope.paging.total = results.total;
+                        scope.paging.pageNumber = results.pageNumber + 1;
+                        scope.paging.pageSize = results.pageSize;
+
+                        scope.paging.required = (scope.paging.pageNumber > 1 || scope.paging.total > scope.paging.pageSize);
+
+                        scope.paging.pageNumbers = [];
+                        var numberOfPages = scope.paging.total / scope.paging.pageSize + 1;
+                        for (var i=1;i<=numberOfPages;i++) {
+                            scope.paging.pageNumbers.push(i);
+                        }
 
                         if (scope.processDefinitionDescription == null)
                             scope.processDefinitionDescription = {};

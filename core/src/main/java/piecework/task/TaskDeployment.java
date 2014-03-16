@@ -26,23 +26,30 @@ import java.util.Map;
  */
 public class TaskDeployment {
 
+    private final long itemNumber;
     private final ProcessDeployment deployment;
     private final ProcessInstance instance;
     private final Task task;
     private final Map<String, Object> instanceData;
 
-    public TaskDeployment(ProcessDeployment deployment, ProcessInstance instance, Task task) {
+    public TaskDeployment(long itemNumber, ProcessDeployment deployment, ProcessInstance instance, Task task) {
+        this.itemNumber = itemNumber+1;
         this.deployment = deployment;
         this.instance = instance;
         this.task = task;
         this.instanceData = null;
     }
 
-    public TaskDeployment(ProcessDeployment deployment, ProcessInstance instance, Task task, Map<String, Object> instanceData) {
+    public TaskDeployment(long itemNumber, ProcessDeployment deployment, ProcessInstance instance, Task task, Map<String, Object> instanceData) {
+        this.itemNumber = itemNumber+1;
         this.deployment = deployment;
         this.instance = instance;
         this.task = task;
         this.instanceData = instanceData;
+    }
+
+    public long getItemNumber() {
+        return itemNumber;
     }
 
     public ProcessDeployment getDeployment() {

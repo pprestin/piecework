@@ -680,21 +680,21 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
         List<String> executionIds = criteria.getExecutionIds();
         if (executionIds != null && !executionIds.isEmpty())
             query.processInstanceIds(new HashSet<String>(criteria.getExecutionIds()));
-
-        if (criteria.getBusinessKey() != null)
-            query.processInstanceBusinessKey(criteria.getBusinessKey());
-
-        if (criteria.getStartedAfter() != null)
-            query.startedAfter(criteria.getStartedAfter());
-
-        if (criteria.getStartedBefore() != null)
-            query.startedBefore(criteria.getStartedBefore());
-
-        if (criteria.getCompletedBefore() != null)
-            query.finishedBefore(criteria.getCompletedBefore());
-
-        if (criteria.getCompletedAfter() != null)
-            query.finishedAfter(criteria.getCompletedAfter());
+//
+//        if (criteria.getBusinessKey() != null)
+//            query.processInstanceBusinessKey(criteria.getBusinessKey());
+//
+//        if (criteria.getStartedAfter() != null)
+//            query.startedAfter(criteria.getStartedAfter());
+//
+//        if (criteria.getStartedBefore() != null)
+//            query.startedBefore(criteria.getStartedBefore());
+//
+//        if (criteria.getCompletedBefore() != null)
+//            query.finishedBefore(criteria.getCompletedBefore());
+//
+//        if (criteria.getCompletedAfter() != null)
+//            query.finishedAfter(criteria.getCompletedAfter());
 
         if (criteria.getInitiatedBy() != null)
             query.startedBy(criteria.getInitiatedBy());
@@ -720,12 +720,12 @@ public class ActivitiEngineProxy implements ProcessEngineProxy {
             query.orderByProcessInstanceEndTime().desc();
         }
 
-        if (criteria.getComplete() != null) {
-            if (criteria.getComplete().booleanValue())
-                query.finished();
-            else
-                query.unfinished();
-        }
+//        if (criteria.getComplete() != null) {
+//            if (criteria.getComplete().booleanValue())
+//                query.finished();
+//            else
+//                query.unfinished();
+//        }
 
         return query;
     }

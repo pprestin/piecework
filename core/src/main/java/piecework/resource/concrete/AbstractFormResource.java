@@ -233,10 +233,13 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError();
         }
 
+        List<MediaType> mediaTypes = context != null ? context.getHttpHeaders().getAcceptableMediaTypes() : Collections.<MediaType>emptyList();
+        MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
+
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         accessTracker.track(requestDetails, false, isAnonymous());
         SearchProvider searchProvider = modelProviderFactory.searchProvider(principal);
-        return searchProvider.forms(criteria, new ViewContext(settings, VERSION));
+        return searchProvider.forms(criteria, new ViewContext(settings, VERSION), mediaType.equals(MediaType.TEXT_HTML_TYPE));
     }
 
 //    protected SearchResults search(final MessageContext context, final MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws PieceworkException {

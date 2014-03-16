@@ -21,7 +21,7 @@ public interface ProcessInstanceRepositoryCustom {
 
     Page<ProcessInstance> findByQueryParameters(Set<String> processDefinitionKeys, SearchQueryParameters queryParameters, Pageable pageable, Sanitizer sanitizer);
 
-    Page<ProcessInstance> findByQuery(Query query, Pageable pageable);
+    Page<ProcessInstance> findByQuery(Query query, Pageable pageable, boolean includeTotal);
 
     ProcessInstance findByTaskId(String processDefinitionKey, String taskId);
 

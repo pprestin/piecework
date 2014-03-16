@@ -47,7 +47,7 @@ public class ProcessInstanceQueryPager implements Pager<ProcessInstance> {
 
     public Page<ProcessInstance> nextPage() {
         Query query = this.query.with(this.request);
-        this.page = repository.findByQuery(query, this.request);
+        this.page = repository.findByQuery(query, this.request, true);
         this.request = page.nextPageable();
         return page;
     }

@@ -16,7 +16,6 @@
 package piecework.util;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,7 +24,6 @@ import piecework.common.FacetSort;
 import piecework.common.SearchCriteria;
 import piecework.common.SearchQueryParameters;
 import piecework.model.*;
-import piecework.model.Process;
 import piecework.security.Sanitizer;
 
 import java.util.*;
@@ -126,10 +124,13 @@ public class SearchUtility {
     }
 
     public static final Pageable pageable(SearchCriteria criteria, Sanitizer sanitizer) {
-        int firstResult = criteria.getFirstResult() != null ? criteria.getFirstResult() : 0;
-        int maxResult = criteria.getMaxResults() != null ? criteria.getMaxResults() : 100;
+//        int page = criteria.getPageNumber() != null ? criteria.getPageNumber() : 0;
+//        int pageSize = criteria.getPageSize() != null ? criteria.getPageSize() : 100;
+        // This is the paging size for the instance search, not the actual paging of the tasks
+        int page = 0;
+        int pageSize = 5;
         Sort sort = SearchUtility.sort(criteria, sanitizer);
-        PageRequest pageRequest = new PageRequest(firstResult, maxResult, sort);
+        PageRequest pageRequest = new PageRequest(page, pageSize, sort);
         return pageRequest;
     }
 

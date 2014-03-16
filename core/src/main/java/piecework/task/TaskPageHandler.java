@@ -20,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import piecework.Constants;
 import piecework.common.PageHandler;
-import piecework.common.SearchQueryParameters;
 import piecework.common.ViewContext;
 import piecework.model.*;
 import piecework.model.Process;
@@ -131,7 +130,7 @@ public abstract class TaskPageHandler implements PageHandler<ProcessInstance> {
                 if (tasks != null && !tasks.isEmpty()) {
                     for (Task task : tasks) {
                         if (taskFilter.include(task, processStatus, taskStatus)) {
-                            rawTasks.add(new TaskDeployment(processDeployment, instance, task));
+                            rawTasks.add(new TaskDeployment(0, processDeployment, instance, task));
                             userIds.addAll(task.getAssigneeAndCandidateAssigneeIds());
                         }
                     }

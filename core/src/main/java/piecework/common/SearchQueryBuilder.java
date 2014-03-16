@@ -21,6 +21,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BSON;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -109,10 +111,10 @@ public class SearchQueryBuilder {
 //        else if (searchCriteria.getStartedAfter() != null)
 //            query.addCriteria(where("startTime").gt(searchCriteria.getStartedAfter()));
 
-        if (searchCriteria.getCompletedBefore() != null)
-            query.addCriteria(where("endTime").lt(searchCriteria.getCompletedBefore()));
-        if (searchCriteria.getCompletedAfter() != null)
-            query.addCriteria(where("endTime").gt(searchCriteria.getCompletedAfter()));
+//        if (searchCriteria.getCompletedBefore() != null)
+//            query.addCriteria(where("endTime").lt(searchCriteria.getCompletedBefore()));
+//        if (searchCriteria.getCompletedAfter() != null)
+//            query.addCriteria(where("endTime").gt(searchCriteria.getCompletedAfter()));
 
         if (!searchCriteria.getKeywords().isEmpty()) {
             List<String> tokens = new ArrayList<String>();
@@ -134,14 +136,9 @@ public class SearchQueryBuilder {
                 query.addCriteria(criteria.all(dbObjects));
         }
 
-        if (searchCriteria.getMaxResults() != null)
-            query.limit(searchCriteria.getMaxResults());
-
-        if (searchCriteria.getFirstResult() != null)
-            query.skip(searchCriteria.getFirstResult());
-
-        if (searchCriteria.getSortBy() != null)
-            query.with(SearchUtility.sort(searchCriteria, sanitizer));
+//        Pageable pageable = SearchUtility.pageable(searchCriteria, sanitizer);
+        // Only apply sort for pageable, because we're counting tasks, not instances
+//        query.with(pageable);
 
         return query;
     }

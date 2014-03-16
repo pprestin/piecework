@@ -32,7 +32,7 @@ public interface SearchProvider extends ModelProvider {
 
     SearchResults facets(String label, ViewContext context) throws PieceworkException;
 
-    SearchResponse forms(SearchCriteria criteria, ViewContext context) throws PieceworkException;
+    SearchResponse forms(SearchCriteria criteria, ViewContext context, boolean excludeData) throws PieceworkException;
 
     Set<Process> processes(String ... allowedRoles);
 
