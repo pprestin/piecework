@@ -87,9 +87,11 @@ public class SearchQueryBuilder {
 //        if (StringUtils.isNotBlank(searchCriteria.getApplicationStatusExplanation()))
 //            query.addCriteria(where("applicationStatus").regex(searchCriteria.getApplicationStatusExplanation(), "i"));
 //
-//        if (StringUtils.isNotBlank(searchCriteria.getProcessStatus())) {
-//            if (!searchCriteria.getProcessStatus().equalsIgnoreCase("all"))
-//                query.addCriteria(where("processStatus").is(searchCriteria.getProcessStatus()));
+        if (StringUtils.isNotBlank(searchCriteria.getProcessStatus())) {
+            if (!searchCriteria.getProcessStatus().equalsIgnoreCase("all"))
+                query.addCriteria(where("processStatus").is(searchCriteria.getProcessStatus()));
+        }
+
 //        } else if (searchCriteria.getComplete() != null && searchCriteria.getComplete().booleanValue())
 //            query.addCriteria(where("processStatus").is(Constants.ProcessStatuses.COMPLETE));
 //        else if (searchCriteria.getSuspended() != null && searchCriteria.getSuspended().booleanValue())

@@ -270,9 +270,11 @@ public class SearchRepositoryProvider implements SearchProvider {
                     }
                 }
 
-                instancePageNumber++;
-                Pageable nextPage = new PageRequest(instancePageNumber, instancePageSize, sort);
-                page = instanceRepository.findByQuery(query, nextPage, false);
+                if (total > instanceCounter) {
+                    instancePageNumber++;
+                    Pageable nextPage = new PageRequest(instancePageNumber, instancePageSize, sort);
+                    page = instanceRepository.findByQuery(query, nextPage, false);
+                }
             }
 
             response.setTotal((int)taskCounter);
