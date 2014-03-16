@@ -1817,10 +1817,13 @@ angular.module('wf.directives',
                         };   
 
                         var failure = function(scope, data, status, headers, config, form) {
+                            dialogs.alert(data.messageDetail);
                         };   
 
                         angular.forEach(selectedForms, function(form) {
-                           instanceService.changeBucket(scope, form, bucket, success, failure);
+                            if (form.Bucket !== bucket) {
+                               instanceService.changeBucket(scope, form, bucket, success, failure);
+                            }
                         });  
                     };
 

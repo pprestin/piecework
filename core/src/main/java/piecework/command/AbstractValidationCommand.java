@@ -99,7 +99,7 @@ public abstract class AbstractValidationCommand<P extends ProcessDeploymentProvi
         return validationFactory.validation(modelProvider, template, submission, version, !UNEXCEPTIONAL_ACTION_TYPES.contains(validatedActionType), ignoreThrowException);
     }
 
-    private Task verifyTask() throws PieceworkException {
+    Task verifyTask() throws PieceworkException {
         Task task = ModelUtility.allowedTask(modelProvider);
         if (task != null) {
             if (!task.isActive())

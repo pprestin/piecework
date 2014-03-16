@@ -18,15 +18,20 @@ package piecework.command;
 import piecework.enumeration.ActionType;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
+import piecework.exception.BadRequestError;
+import piecework.exception.ForbiddenError;
 import piecework.model.Activity;
 import piecework.model.Field;
 import piecework.model.FormRequest;
+import piecework.model.Task;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplate;
 import piecework.submission.SubmissionTemplateFactory;
 import piecework.validation.Validation;
 import piecework.validation.ValidationFactory;
+import piecework.util.ModelUtility;
+import piecework.Constants;
 
 import java.util.Map;
 
@@ -54,4 +59,24 @@ public class FieldValidationCommand<P extends ProcessDeploymentProvider> extends
         SubmissionTemplate template = submissionTemplateFactory.submissionTemplate(modelProvider, field, request, activity.isAllowAny());
         return validation(submissionHandlerRegistry, validationFactory, template);
     }
+
+    @Override
+    Task verifyTask() throws PieceworkException {
+        Task task = ModelUtility.allowedTask(modelProvider);
+        if (task != null) {
+            if (!task.isActive())
+                throw new BadRequestError(Constants.ExceptionCodes.active_task_required);
+
+            // special handling of bucket change
+            // a bit of hack here.
+            boolean assigneeOnly = true;
+            if ( fieldName != null && fieldName.equals("Bucket") ) {
+                assigneeOnly = false;
+            }       
+
+            if (assigneeOnly && !task.isAssignee(modelProvider.principal()))
+                throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
+        }           
+        return task;
+    }   
 }
