@@ -199,7 +199,9 @@ public class SearchRepositoryProvider implements SearchProvider {
             Pageable pageable = new PageRequest(instancePageNumber, instancePageSize, sort);
             Page<ProcessInstance> page = instanceRepository.findByQuery(query, pageable, true);
 
-            Pageable taskPageable = new PageRequest(criteria.getPageNumber(), 200);
+            int pageNumber = criteria.getPageNumber() != null ? criteria.getPageNumber().intValue() : 0;
+            int pageSize = criteria.getPageSize() != null ? criteria.getPageSize() : 200;
+            Pageable taskPageable = new PageRequest(pageNumber, pageSize);
             long total = page.getTotalElements();
             long taskCounter = 0;
             long instanceCounter = 0;
