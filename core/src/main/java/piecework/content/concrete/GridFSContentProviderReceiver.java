@@ -39,6 +39,7 @@ import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.NotFoundError;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.security.AccessTracker;
 
 import java.io.IOException;
@@ -89,6 +90,11 @@ public class GridFSContentProviderReceiver implements ContentProvider, ContentRe
         }
 
         return gridFsContentResource(null, location);
+    }
+
+    @Override
+    public boolean publish(ProcessInstanceProvider modelProvider) throws PieceworkException, IOException {
+        return false;
     }
 
     @Override

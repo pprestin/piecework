@@ -24,6 +24,7 @@ import piecework.content.ContentResource;
 import piecework.enumeration.Scheme;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessInstanceProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -50,6 +51,11 @@ public class InMemoryContentProviderReceiver implements ContentProvider, Content
     @Override
     public ContentResource checkout(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException {
         return null;
+    }
+
+    @Override
+    public boolean publish(ProcessInstanceProvider modelProvider) throws PieceworkException, IOException {
+        return false;
     }
 
     @Override

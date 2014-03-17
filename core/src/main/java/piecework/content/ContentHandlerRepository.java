@@ -24,6 +24,7 @@ import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.enumeration.Scheme;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessInstanceProvider;
 import piecework.repository.ContentRepository;
 import piecework.util.ContentUtility;
 import piecework.util.PathUtility;
@@ -104,6 +105,13 @@ public class ContentHandlerRepository implements ContentRepository {
         }
 
         return null;
+    }
+
+    @Override
+    public boolean publish(ProcessInstanceProvider instanceProvider) throws PieceworkException, IOException {
+        ContentReceiver contentReceiver = lookupContentReceiver(instanceProvider, null);
+        // Return the result from the specified receiver (or primary receiver if key is null)
+        return contentReceiver.publish(instanceProvider);
     }
 
     @Override

@@ -3,6 +3,7 @@ package piecework.repository;
 import piecework.content.ContentResource;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessInstanceProvider;
 
 import java.io.IOException;
 
@@ -32,6 +33,11 @@ public interface ContentRepository {
      * Expires a piece of content so it is no longer available to be found
      */
     boolean expireByLocation(ContentProfileProvider modelProvider, String location) throws PieceworkException, IOException;
+
+    /*
+     * Publishes all content for a process instance, e.g. when the process instance is complete
+     */
+    boolean publish(ProcessInstanceProvider instanceProvider) throws PieceworkException, IOException;
 
     /*
      * Releases checked out content

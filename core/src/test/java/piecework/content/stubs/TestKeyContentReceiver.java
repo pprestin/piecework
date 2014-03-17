@@ -20,6 +20,7 @@ import piecework.content.ContentResource;
 import piecework.content.concrete.BasicContentResource;
 import piecework.exception.PieceworkException;
 import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessInstanceProvider;
 
 import java.io.IOException;
 
@@ -33,6 +34,11 @@ public class TestKeyContentReceiver implements ContentReceiver {
         return new BasicContentResource.Builder()
                 .location("some-key-content-receiver")
                 .build();
+    }
+
+    @Override
+    public boolean publish(ProcessInstanceProvider modelProvider) throws PieceworkException, IOException {
+        return false;
     }
 
     @Override

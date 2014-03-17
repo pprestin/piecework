@@ -27,6 +27,7 @@ import piecework.model.Process;
 import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.TaskProvider;
+import piecework.repository.ContentRepository;
 import piecework.service.NotificationService;
 import piecework.service.ProcessInstanceService;
 import piecework.service.TaskService;
@@ -43,6 +44,9 @@ public class EngineStateSynchronizer {
 
     private static final String VERSION = "v1";
     private static final Logger LOG = Logger.getLogger(EngineStateSynchronizer.class);
+
+    @Autowired
+    ContentRepository contentRepository;
 
     @Autowired
     Mediator mediator;
@@ -79,6 +83,13 @@ public class EngineStateSynchronizer {
             if (instance != null) {
                 LOG.debug("Process instance completed " + processInstanceId);
                 mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).context(context).instanceProvider(instanceProvider).build());
+                try {
+                    boolean isPublished = contentRepository.publish(instanceProvider);
+                    if (isPublished)
+                        LOG.info("Published all content for instance " + processInstanceId);
+                } catch (Exception e) {
+                    LOG.error("Failed to publish content for instance " + processInstanceId, e);
+                }
             } else {
                 LOG.error("Unable to save final state of process instance with execution business key because the instance could not be found" + processInstanceId);
             }

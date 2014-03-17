@@ -107,18 +107,6 @@ public class SearchRepositoryProvider implements SearchProvider {
         Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
         Set<piecework.model.Process> allowedProcesses = processes(allProcessDefinitionKeys);
 
-
-
-//        TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, true, false);
-//        TaskPageHandler pageHandler = new TaskPageHandler(criteria, taskFilter, sanitizer, context){
-//
-//            @Override
-//            protected Map<String, User> getUserMap(Set<String> userIds) {
-//                return identityService.findUsers(userIds);
-//            }
-//
-//        };
-
         SearchResponse response = new SearchResponse();
 
         if (allowedProcesses == null || allowedProcesses.isEmpty())
