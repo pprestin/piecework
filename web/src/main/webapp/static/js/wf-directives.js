@@ -1560,6 +1560,7 @@ angular.module('wf.directives',
 
                         if (true) {
                             scope.selectedFormMap = new Object();
+                            scope.allChecked = false;
                             scope.criteria.sortBy = results.sortBy;
 
                             scope.facetMap = localStorageService.get("facetMap");
@@ -1598,6 +1599,7 @@ angular.module('wf.directives',
                                     }
                                 }
                             });
+                            scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
                         }
                     });
                     scope.$on('wfEvent:search', function(event, criteria) {
