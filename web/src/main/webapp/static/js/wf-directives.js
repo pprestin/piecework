@@ -1490,9 +1490,9 @@ angular.module('wf.directives',
                         form.checked = !form.checked;
                         if (!form.checked)
                             scope.allChecked = false;
-                        if (scope.selectedFormMap[form.formInstanceId] == null)
+                        if (form.checked && scope.selectedFormMap[form.formInstanceId] == null)
                             scope.selectedFormMap[form.formInstanceId] = form;
-                        else
+                        else if ( !form.checked && scope.selectedFormMap[form.formInstanceId] != null)
                             delete scope.selectedFormMap[form.formInstanceId];
 
                         scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
@@ -1502,9 +1502,9 @@ angular.module('wf.directives',
                             scope.allChecked = !scope.allChecked;
                             angular.forEach(forms, function(form) {
                                 form.checked = scope.allChecked;
-                                if (scope.selectedFormMap[form.formInstanceId] == null)
+                                if (form.checked && scope.selectedFormMap[form.formInstanceId] == null)
                                     scope.selectedFormMap[form.formInstanceId] = form;
-                                else
+                                else if ( !form.checked && scope.selectedFormMap[form.formInstanceId] != null)
                                     delete scope.selectedFormMap[form.formInstanceId];
                             });
                             scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
