@@ -1071,7 +1071,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                    </button>' +
     '                    <span data-ng-if="bucketList.buckets.length > 0" class="dropdown">\n' +
     '                        <button class="btn btn-default navbar-btn dropdown-toggle" data-ng-disabled="!isFormSelected()" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-tag"></i><b class="caret"></b></button>\n' +
-    '                        <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
+    '                        <ul id="new-form-dropdown" class="dropdown-menu scroll" role="menu" aria-labelledby="new-form-button">\n' +
     '                            <li class="presentation" role="menuitem"><b>&nbsp;&nbsp;&nbsp;&nbsp;Change Bucket</b></li>\n' +
     '                            <li data-ng-repeat="bucket in bucketList.buckets" data-ng-click="changeBucket(getFormsSelected(), bucket)" class="presentation" role="menuitem"><a>{{bucket}}</a></li>\n' +
     '                        </ul>\n' +

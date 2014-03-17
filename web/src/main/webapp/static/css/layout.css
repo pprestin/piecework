@@ -677,3 +677,9 @@ select.form-control {
 .wf-right-btn-toolbar {
     margin-top: 8px;
 }
+
+.dropdown > ul.scroll{
+    max-height: 30em;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
