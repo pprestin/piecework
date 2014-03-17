@@ -10,8 +10,9 @@ angular.module('wf',
         'wf.directives',
         'wf.services'
     ])
-    .config(['$httpProvider', '$routeProvider', '$locationProvider', '$logProvider','$provide','$sceDelegateProvider',
-        function($httpProvider, $routeProvider, $locationProvider, $logProvider, $provide, $sceDelegateProvider) {
+    .config(['$compile', '$httpProvider', '$routeProvider', '$locationProvider', '$logProvider','$provide','$sceDelegateProvider',
+        function($compile, $httpProvider, $routeProvider, $locationProvider, $logProvider, $provide, $sceDelegateProvider) {
+            window.document.compiler = $compile;
             {{DYNAMIC_CONFIGURATION}}
         }
     ])
