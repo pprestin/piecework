@@ -159,11 +159,12 @@ public class SearchRepositoryProvider implements SearchProvider {
             }
         }
 
-        if ( pg != null && bucketListRepository != null ) {
+        if ( StringUtils.isNotEmpty(pg) && bucketListRepository != null ) {
             BucketList bucketList = bucketListRepository.findOne(pg);
             if ( bucketList != null ) {
                 response.setBucketList(bucketList);
             }
+            response.setProcessGroup(pg);
         }
 
         String processStatus = criteria.getProcessStatus() != null ? sanitizer.sanitize(criteria.getProcessStatus()) : Constants.ProcessStatuses.OPEN;

@@ -1771,6 +1771,7 @@ angular.module('wf.directives',
                                 scope.criteria.processDefinitionKey = results.metadata[0].processDefinitionKey;
                         }
                         scope.bucketList = results.bucketList;
+                        scope.criteria.pg = results.processGroup;
                     });
                     scope.$on('wfEvent:search', function(event, criteria) {
                         scope.searching = true;
