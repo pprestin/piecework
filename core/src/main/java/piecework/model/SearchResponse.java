@@ -36,6 +36,7 @@ public class SearchResponse {
     private int total;
     private User currentUser;
     private BucketList bucketList;
+    private String processGroup;
 
     public List<Facet> getFacets() {
         return facets;
@@ -112,8 +113,17 @@ public class SearchResponse {
     public BucketList getBucketList() {
         return bucketList;
     }
+
+    public String getProcessGroup() {
+        return processGroup;
+    }
+ 
  
     public void setBucketList(BucketList bucketList) {
         this.bucketList = bucketList;
+    }
+ 
+    public void setProcessGroup(String processGroup) {
+        this.processGroup = processGroup;
     }
 }
