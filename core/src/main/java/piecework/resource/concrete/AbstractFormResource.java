@@ -242,19 +242,6 @@ public abstract class AbstractFormResource {
         return searchProvider.forms(criteria, new ViewContext(settings, VERSION), mediaType.equals(MediaType.TEXT_HTML_TYPE));
     }
 
-//    protected SearchResults search(final MessageContext context, final MultivaluedMap<String, String> rawQueryParameters, Entity principal) throws PieceworkException {
-//        if (isAnonymous() || principal == null) {
-//            String message = "Someone is attempting to view a list of tasks through an anonymous resource. This is never allowed.";
-//            LOG.error(message);
-//            accessTracker.alarm(AlarmSeverity.URGENT, message);
-//            throw new ForbiddenError();
-//        }
-//
-//        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-//        accessTracker.track(requestDetails, false, isAnonymous());
-//        return taskService.search(rawQueryParameters, principal, true, false);
-//    }
-
     protected <T, P extends ProcessDeploymentProvider> Response submitForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawRequestId, final T data, final Class<T> type, Entity principal) throws PieceworkException {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
@@ -342,6 +329,7 @@ public abstract class AbstractFormResource {
             StatusCodeError error = StatusCodeError.class.cast(e);
             int statusCode = error.getStatusCode();
             explanation = ErrorResponseBuilder.buildExplanation(statusCode, error.getLocalizedMessage(), error.getMessageDetail());
+            LOG.warn("Caught a status code error", e);
         } else {
             String detail = e.getMessage() != null ? e.getMessage() : "";
             explanation = new Explanation();
@@ -366,7 +354,7 @@ public abstract class AbstractFormResource {
             if (isAnonymous())
                 return response(provider, invalidRequest, ActionType.CREATE, MediaType.TEXT_HTML_TYPE, validation, explanation, true, 1);
 
-            if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE))
+            if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE) || !allowRedirect || explanation != null)
                 return response(provider, invalidRequest, invalidRequest.getAction(), mediaType, validation, explanation, true, 1);
 
             if (!allowRedirect)
@@ -436,9 +424,11 @@ public abstract class AbstractFormResource {
         try {
             FormDisposition formDisposition = FormUtility.disposition(provider, provider.activity(), formRequest.getAction(), new ViewContext(settings, VERSION), null);
 
-            if (isInvalidSubmission)
-                return Response.seeOther(formDisposition.getInvalidPageUri(submission)).build();
-//                return Response.seeOther(formDisposition.getInvalidPageUri(validationRepository.save(validation))).build();
+            if (isInvalidSubmission) {
+                if (validation == null)
+                    return Response.seeOther(formDisposition.getInvalidPageUri(submission)).build();
+                return Response.seeOther(formDisposition.getInvalidPageUri(validationRepository.save(validation))).build();
+            }
 
             return Response.seeOther(formDisposition.getResponsePageUri(formRequest)).build();
         } catch (URISyntaxException use) {

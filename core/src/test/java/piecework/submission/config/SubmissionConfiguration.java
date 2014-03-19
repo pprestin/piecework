@@ -28,6 +28,7 @@ import piecework.security.Sanitizer;
 import piecework.security.data.UserInputSanitizer;
 import piecework.service.IdentityService;
 import piecework.service.SubmissionStorageService;
+import piecework.service.UserInterfaceService;
 import piecework.submission.SubmissionHandlerRegistry;
 import piecework.submission.SubmissionTemplateFactory;
 import piecework.submission.concrete.FormValueSubmissionHandler;

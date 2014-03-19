@@ -185,13 +185,6 @@ public class ValidationFactory {
                     String fieldName = entry.getKey();
 
                     if (!allFieldNames.contains(fieldName)) {
-//                        List<? extends Value> values = entry.getValue();
-//                        List<? extends Value> previousValues = instanceData != null ? instanceData.get(fieldName) : null;
-//
-//                        if (isFile(values, previousValues))
-//                            values = ValidationUtility.append(values, previousValues);
-//
-//                        validationBuilder.formValue(fieldName, values);
                         Field field = new Field.Builder()
                                 .name(fieldName)
                                 .type(null)
@@ -250,12 +243,15 @@ public class ValidationFactory {
             List<? extends Value> values = submissionData.get(fieldName);
             List<? extends Value> previousValues = instanceData != null ? instanceData.get(fieldName) : Collections.<Value>emptyList();
 
+            boolean isDateField = false;
             boolean isFileField = false;
 
             if (field.getType() == null && anyFieldAllowed)
                 isFileField = isFile(values, previousValues);
-            else if (field.getType() != null)
+            else if (field.getType() != null) {
                 isFileField = (field.getType().equals(Constants.FieldTypes.FILE) || field.getType().equals(Constants.FieldTypes.URL));
+                isDateField = (field.getType().equals(Constants.FieldTypes.DATE) || field.getType().equals(Constants.FieldTypes.DATETIME) || field.getType().equals(Constants.FieldTypes.DATETIME_LOCAL));
+            }
 
             if (isFileField) {
                 // Need to track how many files have been added in order to respect the max inputs constraint

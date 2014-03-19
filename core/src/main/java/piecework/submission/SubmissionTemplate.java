@@ -138,6 +138,12 @@ public class SubmissionTemplate {
         return maxAttachmentSize;
     }
 
+    public boolean isDateField(String name) {
+        Field field = fieldMap.get(name);
+        String type = field != null ? field.getType() : null;
+        return type != null && (type.equals(Constants.FieldTypes.DATE) || type.equals(Constants.FieldTypes.DATETIME) || type.equals(Constants.FieldTypes.DATETIME_LOCAL));
+    }
+
     public boolean isUserField(String name) {
         Field field = fieldMap.get(name);
         return field != null && field.getType() != null && field.getType().equals(Constants.FieldTypes.PERSON);

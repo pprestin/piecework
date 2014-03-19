@@ -274,6 +274,8 @@ public class ProcessInstanceRepositoryCustomImpl implements ProcessInstanceRepos
                             clz = User.class;
                         else if (value instanceof Secret)
                             clz = Secret.class;
+                        else if (value instanceof DateValue)
+                            clz = DateValue.class;
 
                         keywords.addAll(ProcessInstanceUtility.keywords(value));
 

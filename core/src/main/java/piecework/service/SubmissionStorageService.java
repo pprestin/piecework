@@ -18,6 +18,9 @@ package piecework.service;
 import com.mongodb.MongoException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
@@ -52,6 +55,7 @@ import java.util.Map;
 public class SubmissionStorageService {
 
     private static final Logger LOG = Logger.getLogger(SubmissionStorageService.class);
+    private DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTimeParser();
 
     @Autowired
     ContentRepository contentRepository;
@@ -85,7 +89,7 @@ public class SubmissionStorageService {
 
             // set actionValue for current task
             String taskId = template.getTaskId();
-            if ( taskId != null && modelProvider!= null && modelProvider instanceof ProcessInstanceProvider ) { 
+            if ( taskId != null && modelProvider!= null && modelProvider instanceof ProcessInstanceProvider ) {
                 ProcessInstanceProvider pirp = (ProcessInstanceProvider) modelProvider;
                 ProcessInstance pi = pirp.instance();
                 if ( pi != null ) {
@@ -94,7 +98,7 @@ public class SubmissionStorageService {
                         submissionBuilder.formValue(task.getTaskDefinitionKey() + "_actionValue", value);
                     }
                 }
-            }   
+            }
 
             return true;
         } else if (fieldSubmissionType != FieldSubmissionType.INVALID) {
@@ -165,7 +169,14 @@ public class SubmissionStorageService {
                     submissionBuilder.formValue(name, file);
                 else if (template.isUserField(name))
                     submissionBuilder.formValue(name, identityService.getUser(value));
-                else
+                else if (template.isDateField(name)) {
+                    value = value.replaceAll("\"", "");
+                    if (StringUtils.isNotEmpty(value)) {
+                        DateTime dateTime = dateTimeFormatter.parseDateTime(value);
+                        if (dateTime != null)
+                            submissionBuilder.formValue(name, new DateValue(dateTime));
+                    }
+                } else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.RANDOM) {
                 if (file != null)
@@ -173,33 +184,6 @@ public class SubmissionStorageService {
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
-//                String location;
-//                if (file != null) {
-//                    try {
-//                        ContentResource contentResource = contentRepository.save(modelProvider, file.getContentResource());
-//
-//                        contentType = contentResource.contentType();
-//                        location = contentResource.getLocation();
-//
-//                    } catch (IOException ioe) {
-//                        LOG.error("Unable to add attachment content", ioe);
-//                        return false;
-//                    }
-//                } else {
-//                    contentType = MediaType.TEXT_PLAIN;
-//                    location = null;
-//                    // Don't bother to save 'notes' if they're empty
-//                    if (StringUtils.isEmpty(value))
-//                        return false;
-//                }
-//                Attachment attachmentDetails = new Attachment.Builder()
-//                        .contentType(contentType)
-//                        .location(location)
-//                        .processDefinitionKey(submissionBuilder.getProcessDefinitionKey())
-//                        .description(value)
-//                        .userId(actingAsId)
-//                        .name(name)
-//                        .build();
 
                 if (file == null) {
                     file = new File.Builder()

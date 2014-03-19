@@ -31,8 +31,10 @@ import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import piecework.model.DateValue;
 import piecework.model.ProcessInstance;
 import piecework.repository.concrete.EmbeddedMongoInstance;
 
@@ -90,6 +92,11 @@ public class MongoConfiguration extends AbstractMongoConfiguration {
             optionsBuilder.socketFactory(SSLSocketFactory.getDefault());
 
         return new MongoClient(getServerAddresses(), optionsBuilder.build());
+    }
+
+    @Bean(name="customConversions")
+    public CustomConversions customConversions() {
+        return new CustomConversions(Collections.singletonList(DateValue.DateValueConverter.INSTANCE));
     }
 
     @Bean

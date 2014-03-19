@@ -137,8 +137,8 @@ public class FormDisposition {
         }
 
         private Builder(Process process, ProcessDeployment deployment, Action action, ViewContext context) {
-            String hostUrl = context.getHostUri();
-            String pageUrl = context.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, process.getProcessDefinitionKey());
+            String hostUrl = context != null ? context.getHostUri() : null;
+            String pageUrl = context != null ? context.getApplicationUri(Form.Constants.ROOT_ELEMENT_NAME, process.getProcessDefinitionKey()) : null;
             String resourceUrl = pageUrl;
 
             this.action = action;

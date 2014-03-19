@@ -124,6 +124,8 @@ public interface Constants {
     public static class FieldTypes {
         public static final String CHECKBOX = "checkbox";
         public static final String DATE = "date";
+        public static final String DATETIME = "datetime";
+        public static final String DATETIME_LOCAL = "datetime-local";
         public static final String EMAIL = "email";
         public static final String FILE = "file";
         public static final String IFRAME = "iframe";

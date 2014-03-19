@@ -32,4 +32,8 @@ public class DataSearchFacet extends SearchFacet {
         super("data." + name + ".value", name, label, type, false);
     }
 
+    public DataSearchFacet(String query, String name, String label, String type) {
+        super(query, name, label, type, false);
+    }
+
 }

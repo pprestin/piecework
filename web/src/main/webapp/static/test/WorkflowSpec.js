@@ -292,6 +292,33 @@ describe('Unit testing wf-container', function() {
 
 });
 
+describe('Unit testing wf-date', function() {
+    var $compile;
+    var $rootScope;
+
+    // Load the wf module, which contains the directive
+    beforeEach(module('wf'));
+
+    // Store references to $rootScope and $compile
+    // so they are available to all tests in this describe block
+    beforeEach(inject(function(_$compile_, _$rootScope_){
+        // The injector unwraps the underscores (_) from around the parameter names when matching
+        $compile = _$compile_;
+        $rootScope = _$rootScope_;
+    }));
+
+    it('Should render correctly when applied to a div', function() {
+        var scope = $rootScope;
+        var element = $compile('<div data-wf-date data-name="myElement"></div>')(scope);
+        scope.$digest();
+        var html = element.html();
+
+        expect(html).toContain('datepicker-popup');
+        expect(html).toContain('name="myElement"');
+    });
+
+});
+
 describe('Unit testing wf-field', function() {
     var $compile;
     var $rootScope;

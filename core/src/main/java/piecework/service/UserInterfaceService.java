@@ -26,12 +26,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
+import piecework.common.ViewContext;
 import piecework.content.ContentResource;
+import piecework.content.concrete.RemoteContentProvider;
+import piecework.content.concrete.RemoteResource;
 import piecework.enumeration.CacheName;
-import piecework.exception.MisconfiguredProcessException;
-import piecework.exception.NotFoundError;
-import piecework.exception.PieceworkException;
-import piecework.exception.StatusCodeError;
+import piecework.enumeration.DataInjectionStrategy;
+import piecework.exception.*;
 import piecework.form.FormDisposition;
 import piecework.identity.IdentityHelper;
 import piecework.model.*;
@@ -54,6 +56,10 @@ import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author James Renfro
@@ -78,6 +84,9 @@ public class UserInterfaceService {
     @Autowired
     private CustomJaxbJsonProvider jsonProvider;
 
+    @Autowired(required=false)
+    private RemoteContentProvider remoteContentProvider;
+
     @Autowired
     private UserInterfaceSettings settings;
 
@@ -95,19 +104,6 @@ public class UserInterfaceService {
             return false;
         }
     }
-
-//    public boolean hasExternalScriptResource(Class<?> type) {
-//        if (type.equals(SearchResults.class))
-//            return true;
-//        if (InputStream.class.isAssignableFrom(type))
-//            return false;
-//        try {
-//            ContentResource resource = formTemplateService.getTemplateResource(type, null);
-//            return resource != null;
-//        } catch (NotFoundError nfe) {
-//            return false;
-//        }
-//    }
 
     public StreamingOutput getExplanationAsStreaming(ServletContext servletContext, Explanation explanation) {
         try {
@@ -160,6 +156,44 @@ public class UserInterfaceService {
             return new HtmlCleanerStreamingOutput(template.getInputStream(), visitor);
         }
         return null;
+    }
+
+    public Set<Field> getRemoteFields(ProcessDeploymentProvider modelProvider, Action action, Container parentContainer, Container container, ViewContext context) throws PieceworkException {
+        if (action.getStrategy() == null || action.getStrategy() != DataInjectionStrategy.REMOTE)
+            return Collections.<Field>emptySet();
+
+        Set<Field> fields = null;
+        if (remoteContentProvider != null) {
+            String location = action.getLocation();
+            Process process = modelProvider.process();
+            ProcessDeployment deployment = modelProvider.deployment();
+            FormDisposition formDisposition = FormDisposition.Builder.build(process, deployment, action, context);
+            URI uri = formDisposition.getPageUri();
+
+
+            ContentResource contentResource = remoteContentProvider.findByLocation(modelProvider, uri.toString());
+
+            try {
+                InputStream inputStream = contentResource.getInputStream();
+                // Sanity check
+                if (inputStream == null)
+                    throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "Unable to view remote template");
+
+                RemoteTemplateVisitor templateVisitor = new RemoteTemplateVisitor(parentContainer, container);
+                CleanerProperties cleanerProperties = new CleanerProperties();
+                cleanerProperties.setOmitXmlDeclaration(true);
+                HtmlCleaner cleaner = new HtmlCleaner(cleanerProperties);
+                TagNode node = cleaner.clean(inputStream);
+                node.traverse(templateVisitor);
+
+                fields = templateVisitor.getFields();
+
+            } catch (IOException ioe) {
+                LOG.error("Error retrieving remote fields", ioe);
+            }
+        }
+
+        return fields;
     }
 
     public ContentResource getCustomPage(ContentProfileProvider modelProvider, Form form) throws PieceworkException {

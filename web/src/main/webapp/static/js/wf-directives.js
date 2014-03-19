@@ -59,26 +59,33 @@ angular.module('wf.directives',
 
                 },
                 link: function (scope, element, attr) {
-                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
-                        scope.form = form;
-                        var validation = form.validation;
-                        var fieldName = attr.wfAlert;
-                        var subFieldName = null;
-                        var indexOfPeriod = fieldName.indexOf('.');
-                        if (indexOfPeriod != -1) {
-                            subFieldName = fieldName.substring(indexOfPeriod+1);
-                            fieldName = fieldName.substring(0, indexOfPeriod);
-                        }
-                        var messages = typeof(validation) !== 'undefined' ? validation[fieldName] : null;
-                        if (messages != null) {
-                            var html = '';
-                            angular.forEach(messages, function(message) {
-                                if (message != null) {
-                                    element.text(message.text);
-                                }
-                            });
-                        }
-                    });
+                    var fieldName = attr.wfAlert;
+
+                    if (fieldName == null || fieldName == '')
+                        fieldName = element.closest('.form-group').find(':input').attr('name');
+
+                    if (fieldName != null && fieldName != '') {
+                        scope.$root.$on('wfEvent:form-loaded', function(event, form) {
+                            scope.form = form;
+                            var validation = form.validation;
+                            var subFieldName = null;
+                            var indexOfPeriod = fieldName.indexOf('.');
+                            if (indexOfPeriod != -1) {
+                                subFieldName = fieldName.substring(indexOfPeriod+1);
+                                fieldName = fieldName.substring(0, indexOfPeriod);
+                            }
+                            var messages = typeof(validation) !== 'undefined' ? validation[fieldName] : null;
+                            if (messages != null) {
+                                var html = '';
+                                angular.forEach(messages, function(message) {
+                                    if (message != null) {
+                                        element.text(message.text);
+                                        element.closest('.form-group').addClass('has-error');
+                                    }
+                                });
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -203,8 +210,78 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfDateRange', [
+    .directive('wfDate', [
         function() {
+            return {
+                restrict: 'AE',
+                scope: {
+                    name : '@',
+                    required : '@'
+                },
+                transclude: true,
+                controller: ['$scope', function($scope) {
+
+                }],
+                link: function (scope, element, attr) {
+
+                    scope.onChange = function() {
+
+                    };
+
+                    scope.today = function() {
+                        scope.dt = new Date();
+                    };
+//                    scope.today();
+
+                    scope['show-weeks'] = false;
+                    scope.toggleWeeks = function () {
+                        scope.showWeeks = ! scope.showWeeks;
+                    };
+
+                    scope.clear = function () {
+                        scope.date = null;
+                    };
+
+                    scope.toggleMin = function() {
+                        scope.minDate = ( scope.minDate ) ? null : new Date();
+                    };
+
+                    scope.open = function($event) {
+                        $event.preventDefault();
+                        $event.stopPropagation();
+                        scope.opened = true;
+                    };
+
+                    scope.dateOptions = {
+                        'year-format': "'yy'",
+                        'show-weeks': false,
+                        'starting-day': 0
+                    };
+
+                    scope.$on('wfEvent:form-loaded', function(event, form) {
+                        console.log("wfDate attached form to its scope");
+                        if (typeof(form) !== 'undefined') {
+                            if (form.loadedBy == null)
+                                form.loadedBy = [];
+                            form.loadedBy.push('wfDate');
+                            scope.form = form;
+                            if (scope.form.data[scope.name] != null)
+                                scope.dt = new Date(scope.form.data[scope.name]);
+                        }
+                    });
+                },
+                template: '<div class="input-group wf-datepicker-group">' +
+                    '   <input data-ng-required="{{required}}" datepicker-popup="MM/dd/yyyy" data-ng-model="dt" datepicker-options="dateOptions" size="10" type="text" class="form-control wf-datepicker"  is-open="opened" min="minDate" max="maxDate" close-text="Close" show-weeks="false"/>' +
+                    '   <input data-ng-value="dt|date:\'yyyy-MM-ddTHH:mm:ssZ\'" name="{{name}}" type="hidden">' +
+                    '   <span class="input-group-addon">' +
+                    '       <i class="fa fa-calendar"></i> ' +
+                    '   </span> ' +
+                    '</div>'
+            }
+        }
+    ])
+    .directive('wfDateRange', ['$filter',
+        function($filter) {
             return {
                 restrict: 'AE',
                 scope: {
@@ -225,14 +302,23 @@ angular.module('wf.directives',
                             scope.before = null;
                             scope.criteria[beforeName] = null;
                             scope.beforeMinDate = scope.after;
-                            scope.criteria[afterName] = scope.after;
+
+                            if (scope.after != null)
+                                scope.criteria[afterName] = $filter('date')(scope.after, 'yyyy-MM-ddT00:00:00-0000');
+                            else
+                                delete scope.criteria[afterName];
+
                             scope.$root.$broadcast('wfEvent:search', scope.criteria);
                         }
                     };
 
                     scope.beforeChange = function() {
                         if (scope.criteria[beforeName] != scope.before) {
-                            scope.criteria[beforeName] = scope.before;
+                            if (scope.before != null)
+                                scope.criteria[beforeName] = $filter('date')(scope.before, 'yyyy-MM-ddT00:00:00-0000');
+                            else
+                                delete scope.criteria[beforeName];
+
                             scope.$root.$broadcast('wfEvent:search', scope.criteria);
                         }
                     };
@@ -240,7 +326,7 @@ angular.module('wf.directives',
                     scope.today = function() {
                         scope.dt = new Date();
                     };
-                    scope.today();
+//                    scope.today();
 
                     scope['show-weeks'] = false;
                     scope.toggleWeeks = function () {
@@ -422,14 +508,11 @@ angular.module('wf.directives',
                 scope: {
                     'name': '@',
                     'label': '@',
-                    'image': '@'
+                    'image': '@',
+                    'required': '@'
                 },
                 templateUrl: 'templates/file.html',
                 link: function (scope, element, attr) {
-//                    scope.isImage = false;
-//                    if (attr.image != null && attr.image == 'true') {
-//                        scope.isImage = true;
-//                    };
                     scope.checkoutFile = function(file) {
                         var url = file.link + '/checkout';
                         $http.post($sce.trustAsResourceUrl(url), null, {
@@ -1351,47 +1434,9 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/searchresponse.html',
                 link: function (scope, element) {
-//                    scope.today = function() {
-//                        scope.dt = new Date();
-//                    };
-//                    scope.today();
-//
-//                    scope.showWeeks = false;
-//                    scope.toggleWeeks = function () {
-//                        scope.showWeeks = ! scope.showWeeks;
-//                    };
-//
-//                    scope.clear = function () {
-//                        scope.dt = null;
-//                    };
-//
-////                    // Disable weekend selection
-////                    scope.disabled = function(date, mode) {
-////                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
-////                    };
-//
-//                    scope.toggleMin = function() {
-//                        scope.minDate = ( scope.minDate ) ? null : new Date();
-//                    };
-////                    scope.toggleMin();
-//
-//                    scope.open = function($event) {
-//                        $event.preventDefault();
-//                        $event.stopPropagation();
-//
-//                        scope.opened = true;
-//                    };
-//
-//                    scope.dateOptions = {
-//                        'year-format': "'yy'",
-//                        'show-weeks': false,
-//                        'starting-day': 0
-//                    };
-
                     if (typeof(scope.criteria) === 'undefined')
                        scope.criteria = {};
 
-//                    $('.wf-filter').hide();
                     scope.dialogs = dialogs;
 
                     scope.paging = {};
@@ -1457,9 +1502,11 @@ angular.module('wf.directives',
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     };
                     scope.getFacetValue = function(form, facet) {
-                        if (facet.type == 'date')
+                        if (facet.type == 'datetime')
                             return $filter('date')(form[facet.name], 'MMM d, y H:mm');
-                        if (facet.type == 'user')
+                        else if (facet.type == 'date')
+                            return $filter('date')(form[facet.name], 'MMM d, y');
+                        else if (facet.type == 'user')
                             return form[facet.name] != null ? form[facet.name].displayName : 'Nobody';
                         if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '')
                             scope.isFiltering = true;
@@ -1828,7 +1875,6 @@ angular.module('wf.directives',
                             }
                         });  
                     };
-
                 }
             }
         }
@@ -1965,56 +2011,68 @@ angular.module('wf.directives',
             }
         }
     ])
-    .directive('wfVariable', [
-        function() {
+    .directive('wfVariable', ['$filter',
+        function($filter) {
             return {
                 restrict: 'A',
                 scope: {
-
+                    name : '@',
+                    type : '@'
                 },
+                template: '{{value}}',
                 link: function (scope, element, attr) {
                     scope.$root.$on('wfEvent:form-loaded', function(event, form) {
+                        var name = attr.wfVariable;
                         scope.form = form;
-                        var data = form.data;
-                        var fieldName = attr.wfVariable;
-                        var subFieldName = null;
-                        var indexOfPeriod = fieldName.indexOf('.');
-                        if (indexOfPeriod != -1) {
-                            subFieldName = fieldName.substring(indexOfPeriod+1);
-                            fieldName = fieldName.substring(0, indexOfPeriod);
+                        scope.value = null;
+
+                        if (form != null && form.data != null && form.data[name] != null && form.data[name].length > 0) {
+                            scope.value = form.data[name][0];
+                            if (scope.type == 'date')
+                                scope.value = scope.value != null && scope.value != '0NaN-NaN-NaNTNaN:NaN:NaNNaNNaN' ? $filter('date')(new Date(scope.value), 'MMM d, y') : '';
                         }
-                        var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
-                        if (values != null) {
-                            var html = '';
-                            var href = '';
-                            angular.forEach(values, function(value) {
-                                if (value != null) {
-                                    var current;
-                                    if (subFieldName != null)
-                                        current = value[subFieldName];
-                                    else
-                                        current = value;
 
-                                    html += typeof(current) === 'string' ? current : current.name;
 
-                                    if (typeof(current) !== 'string')
-                                        href = current.link;
-                                }
-                            });
-                            if (html == '')
-                                html = attr.wfPlaceholder;
-                            if (href != '')
-                                element.attr('href', href);
-
-                            element.html(html);
-                        }
-                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
-                            if (typeof(value) == 'undefined' && value == null)
-                                return;
-
-                            var html = typeof(value) === 'string' ? value : value.name;
-                            element.html(html);
-                        });
+//                        var data = form.data;
+//                        var fieldName = attr.wfVariable;
+//                        var subFieldName = null;
+//                        var indexOfPeriod = fieldName.indexOf('.');
+//                        if (indexOfPeriod != -1) {
+//                            subFieldName = fieldName.substring(indexOfPeriod+1);
+//                            fieldName = fieldName.substring(0, indexOfPeriod);
+//                        }
+//                        var values = typeof(data) !== 'undefined' ? data[fieldName] : null;
+//                        if (values != null) {
+//                            var html = '';
+//                            var href = '';
+//                            angular.forEach(values, function(value) {
+//                                if (value != null) {
+//                                    var current;
+//                                    if (subFieldName != null)
+//                                        current = value[subFieldName];
+//                                    else
+//                                        current = value;
+//
+//                                    html += typeof(current) === 'string' ? current : current.name;
+//
+//                                    if (typeof(current) !== 'string')
+//                                        href = current.link;
+//                                }
+//                            });
+//                            if (html == '')
+//                                html = attr.wfPlaceholder;
+//                            if (href != '')
+//                                element.attr('href', href);
+//
+//                            element.html(html);
+//                        }
+//                        scope.$on('wfEvent:value-updated:' + fieldName, function(event, value) {
+//                            if (typeof(value) == 'undefined' && value == null)
+//                                return;
+//
+//                            var html = typeof(value) === 'string' ? value : value.name;
+//                            element.html(html);
+//                        });
                     });
                 }
             }

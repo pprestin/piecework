@@ -29,7 +29,7 @@ public class FacetFactory {
     public static Map<String, Facet> facetMap(Set<Process> processes) {
         Map<String, Facet> facetMap = new HashMap<String, Facet>();
         for (Facet facet : facets(processes)) {
-            if (facet.getType().equals("date") && facet instanceof SearchFacet) {
+            if ((facet.getType().equals("date") || facet.getType().equals("datetime")) && facet instanceof SearchFacet) {
                 SearchFacet searchFacet = SearchFacet.class.cast(facet);
                 String beforeName = searchFacet.getName() + "Before";
                 String afterName = searchFacet.getName() + "After";
@@ -78,15 +78,15 @@ public class FacetFactory {
             }
         }
 
-        facets.add(new SearchFacet("startTime", "startTime", "Created", "date", false));
-        facets.add(new SearchFacet("endTime", "endTime", "Completed", "date", false));
-        facets.add(new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date", true));
+        facets.add(new SearchFacet("startTime", "startTime", "Created", "datetime", false));
+        facets.add(new SearchFacet("endTime", "endTime", "Completed", "datetime", false));
+        facets.add(new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "datetime", true));
 
         return facets;
     }
 
     public static SearchFacet defaultSearch() {
-        return new SearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date", true);
+        return new DateSearchFacet("lastModifiedTime", "lastModifiedTime", "Last Modified", "date", true);
     }
 
 }

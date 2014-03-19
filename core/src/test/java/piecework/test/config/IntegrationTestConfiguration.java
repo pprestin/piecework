@@ -37,6 +37,7 @@ import piecework.repository.config.MockRepositoryConfiguration;
 import piecework.security.AccessTracker;
 import piecework.security.Sanitizer;
 import piecework.security.data.UserInputSanitizer;
+import piecework.service.UserInterfaceService;
 import piecework.settings.SecuritySettings;
 
 import java.net.URL;

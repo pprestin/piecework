@@ -21,12 +21,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import piecework.Registry;
 import piecework.enumeration.ActionType;
+import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.MisconfiguredProcessException;
 import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.TaskProvider;
+import piecework.service.UserInterfaceService;
+import piecework.ui.visitor.RemoteTemplateVisitor;
 import piecework.util.ActivityUtility;
 import piecework.util.ProcessUtility;
 import piecework.util.ValidationUtility;
@@ -42,6 +45,9 @@ public class SubmissionTemplateFactory {
 
     @Autowired(required=false)
     Registry registry;
+
+    @Autowired(required=false)
+    UserInterfaceService userInterfaceService;
 
     public SubmissionTemplate submissionTemplate(TaskProvider taskProvider, FormRequest formRequest, ActionType actionType) throws PieceworkException {
         return submissionTemplate(taskProvider, actionType, formRequest, null);
@@ -88,7 +94,6 @@ public class SubmissionTemplateFactory {
      * limiting to a specific section id
      */
     private SubmissionTemplate submissionTemplate(ProcessDeploymentProvider deploymentProvider, FormRequest formRequest, ActionType actionType, Activity activity, String validationId) throws PieceworkException {
-        Set<Field> fields = null;
         Process process = deploymentProvider.process();
         ProcessDeployment deployment = deploymentProvider.deployment();
 
@@ -110,49 +115,23 @@ public class SubmissionTemplateFactory {
         if (includeFields) {
             Container parentContainer = ActivityUtility.parent(activity, ActionType.CREATE);
             Container container = ActivityUtility.child(activity, ActionType.CREATE, parentContainer);
-            if (container != null) {
-                if (StringUtils.isNotEmpty(validationId))
-                    container = ProcessUtility.container(container, validationId);
 
-                if (container != null) {
-                    Map<String, Field> fieldMap = activity.getFieldMap();
-                    List<String> fieldIds = ActivityUtility.fieldIds(container, parentContainer);
+            Set<Field> fields = new TreeSet<Field>();
 
-                    if (fieldIds != null) {
-                        fields = new TreeSet<Field>();
-                        for (String fieldId : fieldIds) {
-                            Field field = fieldMap.get(fieldId);
-                            if (field != null)
-                                fields.add(field);
-                        }
-                    }
-
-                    // Only add buttons to the validation from the top-level container, or from
-                    // the particular validation container that is selected
-                    List<Button> buttons = parentContainer.getButtons();
-                    if (buttons != null) {
-                        for (Button button : buttons) {
-                            if (button == null)
-                                continue;
-                            builder.button(button);
-
-                            // get child buttons as well
-                            List<Button> children = button.getChildren();
-                            if ( children != null ) { 
-                                for (Button child : children) {
-                                    if ( child != null ) { 
-                                        builder.button(child);
-                                    }   
-                                }   
-                            }   
-                        }
-                    }
-                }
+            Action action = activity.action(ActionType.CREATE);
+            if (action != null && action.getStrategy() != null && action.getStrategy() == DataInjectionStrategy.REMOTE && activity.isAllowAny()) {
+                Set<Field> remoteFields = userInterfaceService != null ?  userInterfaceService.getRemoteFields(deploymentProvider, action, parentContainer, container, null) : null;
+                if (remoteFields != null && !remoteFields.isEmpty())
+                    fields.addAll(remoteFields);
             }
+
+            Set<Field> localFields = getLocalFields(builder, activity, validationId);
+            if (localFields != null && !localFields.isEmpty())
+                fields.addAll(localFields);
 
             // If we're not validating a single container, or if we weren't able to find the container to validate,
             // then simply validate all fields for this activity
-            if (fields == null)
+            if (fields.isEmpty())
                 fields = activity.getFields();
 
             if (fields != null) {
@@ -169,6 +148,52 @@ public class SubmissionTemplateFactory {
             builder.rules(field, new ArrayList<ValidationRule>(ValidationUtility.validationRules(field, registry)));
             builder.field(field);
         }
+    }
+
+    private Set<Field> getLocalFields(SubmissionTemplate.Builder builder, Activity activity, String validationId) {
+        Set<Field> fields = null;
+        Container parentContainer = ActivityUtility.parent(activity, ActionType.CREATE);
+        Container container = ActivityUtility.child(activity, ActionType.CREATE, parentContainer);
+        if (container != null) {
+            if (StringUtils.isNotEmpty(validationId))
+                container = ProcessUtility.container(container, validationId);
+
+            if (container != null) {
+                Map<String, Field> fieldMap = activity.getFieldMap();
+                List<String> fieldIds = ActivityUtility.fieldIds(container, parentContainer);
+
+                if (fieldIds != null) {
+                    fields = new TreeSet<Field>();
+                    for (String fieldId : fieldIds) {
+                        Field field = fieldMap.get(fieldId);
+                        if (field != null)
+                            fields.add(field);
+                    }
+                }
+
+                // Only add buttons to the validation from the top-level container, or from
+                // the particular validation container that is selected
+                List<Button> buttons = parentContainer.getButtons();
+                if (buttons != null) {
+                    for (Button button : buttons) {
+                        if (button == null)
+                            continue;
+                        builder.button(button);
+
+                        // get child buttons as well
+                        List<Button> children = button.getChildren();
+                        if ( children != null ) {
+                            for (Button child : children) {
+                                if ( child != null ) {
+                                    builder.button(child);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return fields;
     }
 
 

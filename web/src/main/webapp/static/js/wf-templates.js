@@ -514,6 +514,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                   <div data-ng-click="edit()" data-ng-show="files" class="btn btn-default btn-xs" title="To delete files, click unlock then click on red x">' +
     '                       <i data-ng-class="editing ? \'fa-unlock\' : \'fa-lock\'" class="fa"></i>' +
     '                   </div>' +
+    '                   <div data-wf-alert="{{name}}" class="text-danger"></div>' +
     '               </div>' +
     '               <div class="clearfix"></div>' +
     '           </li>' +
@@ -844,6 +845,13 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            </div>\n" +
     "        </div>\n" +
     "    </nav>");
+//  $templateCache.put("templates/date.html",
+//    '<div class="input-group wf-datepicker-group">' +
+//    '   <input name="{{name}}" size="10" type="text" class="form-control wf-datepicker" datepicker-popup data-ng-model="date" datepicker-options="dateOptions"  is-open="opened" min="minDate" max="maxDate" close-text="Close" show-weeks="false"/>' +
+//    '   <span class="input-group-addon">' +
+//    '       <i class="fa fa-calendar"></i> ' +
+//    '   </span> ' +
+//    '</div>');
   $templateCache.put("templates/daterange.html",
     '<input data-ng-change="afterChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/> ' +
     '<input data-ng-change="beforeChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/> ' +

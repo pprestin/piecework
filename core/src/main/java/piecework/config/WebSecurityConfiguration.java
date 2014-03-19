@@ -82,11 +82,6 @@ public class WebSecurityConfiguration {
         return new AffirmativeBased(Collections.singletonList(voter));
     }
 
-//    @Bean //(name="org.springframework.security.authenticationManager")
-//    public CustomAuthenticationManagerFactoryBean authenticationManagerFactoryBean() {
-//        return new CustomAuthenticationManagerFactoryBean();
-//    }
-
     @Bean(name="org.springframework.security.authenticationManager")
     public AuthenticationManager authenticationManager() throws Exception {
         switch (authenticationType()) {
