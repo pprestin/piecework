@@ -57,39 +57,39 @@ public class CacheService {
         this.cacheKeyMap = new ManyMapSet<String, String>();
     }
 
-    @Scheduled(fixedRate=5000)
-    public synchronized void runEveryFiveSeconds() {
-        if (this.cacheKeyMap != null && !this.cacheKeyMap.isEmpty()) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Saving cache event as " + CACHE_AGENT_ID);
-
-            CacheEvent event = new CacheEvent(CACHE_AGENT_ID, new ManyMapSet<String, String>(cacheKeyMap));
-            cacheEventRepository.save(event);
-            this.cacheKeyMap = new ManyMapSet<String, String>();
-        }
-    }
-
-    @Scheduled(fixedRate=30000)
-    public void runEveryThirtySeconds() {
-        List<CacheEvent> events = cacheEventRepository.findAllOtherCacheAgentEvents(CACHE_AGENT_ID);
-        long thirtySecondsAgo = System.currentTimeMillis() - 30000;
-        if (events != null) {
-            for (CacheEvent event : events) {
-                long eventTime = event.getEventDate() != null ? event.getEventDate().getTime() : -1;
-                if (eventTime > thirtySecondsAgo) {
-                    if (LOG.isDebugEnabled())
-                        LOG.debug("Processing cache event as " + CACHE_AGENT_ID);
-
-                    ManyMapSet<String, String> eventCacheKeyMap = event.getCacheKeyMap();
-                    if (eventCacheKeyMap != null && !eventCacheKeyMap.isEmpty()) {
-                        for (Map.Entry<String, Set<String>> entry : eventCacheKeyMap.entrySet()) {
-                            evict(entry.getKey(), entry.getValue());
-                        }
-                    }
-                }
-            }
-        }
-    }
+//    @Scheduled(fixedRate=5000)
+//    public synchronized void runEveryFiveSeconds() {
+//        if (this.cacheKeyMap != null && !this.cacheKeyMap.isEmpty()) {
+//            if (LOG.isDebugEnabled())
+//                LOG.debug("Saving cache event as " + CACHE_AGENT_ID);
+//
+//            CacheEvent event = new CacheEvent(CACHE_AGENT_ID, new ManyMapSet<String, String>(cacheKeyMap));
+//            cacheEventRepository.save(event);
+//            this.cacheKeyMap = new ManyMapSet<String, String>();
+//        }
+//    }
+//
+//    @Scheduled(fixedRate=30000)
+//    public void runEveryThirtySeconds() {
+//        List<CacheEvent> events = cacheEventRepository.findAllOtherCacheAgentEvents(CACHE_AGENT_ID);
+//        long thirtySecondsAgo = System.currentTimeMillis() - 30000;
+//        if (events != null) {
+//            for (CacheEvent event : events) {
+//                long eventTime = event.getEventDate() != null ? event.getEventDate().getTime() : -1;
+//                if (eventTime > thirtySecondsAgo) {
+//                    if (LOG.isDebugEnabled())
+//                        LOG.debug("Processing cache event as " + CACHE_AGENT_ID);
+//
+//                    ManyMapSet<String, String> eventCacheKeyMap = event.getCacheKeyMap();
+//                    if (eventCacheKeyMap != null && !eventCacheKeyMap.isEmpty()) {
+//                        for (Map.Entry<String, Set<String>> entry : eventCacheKeyMap.entrySet()) {
+//                            evict(entry.getKey(), entry.getValue());
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     public Cache.ValueWrapper get(CacheName cacheName, String key) {
         Cache cache = cacheManager.getCache(cacheName.name());

@@ -98,7 +98,7 @@ public class AccessTracker implements RequestHandler {
             StringBuilder body = new StringBuilder(message);
 
             if (principal != null)
-                body.append(crLf).append(crLf).append("Action attempted as principal " + principal.getEntityId());
+                body.append(crLf).append(crLf).append("Action attempted as principal ").append(principal.getEntityId());
             else
                 body.append(crLf).append(crLf).append("Action attempted by anonymous principal");
 

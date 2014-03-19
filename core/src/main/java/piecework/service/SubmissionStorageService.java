@@ -106,6 +106,7 @@ public class SubmissionStorageService {
             File file = null;
 
             if (inputStream != null) {
+                LOG.info("Found content from a stream");
                 if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT)
                     inputStream = new MaxSizeInputStream(inputStream, Long.valueOf(template.getMaxAttachmentSize()) * 1024l);
                 else if (field != null && field.getMaxValueLength() > 0)
@@ -158,6 +159,7 @@ public class SubmissionStorageService {
             }
 
             if (fieldSubmissionType == FieldSubmissionType.RESTRICTED) {
+                LOG.info("Processing restricted field " + name);
                 try {
                     submissionBuilder.formValue(name, encryptionService.encrypt(value));
                 } catch (Exception e) {
@@ -165,6 +167,7 @@ public class SubmissionStorageService {
                     throw new InternalServerError(Constants.ExceptionCodes.encryption_error, name);
                 }
             } else if (fieldSubmissionType == FieldSubmissionType.ACCEPTABLE) {
+                LOG.info("Processing acceptable field " + name);
                 if (file != null)
                     submissionBuilder.formValue(name, file);
                 else if (template.isUserField(name))
@@ -178,13 +181,15 @@ public class SubmissionStorageService {
                     }
                 } else
                     submissionBuilder.formValue(name, value);
+
             } else if (fieldSubmissionType == FieldSubmissionType.RANDOM) {
+                LOG.info("Processing random field " + name);
                 if (file != null)
                     submissionBuilder.formValue(name, file);
                 else
                     submissionBuilder.formValue(name, value);
             } else if (fieldSubmissionType == FieldSubmissionType.ATTACHMENT) {
-
+                LOG.info("Processing attachment " + name);
                 if (file == null) {
                     file = new File.Builder()
                             .name(name)
@@ -212,6 +217,7 @@ public class SubmissionStorageService {
             ActionType actionType = StringUtils.isNotEmpty(button.getAction()) ? ActionType.valueOf(button.getAction()) : null;
 
             if (actionType != null) {
+                LOG.info("Button action type is " + actionType);
                 submissionBuilder.actionType(actionType);
 
                 // FIXME: Potential pipeline mechanism for sending data back to the Activiti Engine for routing - this would need to be added to the

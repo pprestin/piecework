@@ -204,8 +204,6 @@ public class RemoteResource implements ContentResource {
             connectionCloser.closeEverythingQuietly();
             LOG.error("Unable to retrieve remote resource", e);
             throw new IOException("Unable to retrieve remote resource content", e);
-        } finally {
-
         }
     }
 

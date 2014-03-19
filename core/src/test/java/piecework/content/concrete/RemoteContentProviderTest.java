@@ -67,7 +67,6 @@ public class RemoteContentProviderTest {
         Assert.assertEquals("resource", contentResource.getFilename());
         Assert.assertEquals("http://localhost:10001/external/some/resource", contentResource.getContentId());
         Assert.assertEquals("text/plain;charset=UTF-8", contentResource.contentType());
-        byte[] array = null;
         InputStream input = contentResource.getInputStream();
         String expected = "This is some data from an external server";
         String actual = IOUtils.toString(input);

@@ -159,17 +159,20 @@ public class UserInterfaceService {
     }
 
     public Set<Field> getRemoteFields(ProcessDeploymentProvider modelProvider, Action action, Container parentContainer, Container container, ViewContext context) throws PieceworkException {
+        LOG.info("Calling getRemoteFields");
+
         if (action.getStrategy() == null || action.getStrategy() != DataInjectionStrategy.REMOTE)
             return Collections.<Field>emptySet();
 
         Set<Field> fields = null;
         if (remoteContentProvider != null) {
-            String location = action.getLocation();
             Process process = modelProvider.process();
             ProcessDeployment deployment = modelProvider.deployment();
             FormDisposition formDisposition = FormDisposition.Builder.build(process, deployment, action, context);
             URI uri = formDisposition.getPageUri();
 
+            if (LOG.isInfoEnabled())
+                LOG.info("Retrieving remote resource from " + uri.toString());
 
             ContentResource contentResource = remoteContentProvider.findByLocation(modelProvider, uri.toString());
 
@@ -192,6 +195,9 @@ public class UserInterfaceService {
                 LOG.error("Error retrieving remote fields", ioe);
             }
         }
+
+        if (fields != null)
+            LOG.info("Retrieved " + fields.size() + " remote fields");
 
         return fields;
     }
