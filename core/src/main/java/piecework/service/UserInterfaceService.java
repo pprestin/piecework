@@ -16,6 +16,7 @@
 package piecework.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.IOUtils;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.log4j.Logger;
 import org.htmlcleaner.CleanerProperties;
@@ -24,13 +25,11 @@ import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.content.ContentResource;
-import piecework.content.concrete.RemoteContentProvider;
-import piecework.content.concrete.RemoteResource;
+import piecework.content.concrete.FileSystemContentProvider;
 import piecework.enumeration.CacheName;
 import piecework.enumeration.DataInjectionStrategy;
 import piecework.exception.*;
@@ -46,6 +45,7 @@ import piecework.ui.CustomJaxbJsonProvider;
 import piecework.ui.InlinePageModelSerializer;
 import piecework.ui.streaming.HtmlCleanerStreamingOutput;
 import piecework.ui.visitor.*;
+import piecework.util.FileUtility;
 import piecework.util.UserInterfaceUtility;
 
 import javax.servlet.ServletContext;
@@ -59,7 +59,6 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * @author James Renfro
@@ -85,7 +84,7 @@ public class UserInterfaceService {
     private CustomJaxbJsonProvider jsonProvider;
 
     @Autowired(required=false)
-    private RemoteContentProvider remoteContentProvider;
+    private FileSystemContentProvider fileSystemContentProvider;
 
     @Autowired
     private UserInterfaceSettings settings;
@@ -160,12 +159,13 @@ public class UserInterfaceService {
 
     public Set<Field> getRemoteFields(ProcessDeploymentProvider modelProvider, Action action, Container parentContainer, Container container, ViewContext context) throws PieceworkException {
         LOG.info("Calling getRemoteFields");
+        ContentProfile contentProfile = modelProvider.contentProfile();
 
-        if (action.getStrategy() == null || action.getStrategy() != DataInjectionStrategy.REMOTE)
+        if (action.getStrategy() == null || action.getStrategy() != DataInjectionStrategy.REMOTE || StringUtils.isEmpty(contentProfile.getBaseDirectory()))
             return Collections.<Field>emptySet();
 
         Set<Field> fields = null;
-        if (remoteContentProvider != null) {
+        if (fileSystemContentProvider != null) {
             Process process = modelProvider.process();
             ProcessDeployment deployment = modelProvider.deployment();
             FormDisposition formDisposition = FormDisposition.Builder.build(process, deployment, action, context);
@@ -174,10 +174,12 @@ public class UserInterfaceService {
             if (LOG.isInfoEnabled())
                 LOG.info("Retrieving remote resource from " + uri.toString());
 
-            ContentResource contentResource = remoteContentProvider.findByLocation(modelProvider, uri.toString());
+            String fileName = FileUtility.resolveFilenameFromPath(uri.toString());
+            ContentResource contentResource = fileSystemContentProvider.findByLocation(modelProvider, "file:" + fileName);
 
+            InputStream inputStream = null;
             try {
-                InputStream inputStream = contentResource.getInputStream();
+                inputStream = contentResource.getInputStream();
                 // Sanity check
                 if (inputStream == null)
                     throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, "Unable to view remote template");
@@ -193,6 +195,8 @@ public class UserInterfaceService {
 
             } catch (IOException ioe) {
                 LOG.error("Error retrieving remote fields", ioe);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
             }
         }
 

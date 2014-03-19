@@ -86,7 +86,20 @@ public class FileSystemContentProvider implements ContentProvider {
             // Check that base directory is a descendent of Piecework's filesystem root
             File baseDirectory = new File(contentProfile.getBaseDirectory());
             boolean isBaseDirectoryDescendent = FileUtility.isAncestorOf(root, baseDirectory);
+
+            // The base directory is not a descendent of root, then try to find it under the root
+            if (!isBaseDirectoryDescendent) {
+                baseDirectory = new File(root, contentProfile.getBaseDirectory());
+                isBaseDirectoryDescendent = FileUtility.isAncestorOf(root, baseDirectory);
+            }
+
             boolean isFileDescendent = FileUtility.isAncestorOf(baseDirectory, file);
+
+            if (!isFileDescendent) {
+                file = new File(baseDirectory, path);
+                isFileDescendent = FileUtility.isAncestorOf(baseDirectory, file);
+            }
+
             boolean isFileReadAllowed = isBaseDirectoryDescendent && isFileDescendent;
             if (! isFileReadAllowed) {
                 accessTracker.alarm(AlarmSeverity.MINOR, "Attempt to access file " + file.getAbsolutePath() + " outside of " + root.getAbsolutePath() + " forbidden", modelProvider.principal());
@@ -99,7 +112,10 @@ public class FileSystemContentProvider implements ContentProvider {
 
         FileSystemResource resource = new FileSystemResource(file);
 
-        return new FileSystemContentResource(resource);
+        if (resource.exists())
+            return new FileSystemContentResource(resource);
+
+        return null;
     }
 
     @Override

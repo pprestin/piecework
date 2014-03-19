@@ -120,7 +120,7 @@ public class FileSystemContentProviderTest {
         Assert.assertNull(contentResource);
     }
 
-    @Test(expected = ForbiddenError.class)
+    @Test
     public void retrieveFileOutsideApprovedPath() throws Exception {
         File illegalFile = new File(rootDirectory.getParent(), UUID.randomUUID().toString());
         String location = "file:" + illegalFile.getAbsolutePath();
