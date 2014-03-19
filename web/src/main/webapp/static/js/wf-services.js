@@ -545,7 +545,7 @@ angular.module('wf.services',
                         });
                 },
                 comment: function($scope, form, comment, success, failure) {
-                    var formData = 'comment=' + comment;
+                    var formData = 'comment=' + encodeURIComponent(comment);
                     var url = form.attachment + ".json";
                     $http.post($sce.trustAsResourceUrl(url), formData, {
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'}

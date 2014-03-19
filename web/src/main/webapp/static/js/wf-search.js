@@ -10,12 +10,11 @@ angular.module('wf',
         'wf.directives',
         'wf.services'
     ])
-    .directive('wfKeypressEvents', ['$compile', '$document', '$rootScope',
-        function($compile, $document, $rootScope) {
+    .directive('wfKeypressEvents', ['$document', '$rootScope',
+        function($document, $rootScope) {
               return {
                   restrict: 'A',
                   link: function() {
-                      window.document.compiler = $compile;
                       $document.bind('keyup', function(e) {
                           $rootScope.$broadcast('keyup:' + e.which, e);
                       });

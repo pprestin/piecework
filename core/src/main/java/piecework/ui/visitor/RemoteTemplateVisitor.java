@@ -56,6 +56,7 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
             String activeAttribute = tag.getAttributeByName("data-wf-active");
             String dateAttribute = tag.getAttributeByName("data-wf-date");
             String fileAttribute = tag.getAttributeByName("data-wf-file");
+            String personAttribute = tag.getAttributeByName("data-wf-person");
             String nameAttribute = tag.getAttributeByName("data-name");
             if (StringUtils.isEmpty(nameAttribute))
                 nameAttribute = tag.getAttributeByName("name");
@@ -71,6 +72,8 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
                     fieldTag = FieldTag.DATE;
                 else if (StringUtils.isNotEmpty(fileAttribute))
                     fieldTag = FieldTag.FILE;
+                else if (StringUtils.isNotEmpty(personAttribute))
+                    fieldTag = FieldTag.PERSON;
                 else
                     fieldTag = FieldTag.getInstance(tagName, typeAttribute, multipleAttribute);
 

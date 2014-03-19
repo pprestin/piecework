@@ -1333,7 +1333,8 @@ angular.module('wf.directives',
             return {
                 restrict: 'AE',
                 scope: {
-                    name : '='
+                    name : '@',
+                    required : '@'
                 },
                 templateUrl: 'templates/person.html',
                 transclude: true,
