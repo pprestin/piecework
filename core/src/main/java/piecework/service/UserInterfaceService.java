@@ -177,6 +177,9 @@ public class UserInterfaceService {
             String fileName = FileUtility.resolveFilenameFromPath(uri.toString());
             ContentResource contentResource = fileSystemContentProvider.findByLocation(modelProvider, "file:" + fileName);
 
+            if (contentResource == null)
+                throw new NotFoundError();
+
             InputStream inputStream = null;
             try {
                 inputStream = contentResource.getInputStream();

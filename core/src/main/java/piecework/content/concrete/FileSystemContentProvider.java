@@ -115,6 +115,7 @@ public class FileSystemContentProvider implements ContentProvider {
         if (resource.exists())
             return new FileSystemContentResource(resource);
 
+        LOG.error("No file exists at this path: " + file.getAbsolutePath());
         return null;
     }
 
