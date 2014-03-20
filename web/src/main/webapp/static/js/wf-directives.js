@@ -41,11 +41,20 @@ angular.module('wf.directives',
                             isDisabled = true;
                         }
 
-                        var $input = element.is(":input") ? element : element.children();
-                        if (isDisabled)
+                        var $input = element.is(":input") ? element : element.find(":input");
+                        if (isDisabled) {
                             $input.attr('disabled', 'disabled');
-                        else
+                            if ($input.attr('type') == 'radio') {
+                                $input.attr('type', 'checkbox');
+                                $input.addClass('wf-was-radio');
+                            }
+                        } else {
                             $input.removeAttr('disabled');
+                            if ($input.hasClass('wf-was-radio')) {
+                                $input.removeClass('wf-was-radio');
+                                $input.attr('type', 'radio');
+                            }
+                        }
                     });
                 }
             }
