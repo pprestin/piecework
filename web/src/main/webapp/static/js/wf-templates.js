@@ -547,7 +547,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '               <div class="btn-toolbar pull-right">' +
     '                   <div data-ng-class="checkedOut ? \'btn-danger\' : \'\'" class="btn btn-default btn-xs fileinput-button">' +
     '                       <i ng-hide="state.sending" class="fa fa-cloud-upload"></i> Upload' +
-    '                       <input type="file" name="{{name}}" multiple="multiple" ng-disabled="disabled">' +
+    '                       <input type="file" name="{{name}}" multiple="multiple" ng-disabled="form.currentUser.userId !== form.task.assignee.userId">' +
     '                   </div>' +
     '               </div>' +
     '               <div class="clearfix"></div>' +
