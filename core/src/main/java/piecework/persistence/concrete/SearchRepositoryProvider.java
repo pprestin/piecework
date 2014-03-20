@@ -332,7 +332,7 @@ public class SearchRepositoryProvider implements SearchProvider {
         response.setSortBy(sortBy);
 
         if (LOG.isDebugEnabled())
-            LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
+            LOG.debug("Retrieved forms in " + (System.currentTimeMillis() - time) + " ms");
 
         if (principal instanceof User)
             response.setCurrentUser(User.class.cast(principal));
@@ -362,15 +362,22 @@ public class SearchRepositoryProvider implements SearchProvider {
                 } else {
                     Process process = Process.class.cast(wrapper.get());
                     if (process != null) {
-                        if (LOG.isDebugEnabled())
-                            LOG.debug("Retrieving basic process definition from cache for " + processDefinitionKey);
+//                        if (LOG.isDebugEnabled())
+//                            LOG.debug("Retrieving basic process definition from cache for " + processDefinitionKey);
                         allProcesses.add(process);
                     }
                 }
             }
+
+            if (LOG.isDebugEnabled())
+                LOG.debug("Retrieved " + allProcesses.size() + " basic processes from cache");
+
             // Look for any that were not cached
             List<Process> processes = uncachedProcessDefinitionKeys.isEmpty() ? Collections.<Process>emptyList() : processRepository.findAllBasic(uncachedProcessDefinitionKeys);
             if (processes != null && !processes.isEmpty()) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Retrieved " + processes.size() + " basic processes from repository");
+
                 for (Process process : processes) {
                     cacheService.put(CacheName.PROCESS_BASIC, process.getProcessDefinitionKey(), process);
                     allProcesses.add(process);

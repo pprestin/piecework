@@ -21,6 +21,13 @@
            timeToIdleSeconds="300"
            timeToLiveSeconds="600" />
 
+    <cache name="AUTHORIZATIONS"
+           eternal="false"
+           maxElementsInMemory="10000"
+           overflowToDisk="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600" />
+
     <cache name="GROUP"
            eternal="false"
            maxElementsInMemory="1000"

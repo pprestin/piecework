@@ -96,7 +96,8 @@ public class ModelRepositoryProviderFactory implements ModelProviderFactory {
     public ProcessProvider processProvider(String rawProcessDefinitionKey, Entity principal) {
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         ProcessProvider processProvider = new ProcessRepositoryProvider(processRepository, processDefinitionKey, principal);
-        return new CachingProcessProvider(cacheService, processProvider);
+//        return new CachingProcessProvider(cacheService, processProvider);
+        return processProvider;
     }
 
     @Override

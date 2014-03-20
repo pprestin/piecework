@@ -17,11 +17,16 @@ package piecework.authorization.config;
 
 import com.google.common.collect.Sets;
 import org.mockito.Mockito;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import piecework.authorization.*;
 import piecework.model.Authorization;
 import piecework.repository.AuthorizationRepository;
+import piecework.repository.config.MockRepositoryConfiguration;
+import piecework.service.CacheService;
 
 import java.util.Collections;
 
@@ -29,6 +34,7 @@ import java.util.Collections;
  * @author James Renfro
  */
 @Configuration
+@Import(MockRepositoryConfiguration.class)
 public class AuthorizationConfiguration {
 
     @Bean
@@ -77,6 +83,16 @@ public class AuthorizationConfiguration {
     @Bean
     public AuthorizationRoleMapper authorizationRoleMapper() {
         return new AuthorizationRoleMapper();
+    }
+
+    @Bean
+    public CacheManager cacheManager() {
+        return new ConcurrentMapCacheManager();
+    }
+
+    @Bean
+    public CacheService cacheService() {
+        return new CacheService();
     }
 
     @Bean

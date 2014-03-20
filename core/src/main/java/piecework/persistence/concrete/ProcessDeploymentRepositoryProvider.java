@@ -16,6 +16,7 @@
 package piecework.persistence.concrete;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import piecework.common.ViewContext;
 import piecework.exception.InternalServerError;
 import piecework.exception.MisconfiguredProcessException;
@@ -30,6 +31,8 @@ import piecework.repository.DeploymentRepository;
  * @author James Renfro
  */
 public class ProcessDeploymentRepositoryProvider implements ProcessDeploymentProvider {
+
+    private static final Logger LOG = Logger.getLogger(ProcessDeploymentRepositoryProvider.class);
 
     private final DeploymentRepository deploymentRepository;
     private final ProcessProvider processProvider;
@@ -91,7 +94,16 @@ public class ProcessDeploymentRepositoryProvider implements ProcessDeploymentPro
             if (deploymentRepository == null)
                 throw new InternalServerError();
 
-            return deploymentRepository.findOne(deploymentId);
+            long time = 0;
+            if (LOG.isDebugEnabled())
+                time = System.currentTimeMillis();
+
+            ProcessDeployment deployment = deploymentRepository.findOne(deploymentId);
+
+            if (LOG.isDebugEnabled())
+                LOG.debug("Retrieved deployment in " + (System.currentTimeMillis() - time) + " ms");
+
+            return deployment;
         }
 
         Process process = process();

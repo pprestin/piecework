@@ -15,43 +15,77 @@
  */
 package piecework.authorization;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import piecework.enumeration.CacheName;
 import piecework.model.Authorization;
 import piecework.repository.AuthorizationRepository;
+import piecework.service.CacheService;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author James Renfro
  */
 @Service
 public class DefaultAuthorizationProvider implements AuthorizationProvider {
+    private static final Logger LOG = Logger.getLogger(DefaultAuthorizationProvider.class);
 
     @Autowired
     AuthorizationRepository repository;
+
+    @Autowired
+    CacheService cacheService;
 
     @Override
     public AccessAuthority authority(Collection<? extends GrantedAuthority> authorities) {
         AccessAuthority.Builder builder = new AccessAuthority.Builder();
 
+        Set<Authorization> authorizations = new HashSet<Authorization>();
         Set<String> authorizationIds = new HashSet<String>();
         for (GrantedAuthority authority : authorities) {
             if (authority instanceof SuperUserAccessAuthority) {
                 return (SuperUserAccessAuthority) authority;
             } else {
                 String authorizationId = authority.getAuthority();
-                authorizationIds.add(authorizationId);
                 builder.groupId(authorizationId);
+
+                Cache.ValueWrapper valueWrapper = cacheService.get(CacheName.AUTHORIZATIONS, authorizationId);
+                if (valueWrapper != null) {
+                    Authorization authorization = Authorization.class.cast(valueWrapper.get());
+                    if (authorization != null)
+                        authorizations.add(authorization);
+                } else {
+                    authorizationIds.add(authorizationId);
+                }
             }
         }
 
-        Iterable<Authorization> authorizations = repository.findAll(authorizationIds);
-        if (authorizations != null) {
+        if (LOG.isDebugEnabled()) {
+            int numberOfCachedAuthorizations = authorizations.size();
+            int numberOfUncachedAuthorizations = authorizationIds.size();
+            LOG.debug("Retrieved " + numberOfCachedAuthorizations + " cached authorizations, looking up " + numberOfUncachedAuthorizations + " potential authorizations");
+        }
+
+        if (!authorizationIds.isEmpty()) {
+            Iterable<Authorization> uncached = repository.findAll(authorizationIds);
+            if (uncached != null) {
+                for (Authorization authorization : uncached) {
+                    authorizations.add(authorization);
+                    authorizationIds.remove(authorization.getAuthorizationId());
+                    cacheService.put(CacheName.AUTHORIZATIONS, authorization.getAuthorizationId(), authorization);
+                }
+                // Ensure that we cache the fact that nothing came back so we can stop asking for this authorization
+                for (String authorizationId : authorizationIds) {
+                    cacheService.put(CacheName.AUTHORIZATIONS, authorizationId, null);
+                }
+            }
+        }
+
+        if (authorizations != null && !authorizations.isEmpty()) {
             for (Authorization authorization : authorizations) {
                 if (authorization != null) {
                     List<ResourceAuthority> resourceAuthorities = authorization.getAuthorities();

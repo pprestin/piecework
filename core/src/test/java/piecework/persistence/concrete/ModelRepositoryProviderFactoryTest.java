@@ -175,15 +175,15 @@ public class ModelRepositoryProviderFactoryTest {
         allowedTaskProvider.allowedTask(true);
     }
 
-    @Test
-    public void verifyCachingProcessProvider() throws PieceworkException {
-        ProcessProvider processProvider = factory.processProvider("TEST", principal);
-        Assert.assertTrue(processProvider instanceof CachingProcessProvider);
-        Assert.assertEquals("TEST", processProvider.processDefinitionKey());
-
-        Process process = processProvider.process();
-        Assert.assertEquals("TEST", process.getProcessDefinitionKey());
-    }
+//    @Test
+//    public void verifyCachingProcessProvider() throws PieceworkException {
+//        ProcessProvider processProvider = factory.processProvider("TEST", principal);
+//        Assert.assertTrue(processProvider instanceof CachingProcessProvider);
+//        Assert.assertEquals("TEST", processProvider.processDefinitionKey());
+//
+//        Process process = processProvider.process();
+//        Assert.assertEquals("TEST", process.getProcessDefinitionKey());
+//    }
 
     @Test
     public void verifyDeploymentProvider() throws PieceworkException {

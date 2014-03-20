@@ -21,6 +21,7 @@ package piecework.enumeration;
 public enum CacheName {
     ACCESS_ANONYMOUS(true),
     ACCESS_AUTHENTICATED(true),
+    AUTHORIZATIONS(true),
     GROUP(true),
     PROCESS,
     PROCESS_BASIC,

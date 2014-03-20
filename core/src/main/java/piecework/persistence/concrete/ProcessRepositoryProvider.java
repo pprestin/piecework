@@ -16,6 +16,7 @@
 package piecework.persistence.concrete;
 
 import org.apache.cxf.common.util.StringUtils;
+import org.apache.log4j.Logger;
 import piecework.Constants;
 import piecework.common.ViewContext;
 import piecework.exception.*;
@@ -31,6 +32,7 @@ import piecework.security.concrete.PassthroughSanitizer;
  * @author James Renfro
  */
 public class ProcessRepositoryProvider implements ProcessProvider {
+    private static final Logger LOG = Logger.getLogger(ProcessRepositoryProvider.class);
 
     private final ProcessRepository processRepository;
     private final String processDefinitionKey;
@@ -46,11 +48,18 @@ public class ProcessRepositoryProvider implements ProcessProvider {
 
     @Override
     public synchronized Process process() throws StatusCodeError {
+        long time = 0;
+        if (LOG.isDebugEnabled())
+            time = System.currentTimeMillis();
+
         if (process == null) {
             if (StringUtils.isEmpty(processDefinitionKey))
                 throw new BadRequestError(Constants.ExceptionCodes.process_key_required);
             process = processRepository.findOne(processDefinitionKey);
         }
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Retrieved process in " + (System.currentTimeMillis() - time) + " ms");
 
         if (process == null)
             throw new NotFoundError();

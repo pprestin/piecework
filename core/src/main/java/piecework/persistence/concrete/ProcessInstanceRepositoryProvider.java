@@ -93,8 +93,16 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
         }
 
         if (!useCurrentDeployment(instance, _deployment)) {
+            long time = 0;
+            if (LOG.isDebugEnabled())
+                time = System.currentTimeMillis();
+
             String deploymentId = instance.getDeploymentId();
             ProcessDeployment actual = deploymentRepository.findOne(deploymentId);
+
+            if (LOG.isDebugEnabled())
+                LOG.debug("Retrieved deployment in " + (System.currentTimeMillis() - time) + " ms");
+
             return actual;
         }
         return _deployment;
@@ -134,6 +142,7 @@ public class ProcessInstanceRepositoryProvider extends ProcessDeploymentReposito
 
         if (_instance == null) {
             Process process = process();
+
             _instance = processInstanceRepository.findOne(processInstanceId);
 
             if (_instance == null || StringUtils.isEmpty(_instance.getProcessDefinitionKey()))
