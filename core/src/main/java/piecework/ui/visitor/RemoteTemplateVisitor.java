@@ -38,6 +38,8 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
     private final Container container;
     private final Set<Field> fields;
 
+    private boolean novalidate = false;
+
     public RemoteTemplateVisitor(Container parentContainer, Container container) {
         this.parentContainer = parentContainer;
         this.container = container;
@@ -50,6 +52,13 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
         if (htmlNode instanceof TagNode) {
             TagNode tag = (TagNode) htmlNode;
             String tagName = tag.getName() != null ? tag.getName().toLowerCase() : "";
+
+            if (tagName != null && tagName.equalsIgnoreCase("form")) {
+                String novalidate = tag.getAttributeByName("data-wf-novalidation");
+                if (StringUtils.isNotEmpty(novalidate))
+                    this.novalidate = true;
+            }
+
             String typeAttribute = tag.getAttributeByName("type");
             String multipleAttribute = tag.getAttributeByName("multiple");
 
@@ -82,7 +91,7 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
                             .name(nameAttribute)
                             .type(fieldTag.getFieldType())
                             .editable()
-                            .required(required)
+                            .required(!this.novalidate && required)
                             .build());
                 }
             }

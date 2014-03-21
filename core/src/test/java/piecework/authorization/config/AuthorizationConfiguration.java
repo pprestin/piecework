@@ -44,10 +44,19 @@ public class AuthorizationConfiguration {
 
     @Bean
     public AuthorizationRepository authorizationRepository() {
-        Authorization testGroup1Authorization = Mockito.mock(Authorization.class);
-        Authorization testGroup2Authorization = Mockito.mock(Authorization.class);
+
         ResourceAuthority resourceAuthority1 = Mockito.mock(ResourceAuthority.class);
         ResourceAuthority resourceAuthority2 = Mockito.mock(ResourceAuthority.class);
+
+        Authorization testGroup1Authorization = new Authorization.Builder()
+                .authorizationId("ROLE_TESTGROUP1")
+                .authority(resourceAuthority1)
+                .build();
+
+        Authorization testGroup2Authorization = new Authorization.Builder()
+                .authorizationId("ROLE_TESTGROUP2")
+                .authority(resourceAuthority2)
+                .build();
 
         Mockito.when(resourceAuthority1.getRole())
                 .thenReturn(AuthorizationRole.USER);
@@ -61,11 +70,11 @@ public class AuthorizationConfiguration {
         Mockito.when(resourceAuthority2.getProcessDefinitionKeys())
                 .thenReturn(Sets.newHashSet("TESTPROCESS2"));
 
-        Mockito.when(testGroup1Authorization.getAuthorities())
-                .thenReturn(Collections.singletonList(resourceAuthority1));
-
-        Mockito.when(testGroup2Authorization.getAuthorities())
-                .thenReturn(Collections.singletonList(resourceAuthority2));
+//        Mockito.when(testGroup1Authorization.getAuthorities())
+//                .thenReturn(Collections.singletonList(resourceAuthority1));
+//
+//        Mockito.when(testGroup2Authorization.getAuthorities())
+//                .thenReturn(Collections.singletonList(resourceAuthority2));
 
         AuthorizationRepository authorizationRepository = Mockito.mock(AuthorizationRepository.class);
         Mockito.when(authorizationRepository.findAll(Sets.newHashSet("ROLE_TESTGROUP1")))

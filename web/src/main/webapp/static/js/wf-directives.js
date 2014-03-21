@@ -1444,31 +1444,6 @@ angular.module('wf.directives',
                 },
                 templateUrl: 'templates/searchresponse.html',
                 link: function (scope, element) {
-                    if (typeof(scope.criteria) === 'undefined')
-                       scope.criteria = {};
-
-                    scope.dialogs = dialogs;
-
-                    scope.paging = {};
-                    scope.paging.pageNumbers = [1,2,3,4,5];
-                    scope.paging.changePageSize = function(event) {
-                        scope.criteria.pageSize = scope.paging.pageSize;
-                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                    };
-                    scope.paging.previousPage = function() {
-                        scope.criteria.pageNumber = scope.paging.pageNumber >= 2 ? scope.paging.pageNumber - 2 : 0;
-                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                    };
-                    scope.paging.toPage = function(pageNumber) {
-                        scope.criteria.pageNumber = pageNumber - 1;
-                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                    };
-                    scope.paging.nextPage = function() {
-                        scope.criteria.pageNumber = scope.paging.pageNumber;
-                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                    };
-
-                    scope.isFiltering = false;
                     scope.clearFilter = function(facet) {
                         delete scope.criteria[facet.name];
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
@@ -1567,8 +1542,7 @@ angular.module('wf.directives',
                             scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
                         }
                     };
-
-                    var SearchResponse = $resource('./form', {processStatus:'@processStatus'});
+                    scope.SearchResponse = $resource('./form', {processStatus:'@processStatus'});
                     scope.$on('wfEvent:clear-filters', function() {
                         var didClear = false;
                         angular.forEach(scope.facets, function(facet) {
@@ -1593,6 +1567,39 @@ angular.module('wf.directives',
                         console.log("Storing facets");
                         scope.facetMap[facet.name].selected = facet.selected;
                         localStorageService.set("facetMap", scope.facetMap);
+                    });
+                    scope.$on('wfEvent:search', function(event, criteria) {
+                        if (typeof(criteria) !== 'undefined') {
+                            scope.criteria = criteria;
+                        }
+                        if (scope.criteria.keywords != null && typeof(scope.criteria.keywords) == 'string') {
+                            scope.criteria.keyword = scope.criteria.keywords.split(' ');
+                        }
+                        if (scope.facets != null) {
+                            angular.forEach(scope.facets, function(facet) {
+                                var isFilteringThisFacet = false;
+                                if (facet.type == 'date') {
+                                    var afterName = facet.name + 'After';
+                                    var beforeName = facet.name + 'Before';
+                                    var afterCriterion = scope.criteria[afterName];
+                                    var beforeCriterion = scope.criteria[beforeName];
+                                    if (afterCriterion != null && afterCriterion != '')
+                                        isFilteringThisFacet = true;
+                                    else if (beforeCriterion != null && beforeCriterion != '')
+                                        isFilteringThisFacet = true;
+                                } else {
+                                    var criterion = scope.criteria[facet.name];
+                                    if (criterion != null && criterion != '')
+                                        isFilteringThisFacet = true;
+                                }
+
+                                if (isFilteringThisFacet) {
+                                    facet.selected = true;
+                                    scope.isFiltering = true;
+                                }
+                            });
+                        }
+                        scope.SearchResponse.get(scope.criteria, scope.processSearchResults);
                     });
                     scope.$on('wfEvent:found', function(event, results) {
                         scope.forms = results.data;
@@ -1659,42 +1666,43 @@ angular.module('wf.directives',
                             scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
                         }
                     });
-                    scope.$on('wfEvent:search', function(event, criteria) {
-                        if (typeof(criteria) !== 'undefined') {
-                            scope.criteria = criteria;
-                        }
-                        if (scope.criteria.keywords != null && typeof(scope.criteria.keywords) == 'string') {
-                            scope.criteria.keyword = scope.criteria.keywords.split(' ');
-                        }
-                        if (scope.facets != null) {
-                            angular.forEach(scope.facets, function(facet) {
-                                var isFilteringThisFacet = false;
-                                if (facet.type == 'date') {
-                                    var afterName = facet.name + 'After';
-                                    var beforeName = facet.name + 'Before';
-                                    var afterCriterion = scope.criteria[afterName];
-                                    var beforeCriterion = scope.criteria[beforeName];
-                                    if (afterCriterion != null && afterCriterion != '')
-                                        isFilteringThisFacet = true;
-                                    else if (beforeCriterion != null && beforeCriterion != '')
-                                        isFilteringThisFacet = true;
-                                } else {
-                                    var criterion = scope.criteria[facet.name];
-                                    if (criterion != null && criterion != '')
-                                        isFilteringThisFacet = true;
-                                }
+                    scope.$root.$broadcast('wfEvent:results-linked');
+                },
+                controller: ['$scope', function(scope) {
+                    scope.$watch(scope.forms, function(oldValue, newValue) {
 
-                                if (isFilteringThisFacet) {
-                                    facet.selected = true;
-                                    scope.isFiltering = true;
-                                }
-                            });
-                        }
-                        SearchResponse.get(scope.criteria, scope.processSearchResults);
                     });
 
-                    scope.$root.$broadcast('wfEvent:results-linked');
-                }
+                    if (typeof(scope.criteria) === 'undefined')
+                        scope.criteria = {};
+                    if (scope.paging == null)
+                        scope.paging = {};
+
+                    scope.dialogs = dialogs;
+
+                    if (scope.paging == null)
+                        scope.paging = {};
+
+                    scope.paging.pageNumbers = [1,2,3,4,5];
+                    scope.paging.changePageSize = function(event) {
+                        scope.criteria.pageSize = scope.paging.pageSize;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+                    scope.paging.previousPage = function() {
+                        scope.criteria.pageNumber = scope.paging.pageNumber >= 2 ? scope.paging.pageNumber - 2 : 0;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+                    scope.paging.toPage = function(pageNumber) {
+                        scope.criteria.pageNumber = pageNumber - 1;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+                    scope.paging.nextPage = function() {
+                        scope.criteria.pageNumber = scope.paging.pageNumber;
+                        scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                    };
+
+                    scope.isFiltering = false;
+                }]
             }
         }
     ])
@@ -1816,6 +1824,7 @@ angular.module('wf.directives',
                     });
 
                     scope.$on('wfEvent:found', function(event, results) {
+                        console.log('Found');
                         scope.searching = false;
                         if (scope.definitions == null) {
                             scope.definitions = results.metadata;
@@ -1831,10 +1840,15 @@ angular.module('wf.directives',
                         scope.criteria.pg = results.processGroup;
                     });
                     scope.$on('wfEvent:search', function(event, criteria) {
+                        console.log('Searching');
+                        scope.forms = null;
                         scope.searching = true;
                         console.log("Storing criteria");
                         localStorageService.set("criteria", criteria);
                     });
+                    scope.showSearchingIcon = function() {
+//                        $('#searchIcon').addClass('fa-spinner fa-spin').removeClass('fa-search');
+                    };
 
                     scope.dialogs = dialogs;
 

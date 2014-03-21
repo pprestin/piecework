@@ -950,7 +950,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
     '                           <span data-ng-click="clearSearch()" data-ng-show="criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
     '                       </div>' +
-    '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i ng-show="searching" class="fa fa-spinner fa-spin fa-lg"></i><i ng-show="!searching" class="fa fa-search"></i>&nbsp;&nbsp;</button>\n' +
+    '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i data-ng-class="searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
     '                       <span data-ng-if="definitions" class="dropdown">\n' +
     '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
     '                            <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
