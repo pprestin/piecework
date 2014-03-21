@@ -66,6 +66,23 @@ public class ProcessInstanceUtility {
         return keywords;
     }
 
+    public static String completedBy(ProcessInstance instance) {
+        String completedBy = instance.getInitiatorId();
+        Set<Task> tasks = instance.getTasks();
+        if (tasks != null && !tasks.isEmpty()) {
+            Task lastTask = null;
+            for (Task task : tasks) {
+                Date endTime = task.getEndTime();
+
+                if (endTime != null && (lastTask == null || endTime.after(lastTask.getEndTime())))
+                    lastTask = task;
+            }
+            if (lastTask != null)
+                completedBy = lastTask.getAssigneeId();
+        }
+        return completedBy;
+    }
+
     public static Set<Task> tasks(Set<Task> originals, OperationType operation) {
         Set<Task> tasks = new TreeSet<Task>();
         if (originals != null && !originals.isEmpty()) {

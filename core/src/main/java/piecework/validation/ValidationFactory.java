@@ -80,6 +80,7 @@ public class ValidationFactory {
     public <P extends ProcessDeploymentProvider> Validation validate(P modelProvider,
                                 Submission submission, SubmissionTemplate template, String version, boolean onlyAcceptValidInputs) throws PieceworkException {
 
+        Set<Field> fields = template.getFields();
         Map<Field, List<ValidationRule>> fieldRuleMap = template.getFieldRuleMap();
         Set<String> allFieldNames = Collections.unmodifiableSet(new HashSet<String>(template.getFieldMap().keySet()));
         Set<String> fieldNames = new HashSet<String>(template.getFieldMap().keySet());
@@ -156,17 +157,16 @@ public class ValidationFactory {
 
         boolean isAllowAny = template.isAnyFieldAllowed();
 
-        if (fieldRuleMap != null) {
-            Set<Field> fields = fieldRuleMap.keySet();
+        if (fields != null) {
             decryptedSubmissionData = dataFilterService.allSubmissionData(modelProvider, submission, reason);
 
             task = ModelUtility.task(modelProvider);
             if (task != null)
                 decryptedInstanceData = dataFilterService.authorizedInstanceData(modelProvider, fields, version, reason, isAllowAny);
 
-            for (Map.Entry<Field, List<ValidationRule>> entry : fieldRuleMap.entrySet()) {
-                Field field = entry.getKey();
-                List<ValidationRule> rules = entry.getValue();
+            for (Field field : fields) {
+//                String fieldName = ValidationUtility.fieldName(field, submissionData);
+                List<ValidationRule> rules = fieldRuleMap != null && field.getName() != null ? fieldRuleMap.get(field) : Collections.<ValidationRule>emptyList();
                 validateField(modelProvider, validationBuilder, field, rules, fieldNames, submissionData, instanceData, decryptedSubmissionData, decryptedInstanceData, onlyAcceptValidInputs, false);
             }
         }

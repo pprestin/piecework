@@ -126,6 +126,10 @@ public class SubmissionTemplate {
         return fieldMap != null && name != null ? fieldMap.get(name) : null;
     }
 
+    public Set<Field> getFields() {
+        return fieldMap != null && !fieldMap.isEmpty() ? new HashSet<Field>(fieldMap.values()) : Collections.<Field>emptySet();
+    }
+
     public Map<String, Field> getFieldMap() {
         return fieldMap;
     }
