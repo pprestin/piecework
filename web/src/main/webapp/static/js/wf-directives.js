@@ -597,6 +597,7 @@ angular.module('wf.directives',
                         scope.form = form;
                     });
                     scope.fileUploadOptions = {
+                        sequentialUploads: true,    // to avoid race conditions on workflow server with multiple-file upload
                         autoUpload: true
                     };
                     scope.getAttachmentUrl = function() {
@@ -845,6 +846,7 @@ angular.module('wf.directives',
                         scope.$root.uploadOptions = {
                             autoUpload: true,
                             dataType: 'json',
+                            sequentialUploads: true,    // to avoid race conditions on workflow server with multiple-file upload
                             fileInput: $('input:file'),
                             xhrFields: {
                                 withCredentials: true
@@ -2000,6 +2002,7 @@ angular.module('wf.directives',
                     scope.fileUploadOptions = {
                         autoUpload: true,
                         dataType: 'json',
+                        sequentialUploads: true,    // to avoid race conditions on workflow server with multiple-file upload
                         fileInput: $('input:file'),
                         xhrFields: {
                             withCredentials: true
