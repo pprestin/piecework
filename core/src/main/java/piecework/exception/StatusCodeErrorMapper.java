@@ -83,8 +83,13 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
 
         // If the application is trying to return an object then don't get in the way
         // and return HTML
-        if (error.getEntity() != null)
-            return Response.status(error.getStatusCode()).entity(error.getEntity()).build();
+        if (error.getEntity() != null) {
+            ModelProvider modelProvider = error.getModelProvider();
+            if (modelProvider == null)
+                return Response.status(error.getStatusCode()).entity(error.getEntity()).build();
+
+            return FormUtility.errorResponse(error.getStatusCode(), settings, modelProvider, error.getEntity(), null, null, false);
+        }
 
         if (error instanceof BadRequestError)
             LOG.warn("Bad request error");
