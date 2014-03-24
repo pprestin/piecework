@@ -1603,6 +1603,7 @@ angular.module('wf.directives',
                     });
                     scope.$on('wfEvent:found', function(event, results) {
                         scope.forms = results.data;
+
                         scope.paging.total = results.total;
                         scope.paging.pageNumber = results.pageNumber + 1;
                         scope.paging.pageSize = results.pageSize;
@@ -1663,6 +1664,19 @@ angular.module('wf.directives',
                                     }
                                 }
                             });
+
+
+                            scope.displayedForms = [];
+                            angular.forEach(results.data, function(form) {
+                                var displayedForm = {'link' : form.link };
+                                angular.forEach(scope.facets, function(facet) {
+                                    var key = facet.name;
+                                    var value = scope.getFacetValue(form, facet);
+                                    displayedForm[key] = value;
+                                });
+                                scope.displayedForms.push(displayedForm);
+                            });
+
                             scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
                         }
                     });

@@ -15,6 +15,7 @@
  */
 package piecework.engine;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,11 +29,13 @@ import piecework.persistence.ModelProviderFactory;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.persistence.TaskProvider;
 import piecework.repository.ContentRepository;
+import piecework.service.IdentityService;
 import piecework.service.NotificationService;
 import piecework.service.ProcessInstanceService;
 import piecework.service.TaskService;
 import piecework.settings.UserInterfaceSettings;
 import piecework.task.TaskFactory;
+import piecework.util.ProcessInstanceUtility;
 
 import java.util.*;
 
@@ -47,6 +50,9 @@ public class EngineStateSynchronizer {
 
     @Autowired
     ContentRepository contentRepository;
+
+    @Autowired
+    IdentityService identityService;
 
     @Autowired
     Mediator mediator;
@@ -84,6 +90,14 @@ public class EngineStateSynchronizer {
                 LOG.debug("Process instance completed " + processInstanceId);
                 mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).context(context).instanceProvider(instanceProvider).build());
                 try {
+                    String completedBy = ProcessInstanceUtility.completedBy(instance);
+
+                    if (StringUtils.isNotEmpty(completedBy)) {
+                        User lastUser = identityService.getUser(completedBy);
+                        if (lastUser != null)
+                            instanceProvider = modelProviderFactory.instanceProvider(instance.getProcessDefinitionKey(), instance.getProcessInstanceId(), lastUser);
+                    }
+
                     boolean isPublished = contentRepository.publish(instanceProvider);
                     if (isPublished)
                         LOG.info("Published all content for instance " + processInstanceId);

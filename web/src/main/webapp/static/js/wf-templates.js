@@ -881,12 +881,14 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '            </tr>\n' +
     '            </thead>\n' +
     '            <tbody>\n' +
-    '            <tr data-ng-repeat="form in forms">\n' +
+    '            <tr data-ng-repeat="form in displayedForms">\n' +
     '                <td><input data-ng-click="selectForm(form)" data-ng-checked="form.checked" type="checkbox" class="result-checkbox"/></td>\n' +
 //    '                <td class="text-muted">{{form.itemNumber}}</td>' +
     '                <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-show="facet.selected" data-ng-repeat="facet in facets">' +
-    '                   <span data-ng-show="facet.link"><a href="{{form.link}}" target="_self" rel="external">{{getFacetValue(form, facet)}}</a></span>' +
-    '                   <span data-ng-hide="facet.link">{{getFacetValue(form, facet)}}</span>' +
+    '                   <span data-ng-show="facet.link"><a href="{{form.link}}" target="_self" rel="external">{{form[facet.name]}}</a></span>' +
+    '                   <span data-ng-hide="facet.link">{{form[facet.name]}}</span>' +
+//    '                   <span data-ng-show="facet.link"><a href="{{form.link}}" target="_self" rel="external">{{getFacetValue(form, facet)}}</a></span>' +
+//    '                   <span data-ng-hide="facet.link">{{getFacetValue(form, facet)}}</span>' +
     '                </td>' +
     '            </tr>\n' +
     '            </tbody>' +
