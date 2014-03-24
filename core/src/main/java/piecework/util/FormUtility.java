@@ -218,6 +218,32 @@ public class FormUtility {
             }
         }
         builder.header("X-UA-Compatible", "IE=edge");
+        builder.header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
+        builder.header("Pragma", "no-cache");
+        builder.header("Expires", "-1");
+
+        return builder.build();
+    }
+
+    public static Response errorResponse(int statusCode, UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous, String... methods) {
+        Response.ResponseBuilder builder = entity != null ? Response.status(statusCode).entity(entity).type(contentType) : Response.status(statusCode);
+
+        try {
+            addCrossOriginHeaders(settings, builder, deploymentProvider, entity, isAnonymous, methods);
+        } catch (PieceworkException e) {
+            LOG.error("Caught exception adding cors headers", e);
+        }
+
+        if (headers != null) {
+            for (Header header : headers) {
+                if (StringUtils.isNotEmpty(header.getName()) && StringUtils.isNotEmpty(header.getValue()))
+                    builder.header(header.getName(), header.getValue());
+            }
+        }
+        builder.header("X-UA-Compatible", "IE=edge");
+        builder.header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
+        builder.header("Pragma", "no-cache");
+        builder.header("Expires", "-1");
 
         return builder.build();
     }

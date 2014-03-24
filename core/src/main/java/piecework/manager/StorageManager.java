@@ -28,6 +28,7 @@ import piecework.exception.PieceworkException;
 import piecework.model.*;
 import piecework.model.Process;
 import piecework.persistence.ContentProfileProvider;
+import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.ProcessInstanceProvider;
 import piecework.repository.AttachmentRepository;
 import piecework.repository.ContentRepository;
@@ -73,7 +74,10 @@ public class StorageManager {
             return contentRepository.expireByLocation(modelProvider, location);
         } catch (java.io.IOException e) {
             LOG.error("Failed to expire", e);
-            throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, e.getMessage());
+            InternalServerError error = new InternalServerError(Constants.ExceptionCodes.system_misconfigured, e.getMessage());
+            if (modelProvider instanceof ProcessDeploymentProvider)
+                error.setModelProvider(ProcessDeploymentProvider.class.cast(modelProvider));
+            throw error;
         }
     }
 

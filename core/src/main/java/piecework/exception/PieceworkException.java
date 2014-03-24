@@ -15,10 +15,15 @@
  */
 package piecework.exception;
 
+import piecework.persistence.ModelProvider;
+import piecework.persistence.ProcessDeploymentProvider;
+
 /**
  * @author James Renfro
  */
 public class PieceworkException extends Exception {
+
+    private ProcessDeploymentProvider modelProvider;
 
     public PieceworkException() {
         super();
@@ -36,6 +41,13 @@ public class PieceworkException extends Exception {
         super(cause);
     }
 
+    public ProcessDeploymentProvider getModelProvider() {
+        return modelProvider;
+    }
+
+    public void setModelProvider(ProcessDeploymentProvider modelProvider) {
+        this.modelProvider = modelProvider;
+    }
 //    protected PieceworkException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 //        super(message, cause, enableSuppression, writableStackTrace);
 //    }
