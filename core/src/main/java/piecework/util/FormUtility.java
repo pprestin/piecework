@@ -243,7 +243,7 @@ public class FormUtility {
         builder.header("X-UA-Compatible", "IE=edge");
         builder.header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
         builder.header("Pragma", "no-cache");
-        builder.header("Expires", "-1");
+        builder.header("Expires", 0);
 
         return builder.build();
     }
