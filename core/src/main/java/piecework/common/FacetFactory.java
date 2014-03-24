@@ -47,6 +47,8 @@ public class FacetFactory {
         // The system has a default set of facets that is not process-dependent
         List<Facet> facets = new ArrayList<Facet>();
         facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label", true));
+        facets.add(new SearchFacet("processDefinitionLabel", "processDefinitionLabel", "Process", false));
+//        facets.add(new SearchFacet("processStatus", "processStatus", "Process Status", true));
         facets.add(new DataFilterFacet("taskStatus", "Status", false) {
             @Override
             public boolean include(Task task, String value) {
