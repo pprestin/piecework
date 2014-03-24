@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import piecework.Constants;
 import piecework.identity.IdentityHelper;
 import piecework.model.Explanation;
+import piecework.persistence.ModelProvider;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.service.UserInterfaceService;
 import piecework.settings.UserInterfaceSettings;
@@ -102,7 +103,7 @@ public class StatusCodeErrorMapper implements ExceptionMapper<PieceworkException
         Explanation explanation = ErrorResponseBuilder.buildExplanation(statusCode, error.getLocalizedMessage(), error.getMessageDetail());
 
         if (!mediaType.equals(MediaType.TEXT_HTML_TYPE))  {
-            ProcessDeploymentProvider modelProvider = error.getModelProvider();
+            ModelProvider modelProvider = error.getModelProvider();
 
             if (modelProvider == null)
                 return Response.status(statusCode).entity(explanation).build();

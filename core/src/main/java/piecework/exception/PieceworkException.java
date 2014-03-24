@@ -23,7 +23,7 @@ import piecework.persistence.ProcessDeploymentProvider;
  */
 public class PieceworkException extends Exception {
 
-    private ProcessDeploymentProvider modelProvider;
+    private ModelProvider modelProvider;
 
     public PieceworkException() {
         super();
@@ -41,11 +41,11 @@ public class PieceworkException extends Exception {
         super(cause);
     }
 
-    public ProcessDeploymentProvider getModelProvider() {
+    public ModelProvider getModelProvider() {
         return modelProvider;
     }
 
-    public void setModelProvider(ProcessDeploymentProvider modelProvider) {
+    public void setModelProvider(ModelProvider modelProvider) {
         this.modelProvider = modelProvider;
     }
 //    protected PieceworkException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {

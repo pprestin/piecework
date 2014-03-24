@@ -39,7 +39,7 @@ public class ModelUtility {
         }
     }
 
-    public static <P extends ProcessProvider> ProcessDeployment deployment(P modelProvider) throws PieceworkException {
+    public static <P extends ModelProvider> ProcessDeployment deployment(P modelProvider) throws PieceworkException {
         if (modelProvider instanceof ProcessDeploymentProvider) {
             ProcessDeploymentProvider deploymentProvider = ProcessDeploymentProvider.class.cast(modelProvider);
             return deploymentProvider.deployment();

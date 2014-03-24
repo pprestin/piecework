@@ -28,10 +28,8 @@ import piecework.common.SearchCriteria;
 import piecework.common.SearchQueryParameters;
 import piecework.exception.PieceworkException;
 import piecework.identity.IdentityHelper;
-import piecework.model.Entity;
+import piecework.model.*;
 import piecework.model.Process;
-import piecework.model.SearchResponse;
-import piecework.model.SearchResults;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.persistence.SearchProvider;
 import piecework.resource.FormResource;
@@ -128,7 +126,7 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
         Set<Process> processes = searchProvider.processes(AuthorizationRole.USER, AuthorizationRole.OVERSEER);
         SearchResponse searchResponse = search(context, new SearchCriteria.Builder(rawQueryParameters, processes, FacetFactory.facetMap(processes), sanitizer).build(), helper.getPrincipal());
 
-        return Response.ok(searchResponse).build();
+        return FormUtility.okResponse(settings, searchProvider, searchResponse, null, isAnonymous());
     }
 
     @Override

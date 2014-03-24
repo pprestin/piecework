@@ -26,6 +26,7 @@ import piecework.exception.PieceworkException;
 import piecework.form.FormDisposition;
 import piecework.model.*;
 import piecework.model.Process;
+import piecework.persistence.ModelProvider;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.settings.UserInterfaceSettings;
 
@@ -167,23 +168,23 @@ public class FormUtility {
         return builder.build();
     }
 
-    public static Response okResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, boolean isAnonymous) throws PieceworkException {
+    public static Response okResponse(UserInterfaceSettings settings, ModelProvider deploymentProvider, Object entity, String contentType, boolean isAnonymous) throws PieceworkException {
         return allowCrossOriginResponse(settings, deploymentProvider, entity, contentType, Collections.<Header>emptyList(), isAnonymous);
     }
 
-    public static Response okResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous) throws PieceworkException {
+    public static Response okResponse(UserInterfaceSettings settings, ModelProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous) throws PieceworkException {
         return allowCrossOriginResponse(settings, deploymentProvider, entity, contentType, headers, isAnonymous);
     }
 
-    public static Response optionsResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, boolean isAnonymous, String... methods) throws PieceworkException {
+    public static Response optionsResponse(UserInterfaceSettings settings, ModelProvider deploymentProvider, boolean isAnonymous, String... methods) throws PieceworkException {
         return allowCrossOriginResponse(settings, deploymentProvider, null, null, Collections.<Header>emptyList(), isAnonymous, methods);
     }
 
-    public static Response noContentResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, boolean isAnonymous, String... methods) throws PieceworkException {
+    public static Response noContentResponse(UserInterfaceSettings settings, ModelProvider deploymentProvider, boolean isAnonymous, String... methods) throws PieceworkException {
         return noContentResponse(settings, deploymentProvider, null, isAnonymous, methods);
     }
 
-    public static Response noContentResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, List<Header> headers, boolean isAnonymous, String... methods) throws PieceworkException {
+    public static Response noContentResponse(UserInterfaceSettings settings, ModelProvider deploymentProvider, List<Header> headers, boolean isAnonymous, String... methods) throws PieceworkException {
         Response.ResponseBuilder builder = Response.noContent();
 
         addCrossOriginHeaders(settings, builder, deploymentProvider, null, isAnonymous, methods);
@@ -194,6 +195,11 @@ public class FormUtility {
                     builder.header(header.getName(), header.getValue());
             }
         }
+
+        builder.header("X-UA-Compatible", "IE=edge");
+        builder.header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
+        builder.header("Pragma", "no-cache");
+        builder.header("Expires", 0);
 
         return builder.build();
     }
@@ -206,7 +212,7 @@ public class FormUtility {
 //        return allowCrossOriginResponse(settings, deploymentProvider, null, null, Collections.<Header>emptyList(), isAnonymous, methods);
 //    }
 
-    public static Response allowCrossOriginResponse(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous, String... methods) throws PieceworkException {
+    public static Response allowCrossOriginResponse(UserInterfaceSettings settings, ModelProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous, String... methods) throws PieceworkException {
         Response.ResponseBuilder builder = entity != null ? Response.ok(entity, contentType) : Response.ok();
 
         addCrossOriginHeaders(settings, builder, deploymentProvider, entity, isAnonymous, methods);
@@ -217,15 +223,16 @@ public class FormUtility {
                     builder.header(header.getName(), header.getValue());
             }
         }
+
         builder.header("X-UA-Compatible", "IE=edge");
         builder.header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
         builder.header("Pragma", "no-cache");
-        builder.header("Expires", "-1");
+        builder.header("Expires", 0);
 
         return builder.build();
     }
 
-    public static Response errorResponse(int statusCode, UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous, String... methods) {
+    public static Response errorResponse(int statusCode, UserInterfaceSettings settings, ModelProvider deploymentProvider, Object entity, String contentType, List<Header> headers, boolean isAnonymous, String... methods) {
         Response.ResponseBuilder builder = entity != null ? Response.status(statusCode).entity(entity).type(contentType) : Response.status(statusCode);
 
         try {
@@ -248,7 +255,7 @@ public class FormUtility {
         return builder.build();
     }
 
-    public static void addCrossOriginHeaders(UserInterfaceSettings settings, Response.ResponseBuilder builder, ProcessDeploymentProvider deploymentProvider, Object entity, boolean isAnonymous, String... methods) throws PieceworkException {
+    public static void addCrossOriginHeaders(UserInterfaceSettings settings, Response.ResponseBuilder builder, ModelProvider deploymentProvider, Object entity, boolean isAnonymous, String... methods) throws PieceworkException {
         String methodHeader = null;
 
         if (entity != null && methods != null && methods.length > 0)
@@ -276,10 +283,10 @@ public class FormUtility {
             builder.header("Allow", methodHeader);
     }
 
-    public static URI remoteHost(UserInterfaceSettings settings, ProcessDeploymentProvider deploymentProvider) throws PieceworkException {
+    public static URI remoteHost(UserInterfaceSettings settings, ModelProvider modelProvider) throws PieceworkException {
         URI remoteHostUri = null;
-        ProcessDeployment deployment = deploymentProvider.deployment();
-        String remoteHost = deployment.getRemoteHost();
+        ProcessDeployment deployment = ModelUtility.deployment(modelProvider);
+        String remoteHost = deployment != null ? deployment.getRemoteHost() : null;
         String serverHost = settings.getHostUri();
 
         if (StringUtils.isNotEmpty(remoteHost) && StringUtils.isNotEmpty(serverHost)) {
