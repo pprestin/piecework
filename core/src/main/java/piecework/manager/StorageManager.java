@@ -72,6 +72,7 @@ public class StorageManager {
         try {
             return contentRepository.expireByLocation(modelProvider, location);
         } catch (java.io.IOException e) {
+            LOG.error("Failed to expire", e);
             throw new InternalServerError(Constants.ExceptionCodes.system_misconfigured, e.getMessage());
         }
     }

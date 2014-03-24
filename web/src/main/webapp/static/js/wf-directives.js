@@ -551,8 +551,8 @@ angular.module('wf.directives',
                             });
                             scope.files = files;
                         })
-                        .error(function(data, status, headers, config) {
-
+                        .error(function(message, status, headers, config) {
+                            scope.error = message.messageDetail;
                         });
                     };
                     scope.edit = function() {
