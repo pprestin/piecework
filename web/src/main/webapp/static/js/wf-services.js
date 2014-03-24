@@ -14,6 +14,7 @@ angular.module('wf.services',
                     });
                 },
                 refreshAttachments : function(form) {
+                    console.log("Refreshing attachments");
                     $http.get($sce.trustAsResourceUrl(form.attachment)).then(function(response) {
                         form.attachments = response.data.list;
                         form.attachmentCount = response.data.total;

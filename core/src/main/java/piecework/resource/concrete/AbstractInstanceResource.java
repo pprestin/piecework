@@ -94,9 +94,9 @@ public abstract class AbstractInstanceResource {
         ValidationCommand<AllowedTaskProvider> validationCommand = commandFactory.validation(taskProvider, request, ActionType.ATTACH, data, type, VERSION);
         Validation validation = validationCommand.execute();
 
-        ProcessInstance instance = commandFactory.attachment(taskProvider, validation).execute();
+        commandFactory.attachment(taskProvider, validation).execute();
 
-//        ProcessInstance instance = taskProvider.instance();
+        taskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
         SearchResults searchResults = taskProvider.attachments(new AttachmentQueryParameters(), new ViewContext(settings, VERSION));
 
         return FormUtility.okResponse(settings, taskProvider, searchResults, null, false);
