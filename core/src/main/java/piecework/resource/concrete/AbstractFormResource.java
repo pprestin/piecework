@@ -324,9 +324,12 @@ public abstract class AbstractFormResource {
         Explanation explanation = null;
 
         if (e instanceof BadRequestError) {
-            validation = ((BadRequestError)e).getValidation();
+            BadRequestError badRequestError = BadRequestError.class.cast(e);
+            validation = badRequestError.getValidation();
+            badRequestError.setModelProvider(provider);
         } else if (e instanceof StatusCodeError) {
             StatusCodeError error = StatusCodeError.class.cast(e);
+            error.setModelProvider(provider);
             int statusCode = error.getStatusCode();
             explanation = ErrorResponseBuilder.buildExplanation(statusCode, error.getLocalizedMessage(), error.getMessageDetail());
             LOG.warn("Caught a status code error", e);
@@ -345,6 +348,7 @@ public abstract class AbstractFormResource {
                 LOG.warn("Validation error " + result.getKey() + " : " + result.getValue().iterator().next().getText());
             }
         }
+
 
         if (mediaType.equals(MediaType.APPLICATION_JSON_TYPE) && e instanceof BadRequestError)
             throw (BadRequestError)e;
