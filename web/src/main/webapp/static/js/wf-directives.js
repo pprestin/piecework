@@ -1485,7 +1485,8 @@ angular.module('wf.directives',
                             facet.direction = 'desc';
                         }
 
-                        scope.criteria.sortBy = facet.name + ":" + facet.direction;
+                        scope.criteria.sortBy = [];
+                        scope.criteria.sortBy.push(facet.name + ":" + facet.direction);
                         scope.$root.$broadcast('wfEvent:search', scope.criteria);
                     };
                     scope.getFacetValue = function(form, facet) {
