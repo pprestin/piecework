@@ -105,10 +105,11 @@ public class MockRepositoryConfiguration {
 
     private static <R extends MongoRepository> R mockRepository(Class<R> cls) {
         R mock = Mockito.mock(cls);
+
         Mockito.doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                return invocation.getArguments()[0];
+            return invocation.getArguments()[0];
             }
         }).when(mock).save(any(cls));
         return mock;
