@@ -214,6 +214,7 @@ public class SearchRepositoryProvider implements SearchProvider {
                     instanceData.put("processInstanceLabel", instance.getProcessInstanceLabel());
                     instanceData.put("processDefinitionLabel", instance.getProcessDefinitionLabel());
                     instanceData.put("processStatus", instance.getProcessStatus());
+                    instanceData.put("applicationStatusExplanation", instance.getApplicationStatusExplanation());
                     instanceData.put("startTime", instance.getStartTime());
                     instanceData.put("lastModifiedTime", instance.getLastModifiedTime());
                     instanceData.put("endTime", instance.getEndTime());
