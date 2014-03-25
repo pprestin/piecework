@@ -19,6 +19,7 @@ import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.cxf.jaxrs.ext.MessageContextImpl;
 import org.apache.cxf.jaxrs.ext.RequestHandler;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;
 import org.apache.cxf.message.*;
@@ -116,7 +117,7 @@ public class AccessTracker implements RequestHandler {
 
     @Override
     public Response handleRequest(Message message, ClassResourceInfo resourceClass) {
-        MessageContext context = message.get(MessageContext.class);
+        MessageContext context = new MessageContextImpl(message);
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
         boolean isAnonymous = StringUtils.isEmpty(requestDetails.getRemoteUser());
 
@@ -144,7 +145,7 @@ public class AccessTracker implements RequestHandler {
             String alarmMessage = "Access attempt " + accessLog.getAccessCount() + " by " + key;
             LOG.warn(alarmMessage);
             alarm(AlarmSeverity.MINOR, alarmMessage);
-            return Response.status(Response.Status.FORBIDDEN).build();
+//            return Response.status(Response.Status.FORBIDDEN).build();
         }
         return null;
     }

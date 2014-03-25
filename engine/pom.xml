@@ -15,7 +15,7 @@
     <artifactId>piecework-engine</artifactId>
 
 	<properties>
-		<activiti.version>5.14</activiti.version>
+		<activiti.version>5.15</activiti.version>
 	</properties>
 
     <repositories>

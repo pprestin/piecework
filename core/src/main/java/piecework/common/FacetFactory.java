@@ -36,9 +36,9 @@ public class FacetFactory {
                 DateSearchFacet dateSearchFacet = new DateSearchFacet(searchFacet.getQuery(), searchFacet.getName(), searchFacet.getLabel(), searchFacet.getType(), searchFacet.isRequired());
                 facetMap.put(afterName, dateSearchFacet);
                 facetMap.put(beforeName, dateSearchFacet);
-            } else {
-                facetMap.put(facet.getName(), facet);
             }
+
+            facetMap.put(facet.getName(), facet);
         }
         return facetMap;
     }

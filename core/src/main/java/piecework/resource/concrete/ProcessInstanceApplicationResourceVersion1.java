@@ -58,9 +58,9 @@ import java.util.Map;
  * @author James Renfro
  */
 @Service
-public class ProcessInstanceResourceVersion1 extends AbstractInstanceResource implements ProcessInstanceApplicationResource {
+public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstanceResource implements ProcessInstanceApplicationResource {
 
-    private static final Logger LOG = Logger.getLogger(ProcessInstanceResourceVersion1.class);
+    private static final Logger LOG = Logger.getLogger(ProcessInstanceApplicationResourceVersion1.class);
 
     @Autowired
     IdentityHelper helper;
