@@ -95,7 +95,7 @@ public class SearchRepositoryProviderTest {
     @Test
     public void verifyBaseFacets() throws Exception {
         SearchResults results = searchProvider.facets("Test", ProcessFactory.viewContext());
-        Assert.assertEquals(Long.valueOf(8l), results.getTotal());
+        Assert.assertEquals(Long.valueOf(9l), results.getTotal());
         List<Object> list = results.getList();
         Facet processInstanceLabel = Facet.class.cast(list.get(0));
         Assert.assertEquals("processInstanceLabel", processInstanceLabel.getName());
