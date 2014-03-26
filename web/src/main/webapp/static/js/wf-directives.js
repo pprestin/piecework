@@ -1600,6 +1600,16 @@ angular.module('wf.directives',
                                     facet.selected = true;
                                     scope.isFiltering = true;
                                 }
+
+                                // special handling for applicationStatusExplanation
+                                // @see https://jira.cac.washington.edu/browse/EDMSIMPL-177
+                                if ( facet.name == 'applicationStatusExplanation' ) {
+                                    if ( scope.criteria != null && scope.criteria.processStatus == 'suspended' ) {
+                                        facet.selected = true;  // show suspension reason for suspended process instances
+                                    } else {
+                                        facet.selected = false;  // hide suspension reason otherwise
+                                    }    
+                                }
                             });
                         }
                         scope.SearchResponse.get(scope.criteria, scope.processSearchResults);
@@ -1655,23 +1665,6 @@ angular.module('wf.directives',
                             });
 
                             localStorageService.set("facetMap", scope.facetMap);
-
-                            // show application status notes for suspended instances
-                            if ( scope.criteria != null && scope.criteria.processStatus == 'suspended' ) {
-                                 if ( scope.processStatusFacet == null ) {
-                                     var facet  = new Object();
-                                     facet.name = 'applicationStatusExplanation';
-                                     facet.query = 'applicationStatusExplanation';
-                                     facet.label = 'Notes';
-                                     facet.type = "string";
-                                     facet.link = false;
-                                     scope.facets.push(facet);
-                                     scope.processStatusFacet = facet;
-                                }    
-                                scope.processStatusFacet.selected = true;
-                            } else if ( scope.processStatusFacet != null ) {
-                                scope.processStatusFacet.selected = false;
-                            }    
 
                             angular.forEach(scope.criteria.sortBy, function(sortBy) {
                                 var indexOf = sortBy.indexOf(':');
