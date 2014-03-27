@@ -339,6 +339,10 @@ public class ValidationFactory {
                                 validationBuilder.error(fieldName, "Unable to store file. The data store may be down or not responding");
                             }
                             return;
+                        } catch (MaxSizeExceededException mse) {
+                            LOG.error("Unable to store file. Maximum file size of " + mse.getMaxSize() + " exceeded", mse);
+                            validationBuilder.error(fieldName, "This file is larger than the configured file size limit of " + (mse.getMaxSize() / 1024) + "KB - it will not be uploaded");
+                            return;
                         } catch (IOException ioe) {
                             LOG.error("Unable to store file. The content management system may be down or not responding", ioe);
                             validationBuilder.error(fieldName, "Unable to store file. " + ioe.getMessage());
