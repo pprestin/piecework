@@ -126,6 +126,11 @@ public class RemoteResource implements ContentResource {
         return contentType;
     }
 
+    @Override
+    public boolean publish() {
+        return false;
+    }
+
     protected synchronized void ensureInitialized() {
         if (!this.initialized) {
             this.initialized = true;
