@@ -1600,6 +1600,16 @@ angular.module('wf.directives',
                                     facet.selected = true;
                                     scope.isFiltering = true;
                                 }
+
+                                // special handling for applicationStatusExplanation
+                                // @see https://jira.cac.washington.edu/browse/EDMSIMPL-177
+                                if ( facet.name == 'applicationStatusExplanation' ) {
+                                    if ( scope.criteria != null && scope.criteria.processStatus == 'suspended' ) {
+                                        facet.selected = true;  // show suspension reason for suspended process instances
+                                    } else {
+                                        facet.selected = false;  // hide suspension reason otherwise
+                                    }    
+                                }
                             });
                         }
                         scope.SearchResponse.get(scope.criteria, scope.processSearchResults);
