@@ -84,6 +84,11 @@ public abstract class AbstractContentResource<R extends Resource> implements Con
     }
 
     @Override
+    public boolean publish() {
+        return false;
+    }
+
+    @Override
     public String lastModifiedBy() {
         return null;
     }

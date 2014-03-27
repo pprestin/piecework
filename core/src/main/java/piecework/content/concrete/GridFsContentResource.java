@@ -118,6 +118,11 @@ public class GridFsContentResource implements ContentResource {
     }
 
     @Override
+    public boolean publish() {
+        return false;
+    }
+
+    @Override
     public Map<String, String> getMetadata() {
         return Collections.emptyMap();
     }

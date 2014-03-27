@@ -15,12 +15,10 @@
  */
 package piecework.content.concrete;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import piecework.common.ManyMap;
-import piecework.content.ContentProvider;
-import piecework.content.ContentProviderVoter;
-import piecework.content.ContentReceiver;
-import piecework.content.ContentReceiverVoter;
+import piecework.content.*;
 import piecework.enumeration.ContentHandlerPriority;
 import piecework.enumeration.Scheme;
 
@@ -42,6 +40,8 @@ public class ContentHandlerRegistry {
     private Map<String, ContentReceiver> contentReceiverKeyMap;
     private ContentReceiver contentReceiver;
     private Set<ContentReceiver> contentReceiverBackupSet;
+    private Set<String> remoteRepositoryLocationPrefixes;
+
 
     private Storage storage;
 
@@ -53,6 +53,7 @@ public class ContentHandlerRegistry {
         this.contentProviderBackupMap = new ManyMap<Scheme, ContentProvider>();
         this.contentReceiverBackupSet = new HashSet<ContentReceiver>();
         this.contentReceiverKeyMap = new Hashtable<String, ContentReceiver>();
+        this.remoteRepositoryLocationPrefixes = new HashSet<String>();
     }
 
     public void init() {
@@ -97,6 +98,13 @@ public class ContentHandlerRegistry {
         // Loop through all the providers and decide which is primary and which are backup for
         // a given scheme
         for (P provider : providers) {
+            if (provider instanceof RemoteRepositoryContentProvider) {
+                RemoteRepositoryContentProvider remoteRepositoryContentProvider = RemoteRepositoryContentProvider.class.cast(provider);
+                String remoteLocationPrefix = remoteRepositoryContentProvider.getLocationPrefix();
+                if (StringUtils.isNotEmpty(remoteLocationPrefix))
+                    this.remoteRepositoryLocationPrefixes.add(remoteLocationPrefix);
+            }
+
             Scheme scheme = provider.getScheme();
             ContentHandlerPriority priority = ContentHandlerPriority.PRIMARY;
 
@@ -154,9 +162,13 @@ public class ContentHandlerRegistry {
         }
     }
 
+    public Set<String> getRemoteRepositoryLocationPrefixes() {
+        return remoteRepositoryLocationPrefixes;
+    }
+
     /*
-     * Internal immutable to hold data for retrieval
-     */
+         * Internal immutable to hold data for retrieval
+         */
     public class Storage {
         private final Map<String, ContentProvider> contentProviderKeyMap;
         private final Map<Scheme, List<ContentProvider>> contentProviderMap;

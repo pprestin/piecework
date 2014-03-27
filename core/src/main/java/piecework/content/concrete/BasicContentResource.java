@@ -45,6 +45,7 @@ public class BasicContentResource implements ContentResource, Serializable {
     private final long lastModified;
     private final String lastModifiedBy;
     private final long length;
+    private final boolean publish;
     private final Map<String, String> metadata;
     private final List<Version> versions;
 
@@ -64,6 +65,7 @@ public class BasicContentResource implements ContentResource, Serializable {
         this.lastModified = builder.lastModified;
         this.lastModifiedBy = builder.lastModifiedBy;
         this.length = builder.length;
+        this.publish = builder.publish;
         this.metadata = Collections.unmodifiableMap(builder.metadata);
         this.versions = Collections.unmodifiableList(builder.versions);
     }
@@ -124,6 +126,11 @@ public class BasicContentResource implements ContentResource, Serializable {
     }
 
     @Override
+    public boolean publish() {
+        return publish;
+    }
+
+    @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
         throw new NotImplementedException();
     }
@@ -141,6 +148,7 @@ public class BasicContentResource implements ContentResource, Serializable {
         private long lastModified;
         private String lastModifiedBy;
         private long length = 0l;
+        private boolean publish = false;
         private Map<String, String> metadata;
         private List<Version> versions;
 
@@ -221,6 +229,11 @@ public class BasicContentResource implements ContentResource, Serializable {
         public Builder metadata(Map<String, String> metadata) {
             if (metadata != null)
                 this.metadata = new HashMap<String, String>(metadata);
+            return this;
+        }
+
+        public Builder publish() {
+            this.publish = true;
             return this;
         }
 

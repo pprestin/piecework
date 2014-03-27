@@ -94,7 +94,7 @@ public class ContentHandlerRepository implements ContentRepository {
     public ContentResource findByLocation(ContentProfileProvider modelProvider, final String location) throws PieceworkException {
         if (StringUtils.isEmpty(location))
             return null;
-        Scheme scheme = PathUtility.findScheme(location);
+        Scheme scheme = PathUtility.findScheme(location, contentHandlerRegistry);
 
         List<ContentProvider> contentProviders = lookupContentProviders(modelProvider, scheme);
 
@@ -163,7 +163,7 @@ public class ContentHandlerRepository implements ContentRepository {
         // intended to be readonly
         List<ContentProvider> contentProviders;
 
-        if (scheme == Scheme.REPOSITORY || scheme == Scheme.REMOTE) {
+        if (scheme == Scheme.REPOSITORY) {
             String contentHandlerKey = ContentUtility.contentHandlerKey(modelProvider);
             contentProviders = contentHandlerRegistry.providers(scheme, contentHandlerKey);
         } else {

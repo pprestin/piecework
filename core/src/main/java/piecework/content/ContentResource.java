@@ -56,4 +56,6 @@ public interface ContentResource extends StreamingOutput, Serializable {
 
     Map<String, String> getMetadata();
 
+    boolean publish();
+
 }
