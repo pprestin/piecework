@@ -88,6 +88,7 @@ public class SubmitFormCommand<P extends ProcessDeploymentProvider> extends Abst
 
         ProcessInstance instance = ModelUtility.instance(modelProvider);
         AbstractCommand<ProcessInstance, ? extends ProcessDeploymentProvider> command = null;
+
         if (task == null)
             command = commandFactory.createInstance(modelProvider, validation);
         else if (instance != null && principal != null && (validatedActionType == ActionType.COMPLETE || validatedActionType == ActionType.REJECT))

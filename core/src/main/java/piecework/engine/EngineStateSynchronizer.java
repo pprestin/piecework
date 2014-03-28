@@ -89,21 +89,6 @@ public class EngineStateSynchronizer {
             if (instance != null) {
                 LOG.debug("Process instance completed " + processInstanceId);
                 mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).context(context).instanceProvider(instanceProvider).build());
-                try {
-                    String completedBy = ProcessInstanceUtility.completedBy(instance);
-
-                    if (StringUtils.isNotEmpty(completedBy)) {
-                        User lastUser = identityService.getUser(completedBy);
-                        if (lastUser != null)
-                            instanceProvider = modelProviderFactory.instanceProvider(instance.getProcessDefinitionKey(), instance.getProcessInstanceId(), lastUser);
-                    }
-
-                    boolean isPublished = contentRepository.publish(instanceProvider);
-                    if (isPublished)
-                        LOG.info("Published all content for instance " + processInstanceId);
-                } catch (Exception e) {
-                    LOG.error("Failed to publish content for instance " + processInstanceId, e);
-                }
             } else {
                 LOG.error("Unable to save final state of process instance with execution business key because the instance could not be found" + processInstanceId);
             }
