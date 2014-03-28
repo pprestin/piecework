@@ -435,21 +435,20 @@ public class SearchRepositoryProvider implements SearchProvider {
     }
 
     private static boolean include(Task task, Map<DataFilterFacet, String> filterFacetParameters) {
+        // [jira EDMSIMPL-203] use 'and' logic instead of 'or' logic in filtering
+        boolean doInclude = true;
         if (filterFacetParameters != null && !filterFacetParameters.isEmpty()) {
-            boolean doInclude = false;
             for (Map.Entry<DataFilterFacet, String> entry : filterFacetParameters.entrySet()) {
                 DataFilterFacet facet = entry.getKey();
                 String value = entry.getValue();
 
-                if (facet.include(task, value)) {
-                    doInclude = true;
+                if ( ! facet.include(task, value)) {
+                    doInclude = false;
                     break;
                 }
             }
-            if (!doInclude)
-                return false;
         }
-        return true;
+        return doInclude;
     }
 
     private static boolean include(Task task, String processStatus, String taskStatus, Set<String> overseerProcessDefinitionKeys, Entity principal) {
