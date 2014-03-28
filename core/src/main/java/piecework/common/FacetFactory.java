@@ -71,7 +71,13 @@ public class FacetFactory {
             public boolean include(Task task, String value) {
                 String lowercaseValue = value != null ?  value.toLowerCase() : "";
                 String assigneeDisplayName = task != null && task.getAssignee() != null && StringUtils.isNotEmpty(task.getAssignee().getDisplayName()) ? task.getAssignee().getDisplayName().toLowerCase() : null;
-                return assigneeDisplayName != null && assigneeDisplayName.contains(lowercaseValue);
+
+                // [jira EDMSIMPL-206] fix filtering of unassigned tasks
+                if ( task.getAssignee() == null && "nobody".contains(lowercaseValue) ) {
+                    return true;
+                } else {
+                    return assigneeDisplayName != null && assigneeDisplayName.contains(lowercaseValue);
+                }
             }
         });
         if (processes != null) {
