@@ -69,10 +69,11 @@ public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessIns
         switch (actionType) {
             case COMPLETE:
             case REJECT:
+                // Save before completing the task so all the data is there
+                ProcessInstance stored = storageManager.store(modelProvider, validation, actionType);
                 // Only complete the task if the actionType is COMPLETE or REJECT
-                completeTask(processEngineFacade, storageManager, task, validation, actionType, principal);
-                // Intentional fall-through (no return or break here) on switch statement, since we need to save/attach
-                // data on complete and reject as well
+                completeTask(processEngineFacade, storageManager, stored, task, validation, actionType, principal);
+                return stored;
             case ATTACH:
             case SAVE:
                 return storageManager.store(modelProvider, validation, actionType);
@@ -82,14 +83,13 @@ public class CompleteTaskCommand extends AbstractEngineStorageCommand<ProcessIns
         }
     }
 
-    private void completeTask(final ProcessEngineFacade facade, final StorageManager storageManager, final Task task, final Validation validation, final ActionType actionType, final Entity principal) throws PieceworkException {
+    private void completeTask(final ProcessEngineFacade facade, final StorageManager storageManager, final ProcessInstance instance, final Task task, final Validation validation, final ActionType actionType, final Entity principal) throws PieceworkException {
         Process process = modelProvider.process();
         ProcessDeployment deployment = modelProvider.deployment();
         String taskId = task.getTaskInstanceId();
         boolean result = facade.completeTask(process, deployment, taskId, actionType, validation, principal);
 
         if (result == false) {
-            ProcessInstance instance = modelProvider.instance();
             // It's possible that the system has gotten out of sync -- grab a current instance of the task from the engine
             // and overwrite the one that's stored in mongo
             Task current = facade.findTask(process, deployment, taskId, false);
