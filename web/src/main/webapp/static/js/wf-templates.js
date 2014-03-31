@@ -869,7 +869,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     '       <table class="table table-hover">\n' +
     '            <thead>\n' +
     '            <tr>' +
-    '               <th><input data-ng-click="selectAllForms(forms)" data-ng-checked="allChecked" type="checkbox" class="result-checkbox"/></th>\n' +
+    '               <th><input data-ng-click="selectAllForms(displayedForms)" data-ng-checked="allChecked" type="checkbox" class="result-checkbox"/></th>\n' +
 //    '               <th class="text-muted"></th>' +
     '               <th style="white-space:nowrap">' +
     '                   <div class="form-group has-feedback">' +
