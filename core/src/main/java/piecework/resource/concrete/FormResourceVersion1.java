@@ -120,13 +120,22 @@ public class FormResourceVersion1 extends AbstractFormResource implements FormRe
 
     @Override
     public Response search(MessageContext context, SearchQueryParameters queryParameters) throws PieceworkException {
+        long start = 0l;
+        if (LOG.isDebugEnabled())
+            start = System.currentTimeMillis();
+
         UriInfo uriInfo = context.getContext(UriInfo.class);
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
         SearchProvider searchProvider = modelProviderFactory.searchProvider(helper.getPrincipal());
         Set<Process> processes = searchProvider.processes(AuthorizationRole.USER, AuthorizationRole.OVERSEER);
         SearchResponse searchResponse = search(context, new SearchCriteria.Builder(rawQueryParameters, processes, FacetFactory.facetMap(processes), sanitizer).build(), helper.getPrincipal());
 
-        return FormUtility.okResponse(settings, searchProvider, searchResponse, null, isAnonymous());
+        Response response = FormUtility.okResponse(settings, searchProvider, searchResponse, null, isAnonymous());
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Search for forms took " + (System.currentTimeMillis() - start) + " ms");
+
+        return response;
     }
 
     @Override

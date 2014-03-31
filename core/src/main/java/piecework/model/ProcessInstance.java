@@ -68,6 +68,7 @@ public class ProcessInstance implements Serializable {
     private final String processInstanceLabel;
 
     @XmlElement
+    @Indexed
     private final String processStatus;
 
     @XmlElement
