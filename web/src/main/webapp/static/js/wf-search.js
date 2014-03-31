@@ -109,6 +109,7 @@ angular.module('wf',
                 scope.application.state.organizing = false;
             };
             var processData = function(results) {
+                scope.application.state.selectedForms = [];
                 scope.application.state.searching = false;
                 scope.application.criteria.sortBy = results.sortBy;
 
@@ -172,8 +173,6 @@ angular.module('wf',
                 scope.criteria.pageNumber = scope.paging.pageNumber;
                 scope.application.search();
             };
-
-            scope.selectedForms = [];
 
             scope.SearchResponse = $resource('./form', {processStatus:'@processStatus'});
             scope.application.clearFilters = function() {

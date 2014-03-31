@@ -1475,14 +1475,10 @@
                             form.checked = !form.checked;
                             if (!form.checked)
                                 scope.application.state.selectAll = false;
-                            if (form.checked && scope.application.state.selectedFormMap[form.formInstanceId] == null)
-                                scope.application.state.selectedFormMap[form.formInstanceId] = form;
-                            else if ( !form.checked && scope.application.state.selectedFormMap[form.formInstanceId] != null)
-                                delete scope.application.state.selectedFormMap[form.formInstanceId];
-
                             scope.application.state.selectedForms = [];
-                            angular.forEach(scope.application.state.selectedFormMap, function(value, key) {
-                                scope.application.state.selectedForms.push(value);
+                            angular.forEach(scope.application.forms, function(form) {
+                                if (form.checked)
+                                    scope.application.state.selectedForms.push(form);
                             });
                         };
                         scope.selectAllForms = function(checked) {
@@ -1595,18 +1591,6 @@
                             scope.application.state.collapsed = !scope.application.state.collapsed;
                         };
 
-//                        if (typeof(scope.selectedFormMap) === 'undefined')
-//                            scope.selectedFormMap = {};
-//                        scope.context = $window.piecework.context;
-//                        scope.state = new Object();
-//                        scope.state.isCollapsed = false;
-//                        scope.state.toggleCollapse = function() {
-//                            scope.state.isCollapsed = !scope.state.isCollapsed;
-//                        };
-//
-//                        scope.processDefinitionDescription = new Object();
-//                        scope.processDefinitionDescription[''] = 'Any process';
-
                         scope.exportCsv = function() {
                             var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.application.criteria.processDefinitionKey;
                             if (scope.application.criteria.lastModifiedAfter != null)
@@ -1633,8 +1617,7 @@
                         };
 
                         scope.getFormsSelected = function(taskStatuses) {
-//                            var formIds = Object.keys(scope.application.state.selectedFormMap);
-                            var selectedForms = new Array();
+                            var selectedForms = [];
                             var acceptableTaskStatuses = new Object();
                             angular.forEach(taskStatuses, function(taskStatus) {
                                 acceptableTaskStatuses[taskStatus] = true;
@@ -1751,115 +1734,114 @@
                     },
                     template:
                         '<nav class="navbar navbar-default navbar-ex1-collapse" style="margin-bottom: 0px;border-radius: 0px">\n' +
-                            '        <div class="navbar-header">\n' +
-                            '            <button data-ng-click="toggleCollapse()" type="button" class="navbar-toggle">\n' +
-                            '                <span class="sr-only">Toggle</span>\n' +
-                            '                <span class="icon-bar"></span>\n' +
-                            '                <span class="icon-bar"></span>\n' +
-                            '                <span class="icon-bar"></span>\n' +
-                            '            </button>\n' +
-                            '        </div>\n' +
-                            '        <div data-ng-class="application.state.collapsed ? \'\' : \'collapse\'" class="navbar-collapse navbar-ex1-collapse">\n' +
-                            '            <div class="container">\n' +
-                            '                <div class="row"><form class="navbar-form navbar-left form-inline" role="search">\n' +
-                            '                    <div class="row">\n' +
-                            '                       <div class="form-group has-feedback">\n' +
-                            '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="application.criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
-                            '                           <span data-ng-click="clearSearch()" data-ng-show="application.criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
-                            '                       </div>' +
-                            '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i data-ng-class="application.state.searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
-                            '                       <span data-ng-if="application.definitions" class="dropdown">\n' +
-                            '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
-                            '                            <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
-                            '                                <li data-ng-repeat="definition in application.definitions" class="presentation"><a role="menuitem" href="{{definition.link}}" target="_self">{{definition.processDefinitionLabel}}</a></li>\n' +
-                            '                            </ul>\n' +
-                            '                       </span>\n' +
-                            '                    </div>\n' +
-                            '                    <div class="row">\n' +
-                            '                        <ul class="navbar-nav">\n' +
-                            '                            <li>\n' +
-                            '                                <div class="dropdown">\n' +
-                            '                                    <a id="filter-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
-                            '                                        <span class="dropdown-toggle-text">{{application.processStatusDescription[application.criteria.processStatus]}}</span>\n' +
-                            '                                        <b class="caret"></b>\n' +
-                            '                                    </a>\n' +
-                            '                                    <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">\n' +
-                            '                                        <li role="presentation" class="dropdown-header">Process status</li>\n' +
-                            '                                        <li role="presentation" class="disabled">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" id="statusOpen" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="open" role="menuitem" checked=""/> &nbsp;{{application.processStatusDescription[\'open\']}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                        <li role="presentation">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" id="statusComplete" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="complete" role="menuitem"> &nbsp;{{application.processStatusDescription[\'complete\']}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                        <li role="presentation">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" id="statusCancelled" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="cancelled" role="menuitem"> &nbsp;{{application.processStatusDescription[\'cancelled\']}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                        <li role="presentation">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" id="statusSuspended" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="suspended" role="menuitem"> &nbsp;{{application.processStatusDescription[\'suspended\']}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                        <li role="presentation" class="disabled">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" id="statusQueued" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="queued" role="menuitem" checked=""/> &nbsp;{{application.processStatusDescription[\'queued\']}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                        <li role="presentation">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" id="statusAny" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="all" role="menuitem"> &nbsp;{{application.processStatusDescription[\'all\']}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                    </ul>\n' +
-                            '                                </div>\n' +
-                            '                            </li>\n' +
-                            '                            <li ng-hide="isSingleProcessSelectable()">\n' +
-                            '                                <div class="dropdown">\n' +
-                            '                                    <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
-                            '                                        <span class="dropdown-toggle-text">{{application.processDefinitionDescription[application.criteria.processDefinitionKey]}}</span>\n' +
-                            '                                        <b class="caret"></b>\n' +
-                            '                                    </a>\n' +
-                            '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
-                            '                                        <li role="presentation" class="dropdown-header">Processes</li>\n' +
-                            '                                        <li data-ng-repeat="definition in application.definitions" role="presentation">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="{{definition.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.processDefinitionLabel}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                        <li role="presentation">\n' +
-                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                            '                                                <label class="checkbox">\n' +
-                            '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{application.processDefinitionDescription[\'\']}}\n' +
-                            '                                                </label>\n' +
-                            '                                            </div>\n' +
-                            '                                        </li>\n' +
-                            '                                    </ul>\n' +
-                            '                                </div>\n' +
-                            '                            </li>\n' +
-                            '                        </ul>\n' +
-                            '                    </div>\n' +
-                            '                </form>\n' +
-                            '                <div class="navbar-right btn-toolbar">\n' +
-//    '                    <div data-ng-show="isFormSelected([\'Open\'])" data-wf-assignment-button data-forms="getFormsSelected([\'Open\'])" class="navbar-nav"></div>' +
+                        '        <div class="navbar-header">\n' +
+                        '            <button data-ng-click="toggleCollapse()" type="button" class="navbar-toggle">\n' +
+                        '                <span class="sr-only">Toggle</span>\n' +
+                        '                <span class="icon-bar"></span>\n' +
+                        '                <span class="icon-bar"></span>\n' +
+                        '                <span class="icon-bar"></span>\n' +
+                        '            </button>\n' +
+                        '        </div>\n' +
+                        '        <div data-ng-class="application.state.collapsed ? \'\' : \'collapse\'" class="navbar-collapse navbar-ex1-collapse">\n' +
+                        '            <div class="container">\n' +
+                        '                <div class="row"><form class="navbar-form navbar-left form-inline" role="search">\n' +
+                        '                    <div class="row">\n' +
+                        '                       <div class="form-group has-feedback">\n' +
+                        '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="application.criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
+                        '                           <span data-ng-click="clearSearch()" data-ng-show="application.criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+                        '                       </div>' +
+                        '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i data-ng-class="application.state.searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
+                        '                       <span data-ng-if="application.definitions" class="dropdown">\n' +
+                        '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
+                        '                            <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
+                        '                                <li data-ng-repeat="definition in application.definitions" class="presentation"><a role="menuitem" href="{{definition.link}}" target="_self">{{definition.processDefinitionLabel}}</a></li>\n' +
+                        '                            </ul>\n' +
+                        '                       </span>\n' +
+                        '                    </div>\n' +
+                        '                    <div class="row">\n' +
+                        '                        <ul class="navbar-nav">\n' +
+                        '                            <li>\n' +
+                        '                                <div class="dropdown">\n' +
+                        '                                    <a id="filter-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+                        '                                        <span class="dropdown-toggle-text">{{application.processStatusDescription[application.criteria.processStatus]}}</span>\n' +
+                        '                                        <b class="caret"></b>\n' +
+                        '                                    </a>\n' +
+                        '                                    <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">\n' +
+                        '                                        <li role="presentation" class="dropdown-header">Process status</li>\n' +
+                        '                                        <li role="presentation" class="disabled">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" id="statusOpen" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="open" role="menuitem" checked=""/> &nbsp;{{application.processStatusDescription[\'open\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                        <li role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" id="statusComplete" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="complete" role="menuitem"> &nbsp;{{application.processStatusDescription[\'complete\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                        <li role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" id="statusCancelled" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="cancelled" role="menuitem"> &nbsp;{{application.processStatusDescription[\'cancelled\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                        <li role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" id="statusSuspended" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="suspended" role="menuitem"> &nbsp;{{application.processStatusDescription[\'suspended\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                        <li role="presentation" class="disabled">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" id="statusQueued" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="queued" role="menuitem" checked=""/> &nbsp;{{application.processStatusDescription[\'queued\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                        <li role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" id="statusAny" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="all" role="menuitem"> &nbsp;{{application.processStatusDescription[\'all\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                    </ul>\n' +
+                        '                                </div>\n' +
+                        '                            </li>\n' +
+                        '                            <li ng-hide="isSingleProcessSelectable()">\n' +
+                        '                                <div class="dropdown">\n' +
+                        '                                    <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+                        '                                        <span class="dropdown-toggle-text">{{application.processDefinitionDescription[application.criteria.processDefinitionKey]}}</span>\n' +
+                        '                                        <b class="caret"></b>\n' +
+                        '                                    </a>\n' +
+                        '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
+                        '                                        <li role="presentation" class="dropdown-header">Processes</li>\n' +
+                        '                                        <li data-ng-repeat="definition in application.definitions" role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="{{definition.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.processDefinitionLabel}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                        <li role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{application.processDefinitionDescription[\'\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                    </ul>\n' +
+                        '                                </div>\n' +
+                        '                            </li>\n' +
+                        '                        </ul>\n' +
+                        '                    </div>\n' +
+                        '                </form>\n' +
+                        '                <div class="navbar-right btn-toolbar">\n' +
                         '                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>\n' +
                         '                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" data-ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>\n' +
                         '                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected([\'Suspended\']))" data-ng-show="isFormSelected([\'Suspended\'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>\n' +
