@@ -15,15 +15,14 @@
  */
 package piecework.ui.visitor;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.htmlcleaner.HtmlNode;
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.TagNodeVisitor;
-import piecework.Constants;
 import piecework.enumeration.FieldTag;
 import piecework.model.Container;
 import piecework.model.Field;
+import piecework.util.ConversionUtility;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -38,6 +37,7 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
     private final Container container;
     private final Set<Field> fields;
 
+    private boolean disabled = false;
     private boolean novalidate = false;
 
     public RemoteTemplateVisitor(Container parentContainer, Container container) {
@@ -62,17 +62,22 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
             String typeAttribute = tag.getAttributeByName("type");
             String multipleAttribute = tag.getAttributeByName("multiple");
 
-            String activeAttribute = tag.getAttributeByName("data-wf-active");
+            String screenAttribute = attribute(tag, "wf-screen");
+            if (StringUtils.isNotEmpty(screenAttribute)) {
+                disabled = !screenAttribute.equals("" + container.getOrdinal());
+            }
+
             String dateAttribute = tag.getAttributeByName("data-wf-date");
             String fileAttribute = tag.getAttributeByName("data-wf-file");
             String personAttribute = tag.getAttributeByName("data-wf-person");
+
             String nameAttribute = tag.getAttributeByName("data-name");
             if (StringUtils.isEmpty(nameAttribute))
                 nameAttribute = tag.getAttributeByName("name");
 
             String requiredAttribute = tag.getAttributeByName("required");
 
-            if (StringUtils.isEmpty(activeAttribute) || activeAttribute.equals("" + container.getOrdinal())) {
+            if (!disabled) {
                 boolean required = StringUtils.isNotEmpty(requiredAttribute);
 
                 FieldTag fieldTag = null;
@@ -87,12 +92,19 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
                     fieldTag = FieldTag.getInstance(tagName, typeAttribute, multipleAttribute);
 
                 if (fieldTag != null && StringUtils.isNotEmpty(nameAttribute)) {
-                    fields.add(new Field.Builder()
+                    Field.Builder fieldBuilder = new Field.Builder()
                             .name(nameAttribute)
                             .type(fieldTag.getFieldType())
                             .editable()
-                            .required(!this.novalidate && required)
-                            .build());
+                            .required(!this.novalidate && required);
+
+                    switch (fieldTag) {
+                        case FILE:
+                            handleFile(tag, fieldBuilder);
+                            break;
+                    }
+
+                    fields.add(fieldBuilder.build());
                 }
             }
         }
@@ -102,5 +114,21 @@ public class RemoteTemplateVisitor implements TagNodeVisitor {
     public Set<Field> getFields() {
         return fields;
     }
+
+    private void handleFile(TagNode tag, Field.Builder fieldBuilder) {
+        int maxInputs = ConversionUtility.integer(attribute(tag, "max-files"), 1);
+        int maxSize = ConversionUtility.kilobytes(attribute(tag, "max-size"), 255);
+        fieldBuilder.maxInputs(maxInputs).maxValueLength(maxSize);
+    }
+
+    private String attribute(TagNode tag, String attributeName) {
+        String value = tag.getAttributeByName("data-" + attributeName);
+        if (StringUtils.isEmpty(value))
+            value = tag.getAttributeByName(attributeName);
+
+        return value;
+    }
+
+
 
 }

@@ -826,4 +826,69 @@ angular.module('wf.services',
 
             }
         }
+    ])
+    .factory('wfUtils', [
+        function() {
+            return {
+                attachForm : function(scope) {
+                    var parent = scope.$parent;
+                    while (parent != null) {
+                        if (parent.isFormControllerScope) {
+                            parent.$watch('form', function(original, updated) {
+                                var form = updated != null ? updated : original;
+                                if (form != null)
+                                    scope.form = form;
+                            });
+                            break;
+                        }
+                        parent = parent.$parent;
+                    }
+                },
+                linkInputs: function(scope, element, attrs) {
+                    scope.$watch('form', function(original, updated) {
+                        var name = attrs.name;
+                        var type = attrs.type;
+                        var form = updated != null ? updated : original;
+                        if (type != 'file' && form != null) {
+                            var model = form.data[scope.name];
+
+                            if (model != null) {
+                                if (type == 'checkbox' || type == 'radio') {
+                                    if (model != null && model[0] == attrs.value)
+                                        element.prop('checked', true);
+                                } else {
+                                    element.val(model[0]);
+                                }
+                            }
+                        }
+                    });
+                },
+                linkMask: function(scope, element, attrs) {
+                    if (typeof(attrs.wfMask) !== 'undefined') {
+                        var name = attrs.name;
+                        var type = attrs.type;
+
+                        scope.hasDatePickerSupport = function() {
+                            var elem = document.createElement('input');
+                            elem.setAttribute('type','date');
+                            elem.value = 'foo';
+                            return (elem.type == 'date' && elem.value != 'foo');
+                        }
+
+                        var options = {};
+
+                        options['mask'] = attrs.wfMask;
+                        if (typeof(attrs.wfPlaceholder) !== 'undefined')
+                            options['placeholder'] = attrs.wfPlaceholder;
+
+                        options['showMaskOnHover'] = false;
+
+                        if (type == 'text')
+                            element.inputmask(options);
+                        else if ((type == 'date' || type == 'datetime' || type == 'datetime-local') && !scope.hasDatePickerSupport())
+                            element.inputmask(options);
+                    }
+                }
+            }
+        }
     ]);

@@ -393,7 +393,7 @@ public class ValidationFactory {
             if (LOG.isInfoEnabled())
                 LOG.info("Number of files being attached to " + field.getName() + " is greater than " + field.getMaxInputs() + " - no more files will be accepted");
             if (validationBuilder != null)
-                validationBuilder.error(field.getName(), "Number of files being uploaded is greater than " + field.getMaxInputs() + " - no more files will be accepted");
+                validationBuilder.error(field.getName(), "Only " + field.getMaxInputs() + " files are allowed for this input - no more files will be accepted");
             return null;
         }
 

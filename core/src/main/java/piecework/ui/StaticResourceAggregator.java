@@ -228,7 +228,7 @@ public class StaticResourceAggregator<P extends ProcessDeploymentProvider> {
         if (StringUtils.isNotEmpty(base)) {
             // Only add the base if we're looking for the resource in the
             // repository
-            Scheme scheme = PathUtility.findScheme(path);
+            Scheme scheme = PathUtility.findScheme(path, null);
             if (scheme == Scheme.REPOSITORY)
                 fullPath = base + "/" + path;
             else
@@ -238,7 +238,7 @@ public class StaticResourceAggregator<P extends ProcessDeploymentProvider> {
         }
 
         if (!PathUtility.checkForStaticPath(path)) {
-            Scheme scheme = PathUtility.findScheme(path);
+            Scheme scheme = PathUtility.findScheme(path, null);
             // Since we can trust that static resources are not trying to move above their base,
             // allow for cases where the path is on the file system
             if (scheme != Scheme.REPOSITORY)

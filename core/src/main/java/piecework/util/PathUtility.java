@@ -18,6 +18,7 @@ package piecework.util;
 import org.apache.cxf.common.util.StringUtils;
 import org.htmlcleaner.TagNode;
 import piecework.content.ContentResource;
+import piecework.content.concrete.ContentHandlerRegistry;
 import piecework.enumeration.Scheme;
 import piecework.settings.UserInterfaceSettings;
 import piecework.ui.StaticResourceAggregator;
@@ -28,13 +29,19 @@ import piecework.ui.TagAttributeAction;
  */
 public class PathUtility {
 
-    public static Scheme findScheme(String location) {
+    public static Scheme findScheme(String location, ContentHandlerRegistry registry) {
         int indexOf = location.indexOf(':');
         String scheme = "";
         if (indexOf != -1)
             scheme = location.substring(0, indexOf);
 
-        ContentResource contentResource;
+        if (registry != null) {
+            for (String locationPrefix : registry.getRemoteRepositoryLocationPrefixes()) {
+                if (location.startsWith(locationPrefix))
+                    return Scheme.REPOSITORY;
+            }
+        }
+
         if (scheme.equals("http") || scheme.endsWith("https"))
             return Scheme.REMOTE;
         else if (scheme.equals("classpath"))

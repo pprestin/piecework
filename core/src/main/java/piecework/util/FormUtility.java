@@ -229,6 +229,9 @@ public class FormUtility {
         builder.header("Pragma", "no-cache");
         builder.header("Expires", 0);
 
+        if (StringUtils.isNotEmpty(contentType) && contentType.startsWith("image/"))
+            builder.header("X-Content-Type-Options", "nosniff");
+
         return builder.build();
     }
 

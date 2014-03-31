@@ -10,12 +10,18 @@
         <link href="../static/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
         <link href="../static/css/layout.css" rel="stylesheet"/>
         <base href="../ui/form"/>
-        <script src="../static/js/vendor/jquery-1.10.2.min.js"></script>
-        <script src="../static/js/vendor/jquery-ui-1.10.3.custom.min.js"></script>
-        <script src="../static/js/vendor/angular.min.js"></script>
-        <script src="../static/js/vendor/angular-resource.min.js"></script>
-        <script src="../static/js/vendor/angular-route.min.js"></script>
-        <script src="../static/js/vendor/angular-sanitize.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+        <!--<script src="../static/js/vendor/jquery-1.10.2.min.js"></script>-->
+        <!--<script src="../static/js/vendor/jquery-ui-1.10.3.custom.min.js"></script>-->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-resource.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-route.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-sanitize.min.js"></script>
+        <!--<script src="../static/js/vendor/angular.min.js"></script>-->
+        <!--<script src="../static/js/vendor/angular-resource.min.js"></script>-->
+        <!--<script src="../static/js/vendor/angular-route.min.js"></script>-->
+        <!--<script src="../static/js/vendor/angular-sanitize.min.js"></script>-->
         <script src="../static/js/vendor/angular-local-storage.js"></script>
         <!--<script src="../static/js/vendor/ui-bootstrap-0.6.0.min.js"></script>-->
         <!--<script src="../static/js/vendor/ui-bootstrap-tpls-0.6.0.js"></script>-->
@@ -24,16 +30,23 @@
         <script src="../static/js/vendor/jquery.inputmask.js"></script>
         <script src="../static/js/vendor/moment.min.js"></script>
         <script src="../static/js/vendor/jquery.iframe-transport.js"></script>
-        <script src="../static/js/vendor/jquery.fileupload.js"></script>
-        <script src="../static/js/vendor/jquery.fileupload-process.js"></script>
-        <script src="../static/js/vendor/jquery.fileupload-validate.js"></script>
-        <script src="../static/js/vendor/jquery.fileupload-angular.js"></script>
+
+        <script src="../static/js/vendor/jquery-file-upload-9.5.7/jquery.iframe-transport.js"></script>
+        <script src="../static/js/vendor/jquery-file-upload-9.5.7/jquery.fileupload.js"></script>
+        <script src="../static/js/vendor/jquery-file-upload-9.5.7/jquery.fileupload-process.js"></script>
+        <script src="../static/js/vendor/jquery-file-upload-9.5.7/jquery.fileupload-validate.js"></script>
+        <script src="../static/js/vendor/jquery-file-upload-9.5.7/jquery.fileupload-angular.js"></script>
+
+        <!--<script src="../static/js/vendor/jquery.fileupload.js"></script>-->
+        <!--<script src="../static/js/vendor/jquery.fileupload-process.js"></script>-->
+        <!--<script src="../static/js/vendor/jquery.fileupload-validate.js"></script>-->
+        <!--<script src="../static/js/vendor/jquery.fileupload-angular.js"></script>-->
         <script src="../static/js/wf-services.js"></script>
         <script src="../static/js/wf-templates.js"></script>
         <script src="../static/js/wf-directives.js"></script>
         <script src="../static/js/wf-form.js"></script>
     </head>
-    <body role="application">
+    <body data-ng-controller="FormController" data-ng-cloak role="application">
         <div>
             <div class="user-information">
                 <div id="user-information-name" class="user-information-name pull-right">
