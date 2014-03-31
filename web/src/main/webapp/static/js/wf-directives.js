@@ -1661,7 +1661,7 @@
                                 var specialFields = ['activation', 'assignment', 'attachment', 'cancellation', 'history', 'restart', 'suspension', 'bucketUrl'];
                                 scope.displayedForms = [];
                                 angular.forEach(results.data, function(form) {
-                                    var displayedForm = {'link' : form.link };
+                                    var displayedForm = {'formInstanceId': form.formInstanceId, 'link' : form.link };
                                     angular.forEach(specialFields, function(field) {
                                         displayedForm[field] = form[field];
                                     });
