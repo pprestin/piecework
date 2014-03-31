@@ -124,36 +124,7 @@ angular.module('wf',
                     scope.application.paging.pageNumbers.push(i);
                 }
 
-//                angular.forEach(results.metadata, function(definition) {
-//                    scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
-//                });
-
                 scope.application.state.selectAll = false;
-
-//                var includeFacets = true;
-//                if (scope.application.facets == null) {
-//                    includeFacets = true;
-//                    scope.application.facets = [];
-//                }
-
-//                scope.application.state.selectedFacets = [];
-//                angular.forEach(results.facets, function(facet) {
-//                    facet.link = facet.name == 'processInstanceLabel';
-//                    var localFacet = scope.application.facetMap[facet.name];
-//                    if (localFacet != null)
-//                        facet.selected = localFacet.selected;
-//                    else
-//                        facet.selected = facet.required;
-//
-//                    if (facet.selected && facet.name != 'processInstanceLabel')
-//                        scope.application.state.selectedFacets.push(facet);
-//
-//                    scope.application.facetMap[facet.name] = facet;
-//                    if (includeFacets)
-//                        scope.application.facets.push(facet);
-//                });
-
-//                localStorageService.set("facetMap", scope.application.facetMap);
 
                 var criteria = scope.application.criteria;
                 angular.forEach(criteria.sortBy, function(sortBy) {
@@ -274,6 +245,10 @@ angular.module('wf',
             } else {
                 scope.application.search();
             }
+
+            scope.$on("wfEvent:search", function() {
+                scope.application.search();
+            });
         }
     ])
     .directive('wfKeypressEvents', ['$document', '$rootScope',

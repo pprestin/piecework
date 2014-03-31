@@ -18,11 +18,13 @@ package piecework.engine.activiti;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.ExecutionListener;
+import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.impl.pvm.PvmActivity;
 import org.activiti.engine.impl.pvm.delegate.ActivityExecution;
 import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.engine.EngineContext;
 import piecework.engine.EngineStateSynchronizer;
 import piecework.enumeration.StateChangeType;
@@ -83,7 +85,15 @@ public class GeneralExecutionListener implements ExecutionListener {
                     }
                 }
 
+
+
                 if (!isTask) {
+                    if (event == StateChangeType.COMPLETE_PROCESS) {
+                        HistoricProcessInstance historicInstance = execution.getEngineServices().getHistoryService().createHistoricProcessInstanceQuery().processInstanceId(execution.getProcessInstanceId()).singleResult();
+                        if (historicInstance != null && historicInstance.getDeleteReason() != null && historicInstance.getDeleteReason().equalsIgnoreCase(Constants.DeleteReasons.CANCELLED))
+                            event = StateChangeType.CANCEL_PROCESS;
+                    }
+
                     EngineContext context = new ActivitiEngineContext(execution.getEngineServices(), execution.getProcessDefinitionId(), execution.getProcessInstanceId());
                     engineStateSynchronizer.onProcessInstanceEvent(event, pieceworkProcessInstanceId, context);
                 }

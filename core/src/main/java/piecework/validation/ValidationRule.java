@@ -103,7 +103,7 @@ public class ValidationRule {
             evaluateOptions(submissionData);
             break;
         case NUMBER_OF_INPUTS:
-            evaluateNumberOfInputs(submissionData, onlyAcceptValidInputs);
+            evaluateNumberOfInputs(submissionData, instanceData, onlyAcceptValidInputs);
             break;
         case NUMERIC:
             evaluateNumeric(submissionData);
@@ -162,7 +162,7 @@ public class ValidationRule {
         }
     }
 
-    private void evaluateNumberOfInputs(Map<String, List<Value>> submissionData, boolean onlyAcceptValidInputs) throws ValidationRuleException {
+    private void evaluateNumberOfInputs(Map<String, List<Value>> submissionData, Map<String, List<Value>> instanceData, boolean onlyAcceptValidInputs) throws ValidationRuleException {
         if (constraint != null && !ConstraintUtil.evaluate(null, submissionData, constraint))
             return;
 
@@ -178,6 +178,18 @@ public class ValidationRule {
                     numberOfInputs++;
             } else if (StringUtils.isNotEmpty(value.getValue()))
                 numberOfInputs++;
+        }
+
+        List<? extends Value> previousValues = safeValues(name, instanceData);
+        for (Value value : previousValues) {
+            if (value == null)
+                continue;
+
+            if (value instanceof File) {
+                File file = File.class.cast(value);
+                if (StringUtils.isNotEmpty(file.getName()))
+                    numberOfInputs++;
+            }
         }
 
         if (maxInputs < numberOfInputs)

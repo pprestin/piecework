@@ -59,14 +59,18 @@ public class StorageManager {
     @Autowired
     private ProcessInstanceRepository processInstanceRepository;
 
-    public ProcessInstance archive(ProcessInstance instance, Map<String, List<Value>> data) {
+    public ProcessInstance archive(ProcessInstance instance, Map<String, List<Value>> data, String completionStatus) {
         String deploymentId = instance.getDeploymentId();
         ProcessDeployment deployment = StringUtils.isNotEmpty(deploymentId) ? deploymentRepository.findOne(deploymentId) : null;
-        String completionStatus = null;
-        if (deployment != null)
-            completionStatus = deployment.getCompletionStatus();
+        String completionApplicationStatus = null;
+        if (deployment != null && completionStatus != null) {
+            if (completionStatus.equalsIgnoreCase(Constants.ProcessStatuses.COMPLETE))
+                completionApplicationStatus = deployment.getCompletionStatus();
+            else if (completionStatus.equalsIgnoreCase(Constants.ProcessStatuses.CANCELLED))
+                completionApplicationStatus = deployment.getCancellationStatus();
+        }
 
-        return processInstanceRepository.update(instance.getProcessInstanceId(), Constants.ProcessStatuses.COMPLETE, completionStatus, data);
+        return processInstanceRepository.update(instance.getProcessInstanceId(), completionStatus, completionApplicationStatus, data);
     }
 
     public boolean expire(ContentProfileProvider modelProvider, String location) throws PieceworkException {

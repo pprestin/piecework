@@ -116,9 +116,14 @@ public class ProcessInstanceService {
         commandFactory.assignment(instanceProvider, task, assignee).execute();
     }
 
-    public ProcessInstance complete(String processInstanceId, Entity principal) {
+    public ProcessInstance complete(ProcessInstanceProvider instanceProvider) {
+        String processInstanceId = null;
         try {
-            ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(processInstanceId, principal);
+            ProcessInstance instance = instanceProvider.instance();
+            // Don't complete process instances that have been cancelled
+            if (instance.getProcessStatus() != null && instance.getProcessStatus().equals(Constants.ProcessStatuses.CANCELLED))
+                return instance;
+
             return commandFactory.completion(instanceProvider).execute();
         } catch (PieceworkException error) {
             LOG.error("Unable to mark instance as complete: " + processInstanceId, error);

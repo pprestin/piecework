@@ -63,4 +63,5 @@ public class CancellationCommand extends AbstractOperationCommand {
             LOG.fatal("Unable to really cancel the process instance execution... might be a serious issue, but not going to bother the user about it");
         return new OperationResult(applicationStatusExplanation, deployment.getCancellationStatus(), Constants.ProcessStatuses.CANCELLED, applicationStatusExplanation);
     }
+
 }

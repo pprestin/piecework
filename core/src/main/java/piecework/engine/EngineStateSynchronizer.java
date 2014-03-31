@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import piecework.Constants;
 import piecework.SystemUser;
 import piecework.common.ViewContext;
 import piecework.enumeration.StateChangeType;
@@ -84,8 +85,12 @@ public class EngineStateSynchronizer {
 //                doStartNotification(type, context);
 
             break;
+        case CANCEL_PROCESS:
+            LOG.debug("Process instance cancelled " + processInstanceId);
+            mediator.notify(new StateChangeEvent.Builder(StateChangeType.CANCEL_PROCESS).context(context).instanceProvider(instanceProvider).build());
+            break;
         case COMPLETE_PROCESS:
-            ProcessInstance instance = processInstanceService.complete(processInstanceId, new SystemUser());
+            ProcessInstance instance = processInstanceService.complete(instanceProvider);
             if (instance != null) {
                 LOG.debug("Process instance completed " + processInstanceId);
                 mediator.notify(new StateChangeEvent.Builder(StateChangeType.COMPLETE_PROCESS).context(context).instanceProvider(instanceProvider).build());

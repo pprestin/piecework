@@ -90,7 +90,7 @@ public class EngineStateSynchronizerTest {
     @Test
     public void verifyCompleteProcess() {
         Mockito.doReturn(instance)
-               .when(processInstanceService).complete(eq("123"), any(SystemUser.class));
+               .when(processInstanceService).complete(any(ProcessInstanceProvider.class));
         engineStateSynchronizer.onProcessInstanceEvent(StateChangeType.COMPLETE_PROCESS, "123", engineContext);
         Mockito.verify(mediator).notify(any(StateChangeEvent.class));
     }

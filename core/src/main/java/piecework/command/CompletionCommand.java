@@ -15,6 +15,7 @@
  */
 package piecework.command;
 
+import piecework.Constants;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
@@ -43,7 +44,7 @@ public class CompletionCommand extends AbstractEngineStorageCommand<ProcessInsta
             return null;
 
         Map<String, List<Value>> data = instance.getData();
-        return storageManager.archive(instance, data);
+        return storageManager.archive(instance, data, Constants.ProcessStatuses.COMPLETE);
     }
 
 }

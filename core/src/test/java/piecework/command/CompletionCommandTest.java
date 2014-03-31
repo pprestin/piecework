@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import piecework.Constants;
 import piecework.engine.ProcessEngineFacade;
 import piecework.exception.PieceworkException;
 import piecework.manager.StorageManager;
@@ -82,13 +83,13 @@ public class CompletionCommandTest {
         Mockito.when(instance.getData())
                 .thenReturn(data);
 
-        Mockito.when(storageManager.archive(instance, data))
+        Mockito.when(storageManager.archive(instance, data, Constants.ProcessStatuses.COMPLETE))
                 .thenReturn(instance);
 
         ProcessInstanceProvider instanceProvider = new ProcessInstanceProviderStub(process, deployment, instance, principal);
         CompletionCommand command = new CompletionCommand(null, instanceProvider);
         ProcessInstance actual = command.execute(processEngineFacade, storageManager);
-        Mockito.verify(storageManager).archive(eq(instance), eq(data));
+        Mockito.verify(storageManager).archive(eq(instance), eq(data), eq(Constants.ProcessStatuses.COMPLETE));
         Assert.assertEquals(instance, actual);
     }
 }
