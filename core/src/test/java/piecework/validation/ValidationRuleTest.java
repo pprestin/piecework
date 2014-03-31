@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 public class ValidationRuleTest {
 
     private final String fieldName = "testfield1";
+    private final boolean onlyAcceptValidInputs = true;
 
     /*
      * Success condition here is just not throwing an exception
@@ -52,7 +53,7 @@ public class ValidationRuleTest {
 
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne("testfield2", new Value("no"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -70,7 +71,7 @@ public class ValidationRuleTest {
 
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne("testfield2", new Value("yes"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -89,7 +90,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("something"));
         submissionData.putOne("testfield2", new Value("yes"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -101,7 +102,7 @@ public class ValidationRuleTest {
 
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("invalid"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -113,7 +114,7 @@ public class ValidationRuleTest {
 
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("valid@valid.com"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -126,7 +127,7 @@ public class ValidationRuleTest {
 
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("notOkay"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -139,7 +140,7 @@ public class ValidationRuleTest {
 
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("Okay"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -153,7 +154,7 @@ public class ValidationRuleTest {
 
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("first"));
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -171,7 +172,7 @@ public class ValidationRuleTest {
         submissionData.putOne(fieldName, new Value("third"));
         submissionData.putOne(fieldName, new Value("fourth"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -188,7 +189,7 @@ public class ValidationRuleTest {
         submissionData.putOne(fieldName, new Value("second"));
         submissionData.putOne(fieldName, new Value("third"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -201,7 +202,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("nonnumeric"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -214,7 +215,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("123"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -228,7 +229,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("df:e"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -242,7 +243,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("12:e"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -255,7 +256,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value(""));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -268,7 +269,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("something"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -281,7 +282,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value(""));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -295,7 +296,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value(""));
 
-        rule.evaluate(submissionData, previousData);
+        rule.evaluate(submissionData, previousData, onlyAcceptValidInputs);
     }
 
     @Test
@@ -310,7 +311,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value(""));
 
-        rule.evaluate(submissionData, previousData);
+        rule.evaluate(submissionData, previousData, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -323,7 +324,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("sdf"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -336,7 +337,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new User.Builder().build());
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -350,7 +351,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("dfgdfg"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -364,7 +365,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("df"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -378,7 +379,7 @@ public class ValidationRuleTest {
         ManyMap<String, Value> submissionData = new ManyMap<String, Value>();
         submissionData.putOne(fieldName, new Value("dfdf"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test(expected = ValidationRuleException.class)
@@ -392,7 +393,7 @@ public class ValidationRuleTest {
         submissionData.putOne(fieldName, new Value("df"));
         submissionData.putOne(fieldName, new Value("dfs"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
     @Test
@@ -406,7 +407,7 @@ public class ValidationRuleTest {
         submissionData.putOne(fieldName, new Value("dfdf"));
         submissionData.putOne(fieldName, new Value("dfdf"));
 
-        rule.evaluate(submissionData, null);
+        rule.evaluate(submissionData, null, onlyAcceptValidInputs);
     }
 
 }

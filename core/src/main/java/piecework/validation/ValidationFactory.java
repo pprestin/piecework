@@ -226,7 +226,7 @@ public class ValidationFactory {
                         if (rule.getType() == ValidationRule.ValidationRuleType.REQUIRED_IF_NO_PREVIOUS)
                             continue;
                     }
-                    rule.evaluate(decryptedSubmissionData, decryptedInstanceData);
+                    rule.evaluate(decryptedSubmissionData, decryptedInstanceData, onlyAcceptValidInputs);
                 } catch (ValidationRuleException e) {
                     LOG.warn("Invalid input: " + e.getMessage() + " " + e.getRule());
 

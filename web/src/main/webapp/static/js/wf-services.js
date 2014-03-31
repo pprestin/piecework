@@ -54,7 +54,10 @@ angular.module('wf.services',
 
                         var failure = function(scope, data, status, headers, config, form) {
                             form._activationStatus = 'error';
-                            var message = '<em>' + form.task.processInstanceLabel + '</em> cannot be reactivated';
+                            var label = form.processInstanceLabel;
+                            if (label == null && form.task != null)
+                                label = form.task.processInstanceLabel;
+                            var message = '<em>' + label + '</em> cannot be reactivated';
                             var title = data.messageDetail;
                             notificationService.notify($scope, message, title);
                             checkActivationStatuses(scope);
@@ -170,12 +173,9 @@ angular.module('wf.services',
                         $modalInstance.dismiss('cancel');
                     };
                 }],
-               'ColumnsModalController': ['$rootScope', '$scope', '$modalInstance', 'facets', function ($rootScope, $scope, $modalInstance, facets) {
-                    $scope.facets = facets;
-                    $scope.selectFacet = function(facet) {
-                        facet.selected = !facet.selected;
-                        $scope.$root.$broadcast('wfEvent:facet-changed', facet);
-                    };
+               'ColumnsModalController': ['$rootScope', '$scope', '$modalInstance', 'application', function ($rootScope, $scope, $modalInstance, application) {
+                    $scope.application = application;
+
                     $scope.ok = function (comment) {
 
                     };
@@ -404,14 +404,14 @@ angular.module('wf.services',
                     });
                     modalInstance.result.then(function () {}, function () {});
                 },
-                openColumnsModal: function(facets) {
+                openColumnsModal: function(application) {
                     var modalInstance = $modal.open({
                         backdrop: true,
                         templateUrl: 'templates/columns-modal-dialog.html',
                         controller: controllerService.ColumnsModalController,
                         resolve: {
-                            facets: function () {
-                                return facets;
+                            application: function() {
+                                return application;
                             }
                         },
                         windowClass: 'in'

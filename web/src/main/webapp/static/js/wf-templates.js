@@ -67,7 +67,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "        </div>\n" +
     "        <div class=\"modal-body\">\n" +
     "           <ul>" +
-    "               <li data-ng-repeat=\"facet in facets\"><input type=\"checkbox\" data-ng-checked=\"facet.selected\" data-ng-click=\"selectFacet(facet)\">&nbsp;&nbsp;&nbsp;{{facet.label}}</li>" +
+    "               <li data-ng-repeat=\"facet in application.facets\"><input type=\"checkbox\" data-ng-checked=\"facet.selected\" data-ng-click=\"application.selectFacet(facet)\">&nbsp;&nbsp;&nbsp;{{facet.label}}</li>" +
     "           </ul>" +
     "        </div>\n" +
     "        <div class=\"modal-footer\">\n" +
@@ -857,71 +857,73 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
 //    '       <i class="fa fa-calendar"></i> ' +
 //    '   </span> ' +
 //    '</div>');
-  $templateCache.put("templates/daterange.html",
-    '<input data-ng-change="afterChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/> ' +
-    '<input data-ng-change="beforeChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/> ' +
-
-//    '<input size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" is-open="beforeOpened" min="beforeMinDate" datepicker-options="dateOptions" date-disabled="beforeDisabled(date, mode)" ng-required="true" close-text="Close" placeholder="Before"/> ' +
-    '');
-  $templateCache.put("templates/searchresponse.html",
-    '       <div class="pull-right">{{paging.total}} task{{paging.total != 1 ? \'s\' : \'\'}}</div>' +
-    '       <h2 data-ng-bind="isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : \'&nbsp;\'"></h2>\n' +
-    '       <table class="table table-hover">\n' +
-    '            <thead>\n' +
-    '            <tr>' +
-    '               <th><input data-ng-click="selectAllForms(displayedForms)" data-ng-checked="allChecked" type="checkbox" class="result-checkbox"/></th>\n' +
-//    '               <th class="text-muted"></th>' +
-    '               <th style="white-space:nowrap">' +
-    '                   <div class="form-group has-feedback">' +
-    '                       <label class="control-label"><a href="#" data-ng-click="doSort(facetMap[\'processInstanceLabel\'])"><b>Label</b> <i data-ng-show="isSorting(facetMap[\'processInstanceLabel\'])" data-ng-class="facetMap[\'processInstanceLabel\'].direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>' +
-    '                       <div data-ng-show="isFiltering" class="wf-filter">' +
-    '                           <input data-ng-keyup="onFilterKeyUp(facetMap[\'processInstanceLabel\'], $event)" data-ng-model="criteria[\'processInstanceLabel\']" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="Label">\n' +
-    '                           <span data-ng-click="clearFilter(facetMap[\'processInstanceLabel\'])" data-ng-show="hasFilter(facetMap[\'processInstanceLabel\'])" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
-    '                       </div>' +
-    '                    </div>' +
-    '               </th>' +
-    '               <th data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in selectedFacets" style="white-space:nowrap">' +
-    '                   <div data-ng-class="facet.type !== \'date\' ? \'has-feedback\' : \'\'" class="form-group">\n' +
-    '                       <label class="control-label"><a href="#" data-ng-click="doSort(facet)"><b>{{facet.label}}</b> <i data-ng-show="isSorting(facet)" data-ng-class="facet.direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>\n' +
-    '                       <div data-ng-show="isFiltering" class="wf-filter">' +
-    '                           <div data-ng-show="facet.type == \'date\' || facet.type == \'datetime\'"> ' +
-    '                               <div data-wf-date-range data-name="facet.name" data-criteria="criteria" />' +
-    '                           </div> ' +
-    '                           <input data-ng-keyup="onFilterKeyUp(facet, $event)" data-ng-hide="facet.type == \'date\' || facet.type == \'datetime\'" data-ng-model="criteria[facet.name]" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="{{facet.label}}">\n' +
-    '                           <span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
-    '                       </div>' +
-    '                   </div>' +
-    '               </th>' +
-    '            </tr>\n' +
-    '            </thead>\n' +
-    '            <tbody>\n' +
-    '            <tr data-ng-repeat="form in displayedForms">\n' +
-    '                <td><input data-ng-click="selectForm(form)" data-ng-checked="form.checked" type="checkbox" class="result-checkbox"/></td>\n' +
-//    '                <td class="text-muted">{{form.itemNumber}}</td>' +
-    '                  <td><a href="{{form.link}}" target="_self" rel="external">{{form.processInstanceLabel}}</a></td>' +
-    '                  <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in selectedFacets">{{form[facet.name]}}</td>' +
-//    '                <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-show="facet.selected" data-ng-repeat="facet in facets">' +
-//    '                   <span>{{form[facet.name]}}</span>' +
-//    '                   <span data-ng-show="facet.link"><a href="{{form.link}}" target="_self" rel="external">{{getFacetValue(form, facet)}}</a></span>' +
-//    '                   <span data-ng-hide="facet.link">{{getFacetValue(form, facet)}}</span>' +
-//    '                </td>' +
-    '            </tr>\n' +
-    '            </tbody>' +
-    '           \n' +
-    '       </table>' +
-    '       <ul data-ng-show="paging.required" class="pagination pull-right"> ' +
-    '           <li><a data-ng-click="paging.previousPage()">&larr; Previous</a></li> ' +
-    '           <li data-ng-class="pageNumber == paging.pageNumber ? \'active\' : \'\'" data-ng-repeat="pageNumber in paging.pageNumbers"><a data-ng-click="paging.toPage(pageNumber)">{{pageNumber}}</a></li> ' +
-    '           <li><a data-ng-click="paging.nextPage()">Next &rarr;</a></li> ' +
-    '       </ul>' +
-
-//    '       <select data-ng-model="paging.pageSize" data-ng-change="paging.changePageSize($event)" class="form-control">' +
-//    '           <option value="10">10</option>' +
-//    '           <option value="100">100</option>' +
-//    '           <option value="1000">1000</option>' +
-//    '           <option value="10000">10,000</option>' +
-//    '       </select>'
-    '');
+//  $templateCache.put("templates/daterange.html",
+//    '<input data-ng-change="afterChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/>' +
+//    '<span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> ' +
+//    '<input data-ng-change="beforeChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/>' +
+//    '<span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> ' +
+//
+////    '<input size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" is-open="beforeOpened" min="beforeMinDate" datepicker-options="dateOptions" date-disabled="beforeDisabled(date, mode)" ng-required="true" close-text="Close" placeholder="Before"/> ' +
+//    '');
+//  $templateCache.put("templates/searchresponse.html",
+//    '       <div class="pull-right">{{paging.total}} task{{paging.total != 1 ? \'s\' : \'\'}}</div>' +
+//    '       <h2 data-ng-bind="isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : \'&nbsp;\'"></h2>\n' +
+//    '       <table class="table table-hover">\n' +
+//    '            <thead>\n' +
+//    '            <tr>' +
+//    '               <th><input data-ng-click="selectAllForms(displayedForms)" data-ng-checked="allChecked" type="checkbox" class="result-checkbox"/></th>\n' +
+////    '               <th class="text-muted"></th>' +
+//    '               <th style="white-space:nowrap">' +
+//    '                   <div class="form-group has-feedback">' +
+//    '                       <label class="control-label"><a href="#" data-ng-click="doSort(facetMap[\'processInstanceLabel\'])"><b>Label</b> <i data-ng-show="isSorting(facetMap[\'processInstanceLabel\'])" data-ng-class="facetMap[\'processInstanceLabel\'].direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>' +
+//    '                       <div data-ng-show="isFiltering" class="wf-filter">' +
+//    '                           <input data-ng-keyup="onFilterKeyUp(facetMap[\'processInstanceLabel\'], $event)" data-ng-model="criteria[\'processInstanceLabel\']" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="Label">\n' +
+//    '                           <span data-ng-click="clearFilter(facetMap[\'processInstanceLabel\'])" data-ng-show="hasFilter(facetMap[\'processInstanceLabel\'])" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+//    '                       </div>' +
+//    '                    </div>' +
+//    '               </th>' +
+//    '               <th data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in selectedFacets" style="white-space:nowrap">' +
+//    '                   <div data-ng-class="facet.type !== \'date\' ? \'has-feedback\' : \'\'" class="form-group">\n' +
+//    '                       <label class="control-label"><a href="#" data-ng-click="doSort(facet)"><b>{{facet.label}}</b> <i data-ng-show="isSorting(facet)" data-ng-class="facet.direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>\n' +
+//    '                       <div data-ng-show="isFiltering" class="wf-filter">' +
+//    '                           <div data-ng-show="facet.type == \'date\' || facet.type == \'datetime\'"> ' +
+//    '                               <div data-wf-date-range data-name="facet.name" data-criteria="criteria" />' +
+//    '                           </div> ' +
+//    '                           <input data-ng-keyup="onFilterKeyUp(facet, $event)" data-ng-hide="facet.type == \'date\' || facet.type == \'datetime\'" data-ng-model="criteria[facet.name]" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="{{facet.label}}">\n' +
+//    '                           <span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+//    '                       </div>' +
+//    '                   </div>' +
+//    '               </th>' +
+//    '            </tr>\n' +
+//    '            </thead>\n' +
+//    '            <tbody>\n' +
+//    '            <tr data-ng-repeat="form in displayedForms">\n' +
+//    '                <td><input data-ng-click="selectForm(form)" data-ng-checked="form.checked" type="checkbox" class="result-checkbox"/></td>\n' +
+////    '                <td class="text-muted">{{form.itemNumber}}</td>' +
+//    '                  <td><a href="{{form.link}}" target="_self" rel="external">{{form.processInstanceLabel}}</a></td>' +
+//    '                  <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in selectedFacets">{{form[facet.name]}}</td>' +
+////    '                <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-show="facet.selected" data-ng-repeat="facet in facets">' +
+////    '                   <span>{{form[facet.name]}}</span>' +
+////    '                   <span data-ng-show="facet.link"><a href="{{form.link}}" target="_self" rel="external">{{getFacetValue(form, facet)}}</a></span>' +
+////    '                   <span data-ng-hide="facet.link">{{getFacetValue(form, facet)}}</span>' +
+////    '                </td>' +
+//    '            </tr>\n' +
+//    '            </tbody>' +
+//    '           \n' +
+//    '       </table>' +
+//    '       <ul data-ng-show="paging.required" class="pagination pull-right"> ' +
+//    '           <li><a data-ng-click="paging.previousPage()">&larr; Previous</a></li> ' +
+//    '           <li data-ng-class="pageNumber == paging.pageNumber ? \'active\' : \'\'" data-ng-repeat="pageNumber in paging.pageNumbers"><a data-ng-click="paging.toPage(pageNumber)">{{pageNumber}}</a></li> ' +
+//    '           <li><a data-ng-click="paging.nextPage()">Next &rarr;</a></li> ' +
+//    '       </ul>' +
+//
+////    '       <select data-ng-model="paging.pageSize" data-ng-change="paging.changePageSize($event)" class="form-control">' +
+////    '           <option value="10">10</option>' +
+////    '           <option value="100">100</option>' +
+////    '           <option value="1000">1000</option>' +
+////    '           <option value="10000">10,000</option>' +
+////    '       </select>'
+//    '');
 
 //  $templateCache.put("templates/searchresults.html",
 //    "<h2 data-ng-bind=\"isSingleProcessSelected() ? processDefinitionDescription[criteria.processDefinitionKey] : 'Tasks'\"></h2>\n" +
@@ -949,140 +951,140 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
 //    "            </tr>\n" +
 //    "            </tbody>\n" +
 //    "        </table>");
-   $templateCache.put("templates/searchtoolbar.html",
-    '<nav class="navbar navbar-default navbar-ex1-collapse" style="margin-bottom: 0px;border-radius: 0px">\n' +
-    '        <div class="navbar-header">\n' +
-    '            <button data-ng-click="state.toggleCollapse()" type="button" class="navbar-toggle">\n' +
-    '                <span class="sr-only">Toggle</span>\n' +
-    '                <span class="icon-bar"></span>\n' +
-    '                <span class="icon-bar"></span>\n' +
-    '                <span class="icon-bar"></span>\n' +
-    '            </button>\n' +
-    '        </div>\n' +
-    '        <div data-ng-class="state.isCollapsed ? \'\' : \'collapse\'" class="navbar-collapse navbar-ex1-collapse">\n' +
-    '            <div class="container">\n' +
-    '                <div class="row"><form class="navbar-form navbar-left form-inline" role="search">\n' +
-    '                    <div class="row">\n' +
-    '                       <div class="form-group has-feedback">\n' +
-    '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
-    '                           <span data-ng-click="clearSearch()" data-ng-show="criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
-    '                       </div>' +
-    '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i data-ng-class="searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
-    '                       <span data-ng-if="definitions" class="dropdown">\n' +
-    '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
-    '                            <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
-    '                                <li data-ng-repeat="definition in definitions" class="presentation"><a role="menuitem" href="{{definition.link}}" target="_self">{{definition.processDefinitionLabel}}</a></li>\n' +
-    '                            </ul>\n' +
-    '                       </span>\n' +
-    '                    </div>\n' +
-    '                    <div class="row">\n' +
-    '                        <ul class="navbar-nav">\n' +
-    '                            <li>\n' +
-    '                                <div class="dropdown">\n' +
-    '                                    <a id="filter-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
-    '                                        <span class="dropdown-toggle-text">{{processStatusDescription[criteria.processStatus]}}</span>\n' +
-    '                                        <b class="caret"></b>\n' +
-    '                                    </a>\n' +
-    '                                    <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">\n' +
-    '                                        <li role="presentation" class="dropdown-header">Process status</li>\n' +
-    '                                        <li role="presentation" class="disabled">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" id="statusOpen" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="open" role="menuitem" checked=""/> &nbsp;{{processStatusDescription[\'open\']}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                        <li role="presentation">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" id="statusComplete" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="complete" role="menuitem"> &nbsp;{{processStatusDescription[\'complete\']}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                        <li role="presentation">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" id="statusCancelled" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="cancelled" role="menuitem"> &nbsp;{{processStatusDescription[\'cancelled\']}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                        <li role="presentation">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" id="statusSuspended" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="suspended" role="menuitem"> &nbsp;{{processStatusDescription[\'suspended\']}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                        <li role="presentation" class="disabled">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" id="statusQueued" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="queued" role="menuitem" checked=""/> &nbsp;{{processStatusDescription[\'queued\']}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                        <li role="presentation">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" id="statusAny" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="all" role="menuitem"> &nbsp;{{processStatusDescription[\'all\']}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                    </ul>\n' +
-    '                                </div>\n' +
-    '                            </li>\n' +
-    '                            <li ng-hide="isSingleProcessSelectable()">\n' +
-    '                                <div class="dropdown">\n' +
-    '                                    <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
-    '                                        <span class="dropdown-toggle-text">{{processDefinitionDescription[criteria.processDefinitionKey]}}</span>\n' +
-    '                                        <b class="caret"></b>\n' +
-    '                                    </a>\n' +
-    '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
-    '                                        <li role="presentation" class="dropdown-header">Processes</li>\n' +
-    '                                        <li data-ng-repeat="definition in definitions" role="presentation">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.processDefinitionKey" data-ng-true-value="{{definition.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.processDefinitionLabel}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                        <li role="presentation">\n' +
-    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-    '                                                <label class="checkbox">\n' +
-    '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{processDefinitionDescription[\'\']}}\n' +
-    '                                                </label>\n' +
-    '                                            </div>\n' +
-    '                                        </li>\n' +
-    '                                    </ul>\n' +
-    '                                </div>\n' +
-    '                            </li>\n' +
-    '                        </ul>\n' +
-    '                    </div>\n' +
-    '                </form>\n' +
-    '                <div class="navbar-right btn-toolbar">\n' +
-//    '                    <div data-ng-show="isFormSelected([\'Open\'])" data-wf-assignment-button data-forms="getFormsSelected([\'Open\'])" class="navbar-nav"></div>' +
-    '                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>\n' +
-    '                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" data-ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>\n' +
-    '                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected([\'Suspended\']))" data-ng-show="isFormSelected([\'Suspended\'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>\n' +
-    '                    <button data-ng-click="dialogs.openSuspendModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>\n' +
-    '                    <button data-ng-click="dialogs.openCancelModal(getFormsSelected([\'Open\',\'Suspended\']))" data-ng-show="isFormSelected([\'Open\',\'Suspended\'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>\n' +
-    '                    <button data-ng-click="dialogs.openRestartModal(getFormsSelected())" data-ng-show="isFormSelected()" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>\n' +
-    '                    <a data-ng-show="false && !isFormSelected()" href="report.html" rel="external" target="_self" class="btn btn-default navbar-btn" id="report-button"><i class="fa fa-bar-chart-o"></i></a>\n' +
-    '                    <button data-ng-click="exportCsv(getFormsSelected())" data-ng-show="!isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>\n' +
-    '                    <button data-ng-click="toggleColumns()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn"><i class="fa fa-columns fa-1x"></i></button>' +
-    '                    <button data-ng-click="toggleFilter()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn">' +
-    '                       <i data-ng-class="isFiltering ? \'fa-ban\' : \'fa-filter\'" class="fa"></i>' +
-    '                    </button>' +
-    '                    <span data-ng-if="bucketList.buckets.length > 0" class="dropdown">\n' +
-    '                        <button class="btn btn-default navbar-btn dropdown-toggle" data-ng-disabled="!isFormSelected()" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-tag"></i><b class="caret"></b></button>\n' +
-    '                        <ul id="new-form-dropdown" class="dropdown-menu scroll" role="menu" aria-labelledby="new-form-button">\n' +
-    '                            <li class="presentation" role="menuitem"><b>&nbsp;&nbsp;&nbsp;&nbsp;Change Bucket</b></li>\n' +
-    '                            <li data-ng-repeat="bucket in bucketList.buckets" data-ng-click="changeBucket(getFormsSelected(), bucket)" class="presentation" role="menuitem"><a>{{bucket}}</a></li>\n' +
-    '                        </ul>\n' +
-    '                    </span>\n ' +
-    '                </div>\n' +
-    '            </div></div>\n' +
-    '        </div>\n' +
-    '    </nav>');
+//   $templateCache.put("templates/searchtoolbar.html",
+//    '<nav class="navbar navbar-default navbar-ex1-collapse" style="margin-bottom: 0px;border-radius: 0px">\n' +
+//    '        <div class="navbar-header">\n' +
+//    '            <button data-ng-click="state.toggleCollapse()" type="button" class="navbar-toggle">\n' +
+//    '                <span class="sr-only">Toggle</span>\n' +
+//    '                <span class="icon-bar"></span>\n' +
+//    '                <span class="icon-bar"></span>\n' +
+//    '                <span class="icon-bar"></span>\n' +
+//    '            </button>\n' +
+//    '        </div>\n' +
+//    '        <div data-ng-class="state.isCollapsed ? \'\' : \'collapse\'" class="navbar-collapse navbar-ex1-collapse">\n' +
+//    '            <div class="container">\n' +
+//    '                <div class="row"><form class="navbar-form navbar-left form-inline" role="search">\n' +
+//    '                    <div class="row">\n' +
+//    '                       <div class="form-group has-feedback">\n' +
+//    '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
+//    '                           <span data-ng-click="clearSearch()" data-ng-show="criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+//    '                       </div>' +
+//    '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i data-ng-class="searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
+//    '                       <span data-ng-if="definitions" class="dropdown">\n' +
+//    '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
+//    '                            <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
+//    '                                <li data-ng-repeat="definition in definitions" class="presentation"><a role="menuitem" href="{{definition.link}}" target="_self">{{definition.processDefinitionLabel}}</a></li>\n' +
+//    '                            </ul>\n' +
+//    '                       </span>\n' +
+//    '                    </div>\n' +
+//    '                    <div class="row">\n' +
+//    '                        <ul class="navbar-nav">\n' +
+//    '                            <li>\n' +
+//    '                                <div class="dropdown">\n' +
+//    '                                    <a id="filter-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+//    '                                        <span class="dropdown-toggle-text">{{processStatusDescription[criteria.processStatus]}}</span>\n' +
+//    '                                        <b class="caret"></b>\n' +
+//    '                                    </a>\n' +
+//    '                                    <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">\n' +
+//    '                                        <li role="presentation" class="dropdown-header">Process status</li>\n' +
+//    '                                        <li role="presentation" class="disabled">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" id="statusOpen" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="open" role="menuitem" checked=""/> &nbsp;{{processStatusDescription[\'open\']}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                        <li role="presentation">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" id="statusComplete" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="complete" role="menuitem"> &nbsp;{{processStatusDescription[\'complete\']}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                        <li role="presentation">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" id="statusCancelled" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="cancelled" role="menuitem"> &nbsp;{{processStatusDescription[\'cancelled\']}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                        <li role="presentation">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" id="statusSuspended" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="suspended" role="menuitem"> &nbsp;{{processStatusDescription[\'suspended\']}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                        <li role="presentation" class="disabled">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" id="statusQueued" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="queued" role="menuitem" checked=""/> &nbsp;{{processStatusDescription[\'queued\']}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                        <li role="presentation">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" id="statusAny" data-ng-change="refreshSearch()" data-ng-model="criteria.processStatus" data-ng-true-value="all" role="menuitem"> &nbsp;{{processStatusDescription[\'all\']}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                    </ul>\n' +
+//    '                                </div>\n' +
+//    '                            </li>\n' +
+//    '                            <li ng-hide="isSingleProcessSelectable()">\n' +
+//    '                                <div class="dropdown">\n' +
+//    '                                    <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+//    '                                        <span class="dropdown-toggle-text">{{processDefinitionDescription[criteria.processDefinitionKey]}}</span>\n' +
+//    '                                        <b class="caret"></b>\n' +
+//    '                                    </a>\n' +
+//    '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
+//    '                                        <li role="presentation" class="dropdown-header">Processes</li>\n' +
+//    '                                        <li data-ng-repeat="definition in definitions" role="presentation">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.processDefinitionKey" data-ng-true-value="{{definition.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.processDefinitionLabel}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                        <li role="presentation">\n' +
+//    '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+//    '                                                <label class="checkbox">\n' +
+//    '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{processDefinitionDescription[\'\']}}\n' +
+//    '                                                </label>\n' +
+//    '                                            </div>\n' +
+//    '                                        </li>\n' +
+//    '                                    </ul>\n' +
+//    '                                </div>\n' +
+//    '                            </li>\n' +
+//    '                        </ul>\n' +
+//    '                    </div>\n' +
+//    '                </form>\n' +
+//    '                <div class="navbar-right btn-toolbar">\n' +
+////    '                    <div data-ng-show="isFormSelected([\'Open\'])" data-wf-assignment-button data-forms="getFormsSelected([\'Open\'])" class="navbar-nav"></div>' +
+//    '                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>\n' +
+//    '                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" data-ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>\n' +
+//    '                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected([\'Suspended\']))" data-ng-show="isFormSelected([\'Suspended\'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>\n' +
+//    '                    <button data-ng-click="dialogs.openSuspendModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>\n' +
+//    '                    <button data-ng-click="dialogs.openCancelModal(getFormsSelected([\'Open\',\'Suspended\']))" data-ng-show="isFormSelected([\'Open\',\'Suspended\'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>\n' +
+//    '                    <button data-ng-click="dialogs.openRestartModal(getFormsSelected())" data-ng-show="isFormSelected()" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>\n' +
+//    '                    <a data-ng-show="false && !isFormSelected()" href="report.html" rel="external" target="_self" class="btn btn-default navbar-btn" id="report-button"><i class="fa fa-bar-chart-o"></i></a>\n' +
+//    '                    <button data-ng-click="exportCsv(getFormsSelected())" data-ng-show="!isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>\n' +
+//    '                    <button data-ng-click="toggleColumns()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn"><i class="fa fa-columns fa-1x"></i></button>' +
+//    '                    <button data-ng-click="toggleFilter()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn">' +
+//    '                       <i data-ng-class="isFiltering ? \'fa-ban\' : \'fa-filter\'" class="fa"></i>' +
+//    '                    </button>' +
+//    '                    <span data-ng-if="bucketList.buckets.length > 0" class="dropdown">\n' +
+//    '                        <button class="btn btn-default navbar-btn dropdown-toggle" data-ng-disabled="!isFormSelected()" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-tag"></i><b class="caret"></b></button>\n' +
+//    '                        <ul id="new-form-dropdown" class="dropdown-menu scroll" role="menu" aria-labelledby="new-form-button">\n' +
+//    '                            <li class="presentation" role="menuitem"><b>&nbsp;&nbsp;&nbsp;&nbsp;Change Bucket</b></li>\n' +
+//    '                            <li data-ng-repeat="bucket in bucketList.buckets" data-ng-click="changeBucket(getFormsSelected(), bucket)" class="presentation" role="menuitem"><a>{{bucket}}</a></li>\n' +
+//    '                        </ul>\n' +
+//    '                    </span>\n ' +
+//    '                </div>\n' +
+//    '            </div></div>\n' +
+//    '        </div>\n' +
+//    '    </nav>');
   $templateCache.put("templates/toolbar.html",
     "<div class=\"btn-toolbar pull-right\" role=\"toolbar\">\n" +
     "        <button data-ng-if=\"!container.readonly\" data-ng-class=\"button.primary && 'btn-primary'\" data-ng-repeat=\"button in container.buttons\" data-ng-click=\"wizard.clickButton(form, container, button)\" class=\"btn btn-default\" name=\"{{button.name}}\" type=\"{{button.type}}\" value=\"{{button.value}}\">{{button.label}}</button>\n" +

@@ -9,11 +9,11 @@
     <link href="../static/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
     <link href="../static/css/layout.css" rel="stylesheet"/>
     <base href="../ui/form.html"/>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+    <script src="../static/js/vendor/jquery-1.11.0/jquery.min.js"></script>
+    <script src="../static/js/vendor/jqueryui-1.10.4/jquery-ui.min.js"></script>
     <!--<script src="../static/js/vendor/jquery-1.10.2.min.js"></script>-->
     <!--<script src="../static/js/vendor/jquery-ui-1.10.3.custom.min.js"></script>-->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.min.js"></script>
+    <script src="../static/js/vendor/angularjs-1.2.15/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-resource.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-route.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-sanitize.min.js"></script>
@@ -43,30 +43,26 @@
     <script src="../static/js/wf-directives.js"></script>
     <script src="../static/js/wf-search.js"></script>
 </head>
-<body role="application" data-ng-cloak>
-<div class="navbar main-navbar">
-    <div class="user-information">
-        <div id="user-information-name" class="user-information-name pull-right">
-            {{currentUser.displayName}}
+<body role="application" data-ng-controller="SearchController" data-ng-cloak >
+    <div class="navbar main-navbar">
+        <div class="user-information">
+            <div data-ng-bind="application.currentUser.displayName" id="user-information-name" class="user-information-name pull-right"></div>
+        </div>
+
+        <div data-wf-search-toolbar data-application="application"></div>
+    </div>
+    <div class="container">
+        <div class="main-content row">
+            <div data-wf-search-response data-application="application"></div>
         </div>
     </div>
-
-    <div data-wf-search-toolbar></div>
-</div>
-<div class="container">
-    <div class="main-content row">
-        <div data-wf-search-response></div>
+    <div class="main-footer navbar navbar-fixed-bottom">
+        <div class="navbar-inner">
+            <ul>
+                <li class="nav pull-left institutional-logo"></li>
+                <li class="nav pull-right"><h1 style="font-weight: normal;margin-top:15px;margin-right:20px">Workflow&nbsp;&nbsp;</h1></li>
+            </ul>
+        </div>
     </div>
-</div>
-
-<div class="main-footer navbar navbar-fixed-bottom">
-    <div class="navbar-inner">
-        <ul>
-            <li class="nav pull-left institutional-logo"></li>
-            <li class="nav pull-right"><h1 style="font-weight: normal;margin-top:15px;margin-right:20px">Workflow&nbsp;&nbsp;</h1></li>
-        </ul>
-    </div>
-</div>
-
 </body>
 </html>

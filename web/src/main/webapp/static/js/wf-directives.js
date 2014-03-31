@@ -222,7 +222,7 @@
                         "   <ul class=\"dropdown-menu\">\n" +
                         "       <li><a data-ng-click=\"assignTo('')\">Unassign</a></li>\n" +
                         "       <li data-ng-show=\"form.task.candidateAssignees\" role=\"presentation\" class=\"divider\"></li>\n" +
-                        "       <li data-ng-repeat=\"candidateAssignee in form.task.candidateAssignees\"><a data-ng-click=\"assignTo(candidateAssignee.userId)\" class=\"candidate-assignee\" id=\"{{candidateAssignee.userId}}\">Assign to {{candidateAssignee.userId == context.user.userId ? 'me' : candidateAssignee.displayName}}</a></li>\n" +
+                        "       <li data-ng-repeat=\"candidateAssignee in form.task.candidateAssignees\"><a data-ng-click=\"assignTo(candidateAssignee.userId)\" class=\"candidate-assignee\" id=\"{{candidateAssignee.userId}}\">Assign to {{candidateAssignee.userId == application.currentUser.userId ? 'me' : candidateAssignee.displayName}}</a></li>\n" +
                         "   </ul>\n" +
                         "</div>\n"
                 }
@@ -424,48 +424,46 @@
                 return {
                     restrict: 'AE',
                     scope: {
-                        criteria : '=',
+                        application : '=',
                         name : '='
                     },
-                    templateUrl: 'templates/daterange.html',
                     transclude: true,
                     link: function (scope, element) {
                         var afterName = scope.name + 'After';
                         var beforeName = scope.name + 'Before';
 
-                        scope.after = scope.criteria[afterName];
-                        scope.before = scope.criteria[beforeName];
+                        scope.after = scope.application.criteria[afterName];
+                        scope.before = scope.application.criteria[beforeName];
 
                         scope.afterChange = function() {
-                            if (scope.criteria[afterName] != scope.after) {
+                            if (scope.application.criteria[afterName] != scope.after) {
                                 scope.before = null;
-                                scope.criteria[beforeName] = null;
+                                scope.application.criteria[beforeName] = null;
                                 scope.beforeMinDate = scope.after;
 
                                 if (scope.after != null)
-                                    scope.criteria[afterName] = $filter('date')(scope.after, 'yyyy-MM-ddT00:00:00-0000');
+                                    scope.application.criteria[afterName] = $filter('date')(scope.after, 'yyyy-MM-ddT00:00:00-0000');
                                 else
-                                    delete scope.criteria[afterName];
+                                    delete scope.application.criteria[afterName];
 
-                                scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                                scope.application.search();
                             }
                         };
 
                         scope.beforeChange = function() {
-                            if (scope.criteria[beforeName] != scope.before) {
+                            if (scope.application.criteria[beforeName] != scope.before) {
                                 if (scope.before != null)
-                                    scope.criteria[beforeName] = $filter('date')(scope.before, 'yyyy-MM-ddT00:00:00-0000');
+                                    scope.application.criteria[beforeName] = $filter('date')(scope.before, 'yyyy-MM-ddT00:00:00-0000');
                                 else
-                                    delete scope.criteria[beforeName];
+                                    delete scope.application.criteria[beforeName];
 
-                                scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                                scope.application.search();
                             }
                         };
 
                         scope.today = function() {
                             scope.dt = new Date();
                         };
-    //                    scope.today();
 
                         scope['show-weeks'] = false;
                         scope.toggleWeeks = function () {
@@ -476,19 +474,13 @@
                             scope.dt = null;
                             scope.after = null;
                             scope.before = null;
-                            scope.criteria[afterName] = null;
-                            scope.criteria[beforeName] = null;
+                            scope.application.criteria[afterName] = null;
+                            scope.application.criteria[beforeName] = null;
                         };
-
-    //                    // Disable weekend selection
-    //                    scope.disabled = function(date, mode) {
-    //                        return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
-    //                    };
 
                         scope.toggleMin = function() {
                             scope.minDate = ( scope.minDate ) ? null : new Date();
                         };
-    //                    scope.toggleMin();
 
                         scope.afterOpen = function($event) {
                             $event.preventDefault();
@@ -508,26 +500,31 @@
                             'starting-day': 0
                         };
 
-                        scope.$on('wfEvent:clear-filters', function() {
+                        scope.clearFilter = function() {
                             scope.after = null;
                             scope.before = null;
                             var didClear = false;
 
-                            if (scope.criteria[beforeName] != null) {
-                                delete scope.criteria[beforeName];
+                            if (scope.application.criteria[beforeName] != null) {
+                                delete scope.application.criteria[beforeName];
                                 didClear = true;
                             }
-                            if (scope.criteria[afterName] != null) {
-                                delete scope.criteria[afterName];
+                            if (scope.application.criteria[afterName] != null) {
+                                delete scope.application.criteria[afterName];
                                 didClear = true;
                             }
 
                             if (didClear)
-                                scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                                scope.application.search();
 
                             scope.isFiltering = false;
-                        });
-                    }
+                        };
+                    },
+                    template:
+                        '<input data-ng-change="afterChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/>' +
+                        '<span class="form-control-feedback"></span>' +
+                        '<input data-ng-change="beforeChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/>' +
+                        '<span data-ng-click="clearFilter(facet)" data-ng-show="before != null || after != null" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> '
                 }
             }
         ])
@@ -1399,36 +1396,34 @@
                 }
             }
         ])
-    //    .filter('selectedFacets', function(facets) {
-    //
-    //        return facets;
-    //    })
         .directive('wfSearchResponse', ['$filter', '$resource', 'attachmentService', 'dialogs', 'localStorageService', 'notificationService', 'taskService', 'wizardService',
             function($filter, $resource, attachmentService, dialogs, localStorageService, notificationService, taskService, wizardService) {
                 return {
                     restrict: 'AE',
                     scope: {
-
+                        application: '='
                     },
-                    templateUrl: 'templates/searchresponse.html',
                     link: function (scope, element) {
                         scope.clearFilter = function(facet) {
-                            delete scope.criteria[facet.name];
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-    //                        scope.isFiltering = false;
+                            if (facet != null && facet.name != null) {
+                                delete scope.application.criteria[facet.name];
+                                scope.application.search();
+                            }
                         };
                         scope.doFilter = function() {
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                            scope.application.search();
                         };
                         scope.doChangeFilter = function(facet) {
                             console.log(facet.name);
     //                        scope.criteria[facet.name] = facet.model;
-                            if (scope.criteria[facet.name] != null) {
-                                scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                            if (scope.application.criteria[facet.name] != null) {
+                                scope.application.search();
                             }
                         };
                         scope.hasFilter = function(facet) {
-                            var filterValue = scope.criteria[facet.name];
+                            if (facet == null)
+                                return false;
+                            var filterValue = scope.application.criteria[facet.name];
                             return typeof(filterValue) !== 'undefined' && filterValue != null && filterValue != '' && filterValue.length > 0;
                         };
                         scope.onFilterKeyUp = function(facet, event) {
@@ -1451,33 +1446,21 @@
                                 facet.direction = 'desc';
                             }
 
-                            scope.criteria.sortBy = [];
-                            scope.criteria.sortBy.push(facet.name + ":" + facet.direction);
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        };
-                        scope.getFacetValue = function(form, facet) {
-                            if (facet.type !== 'user' && form[facet.name] == null)
-                                return null;
-
-                            if (facet.type == 'datetime')
-                                return $filter('date')(form[facet.name], 'MMM d, y H:mm');
-                            else if (facet.type == 'date')
-                                return $filter('date')(form[facet.name], 'MMM d, y');
-                            else if (facet.type == 'user')
-                                return form[facet.name] != null && form[facet.name].displayName != null ? form[facet.name].displayName : 'Nobody';
-                            if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '')
-                                scope.isFiltering = true;
-
-                            return form[facet.name];
+                            scope.application.criteria.sortBy = [];
+                            scope.application.criteria.sortBy.push(facet.name + ":" + facet.direction);
+                            scope.application.search();
                         };
                         scope.isSingleProcessSelected = function() {
-                            return scope.criteria.processDefinitionKey != null && scope.criteria.processDefinitionKey != '';
+                            return scope.application.criteria.processDefinitionKey != null && scope.application.criteria.processDefinitionKey != '';
                         };
                         scope.isSorting = function(facet) {
+                            if (facet == null)
+                                return false;
+
                             var pattern = '^' + facet.name + ':';
                             var regex = new RegExp(pattern);
                             var isSorting = false;
-                            angular.forEach(scope.criteria.sortBy, function(sortBy) {
+                            angular.forEach(scope.application.criteria.sortBy, function(sortBy) {
                                 isSorting = regex.test(sortBy);
                                 if (isSorting)
                                     return true;
@@ -1487,232 +1470,85 @@
                         scope.onDateChange = function(facet) {
                             scope.doChangeFilter(facet);
                         };
-                        scope.processSearchResults = function(results) {
-                            scope.$root.$broadcast('wfEvent:found', results);
-                        };
+
                         scope.selectForm = function(form) {
                             form.checked = !form.checked;
                             if (!form.checked)
-                                scope.allChecked = false;
-                            if (form.checked && scope.selectedFormMap[form.formInstanceId] == null)
-                                scope.selectedFormMap[form.formInstanceId] = form;
-                            else if ( !form.checked && scope.selectedFormMap[form.formInstanceId] != null)
-                                delete scope.selectedFormMap[form.formInstanceId];
+                                scope.application.state.selectAll = false;
+                            if (form.checked && scope.application.state.selectedFormMap[form.formInstanceId] == null)
+                                scope.application.state.selectedFormMap[form.formInstanceId] = form;
+                            else if ( !form.checked && scope.application.state.selectedFormMap[form.formInstanceId] != null)
+                                delete scope.application.state.selectedFormMap[form.formInstanceId];
 
-                            scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
+                            scope.application.state.selectedForms = [];
+                            angular.forEach(scope.application.state.selectedFormMap, function(value, key) {
+                                scope.application.state.selectedForms.push(value);
+                            });
                         };
-                        scope.selectAllForms = function(forms, checked) {
-                            if (forms != null) {
-                                scope.allChecked = !scope.allChecked;
-                                angular.forEach(forms, function(form) {
-                                    form.checked = scope.allChecked;
-                                    if (form.checked && scope.selectedFormMap[form.formInstanceId] == null)
-                                        scope.selectedFormMap[form.formInstanceId] = form;
-                                    else if ( !form.checked && scope.selectedFormMap[form.formInstanceId] != null)
-                                        delete scope.selectedFormMap[form.formInstanceId];
+                        scope.selectAllForms = function(checked) {
+                            if (scope.application.forms != null) {
+                                scope.application.state.selectAll = !scope.application.state.selectAll;
+                                scope.application.state.selectedForms = [];
+                                angular.forEach(scope.application.forms, function(form) {
+                                    form.checked = scope.application.state.selectAll;
+                                    if (form.checked)
+                                        scope.application.state.selectedForms.push(form);
                                 });
-                                scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
                             }
                         };
-                        scope.SearchResponse = $resource('./form', {processStatus:'@processStatus'});
-                        scope.$on('wfEvent:clear-filters', function() {
-                            var didClear = false;
-                            angular.forEach(scope.facets, function(facet) {
-                                if (scope.criteria[facet.name] != null && scope.criteria[facet.name] != '') {
-                                    delete scope.criteria[facet.name];
-                                    didClear = true;
-                                }
-                            });
-                            if (didClear)
-                                scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                            scope.isFiltering = false;
-                        });
-                        scope.$on('wfEvent:columns-toggle', function(event) {
-                            dialogs.openColumnsModal(scope.facets);
-                        });
-                        scope.$on('wfEvent:filter-toggle', function(event) {
-                            scope.isFiltering = !scope.isFiltering;
-                            if (!scope.isFiltering)
-                                scope.$root.$broadcast('wfEvent:clear-filters');
-                        });
-                        scope.$on('wfEvent:facet-changed', function(event, facet) {
-                            console.log("Storing facets");
-                            scope.facetMap[facet.name].selected = facet.selected;
-                            localStorageService.set("facetMap", scope.facetMap);
 
-                            scope.selectedFacets = [];
-                            angular.forEach(scope.facets, function(facet, index) {
-                                if (facet.selected && facet.name != 'processInstanceLabel')
-                                    scope.selectedFacets.push(facet);
-                            });
-                        });
-                        scope.$on('wfEvent:search', function(event, criteria) {
-                            if (typeof(criteria) !== 'undefined') {
-                                scope.criteria = criteria;
-                            }
-                            if (scope.criteria.keywords != null && typeof(scope.criteria.keywords) == 'string') {
-                                scope.criteria.keyword = scope.criteria.keywords.split(' ');
-                            }
-                            if (scope.facets != null) {
-                                angular.forEach(scope.facets, function(facet) {
-                                    var isFilteringThisFacet = false;
-                                    if (facet.type == 'date') {
-                                        var afterName = facet.name + 'After';
-                                        var beforeName = facet.name + 'Before';
-                                        var afterCriterion = scope.criteria[afterName];
-                                        var beforeCriterion = scope.criteria[beforeName];
-                                        if (afterCriterion != null && afterCriterion != '')
-                                            isFilteringThisFacet = true;
-                                        else if (beforeCriterion != null && beforeCriterion != '')
-                                            isFilteringThisFacet = true;
-                                    } else {
-                                        var criterion = scope.criteria[facet.name];
-                                        if (criterion != null && criterion != '')
-                                            isFilteringThisFacet = true;
-                                    }
-
-                                    if (isFilteringThisFacet) {
-                                        facet.selected = true;
-                                        scope.isFiltering = true;
-                                    }
-
-                                    // special handling for applicationStatusExplanation
-                                    // @see https://jira.cac.washington.edu/browse/EDMSIMPL-177
-                                    if ( facet.name == 'applicationStatusExplanation' ) {
-                                        if ( scope.criteria != null && scope.criteria.processStatus == 'suspended' ) {
-                                            facet.selected = true;  // show suspension reason for suspended process instances
-                                        } else {
-                                            facet.selected = false;  // hide suspension reason otherwise
-                                        }
-                                    }
-                                });
-                            }
-                            scope.SearchResponse.get(scope.criteria, scope.processSearchResults);
-                        });
-                        scope.$on('wfEvent:found', function(event, results) {
-                            scope.forms = results.data;
-
-                            scope.paging.total = results.total;
-                            scope.paging.pageNumber = results.pageNumber + 1;
-                            scope.paging.pageSize = results.pageSize;
-
-                            scope.paging.required = (scope.paging.pageNumber > 1 || scope.paging.total > scope.paging.pageSize);
-
-                            scope.paging.pageNumbers = [];
-                            var numberOfPages = scope.paging.total / scope.paging.pageSize + 1;
-                            for (var i=1;i<=numberOfPages;i++) {
-                                scope.paging.pageNumbers.push(i);
-                            }
-
-                            if (scope.processDefinitionDescription == null)
-                                scope.processDefinitionDescription = {};
-
-                            angular.forEach(results.metadata, function(definition) {
-                                scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
-                            });
-
-                            if (true) {
-                                scope.selectedFormMap = new Object();
-                                scope.allChecked = false;
-                                scope.criteria.sortBy = results.sortBy;
-
-                                scope.facetMap = localStorageService.get("facetMap");
-                                if (scope.facetMap == null || scope.facetMap.length == 0) {
-                                    scope.facetMap = {};
-                                }
-
-                                var includeFacets = false;
-                                if (scope.facets == null) {
-                                    includeFacets = true;
-                                    scope.facets = [];
-                                }
-
-                                scope.selectedFacets = [];
-                                angular.forEach(results.facets, function(facet) {
-                                    facet.link = facet.name == 'processInstanceLabel';
-                                    var localFacet = scope.facetMap[facet.name];
-                                    if (localFacet != null)
-                                        facet.selected = localFacet.selected;
-                                    else
-                                        facet.selected = facet.required;
-
-                                    if (facet.selected && facet.name != 'processInstanceLabel')
-                                        scope.selectedFacets.push(facet);
-
-                                    scope.facetMap[facet.name] = facet;
-                                    if (includeFacets)
-                                        scope.facets.push(facet);
-                                });
-
-                                localStorageService.set("facetMap", scope.facetMap);
-
-                                angular.forEach(scope.criteria.sortBy, function(sortBy) {
-                                    var indexOf = sortBy.indexOf(':');
-                                    if (indexOf != -1) {
-                                        var name = sortBy.substring(0, indexOf);
-                                        var direction = sortBy.substring(indexOf+1);
-                                        var facet = scope.facetMap[name];
-                                        if (facet != null) {
-                                            facet.direction = direction;
-                                        }
-                                    }
-                                });
-
-                                var specialFields = ['activation', 'assignment', 'attachment', 'cancellation', 'history', 'restart', 'suspension', 'bucketUrl'];
-                                scope.displayedForms = [];
-                                angular.forEach(results.data, function(form) {
-                                    var displayedForm = {'formInstanceId': form.formInstanceId, 'link' : form.link };
-                                    angular.forEach(specialFields, function(field) {
-                                        displayedForm[field] = form[field];
-                                    });
-                                    angular.forEach(scope.facets, function(facet) {
-                                        var key = facet.name;
-                                        var value = scope.getFacetValue(form, facet);
-                                        displayedForm[key] = value;
-                                    });
-                                    scope.displayedForms.push(displayedForm);
-                                });
-
-                                scope.$root.$broadcast('wfEvent:change-selection', scope.selectedFormMap);
-                            }
-                        });
-                        scope.$root.$broadcast('wfEvent:results-linked');
                     },
                     controller: ['$scope', function(scope) {
                         scope.$watch(scope.forms, function(oldValue, newValue) {
 
                         });
 
-                        if (typeof(scope.criteria) === 'undefined')
-                            scope.criteria = {};
-                        if (scope.paging == null)
-                            scope.paging = {};
-
                         scope.dialogs = dialogs;
-
-                        if (scope.paging == null)
-                            scope.paging = {};
-
-                        scope.paging.pageNumbers = [1,2,3,4,5];
-                        scope.paging.changePageSize = function(event) {
-                            scope.criteria.pageSize = scope.paging.pageSize;
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        };
-                        scope.paging.previousPage = function() {
-                            scope.criteria.pageNumber = scope.paging.pageNumber >= 2 ? scope.paging.pageNumber - 2 : 0;
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        };
-                        scope.paging.toPage = function(pageNumber) {
-                            scope.criteria.pageNumber = pageNumber - 1;
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        };
-                        scope.paging.nextPage = function() {
-                            scope.criteria.pageNumber = scope.paging.pageNumber;
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        };
-
-                        scope.isFiltering = false;
-                    }]
+                    }],
+                    template:
+                        '       <div class="pull-right">{{application.paging.total}} task{{application.paging.total != 1 ? \'s\' : \'\'}}</div>' +
+                        '       <h2 data-ng-bind="isSingleProcessSelected() ? application.processDefinitionDescription[application.criteria.processDefinitionKey] : \'&nbsp;\'"></h2>\n' +
+                        '       <table data-ng-hide="application.state.organizing" class="table table-hover">\n' +
+                        '            <thead>\n' +
+                        '            <tr>' +
+                        '               <th><input data-ng-click="selectAllForms()" data-ng-checked="application.state.selectAll" type="checkbox" class="result-checkbox"/></th>\n' +
+                        '               <th style="white-space:nowrap">' +
+                        '                   <div class="form-group has-feedback">' +
+                        '                       <label class="control-label"><a href="#" data-ng-click="doSort(application.facetMap[\'processInstanceLabel\'])"><b>Label</b> <i data-ng-show="isSorting(application.facetMap[\'processInstanceLabel\'])" data-ng-class="application.facetMap[\'processInstanceLabel\'].direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>' +
+                        '                       <div data-ng-show="application.state.filtering" class="wf-filter">' +
+                        '                           <input data-ng-keyup="onFilterKeyUp(application.facetMap[\'processInstanceLabel\'], $event)" data-ng-model="application.criteria[\'processInstanceLabel\']" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="Label">\n' +
+                        '                           <span data-ng-click="clearFilter(application.facetMap[\'processInstanceLabel\'])" data-ng-show="hasFilter(application.facetMap[\'processInstanceLabel\'])" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+                        '                       </div>' +
+                        '                    </div>' +
+                        '               </th>' +
+                        '               <th data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in application.state.selectedFacets" style="white-space:nowrap">' +
+                        '                   <div data-ng-class="facet.type !== \'date\' ? \'has-feedback\' : \'\'" class="form-group">\n' +
+                        '                       <label class="control-label"><a href="#" data-ng-click="doSort(facet)"><b>{{facet.label}}</b> <i data-ng-show="isSorting(facet)" data-ng-class="facet.direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>\n' +
+                        '                       <div data-ng-show="application.state.filtering" class="wf-filter">' +
+                        '                           <div data-ng-show="facet.type == \'date\' || facet.type == \'datetime\'"> ' +
+                        '                               <div data-wf-date-range data-name="facet.name" data-application="application" />' +
+                        '                           </div> ' +
+                        '                           <input data-ng-keyup="onFilterKeyUp(facet, $event)" data-ng-hide="facet.type == \'date\' || facet.type == \'datetime\'" data-ng-model="application.criteria[facet.name]" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="{{facet.label}}">\n' +
+                        '                           <span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+                        '                       </div>' +
+                        '                   </div>' +
+                        '               </th>' +
+                        '            </tr>\n' +
+                        '            </thead>\n' +
+                        '            <tbody>\n' +
+                        '            <tr data-ng-repeat="form in application.forms">\n' +
+                        '                <td><input data-ng-click="selectForm(form)" data-ng-checked="form.checked" type="checkbox" class="result-checkbox"/></td>\n' +
+                        '                  <td><a href="{{form.link}}" target="_self" rel="external">{{form.processInstanceLabel}}</a></td>' +
+                        '                  <td data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in application.state.selectedFacets">{{form[facet.name]}}</td>' +
+                        '            </tr>\n' +
+                        '            </tbody>' +
+                        '           \n' +
+                        '       </table>' +
+                        '       <ul data-ng-show="application.paging.required" class="pagination pull-right"> ' +
+                        '           <li><a data-ng-click="application.paging.previousPage()">&larr; Previous</a></li> ' +
+                        '           <li data-ng-class="pageNumber == application.paging.pageNumber ? \'active\' : \'\'" data-ng-repeat="pageNumber in application.paging.pageNumbers"><a data-ng-click="application.paging.toPage(pageNumber)">{{pageNumber}}</a></li> ' +
+                        '           <li><a data-ng-click="application.paging.nextPage()">Next &rarr;</a></li> ' +
+                        '       </ul>'
                 }
             }
         ])
@@ -1721,56 +1557,63 @@
                 return {
                     restrict: 'AE',
                     scope: {
-
+                        application: '='
                     },
-                    templateUrl: 'templates/searchtoolbar.html',
+                    controller: ['$scope', function(scope) {
+
+
+                    }],
                     link: function (scope, element) {
-                        if (typeof(scope.selectedFormMap) === 'undefined')
-                            scope.selectedFormMap = {};
-                        scope.context = $window.piecework.context;
-                        scope.state = new Object();
-                        scope.state.isCollapsed = false;
-                        scope.state.toggleCollapse = function() {
-                            scope.state.isCollapsed = !scope.state.isCollapsed;
+                        scope.clearFilters = function() {
+                            var didClear = false;
+                            angular.forEach(scope.application.facets, function(facet) {
+                                if (facet.type == 'date' || facet.type == 'datetime') {
+                                    var beforeName = facet.name + 'Before';
+                                    var afterName = facet.name + 'After';
+
+                                    if (scope.application.criteria[beforeName] != null) {
+                                        delete scope.application.criteria[beforeName];
+                                        didClear = true;
+                                    }
+                                    if (scope.application.criteria[afterName] != null) {
+                                        delete scope.application.criteria[afterName];
+                                        didClear = true;
+                                    }
+                                } else if (scope.application.criteria[facet.name] != null && scope.application.criteria[facet.name] != '') {
+                                    delete scope.application.criteria[facet.name];
+                                    didClear = true;
+                                }
+                            });
+
+                            if (didClear)
+                                scope.application.search();
+
+                            scope.application.state.filtering = false;
                         };
 
-                        scope.processDefinitionDescription = new Object();
-                        scope.processDefinitionDescription[''] = 'Any process';
+                        scope.toggleCollapse = function() {
+                            scope.application.state.collapsed = !scope.application.state.collapsed;
+                        };
 
-                        scope.criteria = localStorageService.get("criteria");
-                        if (scope.criteria == null) {
-                            console.log("New criteria");
-                            scope.criteria = new Object();
-                            scope.criteria.keywords = [];
-                            scope.criteria.processDefinitionKey = '';
-                            scope.criteria.processStatus = 'open';
-                            scope.criteria.taskStatus = 'all';
-                        }
+//                        if (typeof(scope.selectedFormMap) === 'undefined')
+//                            scope.selectedFormMap = {};
+//                        scope.context = $window.piecework.context;
+//                        scope.state = new Object();
+//                        scope.state.isCollapsed = false;
+//                        scope.state.toggleCollapse = function() {
+//                            scope.state.isCollapsed = !scope.state.isCollapsed;
+//                        };
+//
+//                        scope.processDefinitionDescription = new Object();
+//                        scope.processDefinitionDescription[''] = 'Any process';
 
-                        scope.exportCsv = function(selectedForms) {
-                            var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.criteria.processDefinitionKey;
-                            if (scope.criteria.startedAfter != null)
-                                url += '&startedAfter=' + scope.criteria.startedAfter;
-                            if (scope.criteria.startedBefore != null)
-                                url += '&startedBefore=' + scope.criteria.startedBefore;
+                        scope.exportCsv = function() {
+                            var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.application.criteria.processDefinitionKey;
+                            if (scope.application.criteria.lastModifiedAfter != null)
+                                url += '&startedAfter=' + scope.application.criteria.lastModifiedAfter;
+                            if (scope.application.criteria.lastModifiedBefore != null)
+                                url += '&startedBefore=' + scope.application.criteria.lastModifiedBefore;
                             $window.location.href = url;
-                        };
-
-                        scope.processStatusDescription = {
-                            'open': 'Active',
-                            'complete': 'Completed',
-                            'cancelled': 'Cancelled',
-                            'suspended': 'Suspended',
-                            'queued': 'Queued',
-                            'all': 'Any status'
-                        };
-                        scope.taskStatusDescription = {
-                            'Open': 'Open tasks',
-                            'Complete': 'Completed tasks',
-                            'Cancelled': 'Cancelled tasks',
-                            'Rejected': 'Rejected tasks',
-                            'Suspended': 'Suspended tasks',
-                            'all': 'All tasks'
                         };
 
                         scope.showReportPanel = function() {
@@ -1778,22 +1621,25 @@
                         };
 
                         scope.toggleColumns = function() {
-                            scope.$root.$broadcast('wfEvent:columns-toggle');
+                            dialogs.openColumnsModal(scope.application);
                         };
 
                         scope.toggleFilter = function() {
-                            scope.$root.$broadcast('wfEvent:filter-toggle');
+                            scope.application.state.filtering = !scope.application.state.filtering;
+
+                            if (!scope.application.state.filtering) {
+                                scope.clearFilters();
+                            }
                         };
 
                         scope.getFormsSelected = function(taskStatuses) {
-                            var formIds = Object.keys(scope.selectedFormMap);
+//                            var formIds = Object.keys(scope.application.state.selectedFormMap);
                             var selectedForms = new Array();
                             var acceptableTaskStatuses = new Object();
                             angular.forEach(taskStatuses, function(taskStatus) {
                                 acceptableTaskStatuses[taskStatus] = true;
                             });
-                            angular.forEach(formIds, function(formId) {
-                                var form = scope.selectedFormMap[formId];
+                            angular.forEach(scope.application.state.selectedForms, function(form) {
                                 if (typeof(form) !== 'undefined' && form != null) {
                                     if (typeof(taskStatuses) === 'undefined' || taskStatuses == null ||
                                         acceptableTaskStatuses[form.taskStatus] != null)
@@ -1809,7 +1655,7 @@
                                 return selectedForms.length === 1;
                             }
 
-                            return Object.keys(scope.selectedFormMap).length === 1;
+                            return scope.application.state.selectedForms.length === 1;
                         };
 
                         scope.isFormSelected = function(taskStatuses) {
@@ -1818,47 +1664,47 @@
                                 return selectedForms.length !== 0;
                             }
 
-                            return Object.keys(scope.selectedFormMap).length !== 0;
+                            return scope.application.state.selectedForms.length !== 0;
                         };
 
                         scope.isSingleProcessSelected = function() {
-                            return scope.criteria.processDefinitionKey != null && scope.criteria.processDefinitionKey != '';
+                            return scope.application.criteria.processDefinitionKey != null && scope.application.criteria.processDefinitionKey != '';
                         };
 
                         scope.isSingleProcessSelectable = function() {
-                            return typeof(scope.metadata) !== 'undefined' && scope.metadata.length == 1;
+                            return typeof(scope.application.definitions) !== 'undefined' && scope.application.definitions.length == 1;
                         };
 
-                        scope.$on('wfEvent:change-selection', function(event, selectedFormMap) {
-                            scope.selectedFormMap = selectedFormMap;
-                        });
+//                        scope.$on('wfEvent:change-selection', function(event, selectedFormMap) {
+//                            scope.selectedFormMap = selectedFormMap;
+//                        });
 
-                        scope.$on('wfEvent:found', function(event, results) {
-                            console.log('Found');
-                            scope.searching = false;
-                            if (scope.definitions == null) {
-                                scope.definitions = results.metadata;
-                                scope.selectedFormMap = {};
-                                scope.$root.currentUser = results.currentUser;
-                                angular.forEach(results.metadata, function(definition) {
-                                    scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
-                                });
-                                if (results.metadata != null && results.metadata.length == 1)
-                                    scope.criteria.processDefinitionKey = results.metadata[0].processDefinitionKey;
-                            }
-                            scope.bucketList = results.bucketList;
-                            scope.criteria.pg = results.processGroup;
-                        });
-                        scope.$on('wfEvent:search', function(event, criteria) {
-                            console.log('Searching');
-                            scope.forms = null;
-                            scope.searching = true;
-                            console.log("Storing criteria");
-                            localStorageService.set("criteria", criteria);
-                        });
-                        scope.showSearchingIcon = function() {
-    //                        $('#searchIcon').addClass('fa-spinner fa-spin').removeClass('fa-search');
-                        };
+//                        scope.$on('wfEvent:found', function(event, results) {
+//                            console.log('Found');
+//                            scope.searching = false;
+//                            if (scope.definitions == null) {
+//                                scope.definitions = results.metadata;
+//                                scope.selectedFormMap = {};
+//                                scope.$root.currentUser = results.currentUser;
+//                                angular.forEach(results.metadata, function(definition) {
+//                                    scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
+//                                });
+//                                if (results.metadata != null && results.metadata.length == 1)
+//                                    scope.criteria.processDefinitionKey = results.metadata[0].processDefinitionKey;
+//                            }
+//                            scope.bucketList = results.bucketList;
+//                            scope.criteria.pg = results.processGroup;
+//                        });
+//                        scope.$on('wfEvent:search', function(event, criteria) {
+//                            console.log('Searching');
+//                            scope.forms = null;
+//                            scope.searching = true;
+//                            console.log("Storing criteria");
+//                            localStorageService.set("criteria", criteria);
+//                        });
+//                        scope.showSearchingIcon = function() {
+//    //                        $('#searchIcon').addClass('fa-spinner fa-spin').removeClass('fa-search');
+//                        };
 
                         scope.dialogs = dialogs;
 
@@ -1868,32 +1714,24 @@
                                 return;
                             }
                             if (scope.searchTimeout != null)
-                                clearTimeout(scope.refreshSearch);
-                            scope.searchTimeout = setTimeout(scope.refreshSearch, 300);
-                        };
-
-                        scope.clearSearch = function() {
-                            scope.criteria.keyword = '';
-                            scope.criteria.keywords = '';
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                                clearTimeout(scope.searchTimeout);
+                            scope.searchTimeout = setTimeout(scope.application.search, 300);
                         };
 
                         scope.refreshSearch = function() {
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                            scope.application.search();
                         };
-    //                    scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        scope.clearSearch = function() {
+                            scope.application.criteria.keyword = '';
+                            scope.application.criteria.keywords = '';
+                            scope.application.search();
+                        };
 
-                        scope.model = $window.piecework.model;
-                        if (typeof(scope.model) !== 'undefined' && typeof(scope.model.total) !== 'undefined') {
-                            scope.$on('wfEvent:results-linked', function(event) {
-                                delete scope.model['data'];
-                                scope.$root.$broadcast('wfEvent:found', scope.model);
-                                delete $window.piecework['model'];
-                                scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                            });
-                        } else {
-                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-                        }
+//                        scope.refreshSearch = function() {
+//                            scope.application.search();
+////                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
+//                        };
+    //                    scope.$root.$broadcast('wfEvent:search', scope.criteria);
 
                         scope.changeBucket = function(selectedForms, bucket) {
                             var success = function(scope, data, status, headers, config, form) {
@@ -1910,7 +1748,141 @@
                                 }
                             });
                         };
-                    }
+                    },
+                    template:
+                        '<nav class="navbar navbar-default navbar-ex1-collapse" style="margin-bottom: 0px;border-radius: 0px">\n' +
+                            '        <div class="navbar-header">\n' +
+                            '            <button data-ng-click="toggleCollapse()" type="button" class="navbar-toggle">\n' +
+                            '                <span class="sr-only">Toggle</span>\n' +
+                            '                <span class="icon-bar"></span>\n' +
+                            '                <span class="icon-bar"></span>\n' +
+                            '                <span class="icon-bar"></span>\n' +
+                            '            </button>\n' +
+                            '        </div>\n' +
+                            '        <div data-ng-class="application.state.collapsed ? \'\' : \'collapse\'" class="navbar-collapse navbar-ex1-collapse">\n' +
+                            '            <div class="container">\n' +
+                            '                <div class="row"><form class="navbar-form navbar-left form-inline" role="search">\n' +
+                            '                    <div class="row">\n' +
+                            '                       <div class="form-group has-feedback">\n' +
+                            '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="application.criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
+                            '                           <span data-ng-click="clearSearch()" data-ng-show="application.criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+                            '                       </div>' +
+                            '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i data-ng-class="application.state.searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
+                            '                       <span data-ng-if="application.definitions" class="dropdown">\n' +
+                            '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
+                            '                            <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
+                            '                                <li data-ng-repeat="definition in application.definitions" class="presentation"><a role="menuitem" href="{{definition.link}}" target="_self">{{definition.processDefinitionLabel}}</a></li>\n' +
+                            '                            </ul>\n' +
+                            '                       </span>\n' +
+                            '                    </div>\n' +
+                            '                    <div class="row">\n' +
+                            '                        <ul class="navbar-nav">\n' +
+                            '                            <li>\n' +
+                            '                                <div class="dropdown">\n' +
+                            '                                    <a id="filter-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+                            '                                        <span class="dropdown-toggle-text">{{application.processStatusDescription[application.criteria.processStatus]}}</span>\n' +
+                            '                                        <b class="caret"></b>\n' +
+                            '                                    </a>\n' +
+                            '                                    <ul id="limit-dropdown" class="dropdown-menu form-inline" role="menu" aria-labelledby="filter-button">\n' +
+                            '                                        <li role="presentation" class="dropdown-header">Process status</li>\n' +
+                            '                                        <li role="presentation" class="disabled">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" id="statusOpen" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="open" role="menuitem" checked=""/> &nbsp;{{application.processStatusDescription[\'open\']}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                        <li role="presentation">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" id="statusComplete" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="complete" role="menuitem"> &nbsp;{{application.processStatusDescription[\'complete\']}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                        <li role="presentation">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" id="statusCancelled" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="cancelled" role="menuitem"> &nbsp;{{application.processStatusDescription[\'cancelled\']}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                        <li role="presentation">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" id="statusSuspended" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="suspended" role="menuitem"> &nbsp;{{application.processStatusDescription[\'suspended\']}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                        <li role="presentation" class="disabled">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" id="statusQueued" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="queued" role="menuitem" checked=""/> &nbsp;{{application.processStatusDescription[\'queued\']}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                        <li role="presentation">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" id="statusAny" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processStatus" data-ng-true-value="all" role="menuitem"> &nbsp;{{application.processStatusDescription[\'all\']}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                    </ul>\n' +
+                            '                                </div>\n' +
+                            '                            </li>\n' +
+                            '                            <li ng-hide="isSingleProcessSelectable()">\n' +
+                            '                                <div class="dropdown">\n' +
+                            '                                    <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+                            '                                        <span class="dropdown-toggle-text">{{application.processDefinitionDescription[application.criteria.processDefinitionKey]}}</span>\n' +
+                            '                                        <b class="caret"></b>\n' +
+                            '                                    </a>\n' +
+                            '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
+                            '                                        <li role="presentation" class="dropdown-header">Processes</li>\n' +
+                            '                                        <li data-ng-repeat="definition in application.definitions" role="presentation">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="{{definition.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.processDefinitionLabel}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                        <li role="presentation">\n' +
+                            '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                            '                                                <label class="checkbox">\n' +
+                            '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{application.processDefinitionDescription[\'\']}}\n' +
+                            '                                                </label>\n' +
+                            '                                            </div>\n' +
+                            '                                        </li>\n' +
+                            '                                    </ul>\n' +
+                            '                                </div>\n' +
+                            '                            </li>\n' +
+                            '                        </ul>\n' +
+                            '                    </div>\n' +
+                            '                </form>\n' +
+                            '                <div class="navbar-right btn-toolbar">\n' +
+//    '                    <div data-ng-show="isFormSelected([\'Open\'])" data-wf-assignment-button data-forms="getFormsSelected([\'Open\'])" class="navbar-nav"></div>' +
+                        '                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>\n' +
+                        '                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" data-ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>\n' +
+                        '                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected([\'Suspended\']))" data-ng-show="isFormSelected([\'Suspended\'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>\n' +
+                        '                    <button data-ng-click="dialogs.openSuspendModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>\n' +
+                        '                    <button data-ng-click="dialogs.openCancelModal(getFormsSelected([\'Open\',\'Suspended\']))" data-ng-show="isFormSelected([\'Open\',\'Suspended\'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>\n' +
+                        '                    <button data-ng-click="dialogs.openRestartModal(getFormsSelected())" data-ng-show="isFormSelected()" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>\n' +
+                        '                    <a data-ng-show="false && !isFormSelected()" href="report.html" rel="external" target="_self" class="btn btn-default navbar-btn" id="report-button"><i class="fa fa-bar-chart-o"></i></a>\n' +
+                        '                    <button data-ng-click="exportCsv()" data-ng-show="!isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>\n' +
+                        '                    <button data-ng-click="toggleColumns()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn"><i class="fa fa-columns fa-1x"></i></button>' +
+                        '                    <button data-ng-click="toggleFilter()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn">' +
+                        '                       <i data-ng-class="application.state.filtering ? \'fa-ban\' : \'fa-filter\'" class="fa"></i>' +
+                        '                    </button>' +
+                        '                    <span data-ng-if="application.bucketList.buckets.length > 0" class="dropdown">\n' +
+                        '                        <button class="btn btn-default navbar-btn dropdown-toggle" data-ng-disabled="!isFormSelected()" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-tag"></i><b class="caret"></b></button>\n' +
+                        '                        <ul id="new-form-dropdown" class="dropdown-menu scroll" role="menu" aria-labelledby="new-form-button">\n' +
+                        '                            <li class="presentation" role="menuitem"><b>&nbsp;&nbsp;&nbsp;&nbsp;Change Bucket</b></li>\n' +
+                        '                            <li data-ng-repeat="bucket in application.bucketList.buckets" data-ng-click="changeBucket(getFormsSelected(), bucket)" class="presentation" role="menuitem"><a>{{bucket}}</a></li>\n' +
+                        '                        </ul>\n' +
+                        '                    </span>\n ' +
+                        '                </div>\n' +
+                        '            </div></div>\n' +
+                        '        </div>\n' +
+                        '    </nav>'
                 }
             }
         ])

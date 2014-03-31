@@ -88,7 +88,7 @@ public class ValidationRule {
                 .toString();
     }
 
-    public void evaluate(Map<String, List<Value>> submissionData,  Map<String, List<Value>> instanceData) throws ValidationRuleException {
+    public void evaluate(Map<String, List<Value>> submissionData, Map<String, List<Value>> instanceData, boolean onlyAcceptValidInputs) throws ValidationRuleException {
         switch(type) {
         case CONSTRAINED:
             evaluateConstraint(submissionData);
@@ -103,7 +103,7 @@ public class ValidationRule {
             evaluateOptions(submissionData);
             break;
         case NUMBER_OF_INPUTS:
-            evaluateNumberOfInputs(submissionData);
+            evaluateNumberOfInputs(submissionData, onlyAcceptValidInputs);
             break;
         case NUMERIC:
             evaluateNumeric(submissionData);
@@ -162,7 +162,7 @@ public class ValidationRule {
         }
     }
 
-    private void evaluateNumberOfInputs(Map<String, List<Value>> submissionData) throws ValidationRuleException {
+    private void evaluateNumberOfInputs(Map<String, List<Value>> submissionData, boolean onlyAcceptValidInputs) throws ValidationRuleException {
         if (constraint != null && !ConstraintUtil.evaluate(null, submissionData, constraint))
             return;
 
@@ -182,7 +182,7 @@ public class ValidationRule {
 
         if (maxInputs < numberOfInputs)
             throw new ValidationRuleException(this, "No more than " + maxInputs + " are allowed");
-        else if (required && minInputs > numberOfInputs)
+        else if (required && minInputs > numberOfInputs && onlyAcceptValidInputs)
             throw new ValidationRuleException(this, "At least " + minInputs + " are required");
     }
 
