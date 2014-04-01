@@ -413,31 +413,31 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "            </div>\n" +
 //    "        </form>\n" +
     "    </div>");
-  $templateCache.put("templates/status.html",
-    "   <div class=\"container\"><div class=\"row\" data-ng-show=\"form.container.readonly\" data-ng-switch=\"form.state\">\n" +
-    "        <div data-ng-switch-when=\"assigned\" class=\"alert alert-info\">\n" +
-    "            <strong>This form is assigned to {{form.task.assignee ? form.task.assignee.displayName : 'Nobody'}}</strong> - to take action, you will need to assign it to yourself.\n" +
-    "            <button data-ng-click=\"claim()\" class=\"btn btn-default pull-right\" type=\"button\">Assign to me</button>\n" +
-    "            <div class=\"clearfix\"></div>\n" +
-    "        </div>\n" +
-    "        <div data-ng-switch-when=\"unassigned\" class=\"alert alert-info\">\n" +
-    "            <strong>This form is not currently assigned</strong> - to modify it, you will need to assign it to yourself.\n" +
-    "            <button data-ng-click=\"claim()\" class=\"btn btn-default pull-right\" type=\"button\">Assign to me</button>\n" +
-    "            <div class=\"clearfix\"></div>\n" +
-    "        </div>\n" +
-    "        <div data-ng-switch-when=\"completed\" class=\"alert alert-info\"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:'MMM d, y H:mm'}}</div>\n" +
-    "        <div data-ng-switch-when=\"suspended\" class=\"alert alert-info\"><strong>This form can no longer be modified</strong> - it has been suspended</div>\n" +
-    "        <div data-ng-switch-when=\"cancelled\" class=\"alert alert-info\"><strong>This form can no longer be modified</strong> - it has been cancelled</div>\n" +
-    "    </div>\n" +
-    "    <div data-ng-if=\"form.applicationStatusExplanation != null && form.applicationStatusExplanation != ''\" class=\"row\">\n" +
-    "        <div class=\"alert alert-danger\">\n" +
-    "        <button type=\"button\" class=\"close\" data-ng-click=\"form.applicationStatusExplanation = null\" aria-hidden=\"true\">&times;</button>\n" +
-    "           {{form.applicationStatusExplanation}}\n" +
-    "    </div>\n" +
-    "    </div><div class=\"row\"><div data-ng-if=\"form.explanation != null && form.explanation.message != null && form.explanation.message != ''\" class=\"alert alert-danger\">\n" +
-    "        <h4 data-ng-if=\"form.explanation.message\">{{form.explanation.message}}</h4>\n" +
-    "        <p>{{form.explanation.messageDetail}}</p>\n" +
-    "    </div></div></div>")
+//  $templateCache.put("templates/status.html",
+//    '   <div class="container"><div class="row" data-ng-show="form.container.readonly" data-ng-switch="form.state">\n' +
+//    '        <div data-ng-switch-when="assigned" class="alert alert-info">\n' +
+//    '            <strong>This form is assigned to {{form.task.assignee ? form.task.assignee.displayName : \'Nobody\'}}</strong> - to take action, you will need to assign it to yourself.\n' +
+//    '            <button data-ng-click="claim()" class="btn btn-default pull-right" type="button">Assign to me</button>\n' +
+//    '            <div class="clearfix"></div>\n' +
+//    '        </div>\n' +
+//    '        <div data-ng-switch-when="unassigned" class="alert alert-info">\n' +
+//    '            <strong>This form is not currently assigned</strong> - to modify it, you will need to assign it to yourself.\n' +
+//    '            <button data-ng-click="claim()" class="btn btn-default pull-right" type="button">Assign to me</button>\n' +
+//    '            <div class="clearfix"></div>\n' +
+//    '        </div>\n' +
+//    '        <div data-ng-switch-when="completed" class="alert alert-info"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime"date:\'MMM d, y H:mm\'}}</div>\n' +
+//    '        <div data-ng-switch-when="suspended" class="alert alert-info"><strong>This form can no longer be modified</strong> - it has been suspended</div>\n' +
+//    '        <div data-ng-switch-when="cancelled" class="alert alert-info"><strong>This form can no longer be modified</strong> - it has been cancelled</div>\n' +
+//    '    </div>\n' +
+//    '    <div data-ng-if="form.applicationStatusExplanation != null && form.applicationStatusExplanation != \'\'" class="row">\n' +
+//    '        <div class="alert alert-danger">\n' +
+//    '        <button type="button" class="close" data-ng-click="form.applicationStatusExplanation = null" aria-hidden="true">&times;</button>\n' +
+//    '           {{form.applicationStatusExplanation}}\n' +
+//    '    </div>\n' +
+//    '    </div><div class="row"><div data-ng-if="form.explanation != null && form.explanation.message != null && form.explanation.message != \'\'" class="alert alert-danger">\n' +
+//    '        <h4 data-ng-if="form.explanation.message">{{form.explanation.message}}</h4>\n' +
+//    '        <p>{{form.explanation.messageDetail}}</p>\n' +
+//    '    </div></div></div>');
   $templateCache.put("templates/buttonbar.html",
     "<div data-ng-if=\"!container.readonly && container.buttons.length>0\" class=\"btn-toolbar pull-right\" role=\"toolbar\">\n" +
     "    <div data-ng-repeat=\"button in container.buttons\" class=\"btn-group dropup\">\n" +

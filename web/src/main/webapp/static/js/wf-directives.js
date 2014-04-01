@@ -28,7 +28,6 @@
                 scope: {
                     name: '@'
                 }
-        //        template: '<span><input data-ng-model="inputModel" name="{{name}}"></span>'
             };
         }
     ];
@@ -56,12 +55,6 @@
 
                     notificationService.notify(scope.$root, message.messageDetail);
                 });
-//                scope.$on('fileuploadstart', function() {
-//                    scope.state.sending = true;
-//                });
-//                scope.$on('fileuploadstop', function() {
-//                    scope.state.sending = false;
-//                });
                 scope.toggleCollapse = function() {
                     scope.state.isCollapsed = !scope.state.isCollapsed;
                 };
@@ -73,65 +66,6 @@
         .directive('input', wfInputDirective)
         .directive('select', wfInputDirective)
         .directive('textarea', wfInputDirective)
-    //    .directive('wfActive', [
-    //        function() {
-    //            return {
-    //                restrict: 'A',
-    //                link: function (scope, element, attr) {
-    //                    var step = attr.wfActive;
-    //                    if (typeof(step) === 'undefined')
-    //                        step = '-1';
-    //
-    //                    var indexOf = step.indexOf('+');
-    //                    var upwards = false;
-    //                    if (indexOf == (step.length-1)) {
-    //                        step = step.substring(0, indexOf);
-    //                        upwards = true;
-    //                    }
-    //
-    //                    step = parseInt(step);
-    //
-    //                    scope.$root.$on('wfEvent:form-loaded', function(event, form) {
-    //                        scope.form = form;
-    //                        var isDisabled = false;
-    //
-    //                        // Check to see if the current user is the assigned user
-    //                        if (typeof(form) !== 'undefined' && form.task != null) {
-    //                            isDisabled = (form.currentUser == null || form.task.assignee == null || form.currentUser.userId !== form.task.assignee.userId)
-    //                        }
-    //
-    //                        var ordinal = form.activeStepOrdinal;
-    //
-    //                        if (form.actionType == 'VIEW')
-    //                            ordinal = -1;
-    //
-    //                        if (upwards) {
-    //                            if (typeof(ordinal) !== 'undefined' && step < ordinal)
-    //                                isDisabled = true;
-    //                        } else if (step != ordinal) {
-    //                            isDisabled = true;
-    //                        }
-    //
-    //                        var $input = element.is(":input") ? element : element.find(":input");
-    //                        scope.disabled = isDisabled;
-    //                        if (isDisabled) {
-    //                            $input.attr('disabled', 'disabled');
-    //                            if ($input.attr('type') == 'radio') {
-    //                                $input.attr('type', 'checkbox');
-    //                                $input.addClass('wf-was-radio');
-    //                            }
-    //                        } else {
-    //                            $input.removeAttr('disabled');
-    //                            if ($input.hasClass('wf-was-radio')) {
-    //                                $input.removeClass('wf-was-radio');
-    //                                $input.attr('type', 'radio');
-    //                            }
-    //                        }
-    //                    });
-    //                }
-    //            }
-    //        }
-    //    ])
         .directive('wfAlert', [
             function() {
                 return {
@@ -637,8 +571,8 @@
                 }
             }
         ])
-        .directive('wfFile', ['$http', '$sce', '$window', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wizardService',
-            function($http, $sce, $window, attachmentService, dialogs, notificationService, taskService, wizardService) {
+        .directive('wfFile', ['$http', '$sce', '$window', 'attachmentService', 'dialogs', 'notificationService', 'taskService', 'wfUtils', 'wizardService',
+            function($http, $sce, $window, attachmentService, dialogs, notificationService, taskService, wfUtils, wizardService) {
                 return {
                     restrict: 'AE',
                     scope: {
@@ -657,6 +591,22 @@
                         scope.files = [];
                     }],
                     link: function (scope, element, attr) {
+                        wfUtils.attachForm(scope);
+                        scope.$watch('form', function(modified, original) {
+                            var form = modified;
+                            if (form != null) {
+                                var data = form.data;
+                                var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
+                                scope.files = [];
+                                angular.forEach(values, function(file) {
+                                    file.detailed = false;
+                                    scope.files.push(file);
+                                });
+
+                                if (form.state !== 'open' && form.state !== 'assigned')
+                                    scope.disabled = true;
+                            }
+                        });
                         scope.checkoutFile = function(file) {
                             var url = file.link + '/checkout';
                             $http.post($sce.trustAsResourceUrl(url), null, {
@@ -713,16 +663,16 @@
                         scope.showDetails = function(file) {
                             file.detailed = !file.detailed;
                         };
-                        scope.$on('wfEvent:form-loaded', function(event, form) {
-                            scope.form = form;
-                            var data = form.data;
-                            var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
-                            scope.files = [];
-                            angular.forEach(values, function(file) {
-                                file.detailed = false;
-                                scope.files.push(file);
-                            });
-                        });
+//                        scope.$on('wfEvent:form-loaded', function(event, form) {
+//                            scope.form = form;
+//                            var data = form.data;
+//                            var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
+//                            scope.files = [];
+//                            angular.forEach(values, function(file) {
+//                                file.detailed = false;
+//                                scope.files.push(file);
+//                            });
+//                        });
                         scope.$on('wfEvent:invalid', function(event, validation) {
                             if (validation != null && validation[scope.name] != null) {
                                 scope.error = validation[scope.name];
@@ -735,9 +685,9 @@
                         scope.$on('fileuploadstop', function(event, data) {
                             scope.sending = false;
                         });
-                        scope.$watch('files', function(original, modified) {
-                            console.log('Files changed');
-                        });
+//                        scope.$watch('files', function(original, modified) {
+//
+//                        });
                     },
                     template:
                         '       <ul class="list-group"> ' +
@@ -758,7 +708,7 @@
                         '               <div>' +
                         '                   <i data-ng-click="showDetails(file)" data-ng-class="file.detailed ? \'fa-angle-up\' : \'fa-angle-down\'" data-ng-hide="editing" class="fa pull-right" style="cursor:pointer;padding-top: 4px"></i>' +
                         '                   <div data-ng-if="image"><img data-wf-image="{{name}}" class="" data-ng-src="{{file.link}}" alt="" /><br /></div>' +
-                        '                   <a data-ng-href="{{file.link}}" data-ng-class="checkedOut ? \'text-danger\' : \'\'"><i data-ng-hide="editing" class="fa fa-cloud-download"></i> {{file.name}}</a>&nbsp;&nbsp;&nbsp;' +
+                        '                   <a data-ng-href="{{file.link}}" data-ng-class="checkedOut ? \'text-danger\' : \'\'" class="wf-file-link"><i data-ng-hide="editing" class="fa fa-cloud-download"></i> {{file.name}}</a>&nbsp;&nbsp;&nbsp;' +
                         '                   <div data-ng-click="checkinFile(file)" data-ng-hide="editing || !checkedOut" class="btn btn-default btn-xs">' +
                         '                       <span class="fa-stack"><i class="fa fa-key fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x text-danger"></i></span></div>' +
                         '                   <div data-ng-click="checkoutFile(file)" data-ng-hide="cannotCheckout || editing || checkedOut" class="btn btn-default btn-xs"><i class="fa fa-key"></i> Checkout</div>' +
@@ -768,19 +718,16 @@
                         '                   <table class="table table-condensed">' +
                         '                       <thead><tr><th>Version</th><th>Upload date</th><th>Filer</th></tr></thead>' +
                         '                       <tbody>' +
-                        '                           <tr data-ng-repeat="version in file.versions"><td><a data-ng-href="{{version.link}}">{{version.label}}</a></td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdByUser.displayName}}</td></tr>' +
+                        '                           <tr data-ng-repeat="version in file.versions"><td><a data-ng-href="{{version.link}}" class="wf-file-link">{{version.label}}</a></td><td>{{version.createDate|date:\'medium\'}}</td><td>{{version.createdByUser.displayName}}</td></tr>' +
                         '                       </tbody>' +
                         '                   </table>' +
-                        '                   <button data-ng-click="verifyDeleteFile(file)" class="btn btn-default btn-xs" role="button" type="button"><i class="fa fa-ban"></i> Delete</button>' +
+                        '                   <button data-ng-click="verifyDeleteFile(file)" data-ng-hide="disabled" class="btn btn-default btn-xs" role="button" type="button"><i class="fa fa-ban"></i> Delete</button>' +
                         '                   <div class="clearfix"></div>' +
                         '               </div>' +
                         '           </li>' +
                         '           <li data-ng-hide="disabled" class="list-group-item">' +
                         '               <p data-ng-show="checkedOut" class="pull-left">One or more files are checked out</p>' +
                         '               <div class="pull-left">' +
-    //                    '                   <span data-ng-click="edit()" data-ng-show="files" class="btn btn-default btn-xs" title="{{editing ? \'Done\' : \'Click to delete files\'}}">' +
-    //                    '                       <i data-ng-class="editing ? \'fa-folder\' : \'fa-edit\'" class="fa"></i>' +
-    //                    '                   </span>' +
                         '                   <span data-wf-alert="{{name}}" class="text-danger"></span>' +
                         '               </div>' +
                         '               <div class="btn-toolbar pull-right">' +
@@ -870,38 +817,6 @@
 
             }
         ])
-    //    .directive('wfInputMask', [
-    //         function() {
-    //             return {
-    //                 restrict: 'AE',
-    //                 link: function(scope, element, attr) {
-    //                     scope.hasDatePickerSupport = function() {
-    //                         var elem = document.createElement('input');
-    //                         elem.setAttribute('type','date');
-    //                         elem.value = 'foo';
-    //                         return (elem.type == 'date' && elem.value != 'foo');
-    //                     }
-    //
-    //                     var type = element.attr('type');
-    //                     var options = {};
-    //                     if (typeof(attr.wfInputMask) !== 'undefined' && attr.wfInputMask != '')
-    //                        options['mask'] = attr.wfInputMask;
-    //                     else if (typeof(attr.wfMask) !== 'undefined')
-    //                        options['mask'] = attr.wfMask;
-    //                     if (typeof(attr.wfPlaceholder) !== 'undefined')
-    //                        options['placeholder'] = attr.wfPlaceholder;
-    //
-    //                     options['showMaskOnHover'] = false;
-    //
-    //                     if (type == 'text')
-    //                        element.inputmask(options);
-    //                     else if ((type == 'date' || type == 'datetime' || type == 'datetime-local') && !scope.hasDatePickerSupport())
-    //                        element.inputmask(options);
-    //                 }
-    //             }
-    //
-    //         }
-    //     ])
         .directive('wfForm', ['$http', '$location', '$sce', '$window', 'formPageUri', 'formResourceUri', 'notificationService', 'wizardService',
             function($http, $location, $sce, $window, formPageUri, formResourceUri, notificationService, wizardService) {
                 return {
@@ -909,45 +824,8 @@
                     scope: {
                         form : '='
                     },
-//                    compile: function compile(tElement, tAttrs, transclude) {
-//                        var modelName = 'form.data[\'' + tAttrs.name + '\'][0]';
-//                        if (tAttrs.ngModel == null)
-//                            tElement.attr('ng-value', modelName);
-//                        tElement.attr('ng-controller', 'FormController');
-//                        return {
-//                            pre: function preLink(scope, iElement, iAttrs, controller) {
-//
-//                            },
-//                            post: function postLink(scope, element, attrs, controller) {
-//                                scope.$root.$broadcast('wfEvent:start-loading');
-//                                scope.initialize = function(form) {
-//                                    element.show();
-//                                    scope.$root.$broadcast('wfEvent:stop-loading');
-//                                    element.attr("action", form.action);
-//                                    element.attr("method", "POST");
-//                                    element.attr("enctype", "multipart/form-data");
-//
-//                                    var created = form.task != null ? form.task.startTime : null;
-//                                    element.attr('data-wf-task-started', created);
-//                                };
-//                                scope.$watch('form', function(oldValue, newValue) {
-//                                    if (newValue != null || oldValue != null) {
-//                                        var form = newValue != null ? newValue : oldValue;
-//                                        scope.initialize(form);
-//                                    }
-//                                });
-//                            }
-//                        }
-//                    }
-//                    controller:
-//                        ['$compile', '$scope',
-//                        function($compile, scope) {
-//
-//                        }
-//                    ],
                     link: function (scope, element, attr) {
                         // Hide this form initially
-    //                    element.hide();
                         scope.$root.$broadcast('wfEvent:start-loading');
                         scope.initialize = function(form) {
                             element.show();
@@ -955,6 +833,9 @@
                             element.attr("action", form.action);
                             element.attr("method", "POST");
                             element.attr("enctype", "multipart/form-data");
+
+                            if (form.state != null)
+                                element.addClass('wf-state-' + form.state);
 
                             var created = form.task != null ? form.task.startTime : null;
                             element.attr('data-wf-task-started', created);
@@ -1868,27 +1749,25 @@
                 }
             }
         ])
-        .directive('wfStatus', ['$rootScope', '$window', 'notificationService', 'taskService', 'wizardService',
-             function($rootScope, $window, notificationService, taskService, wizardService) {
+        .directive('wfStatus', ['$rootScope', '$window', 'notificationService', 'taskService', 'wfUtils', 'wizardService',
+             function($rootScope, $window, notificationService, taskService, wfUtils, wizardService) {
                  return {
                      restrict: 'AE',
                      scope: {
                         form : '='
                      },
-                     templateUrl: 'templates/status.html',
                      link: function (scope, element) {
-                        if (typeof(scope.form) === 'undefined')
-                            scope.form = scope.$root.form;
+                        wfUtils.attachForm(scope);
 
-                        scope.$on('wfEvent:form-loaded', function(event, form) {
-                            console.log("wfStatus attached form to its scope");
-                            if (typeof(form) !== 'undefined') {
-                                if (form.loadedBy == null)
-                                    form.loadedBy = [];
-                                form.loadedBy.push('wfStatus');
-                                scope.form = form;
-                            }
-                        });
+//                        scope.$on('wfEvent:form-loaded', function(event, form) {
+//                            console.log("wfStatus attached form to its scope");
+//                            if (typeof(form) !== 'undefined') {
+//                                if (form.loadedBy == null)
+//                                    form.loadedBy = [];
+//                                form.loadedBy.push('wfStatus');
+//                                scope.form = form;
+//                            }
+//                        });
                         scope.claim = function() {
                             var success = function(scope, data, status, headers, config, form, assignee) {
                                 $rootScope.$broadcast('wfEvent:refresh', 'assignment');
@@ -1903,7 +1782,32 @@
                             };
                             taskService.assignTask(scope, scope.form, scope.form.currentUser.userId, success, failure);
                         };
-                     }
+                     },
+                     template:
+                         '   <div class="container"><div class="row" data-ng-show="form.container.readonly" data-ng-switch="form.state">\n' +
+                         '        <div data-ng-switch-when="assigned" class="alert alert-info">\n' +
+                         '            <strong>This form is assigned to {{form.task.assignee ? form.task.assignee.displayName : \'Nobody\'}}</strong> - to take action, you will need to assign it to yourself.\n' +
+                         '            <button data-ng-click="claim()" class="btn btn-default pull-right" type="button">Assign to me</button>\n' +
+                         '            <div class="clearfix"></div>\n' +
+                         '        </div>\n' +
+                         '        <div data-ng-switch-when="unassigned" class="alert alert-info">\n' +
+                         '            <strong>This form is not currently assigned</strong> - to modify it, you will need to assign it to yourself.\n' +
+                         '            <button data-ng-click="claim()" class="btn btn-default pull-right" type="button">Assign to me</button>\n' +
+                         '            <div class="clearfix"></div>\n' +
+                         '        </div>\n' +
+                         '        <div data-ng-switch-when="completed" class="alert alert-info"><strong>This form can no longer be modified</strong> - it was completed by {{form.task.assignee.displayName}} on {{form.task.endTime|date:\'MMM d, y H:mm\'}}</div>\n' +
+                         '        <div data-ng-switch-when="suspended" class="alert alert-info"><strong>This form can no longer be modified</strong> - it has been suspended</div>\n' +
+                         '        <div data-ng-switch-when="cancelled" class="alert alert-info"><strong>This form can no longer be modified</strong> - it has been cancelled</div>\n' +
+                         '    </div>\n' +
+                         '    <div data-ng-if="form.applicationStatusExplanation != null && form.applicationStatusExplanation != \'\'" class="row">\n' +
+                         '        <div class="alert alert-danger">\n' +
+                         '        <button type="button" class="close" data-ng-click="form.applicationStatusExplanation = null" aria-hidden="true">&times;</button>\n' +
+                         '           {{form.applicationStatusExplanation}}\n' +
+                         '    </div>\n' +
+                         '    </div><div class="row"><div data-ng-if="form.explanation != null && form.explanation.message != null && form.explanation.message != \'\'" class="alert alert-danger">\n' +
+                         '        <h4 data-ng-if="form.explanation.message">{{form.explanation.message}}</h4>\n' +
+                         '        <p>{{form.explanation.messageDetail}}</p>\n' +
+                         '    </div></div></div>'
                  }
              }
         ])

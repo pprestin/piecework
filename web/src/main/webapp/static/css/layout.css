@@ -683,6 +683,11 @@ select.form-control {
     margin-top: 8px;
 }
 
+.wf-state-cancelled a.wf-file-link {
+    color:red;
+    text-decoration:line-through;
+}
+
 .dropdown > ul.scroll{
     max-height: 30em;
     overflow-y: auto;

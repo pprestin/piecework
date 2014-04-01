@@ -234,7 +234,7 @@ describe('Unit testing wf-buttonbar', function() {
 });
 
 
-describe('Unit testing wf-container', function() {
+describe('Unit testing wfContainer', function() {
     var $compile;
     var $rootScope;
     var $element;
