@@ -591,9 +591,8 @@
                         scope.files = [];
                     }],
                     link: function (scope, element, attr) {
-                        wfUtils.attachForm(scope);
-                        scope.$watch('form', function(modified, original) {
-                            var form = modified;
+                        scope.$on('wfEvent:form-loaded', function(event, form) {
+                            scope.form = form;
                             if (form != null) {
                                 var data = form.data;
                                 var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
@@ -603,8 +602,7 @@
                                     scope.files.push(file);
                                 });
 
-                                if (form.state !== 'open' && form.state !== 'assigned')
-                                    scope.disabled = true;
+                                scope.disabled = form.state !== 'open' && form.state !== 'assigned';
                             }
                         });
                         scope.checkoutFile = function(file) {
@@ -644,8 +642,6 @@
                             });
                         };
                         scope.fileChange = function() {
-
-
                             console.log('New file');
                         };
                         scope.doNotDeleteFile = function() {
@@ -663,31 +659,18 @@
                         scope.showDetails = function(file) {
                             file.detailed = !file.detailed;
                         };
-//                        scope.$on('wfEvent:form-loaded', function(event, form) {
-//                            scope.form = form;
-//                            var data = form.data;
-//                            var values = typeof(data) !== 'undefined' ? data[scope.name] : null;
-//                            scope.files = [];
-//                            angular.forEach(values, function(file) {
-//                                file.detailed = false;
-//                                scope.files.push(file);
-//                            });
-//                        });
                         scope.$on('wfEvent:invalid', function(event, validation) {
                             if (validation != null && validation[scope.name] != null) {
                                 scope.error = validation[scope.name];
                             }
                         });
-
-                        scope.$on('fileuploadstart', function(event, data) {
-                            scope.sending = true;
+                        scope.$on('wfEvent:fileuploadstart', function(event, data) {
+                            if (data.paramName == scope.name)
+                                scope.sending = true;
                         });
-                        scope.$on('fileuploadstop', function(event, data) {
-                            scope.sending = false;
+                        scope.$on('wfEvent:fileuploadstop', function(event, data) {
+                                scope.sending = false;
                         });
-//                        scope.$watch('files', function(original, modified) {
-//
-//                        });
                     },
                     template:
                         '       <ul class="list-group"> ' +
@@ -732,7 +715,7 @@
                         '               </div>' +
                         '               <div class="btn-toolbar pull-right">' +
                         '                   <div data-ng-class="checkedOut ? \'btn-danger\' : \'\'" class="btn btn-default btn-xs fileinput-button" role="button" type="button">' +
-                        '                       <i ng-class="state.sending ? \'fa-spinner fa-spin\' : \'fa-cloud-upload\'" class="fa"></i> Add' +
+                        '                       <i ng-class="sending ? \'fa-spinner fa-spin\' : \'fa-cloud-upload\'" class="fa"></i> Add' +
                         '                       <input type="file" name="{{name}}" multiple="multiple" data-ng-change="fileChange()" data-ng-disabled="disabled || form.currentUser.userId !== form.task.assignee.userId" data-ng-model="files">' +
                         '                   </div>' +
                         '               </div>' +
@@ -840,11 +823,10 @@
                             var created = form.task != null ? form.task.startTime : null;
                             element.attr('data-wf-task-started', created);
                         };
-                        scope.$watch('form', function(oldValue, newValue) {
-                            if (newValue != null || oldValue != null) {
-                                var form = newValue != null ? newValue : oldValue;
+                        scope.$watch('form', function(modified, original) {
+                            var form = modified;
+                            if (form != null)
                                 scope.initialize(form);
-                            }
                         });
                     }
                 }
@@ -1277,8 +1259,8 @@
                 }
             }
         ])
-        .directive('wfSearchResponse', ['$filter', '$resource', 'attachmentService', 'dialogs', 'localStorageService', 'notificationService', 'taskService', 'wizardService',
-            function($filter, $resource, attachmentService, dialogs, localStorageService, notificationService, taskService, wizardService) {
+        .directive('wfSearchResponse', ['$filter', 'attachmentService', 'dialogs', 'localStorageService', 'notificationService', 'taskService', 'wizardService',
+            function($filter, attachmentService, dialogs, localStorageService, notificationService, taskService, wizardService) {
                 return {
                     restrict: 'AE',
                     scope: {
@@ -1376,10 +1358,6 @@
 
                     },
                     controller: ['$scope', function(scope) {
-                        scope.$watch(scope.forms, function(oldValue, newValue) {
-
-                        });
-
                         scope.dialogs = dialogs;
                     }],
                     template:
@@ -1839,8 +1817,8 @@
                     controller: 'wfToolbarController',
                     link: function (scope, element) {
                         wfUtils.attachForm(scope);
-                        scope.$watch('form', function(original, updated) {
-                            var form = updated != null ? updated : original;
+                        scope.$watch('form', function(modified, original) {
+                            var form = modified;
                             if (form != null && form.fileUploadOptions != null) {
                                 scope.fileUploadOptions.url = scope.form.attachment;
                             }

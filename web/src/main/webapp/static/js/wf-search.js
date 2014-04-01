@@ -1,6 +1,5 @@
 angular.module('wf',
     [
-        'ngResource',
         'ngRoute',
         'ngSanitize',
         'blueimp.fileupload',
@@ -10,8 +9,8 @@ angular.module('wf',
         'wf.directives',
         'wf.services'
     ])
-    .controller('SearchController', ['$filter', '$http', '$location', '$resource', '$sce', '$scope', '$window', 'localStorageService', 'fileUpload', 'wizardService',
-        function($filter, $http, $location, $resource, $sce, scope, $window, localStorageService, fileUpload, formPageUri, formResourceUri, wizardService) {
+    .controller('SearchController', ['$filter', '$http', '$location', '$sce', '$scope', '$window', 'localStorageService', 'fileUpload', 'wizardService',
+        function($filter, $http, $location, $sce, scope, $window, localStorageService, fileUpload, formPageUri, formResourceUri, wizardService) {
             scope.application = {
                 bucketList: [],
                 criteria: {
@@ -108,7 +107,8 @@ angular.module('wf',
                 });
                 scope.application.state.organizing = false;
             };
-            var processData = function(results) {
+            var processData = function(response) {
+                var results = response.data;
                 scope.application.state.selectedForms = [];
                 scope.application.state.searching = false;
                 scope.application.criteria.sortBy = results.sortBy;
@@ -174,7 +174,7 @@ angular.module('wf',
                 scope.application.search();
             };
 
-            scope.SearchResponse = $resource('./form', {processStatus:'@processStatus'});
+//            scope.SearchResponse = $resource('./form', {processStatus:'@processStatus'});
             scope.application.clearFilters = function() {
 
             };
@@ -223,7 +223,8 @@ angular.module('wf',
 
                 scope.application.state.searching = true;
                 localStorageService.set("criteria", criteria);
-                scope.SearchResponse.get(criteria, processData);
+                var url = './form?' + $.param(criteria);
+                $http.get(url).then(processData);
             };
             scope.application.selectFacet = function(facet) {
                 facet.selected = !facet.selected;

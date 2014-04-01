@@ -1,6 +1,5 @@
 angular.module('wf',
     [
-        'ngResource',
         'ngRoute',
         'ngSanitize',
         'blueimp.fileupload',
@@ -246,7 +245,8 @@ angular.module('wf',
                     console.log(data);
 
                     if (data.files != null && data.files.length > 0) {
-                          data.submit();
+                        scope.$root.$broadcast('wfEvent:fileuploadstart', data);
+                        data.submit();
                     }
                 }
             })
@@ -267,9 +267,11 @@ angular.module('wf',
 //                        notificationService.notify(scope.$root, message.messageDetail);
             });
             scope.$on('fileuploadstart', function(event, data) {
+
                 scope.state.sending = true;
             });
             scope.$on('fileuploadstop', function(event, data) {
+                scope.$root.$broadcast('wfEvent:fileuploadstop', data);
                 scope.state.sending = false;
             });
         }
