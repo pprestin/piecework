@@ -167,19 +167,7 @@ public class ValidationRule {
             return;
 
         int numberOfInputs = 0;
-        List<? extends Value> values = safeValues(name, submissionData);
-        for (Value value : values) {
-            if (value == null)
-                continue;
-
-            if (value instanceof File) {
-                File file = File.class.cast(value);
-                if (StringUtils.isNotEmpty(file.getName()))
-                    numberOfInputs++;
-            } else if (StringUtils.isNotEmpty(value.getValue()))
-                numberOfInputs++;
-        }
-
+        Set<String> existingFileNames = new HashSet<String>();
         List<? extends Value> previousValues = safeValues(name, instanceData);
         for (Value value : previousValues) {
             if (value == null)
@@ -187,9 +175,24 @@ public class ValidationRule {
 
             if (value instanceof File) {
                 File file = File.class.cast(value);
-                if (StringUtils.isNotEmpty(file.getName()))
+                if (StringUtils.isNotEmpty(file.getName())) {
+                    existingFileNames.add(file.getName());
                     numberOfInputs++;
+                }
             }
+        }
+
+        List<? extends Value> values = safeValues(name, submissionData);
+        for (Value value : values) {
+            if (value == null)
+                continue;
+
+            if (value instanceof File) {
+                File file = File.class.cast(value);
+                if (StringUtils.isNotEmpty(file.getName()) && !existingFileNames.contains(file.getName()))
+                    numberOfInputs++;
+            } else if (StringUtils.isNotEmpty(value.getValue()))
+                numberOfInputs++;
         }
 
         if (maxInputs < numberOfInputs)

@@ -246,7 +246,6 @@ angular.module('wf',
 
                     if (data.files != null && data.files.length > 0) {
                         scope.$root.$broadcast('wfEvent:fileuploadstart', data);
-                        data.submit();
                     }
                 }
             })

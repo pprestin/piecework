@@ -587,6 +587,7 @@
                         scope.cannotCheckout = true;
                         scope.checkedOut = false;
                         scope.deleting = false;
+                        scope.duplicating = false;
                         scope.editing = false;
                         scope.files = [];
                     }],
@@ -605,6 +606,10 @@
                                 scope.disabled = form.state !== 'open' && form.state !== 'assigned';
                             }
                         });
+                        scope.cancelSendFile = function() {
+                            this.data = null;
+                            this.duplicating = false;
+                        };
                         scope.checkoutFile = function(file) {
                             var url = file.link + '/checkout';
                             $http.post($sce.trustAsResourceUrl(url), null, {
@@ -656,6 +661,14 @@
                         scope.edit = function() {
                             scope.editing = !scope.editing;
                         };
+                        scope.sendFile = function() {
+                            scope.sending = true;
+                            if (scope.data != null)
+                                scope.data.submit();
+
+                            this.data = null;
+                            this.duplicating = false;
+                        };
                         scope.showDetails = function(file) {
                             file.detailed = !file.detailed;
                         };
@@ -665,8 +678,25 @@
                             }
                         });
                         scope.$on('wfEvent:fileuploadstart', function(event, data) {
-                            if (data.paramName == scope.name)
-                                scope.sending = true;
+                            if (data.paramName == scope.name) {
+                                scope.data = data;
+
+                                var fileNameMap = {};
+                                angular.forEach(scope.files, function(file) {
+                                    fileNameMap[file.name] = file;
+                                });
+
+                                angular.forEach(data.files, function(file) {
+                                    var duplicate = fileNameMap[file.name];
+                                    if (duplicate != null) {
+                                        scope.duplicating = true;
+                                        scope.duplicateFileName = duplicate.name;
+                                    }
+                                });
+
+                                if (!scope.duplicating)
+                                    scope.sendFile();
+                            }
                         });
                         scope.$on('wfEvent:fileuploadstop', function(event, data) {
                                 scope.sending = false;
@@ -679,6 +709,14 @@
                         '               <div>{{error}}</div>' +
                         '           </li>' +
                         '           <li data-ng-hide="files" class="list-group-item"><span class="text-muted">No documents</span></li>' +
+                        '           <li data-ng-show="duplicating" class="list-group-item list-group-item-danger">' +
+                        '               <div>Uploading {{duplicateFileName}} will permanently overwrite the existing version of this file. Are you sure?</div>' +
+                        '               <div class="btn-toolbar pull-right">' +
+                        '                   <button data-ng-click="sendFile()" class="btn btn-danger btn-xs" type="button">Yes, overwrite it</button>' +
+                        '                   <button data-ng-click="cancelSendFile()" class="btn btn-default btn-xs" type="button">Cancel</button>' +
+                        '               </div>' +
+                        '               <div class="clearfix"></div>' +
+                        '           </li>' +
                         '           <li data-ng-show="deleting" class="list-group-item list-group-item-danger">' +
                         '               <div>Deleting {{fileToDelete.name}} will permanently remove it from the repository. Are you sure?</div>' +
                         '               <div class="btn-toolbar pull-right">' +
