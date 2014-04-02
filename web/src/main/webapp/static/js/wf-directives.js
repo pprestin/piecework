@@ -389,6 +389,12 @@
 
                         };
 
+                        scope.defaultMinDate = moment().subtract('years', 20).calendar();
+                        scope.defaultMaxDate = moment().add('years', 20).calendar();
+
+                        scope.minDate = scope.defaultMinDate;
+                        scope.maxDate = scope.defaultMaxDate;
+
                         scope.today = function() {
                             scope.dt = new Date();
                         };
@@ -404,7 +410,7 @@
                         };
 
                         scope.toggleMin = function() {
-                            scope.minDate = ( scope.minDate ) ? null : new Date();
+                            scope.minDate = ( scope.minDate ) ? scope.defaultMinDate : new Date();
                         };
 
                         scope.onKeyUp = function(event) {
@@ -480,6 +486,14 @@
 
                         scope.after = scope.application.criteria[afterName];
                         scope.before = scope.application.criteria[beforeName];
+
+                        scope.defaultMinDate = moment().subtract('years', 20).calendar();
+                        scope.defaultMaxDate = moment().add('years', 20).calendar();
+
+                        scope.afterMinDate = scope.defaultMinDate;
+                        scope.beforeMinDate = scope.defaultMinDate;
+                        scope.afterMaxDate = scope.defaultMaxDate;
+                        scope.beforeMaxDate = scope.defaultMaxDate;
 
                         scope.afterChange = function() {
                             if (scope.application.criteria[afterName] != scope.after) {

@@ -71,7 +71,7 @@ angular.module('wf.templates', []).run(["$templateCache", function($templateCach
     "           </ul>" +
     "        </div>\n" +
     "        <div class=\"modal-footer\">\n" +
-//    "            <button ng-click=\"cancel()\" type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\" aria-hidden=\"true\">Cancel</button>\n" +
+    "            <button ng-click=\"cancel()\" type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\" aria-hidden=\"true\">Close</button>\n" +
 //    "            <button ng-click=\"ok(reason)\" type=\"button\" id=\"activate-button\" class=\"btn btn-primary\">Activate</button>\n" +
     "        </div>\n" +
 //    "    </div>\n" +
