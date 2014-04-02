@@ -1517,8 +1517,10 @@
                         scope.dialogs = dialogs;
                     }],
                     template:
-                        '       <div class="pull-right">{{application.paging.total}} task{{application.paging.total != 1 ? \'s\' : \'\'}}</div>' +
-                        '       <h2 data-ng-bind="isSingleProcessSelected() ? application.processDefinitionDescription[application.criteria.processDefinitionKey] : \'&nbsp;\'"></h2>\n' +
+                        '       <div class="pull-right"><div class="wf-task-count">{{application.paging.total}} task{{application.paging.total != 1 ? \'s\' : \'\'}}</div></div>' +
+//                        '       <h3 data-ng-bind="isSingleProcessSelected() ? application.processDefinitionDescription[application.criteria.processDefinitionKey] : \'\'" class="wf-search-header"></h3>' +
+                        '       <div data-wf-form-toolbar data-application="application" class=""></div>' +
+                        '       <div class="row"></div>' +
                         '       <table data-ng-hide="application.state.organizing" class="table table-hover">\n' +
                         '            <thead>\n' +
                         '            <tr>' +
@@ -1545,6 +1547,87 @@
                         '           <li data-ng-class="pageNumber == application.paging.pageNumber ? \'active\' : \'\'" data-ng-repeat="pageNumber in application.paging.pageNumbers"><a data-ng-click="application.paging.toPage(pageNumber)">{{pageNumber}}</a></li> ' +
                         '           <li><a data-ng-click="application.paging.nextPage()">Next &rarr;</a></li> ' +
                         '       </ul>'
+                }
+            }
+        ])
+        .directive('wfFormToolbar', ['dialogs', 'instanceService', 'notificationService', 'taskService', 'wizardService',
+            function(dialogs, instanceService, notificationService, taskService, wizardService) {
+                return {
+                    restrict: 'AE',
+                    scope: {
+                        application: '='
+                    },
+                    controller: ['$scope', function(scope) {
+
+
+                    }],
+                    link: function (scope, element) {
+                        scope.dialogs = dialogs;
+                        scope.changeBucket = function(selectedForms, bucket) {
+                            var success = function(scope, data, status, headers, config, form) {
+                                form.Bucket = bucket;
+                            };
+
+                            var failure = function(scope, data, status, headers, config, form) {
+                                dialogs.alert(data.messageDetail);
+                            };
+
+                            angular.forEach(selectedForms, function(form) {
+                                if (form.Bucket !== bucket) {
+                                    instanceService.changeBucket(scope, form, bucket, success, failure);
+                                }
+                            });
+                        };
+                        scope.getFormsSelected = function(taskStatuses) {
+                            var selectedForms = [];
+                            var unlimited = typeof(taskStatuses) === 'undefined' || taskStatuses == null;
+                            var acceptableTaskStatuses = {};
+                            angular.forEach(taskStatuses, function(taskStatus) {
+                                acceptableTaskStatuses[taskStatus] = true;
+                            });
+                            angular.forEach(scope.application.state.selectedForms, function(form) {
+                                if (typeof(form) !== 'undefined' && form != null) {
+                                    if (unlimited || acceptableTaskStatuses[form.taskStatus] != null)
+                                        selectedForms.push(form);
+                                }
+                            });
+                            return selectedForms;
+                        };
+
+                        scope.isSingleFormSelected = function(taskStatuses) {
+                            if (typeof(taskStatuses) !== 'undefined' && taskStatuses != null) {
+                                var selectedForms = scope.getFormsSelected(taskStatuses);
+                                return selectedForms.length === 1;
+                            }
+
+                            return scope.application.state.selectedForms.length === 1;
+                        };
+
+                        scope.isFormSelected = function(taskStatuses) {
+                            if (typeof(taskStatuses) !== 'undefined' && taskStatuses != null) {
+                                var selectedForms = scope.getFormsSelected(taskStatuses);
+                                return selectedForms.length !== 0 && selectedForms.length === scope.application.state.selectedForms.length;
+                            }
+
+                            return scope.application.state.selectedForms.length !== 0;
+                        };
+                    },
+                    template:
+                        '<div class="btn-toolbar" >' +
+                        '   <button data-ng-click="dialogs.openAssignModal(getFormsSelected([\'Open\']))" data-ng-disabled="!isFormSelected([\'Open\'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" title="Assign task" type="button"><i class="fa fa-user fa-white"></i> Assign</button>\n' +
+                        '   <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-disabled="!isSingleFormSelected()" data-ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i> History</button>\n' +
+                        '   <button data-ng-click="dialogs.openActivateModal(getFormsSelected([\'Suspended\']))" data-ng-show="isFormSelected([\'Suspended\'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i> Reactivate</button>\n' +
+                        '   <button data-ng-click="dialogs.openSuspendModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i> Suspend</button>\n' +
+                        '   <button data-ng-click="dialogs.openCancelModal(getFormsSelected([\'Open\',\'Suspended\']))" data-ng-show="isFormSelected([\'Open\',\'Suspended\'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i> Delete</button>\n' +
+                        '   <button data-ng-click="dialogs.openRestartModal(getFormsSelected([\'Queued\',\'Cancelled\',\'Complete\']))" data-ng-show="isFormSelected([\'Queued\',\'Cancelled\',\'Complete\'])" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>\n' +
+                        '   <span data-ng-if="application.bucketList.buckets.length > 0" class="dropdown">\n' +
+                        '       <button class="btn btn-default navbar-btn dropdown-toggle" data-ng-disabled="!isFormSelected()" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button" title="Assign to bucket"><i class="fa fa-tag"></i><b class="caret"></b> Bucket</button>\n' +
+                        '           <ul id="new-form-dropdown" class="dropdown-menu scroll" role="menu" aria-labelledby="new-form-button">\n' +
+                        '               <li class="presentation dropdown-header" role="menuitem">Change Bucket</li>\n' +
+                        '               <li data-ng-repeat="bucket in application.bucketList.buckets" data-ng-click="changeBucket(getFormsSelected(), bucket)" class="presentation" role="menuitem"><a>{{bucket}}</a></li>\n' +
+                        '           </ul>\n' +
+                        '   </span>\n ' +
+                        '</div>'
                 }
             }
         ])
@@ -1587,10 +1670,6 @@
                             scope.application.state.filtering = false;
                         };
 
-                        scope.toggleCollapse = function() {
-                            scope.application.state.collapsed = !scope.application.state.collapsed;
-                        };
-
                         scope.exportCsv = function() {
                             var url = "/workflow/ui/instance.xls?processDefinitionKey=" + scope.application.criteria.processDefinitionKey;
                             if (scope.application.criteria.lastModifiedAfter != null)
@@ -1598,22 +1677,6 @@
                             if (scope.application.criteria.lastModifiedBefore != null)
                                 url += '&startedBefore=' + scope.application.criteria.lastModifiedBefore;
                             $window.location.href = url;
-                        };
-
-                        scope.showReportPanel = function() {
-
-                        };
-
-                        scope.toggleColumns = function() {
-                            dialogs.openColumnsModal(scope.application);
-                        };
-
-                        scope.toggleFilter = function() {
-                            scope.application.state.filtering = !scope.application.state.filtering;
-
-                            if (!scope.application.state.filtering) {
-                                scope.clearFilters();
-                            }
                         };
 
                         scope.getFormsSelected = function(taskStatuses) {
@@ -1658,39 +1721,6 @@
                             return typeof(scope.application.definitions) !== 'undefined' && scope.application.definitions.length == 1;
                         };
 
-//                        scope.$on('wfEvent:change-selection', function(event, selectedFormMap) {
-//                            scope.selectedFormMap = selectedFormMap;
-//                        });
-
-//                        scope.$on('wfEvent:found', function(event, results) {
-//                            console.log('Found');
-//                            scope.searching = false;
-//                            if (scope.definitions == null) {
-//                                scope.definitions = results.metadata;
-//                                scope.selectedFormMap = {};
-//                                scope.$root.currentUser = results.currentUser;
-//                                angular.forEach(results.metadata, function(definition) {
-//                                    scope.processDefinitionDescription[definition.processDefinitionKey] = definition.processDefinitionLabel;
-//                                });
-//                                if (results.metadata != null && results.metadata.length == 1)
-//                                    scope.criteria.processDefinitionKey = results.metadata[0].processDefinitionKey;
-//                            }
-//                            scope.bucketList = results.bucketList;
-//                            scope.criteria.pg = results.processGroup;
-//                        });
-//                        scope.$on('wfEvent:search', function(event, criteria) {
-//                            console.log('Searching');
-//                            scope.forms = null;
-//                            scope.searching = true;
-//                            console.log("Storing criteria");
-//                            localStorageService.set("criteria", criteria);
-//                        });
-//                        scope.showSearchingIcon = function() {
-//    //                        $('#searchIcon').addClass('fa-spinner fa-spin').removeClass('fa-search');
-//                        };
-
-                        scope.dialogs = dialogs;
-
                         scope.onSearchKeyUp = function(event) {
                             if (event.keyCode == 27) {
                                 scope.clearSearch();
@@ -1710,26 +1740,24 @@
                             scope.application.search();
                         };
 
-//                        scope.refreshSearch = function() {
-//                            scope.application.search();
-////                            scope.$root.$broadcast('wfEvent:search', scope.criteria);
-//                        };
-    //                    scope.$root.$broadcast('wfEvent:search', scope.criteria);
+                        scope.showReportPanel = function() {
 
-                        scope.changeBucket = function(selectedForms, bucket) {
-                            var success = function(scope, data, status, headers, config, form) {
-                                form.Bucket = bucket;
-                            };
+                        };
 
-                            var failure = function(scope, data, status, headers, config, form) {
-                                dialogs.alert(data.messageDetail);
-                            };
+                        scope.toggleColumns = function() {
+                            dialogs.openColumnsModal(scope.application);
+                        };
 
-                            angular.forEach(selectedForms, function(form) {
-                                if (form.Bucket !== bucket) {
-                                   instanceService.changeBucket(scope, form, bucket, success, failure);
-                                }
-                            });
+                        scope.toggleFilter = function() {
+                            scope.application.state.filtering = !scope.application.state.filtering;
+
+                            if (!scope.application.state.filtering) {
+                                scope.clearFilters();
+                            }
+                        };
+
+                        scope.toggleCollapse = function() {
+                            scope.application.state.collapsed = !scope.application.state.collapsed;
                         };
                     },
                     template:
@@ -1750,9 +1778,9 @@
                         '                           <input data-ng-keyup="onSearchKeyUp($event)" style="width: 400px" title="Search by keyword" role="" class="form-control searchField" data-ng-model="application.criteria.keywords" placeholder="Search" id="keyword" type="text">\n' +
                         '                           <span data-ng-click="clearSearch()" data-ng-show="application.criteria.keywords" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
                         '                       </div>' +
-                        '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" type="submit">&nbsp;&nbsp;<i data-ng-class="application.state.searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
+                        '                       <button data-ng-click="refreshSearch()" class="btn btn-default navbar-btn" role="button" id="instanceSearchButton" title="Search" type="submit">&nbsp;&nbsp;<i data-ng-class="application.state.searching ? \'fa-spinner fa-spin\' : \'fa-search\'" id="searchIcon" class="fa fa-lg"></i>&nbsp;&nbsp;</button>\n' +
                         '                       <span data-ng-if="application.definitions" class="dropdown">\n' +
-                        '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
+                        '                            <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" title="Start new process" type="button"><i class="fa fa-play-circle-o"></i> <b class="caret"></b></button>\n' +
                         '                            <ul id="new-form-dropdown" class="dropdown-menu" role="menu" aria-labelledby="new-form-button">\n' +
                         '                                <li data-ng-repeat="definition in application.definitions" class="presentation"><a role="menuitem" href="{{definition.link}}" target="_self">{{definition.processDefinitionLabel}}</a></li>\n' +
                         '                            </ul>\n' +
@@ -1760,6 +1788,31 @@
                         '                    </div>\n' +
                         '                    <div class="row">\n' +
                         '                        <ul class="navbar-nav">\n' +
+                        '                            <li ng-hide="isSingleProcessSelectable()">\n' +
+                        '                                <div class="dropdown">\n' +
+                        '                                    <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
+                        '                                        <span class="dropdown-toggle-text">{{application.processDefinitionDescription[application.criteria.processDefinitionKey]}}</span>\n' +
+                        '                                        <b class="caret"></b>\n' +
+                        '                                    </a>\n' +
+                        '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
+                        '                                        <li role="presentation" class="dropdown-header">Processes</li>\n' +
+                        '                                        <li data-ng-repeat="definition in application.definitions" role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="{{definition.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.processDefinitionLabel}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                        <li role="presentation">\n' +
+                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
+                        '                                                <label class="checkbox">\n' +
+                        '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{application.processDefinitionDescription[\'\']}}\n' +
+                        '                                                </label>\n' +
+                        '                                            </div>\n' +
+                        '                                        </li>\n' +
+                        '                                    </ul>\n' +
+                        '                                </div>\n' +
+                        '                            </li>\n' +
                         '                            <li>\n' +
                         '                                <div class="dropdown">\n' +
                         '                                    <a id="filter-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
@@ -1813,54 +1866,16 @@
                         '                                    </ul>\n' +
                         '                                </div>\n' +
                         '                            </li>\n' +
-                        '                            <li ng-hide="isSingleProcessSelectable()">\n' +
-                        '                                <div class="dropdown">\n' +
-                        '                                    <a id="process-definition-button" class="btn btn-link btn-small dropdown-toggle" data-target="limit-dropdown" data-toggle="dropdown" role="button" type="button">\n' +
-                        '                                        <span class="dropdown-toggle-text">{{application.processDefinitionDescription[application.criteria.processDefinitionKey]}}</span>\n' +
-                        '                                        <b class="caret"></b>\n' +
-                        '                                    </a>\n' +
-                        '                                    <ul class="dropdown-menu form-inline" role="menu" aria-labelledby="process-definition-button">\n' +
-                        '                                        <li role="presentation" class="dropdown-header">Processes</li>\n' +
-                        '                                        <li data-ng-repeat="definition in application.definitions" role="presentation">\n' +
-                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                        '                                                <label class="checkbox">\n' +
-                        '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="{{definition.processDefinitionKey}}" role="menuitem" checked=""/> &nbsp;{{definition.processDefinitionLabel}}\n' +
-                        '                                                </label>\n' +
-                        '                                            </div>\n' +
-                        '                                        </li>\n' +
-                        '                                        <li role="presentation">\n' +
-                        '                                            <div class="checkbox-menu-item" role="menuitem" tabindex="-1">\n' +
-                        '                                                <label class="checkbox">\n' +
-                        '                                                    <input type="checkbox" data-ng-change="refreshSearch()" data-ng-model="application.criteria.processDefinitionKey" data-ng-true-value="" role="menuitem"> &nbsp;{{application.processDefinitionDescription[\'\']}}\n' +
-                        '                                                </label>\n' +
-                        '                                            </div>\n' +
-                        '                                        </li>\n' +
-                        '                                    </ul>\n' +
-                        '                                </div>\n' +
-                        '                            </li>\n' +
                         '                        </ul>\n' +
                         '                    </div>\n' +
                         '                </form>\n' +
                         '                <div class="navbar-right btn-toolbar">\n' +
-                        '                    <button data-ng-click="dialogs.openAssignModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn incomplete-selected-result-btn" id="assign-dialog-button" title="Assign task" type="button"><i class="fa fa-user fa-white"></i></button>\n' +
-                        '                    <button data-ng-click="dialogs.openHistoryModal(getFormsSelected())" data-ng-show="isFormSelected()" data-ng-disabled="!isSingleFormSelected()" class="btn btn-default navbar-btn selected-result-btn" id="history-dialog-button" title="History" type="button"><i class="fa fa-calendar-o fa-white"></i></button>\n' +
-                        '                    <button data-ng-click="dialogs.openActivateModal(getFormsSelected([\'Suspended\']))" data-ng-show="isFormSelected([\'Suspended\'])" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play fa-white"></i></button>\n' +
-                        '                    <button data-ng-click="dialogs.openSuspendModal(getFormsSelected([\'Open\']))" data-ng-show="isFormSelected([\'Open\'])" class="btn btn-default navbar-btn" id="suspend-dialog-button" title="Suspend process" type="button"><i class="fa fa-pause fa-white"></i></button>\n' +
-                        '                    <button data-ng-click="dialogs.openCancelModal(getFormsSelected([\'Open\',\'Suspended\']))" data-ng-show="isFormSelected([\'Open\',\'Suspended\'])" class="btn btn-danger navbar-btn incomplete-selected-result-btn" id="delete-dialog-button" title="Cancel process" type="button"><i class="fa fa-trash-o fa-white"></i></button>\n' +
-                        '                    <button data-ng-click="dialogs.openRestartModal(getFormsSelected())" data-ng-show="isFormSelected()" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>\n' +
                         '                    <a data-ng-show="false && !isFormSelected()" href="report.html" rel="external" target="_self" class="btn btn-default navbar-btn" id="report-button"><i class="fa fa-bar-chart-o"></i></a>\n' +
-                        '                    <button data-ng-click="exportCsv()" data-ng-show="!isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as CSV" type="button"><i class="fa fa-download"></i> Export</button>\n' +
-                        '                    <button data-ng-click="toggleColumns()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn"><i class="fa fa-columns fa-1x"></i></button>' +
-                        '                    <button data-ng-click="toggleFilter()" data-ng-show="!isFormSelected()" class="btn btn-default navbar-btn">' +
-                        '                       <i data-ng-class="application.state.filtering ? \'fa-ban\' : \'fa-filter\'" class="fa"></i>' +
+                        '                    <button data-ng-click="exportCsv()" data-ng-disabled="isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as xls" type="button"><i class="fa fa-download"></i> Export</button>\n' +
+                        '                    <button data-ng-click="toggleColumns()" data-ng-disabled="isFormSelected()" class="btn btn-default navbar-btn" title="Select columns"><i class="fa fa-columns fa-1x"></i> Columns</button>' +
+                        '                    <button data-ng-click="toggleFilter()" data-ng-disabled="isFormSelected()" class="btn btn-default navbar-btn" title="Toggle filter">' +
+                        '                       <i data-ng-class="application.state.filtering ? \'fa-ban\' : \'fa-filter\'" class="fa"></i> Filter' +
                         '                    </button>' +
-                        '                    <span data-ng-if="application.bucketList.buckets.length > 0" class="dropdown">\n' +
-                        '                        <button class="btn btn-default navbar-btn dropdown-toggle" data-ng-disabled="!isFormSelected()" data-toggle="dropdown" data-target="new-form-dropdown" id="new-form-button" type="button"><i class="fa fa-tag"></i><b class="caret"></b></button>\n' +
-                        '                        <ul id="new-form-dropdown" class="dropdown-menu scroll" role="menu" aria-labelledby="new-form-button">\n' +
-                        '                            <li class="presentation" role="menuitem"><b>&nbsp;&nbsp;&nbsp;&nbsp;Change Bucket</b></li>\n' +
-                        '                            <li data-ng-repeat="bucket in application.bucketList.buckets" data-ng-click="changeBucket(getFormsSelected(), bucket)" class="presentation" role="menuitem"><a>{{bucket}}</a></li>\n' +
-                        '                        </ul>\n' +
-                        '                    </span>\n ' +
                         '                </div>\n' +
                         '            </div></div>\n' +
                         '        </div>\n' +
@@ -1878,15 +1893,6 @@
                      link: function (scope, element) {
                         wfUtils.attachForm(scope);
 
-//                        scope.$on('wfEvent:form-loaded', function(event, form) {
-//                            console.log("wfStatus attached form to its scope");
-//                            if (typeof(form) !== 'undefined') {
-//                                if (form.loadedBy == null)
-//                                    form.loadedBy = [];
-//                                form.loadedBy.push('wfStatus');
-//                                scope.form = form;
-//                            }
-//                        });
                         scope.claim = function() {
                             var success = function(scope, data, status, headers, config, form, assignee) {
                                 $rootScope.$broadcast('wfEvent:refresh', 'assignment');
