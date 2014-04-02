@@ -253,6 +253,66 @@
                 }
             }
         ])
+        .directive('wfColumnHeader', [
+            function() {
+                return {
+                    restrict: 'AE',
+                    scope: {
+                        application: '=',
+                        facet: '='
+                    },
+                    link: function(scope, element) {
+                        scope.clearFilter = function(facet) {
+                            if (facet != null && facet.name != null) {
+                                delete scope.application.criteria[facet.name];
+                                scope.application.search();
+                            }
+                        };
+                        scope.doFilter = function() {
+                            scope.application.search();
+                        };
+                        scope.doChangeFilter = function(facet) {
+                            console.log(facet.name);
+                            if (scope.application.criteria[facet.name] != null) {
+                                scope.application.search();
+                            }
+                        };
+                        scope.hasFilter = function(facet) {
+                            if (facet == null)
+                                return false;
+                            var filterValue = scope.application.criteria[facet.name];
+                            return typeof(filterValue) !== 'undefined' && filterValue != null && filterValue != '' && filterValue.length > 0;
+                        };
+                        scope.onDateChange = function(facet) {
+                            scope.doChangeFilter(facet);
+                        };
+                        scope.onFilterKeyUp = function(facet, event) {
+                            if (event.keyCode == 27) {
+                                scope.clearFilter(facet);
+                                return;
+                            }
+                            if (scope.filterTimeout != null)
+                                clearTimeout(scope.filterTimeout);
+                            scope.filterTimeout = setTimeout(scope.doChangeFilter, 300, facet);
+                        };
+                    },
+                    template:
+                        '<div data-ng-if="facet.type == \'date\' || facet.type == \'datetime\'">' +
+                        '   <label class="control-label"><a href="#" data-ng-click="doSort(facet)"><b>{{facet.label}}</b> <i data-ng-show="isSorting(facet)" data-ng-class="facet.direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>\n' +
+                        '   <div data-ng-show="application.state.filtering" class="wf-filter">' +
+                        '       <div data-wf-date-range data-name="facet.name" data-application="application" />' +
+                        '   </div>' +
+                        '</div>' +
+                        '<div data-ng-if="facet.type !== \'date\' && facet.type !== \'datetime\'" class="form-group has-feedback">\n' +
+                        '   <label class="control-label"><a href="#" data-ng-click="doSort(facet)"><b>{{facet.label}}</b> <i data-ng-show="isSorting(facet)" data-ng-class="facet.direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>\n' +
+                        '   <div data-ng-show="application.state.filtering" class="wf-filter">' +
+                        '       <input data-ng-keyup="onFilterKeyUp(facet, $event)" data-ng-hide="facet.type == \'date\' || facet.type == \'datetime\'" data-ng-model="application.criteria[facet.name]" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="{{facet.label}}">\n' +
+                        '       <span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
+                        '   </div>' +
+                        '</div>'
+                }
+            }
+        ])
         .directive('wfContainer', [
             function() {
                 return {
@@ -322,12 +382,13 @@
                             if (event == null)
                                 return;
 
-                            event.preventDefault();
-                            event.stopPropagation();
-
-                            if (event.keyCode == 27)
+                            if (event.keyCode == 27) {
+                                event.preventDefault();
+                                event.stopPropagation();
                                 scope.opened = false;
-                            else if (event.keyCode == 13) {
+                            } else if (event.keyCode == 13) {
+                                event.preventDefault();
+                                event.stopPropagation();
                                 scope.today();
                                 scope.opened = false;
                             }
@@ -456,31 +517,55 @@
                             'starting-day': 0
                         };
 
-                        scope.clearFilter = function() {
-                            scope.after = null;
-                            scope.before = null;
+                        scope.onAfterKeyUp = function(event) {
+                            if (event.keyCode == 27) {
+                                scope.clearAfterFilter();
+                                return;
+                            }
+                        };
+
+                        scope.onBeforeKeyUp = function(event) {
+                            if (event.keyCode == 27) {
+                                scope.clearAfterFilter();
+                                return;
+                            }
+                        };
+
+                        scope.clearAfterFilter = function() {
                             var didClear = false;
 
-                            if (scope.application.criteria[beforeName] != null) {
-                                delete scope.application.criteria[beforeName];
-                                didClear = true;
-                            }
                             if (scope.application.criteria[afterName] != null) {
+                                scope.after = null;
                                 delete scope.application.criteria[afterName];
                                 didClear = true;
                             }
 
                             if (didClear)
                                 scope.application.search();
+                        };
 
-                            scope.isFiltering = false;
+                        scope.clearBeforeFilter = function() {
+                            var didClear = false;
+
+                            if (scope.application.criteria[beforeName] != null) {
+                                scope.before = null;
+                                delete scope.application.criteria[beforeName];
+                                didClear = true;
+                            }
+
+                            if (didClear)
+                                scope.application.search();
                         };
                     },
                     template:
-                        '<input data-ng-change="afterChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/>' +
-                        '<span class="form-control-feedback"></span>' +
-                        '<input data-ng-change="beforeChange()" size="8" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/>' +
-                        '<span data-ng-click="clearFilter(facet)" data-ng-show="before != null || after != null" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> '
+                        '<span class="form-group has-feedback wf-date-range">' +
+                        '   <input data-ng-change="afterChange()" data-ng-keypress="onAfterKeyUp($event)" size="10" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/>' +
+                        '   <span data-ng-click="clearAfterFilter()" data-ng-show="after != null" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> ' +
+                        '</span>' +
+                        '<span class="form-group has-feedback wf-date-range">' +
+                        '   <input data-ng-change="beforeChange()" data-ng-keypress="onBeforeKeyUp($event)" size="10" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/>' +
+                        '   <span data-ng-click="clearBeforeFilter()" data-ng-show="before != null" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> ' +
+                        '</span>'
                 }
             }
         ])
@@ -1327,37 +1412,6 @@
                         application: '='
                     },
                     link: function (scope, element) {
-                        scope.clearFilter = function(facet) {
-                            if (facet != null && facet.name != null) {
-                                delete scope.application.criteria[facet.name];
-                                scope.application.search();
-                            }
-                        };
-                        scope.doFilter = function() {
-                            scope.application.search();
-                        };
-                        scope.doChangeFilter = function(facet) {
-                            console.log(facet.name);
-    //                        scope.criteria[facet.name] = facet.model;
-                            if (scope.application.criteria[facet.name] != null) {
-                                scope.application.search();
-                            }
-                        };
-                        scope.hasFilter = function(facet) {
-                            if (facet == null)
-                                return false;
-                            var filterValue = scope.application.criteria[facet.name];
-                            return typeof(filterValue) !== 'undefined' && filterValue != null && filterValue != '' && filterValue.length > 0;
-                        };
-                        scope.onFilterKeyUp = function(facet, event) {
-                            if (event.keyCode == 27) {
-                                scope.clearFilter(facet);
-                                return;
-                            }
-                            if (scope.filterTimeout != null)
-                                clearTimeout(scope.filterTimeout);
-                            scope.filterTimeout = setTimeout(scope.doChangeFilter, 300, facet);
-                        };
                         scope.doSort = function(facet) {
                             // If already sorting by this facet then switch the direction
                             if (scope.isSorting(facet)) {
@@ -1390,10 +1444,6 @@
                             });
                             return isSorting;
                         };
-                        scope.onDateChange = function(facet) {
-                            scope.doChangeFilter(facet);
-                        };
-
                         scope.selectForm = function(form) {
                             form.checked = !form.checked;
                             if (!form.checked)
@@ -1428,25 +1478,10 @@
                         '            <tr>' +
                         '               <th><input data-ng-click="selectAllForms()" data-ng-checked="application.state.selectAll" type="checkbox" class="result-checkbox"/></th>\n' +
                         '               <th style="white-space:nowrap">' +
-                        '                   <div class="form-group has-feedback">' +
-                        '                       <label class="control-label"><a href="#" data-ng-click="doSort(application.facetMap[\'processInstanceLabel\'])"><b>Label</b> <i data-ng-show="isSorting(application.facetMap[\'processInstanceLabel\'])" data-ng-class="application.facetMap[\'processInstanceLabel\'].direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>' +
-                        '                       <div data-ng-show="application.state.filtering" class="wf-filter">' +
-                        '                           <input data-ng-keyup="onFilterKeyUp(application.facetMap[\'processInstanceLabel\'], $event)" data-ng-model="application.criteria[\'processInstanceLabel\']" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="Label">\n' +
-                        '                           <span data-ng-click="clearFilter(application.facetMap[\'processInstanceLabel\'])" data-ng-show="hasFilter(application.facetMap[\'processInstanceLabel\'])" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
-                        '                       </div>' +
-                        '                    </div>' +
+                        '                   <div data-wf-column-header data-application="application" data-facet="application.facetMap[\'processInstanceLabel\']"></div>' +
                         '               </th>' +
                         '               <th data-ng-class="facet.required ? \'\' : \'hidden-sm hidden-xs\'" data-ng-repeat="facet in application.state.selectedFacets" style="white-space:nowrap">' +
-                        '                   <div data-ng-class="facet.type !== \'date\' ? \'has-feedback\' : \'\'" class="form-group">\n' +
-                        '                       <label class="control-label"><a href="#" data-ng-click="doSort(facet)"><b>{{facet.label}}</b> <i data-ng-show="isSorting(facet)" data-ng-class="facet.direction == \'asc\' ? \'fa-caret-up\' : \'fa-caret-down\'" class="fa"></i></a></label>\n' +
-                        '                       <div data-ng-show="application.state.filtering" class="wf-filter">' +
-                        '                           <div data-ng-show="facet.type == \'date\' || facet.type == \'datetime\'"> ' +
-                        '                               <div data-wf-date-range data-name="facet.name" data-application="application" />' +
-                        '                           </div> ' +
-                        '                           <input data-ng-keyup="onFilterKeyUp(facet, $event)" data-ng-hide="facet.type == \'date\' || facet.type == \'datetime\'" data-ng-model="application.criteria[facet.name]" autocomplete="off" type="text" class="form-control input-sm natural" placeholder="{{facet.label}}">\n' +
-                        '                           <span data-ng-click="clearFilter(facet)" data-ng-show="hasFilter(facet)" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span>\n' +
-                        '                       </div>' +
-                        '                   </div>' +
+                        '                   <div data-wf-column-header data-application="application" data-facet="facet"></div>' +
                         '               </th>' +
                         '            </tr>\n' +
                         '            </thead>\n' +

@@ -658,7 +658,7 @@ select.form-control {
     color: white;
 }
 
-.user-information name .caret {
+.user-information .name .caret {
     border-top: 4px solid #ffffff;
 }
 
@@ -671,12 +671,18 @@ select.form-control {
     width: 185px;
 }
 
+.wf-filter .wf-date-range .form-control-feedback {
+    position: absolute;
+    top: -6px;
+    display: block;
+}
+
 .wf-delete-item {
     cursor: pointer;
 }
 
-.wf-filter {
-
+.wf-filter .form-control-feedback {
+    top: 23px;
 }
 
 .wf-right-btn-toolbar {

@@ -58,9 +58,6 @@ public class TaskResourceVersion1 implements TaskResource {
     private static final String VERSION = "v1";
 
     @Autowired
-    AccessTracker accessTracker;
-
-    @Autowired
     IdentityHelper helper;
 
     @Autowired
@@ -81,9 +78,6 @@ public class TaskResourceVersion1 implements TaskResource {
 
     @Override
     public Response assign(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, String rawAssigneeId) throws PieceworkException {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
-
         String assigneeId = sanitizer.sanitize(rawAssigneeId);
         Submission submission = new Submission.Builder()
                 .assignee(assigneeId)
@@ -94,15 +88,11 @@ public class TaskResourceVersion1 implements TaskResource {
     @Override
     public Response complete(String rawProcessDefinitionKey, String rawTaskId, String rawAction, MessageContext context, Submission rawSubmission) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
         TaskProvider taskProvider = taskService.complete(rawProcessDefinitionKey, rawTaskId, rawAction, rawSubmission, requestDetails, helper.getPrincipal());
         return FormUtility.noContentResponse(settings, taskProvider, false);
     }
 
     public Response read(MessageContext context, String rawProcessDefinitionKey, String rawTaskId) throws PieceworkException {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, false);
-
         TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, helper.getPrincipal());
         Task task = taskProvider.task(new ViewContext(settings, VERSION), false);
         if (task == null)
@@ -120,41 +110,15 @@ public class TaskResourceVersion1 implements TaskResource {
     public SearchResults search(MessageContext context, SearchQueryParameters queryParameters) throws PieceworkException {
         UriInfo uriInfo = context != null ? context.getContext(UriInfo.class) : null;
         MultivaluedMap<String, String> rawQueryParameters = uriInfo != null ? uriInfo.getQueryParameters() : null;
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, false);
         SearchProvider searchProvider = modelProviderFactory.searchProvider(helper.getPrincipal());
         Set<Process> processes = searchProvider.processes(AuthorizationRole.USER, AuthorizationRole.OVERSEER);
         return search(new SearchCriteria.Builder(rawQueryParameters, processes, FacetFactory.facetMap(processes), sanitizer).build());
     }
 
     public SearchResults search(SearchCriteria criteria) throws PieceworkException {
-        Entity principal = helper.getPrincipal();
-//        SearchResults results = taskService.search(rawQueryParameters, principal, false, false);
-
         ViewContext version = new ViewContext(settings, VERSION);
-
-        SearchProvider searchProvider = modelProviderFactory.searchProvider(principal);
+        SearchProvider searchProvider = modelProviderFactory.searchProvider(helper.getPrincipal());
         return searchProvider.tasks(criteria, version);
-
-//        SearchResults.Builder resultsBuilder = new SearchResults.Builder().resourceName(Task.Constants.ROOT_ELEMENT_NAME)
-//                .resourceLabel("Tasks")
-//                .link(version.getApplicationUri(Task.Constants.ROOT_ELEMENT_NAME))
-//                .uri(version.getServiceUri(Task.Constants.ROOT_ELEMENT_NAME));
-//
-//        PassthroughSanitizer passthroughSanitizer = new PassthroughSanitizer();
-//        List<?> items = results.getList();
-//        if (items != null && !items.isEmpty()) {
-//            for (Object item : items) {
-//                Task task = Task.class.cast(item);
-//                resultsBuilder.item(new Task.Builder(task, passthroughSanitizer).build(version));
-//            }
-//        }
-//
-//        resultsBuilder.firstResult(results.getFirstResult());
-//        resultsBuilder.maxResults(results.getMaxResults());
-//        resultsBuilder.total(Long.valueOf(results.getTotal()));
-//
-//        return resultsBuilder.build(version);
     }
 
     @Override

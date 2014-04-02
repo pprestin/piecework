@@ -51,12 +51,6 @@ public class TaskService {
     private CommandFactory commandFactory;
 
     @Autowired
-    DataFilterService dataFilterService;
-
-    @Autowired
-    DeploymentService deploymentService;
-
-    @Autowired
     IdentityHelper helper;
 
     @Autowired
@@ -67,12 +61,6 @@ public class TaskService {
 
     @Autowired
     ProcessInstanceRepository processInstanceRepository;
-
-    @Autowired
-    ProcessInstanceService processInstanceService;
-
-    @Autowired
-    ProcessService processService;
 
     @Autowired
     RequestService requestService;
@@ -153,91 +141,10 @@ public class TaskService {
         return taskProvider;
     }
 
-//    public Task read(Process process, String taskId, boolean limitToActive) throws StatusCodeError {
-//        ProcessInstance instance = processInstanceRepository.findByTaskId(process.getProcessDefinitionKey(), taskId);
-//
-//        if (instance == null)
-//            return null;
-//
-//        Entity principal = helper.getPrincipal();
-//        return TaskUtility.findTask(identityService, process, instance, taskId, principal, limitToActive, new ViewContext(settings, VERSION));
-//    }
-
-    /*
-     * Returns the first task for the passed instance that the user is allowed to access
-     */
-//    public Task allowedTask(Process process, ProcessInstance instance, Entity principal, boolean limitToActive) throws StatusCodeError {
-//        return TaskUtility.findTask(identityService, process, instance, null, principal, limitToActive, new ViewContext(settings, VERSION));
-//    }
-
-//    public void checkIsActiveIfTaskExists(Process process, Task task) throws StatusCodeError {
-//        String taskId = task != null ? task.getTaskInstanceId() : null;
-//        if (StringUtils.isNotEmpty(taskId)) {
-//            task = read(process, taskId, false);
-//            if (task == null || !task.isActive())
-//                throw new ForbiddenError();
-//        }
-//    }
-
-//    public SearchResults search(MultivaluedMap<String, String> rawQueryParameters, Entity principal, boolean wrapWithForm, boolean includeData) throws StatusCodeError {
-//        long time = 0;
-//        if (LOG.isDebugEnabled())
-//            time = System.currentTimeMillis();
-//
-//        Set<String> overseerProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.OVERSEER);
-//        Set<String> userProcessDefinitionKeys = principal.getProcessDefinitionKeys(AuthorizationRole.USER);
-//
-//        Set<String> allProcessDefinitionKeys = Sets.union(overseerProcessDefinitionKeys, userProcessDefinitionKeys);
-//        Set<Process> allowedProcesses = processService.findProcesses(allProcessDefinitionKeys);
-//
-//        TaskFilter taskFilter = new TaskFilter(dataFilterService, principal, overseerProcessDefinitionKeys, wrapWithForm, includeData);
-//        TaskPageHandler pageHandler = new TaskPageHandler(rawQueryParameters, taskFilter, sanitizer, new ViewContext(settings, VERSION)){
-//
-//            protected Map<String, ProcessDeployment> getDeploymentMap(Set<String> deploymentIds) {
-//                return deploymentService.getDeploymentMap(deploymentIds);
-//            }
-//
-//            @Override
-//            protected Map<String, User> getUserMap(Set<String> userIds) {
-//                return identityService.findUsers(userIds);
-//            }
-//
-//        };
-//
-//        SearchCriteria executionCriteria = pageHandler.criteria(allowedProcesses);
-//
-//        int firstResult = executionCriteria.getFirstResult() != null ? executionCriteria.getFirstResult() : 0;
-//        int maxResult = executionCriteria.getMaxResults() != null ? executionCriteria.getMaxResults() : 1000;
-//
-//        Pageable pageable = new PageRequest(firstResult, maxResult, executionCriteria.getSort());
-//        Page<ProcessInstance> page = processInstanceRepository.findByCriteria(executionCriteria, pageable);
-//
-//        SearchResults results = pageHandler.handle(page);
-//
-//        if (LOG.isDebugEnabled())
-//            LOG.debug("Retrieved tasks in " + (System.currentTimeMillis() - time) + " ms");
-//
-//        return results;
-//    }
-
-//    public Task read(ProcessInstance instance, String taskId) {
-//        if (instance != null && StringUtils.isNotEmpty(taskId)) {
-//            if (instance != null) {
-//                Set<Task> tasks = instance.getTasks();
-//                if (tasks != null) {
-//                    ViewContext context = new ViewContext(settings, VERSION);
-//                    for (Task task : tasks) {
-//                        if (task.getTaskInstanceId() != null && task.getTaskInstanceId().equals(taskId)) {
-//                            Map<String, User> userMap = identityService.findUsers(task.getAssigneeAndCandidateAssigneeIds());
-//                            return TaskFactory.task(task, new PassthroughSanitizer(), userMap, context);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        return null;
-//    }
+    public Task read(String rawProcessDefinitionKey, String rawTaskId, boolean limitToActive) throws PieceworkException {
+        TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, helper.getPrincipal());
+        return taskProvider.task(new ViewContext(settings, VERSION), limitToActive);
+    }
 
     public boolean update(String processInstanceId, Task task) {
         return processInstanceRepository.update(processInstanceId, task);

@@ -144,9 +144,6 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
 
     @Override
     public Response diagram(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, false);
-
         ProcessInstanceProvider instanceProvider = modelProviderFactory.instanceProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
         ContentResource diagram = instanceProvider.diagram();
         ResponseBuilder responseBuilder = Response.ok(diagram);
@@ -155,9 +152,6 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
 
     @Override
     public Response history(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId) throws PieceworkException {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, false);
-
         HistoryProvider historyProvider = modelProviderFactory.historyProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
         return FormUtility.okResponse(settings, historyProvider, historyProvider.history(new ViewContext(settings, VERSION)), null, false);
     }
@@ -165,34 +159,24 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
     @Override
     public Response restart(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
         ProcessInstanceProvider instanceProvider = doOperation(OperationType.RESTART, rawProcessDefinitionKey, rawProcessInstanceId, rawReason, helper.getPrincipal());
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
         return FormUtility.noContentResponse(settings, instanceProvider, false);
     }
 
     @Override
     public Response checkout(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
-
         AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
-        accessTracker.track(requestDetails, true, false);
         return FormUtility.noContentResponse(settings, allowedTaskProvider, false);
     }
 
     @Override
     public Response removal(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
         AllowedTaskProvider allowedTaskProvider = doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, helper.getPrincipal());
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
         return FormUtility.noContentResponse(settings, allowedTaskProvider, false);
     }
 
     @Override
     public Response remove(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId) throws PieceworkException {
         AllowedTaskProvider allowedTaskProvider = doRemove(context, rawProcessDefinitionKey, rawProcessInstanceId, rawFieldName, rawValueId, helper.getPrincipal());
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
         return FormUtility.noContentResponse(settings, allowedTaskProvider, false);
     }
 
@@ -204,9 +188,6 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
 
     @Override
     public Response readValue(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawFieldName, String rawValueId, Boolean inline) throws PieceworkException {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, false);
-
         AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, helper.getPrincipal());
         ContentResource contentResource = allowedTaskProvider.value(rawFieldName, rawValueId);
 
@@ -234,8 +215,6 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
     @Override
     public Response suspend(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawReason) throws PieceworkException {
         ProcessInstanceProvider instanceProvider = doOperation(OperationType.SUSPENSION, rawProcessDefinitionKey, rawProcessInstanceId, rawReason, helper.getPrincipal());
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
         return FormUtility.noContentResponse(settings, instanceProvider, false);
     }
 
@@ -247,8 +226,6 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
-
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         ManyMap<String, String> data = new ManyMap<String, String>();
@@ -270,7 +247,6 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
 
         FormRequest request = requestService.create(requestDetails, allowedTaskProvider, ActionType.UPDATE);
@@ -313,10 +289,7 @@ public class ProcessInstanceApplicationResourceVersion1 extends AbstractInstance
         if (allowedTask == null)
             throw new ForbiddenError(Constants.ExceptionCodes.active_task_required);
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
-
         SearchResults searchResults = allowedTaskProvider.values(fieldName, new ViewContext(settings, VERSION));
         return FormUtility.okResponse(settings, allowedTaskProvider, searchResults, null, false);
     }

@@ -81,10 +81,7 @@ public abstract class AbstractInstanceResource {
 
 
     protected <T> Response doAttach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, T data, Class<T> type, Entity principal) throws PieceworkException {
-
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
-
         AllowedTaskProvider taskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
         Task task = taskProvider.allowedTask(true);
         if (task == null)
@@ -103,10 +100,7 @@ public abstract class AbstractInstanceResource {
     }
 
     protected <T> Response doCreate(MessageContext context, String rawProcessDefinitionKey, T data, Class<T> type, Entity principal) throws PieceworkException {
-
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
-
         ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         FormRequest request = requestService.create(requestDetails, deploymentProvider);
         ValidationCommand<ProcessDeploymentProvider> validationCommand = commandFactory.validation(deploymentProvider, request, ActionType.CREATE, data, type, VERSION);
@@ -114,17 +108,12 @@ public abstract class AbstractInstanceResource {
         ProcessInstance instance = commandFactory.createInstance(deploymentProvider, validation).execute();
 
         ProcessInstance decorated = new ProcessInstance.Builder(instance).build(new ViewContext(settings, VERSION));
-//        URI location = URI.create(decorated.getUri());
-
         return FormUtility.okResponse(settings, deploymentProvider, decorated, null, false);
     }
 
     protected AllowedTaskProvider doDetach(MessageContext context, String rawProcessDefinitionKey, String rawProcessInstanceId, String rawAttachmentId, Entity principal) throws PieceworkException {
         String attachmentId = sanitizer.sanitize(rawAttachmentId);
-
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
-
         AllowedTaskProvider taskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
         Task task = taskProvider.allowedTask(new ViewContext(settings, VERSION), true);
         if (task == null)
@@ -160,7 +149,6 @@ public abstract class AbstractInstanceResource {
         AllowedTaskProvider allowedTaskProvider = modelProviderFactory.allowedTaskProvider(rawProcessDefinitionKey, rawProcessInstanceId, principal);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, false);
         String fieldName = sanitizer.sanitize(rawFieldName);
         String valueId = sanitizer.sanitize(rawValueId);
 
@@ -169,9 +157,6 @@ public abstract class AbstractInstanceResource {
     }
 
     protected Response doSearch(MessageContext context, Entity principal) throws PieceworkException {
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, false);
-
         UriInfo uriInfo = context.getContext(UriInfo.class);
         List<MediaType> mediaTypes = context.getHttpHeaders().getAcceptableMediaTypes();
 

@@ -112,7 +112,6 @@ public abstract class AbstractFormResource {
 
     protected Response startForm(final MessageContext context, final String rawProcessDefinitionKey, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, isAnonymous());
         ProcessDeploymentProvider deploymentProvider = modelProviderFactory.deploymentProvider(rawProcessDefinitionKey, principal);
         if (isAnonymous())
             SecurityUtility.verifyProcessAllowsAnonymousSubmission(deploymentProvider);
@@ -125,7 +124,6 @@ public abstract class AbstractFormResource {
 
     protected <P extends ProcessDeploymentProvider> Response requestForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawRequestId, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, isAnonymous());
 
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String requestId = sanitizer.sanitize(rawRequestId);
@@ -155,7 +153,6 @@ public abstract class AbstractFormResource {
 
     protected <P extends ProcessDeploymentProvider> Response submissionForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawSubmissionId, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, isAnonymous());
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String submissionId = sanitizer.sanitize(rawSubmissionId);
 
@@ -208,7 +205,6 @@ public abstract class AbstractFormResource {
         }
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, isAnonymous());
         TaskProvider taskProvider = modelProviderFactory.taskProvider(rawProcessDefinitionKey, rawTaskId, principal);
 
         Task task = taskProvider.task();
@@ -236,8 +232,6 @@ public abstract class AbstractFormResource {
         List<MediaType> mediaTypes = context != null ? context.getHttpHeaders().getAcceptableMediaTypes() : Collections.<MediaType>emptyList();
         MediaType mediaType = mediaTypes != null && !mediaTypes.isEmpty() ? mediaTypes.iterator().next() : MediaType.TEXT_HTML_TYPE;
 
-        RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, isAnonymous());
         SearchProvider searchProvider = modelProviderFactory.searchProvider(principal);
         return searchProvider.forms(criteria, new ViewContext(settings, VERSION), mediaType.equals(MediaType.TEXT_HTML_TYPE));
     }
@@ -250,7 +244,6 @@ public abstract class AbstractFormResource {
             throw new ForbiddenError(Constants.ExceptionCodes.request_id_required);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, true, isAnonymous());
         FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
 
         if (request == null)
@@ -284,7 +277,6 @@ public abstract class AbstractFormResource {
 
     protected <P extends ProcessDeploymentProvider> Response validationForm(final MessageContext context, final String rawProcessDefinitionKey, final String rawValidationId, Entity principal) throws PieceworkException {
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, isAnonymous());
         String processDefinitionKey = sanitizer.sanitize(rawProcessDefinitionKey);
         String validationId = sanitizer.sanitize(rawValidationId);
 
@@ -378,7 +370,6 @@ public abstract class AbstractFormResource {
         String validationId = sanitizer.sanitize(rawValidationId);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, isAnonymous());
         FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
 
         if (request == null)
@@ -400,8 +391,6 @@ public abstract class AbstractFormResource {
         String validationId = sanitizer.sanitize(rawValidationId);
 
         RequestDetails requestDetails = new RequestDetails.Builder(context, securitySettings).build();
-        accessTracker.track(requestDetails, false, isAnonymous());
-
         FormRequest request = requestService.read(processDefinitionKey, requestDetails, requestId);
 
         if (request == null)

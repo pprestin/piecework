@@ -91,11 +91,15 @@ angular.module('wf',
                 scope.application.bucketList = results.bucketList;
                 scope.application.criteria.pg = results.processGroup;
 
+                var selectedFacetMap = {};
                 var state = localStorageService.get('state');
                 if (state != null)
                     scope.application.state.selectedFacets = state.selectedFacets;
+                else {
+                    selectedFacetMap['lastModifiedTime'] = true;
+                    selectedFacetMap['taskLabel'] = true;
+                }
 
-                var selectedFacetMap = {};
                 if (scope.application.state.selectedFacets != null) {
                     angular.forEach(scope.application.state.selectedFacets, function(selectedFacet) {
                         selectedFacetMap[selectedFacet.name] = true;
@@ -191,7 +195,7 @@ angular.module('wf',
                 if (facets != null) {
                     angular.forEach(facets, function(facet) {
                         var isFilteringThisFacet = false;
-                        if (facet.type == 'date') {
+                        if (facet.type == 'date' || facet.type == 'datetime') {
                             var afterName = facet.name + 'After';
                             var beforeName = facet.name + 'Before';
                             var afterCriterion = criteria[afterName];
