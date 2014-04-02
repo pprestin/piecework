@@ -1519,7 +1519,7 @@
                     template:
                         '       <div class="pull-right"><div data-ng-class="application.state.selectedForms.length !== 0 ? \'wf-task-count\' : \'\'">{{application.paging.total}} task{{application.paging.total != 1 ? \'s\' : \'\'}}</div></div>' +
                         '       <div data-ng-if="application.state.selectedForms.length === 0" >' +
-                        '           <h3 data-ng-bind="isSingleProcessSelected() ? application.processDefinitionDescription[application.criteria.processDefinitionKey] : \'\'" class="wf-search-header"></h3>' +
+                        '           <h3 data-ng-bind="isSingleProcessSelected() ? application.processDefinitionDescription[application.criteria.processDefinitionKey] : \'&nbsp;\'" class="wf-search-header"></h3>' +
                         '       </div>' +
                         '       <div data-ng-if="application.state.selectedForms.length !== 0" data-wf-form-toolbar data-application="application" class=""></div>' +
                         '       <div class="row"></div>' +
