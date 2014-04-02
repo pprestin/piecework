@@ -2,8 +2,8 @@
 
     'use strict';
 
-    var wfInputDirective = ['$browser', '$compile', '$sniffer', 'wfUtils',
-        function($browser, $compile, $sniffer, wfUtils) {
+    var wfInputDirective = ['$browser', '$compile', '$document', '$sniffer', 'wfUtils',
+        function($browser, $document, $compile, $sniffer, wfUtils) {
             return {
                 priority: -1,
                 restrict: 'E',
@@ -318,10 +318,32 @@
                             scope.minDate = ( scope.minDate ) ? null : new Date();
                         };
 
+                        scope.onKeyUp = function(event) {
+                            if (event == null)
+                                return;
+
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            if (event.keyCode == 27)
+                                scope.opened = false;
+                            else if (event.keyCode == 13) {
+                                scope.today();
+                                scope.opened = false;
+                            }
+                        };
+
                         scope.open = function($event) {
-                            $event.preventDefault();
-                            $event.stopPropagation();
+                            if ($event != null) {
+                                $event.preventDefault();
+                                $event.stopPropagation();
+                            }
                             scope.opened = true;
+                        };
+
+                        scope.clickDate = function($event) {
+                            scope.today();
+                            scope.open($event);
                         };
 
                         scope.dateOptions = {
@@ -344,10 +366,10 @@
                     },
                     template:
                         '<div class="input-group wf-datepicker-group">' +
-                        '   <input data-ng-required="{{required}}" datepicker-popup="MM/dd/yyyy" data-ng-model="dt" datepicker-options="dateOptions" size="10" type="text" class="form-control wf-datepicker"  is-open="opened" min="minDate" max="maxDate" close-text="Close" show-weeks="false"/>' +
+                        '   <input data-ng-keypress="onKeyUp($event)" data-ng-required="{{required}}" datepicker-popup="MM/dd/yyyy" data-ng-model="dt" datepicker-options="dateOptions" size="10" type="text" class="form-control wf-datepicker"  is-open="opened" min="minDate" max="maxDate" close-text="Close" show-weeks="false"/>' +
                         '   <input data-ng-value="dt|date:\'yyyy-MM-ddTHH:mm:ssZ\'" name="{{name}}" type="hidden">' +
                         '   <span class="input-group-addon">' +
-                        '       <i class="fa fa-calendar"></i> ' +
+                        '       <i class="fa fa-calendar" ng-click="clickDate($event)"></i>' +
                         '   </span> ' +
                         '</div>'
                 }
