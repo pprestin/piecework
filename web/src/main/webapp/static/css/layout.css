@@ -690,7 +690,9 @@ select.form-control {
 }
 
 .wf-search-header {
-    margin-top: 15px;
+    line-height: 34px;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .wf-state-cancelled a.wf-file-link {
@@ -700,7 +702,7 @@ select.form-control {
 
 .wf-task-count {
     line-height: 34px;
-    margin-top: 7px;
+    margin-top: 1px;
 }
 
 .dropdown > ul.scroll{
