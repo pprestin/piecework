@@ -19,6 +19,7 @@ package piecework.util;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import static org.testng.Assert.*;
 import org.testng.annotations.*;
@@ -51,11 +52,28 @@ public class E2eTestHelper {
                     if ( byAttr.equals("id") ) {
                         element = driver.findElement(By.id(k));
                     } else {
-                        element = driver.findElement(By.name(k));
+                        List<WebElement> elements = driver.findElements(By.name(k));
+                        if ( elements.size() == 0 ) {
+                             element = driver.findElement(By.name(k));  // let driver throw exception
+                        } else if ( elements.size() == 1 ) {
+                             element = elements.get(0);
+                        } else {
+                            for (int j=0; j<elements.size(); ++j) {
+                                String tagName = elements.get(j).getTagName();
+                                if ( tagName.equals("input") || tagName.startsWith("text") || tagName.equals("select") ) { 
+                                    element = elements.get(j);
+                                    String t = element.getAttribute("type");
+                                    if ( t.equals("hidden") ) {
+                                        element = element.findElement(By.xpath("../input[@type='text']"));
+                                    }
+                                    break;
+                                }
+                            }
+                        }
                     }
                     String tagName = element.getTagName();
                     String t = element.getAttribute("type");
-                    //System.out.println(k + "'s type =" + a);
+                    //System.out.println(k + "'s type =" + t);
                     if ( tagName.equals("input") ) {
                         if ( t.equals("hidden") ) {
                             WebElement e1 = element.findElement(By.xpath("../input[@data-ng-change]"));
@@ -70,7 +88,7 @@ public class E2eTestHelper {
                                 element.click();
                             }
                         } else {  // "text", "date", "datetime" etc.
-                            element.click();  // need this for field with maskedinput (another mask package)
+                            //element.click();  // need this for field with maskedinput (another mask package), but messed up date picker on chrome
                             element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
                             element.sendKeys(v);
                         }
@@ -88,6 +106,7 @@ public class E2eTestHelper {
                     found = true;
                     break;
                 } catch ( Exception ex ) {
+                    System.out.println(k + ", val=" + v+", exception =" + ex.toString());
                     try {
                         Thread.sleep(1000);   // wait a bit, then try again
                     } catch (InterruptedException ex1) {
@@ -191,7 +210,7 @@ public class E2eTestHelper {
 
     // get date usig default date  format
     public static String getDate(int days) {
-        return getDate(days, "yyyy/MM/dd");  // default date format
+        return getDate(days, "MM/dd/yyyy");  // default date format
     }
 
     public static String getCurrentDate() {
@@ -234,6 +253,20 @@ public class E2eTestHelper {
             } catch (InterruptedException e) {
             }   
         } 
+    }
+
+    public static String getTimeUuid(int len) {
+        Date dt = new Date();
+        long ret = dt.getTime();  // current time in millisecond
+        if ( len > 0 && len < 16) {
+            ret /= 100;   // use 0.1 sec as unit
+            long base = 1;
+            for (int i=0; i<len; ++i) {
+                base *= 10;
+            }
+            ret %= base;
+        }
+        return ""+ret;
     }
 
     // convience function
