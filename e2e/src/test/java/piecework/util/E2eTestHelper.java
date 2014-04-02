@@ -259,7 +259,7 @@ public class E2eTestHelper {
         Date dt = new Date();
         long ret = dt.getTime();  // current time in millisecond
         if ( len > 0 && len < 16) {
-            ret /= 100;   // use 0.1 sec as unit
+            ret /= 1000;   // use sec as unit
             long base = 1;
             for (int i=0; i<len; ++i) {
                 base *= 10;
