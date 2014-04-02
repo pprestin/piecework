@@ -60,6 +60,8 @@ angular.module('wf',
             if (criteria !== null) {
                 console.log("Retrieving saved criteria");
                 scope.application.criteria = criteria;
+            } else {
+                criteria = scope.application.criteria;
             }
 
             var facetValue = function(form, facet) {
