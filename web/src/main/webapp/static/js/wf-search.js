@@ -77,6 +77,63 @@ angular.module('wf',
 
                 return form[facet.name];
             };
+            var checkColumns = function() {
+                var facets = scope.application.facets;
+                var selectedFacets = scope.application.state.selectedFacets;
+                var refresh = false;
+                if (facets != null) {
+                    var selectedFacetMap = {};
+                    if (selectedFacets != null) {
+                        angular.forEach(selectedFacets, function(selectedFacet) {
+                            selectedFacetMap[selectedFacet.name] = true;
+                        });
+                    }
+                    angular.forEach(facets, function(facet) {
+                        var isFilteringThisFacet = false;
+                        if (facet.type == 'date' || facet.type == 'datetime') {
+                            var afterName = facet.name + 'After';
+                            var beforeName = facet.name + 'Before';
+                            var afterCriterion = criteria[afterName];
+                            var beforeCriterion = criteria[beforeName];
+                            if (afterCriterion != null && afterCriterion != '')
+                                isFilteringThisFacet = true;
+                            else if (beforeCriterion != null && beforeCriterion != '')
+                                isFilteringThisFacet = true;
+                        } else {
+                            var criterion = criteria[facet.name];
+                            if (criterion != null && criterion != '')
+                                isFilteringThisFacet = true;
+                        }
+
+                        if (isFilteringThisFacet) {
+                            facet.selected = true;
+                            scope.application.state.filtering = true;
+
+                            if (!selectedFacetMap[facet.name])
+                                refresh = true;
+                        } else if (facet.name == 'applicationStatusExplanation') {
+                            if (criteria != null && criteria.processStatus == 'suspended' ) {
+                                facet.selected = true;  // show suspension reason for suspended process instances
+                                if (!selectedFacetMap[facet.name])
+                                    refresh = true;
+                            } else {
+                                facet.selected = false;  // hide suspension reason otherwise
+                                if (selectedFacetMap[facet.name])
+                                    refresh = true;
+                            }
+                        }
+                    });
+                }
+                if (refresh)
+                    refreshColumns();
+            };
+            var refreshColumns = function() {
+                scope.application.state.selectedFacets = [];
+                angular.forEach(scope.application.facets, function(facet) {
+                    if (facet.selected && facet.name != 'processInstanceLabel')
+                        scope.application.state.selectedFacets.push(facet);
+                });
+            };
             var processMetadata = function(results) {
                 scope.application.state.organizing = true;
                 scope.application.facets = results.facets;
@@ -105,11 +162,18 @@ angular.module('wf',
                         selectedFacetMap[selectedFacet.name] = true;
                     });
                 }
+
+                if (scope.application.criteria.processStatus == 'suspended')
+                    selectedFacetMap['applicationStatusExplanation'] = true;
+                else
+                    delete selectedFacetMap['applicationStatusExplanation'];
+
                 angular.forEach(scope.application.facets, function(facet) {
                     if (facet.required || selectedFacetMap[facet.name])
                         facet.selected = true;
                     scope.application.facetMap[facet.name] = facet;
                 });
+                refreshColumns();
                 scope.application.state.organizing = false;
             };
             var processData = function(results) {
@@ -191,41 +255,7 @@ angular.module('wf',
                     criteria = scope.application.criteria;
                 if (criteria.keywords != null && typeof(criteria.keywords) == 'string')
                     criteria.keyword = criteria.keywords.split(' ');
-                var facets = scope.application.facets;
-                if (facets != null) {
-                    angular.forEach(facets, function(facet) {
-                        var isFilteringThisFacet = false;
-                        if (facet.type == 'date' || facet.type == 'datetime') {
-                            var afterName = facet.name + 'After';
-                            var beforeName = facet.name + 'Before';
-                            var afterCriterion = criteria[afterName];
-                            var beforeCriterion = criteria[beforeName];
-                            if (afterCriterion != null && afterCriterion != '')
-                                isFilteringThisFacet = true;
-                            else if (beforeCriterion != null && beforeCriterion != '')
-                                isFilteringThisFacet = true;
-                        } else {
-                            var criterion = criteria[facet.name];
-                            if (criterion != null && criterion != '')
-                                isFilteringThisFacet = true;
-                        }
-
-                        if (isFilteringThisFacet) {
-                            facet.selected = true;
-                            scope.application.state.filtering = true;
-                        }
-
-                        // special handling for applicationStatusExplanation
-                        // @see https://jira.cac.washington.edu/browse/EDMSIMPL-177
-                        if (facet.name == 'applicationStatusExplanation') {
-                            if (criteria != null && criteria.processStatus == 'suspended' ) {
-                                facet.selected = true;  // show suspension reason for suspended process instances
-                            } else {
-                                facet.selected = false;  // hide suspension reason otherwise
-                            }
-                        }
-                    });
-                }
+                checkColumns();
 
                 scope.application.state.searching = true;
                 localStorageService.set("criteria", criteria);
@@ -235,11 +265,7 @@ angular.module('wf',
             };
             scope.application.selectFacet = function(facet) {
                 facet.selected = !facet.selected;
-                scope.application.state.selectedFacets = [];
-                angular.forEach(scope.application.facets, function(facet) {
-                    if (facet.selected && facet.name != 'processInstanceLabel')
-                        scope.application.state.selectedFacets.push(facet);
-                });
+                refreshColumns();
                 localStorageService.set('state', scope.application.state);
             };
 

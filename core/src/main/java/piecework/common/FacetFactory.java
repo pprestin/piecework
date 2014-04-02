@@ -48,8 +48,6 @@ public class FacetFactory {
         List<Facet> facets = new ArrayList<Facet>();
         facets.add(new SearchFacet("processInstanceLabel", "processInstanceLabel", "Label", true));
         facets.add(new SearchFacet("processDefinitionLabel", "processDefinitionLabel", "Process", false));
-        facets.add(new SearchFacet("applicationStatusExplanation", "applicationStatusExplanation", "Reason", false));
-//        facets.add(new SearchFacet("processStatus", "processStatus", "Process Status", true));
         facets.add(new DataFilterFacet("taskStatus", "Status", false) {
             @Override
             public boolean include(Task task, String value) {
@@ -58,6 +56,7 @@ public class FacetFactory {
                 return taskStatus != null && ( lowercaseValue.equals("all") || taskStatus.contains(lowercaseValue));
             }
         });
+        facets.add(new SearchFacet("applicationStatusExplanation", "applicationStatusExplanation", "Reason", false));
         facets.add(new DataFilterFacet("taskLabel", "Task", false) {
             @Override
             public boolean include(Task task, String value) {

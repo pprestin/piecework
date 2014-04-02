@@ -277,11 +277,40 @@
                                 scope.application.search();
                             }
                         };
+                        scope.doSort = function(facet) {
+                            // If already sorting by this facet then switch the direction
+                            if (scope.isSorting(facet)) {
+                                if (facet.direction == 'desc')
+                                    facet.direction = 'asc';
+                                else
+                                    facet.direction = 'desc';
+                            } else {
+                                facet.direction = 'desc';
+                            }
+
+                            scope.application.criteria.sortBy = [];
+                            scope.application.criteria.sortBy.push(facet.name + ":" + facet.direction);
+                            scope.application.search();
+                        };
                         scope.hasFilter = function(facet) {
                             if (facet == null)
                                 return false;
                             var filterValue = scope.application.criteria[facet.name];
                             return typeof(filterValue) !== 'undefined' && filterValue != null && filterValue != '' && filterValue.length > 0;
+                        };
+                        scope.isSorting = function(facet) {
+                            if (facet == null)
+                                return false;
+
+                            var pattern = '^' + facet.name + ':';
+                            var regex = new RegExp(pattern);
+                            var isSorting = false;
+                            angular.forEach(scope.application.criteria.sortBy, function(sortBy) {
+                                isSorting = regex.test(sortBy);
+                                if (isSorting)
+                                    return true;
+                            });
+                            return isSorting;
                         };
                         scope.onDateChange = function(facet) {
                             scope.doChangeFilter(facet);
@@ -518,15 +547,33 @@
                         };
 
                         scope.onAfterKeyUp = function(event) {
-                            if (event.keyCode == 27) {
+                            if (event.keyCode == 27 || event.keyCode == 13) {
+                                event.preventDefault();
+                                event.stopPropagation();
                                 scope.clearAfterFilter();
+                                if (scope.afterOpened && event.keyCode == 13) {
+                                    scope.after = new Date();
+                                    scope.application.criteria[afterName] = scope.after;
+                                    scope.application.search();
+                                }
+                                scope.afterOpened = event.keyCode == 13;
                                 return;
                             }
                         };
 
                         scope.onBeforeKeyUp = function(event) {
-                            if (event.keyCode == 27) {
-                                scope.clearAfterFilter();
+                            if (event.keyCode == 27 || event.keyCode == 13) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                scope.clearBeforeFilter();
+
+                                if (scope.beforeOpened && event.keyCode == 13) {
+                                    scope.before = new Date();
+                                    scope.application.criteria[beforeName] = scope.before;
+                                    scope.application.search();
+                                }
+
+                                scope.beforeOpened = event.keyCode == 13;
                                 return;
                             }
                         };
@@ -559,11 +606,11 @@
                     },
                     template:
                         '<span class="form-group has-feedback wf-date-range">' +
-                        '   <input data-ng-change="afterChange()" data-ng-keypress="onAfterKeyUp($event)" size="10" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/>' +
+                        '   <input data-ng-change="afterChange()" data-ng-keyup="onAfterKeyUp($event)" size="10" type="text" class="form-control wf-datepicker input-sm" datepicker-popup="MM/dd/yyyy" data-ng-model="after" datepicker-options="dateOptions"  is-open="afterOpened" min="afterMinDate" max="afterMaxDate" close-text="Close" placeholder="After" show-weeks="false"/>' +
                         '   <span data-ng-click="clearAfterFilter()" data-ng-show="after != null" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> ' +
                         '</span>' +
                         '<span class="form-group has-feedback wf-date-range">' +
-                        '   <input data-ng-change="beforeChange()" data-ng-keypress="onBeforeKeyUp($event)" size="10" type="text" class="form-control wf-datepicker input-sm" datepicker-popup data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/>' +
+                        '   <input data-ng-change="beforeChange()" data-ng-keyup="onBeforeKeyUp($event)" size="10" type="text" class="form-control wf-datepicker input-sm" datepicker-popup="MM/dd/yyyy" data-ng-model="before" datepicker-options="dateOptions"  is-open="beforeOpened" min="beforeMinDate" max="beforeMaxDate" close-text="Close" placeholder="Before" show-weeks="false"/>' +
                         '   <span data-ng-click="clearBeforeFilter()" data-ng-show="before != null" aria-hidden="true" class="form-control-feedback"><i class="fa fa-times-circle text-muted"></i></span> ' +
                         '</span>'
                 }
@@ -1411,25 +1458,21 @@
                     scope: {
                         application: '='
                     },
-                    link: function (scope, element) {
-                        scope.doSort = function(facet) {
-                            // If already sorting by this facet then switch the direction
-                            if (scope.isSorting(facet)) {
-                                if (facet.direction == 'desc')
-                                    facet.direction = 'asc';
-                                else
-                                    facet.direction = 'desc';
-                            } else {
+                    link: function (scope, element) {scope.doSort = function(facet) {
+                        // If already sorting by this facet then switch the direction
+                        if (scope.isSorting(facet)) {
+                            if (facet.direction == 'desc')
+                                facet.direction = 'asc';
+                            else
                                 facet.direction = 'desc';
-                            }
+                        } else {
+                            facet.direction = 'desc';
+                        }
 
-                            scope.application.criteria.sortBy = [];
-                            scope.application.criteria.sortBy.push(facet.name + ":" + facet.direction);
-                            scope.application.search();
-                        };
-                        scope.isSingleProcessSelected = function() {
-                            return scope.application.criteria.processDefinitionKey != null && scope.application.criteria.processDefinitionKey != '';
-                        };
+                        scope.application.criteria.sortBy = [];
+                        scope.application.criteria.sortBy.push(facet.name + ":" + facet.direction);
+                        scope.application.search();
+                    };
                         scope.isSorting = function(facet) {
                             if (facet == null)
                                 return false;
@@ -1443,6 +1486,9 @@
                                     return true;
                             });
                             return isSorting;
+                        };
+                        scope.isSingleProcessSelected = function() {
+                            return scope.application.criteria.processDefinitionKey != null && scope.application.criteria.processDefinitionKey != '';
                         };
                         scope.selectForm = function(form) {
                             form.checked = !form.checked;
