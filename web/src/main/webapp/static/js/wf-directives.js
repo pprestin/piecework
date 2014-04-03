@@ -389,6 +389,12 @@
 
                         };
 
+                        scope.defaultMinDate = moment().subtract('years', 20).calendar();
+                        scope.defaultMaxDate = moment().add('years', 20).calendar();
+
+                        scope.minDate = scope.defaultMinDate;
+                        scope.maxDate = scope.defaultMaxDate;
+
                         scope.today = function() {
                             scope.dt = new Date();
                         };
@@ -404,7 +410,7 @@
                         };
 
                         scope.toggleMin = function() {
-                            scope.minDate = ( scope.minDate ) ? null : new Date();
+                            scope.minDate = ( scope.minDate ) ? scope.defaultMinDate : new Date();
                         };
 
                         scope.onKeyUp = function(event) {
@@ -480,6 +486,14 @@
 
                         scope.after = scope.application.criteria[afterName];
                         scope.before = scope.application.criteria[beforeName];
+
+                        scope.defaultMinDate = moment().subtract('years', 20).calendar();
+                        scope.defaultMaxDate = moment().add('years', 20).calendar();
+
+                        scope.afterMinDate = scope.defaultMinDate;
+                        scope.beforeMinDate = scope.defaultMinDate;
+                        scope.afterMaxDate = scope.defaultMaxDate;
+                        scope.beforeMaxDate = scope.defaultMaxDate;
 
                         scope.afterChange = function() {
                             if (scope.application.criteria[afterName] != scope.after) {
@@ -1873,9 +1887,9 @@
                         '                </form>\n' +
                         '                <div class="navbar-right btn-toolbar">\n' +
                         '                    <a data-ng-show="false && !isFormSelected()" href="report.html" rel="external" target="_self" class="btn btn-default navbar-btn" id="report-button"><i class="fa fa-bar-chart-o"></i></a>\n' +
-                        '                    <button data-ng-click="exportCsv()" data-ng-disabled="isFormSelected()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as xls" type="button"><i class="fa fa-download"></i> Export</button>\n' +
-                        '                    <button data-ng-click="toggleColumns()" data-ng-disabled="isFormSelected()" class="btn btn-default navbar-btn" title="Select columns"><i class="fa fa-columns fa-1x"></i> Columns</button>' +
-                        '                    <button data-ng-click="toggleFilter()" data-ng-disabled="isFormSelected()" class="btn btn-default navbar-btn" title="Toggle filter">' +
+                        '                    <button data-ng-click="exportCsv()" data-ng-disabled="!isSingleProcessSelected()" class="btn btn-default navbar-btn" title="Export as xls" type="button"><i class="fa fa-download"></i> Export</button>\n' +
+                        '                    <button data-ng-click="toggleColumns()" class="btn btn-default navbar-btn" title="Select columns"><i class="fa fa-columns fa-1x"></i> Columns</button>' +
+                        '                    <button data-ng-click="toggleFilter()" class="btn btn-default navbar-btn" title="Toggle filter">' +
                         '                       <i data-ng-class="application.state.filtering ? \'fa-ban\' : \'fa-filter\'" class="fa"></i> Filter' +
                         '                    </button>' +
                         '                </div>\n' +
