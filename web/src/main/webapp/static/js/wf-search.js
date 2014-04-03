@@ -229,19 +229,19 @@ angular.module('wf',
 
             scope.application.paging.pageNumbers = [1,2,3,4,5];
             scope.application.paging.changePageSize = function(event) {
-                scope.criteria.pageSize = scope.paging.pageSize;
+                scope.application.criteria.pageSize = scope.application.paging.pageSize;
                 scope.application.search();
             };
             scope.application.paging.previousPage = function() {
-                scope.criteria.pageNumber = scope.paging.pageNumber >= 2 ? scope.paging.pageNumber - 2 : 0;
+                scope.application.criteria.pageNumber = scope.application.paging.pageNumber >= 2 ? scope.application.paging.pageNumber - 2 : 0;
                 scope.application.search();
             };
             scope.application.paging.toPage = function(pageNumber) {
-                scope.criteria.pageNumber = pageNumber - 1;
+                scope.application.criteria.pageNumber = pageNumber - 1;
                 scope.application.search();
             };
             scope.application.paging.nextPage = function() {
-                scope.criteria.pageNumber = scope.paging.pageNumber;
+                scope.application.criteria.pageNumber = scope.application.paging.pageNumber;
                 scope.application.search();
             };
 
