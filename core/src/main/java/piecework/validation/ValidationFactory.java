@@ -27,6 +27,7 @@ import piecework.content.ContentResource;
 import piecework.content.Version;
 import piecework.exception.*;
 import piecework.model.*;
+import piecework.model.Process;
 import piecework.persistence.ProcessDeploymentProvider;
 import piecework.repository.ContentRepository;
 import piecework.security.data.DataFilterService;
@@ -34,6 +35,9 @@ import piecework.settings.UserInterfaceSettings;
 import piecework.submission.SubmissionTemplate;
 import piecework.util.ModelUtility;
 import piecework.util.ValidationUtility;
+import piecework.util.ProcessInstanceUtility;
+import piecework.manager.StorageManager;
+import piecework.ServiceLocator;
 
 import java.io.IOException;
 import java.util.*;
@@ -56,6 +60,9 @@ public class ValidationFactory {
     @Autowired
     UserInterfaceSettings settings;
 
+    @Autowired
+    private ServiceLocator serviceLocator;
+
     public <P extends ProcessDeploymentProvider> Validation validation(P modelProvider, SubmissionTemplate template, Submission submission, String version, boolean onlyAcceptValidInputs, boolean ignoreException) throws PieceworkException {
         long time = 0;
 
@@ -70,6 +77,15 @@ public class ValidationFactory {
 
         Map<String, List<Message>> results = validation.getResults();
         if (!ignoreException && results != null && !results.isEmpty()) {
+            // save submitted data so that user do not have to reenter them
+            Map<String, List<Value>> validationData = validation.getData();
+            String submissionLabel = submission != null ? submission.getProcessInstanceLabel() : null;
+            Process process = modelProvider.process();
+            ProcessInstance instance = ModelUtility.instance(modelProvider);
+            String label = ProcessInstanceUtility.processInstanceLabel(process, instance, validationData, submissionLabel);
+            StorageManager storageManager = serviceLocator.getService(StorageManager.class);
+            storageManager.store(label, instance, validationData, submission);
+
             // Throw an exception if the submitter needs to adjust the data
             throw new BadRequestError(validation);
         }
