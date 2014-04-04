@@ -1998,6 +1998,11 @@
                         });
                         scope.$root.$on('wfEvent:form-loaded', function(event, form) {
                             scope.form = form;
+                            if ( Object.keys(form.validation).length > 0 ) {
+                                 scope.errmsg = "There were missing fields.";
+                            } else {
+                                 scope.errmsg = null;
+                            }
                         });
                         scope.dialogs = dialogs;
                         scope.wizard = wizardService;
@@ -2027,6 +2032,7 @@
                         '                     <button data-ng-click="dialogs.openCancelModal([form])" data-ng-show="form.history && form.task.active" class="btn btn-danger navbar-btn" id="delete-dialog-button" title="Delete process" type="button"><i class="fa fa-trash-o"></i></button>\n' +
                         '                     <button data-ng-click="dialogs.openActivateModal([form])" data-ng-show="form.history && form.task.taskStatus == \'Suspended\'" class="btn btn-default navbar-btn" id="activate-dialog-button" title="Activate process" type="button"><i class="fa fa-play"></i></button>\n' +
                         '                     <button data-ng-click="dialogs.openRestartModal([form])" data-ng-show="form.history && (form.task.taskStatus == \'Cancelled\' || form.task.taskStatus == \'Completed\')" class="btn btn-default navbar-btn" title="Restart process" type="button"><i class="fa fa-rotate-left"></i></button>\n' +
+                        '<p data-ng-if="errmsg != null" class="btn text-primary alert-danger">There were missing fields</p>\n' +
                         '                 </div>\n' +
                         '                 <div class="navbar-right btn-toolbar">\n' +
                         '                       <div data-wf-assignment-button data-form="form" class="navbar-nav"></div>' +
