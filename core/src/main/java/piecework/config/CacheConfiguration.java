@@ -23,7 +23,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import piecework.cache.CustomCacheManager;
 import piecework.service.CacheService;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 /**
  * @author James Renfro
@@ -33,16 +37,22 @@ import piecework.service.CacheService;
 @EnableScheduling
 public class CacheConfiguration {
 
-    @Bean
-    public EhCacheManagerFactoryBean ehCacheManagerFactoryBean() {
-        EhCacheManagerFactoryBean ehCacheManagerFactoryBean = new EhCacheManagerFactoryBean();
-        ehCacheManagerFactoryBean.setConfigLocation(new ClassPathResource("META-INF/piecework/ehcache.xml"));
-        return ehCacheManagerFactoryBean;
+//    @Bean
+//    public EhCacheManagerFactoryBean ehCacheManagerFactoryBean() {
+//        EhCacheManagerFactoryBean ehCacheManagerFactoryBean = new EhCacheManagerFactoryBean();
+//        ehCacheManagerFactoryBean.setConfigLocation(new ClassPathResource("META-INF/piecework/ehcache.xml"));
+//        return ehCacheManagerFactoryBean;
+//    }
+
+    @Bean(destroyMethod="shutdown")
+    public net.sf.ehcache.CacheManager ehCacheCacheManager() {
+        return new CustomCacheManager();
     }
+
     @Bean
-    public CacheManager cacheManager() {
+    public CacheManager cacheManager(net.sf.ehcache.CacheManager ehCacheCacheManager) {
         EhCacheCacheManager cacheManager = new EhCacheCacheManager();
-        cacheManager.setCacheManager(ehCacheManagerFactoryBean().getObject());
+        cacheManager.setCacheManager(ehCacheCacheManager);
         return cacheManager;
     }
 
