@@ -87,6 +87,9 @@ public class E2eTestHelper {
                             } else {
                                 element.click();
                             }
+                        } else if ( t.equals("file") ) {
+                            element.sendKeys(v);
+                            Thread.sleep(1000);   // for file upload 
                         } else {  // "text", "date", "datetime" etc.
                             //element.click();  // need this for field with maskedinput (another mask package), but messed up date picker on chrome
                             element.sendKeys(org.openqa.selenium.Keys.HOME); // need this for field with inputmask
